@@ -14,6 +14,9 @@ export type DocumentVersionSummary = {
   publishedAt: Date;
 };
 
+/** A document's title and lede, which an edit changes without making a new version. */
+export type DocumentHeading = { id: string; title: string; lede: string };
+
 export type DocumentDraft = {
   id: string;
   number: number;

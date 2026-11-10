@@ -1,10 +1,5 @@
 import 'server-only';
-import {
-  findCategoryCount,
-  findCategoryPage,
-  findOneBySlug,
-  withAudit,
-} from '../../../db/repository';
+import { findCategoryCount, findCategoryPage, withAudit } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
@@ -15,8 +10,14 @@ import { assertCurator } from '@/modules/identity';
 import { categories, categoryGroups } from '../schema/categories';
 import { CategoryInput } from '../validation/category';
 import { cachedFilteredList } from './curated-lists';
-import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-writes';
-import { refuseWhileHeld } from './held-entries';
+import {
+  bySlug,
+  createCurated,
+  deleteCurated,
+  liveRow,
+  parseUnderLiveParent,
+  refuseSlugCollision,
+} from './curated-writes';
 import type { CategoryFilter, CategoryRow, CuratedVocabulary } from '../types';
 
 // The category vocabulary: public reads, and writes for a curator or a keeper alone. A delete leaves every link in place and
@@ -51,9 +52,7 @@ export function countCategories(
  * @throws {NotFound} no live category holds the slug.
  */
 export async function getCategoryBySlug(slug: string): Promise<CategoryRow> {
-  const row = await findOneBySlug(categories, slug);
-  if (!row) throw new NotFound('No such category');
-  return row;
+  return bySlug(CATEGORIES, slug);
 }
 
 /**
@@ -63,14 +62,7 @@ export async function getCategoryBySlug(slug: string): Promise<CategoryRow> {
 export async function createCategory(session: Session, input: CategoryInput): Promise<CategoryRow> {
   assertCurator(session);
   const fields = await parseCategory(input);
-  const slug = slugify(fields.name);
-
-  const written = await withAudit(session, async (write) => {
-    const [row] = await write.insert(categories, { ...fields, slug });
-    return row;
-  }).catch((error: unknown) => refuseSlugCollision(CATEGORIES, error, slug));
-  expireCompendium();
-  return written;
+  return createCurated(session, CATEGORIES, fields, slugify(fields.name));
 }
 
 /**
@@ -108,21 +100,14 @@ export async function updateCategory(
  */
 export async function deleteCategory(session: Session, id: string): Promise<void> {
   assertCurator(session);
-  const category = await liveRow(CATEGORIES, id);
-  await refuseWhileHeld(
-    { categoryIds: [category.id] },
-    {
+  await deleteCurated(session, CATEGORIES, id, (category) => ({
+    filter: { categoryIds: [category.id] },
+    wording: {
       name: category.name,
       holding: 'is filed on',
       remedy: (count) => `Take it off ${plural(count, 'it', 'them')} first.`,
     },
-  );
-
-  await withAudit(session, async (write) => {
-    const [row] = await write.softDeleteByIds(categories, [id]);
-    if (!row) throw new NotFound('No such category');
-  });
-  expireCompendium();
+  }));
 }
 
 async function parseCategory(input: CategoryInput): Promise<CategoryInput> {

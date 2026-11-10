@@ -40,6 +40,7 @@ export * from './graphql/workspace-ingredient-list';
 export * from './graphql/stock';
 export * from './graphql/cupboard-entries';
 export { unitConvert } from './units/convert';
+export { canConvert, canMeasureAs } from './schema/units';
 export type {
   CategoryDetail,
   CitedReference,

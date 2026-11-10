@@ -145,7 +145,8 @@ expiry in the service they guard.
 
 - **`vocabulary/services/curated-writes.ts`** — a curated write's steps,
   each taking the table's `CuratedVocabulary` descriptor (`types.ts`):
-  `refuseSlugCollision`, `liveRow` for an id that may name nothing,
+  `refuseSlugCollision`, `liveRow` for an id that may name nothing, `bySlug`,
+  `createCurated` and `deleteCurated` for the shared create and delete,
   `parseUnderLiveParent` for a row filed under a group, and a group's
   `moveTarget`, `updateGroup` and `deleteGroup`, built on
   `group-moves.ts` and a `CuratedGroup` whose `members` are the `MovedRows`

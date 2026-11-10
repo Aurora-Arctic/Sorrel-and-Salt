@@ -34,6 +34,17 @@ export function dimensionOf(unit: Unit): UnitDimension {
   return DIMENSION_BY_UNIT.get(unit) as UnitDimension;
 }
 
+/** Whether an amount in `from` can be restated in `to`: the same dimension, and never a count. */
+export function canConvert(from: Unit, to: Unit): boolean {
+  const dimension = dimensionOf(from);
+  return dimension !== 'count' && dimension === dimensionOf(to);
+}
+
+/** Whether an amount in `unit` can be taken from a jar kept in `jarUnit`: the same unit, or one it converts to. */
+export function canMeasureAs(unit: Unit, jarUnit: Unit): boolean {
+  return unit === jarUnit || canConvert(unit, jarUnit);
+}
+
 export function isUnit(value: string): value is Unit {
   return DIMENSION_BY_UNIT.has(value);
 }

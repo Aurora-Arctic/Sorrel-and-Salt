@@ -5,7 +5,6 @@ import {
   findDeityOtherNames,
   findDeityPage,
   findManyByIds,
-  findOneBySlug,
   withAudit,
 } from '../../../db/repository';
 import type { AuditWriter } from '../../../db/repository';
@@ -20,8 +19,14 @@ import { deities, deityTraditions } from '../schema/deities';
 import { deityOtherNames } from '../schema/deity-other-names';
 import { DeityInput, otherNameHeldBy, otherNameRepeats } from '../validation/deity';
 import { cachedFilteredList } from './curated-lists';
-import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-writes';
-import { refuseWhileHeld } from './held-entries';
+import {
+  bySlug,
+  createCurated,
+  deleteCurated,
+  liveRow,
+  parseUnderLiveParent,
+  refuseSlugCollision,
+} from './curated-writes';
 import type { CuratedVocabulary, DeityFilter, DeityRow } from '../types';
 
 // A live link holds a deity, and a rename reaches the link (claude-docs/db/deity-vocabulary.md, "Deity service details").
@@ -54,9 +59,7 @@ export function countDeities(filter: DeityFilter, start: Cursor | undefined): Pr
  * @throws {NotFound} no live deity holds the slug.
  */
 export async function getDeityBySlug(slug: string): Promise<DeityRow> {
-  const row = await findOneBySlug(deities, slug);
-  if (!row) throw new NotFound('No such deity');
-  return row;
+  return bySlug(DEITIES, slug);
 }
 
 /**
@@ -68,13 +71,9 @@ export async function createDeity(session: Session, input: DeityInput): Promise<
   const { fields, traditionName, otherNames } = await parseDeity(input);
   const slug = deitySlug(fields.name, traditionName);
 
-  const written = await withAudit(session, async (write) => {
-    const [row] = await write.insert(deities, { ...fields, slug });
-    await replaceOtherNames(write, row.id, otherNames);
-    return row;
-  }).catch((error: unknown) => refuseSlugCollision(DEITIES, error, slug));
-  expireCompendium();
-  return written;
+  return createCurated(session, DEITIES, fields, slug, (write, row) =>
+    replaceOtherNames(write, row.id, otherNames),
+  );
 }
 
 /**
@@ -114,22 +113,15 @@ export async function updateDeity(
  */
 export async function deleteDeity(session: Session, id: string): Promise<void> {
   assertCurator(session);
-  const deity = await liveRow(DEITIES, id);
   // Read through the compendium's own filter on the pick, which `ingredient_deities_deity_id_idx` answers.
-  await refuseWhileHeld(
-    { deityIds: [deity.id] },
-    {
+  await deleteCurated(session, DEITIES, id, (deity) => ({
+    filter: { deityIds: [deity.id] },
+    wording: {
       name: deity.name,
       holding: 'is among the deities of',
       remedy: (count) => `Take it off ${plural(count, 'its', 'their')} deities first.`,
     },
-  );
-
-  await withAudit(session, async (write) => {
-    const [row] = await write.softDeleteByIds(deities, [id]);
-    if (!row) throw new NotFound('No such deity');
-  });
-  expireCompendium();
+  }));
 }
 
 /** Each deity's live other names, alphabetically, in the order of `ids`: an empty list for a deity with none. Public, so no session. */

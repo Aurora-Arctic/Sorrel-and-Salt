@@ -1,10 +1,5 @@
 import 'server-only';
-import {
-  findAstrologyValueCount,
-  findAstrologyValues,
-  findOneBySlug,
-  withAudit,
-} from '../../../db/repository';
+import { findAstrologyValueCount, findAstrologyValues, withAudit } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
@@ -20,8 +15,13 @@ import {
   ZodiacSignInput,
 } from '../validation/astrology-value';
 import { readableFilter } from './curated-lists';
-import { liveRow, refuseSlugCollision } from './curated-writes';
-import { refuseWhileHeld } from './held-entries';
+import {
+  bySlug,
+  createCurated,
+  deleteCurated,
+  liveRow,
+  refuseSlugCollision,
+} from './curated-writes';
 import type { AstrologyValueFilter, AstrologyValueRow, CuratedField } from '../types';
 
 const VOCABULARY = {
@@ -80,9 +80,7 @@ export async function getAstrologyValueBySlug(
   field: CuratedField,
   slug: string,
 ): Promise<AstrologyValueRow> {
-  const row = await findOneBySlug(VOCABULARY[field].table, slug);
-  if (!row) throw new NotFound(`No such ${VOCABULARY[field].noun}`);
-  return row;
+  return bySlug<AstrologyTable>(VOCABULARY[field], slug);
 }
 
 /**
@@ -97,14 +95,7 @@ export async function createAstrologyValue(
   assertCurator(session);
   const vocabulary = VOCABULARY[field];
   const fields = parseInput(vocabulary.input, input);
-  const slug = slugify(fields.name);
-
-  const written = await withAudit(session, async (write) => {
-    const [row] = await write.insert(vocabulary.table, { ...fields, slug });
-    return row;
-  }).catch((error: unknown) => refuseSlugCollision(vocabulary, error, slug));
-  expireCompendium();
-  return written;
+  return createCurated<AstrologyTable>(session, vocabulary, fields, slugify(fields.name));
 }
 
 /**
@@ -152,16 +143,13 @@ export async function deleteAstrologyValue(
 ): Promise<void> {
   assertCurator(session);
   const vocabulary = VOCABULARY[field];
-  const row = await liveRow<AstrologyTable>(vocabulary, id);
-  await refuseWhileHeld(vocabulary.holding(row.name), {
-    name: row.name,
-    holding: `is among the ${vocabulary.listNoun} of`,
-    remedy: (count) => `Take it off ${plural(count, 'its', 'their')} ${vocabulary.listNoun} first.`,
-  });
-
-  await withAudit(session, async (write) => {
-    const [deleted] = await write.softDeleteByIds(vocabulary.table, [id]);
-    if (!deleted) throw new NotFound(`No such ${vocabulary.noun}`);
-  });
-  expireCompendium();
+  await deleteCurated<AstrologyTable>(session, vocabulary, id, (row) => ({
+    filter: vocabulary.holding(row.name),
+    wording: {
+      name: row.name,
+      holding: `is among the ${vocabulary.listNoun} of`,
+      remedy: (count) =>
+        `Take it off ${plural(count, 'its', 'their')} ${vocabulary.listNoun} first.`,
+    },
+  }));
 }

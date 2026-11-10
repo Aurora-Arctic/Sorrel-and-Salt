@@ -1,6 +1,7 @@
 import 'server-only';
 import { findCuratedRowsByIds, findCuratedRowsByName } from '../../../db/repository';
 import { inIdOrder } from '../../../lib/in-id-order';
+import { fold } from '../../../lib/text';
 import { celestialBodies, zodiacSigns } from '../schema/astrology';
 import { deities } from '../schema/deities';
 import { ingredientForms } from '../schema/ingredient-forms';
@@ -10,9 +11,7 @@ const VOCABULARY_OF = { celestialBodies, zodiacSigns } satisfies Record<CuratedF
 
 const PICKED_FROM = { form: ingredientForms, deities } satisfies Record<PickedField, unknown>;
 
-export function foldVocabularyValue(value: string): string {
-  return value.trim().toLowerCase();
-}
+export const foldVocabularyValue = fold;
 
 /**
  * The live curated spelling each of `values` folds to, keyed by the fold, for the ingredient field `field`; a value no live row curates is absent.

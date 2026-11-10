@@ -1,13 +1,6 @@
 import 'server-only';
-import {
-  findDeityPage,
-  findGroupCount,
-  findGroupPage,
-  findOneBySlug,
-  withAudit,
-} from '../../../db/repository';
+import { findDeityPage, findGroupCount, findGroupPage } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound } from '../../../lib/errors';
 import { allPages } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { deitySlug, slugify } from '../../../lib/slugify';
@@ -16,7 +9,7 @@ import { parseInput } from '../../../lib/validation';
 import { assertCurator } from '@/modules/identity';
 import { deities, deityTraditions } from '../schema/deities';
 import { DeityTraditionInput } from '../validation/deity-tradition';
-import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
+import { bySlug, createCurated, deleteGroup, updateGroup } from './curated-writes';
 import type { CuratedGroup, DeityTraditionRow, GroupFilter } from '../types';
 
 // A rename or delete re-slugs the deities (claude-docs/db/deity-vocabulary.md, "Deity tradition service details").
@@ -55,9 +48,7 @@ export function countDeityTraditions(
  * @throws {NotFound} no live tradition holds the slug.
  */
 export async function getDeityTraditionBySlug(slug: string): Promise<DeityTraditionRow> {
-  const row = await findOneBySlug(deityTraditions, slug);
-  if (!row) throw new NotFound('No such tradition');
-  return row;
+  return bySlug(TRADITIONS, slug);
 }
 
 /**
@@ -70,14 +61,7 @@ export async function createDeityTradition(
 ): Promise<DeityTraditionRow> {
   assertCurator(session);
   const fields = parseInput(DeityTraditionInput, input);
-  const slug = slugify(fields.name);
-
-  const written = await withAudit(session, async (write) => {
-    const [row] = await write.insert(deityTraditions, { ...fields, slug });
-    return row;
-  }).catch((error: unknown) => refuseSlugCollision(TRADITIONS, error, slug));
-  expireCompendium();
-  return written;
+  return createCurated(session, TRADITIONS, fields, slugify(fields.name));
 }
 
 /**

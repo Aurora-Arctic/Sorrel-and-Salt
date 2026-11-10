@@ -1,11 +1,14 @@
 import 'server-only';
 import { findOneById, findOneBySlug, withAudit } from '../../../db/repository';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import type { AuditWriter, IngredientFilter } from '../../../db/repository';
+import { expireCompendium } from '../../../lib/compendium-cache';
+import { NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
 import { addressTaken, plural } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId, parseInput } from '../../../lib/validation';
+import { isRowId, parseInput } from '../../../lib/validation';
+import { refuseWhileHeld } from './held-entries';
 import { refusal, refuseCollidingMoves } from './group-moves';
 import type { ZodType, z } from 'zod';
 import type {
@@ -14,6 +17,7 @@ import type {
   CuratedVocabulary,
   GroupMove,
   GroupTable,
+  HeldWording,
   MovedRows,
 } from '../types';
 
@@ -28,16 +32,14 @@ export async function refuseSlugCollision(
 ): Promise<never> {
   if (violatedUniqueIndex(error) !== vocabulary.slugIndex) throw error;
   const holder = await findOneBySlug(vocabulary.table, slug);
-  throw new ValidationError([
-    {
-      path: ['name'],
-      message: addressTaken(
-        holder ? `"${holder.name}"` : `Another ${vocabulary.noun}`,
-        slug,
-        `choose another name${vocabulary.addressHint ?? ''}`,
-      ),
-    },
-  ]);
+  throw fieldRefusal(
+    'name',
+    addressTaken(
+      holder ? `"${holder.name}"` : `Another ${vocabulary.noun}`,
+      slug,
+      `choose another name${vocabulary.addressHint ?? ''}`,
+    ),
+  );
 }
 
 /**
@@ -47,9 +49,74 @@ export async function liveRow<TTable extends CuratedTable>(
   vocabulary: CuratedVocabulary<TTable>,
   id: string,
 ): Promise<TTable['$inferSelect']> {
-  const row = RowId.safeParse(id).success ? await findOneById(vocabulary.table, id) : undefined;
+  const row = isRowId(id) ? await findOneById(vocabulary.table, id) : undefined;
   if (!row) throw new NotFound(`No such ${vocabulary.noun}`);
   return row;
+}
+
+/**
+ * @throws {NotFound} no live row holds the slug.
+ */
+export async function bySlug<TTable extends CuratedTable>(
+  vocabulary: CuratedVocabulary<TTable>,
+  slug: string,
+): Promise<TTable['$inferSelect']> {
+  const row = await findOneBySlug(vocabulary.table, slug);
+  if (!row) throw new NotFound(`No such ${vocabulary.noun}`);
+  return row;
+}
+
+/**
+ * Inserts a row under the slug its name gave and expires the compendium cache; `alsoWrite` adds to the same transaction. The caller has
+ * checked the curator and parsed the input.
+ *
+ * @throws {ValidationError} the slug is a live row's, on `name`.
+ */
+export async function createCurated<TTable extends CuratedTable>(
+  session: Session,
+  vocabulary: CuratedVocabulary<TTable>,
+  fields: object,
+  slug: string,
+  alsoWrite?: (write: AuditWriter, row: TTable['$inferSelect']) => Promise<void>,
+): Promise<TTable['$inferSelect']> {
+  const written = await withAudit(session, async (write) => {
+    // Widened to the curated tables, as the writer cannot type a write to a generic table; narrowed back on return.
+    const [row] = (await write.insert(
+      vocabulary.table as CuratedTable,
+      {
+        ...fields,
+        slug,
+      } as CuratedTable['$inferInsert'],
+    )) as TTable['$inferSelect'][];
+    await alsoWrite?.(write, row);
+    return row;
+  }).catch((error: unknown) => refuseSlugCollision(vocabulary, error, slug));
+  expireCompendium();
+  return written;
+}
+
+/**
+ * Soft-deletes a row that no live compendium entry holds, as `held` reads the entries holding it, and expires the compendium cache.
+ * The caller has checked the curator.
+ *
+ * @throws {Forbidden} a live entry holds the row.
+ * @throws {NotFound} no live row has this id.
+ */
+export async function deleteCurated<TTable extends CuratedTable>(
+  session: Session,
+  vocabulary: CuratedVocabulary<TTable>,
+  id: string,
+  held: (row: TTable['$inferSelect']) => { filter: IngredientFilter; wording: HeldWording },
+): Promise<void> {
+  const row = await liveRow(vocabulary, id);
+  const { filter, wording } = held(row);
+  await refuseWhileHeld(filter, wording);
+
+  await withAudit(session, async (write) => {
+    const [deleted] = await write.softDeleteByIds(vocabulary.table as CuratedTable, [id]);
+    if (!deleted) throw new NotFound(`No such ${vocabulary.noun}`);
+  });
+  expireCompendium();
 }
 
 export async function parseUnderLiveParent<
@@ -63,7 +130,7 @@ export async function parseUnderLiveParent<
   const fields = parseInput(schema, input);
   const row = await findOneById(parent.table, fields[parent.column]);
   if (!row) {
-    throw new ValidationError([{ path: [parent.column], message: parent.refusal }]);
+    throw fieldRefusal(parent.column, parent.refusal);
   }
   return { fields, parent: row };
 }
@@ -76,18 +143,12 @@ export async function moveTarget<TTable extends GroupTable>(
 ): Promise<TTable['$inferSelect']> {
   const them = `${count} ${plural(count, group.members.noun, group.members.nouns)}`;
   if (moveTo === undefined) {
-    throw new ValidationError([
-      { path: ['moveTo'], message: `Choose a ${group.noun} to move its ${them} to` },
-    ]);
+    throw fieldRefusal('moveTo', `Choose a ${group.noun} to move its ${them} to`);
   }
   const target =
-    moveTo !== id && RowId.safeParse(moveTo).success
-      ? await findOneById(group.table, moveTo)
-      : undefined;
+    moveTo !== id && isRowId(moveTo) ? await findOneById(group.table, moveTo) : undefined;
   if (!target) {
-    throw new ValidationError([
-      { path: ['moveTo'], message: `Choose another live ${group.noun} to move its ${them} to` },
-    ]);
+    throw fieldRefusal('moveTo', `Choose another live ${group.noun} to move its ${them} to`);
   }
   return target;
 }
