@@ -1,15 +1,15 @@
-import { type FieldFormat, tidy } from '../../lib/formats';
+import { type FieldFormat, tidy, trimEnds } from '../../lib/formats';
 import type { TextControlProps } from './types';
 
 // What the react-hook-form TextField and the plain-state PlainTextField share, so the two cannot drift
 // (claude-docs/components/field.md, "Text fields").
 
-/** The blur format: the caller's, else `tidy` for a single line, else none (a multiline field keeps its line breaks). */
+/** The blur format: the caller's, else `tidy` for a single line, else `trimEnds` for multiline text (which keeps its line breaks). */
 export const blurFormat = ({
   format,
   multiline,
 }: Pick<TextControlProps, 'format' | 'multiline'>): FieldFormat | undefined =>
-  format ?? (multiline ? undefined : tidy);
+  format ?? (multiline ? trimEnds : tidy);
 
 const IDENTIFIER_TYPES = new Set(['email', 'url', 'tel']);
 

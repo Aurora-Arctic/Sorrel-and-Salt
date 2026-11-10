@@ -208,4 +208,19 @@ describe('CupboardEntryForm', () => {
     fireEvent.blur(description);
     expect(description).toHaveValue('One\n\nTwo');
   });
+
+  it('trims the ends of a description and safety notes when they are left', () => {
+    captureSaves();
+    renderForm();
+
+    const description = screen.getByRole('textbox', { name: 'Description' });
+    typeIn(description, 'One  \n\nTwo   \n\n  ');
+    fireEvent.blur(description);
+    expect(description).toHaveValue('One  \n\nTwo');
+
+    const notes = screen.getByRole('textbox', { name: 'Safety Notes' });
+    typeIn(notes, '  Keep dry \n');
+    fireEvent.blur(notes);
+    expect(notes).toHaveValue('Keep dry');
+  });
 });

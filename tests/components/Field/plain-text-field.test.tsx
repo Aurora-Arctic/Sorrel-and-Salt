@@ -22,7 +22,7 @@ describe('PlainTextField', () => {
     await type('Sage');
     expect(box().value).toBe('Sage');
   });
-  it('tidies on blur by default when single-line, and not when multiline', async () => {
+  it('tidies on blur by default when single-line, and trims only the ends when multiline', async () => {
     const { unmount } = render(<Host />);
     await type('  a   b ');
     await act(async () => {
@@ -37,7 +37,7 @@ describe('PlainTextField', () => {
       box().focus();
       box().blur();
     });
-    expect(box().value).toBe('  a   b ');
+    expect(box().value).toBe('a   b');
   });
   it('uses the format it is given', async () => {
     render(<Host format={(t) => t.toUpperCase()} />);

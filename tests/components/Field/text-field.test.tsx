@@ -40,10 +40,10 @@ describe('a single-line TextField tidies on blur by default', () => {
     await typeAndLeave('  sage ');
     expect(box().value).toBe('  SAGE ');
   });
-  it('leaves a multiline field as typed', async () => {
+  it('trims only the ends of a multiline field, keeping its spacing', async () => {
     render(<Form multiline />);
     await typeAndLeave('One   two\n\nthree ');
-    expect(box().value).toBe('One   two\n\nthree ');
+    expect(box().value).toBe('One   two\n\nthree');
   });
 });
 

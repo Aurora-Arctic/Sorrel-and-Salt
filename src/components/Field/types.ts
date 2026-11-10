@@ -69,7 +69,7 @@ export interface TextControlProps extends FieldProps {
   disabled?: boolean;
   /**
    * Tidies the text when the person leaves the field. A single-line field defaults to `tidy`
-   * (src/lib/formats.ts); a multiline one to none. The server schema runs the same function.
+   * (src/lib/formats.ts); a multiline one to `trimEnds`. The server schema runs the same function.
    */
   format?: (text: string) => string;
   /**
