@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import {
@@ -8,6 +8,7 @@ import {
   pointTo,
   setReadyState,
   stubIdle,
+  waitForLoads,
   watchLoads,
 } from '../../support/preload';
 
@@ -47,7 +48,7 @@ describe('Record a Working on a spell card, before its dialog opens', () => {
     expect(loaded()).toEqual([]);
 
     idle.runIdle();
-    await waitFor(() => expect(loaded()).toEqual(expect.arrayContaining(['react-day-picker'])));
+    await waitForLoads(loaded, expect.arrayContaining(['react-day-picker']));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
@@ -63,7 +64,7 @@ describe('Record a Working on a spell card, before its dialog opens', () => {
     expect(loaded()).toEqual([]);
 
     intend(record);
-    await waitFor(() => expect(loaded()).toEqual(expect.arrayContaining(['react-day-picker'])));
+    await waitForLoads(loaded, expect.arrayContaining(['react-day-picker']));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
-import { act, fireEvent } from '@testing-library/react';
-import { onTestFinished, vi } from 'vitest';
+import { act, fireEvent, waitFor } from '@testing-library/react';
+import { expect, onTestFinished, vi } from 'vitest';
 
 // What a preloading test needs: control over when the page counts as loaded and idle, the three intents a
 // person shows towards a control, and a count of which deferred modules have been evaluated.
@@ -106,4 +106,12 @@ export function watchLoads(specifiers: readonly string[]): () => string[] {
     for (const specifier of specifiers) vi.doUnmock(specifier);
   });
   return () => [...loaded];
+}
+
+/**
+ * Waits until the watched loads equal `expected`. A deferred module passes through Vite's transform before
+ * it is asked for, which a full coverage run can hold up past `waitFor`'s one-second default.
+ */
+export async function waitForLoads(loaded: () => string[], expected: unknown): Promise<void> {
+  await waitFor(() => expect(loaded()).toEqual(expected), { timeout: 10_000 });
 }

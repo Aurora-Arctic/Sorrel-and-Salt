@@ -1,6 +1,6 @@
 import type { Route } from 'next';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { CompendiumCardPlace } from '@/components/CompendiumCards/types';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -10,6 +10,7 @@ import {
   pointTo,
   setReadyState,
   stubIdle,
+  waitForLoads,
   watchLoads,
 } from '../../support/preload';
 
@@ -67,7 +68,7 @@ describe('a compendium card’s More, before its menu opens', () => {
     expect(loaded()).toEqual([]);
 
     idle.runIdle();
-    await waitFor(() => expect(loaded()).toEqual(COVEN_CHOICE));
+    await waitForLoads(loaded, COVEN_CHOICE);
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
@@ -83,7 +84,7 @@ describe('a compendium card’s More, before its menu opens', () => {
     expect(loaded()).toEqual([]);
 
     intend(more);
-    await waitFor(() => expect(loaded()).toEqual(COVEN_CHOICE));
+    await waitForLoads(loaded, COVEN_CHOICE);
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
