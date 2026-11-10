@@ -16,7 +16,8 @@ import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
 import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId } from '../../../lib/validation';
+import { isRowId } from '../../../lib/validation';
+import { assertRowId } from './messages';
 import { ingredients } from '../schema/ingredients';
 import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientDeities } from '../schema/ingredient-deities';
@@ -178,7 +179,7 @@ export async function softDeleteIngredient(
   missing: string,
   remove: (write: AuditWriter) => Promise<readonly unknown[]>,
 ): Promise<void> {
-  if (!RowId.safeParse(id).success) throw new NotFound(missing);
+  assertRowId(id, missing);
   await withAudit(session, async (write) => {
     const [row] = await remove(write);
     if (!row) throw new NotFound(missing);
@@ -830,7 +831,7 @@ export async function readPromotedFolkName(
   folkNameId: string,
 ): Promise<{ promoted: { id: string; name: string }; others: string[] }> {
   const notFound = () => new NotFound('No such common name on this ingredient');
-  if (!RowId.safeParse(folkNameId).success) throw notFound();
+  if (!isRowId(folkNameId)) throw notFound();
   const live = await findManyOfIngredients(memberships, ingredientFolkNames, [ingredientId]);
   const promoted = live.find((row) => row.id === folkNameId);
   if (!promoted) throw notFound();

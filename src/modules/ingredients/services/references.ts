@@ -8,8 +8,9 @@ import {
 } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
 import { NotFound, ValidationError } from '../../../lib/errors';
+import { NO_SOURCE, assertRowId } from './messages';
 import type { Session } from '../../../lib/session';
-import { RowId, parseInput } from '../../../lib/validation';
+import { parseInput } from '../../../lib/validation';
 import { references } from '../schema/references';
 import { CompendiumFilter } from '../validation/compendium-filter';
 import { ReferenceInput } from '../validation/reference';
@@ -104,14 +105,14 @@ export async function updateReference(
   const values = { ...NOTHING, ...parseInput(ReferenceInput, input) };
   if ('membership' in proof) refuseScholarlyInCoven(values);
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
-  if (!RowId.safeParse(id).success) throw new NotFound('No such source');
+  assertRowId(id, NO_SOURCE);
 
   const written = await withAudit(session, async (write) => {
     const [row] =
       'curator' in proof
         ? await write.updateByIdInCompendium(proof.curator, references, id, values)
         : await write.updateByIdInWorkspace(proof.membership, references, id, values);
-    if (!row) throw new NotFound('No such source');
+    if (!row) throw new NotFound(NO_SOURCE);
     return row;
   });
   // A coven's reference is in no cached read.
@@ -132,9 +133,9 @@ export async function getReference(
 ): Promise<ReferenceRow> {
   const memberships = await readersOf(session, workspaceId, { ingredient: ['read'] });
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
-  if (!RowId.safeParse(id).success) throw new NotFound('No such source');
+  assertRowId(id, NO_SOURCE);
   const [row] = await findManyReferences(memberships, [id]);
-  if (!row) throw new NotFound('No such source');
+  if (!row) throw new NotFound(NO_SOURCE);
   return row;
 }
 

@@ -19,7 +19,7 @@ import { NO_COMPENDIUM_ENTRY, assertRowId } from './messages';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId, parseInput } from '../../../lib/validation';
+import { isRowId, parseInput } from '../../../lib/validation';
 import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { ingredientVariants } from '../schema/ingredient-variants';
 import { ingredients } from '../schema/ingredients';
@@ -79,7 +79,7 @@ export async function heldCompendiumEntry(
   ingredientId: string,
 ): Promise<{ entry: IngredientRow; cupboardEntry: CupboardEntryRow } | undefined> {
   // An id that is not a uuid names nothing and would be a driver error at the comparison.
-  if (!RowId.safeParse(ingredientId).success) return undefined;
+  if (!isRowId(ingredientId)) return undefined;
   return findCupboardEntryIncludingSoftDeleted(membership, ingredientId);
 }
 
@@ -96,7 +96,7 @@ export async function getCupboardEntry(
 ): Promise<CupboardEntryRow | null> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
   // An id that is not a uuid names nothing and would be a driver error at the comparison.
-  if (!RowId.safeParse(ingredientId).success) return null;
+  if (!isRowId(ingredientId)) return null;
   return (await findCupboardEntry(membership, ingredientId)) ?? null;
 }
 

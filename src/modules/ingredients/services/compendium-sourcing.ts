@@ -3,7 +3,7 @@ import { findCompendiumReview, findOneIngredient } from '../../../db/repository'
 import { Forbidden, NotFound } from '../../../lib/errors';
 import { NO_COMPENDIUM_ENTRY } from './messages';
 import type { Session } from '../../../lib/session';
-import { RowId } from '../../../lib/validation';
+import { isRowId } from '../../../lib/validation';
 import { referencesOf, referencesOfVariants, variantsOf } from './ingredient-children';
 import { sourcingScore } from './sourcing-score';
 import type { SourcingChildren, SourcingScore } from '../types';
@@ -38,7 +38,7 @@ export async function readSourcingScore(
   children: SourcingChildren = childrenFor(session),
 ): Promise<SourcingScore> {
   const curator = assertCurator(session);
-  const review = RowId.safeParse(id).success ? await findCompendiumReview(curator, id) : undefined;
+  const review = isRowId(id) ? await findCompendiumReview(curator, id) : undefined;
   const entry = review && (await findOneIngredient([], id));
   if (!review || !entry) throw new NotFound(NO_COMPENDIUM_ENTRY);
   const [references, variants] = await Promise.all([
