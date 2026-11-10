@@ -14,7 +14,7 @@
 
 ### The opened request
 
-- **Left column** holds the facts, Issue, thread and reply form; **the right column, Request Settings, is a keeper's alone**: Assignee, Shared With Curators and Time-Out. The dialog is shared with the sender's page: `facts.tsx` and `thread.tsx` and the `support-detail` rules are reused by [`support-sender-request.md`](support-sender-request.md).
+- **Left column** holds the facts (From, Sent, Page, Error with the reference and its Copy button, and Error Details, the error's name and message, on a row of its own when the request has them), Issue, thread and reply form; **the right column, Request Settings, is a keeper's alone**: Assignee, Shared With Curators and Time-Out. The dialog is shared with the sender's page: `facts.tsx` and `thread.tsx` and the `support-detail` rules are reused by [`support-sender-request.md`](support-sender-request.md).
 - **From and Page take a row of their own** (`support-detail__fact--wide`), so a long path never sits beside a date. The crash reference is staff only.
 - **Resolved reads "by the sender"** when `resolved_by` is the request's sender (`resolvedBySender`).
 - **Internal Note is the opening mode**, so a reply is always chosen. A note goes through `addSupportInternalNote`, which takes no notifier, so no email is sent and senders never receive it.

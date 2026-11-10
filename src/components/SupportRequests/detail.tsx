@@ -5,7 +5,7 @@ import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../ConfirmedAction';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
-import Spinner from '../Spinner';
+import { ComboboxSelect } from '../Combobox/select';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import IssuePanel from './issue-panel';
@@ -51,6 +51,15 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
   const assign = useSupportAction();
   const visible = useSupportAction();
   const { aria, ...assignField } = fieldDescription({ id: useId() });
+  const current = request.assignee;
+  // An assignee paused since the assignment stays listed, chosen and not choosable again.
+  const assigneeChoices = [
+    { value: '', label: 'Unassigned' },
+    ...assignees.map((person) => ({ value: person.id, label: person.name })),
+    ...(current?.paused && !assignees.some((person) => person.id === current.id)
+      ? [{ value: current.id, label: current.name, disabled: true, note: 'Paused' }]
+      : []),
+  ];
   const failure = assign.failure.alert ?? visible.failure.alert;
 
   return (
@@ -61,6 +70,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
           path={request.path}
           errorCode={request.errorCode}
           errorReference={request.errorReference}
+          errorDetail={request.errorDetail}
           lead={
             !request.anonymised && (
               <div className="support-detail__fact--wide">
@@ -173,35 +183,27 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
       {edits && (
         <aside className="support-detail__side" aria-label="Request Settings">
           <FieldShell label="Assignee" {...assignField}>
-            <span className="field__control">
-              <select
-                id={assignField.controlId}
-                className="select"
-                {...aria}
-                value={request.assignee?.id ?? ''}
-                aria-busy={assign.busy || undefined}
-                disabled={assign.busy}
-                onChange={(event) => {
-                  if (assign.busy) return;
-                  void assign.run(
-                    () =>
-                      graphqlRequest(AssignDocument, {
-                        id: request.id,
-                        assigneeId: event.target.value || null,
-                      }),
-                    event.target.value ? 'Request assigned.' : 'Request unassigned.',
-                  );
-                }}
-              >
-                <option value="">Unassigned</option>
-                {assignees.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {person.name}
-                  </option>
-                ))}
-              </select>
-              {assign.busy && <Spinner className="field__busy" />}
-            </span>
+            <ComboboxSelect
+              id={assignField.controlId}
+              label="Assignee"
+              labelId={assignField.labelId}
+              aria-describedby={aria['aria-describedby']}
+              value={request.assignee?.id ?? ''}
+              busy={assign.busy}
+              disabled={assign.busy}
+              choices={assigneeChoices}
+              onChange={(picked) => {
+                if (assign.busy) return;
+                void assign.run(
+                  () =>
+                    graphqlRequest(AssignDocument, {
+                      id: request.id,
+                      assigneeId: picked || null,
+                    }),
+                  picked ? 'Request assigned.' : 'Request unassigned.',
+                );
+              }}
+            />
           </FieldShell>
           <SwitchField
             label="Shared With Curators"

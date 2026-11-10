@@ -19,3 +19,9 @@ export interface SlotEnv {
   TEST_PARALLEL_INDEX?: string;
   [key: string]: string | undefined;
 }
+
+/** The clock the reclone's warm-up reads and sleeps on; a test passes a fake one. */
+export interface WarmUpClock {
+  now: () => number;
+  sleep: (ms: number) => Promise<void>;
+}

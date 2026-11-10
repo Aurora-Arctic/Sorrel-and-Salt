@@ -31,6 +31,8 @@ interface SeedRequest {
   errorCode?: number;
   /** The error page's digest. */
   errorReference?: string;
+  /** The error's name and message, as the bug form sent it. */
+  errorDetail?: string;
   assignedTo?: string;
   /** Shared with the curators. */
   curatorVisible?: boolean;
@@ -174,6 +176,8 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     path: '/coven/whitethorn-coven/grimoire',
     errorCode: 500,
     errorReference: '994764113',
+    errorDetail:
+      'Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details.',
     daysAgo: 1.1,
   },
   {
@@ -521,6 +525,7 @@ export async function seedSupportRequests(tx: SeedTransaction): Promise<void> {
       path: r.path,
       errorCode: r.errorCode ?? null,
       errorReference: r.errorReference ?? null,
+      errorDetail: r.errorDetail ?? null,
       status: r.closed
         ? ('closed' as const)
         : r.waiting

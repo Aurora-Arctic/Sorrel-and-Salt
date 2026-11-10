@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, isNotNull, like, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNotNull, like, not, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { accounts, passkeys, verifications } from '../../modules/identity/schema/auth';
@@ -82,6 +82,22 @@ export async function findProvidersOfUsers(
     selectFrom(accounts, and(notSoftDeleted(accounts), inArray(accounts.userId, [...userIds]))),
   );
   return rows.map(({ userId, providerId }) => ({ userId, providerId }));
+}
+
+/** Which of the given users hold at least one passkey, each named once. */
+export async function findPasskeyHoldersAmong(
+  _admin: SiteAdmin,
+  userIds: readonly string[],
+): Promise<string[]> {
+  // `passkeys` carries no `deleted_at`, so the filter adds nothing today.
+  const rows = await whenIds(userIds, () =>
+    selectFrom(passkeys, and(notSoftDeleted(passkeys), inArray(passkeys.userId, [...userIds])), {
+      aggregate: { userId: sql<string>`${passkeys.userId}` },
+      over: {},
+      groupBy: [passkeys.userId],
+    }),
+  );
+  return rows.map((row) => row.userId);
 }
 
 /**
@@ -175,6 +191,7 @@ function userArms({
   role,
   timedOut,
   paused,
+  unpaused,
 }: UserFilter): (SQL | undefined)[] {
   return [
     query ? nameOrEmailHolds(query) : undefined,
@@ -186,6 +203,9 @@ function userArms({
       : undefined,
     paused
       ? existsByKey(userAccessPauses, userAccessPauses.userId, users.id, pauseStands)
+      : undefined,
+    unpaused
+      ? not(existsByKey(userAccessPauses, userAccessPauses.userId, users.id, pauseStands))
       : undefined,
   ];
 }

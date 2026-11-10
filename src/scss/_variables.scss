@@ -523,8 +523,10 @@ $stock-out-ink: badge-token('out-of-stock', 'fg');
 // the named families behind them do not actually rescue a render outside the
 // root layout — claude-docs/styling.md, "Known issue". Plain variables, so a
 // component can `@use` this file without _typography.scss's global rules.
-$font-body: var(--font-body), 'Lexend', Arial, Helvetica, sans-serif;
-$font-heading: var(--font-display), 'Cormorant Unicase', Georgia, 'Times New Roman', serif;
+$font-body: var(--font-body), 'Lexend', Verdana, Tahoma, 'Segoe UI', sans-serif;
+$font-heading:
+  var(--font-display), 'Cormorant Unicase', Garamond, 'Palatino Linotype', Palatino, 'Book Antiqua',
+  Georgia, serif;
 
 // No webfont: incidental inline code, and every platform ships a good monospace.
 $font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
@@ -1007,7 +1009,7 @@ $card-skeleton-heights: (
 // with no list named.
 $stack-row-skeleton-heights: (
   'default': 16rem,
-  'users': 32rem,
+  'users': 30.75rem,
   'members': 23.25rem,
   'support': 29.416rem,
   'invitation-cards': 28.25rem,

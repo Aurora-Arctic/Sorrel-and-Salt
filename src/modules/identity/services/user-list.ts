@@ -1,5 +1,10 @@
 import 'server-only';
-import { findProvidersOfUsers, findUserCount, findUserPage } from '../../../db/repository';
+import {
+  findPasskeyHoldersAmong,
+  findProvidersOfUsers,
+  findUserCount,
+  findUserPage,
+} from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import { isSiteAdmin, refuseBatch } from './admin-changes';
 import { assertSiteAdmin } from './site-admin';
@@ -55,4 +60,16 @@ export async function providersOf(
       .map((row) => row.providerId)
       .sort(),
   );
+}
+
+/** A DataLoader's batch: whether each user holds at least one passkey. A site admin's alone, as `providersOf` is. */
+export async function holdsPasskey(
+  session: Session,
+  userIds: readonly string[],
+): Promise<(boolean | Forbidden)[]> {
+  if (!isSiteAdmin(session)) return refuseBatch(userIds, REFUSAL);
+  const holders = new Set(
+    await findPasskeyHoldersAmong(assertSiteAdmin(session, REFUSAL), [...new Set(userIds)]),
+  );
+  return userIds.map((id) => holders.has(id));
 }

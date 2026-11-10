@@ -1009,6 +1009,13 @@
       "when": 1794240005092,
       "tag": "0143_site-invitation-user-role",
       "breakpoints": true
+    },
+    {
+      "idx": 144,
+      "version": "7",
+      "when": 1794295412456,
+      "tag": "0144_support-error-detail",
+      "breakpoints": true
     }
   ]
 }

@@ -89,6 +89,33 @@ describe('SignedOutSupportForm', () => {
     expect(calls[0]!.input.website).toBeUndefined();
   });
 
+  it('shows the error detail read-only and sends it with the error reference', async () => {
+    const calls = recordCalls();
+    const detail = 'TypeError: Testwort is not a function';
+    render(
+      <SignedOutSupportForm path="/broken" errorReference="c0a1b2c3d4e" errorDetail={detail} />,
+    );
+    const shown = screen.getByRole('group', { name: 'Error Details' });
+    expect(shown).toHaveTextContent(detail);
+    expect(within(shown).queryByRole('textbox')).toBeNull();
+    for (const field of screen.getAllByRole('textbox')) expect(field).not.toHaveValue(detail);
+    fillForm();
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input).toMatchObject({ errorReference: 'c0a1b2c3d4e', errorDetail: detail });
+  });
+
+  it('shows no error detail, and sends neither it nor a reference, when none is given', async () => {
+    const calls = recordCalls();
+    render(<SignedOutSupportForm path="/support" />);
+    expect(screen.queryByRole('group', { name: 'Error Details' })).toBeNull();
+    fillForm();
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input).not.toHaveProperty('errorDetail');
+    expect(calls[0]?.input).not.toHaveProperty('errorReference');
+  });
+
   it('says the limit was reached, with the server’s words, and keeps what was written', async () => {
     mockGraphQLError('SendSignedOutSupportRequest', {
       code: 'RATE_LIMITED',

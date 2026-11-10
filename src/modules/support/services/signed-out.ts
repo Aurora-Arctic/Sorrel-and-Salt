@@ -85,6 +85,7 @@ export async function sendSignedOutSupportRequest(
       path: redactPath(values.path),
       errorCode: values.errorCode ?? null,
       errorReference: values.errorReference || null,
+      errorDetail: values.errorDetail || null,
       senderEmail: values.email,
       lastSenderActivityAt: now,
     }),

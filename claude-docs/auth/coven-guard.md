@@ -50,7 +50,8 @@ visitors four ways, all from the server:
   page title and the page asking again cost one query between them.
 - **The layout also names the coven in the page title.** Each page gives its
   own name ('Grimoire'), and the layout's title template adds the coven's:
-  `Grimoire | Whitethorn Coven | Sorrel & Salt`. The template comes from
+  `Grimoire | Whitethorn Coven | Sorrel and Salt`. Titles spell out "and" so that
+  1Password names the saved login from them. The template comes from
   `titleTemplate()` in `src/lib/site.ts`, so " | " is the one separator and no
   page writes the site's name itself (`tests/guards/page-titles.test.ts`).
 

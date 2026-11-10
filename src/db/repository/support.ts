@@ -777,6 +777,7 @@ export function supportWrites({
           subject: ANONYMISED_SUBJECT,
           message: '',
           path: '',
+          errorDetail: null,
           senderEmail: null,
           viewTokenHash: null,
           viewTokenExpiresAt: null,

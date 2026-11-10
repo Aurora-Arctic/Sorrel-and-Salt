@@ -25,11 +25,13 @@
 - **`errorReference` is shown and sent.** With an error number the Page field's note reads "Opened from the Error 500 page, reference abc123. You can change it.", the reference in a `code` element, and it goes as `errorReference`. The service trims it, refuses more than 100 characters, and stores it on
   `support_requests.error_reference`, where the admin request dialog shows it as Error Reference beside the error
   number, with a Copy button.
+- **`errorDetail` is shown read-only and sent.** When the form is given the error's name and message, it shows them as an Error Details group (`ErrorDetails`, `src/components/SupportForm/error-details.tsx`: a label and the text in a `code` element, not a field, so the sender cannot change them) after the Page field, and sends them as `errorDetail`. The service trims it, refuses more than `ERROR_DETAIL_MAX_LENGTH` (500, `src/modules/support/validation/limits.ts`) with `limitMessage`, and stores it on `support_requests.error_detail`, where the staff request dialog shows it as Error Details. Like the reference it is staff-only afterwards: the sender's reads blank it.
 - **Closing asks first while text is typed or the Page differs from its starting value**, through
   `useDiscardGuard`. Cancel and Done exist only when
   `onDone` is given, because a page has nothing to close.
 - **The signed-out form offers five of the seven topics** (Accessibility, Bug, Account & Sign-In, Privacy & Data, Question), with the same labels and hints as this form, from `SUPPORT_ABOUTS`. `SIGNED_OUT_ABOUTS` in `src/modules/support/validation/support.ts` is the service's list; Compendium Entry and Feedback need an account.
 - **The signed-out form checks Send Request the same way**, with Email added between the topic and Subject: an empty or malformed address shows its message on the Email box, and the focus order is topic, Email, Subject, then Message. Both forms take their empty-field messages from `src/lib/support-messages.ts`.
+- **The signed-out form carries the error the same way.** Given `errorReference` and `errorDetail`, it shows the detail through the same `ErrorDetails` group, before Message, and sends both with the request; given neither, it shows and sends neither. It has no Page field, so it does not show the reference or the error number.
 
 ## Support panel
 
@@ -39,7 +41,7 @@ or `SupportForm`. `returnTo` is where Sign In brings the visitor back (the suppo
 
 Both callers put a "Search Help" link to `/help` on its own above the panel, so a reader can look for an answer before writing. The dialog omits it for the unverified notice.
 
-The signed-out state carries the same optional `support` topic as the form state, and passes it to `SignedOutSupportForm` as `about`.
+The signed-out state carries the same optional `support` topic, `errorReference` and `errorDetail` as the form state, and passes them to `SignedOutSupportForm`, the topic as `about`.
 
 ## Support link
 

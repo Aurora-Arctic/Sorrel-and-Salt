@@ -50,7 +50,7 @@ A printed invitation card is bound to no email. When someone opens a card's link
 
 ### Support Requests
 
-A support request keeps what you chose to write (its subject and message), the page you sent it from, the error code if you sent it from an error page, its status, who it is assigned to, and any replies. A request sent without an account keeps the email you gave so that a reply can reach you. A time-out a keeper sets on a requestor is kept as history. Before a request is saved, the page address is cleaned: an invitation code in it is replaced and anything after a "?" is dropped. A curator sees only requests a keeper marked for curators or assigned to them, without the requestor's email or the coven named in the page address. A keeper sees them with the requestor's email.
+A support request keeps what you chose to write (its subject and message), the page you sent it from, the error code if you sent it from an error page, its status, who it is assigned to, and any replies. A request sent from an error page also keeps the reference that page showed and the error's name and message (its error details). A request sent without an account keeps the email you gave so that a reply can reach you. A time-out a keeper sets on a requestor is kept as history. Before a request is saved, the page address is cleaned: an invitation code in it is replaced and anything after a "?" is dropped. A curator sees only requests a keeper marked for curators or assigned to them, without the requestor's email or the coven named in the page address. A keeper sees them with the requestor's email.
 
 ### Time-Outs and Pauses
 
@@ -87,7 +87,7 @@ Most tables use a soft delete: a deleted row is marked with who deleted it and w
 
 It works this way for two reasons: a spell keeps showing what went into it even after one of those ingredients is deleted, and a later version of the site can offer to bring back something deleted by mistake. That second feature does not exist yet.
 
-A support request closes by itself seven days after it is resolved. Twelve months after it closes, a job that runs once a day anonymises it, within a day: its subject is replaced with “Anonymised support request.”, its message, page address and the text of every reply are emptied, and the email and account it was sent from are removed from it. Its topic, status and dates are kept, so the site can still count requests by topic and month.
+A support request closes by itself seven days after it is resolved. Twelve months after it closes, a job that runs once a day anonymises it, within a day: its subject is replaced with “Anonymised support request.”, its message, page address, error details, and the text of every reply are emptied, and the email and account it was sent from are removed from it. Its topic, status and dates are kept, so the site can still count requests by topic and month.
 
 Some rows are removed outright:
 

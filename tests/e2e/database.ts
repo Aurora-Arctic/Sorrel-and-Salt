@@ -2,6 +2,7 @@ import postgres from 'postgres';
 import { cloneDatabase, databaseUrl, dropDatabase, seedTemplate } from '../support/seeded-database';
 import { SESSION_COOKIE, signed } from './session-cookie';
 import { E2E_SLOTS, currentSlot, serverUrl, slotPort } from './slots';
+import type { WarmUpClock } from './types';
 
 // One database per worker slot, read by that slot's server: global-setup.ts clones each from a
 // seeded template, and a db-touching spec file recreates its own in `beforeAll`.
@@ -32,7 +33,8 @@ export async function cloneE2eDatabases(): Promise<void> {
 /**
  * Between spec files: the worker's slot database back to the seeded baseline, and the slot's server told so.
  * `DROP DATABASE ... WITH (FORCE)` kills the server's pooled connections, but it learns of it only on reading
- * each socket's close, so a request landing first fails; bursts of session lookups go out until every one answers 200.
+ * each socket's close, so a request landing first fails; paused bursts of session lookups go out until every one
+ * answers 200, for long enough to cover the pool's reconnect backoff after a connect that failed mid-clone.
  */
 export async function recreateE2eDatabase(): Promise<void> {
   const slot = currentSlot();
@@ -46,15 +48,40 @@ export async function recreateE2eDatabase(): Promise<void> {
     fetch(`${serverUrl(slotPort(slot))}/api/auth/get-session`, {
       headers: { cookie: `${SESSION_COOKIE}=${signed('warm-up', secret)}` },
     }).catch(() => undefined);
-  let statuses: string[] = [];
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const responses = await Promise.all(Array.from({ length: 10 }, request));
+  await untilSessionLookupsAnswer(serverUrl(slotPort(slot)), request);
+}
+
+const REAL_CLOCK: WarmUpClock = {
+  now: () => Date.now(),
+  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+};
+
+// Past postgres's reconnect backoff, which caps at 20 s; the pause lets the backoff run out rather than spend it in bursts.
+const WARM_UP_DEADLINE_MS = 30_000;
+const WARM_UP_PAUSE_MS = 500;
+const WARM_UP_BURST = 10;
+
+/** Bursts of `request`s to `server`, paused between, until a whole burst answers OK; throws at the deadline. */
+export async function untilSessionLookupsAnswer(
+  server: string,
+  request: () => Promise<Response | undefined>,
+  clock: WarmUpClock = REAL_CLOCK,
+): Promise<void> {
+  const started = clock.now();
+  for (;;) {
+    const responses = await Promise.all(Array.from({ length: WARM_UP_BURST }, request));
     if (responses.every((response) => response?.ok)) return;
-    statuses = responses.map((response) => (response ? String(response.status) : 'no response'));
+    const elapsed = clock.now() - started;
+    if (elapsed >= WARM_UP_DEADLINE_MS) {
+      const statuses = responses.map((response) =>
+        response ? String(response.status) : 'no response',
+      );
+      throw new Error(
+        `The slot server at ${server} kept failing session lookups for ${(elapsed / 1000).toFixed(1)} s after the database was recloned. Status codes in the last burst: ${statuses.join(', ')}.`,
+      );
+    }
+    await clock.sleep(WARM_UP_PAUSE_MS);
   }
-  throw new Error(
-    `The slot server at ${serverUrl(slotPort(slot))} kept failing session lookups after the database was recloned. Status codes in the last burst: ${statuses.join(', ')}.`,
-  );
 }
 
 export async function dropE2eTemplate(): Promise<void> {

@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import UserListFilter from './filter';
-import { Mark, ProviderLogo } from './marks';
+import { Mark, SignInMarks } from './marks';
 import UntilMark from './until-mark';
 import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
@@ -117,13 +117,7 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     heading: 'Logins',
     className: 'user-list__fact user-list__mark-column',
     headingClassName: 'user-list__mark-column',
-    cell: (user) => (
-      <span className="user-list__providers">
-        {user.providers.map((id) => (
-          <ProviderLogo key={id} id={id} />
-        ))}
-      </span>
-    ),
+    cell: (user) => <SignInMarks providers={user.providers} hasPasskey={user.hasPasskey} />,
   },
   {
     heading: 'Terms',

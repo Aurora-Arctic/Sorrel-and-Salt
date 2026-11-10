@@ -25,6 +25,7 @@ import {
   listPrivilegeChanges,
   listUsers,
   pauseAdminRoleChanges,
+  holdsPasskey,
   providersOf,
   resumeAdminRoleChanges,
   revokeAdminInvitation,
@@ -131,6 +132,7 @@ const PEOPLE_PAGE: [string, Call][] = [
 const DETAILS: [string, (session: Session) => Promise<unknown[]>][] = [
   ['usersForAdmin', (session) => usersForAdmin(session, [A.id])],
   ['providersOf', (session) => providersOf(session, [A.id])],
+  ['holdsPasskey', (session) => holdsPasskey(session, [A.id])],
   ['membershipsOf, the covens a user is in', (session) => membershipsOf(session, [A.id])],
 ];
 

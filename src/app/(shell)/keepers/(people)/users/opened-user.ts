@@ -5,6 +5,7 @@ import { isRowId } from '@/lib/validation';
 import type { Session } from '@/lib/session';
 import { membershipsOf } from '@/modules/coven';
 import {
+  holdsPasskey,
   isPrimaryAdmin,
   listedOnUserList,
   listUserAccessPauses,
@@ -62,10 +63,11 @@ async function readPausesOf(
 export const readOpenedUser = cache(async (session: Session, raw: string) => {
   if (!isRowId(raw) || !listedOnUserList(raw)) return undefined;
   const id = raw;
-  const [[found], [memberships], [providers], timeouts] = await Promise.all([
+  const [[found], [memberships], [providers], [passkey], timeouts] = await Promise.all([
     usersForAdmin(session, [id]),
     membershipsOf(session, [id]),
     providersOf(session, [id]),
+    holdsPasskey(session, [id]),
     readTimeoutsOf(session, id),
   ]);
   // A keeper's batch answers every slot; a refusal here is the guard's bug.
@@ -73,6 +75,7 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
   if (!found) return undefined;
   const heldMemberships = answerOf(memberships);
   const linkedProviders = answerOf(providers);
+  const hasPasskey = answerOf(passkey);
   const pauses = await readPausesOf(session, id, isPrimaryAdmin(found));
   return {
     heading: userHeading(found),
@@ -85,6 +88,7 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
       primaryAdmin: isPrimaryAdmin(found),
       canCreateWorkspace: found.canCreateWorkspace,
       providers: linkedProviders,
+      hasPasskey,
       createdAt: found.createdAt,
       agreedTermsVersion: found.agreedTermsVersion,
       agreedDisclaimerVersion: found.agreedDisclaimerVersion,
