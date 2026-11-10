@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { CuratorNav } from '../../../components/AdminNav';
+import { CuratorNav } from '@/components/AdminNav';
 import AdminAreaLayout from '@/app/(shell)/_admin/area-layout';
-import { requireCuratorSession } from '../../../lib/request-session';
-import { titleTemplate } from '../../../lib/site';
+import { requireCuratorSession } from '@/lib/request-session';
+import { titleTemplate } from '@/lib/site';
 import type { AdminLayoutProps } from '@/app/(shell)/_admin/types';
 
 // Each page under `/curator` gives its own name ('Celestial Bodies') and this template

@@ -1,5 +1,5 @@
 import { orMissing, orNotFound } from '@/lib/or-not-found';
-import { SHARE_CARD_SIZE, SHARE_CARD_TYPE, entryCardImage } from '../../../../../lib/share-card';
+import { SHARE_CARD_SIZE, SHARE_CARD_TYPE, entryCardImage } from '@/lib/share-card';
 import { readCompendiumShareCard } from '@/modules/ingredients';
 
 // A compendium entry's share card, drawn from the cached public entry read alone, so it is cached under

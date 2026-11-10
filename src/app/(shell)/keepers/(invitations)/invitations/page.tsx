@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
-import AdminInvitations from '../../../../../components/AdminInvitations';
-import { invitationsHref } from '../../../../../components/AdminInvitations/href';
-import { requireAdminSession } from '../../../../../lib/request-session';
-import type { Session } from '../../../../../lib/session';
+import AdminInvitations from '@/components/AdminInvitations';
+import { invitationsHref } from '@/components/AdminInvitations/href';
+import { requireAdminSession } from '@/lib/request-session';
+import type { Session } from '@/lib/session';
 import { countPendingAdminInvitations, listPendingAdminInvitations } from '@/modules/identity';
-import { pagerHrefs } from '../../../../../lib/list-href';
+import { pagerHrefs } from '@/lib/list-href';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { readInvitationsPlace } from './filter';
 import { invitationsLock } from './lock';

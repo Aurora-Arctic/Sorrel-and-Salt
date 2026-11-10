@@ -1,25 +1,25 @@
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
-import PrivilegeLedger from '../../../../../components/PrivilegeLedger';
-import { privilegeLedgerHref } from '../../../../../components/PrivilegeLedger/href';
-import { PRIVILEGES } from '../../../../../components/PrivilegeLedger/privileges';
+import PrivilegeLedger from '@/components/PrivilegeLedger';
+import { privilegeLedgerHref } from '@/components/PrivilegeLedger/href';
+import { PRIVILEGES } from '@/components/PrivilegeLedger/privileges';
 import type {
   LedgerPerson,
   LedgerPrivilege,
   PrivilegeLedgerEntry,
-} from '../../../../../components/PrivilegeLedger/types';
-import { userListHref } from '../../../../../components/UserList/href';
-import { requireAdminSession } from '../../../../../lib/request-session';
-import { oneOf, single } from '../../../../../lib/search-params';
-import type { Session } from '../../../../../lib/session';
+} from '@/components/PrivilegeLedger/types';
+import { userListHref } from '@/components/UserList/href';
+import { requireAdminSession } from '@/lib/request-session';
+import { oneOf, single } from '@/lib/search-params';
+import type { Session } from '@/lib/session';
 import {
   countPrivilegeChanges,
   listPrivilegeChanges,
   listedOnUserList,
   usersForAdmin,
 } from '@/modules/identity';
-import { pagerHrefs } from '../../../../../lib/list-href';
+import { pagerHrefs } from '@/lib/list-href';
 import { readListPlace } from '@/app/(shell)/_admin/list-page';
 import { readNumberedPage } from '@/lib/numbered-page';
 import type { AdminPrivilegeChangesPageProps, PrivilegeChangesSearchParams } from './types';

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import TabbedPage from '../../../../../components/TabbedPage';
-import type { PageTab } from '../../../../../components/TabbedPage/types';
-import { requireCovenMembership } from '../../../../../lib/request-session';
+import TabbedPage from '@/components/TabbedPage';
+import type { PageTab } from '@/components/TabbedPage/types';
+import { requireCovenMembership } from '@/lib/request-session';
 import { covenAccessOf } from '@/lib/coven-access';
 import type { CovenLayoutProps } from '../types';
 import { InvitationsPanelSkeleton, MembersPanelSkeleton } from './skeleton';

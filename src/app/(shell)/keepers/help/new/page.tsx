@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
-import { NewHelpArticleForm } from '../../../../../components/HelpArticleForm';
-import { HelpArticlePage } from '../../../../../components/HelpArticleForm/page';
-import BackLink from '../../../../../components/IngredientEntry/back-link';
-import { requireAdminSession } from '../../../../../lib/request-session';
-import { single } from '../../../../../lib/search-params';
+import { NewHelpArticleForm } from '@/components/HelpArticleForm';
+import { HelpArticlePage } from '@/components/HelpArticleForm/page';
+import BackLink from '@/components/IngredientEntry/back-link';
+import { requireAdminSession } from '@/lib/request-session';
+import { single } from '@/lib/search-params';
 import { helpFormReturn, readHelpFormChoices } from '../form-choices';
 
 export const metadata: Metadata = pageTitle('Add Help Article');

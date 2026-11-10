@@ -1,13 +1,13 @@
 import { displayNamesOf } from '@/modules/identity';
 import { memberRoster } from '@/modules/coven';
-import DeleteWorkspaceButton from '../../../../components/DeleteWorkspaceButton';
-import RenameWorkspaceForm from '../../../../components/RenameWorkspaceForm';
-import LeaveWorkspaceButton from '../../../../components/LeaveWorkspaceButton';
-import type { Successor } from '../../../../components/LeaveWorkspaceButton/types';
-import { requireCovenMembership, requireSession } from '../../../../lib/request-session';
+import DeleteWorkspaceButton from '@/components/DeleteWorkspaceButton';
+import RenameWorkspaceForm from '@/components/RenameWorkspaceForm';
+import LeaveWorkspaceButton from '@/components/LeaveWorkspaceButton';
+import type { Successor } from '@/components/LeaveWorkspaceButton/types';
+import { requireCovenMembership, requireSession } from '@/lib/request-session';
 import { homeAccessOf } from './home-access';
 import type { CovenLayoutParams } from './types';
-import CovenHome from '../../../../components/CovenHome';
+import CovenHome from '@/components/CovenHome';
 
 // The page a coven opens on. The layout's title template does not apply in its own segment, so this
 // titles itself with the coven's name. The guard runs again (claude-docs/auth/coven-guard.md,

@@ -1,6 +1,6 @@
-import { detailsHeading, detailsMarks } from '../../../../../components/IngredientEntry/details';
-import IngredientSummary from '../../../../../components/IngredientEntry/summary';
-import type { IngredientDetailsOpened } from '../../../../../components/IngredientEntry/types';
+import { detailsHeading, detailsMarks } from '@/components/IngredientEntry/details';
+import IngredientSummary from '@/components/IngredientEntry/summary';
+import type { IngredientDetailsOpened } from '@/components/IngredientEntry/types';
 import type { readViewedEntry } from './reads';
 import { stockDialogOf } from '@/app/coven-stock';
 import { covenPath } from '@/lib/coven-path';

@@ -1,8 +1,8 @@
 import 'server-only';
 import type { Route } from 'next';
-import type { CompendiumCardPlace } from '../../../components/CompendiumCards/types';
-import type { StockData } from '../../../components/StockDialog/types';
-import { covenRolesIfSignedIn } from '../../../lib/viewer';
+import type { CompendiumCardPlace } from '@/components/CompendiumCards/types';
+import type { StockData } from '@/components/StockDialog/types';
+import { covenRolesIfSignedIn } from '@/lib/viewer';
 import { covenAccessOf } from '@/lib/coven-access';
 
 // What the cards' three dots and Quick Look offer a signed-in member: each coven they may write in and

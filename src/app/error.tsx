@@ -1,6 +1,6 @@
 'use client';
 
-import { ErrorScreen } from '../components/ErrorScreens';
+import { ErrorScreen } from '@/components/ErrorScreens';
 
 // The boundary for an error thrown while a page renders, with a 500. Next's redirect, `notFound()` and
 // `forbidden()` signals never reach it. Only the digest is shown, as production strips the message and

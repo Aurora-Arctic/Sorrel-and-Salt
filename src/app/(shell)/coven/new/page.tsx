@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import { CREATE_COVEN_LEDE, CREATE_COVEN_TITLE } from './head';
 import { pageTitle } from '@/lib/page-metadata';
 import { getMe } from '@/modules/identity';
-import CreateWorkspaceForm from '../../../../components/CreateWorkspaceForm';
-import ContextRow from '../../../../components/ContextRow';
-import Notice from '../../../../components/Notice';
-import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
-import { requireSession } from '../../../../lib/request-session';
-import { viewerOf } from '../../../../lib/viewer';
+import CreateWorkspaceForm from '@/components/CreateWorkspaceForm';
+import ContextRow from '@/components/ContextRow';
+import Notice from '@/components/Notice';
+import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
+import { requireSession } from '@/lib/request-session';
+import { viewerOf } from '@/lib/viewer';
 import NarrowPanelPage from '@/components/NarrowPanelPage';
 
 export const metadata: Metadata = pageTitle(CREATE_COVEN_TITLE);

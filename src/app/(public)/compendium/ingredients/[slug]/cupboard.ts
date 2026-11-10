@@ -1,15 +1,12 @@
 import 'server-only';
 import type { Route } from 'next';
-import { cupboardFormValues } from '../../../../../components/CupboardEntryForm/entry-values';
-import type { CupboardOverrides } from '../../../../../components/CupboardEntryForm/types';
-import type {
-  CupboardPlace,
-  PublicCupboardProps,
-} from '../../../../../components/IngredientEntry/types';
+import { cupboardFormValues } from '@/components/CupboardEntryForm/entry-values';
+import type { CupboardOverrides } from '@/components/CupboardEntryForm/types';
+import type { CupboardPlace, PublicCupboardProps } from '@/components/IngredientEntry/types';
 import { readEntryStock, stockKey } from '../../../../entry-stock';
-import { getSession } from '../../../../../lib/request-session';
-import { single } from '../../../../../lib/search-params';
-import { covenRolesIfSignedIn, viewerIfSignedIn } from '../../../../../lib/viewer';
+import { getSession } from '@/lib/request-session';
+import { single } from '@/lib/search-params';
+import { covenRolesIfSignedIn, viewerIfSignedIn } from '@/lib/viewer';
 import { covenAccessOf } from '@/lib/coven-access';
 import { getCupboardEntry, type HoldingCoven, type IngredientRow } from '@/modules/ingredients';
 

@@ -8,9 +8,9 @@ import {
   listMySupportRequests,
   repliesForRequests,
 } from '@/modules/support';
-import SupportList from '../../../../../components/SupportList';
-import { requireSession } from '../../../../../lib/request-session';
-import { SUPPORT_LIST_PATH } from '../../../../../lib/support-path';
+import SupportList from '@/components/SupportList';
+import { requireSession } from '@/lib/request-session';
+import { SUPPORT_LIST_PATH } from '@/lib/support-path';
 import { readOpenedRequest } from './reads';
 import type { SupportListPageProps } from './types';
 import PageWithNav from '@/components/PageWithNav';

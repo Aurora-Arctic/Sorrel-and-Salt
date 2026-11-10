@@ -4,10 +4,10 @@ import type {
   EditedGroupedValue,
   GroupedValueGroupChoice,
   GroupedValueKind,
-} from '../../../components/GroupedValueForm/types';
-import type { EditedGroup, GroupChoice, GroupKind } from '../../../components/GroupForm/types';
-import type { ModalHeading } from '../../../components/Modal/types';
-import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
+} from '@/components/GroupedValueForm/types';
+import type { EditedGroup, GroupChoice, GroupKind } from '@/components/GroupForm/types';
+import type { ModalHeading } from '@/components/Modal/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/types';
 import type { GroupFilter } from '@/modules/vocabulary';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 

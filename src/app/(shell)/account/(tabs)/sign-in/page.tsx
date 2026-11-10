@@ -1,24 +1,24 @@
 import { single } from '@/lib/search-params';
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
-import PageNav from '../../../../../components/PageNav';
-import Passkeys from '../../../../../components/Passkeys';
-import PasswordSection from '../../../../../components/PasswordSection';
-import TwoFactorSettings from '../../../../../components/PasswordSection/two-factor';
-import SignInMethods from '../../../../../components/SignInMethods';
+import PageNav from '@/components/PageNav';
+import Passkeys from '@/components/Passkeys';
+import PasswordSection from '@/components/PasswordSection';
+import TwoFactorSettings from '@/components/PasswordSection/two-factor';
+import SignInMethods from '@/components/SignInMethods';
 import {
   accountPasskeys,
   hasPassword,
   linkedAccounts,
   requireSession,
   sessionIsFresh,
-} from '../../../../../lib/request-session';
-import { ACCOUNT_PASSWORD_PATH, linkErrorMessage } from '../../../../../lib/sign-in';
-import { isRosterProvider } from '../../../../../lib/social-providers';
+} from '@/lib/request-session';
+import { ACCOUNT_PASSWORD_PATH, linkErrorMessage } from '@/lib/sign-in';
+import { isRosterProvider } from '@/lib/social-providers';
 // Server-only — see social-providers-config.ts's own header. Only the
 // resulting `configured` ids reach the client component.
 // oxlint-disable-next-line no-restricted-imports
-import { configuredProviders } from '../../../../../lib/social-providers-config';
+import { configuredProviders } from '@/lib/social-providers-config';
 import { getMe } from '@/modules/identity';
 import type { SignInPageProps } from './types';
 import PageWithNav from '@/components/PageWithNav';

@@ -1,4 +1,4 @@
-import type { SITE_INVITATION_PARAM } from '../../../lib/invitation-link';
+import type { SITE_INVITATION_PARAM } from '@/lib/invitation-link';
 
 export interface InvitePageProps {
   params: Promise<{ token: string }>;

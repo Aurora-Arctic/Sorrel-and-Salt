@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import AdminNav from '../../../components/AdminNav';
+import AdminNav from '@/components/AdminNav';
 import AdminAreaLayout from '@/app/(shell)/_admin/area-layout';
 import { countSupportViews } from '@/modules/support';
-import { requireCuratorSession } from '../../../lib/request-session';
-import { titleTemplate } from '../../../lib/site';
+import { requireCuratorSession } from '@/lib/request-session';
+import { titleTemplate } from '@/lib/site';
 import type { AdminLayoutProps } from '@/app/(shell)/_admin/types';
 
 // Each page under `/keepers` gives its own name ('Privilege Changes') and this template

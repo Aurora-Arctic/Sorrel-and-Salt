@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 import { demoNoticeOf } from '@/lib/demo-notice';
-import DemoNotice from '../../../../components/DemoNotice';
-import SectionBody from '../../../../components/SectionBody';
-import ContextRow from '../../../../components/ContextRow';
-import { CovenFactsProvider } from '../../../../components/CovenFacts';
-import CovenNav from '../../../../components/CovenNav';
-import { CovenSwitchProvider } from '../../../../components/CovenSwitchTargets/context';
-import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
-import { requireCovenMembership } from '../../../../lib/request-session';
-import { titleTemplate } from '../../../../lib/site';
-import { viewerOf } from '../../../../lib/viewer';
+import DemoNotice from '@/components/DemoNotice';
+import SectionBody from '@/components/SectionBody';
+import ContextRow from '@/components/ContextRow';
+import { CovenFactsProvider } from '@/components/CovenFacts';
+import CovenNav from '@/components/CovenNav';
+import { CovenSwitchProvider } from '@/components/CovenSwitchTargets/context';
+import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
+import { requireCovenMembership } from '@/lib/request-session';
+import { titleTemplate } from '@/lib/site';
+import { viewerOf } from '@/lib/viewer';
 import { homeAccessOf } from './home-access';
 import type { CovenLayoutParams, CovenLayoutProps } from './types';
 

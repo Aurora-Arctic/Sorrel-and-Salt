@@ -8,13 +8,13 @@ import {
   listReceivedInvitations,
   verificationWaitSeconds,
 } from '@/modules/identity';
-import EmailForm from '../../../../components/EmailForm';
-import NameForm from '../../../../components/NameForm';
-import PageNav from '../../../../components/PageNav';
-import ReceivedInvitations from '../../../../components/ReceivedInvitations';
-import { requireSession } from '../../../../lib/request-session';
-import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH } from '../../../../lib/sign-in';
-import { signedInLanding } from '../../../../lib/landing';
+import EmailForm from '@/components/EmailForm';
+import NameForm from '@/components/NameForm';
+import PageNav from '@/components/PageNav';
+import ReceivedInvitations from '@/components/ReceivedInvitations';
+import { requireSession } from '@/lib/request-session';
+import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH } from '@/lib/sign-in';
+import { signedInLanding } from '@/lib/landing';
 import type { AccountPageProps } from './types';
 import PageWithNav from '@/components/PageWithNav';
 import PanelSection from '@/components/PanelSection';

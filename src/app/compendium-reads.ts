@@ -3,15 +3,15 @@ import { cache } from 'react';
 import type {
   CompendiumCategoryChoice,
   CompendiumListForm,
-} from '../components/CompendiumList/types';
-import { cardCategoryReader } from '../components/CategoryChips/card-categories';
-import type { CardCategory } from '../components/IngredientCard/types';
-import type { SafetyVariant } from '../components/SafetyNote/types';
-import { Forbidden, NotFound } from '../lib/errors';
-import { orMissing } from '../lib/or-not-found';
-import { readNumberedPage } from '../lib/numbered-page';
-import { DEFAULT_PAGE_SIZE, allPages } from '../lib/pagination';
-import type { Session } from '../lib/session';
+} from '@/components/CompendiumList/types';
+import { cardCategoryReader } from '@/components/CategoryChips/card-categories';
+import type { CardCategory } from '@/components/IngredientCard/types';
+import type { SafetyVariant } from '@/components/SafetyNote/types';
+import { Forbidden, NotFound } from '@/lib/errors';
+import { orMissing } from '@/lib/or-not-found';
+import { readNumberedPage } from '@/lib/numbered-page';
+import { DEFAULT_PAGE_SIZE, allPages } from '@/lib/pagination';
+import type { Session } from '@/lib/session';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 import {

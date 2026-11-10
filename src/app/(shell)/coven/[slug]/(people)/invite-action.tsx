@@ -1,5 +1,5 @@
-import InviteDialog from '../../../../../components/InviteDialog';
-import { requireCovenMembership } from '../../../../../lib/request-session';
+import InviteDialog from '@/components/InviteDialog';
+import { requireCovenMembership } from '@/lib/request-session';
 import { covenAccessOf } from '@/lib/coven-access';
 import type { CovenLayoutParams } from '../types';
 

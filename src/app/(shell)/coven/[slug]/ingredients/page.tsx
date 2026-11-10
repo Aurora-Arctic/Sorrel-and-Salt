@@ -4,31 +4,28 @@ import { amountOf } from '@/lib/quantity';
 import { single } from '@/lib/search-params';
 import type { Metadata, Route } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
-import CovenCards from '../../../../../components/CovenCards';
-import { covenCardActions } from '../../../../../components/CovenCards/actions';
-import type { CovenCardEntry } from '../../../../../components/CovenCards/types';
-import { editHeading } from '../../../../../components/CompendiumList/heading';
-import { covenIngredientsHref } from '../../../../../components/CompendiumList/href';
-import type {
-  CovenListDialog,
-  CovenListFilter,
-} from '../../../../../components/CompendiumList/types';
-import { cupboardFormValues } from '../../../../../components/CupboardEntryForm/entry-values';
-import AnnotateDialog from '../../../../../components/IngredientEntry/annotate-dialog';
-import EntryDialog from '../../../../../components/IngredientEntry/entry-dialog';
-import { categoryRefs } from '../../../../../components/IngredientCard/category-refs';
-import { COVEN_PARAMS } from '../../../../../components/IngredientSearch/coven-params';
-import type { JarLine } from '../../../../../components/JarLines/types';
-import DetailsDialog from '../../../../../components/IngredientEntry/details-dialog';
+import CovenCards from '@/components/CovenCards';
+import { covenCardActions } from '@/components/CovenCards/actions';
+import type { CovenCardEntry } from '@/components/CovenCards/types';
+import { editHeading } from '@/components/CompendiumList/heading';
+import { covenIngredientsHref } from '@/components/CompendiumList/href';
+import type { CovenListDialog, CovenListFilter } from '@/components/CompendiumList/types';
+import { cupboardFormValues } from '@/components/CupboardEntryForm/entry-values';
+import AnnotateDialog from '@/components/IngredientEntry/annotate-dialog';
+import EntryDialog from '@/components/IngredientEntry/entry-dialog';
+import { categoryRefs } from '@/components/IngredientCard/category-refs';
+import { COVEN_PARAMS } from '@/components/IngredientSearch/coven-params';
+import type { JarLine } from '@/components/JarLines/types';
+import DetailsDialog from '@/components/IngredientEntry/details-dialog';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
-import { RouteModalProvider } from '../../../../../components/Modal/route-modal-provider';
-import PageHeader from '../../../../../components/PageHeader';
-import { pagerHrefs } from '../../../../../lib/list-href';
-import { readPageCursors } from '../../../../../lib/numbered-page';
-import { requireCovenMembership } from '../../../../../lib/request-session';
+import { RouteModalProvider } from '@/components/Modal/route-modal-provider';
+import PageHeader from '@/components/PageHeader';
+import { pagerHrefs } from '@/lib/list-href';
+import { readPageCursors } from '@/lib/numbered-page';
+import { requireCovenMembership } from '@/lib/request-session';
 import { readCategories, readDeities, readFormIcons } from '../../../../compendium-reads';
-import { detailsHeading } from '../../../../../components/IngredientEntry/details';
+import { detailsHeading } from '@/components/IngredientEntry/details';
 import AddIngredientAction from './add-ingredient-action';
 import { readCovenFacets, readCovenIngredients, readEditedEntry, readViewedEntry } from './reads';
 import { viewedDetailsOf } from './viewed-details';

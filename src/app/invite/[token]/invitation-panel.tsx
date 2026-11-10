@@ -1,20 +1,20 @@
 import { covenPath } from '@/lib/coven-path';
 import type { Route } from 'next';
 import { cache } from 'react';
-import InvitationAcceptance from '../../../components/InvitationAcceptance';
+import InvitationAcceptance from '@/components/InvitationAcceptance';
 import type {
   InvitationAcceptanceProps,
   SignedOutLead,
-} from '../../../components/InvitationAcceptance/types';
-import type { PageHeaderProps } from '../../../components/PageHeader/types';
-import { emailPagePath } from '../../../lib/account-email';
-import { isSiteInvitationMarker } from '../../../lib/invitation-link';
-import { getSession } from '../../../lib/request-session';
-import type { UserRole } from '../../../lib/session';
-import { ADMIN_LANDING, CURATOR_LANDING } from '../../../lib/sign-in';
+} from '@/components/InvitationAcceptance/types';
+import type { PageHeaderProps } from '@/components/PageHeader/types';
+import { emailPagePath } from '@/lib/account-email';
+import { isSiteInvitationMarker } from '@/lib/invitation-link';
+import { getSession } from '@/lib/request-session';
+import type { UserRole } from '@/lib/session';
+import { ADMIN_LANDING, CURATOR_LANDING } from '@/lib/sign-in';
 // Server component, so the env var names this reads never reach the client bundle; only the `configured` ids pass as a prop.
 // oxlint-disable-next-line no-restricted-imports
-import { configuredProviders } from '../../../lib/social-providers-config';
+import { configuredProviders } from '@/lib/social-providers-config';
 import { getMe, invitationStanding, isPlaceholderEmail } from '@/modules/identity';
 
 // Cached so a second render in the request reads once (CLAUDE.md rule 1).

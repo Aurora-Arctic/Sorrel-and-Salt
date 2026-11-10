@@ -1,4 +1,4 @@
-import NotAuthorized from '../../components/NotAuthorized';
+import NotAuthorized from '@/components/NotAuthorized';
 import PageFrame from '@/components/PageFrame';
 
 // What `forbidden()` renders, with a 403. It is in the shell's route group because the `/curator` and `/keepers` layouts

@@ -1,22 +1,22 @@
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { ReactElement } from 'react';
 import { cache } from 'react';
-import type { GroupedValueKind } from '../../../components/GroupedValueForm/types';
-import GroupedValueList from '../../../components/GroupedValueList';
-import { groupedValuesHref } from '../../../components/GroupedValueList/href';
-import { KINDS } from '../../../components/GroupedValueList/kinds';
-import type { GroupedValueListEntry } from '../../../components/GroupedValueList/types';
-import { readNumberedPage } from '../../../lib/numbered-page';
-import { requireCuratorSession } from '../../../lib/request-session';
-import { single } from '../../../lib/search-params';
+import type { GroupedValueKind } from '@/components/GroupedValueForm/types';
+import GroupedValueList from '@/components/GroupedValueList';
+import { groupedValuesHref } from '@/components/GroupedValueList/href';
+import { KINDS } from '@/components/GroupedValueList/kinds';
+import type { GroupedValueListEntry } from '@/components/GroupedValueList/types';
+import { readNumberedPage } from '@/lib/numbered-page';
+import { requireCuratorSession } from '@/lib/request-session';
+import { single } from '@/lib/search-params';
 import { editorStamps } from './editors';
 import AddAction from '@/app/(shell)/_admin/add-action';
-import { pagerHrefs } from '../../../lib/list-href';
+import { pagerHrefs } from '@/lib/list-href';
 import { readEditPlace, readListPlace } from '@/app/(shell)/_admin/list-page';
 import MissingNotice from '@/app/(shell)/_admin/missing-notice';
 import ValueDialog from './value-dialog';
 import { VALUE_KINDS } from './value-kinds';
-import type { ModalHeading } from '../../../components/Modal/types';
+import type { ModalHeading } from '@/components/Modal/types';
 import type { ValueGroupRow, ValuePageProps, ValueRow, ValueSearchParams } from './types';
 
 // One page of the kind under the filter, with "Page X of Y" counted from its

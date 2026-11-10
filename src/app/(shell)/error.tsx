@@ -1,6 +1,6 @@
 'use client';
 
-import { ErrorScreen } from '../../components/ErrorScreens';
+import { ErrorScreen } from '@/components/ErrorScreens';
 
 export default function ShellErrorBoundary({
   error,

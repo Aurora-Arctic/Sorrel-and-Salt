@@ -1,4 +1,4 @@
-import { trimmed } from '../../../../../lib/search-params';
+import { trimmed } from '@/lib/search-params';
 import { readListPlace } from '@/app/(shell)/_admin/list-page';
 import type { InvitationsPlace, InvitationsSearchParams } from './types';
 

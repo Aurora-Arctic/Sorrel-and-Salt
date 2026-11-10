@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import { noIndexMetadata } from '@/lib/page-metadata';
 import { redirect } from 'next/navigation';
-import PageHeader from '../../components/PageHeader';
-import SupportLink from '../../components/SupportLink';
-import { getShellSession } from '../../lib/request-session';
-import { SUPPORT_LIST_PATH } from '../../lib/support-path';
-import LocalTime from '../../components/LocalTime';
-import { getMySupportTimeout } from '../../modules/support';
+import PageHeader from '@/components/PageHeader';
+import SupportLink from '@/components/SupportLink';
+import { getShellSession } from '@/lib/request-session';
+import { SUPPORT_LIST_PATH } from '@/lib/support-path';
+import LocalTime from '@/components/LocalTime';
+import { getMySupportTimeout } from '@/modules/support';
 import PageFrame from '@/components/PageFrame';
 import { PendingLink } from '@/lib/navigation';
 

@@ -1,6 +1,6 @@
-import { pageTitleOf } from '../components/IngredientEntry/page-title';
-import { describe } from '../lib/page-metadata';
-import { SITE_NAME, siteUrl } from '../lib/site';
+import { pageTitleOf } from '@/components/IngredientEntry/page-title';
+import { describe } from '@/lib/page-metadata';
+import { SITE_NAME, siteUrl } from '@/lib/site';
 import type { CompendiumSlugEntry } from '@/modules/ingredients';
 import { compendiumEntryPath } from '@/lib/compendium-path';
 

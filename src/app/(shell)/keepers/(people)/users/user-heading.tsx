@@ -1,5 +1,5 @@
-import type { ModalHeading } from '../../../../../components/Modal/types';
-import type { UserListEntry } from '../../../../../components/UserList/types';
+import type { ModalHeading } from '@/components/Modal/types';
+import type { UserListEntry } from '@/components/UserList/types';
 
 /**
  * The user modal's head: what it is, then whom. Built for both the row's link and the loaded

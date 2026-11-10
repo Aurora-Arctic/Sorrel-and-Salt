@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
-import UserList from '../../../../../components/UserList';
-import { USER_MODAL_ORIGINS, userListHref } from '../../../../../components/UserList/href';
-import { ROLES } from '../../../../../components/UserList/roles';
-import type { UserModalOrigin } from '../../../../../components/UserList/href';
-import type { UserListEntry } from '../../../../../components/UserList/types';
-import { impersonationEnabled } from '../../../../../lib/impersonation';
-import { requireAdminSession } from '../../../../../lib/request-session';
-import { oneOf, single } from '../../../../../lib/search-params';
-import type { Session, UserRole } from '../../../../../lib/session';
+import UserList from '@/components/UserList';
+import { USER_MODAL_ORIGINS, userListHref } from '@/components/UserList/href';
+import { ROLES } from '@/components/UserList/roles';
+import type { UserModalOrigin } from '@/components/UserList/href';
+import type { UserListEntry } from '@/components/UserList/types';
+import { impersonationEnabled } from '@/lib/impersonation';
+import { requireAdminSession } from '@/lib/request-session';
+import { oneOf, single } from '@/lib/search-params';
+import type { Session, UserRole } from '@/lib/session';
 import {
   countUsers,
   isPrimaryAdmin,
@@ -18,7 +18,7 @@ import {
   standingAccessPausesOf,
 } from '@/modules/identity';
 import { standingTimeoutsOf } from '@/modules/support';
-import { pagerHrefs } from '../../../../../lib/list-href';
+import { pagerHrefs } from '@/lib/list-href';
 import { readListPlace } from '@/app/(shell)/_admin/list-page';
 import { cursorOf, readNumberedPage } from '@/lib/numbered-page';
 import MissingNotice from '@/app/(shell)/_admin/missing-notice';

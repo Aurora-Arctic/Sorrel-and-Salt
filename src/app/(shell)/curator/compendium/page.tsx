@@ -1,27 +1,24 @@
 import { compendiumEntryPath } from '@/lib/compendium-path';
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
-import type { ModalHeading } from '../../../../components/Modal/types';
+import type { ModalHeading } from '@/components/Modal/types';
 import { redirect } from 'next/navigation';
-import CompendiumList from '../../../../components/CompendiumList';
-import { COMPENDIUM_PARAMS } from '../../../../components/CompendiumList/params';
-import { compendiumHref } from '../../../../components/CompendiumList/href';
-import { editHeading } from '../../../../components/CompendiumList/heading';
-import { cardName } from '../../../../components/IngredientCard/card-name';
-import { detailsHeading, detailsMarks } from '../../../../components/IngredientEntry/details';
-import DetailsDialog from '../../../../components/IngredientEntry/details-dialog';
-import ShownToggle from '../../../../components/IngredientEntry/shown-toggle';
-import ReviewMark from '../../../../components/IngredientEntry/review-mark';
-import IngredientSummary from '../../../../components/IngredientEntry/summary';
-import type { ListDialog } from '../../../../lib/types';
-import { single } from '../../../../lib/search-params';
-import { NEW_COMPENDIUM_ENTRY } from '../../../../lib/coven-path';
-import type {
-  CompendiumListEntry,
-  CompendiumListFilter,
-} from '../../../../components/CompendiumList/types';
-import PageHeader from '../../../../components/PageHeader';
-import { DEFAULT_PAGE_SIZE } from '../../../../lib/pagination';
+import CompendiumList from '@/components/CompendiumList';
+import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
+import { compendiumHref } from '@/components/CompendiumList/href';
+import { editHeading } from '@/components/CompendiumList/heading';
+import { cardName } from '@/components/IngredientCard/card-name';
+import { detailsHeading, detailsMarks } from '@/components/IngredientEntry/details';
+import DetailsDialog from '@/components/IngredientEntry/details-dialog';
+import ShownToggle from '@/components/IngredientEntry/shown-toggle';
+import ReviewMark from '@/components/IngredientEntry/review-mark';
+import IngredientSummary from '@/components/IngredientEntry/summary';
+import type { ListDialog } from '@/lib/types';
+import { single } from '@/lib/search-params';
+import { NEW_COMPENDIUM_ENTRY } from '@/lib/coven-path';
+import type { CompendiumListEntry, CompendiumListFilter } from '@/components/CompendiumList/types';
+import PageHeader from '@/components/PageHeader';
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import { editorStamps } from '../editors';
 import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import {
@@ -30,7 +27,7 @@ import {
   readCompendiumReview,
   resolveCompendiumSlug,
 } from '@/modules/ingredients';
-import { requireCuratorSession } from '../../../../lib/request-session';
+import { requireCuratorSession } from '@/lib/request-session';
 import {
   readCardCategories,
   readCategories,
@@ -40,8 +37,8 @@ import {
   readFormIcons,
 } from '../../../compendium-reads';
 import AddAction from '@/app/(shell)/_admin/add-action';
-import { pagerHrefs } from '../../../../lib/list-href';
-import { orMissing } from '../../../../lib/or-not-found';
+import { pagerHrefs } from '@/lib/list-href';
+import { orMissing } from '@/lib/or-not-found';
 import { readEditPlace, readListPlace } from '@/app/(shell)/_admin/list-page';
 import MissingNotice from '@/app/(shell)/_admin/missing-notice';
 import CompendiumDialog from './compendium-dialog';

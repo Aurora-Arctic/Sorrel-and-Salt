@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import AppShell from '../../components/AppShell';
-import { viewerOf } from '../../lib/viewer';
+import AppShell from '@/components/AppShell';
+import { viewerOf } from '@/lib/viewer';
 
 // The application shell for every signed-in page, a route group so the public pages stay static. A
 // layout does not re-run on client navigation, so each page calls its own guard. `viewerOf()` never

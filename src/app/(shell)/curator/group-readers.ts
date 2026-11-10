@@ -1,8 +1,8 @@
 import 'server-only';
 import { cache } from 'react';
-import type { GroupListKind } from '../../../components/GroupList/types';
-import { MAX_PAGE_SIZE, resolvePage } from '../../../lib/pagination';
-import type { PageEntry, PageRequest } from '../../../lib/types';
+import type { GroupListKind } from '@/components/GroupList/types';
+import { MAX_PAGE_SIZE, resolvePage } from '@/lib/pagination';
+import type { PageEntry, PageRequest } from '@/lib/types';
 import {
   listCategoryGroups,
   listDeityTraditions,
