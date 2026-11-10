@@ -26,19 +26,6 @@ import type { AdminPrivilegeChangesPageProps, PrivilegeChangesSearchParams } fro
 
 export const metadata: Metadata = pageTitle('Privilege Changes');
 
-function readLedgerPage(
-  session: Session,
-  filter: { query?: string; privilege?: LedgerPrivilege },
-  after: string | undefined,
-  before: string | undefined,
-) {
-  return readNumberedPage(
-    { after, before },
-    (request) => listPrivilegeChanges(session, filter, request),
-    (start) => countPrivilegeChanges(session, filter, start),
-  );
-}
-
 // The page and GraphQL's `privilegeChanges` end at the same service, paged by the same helper
 // (rules 1 and 8) and numbered as every admin list is; the users a page names are one read beside
 // it. Cached so a second render in the request reads once.
@@ -50,7 +37,12 @@ const readLedger = cache(
     after: string | undefined,
     before: string | undefined,
   ) => {
-    const page = await readLedgerPage(session, { query, privilege }, after, before);
+    const filter = { query, privilege };
+    const page = await readNumberedPage(
+      { after, before },
+      (request) => listPrivilegeChanges(session, filter, request),
+      (start) => countPrivilegeChanges(session, filter, start),
+    );
     const ids = [...new Set(page.edges.flatMap(({ node }) => [node.userId, node.createdBy]))];
     const read = await usersForAdmin(session, ids);
     const people = new Map<string, LedgerPerson | null>(

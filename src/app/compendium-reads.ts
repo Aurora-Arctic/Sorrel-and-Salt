@@ -4,6 +4,7 @@ import type {
   CompendiumCategoryChoice,
   CompendiumListForm,
 } from '../components/CompendiumList/types';
+import { cardCategoryReader } from '../components/CategoryChips/card-categories';
 import type { CardCategory } from '../components/IngredientCard/types';
 import type { SafetyVariant } from '../components/SafetyNote/types';
 import { Forbidden, NotFound } from '../lib/errors';
@@ -231,15 +232,10 @@ export async function readCardCategoriesOf(
     cardCategoriesOf(session, refs, heldBy),
     readCategories(),
   ]);
-  const byId = new Map(known.map((category) => [category.id, category]));
+  const read = cardCategoryReader(known);
   return answers.map((answer) => {
     if (answer instanceof Error) throw answer;
-    return answer.flatMap(({ category: { id }, forms }): CardCategory[] => {
-      const category = byId.get(id);
-      if (!category) return [];
-      const chip = { category: { id, name: category.name }, group: category.group };
-      return [forms.length > 0 ? { ...chip, forms: forms.map(formLabel) } : chip];
-    });
+    return read(answer.map(({ category: { id }, forms }) => ({ id, forms: forms.map(formLabel) })));
   });
 }
 

@@ -55,6 +55,7 @@ const covensHoldingEntry = vi.fn();
 const readCompendiumReview = vi.fn();
 const getIngredient = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
+  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
   readSourcingScore,
   readCompendiumReview,
   getIngredient,

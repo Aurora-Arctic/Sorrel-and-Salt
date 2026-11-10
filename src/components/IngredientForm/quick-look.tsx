@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
+import { amountOf } from '@/lib/quantity';
 import { graphql } from '@/lib/graphql-document';
 import type { DuplicateQuickLookQuery } from '../../gql/graphql';
 import { graphqlQuery } from '../../lib/graphql-client';
@@ -144,9 +145,9 @@ export function detailOf(looked: Looked, workspaceId: string): IngredientDetail 
 export const jarsOf = (looked: Looked): SummaryJar[] =>
   looked.stock.map((jar) => ({
     variantId: jar.variant.id,
-    quantity: jar.quantityOnHand === null ? null : Number(jar.quantityOnHand),
+    quantity: amountOf(jar.quantityOnHand),
     unit: jar.unit,
-    threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
+    threshold: amountOf(jar.lowStockThreshold),
   }));
 
 export function DuplicateQuickLook({

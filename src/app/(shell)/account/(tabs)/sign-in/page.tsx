@@ -1,3 +1,4 @@
+import { single } from '@/lib/search-params';
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import PageNav from '../../../../../components/PageNav';
@@ -37,10 +38,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
     accountPasskeys(),
   ]);
   const linkError = linkErrorMessage(params.error);
+  const provider = single(params.provider);
   const failedProvider =
-    typeof params.provider === 'string' && isRosterProvider(params.provider)
-      ? params.provider
-      : undefined;
+    provider !== undefined && isRosterProvider(provider) ? provider : undefined;
 
   return (
     <PageWithNav as="div" headless>

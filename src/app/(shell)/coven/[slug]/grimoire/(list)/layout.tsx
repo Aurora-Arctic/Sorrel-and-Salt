@@ -2,7 +2,7 @@ import { RouteModalProvider } from '@/components/Modal/route-modal-provider';
 import TabbedPage from '@/components/TabbedPage';
 import type { PageTab } from '@/components/TabbedPage/types';
 import { requireCovenMembership } from '@/lib/request-session';
-import { rolePermits } from '@/modules/coven';
+import { covenAccessOf } from '@/lib/coven-access';
 import type { CovenLayoutProps } from '../../types';
 import NewSpellAction from './new-spell-action';
 import { GrimoirePanelSkeleton } from './skeleton';
@@ -26,7 +26,7 @@ export default async function GrimoireLayout({ children, params }: CovenLayoutPr
       skeleton: <GrimoirePanelSkeleton drafts />,
     },
   ];
-  const action = rolePermits(membership.role, { spell: ['create'] }) ? (
+  const action = covenAccessOf(membership.role).canCreateSpell ? (
     <NewSpellAction covenName={workspace.name} />
   ) : undefined;
   return (

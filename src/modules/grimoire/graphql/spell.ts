@@ -1,3 +1,4 @@
+import { amountOf } from '../../../lib/quantity';
 import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
@@ -25,8 +26,6 @@ const GrimoireOrderEnum = builder.enumType('GrimoireOrder', {
   description:
     'How a grimoire page is ordered: UPDATED_DESC, last edited first (the default); CREATED_DESC, newest first; or TITLE_ASC, by title, untitled spells last.',
 });
-
-const amount = (value: string | null) => (value === null ? null : Number(value));
 
 type CategoryGaps = { intendedNotPresent: CategoryRow[]; presentNotIntended: CategoryRow[] };
 
@@ -79,7 +78,7 @@ const SpellStepRef = builder.objectRef<SpellStepView>('SpellStep').implement({
       description: "The linked form's name; the one-off row's free text otherwise.",
       resolve: (step) => step.variant?.form ?? step.form,
     }),
-    quantity: t.float({ nullable: true, resolve: (step) => amount(step.quantity) }),
+    quantity: t.float({ nullable: true, resolve: (step) => amountOf(step.quantity) }),
     unit: t.expose('unit', { type: InventoryUnitEnum, nullable: true }),
     audit: t.field({ type: AuditInfo, resolve: (step) => step }),
   }),

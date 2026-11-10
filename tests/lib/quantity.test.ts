@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatQuantity, plainQuantity } from '@/lib/quantity';
+import { amountOf, formatQuantity, plainQuantity } from '@/lib/quantity';
 
 describe('plainQuantity', () => {
   // The strings the quantity columns return; the three former copies agreed on every one.
@@ -48,5 +48,18 @@ describe('formatQuantity', () => {
     expect(formatQuantity('2.000', null)).toBe('2');
     expect(formatQuantity(4, undefined)).toBe('4');
     expect(formatQuantity(4, '')).toBe('4');
+  });
+});
+
+describe('amountOf', () => {
+  it.each([
+    ['2.500', 2.5],
+    ['0', 0],
+    ['0.000', 0],
+    ['10', 10],
+    [3, 3],
+    [null, null],
+  ] as const)('reads a stored amount %j as %j', (stored, amount) => {
+    expect(amountOf(stored)).toBe(amount);
   });
 });

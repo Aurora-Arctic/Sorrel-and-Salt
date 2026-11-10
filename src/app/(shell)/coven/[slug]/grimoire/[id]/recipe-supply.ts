@@ -2,6 +2,7 @@ import 'server-only';
 import { supplyOf } from '@/components/SpellBuilder/steps/supply';
 import { jarOf } from '@/components/SpellBuilder/steps/values';
 import { verdictOf, type VerdictKind } from '@/components/SpellBuilder/verdict-mark';
+import { amountOf } from '@/lib/quantity';
 import type { Session } from '@/lib/session';
 import type { SpellStepView } from '@/modules/grimoire';
 import { stockOf } from '@/modules/ingredients';
@@ -15,8 +16,8 @@ type StockRows = Awaited<ReturnType<typeof stockOf>>[number];
 export const jarRowsOf = (stock: StockRows | undefined) =>
   (stock instanceof Error || !stock ? [] : stock).map((jar) => ({
     unit: jar.unit,
-    quantityOnHand: jar.quantityOnHand === null ? null : Number(jar.quantityOnHand),
-    lowStockThreshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
+    quantityOnHand: amountOf(jar.quantityOnHand),
+    lowStockThreshold: amountOf(jar.lowStockThreshold),
     variant: { id: jar.variantId },
   }));
 
