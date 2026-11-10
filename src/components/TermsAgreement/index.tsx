@@ -1,12 +1,10 @@
 'use client';
 
 import { TERMS_LEDE, TERMS_TITLE } from './head';
-import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { formatAgreementVersion } from '../../lib/agreement-version';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
-import { graphqlRequest } from '../../lib/graphql-client';
+import { graphqlRequest, useRefusableMutation } from '../../lib/graphql-client';
 import type { AgreementDocumentKey } from '../../lib/types';
 import { dayInUtc } from '../../lib/utc';
 import BusyButton from '../BusyButton';
@@ -43,18 +41,18 @@ const TermsAgreement = ({
 }: TermsAgreementProps): ReactElement => {
   const [alert, setAlert] = useState<string>();
 
-  const mutation = useMutation({
-    mutationFn: () => graphqlRequest(AgreeToTermsDocument, { version }),
+  const mutation = useRefusableMutation({
+    request: () => graphqlRequest(AgreeToTermsDocument, { version }),
     // A full navigation, not the router's: the router may hold the redirect to this page as the answer for the page asked for.
-    onSuccess: () => {
+    onDone: () => {
       reportLeaving();
       window.location.assign(destination);
     },
-    onError: (failure) => setAlert(readGraphqlFailure(failure, []).alert),
+    onRefused: setAlert,
   });
 
   // Busy through the navigation too: the page stays up until the next one loads, and a second press would ask again.
-  const recording = mutation.isPending || mutation.isSuccess;
+  const recording = mutation.pending;
 
   return (
     <div className="terms-agreement">
@@ -100,7 +98,7 @@ const TermsAgreement = ({
           disabled={recording}
           onClick={() => {
             setAlert(undefined);
-            mutation.mutate();
+            mutation.run();
           }}
         >
           Agree & Continue

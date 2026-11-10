@@ -1,10 +1,8 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
-import { graphqlRequest } from '../../lib/graphql-client';
-import { failureMessage } from '../../lib/graphql-failure';
+import { graphqlRequest, useRefusableMutation } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import ConfirmDialog from '../ConfirmDialog';
@@ -53,19 +51,19 @@ export function useDeleteEntry({
 }: DeleteEntryOptions): CupboardWrite {
   const { navigate, refresh } = usePendingNavigation();
   const announce = useAnnounce();
-  const remove = useMutation({
-    mutationFn: () => graphqlRequest(DeleteOwnIngredientDocument, { id, workspaceId }),
-    onSuccess: () => {
+  const remove = useRefusableMutation({
+    request: () => graphqlRequest(DeleteOwnIngredientDocument, { id, workspaceId }),
+    onDone: () => {
       // The page's status region outlives the card, so a screen reader hears the removal the list
       // then shows.
       if (announcement) announce(announcement);
       if (deletedHref) navigate(deletedHref, { replace: true });
       else refresh();
     },
-    onError: (error) => {
+    onRefused: (message) => {
       onSettle();
-      onRefused(failureMessage(error));
+      onRefused(message);
     },
   });
-  return { run: () => remove.mutate(), pending: remove.isPending || remove.isSuccess };
+  return { run: () => remove.run(), pending: remove.pending };
 }

@@ -6,7 +6,7 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import ConfirmDialog from '../ConfirmDialog';
-import { graphqlRequest } from '../../lib/graphql-client';
+import { graphqlRequest, useRefusableMutation } from '../../lib/graphql-client';
 import { failureMessage } from '../../lib/graphql-failure';
 import CovenChoice from './lazy-coven-choice';
 import type { CupboardQuestionProps, CupboardWritesOptions, CupboardWrites } from './types';
@@ -120,17 +120,17 @@ export function useCupboardWrites({
   onRefused,
 }: CupboardWritesOptions): CupboardWrites {
   const { navigate, refresh } = usePendingNavigation();
-  const refused = (error: unknown): void => {
+  const refused = (message: string): void => {
     onSettle();
-    onRefused(failureMessage(error));
+    onRefused(message);
   };
-  const remove = useMutation({
-    mutationFn: () => graphqlRequest(RemoveCupboardEntryDocument, { workspaceId, ingredientId }),
-    onSuccess: () => {
+  const remove = useRefusableMutation({
+    request: () => graphqlRequest(RemoveCupboardEntryDocument, { workspaceId, ingredientId }),
+    onDone: () => {
       if (removedHref) navigate(removedHref, { replace: true });
       else refresh();
     },
-    onError: refused,
+    onRefused: refused,
   });
   const makeOurs = useMutation({
     mutationFn: () => graphqlRequest(MakeItOursDocument, { workspaceId, ingredientId }),
@@ -138,13 +138,12 @@ export function useCupboardWrites({
       const href = covenPath(covenSlug, 'ingredients', entry.id);
       navigate(href as Route);
     },
-    onError: refused,
+    onError: (error) => refused(failureMessage(error)),
   });
   return {
     remove: {
-      run: () => remove.mutate(),
-      // Busy past the write too, until the page it changed arrives (above).
-      pending: remove.isPending || remove.isSuccess,
+      run: () => remove.run(),
+      pending: remove.pending,
       reset: remove.reset,
     },
     makeOurs: { run: () => makeOurs.mutate(), pending: makeOurs.isPending, reset: makeOurs.reset },
