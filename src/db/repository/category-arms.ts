@@ -3,6 +3,7 @@ import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { categories } from '../../modules/vocabulary/schema/categories';
 import type { deities } from '../../modules/vocabulary/schema/deities';
 import { existsIn } from './select';
+import type { AggregateJoin } from './types';
 import { inLiveGroup } from './vocabularies';
 
 /**
@@ -44,4 +45,28 @@ export function categoryArms(
   return mode === 'any'
     ? [carries(inArray(link.category, [...categoryIds]))]
     : categoryIds.map((categoryId) => carries(eq(link.category, categoryId)));
+}
+
+/**
+ * The query a category facet counts under: `any` lets the chosen categories go, so each count is a category on its own; `all` keeps them, so each count is the chosen ones and that one together.
+ */
+export function withoutChosenIfAny<
+  Query extends { categoryMode?: 'any' | 'all'; categoryIds?: readonly string[] },
+>(query: Query): Query {
+  return query.categoryMode === 'any' ? { ...query, categoryIds: undefined } : query;
+}
+
+/**
+ * The joins a category facet counts through: an alias of the link table (`link.table`) matched to the outer row, and the live categories it names, so the count reads the same
+ * rows the list's `categoryArms` do. Group by `categories.id`.
+ */
+export function categoryFacetJoins(link: CategoryLink): AggregateJoin[] {
+  return [
+    { type: 'inner', table: link.table, on: and(eq(link.owner, link.outer), link.also) },
+    {
+      type: 'inner',
+      table: categories,
+      on: and(eq(categories.id, link.category), inLiveGroup(categories)),
+    },
+  ];
 }

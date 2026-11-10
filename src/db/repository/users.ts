@@ -141,7 +141,7 @@ export function findPrivilegeChangePage(
   filter: PrivilegeChangeFilter,
   page: PageRequest,
 ): Promise<PageEntry<typeof userPrivilegeChanges.$inferSelect>[]> {
-  return findPage(userPrivilegeChanges, LEDGER_ORDER, page, and(...privilegeChangeArms(filter)));
+  return findPage(userPrivilegeChanges, LEDGER_ORDER, page, privilegeChangesWhere(filter));
 }
 
 /**
@@ -154,13 +154,11 @@ export function findPrivilegeChangeCount(
   filter: PrivilegeChangeFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCount(
-    userPrivilegeChanges,
-    LEDGER_ORDER,
-    start,
-    and(...privilegeChangeArms(filter)),
-  );
+  return findPageCount(userPrivilegeChanges, LEDGER_ORDER, start, privilegeChangesWhere(filter));
 }
+
+const privilegeChangesWhere = (filter: PrivilegeChangeFilter) =>
+  and(...privilegeChangeArms(filter));
 
 function privilegeChangeArms({
   userId,

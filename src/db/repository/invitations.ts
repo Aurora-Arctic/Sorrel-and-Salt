@@ -1,4 +1,17 @@
-import { and, eq, gt, inArray, isNotNull, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  not,
+  or,
+  sql,
+  type SQL,
+  type SQLWrapper,
+} from 'drizzle-orm';
 import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { applyAudit } from '../audit';
 import { workspaces } from '../../modules/coven/schema/workspaces';
@@ -48,6 +61,16 @@ function cardKind(): SQL {
   return eq(invitations.kind, 'card');
 }
 
+/** A card invitation whose `accepted_by` satisfies `acceptedBy`: the one reading of "accepted a card", in the lists and the single-row checks alike. */
+export function acceptedCard(acceptedBy: SQL): SQL {
+  return and(cardKind(), acceptedBy) as SQL;
+}
+
+/** `user` (a column or an id) has accepted a live card. Derived from the invitation, never stored. */
+export function cardAcceptedBy(user: SQLWrapper | string): SQL {
+  return existsIn(invitations, acceptedCard(eq(invitations.acceptedBy, user)));
+}
+
 /** Not `inCompendium`: a site-tier invitation is no compendium row, and the tier seam counts the compendium's reads (claude-docs/db/tier-seam.md, "The tier seam"). A card has no workspace either, and is not this tier's. */
 function onSiteTier(): SQL {
   return and(addressKind(), isNull(invitations.workspaceId)) as SQL;
@@ -61,13 +84,16 @@ function inTierOf(proof: Membership | SiteAdmin): SQL {
   return 'workspaceId' in proof ? scopedTo(proof, invitations) : onSiteTier();
 }
 
+// Neither accepted nor revoked: the base that pending and open invitations both start from.
+function unsettled(...which: (SQL | undefined)[]) {
+  return [...which, isNull(invitations.acceptedAt), isNull(invitations.revokedAt)];
+}
+
 // Not the live filter, which the writer and each finder AND on themselves.
 function pendingInvitation(...which: (SQL | undefined)[]) {
   return and(
-    ...which,
-    isNull(invitations.acceptedAt),
+    ...unsettled(...which),
     isNull(invitations.declinedAt),
-    isNull(invitations.revokedAt),
     gt(invitations.expiresAt, sql`now()`),
   );
 }
@@ -76,9 +102,7 @@ function pendingInvitation(...which: (SQL | undefined)[]) {
 // declined invitation is an answer, not a lapsing link). A site-tier row is never declined, so there it is pending.
 function openInvitation(...which: (SQL | undefined)[]) {
   return and(
-    ...which,
-    isNull(invitations.acceptedAt),
-    isNull(invitations.revokedAt),
+    ...unsettled(...which),
     or(isNotNull(invitations.declinedAt), gt(invitations.expiresAt, sql`now()`)),
   );
 }
@@ -111,11 +135,10 @@ function verifiedBySession(session: AuditSession) {
 
 // The session's account has accepted no card yet: an account takes one card, so the next stays free for someone else.
 function noCardAcceptedBySession(session: AuditSession) {
-  const used = alias(invitations, 'used_card');
-  return sql`not exists (select 1 from ${invitations} as ${sql.identifier('used_card')} where ${used.kind} = 'card' and ${used.acceptedBy} = ${session.userId} and ${used.deletedAt} is null)`;
+  return not(cardAcceptedBy(session.userId));
 }
 
-// The two pagers spell the same two terms as scope and filter, since a scope is not optional.
+// The received list's scope and filter as one term, for the finders that read a received invitation by id.
 function receivedBy(session: AuditSession) {
   return and(onWorkspaceTier(), heldVerifiedBySession(session));
 }
@@ -132,7 +155,7 @@ export function findInvitationByToken(token: string): Promise<InvitationRow | un
 export async function hasAcceptedCard(userId: string): Promise<boolean> {
   const row = await selectOne(
     invitations,
-    and(notSoftDeleted(invitations), cardKind(), eq(invitations.acceptedBy, userId)),
+    and(notSoftDeleted(invitations), acceptedCard(eq(invitations.acceptedBy, userId))),
   );
   return row !== undefined;
 }
@@ -163,15 +186,39 @@ export function findInvitationInWorkspace(
  */
 const PENDING_INVITATION_ORDER: readonly SortPart[] = [newestFirst(invitations.createdAt)];
 
-function pendingOnSite({ email, expiresWithinHours }: SiteInvitationFilter): SQL | undefined {
-  return pendingInvitation(
-    email ? containsText(invitations.email, email) : undefined,
-    // Against the database's clock, as `pendingInvitation`'s own
-    // expiry is, so the two edges of the window read one `now()`.
-    expiresWithinHours === undefined
-      ? undefined
-      : lte(invitations.expiresAt, sql`now() + make_interval(hours => ${expiresWithinHours})`),
-  );
+// Each list below returns its scope and filter once, for its page finder and its count finder both.
+
+function pendingOnSite({ email, expiresWithinHours }: SiteInvitationFilter) {
+  return {
+    scope: onSiteTier(),
+    where: pendingInvitation(
+      email ? containsText(invitations.email, email) : undefined,
+      // Against the database's clock, as `pendingInvitation`'s own
+      // expiry is, so the two edges of the window read one `now()`.
+      expiresWithinHours === undefined
+        ? undefined
+        : lte(invitations.expiresAt, sql`now() + make_interval(hours => ${expiresWithinHours})`),
+    ),
+  };
+}
+
+function openInWorkspace(membership: Membership) {
+  return { scope: scopedTo(membership, invitations), where: openInvitation() };
+}
+
+function receivedListing(session: AuditSession) {
+  return {
+    scope: onWorkspaceTier(),
+    where: pendingInvitation(inLiveWorkspace(), heldVerifiedBySession(session)),
+  };
+}
+
+function cardArrivals(filter: CardArrivalFilter) {
+  return { scope: arrivedByCard(), where: arrivalsWhere(filter) };
+}
+
+function cardBatches(filter: CardBatchFilter) {
+  return { scope: batchHeads(), where: batchesWhere(filter) };
 }
 
 export function findPendingSiteInvitationPage(
@@ -179,13 +226,10 @@ export function findPendingSiteInvitationPage(
   filter: SiteInvitationFilter,
   page: PageRequest,
 ): Promise<PageEntry<SiteInvitationRow>[]> {
-  return findPageInScope(
-    invitations,
-    onSiteTier(),
-    PENDING_INVITATION_ORDER,
-    page,
-    pendingOnSite(filter),
-  ) as Promise<PageEntry<SiteInvitationRow>[]>;
+  const { scope, where } = pendingOnSite(filter);
+  return findPageInScope(invitations, scope, PENDING_INVITATION_ORDER, page, where) as Promise<
+    PageEntry<SiteInvitationRow>[]
+  >;
 }
 
 export function findPendingSiteInvitationCount(
@@ -193,13 +237,8 @@ export function findPendingSiteInvitationCount(
   filter: SiteInvitationFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCountInScope(
-    invitations,
-    onSiteTier(),
-    PENDING_INVITATION_ORDER,
-    start,
-    pendingOnSite(filter),
-  );
+  const { scope, where } = pendingOnSite(filter);
+  return findPageCountInScope(invitations, scope, PENDING_INVITATION_ORDER, start, where);
 }
 
 /** No proof, as the limit is on the sender across every coven they own. */
@@ -224,26 +263,18 @@ export function findPendingWorkspaceInvitationPage(
   page: PageRequest,
 ): Promise<PageEntry<AddressInvitationRow>[]> {
   // A coven's row names a workspace, which a card never does, so every row has an address.
-  return findPageInScope(
-    invitations,
-    scopedTo(membership, invitations),
-    PENDING_INVITATION_ORDER,
-    page,
-    openInvitation(),
-  ) as Promise<PageEntry<AddressInvitationRow>[]>;
+  const { scope, where } = openInWorkspace(membership);
+  return findPageInScope(invitations, scope, PENDING_INVITATION_ORDER, page, where) as Promise<
+    PageEntry<AddressInvitationRow>[]
+  >;
 }
 
 export function findPendingWorkspaceInvitationCount(
   membership: Membership,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCountInScope(
-    invitations,
-    scopedTo(membership, invitations),
-    PENDING_INVITATION_ORDER,
-    start,
-    openInvitation(),
-  );
+  const { scope, where } = openInWorkspace(membership);
+  return findPageCountInScope(invitations, scope, PENDING_INVITATION_ORDER, start, where);
 }
 
 /** No proof: the invitee holds no membership, so the scope is the session's verified address, matched in SQL. A keeper invitation is accepted by its mailed link alone, so the site tier is never listed. */
@@ -251,26 +282,16 @@ export function findReceivedInvitationPage(
   session: AuditSession,
   page: PageRequest,
 ): Promise<PageEntry<InvitationRow>[]> {
-  return findPageInScope(
-    invitations,
-    onWorkspaceTier(),
-    PENDING_INVITATION_ORDER,
-    page,
-    pendingInvitation(inLiveWorkspace(), heldVerifiedBySession(session)),
-  );
+  const { scope, where } = receivedListing(session);
+  return findPageInScope(invitations, scope, PENDING_INVITATION_ORDER, page, where);
 }
 
 export function findReceivedInvitationCount(
   session: AuditSession,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCountInScope(
-    invitations,
-    onWorkspaceTier(),
-    PENDING_INVITATION_ORDER,
-    start,
-    pendingInvitation(inLiveWorkspace(), heldVerifiedBySession(session)),
-  );
+  const { scope, where } = receivedListing(session);
+  return findPageCountInScope(invitations, scope, PENDING_INVITATION_ORDER, start, where);
 }
 
 /** Read by the accept-by-id service, which tells accepted, withdrawn and lapsed from missing; no proof. */
@@ -353,13 +374,10 @@ export function findCardArrivalPage(
   filter: CardArrivalFilter,
   page: PageRequest,
 ): Promise<PageEntry<CardArrivalRow>[]> {
-  return findPageInScope(
-    invitations,
-    arrivedByCard(),
-    CARD_ARRIVAL_ORDER,
-    page,
-    arrivalsWhere(filter),
-  ) as Promise<PageEntry<CardArrivalRow>[]>;
+  const { scope, where } = cardArrivals(filter);
+  return findPageInScope(invitations, scope, CARD_ARRIVAL_ORDER, page, where) as Promise<
+    PageEntry<CardArrivalRow>[]
+  >;
 }
 
 export function findCardArrivalCount(
@@ -367,13 +385,8 @@ export function findCardArrivalCount(
   filter: CardArrivalFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCountInScope(
-    invitations,
-    arrivedByCard(),
-    CARD_ARRIVAL_ORDER,
-    start,
-    arrivalsWhere(filter),
-  );
+  const { scope, where } = cardArrivals(filter);
+  return findPageCountInScope(invitations, scope, CARD_ARRIVAL_ORDER, start, where);
 }
 
 const CARD_ORDER: readonly SortPart[] = [newestFirst(invitations.createdAt)];
@@ -443,13 +456,10 @@ export function findCardBatchPage(
   filter: CardBatchFilter,
   page: PageRequest,
 ): Promise<PageEntry<CardRow>[]> {
-  return findPageInScope(
-    invitations,
-    batchHeads(),
-    CARD_ORDER,
-    page,
-    batchesWhere(filter),
-  ) as Promise<PageEntry<CardRow>[]>;
+  const { scope, where } = cardBatches(filter);
+  return findPageInScope(invitations, scope, CARD_ORDER, page, where) as Promise<
+    PageEntry<CardRow>[]
+  >;
 }
 
 export function findCardBatchCount(
@@ -457,7 +467,8 @@ export function findCardBatchCount(
   filter: CardBatchFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCountInScope(invitations, batchHeads(), CARD_ORDER, start, batchesWhere(filter));
+  const { scope, where } = cardBatches(filter);
+  return findPageCountInScope(invitations, scope, CARD_ORDER, start, where);
 }
 
 export function findCardBatchTotals(

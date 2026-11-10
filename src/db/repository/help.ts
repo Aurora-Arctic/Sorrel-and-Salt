@@ -58,6 +58,18 @@ const A_TO_Z: readonly SortPart[] = [
   { expression: sql`lower(${helpArticles.title})`, type: 'text' },
 ];
 
+// Position order in memory, a null position last, ties by title: BY_POSITION for the rows already read.
+function inPositionOrder(rows: HelpArticleRow[]): HelpArticleRow[] {
+  const rank = (row: HelpArticleRow) => row.position ?? LAST;
+  return rows.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
+}
+
+// The live rows a keeper orders as one list: the top-level guides and articles, or the FAQ entries.
+const orderedList = (list: 'guides' | 'faq'): SQL | undefined =>
+  list === 'guides'
+    ? and(notSoftDeleted(helpArticles), isPage(), isNull(helpArticles.parentId))
+    : and(notSoftDeleted(helpArticles), eq(helpArticles.kind, 'faq'));
+
 /** One page of the public FAQ entries, in position order. */
 export function findHelpFaqPage(page: PageRequest): Promise<PageEntry<HelpArticleRow>[]> {
   return findPage(
@@ -157,8 +169,7 @@ export async function findHelpArticleChildren(
       readable(reach),
     ),
   );
-  const rank = (row: HelpArticleRow) => row.position ?? LAST;
-  return rows.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
+  return inPositionOrder(rows);
 }
 
 /** The slug of each live row among these ids that `reach` admits, keyed by id: how a child names its parent. */
@@ -185,31 +196,19 @@ export async function findAllHelpArticleChildren(parentId: string): Promise<Help
     helpArticles,
     and(notSoftDeleted(helpArticles), eq(helpArticles.parentId, parentId)),
   );
-  const rank = (row: HelpArticleRow) => row.position ?? LAST;
-  return rows.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
+  return inPositionOrder(rows);
 }
 
 /** The highest position among the live rows of one ordered list (top-level guides and articles, or FAQ entries), shown or hidden, or 0 when none has one: where a new or released row goes after. */
 export async function findLastHelpPosition(list: 'guides' | 'faq'): Promise<number> {
-  const rows = await selectFrom(
-    helpArticles,
-    list === 'guides'
-      ? and(notSoftDeleted(helpArticles), isPage(), isNull(helpArticles.parentId))
-      : and(notSoftDeleted(helpArticles), eq(helpArticles.kind, 'faq')),
-  );
+  const rows = await selectFrom(helpArticles, orderedList(list));
   return Math.max(0, ...rows.map((row) => row.position ?? 0));
 }
 
 /** Every live row a keeper orders as one list, whatever its audience or flag, in position order: the top-level guides, or the FAQ entries. */
 export async function findAllHelpOrdered(list: 'guides' | 'faq'): Promise<HelpArticleRow[]> {
-  const rows = await selectFrom(
-    helpArticles,
-    list === 'guides'
-      ? and(notSoftDeleted(helpArticles), isPage(), isNull(helpArticles.parentId))
-      : and(notSoftDeleted(helpArticles), eq(helpArticles.kind, 'faq')),
-  );
-  const rank = (row: HelpArticleRow) => row.position ?? LAST;
-  return rows.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
+  const rows = await selectFrom(helpArticles, orderedList(list));
+  return inPositionOrder(rows);
 }
 
 /** The live row of `kind` holding `slug`, whatever its audience, or `undefined`: how a write finds a duplicate. A guide and an article share one address space. */

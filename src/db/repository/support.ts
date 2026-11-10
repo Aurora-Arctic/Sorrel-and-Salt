@@ -24,6 +24,7 @@ import { ANONYMISED_SUBJECT, SIGNED_OUT_SENDER_ID } from '../../lib/support-send
 import type { SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
+import { acceptedCard, cardAcceptedBy } from './invitations';
 import { newestFirst, noEndOrAhead, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
@@ -153,12 +154,16 @@ function viewArm(reader: SupportReader, view: SupportView): SQL {
   }
 }
 
+// A reply's visibility, not a spell's.
+// oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
+const PUBLIC_REPLY = eq(supportReplies.visibility, 'public');
+
 /** The sender is in the group. A beta tester accepted a printed card: derived from the
  * invitation, never stored. */
 function senderArm(group: SupportSenderGroup): SQL {
   switch (group) {
     case 'beta_tester':
-      return sql`exists (select 1 from ${invitations} where ${invitations.kind} = 'card' and ${invitations.acceptedBy} = ${supportRequests.createdBy} and ${invitations.deletedAt} is null)`;
+      return cardAcceptedBy(supportRequests.createdBy);
   }
 }
 
@@ -175,17 +180,18 @@ function filterArms(
   ];
 }
 
+// What the page and the count of a reader's requests both read.
+const requestsOf = (reader: SupportReader, filter: SupportRequestFilter) =>
+  and(readerScope(reader), ...filterArms(reader, filter));
+
 export function findSupportRequestPage(
   reader: SupportReader,
   filter: SupportRequestFilter,
   page: PageRequest,
 ) {
-  return findPage(
-    supportRequests,
-    orderOf(filter),
-    page,
-    and(readerScope(reader), ...filterArms(reader, filter)),
-  ).then(readAsOfNow);
+  return findPage(supportRequests, orderOf(filter), page, requestsOf(reader, filter)).then(
+    readAsOfNow,
+  );
 }
 
 export function findSupportRequestCount(
@@ -193,12 +199,7 @@ export function findSupportRequestCount(
   filter: SupportRequestFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCount(
-    supportRequests,
-    orderOf(filter),
-    start,
-    and(readerScope(reader), ...filterArms(reader, filter)),
-  );
+  return findPageCount(supportRequests, orderOf(filter), start, requestsOf(reader, filter));
 }
 
 /**
@@ -238,21 +239,21 @@ export function findSupportRequestForReader(reader: SupportReader, id: string) {
   ).then(oneAsOfNow);
 }
 
+const ownedBy = (userId: string) => eq(supportRequests.createdBy, userId);
+
 /** One page of the sender's own requests, newest first. The finder ANDs `created_by` itself. */
 export function findOwnSupportRequestPage(
   userId: string,
   page: PageRequest,
 ): Promise<PageEntry<typeof supportRequests.$inferSelect>[]> {
-  return findPage(supportRequests, OWN_ORDER, page, eq(supportRequests.createdBy, userId)).then(
-    readAsOfNow,
-  );
+  return findPage(supportRequests, OWN_ORDER, page, ownedBy(userId)).then(readAsOfNow);
 }
 
 export function findOwnSupportRequestCount(
   userId: string,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCount(supportRequests, OWN_ORDER, start, eq(supportRequests.createdBy, userId));
+  return findPageCount(supportRequests, OWN_ORDER, start, ownedBy(userId));
 }
 
 export async function findOwnSupportStatusCounts(userId: string): Promise<SupportStatusCounts> {
@@ -317,13 +318,7 @@ export function findSupportRequestByViewTokenHash(hash: string) {
 export function findPublicSupportReplies(requestId: string) {
   return selectFrom(
     supportReplies,
-    and(
-      notSoftDeleted(supportReplies),
-      eq(supportReplies.requestId, requestId),
-      // A reply's visibility, not a spell's.
-      // oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
-      eq(supportReplies.visibility, 'public'),
-    ),
+    and(notSoftDeleted(supportReplies), eq(supportReplies.requestId, requestId), PUBLIC_REPLY),
   );
 }
 
@@ -399,9 +394,7 @@ export function findReplyAwaitingNotice(id: string) {
       notSoftDeleted(supportReplies),
       eq(supportReplies.id, id),
       eq(supportReplies.authorRole, 'staff'),
-      // A reply's visibility, not a spell's.
-      // oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
-      eq(supportReplies.visibility, 'public'),
+      PUBLIC_REPLY,
       isNull(supportReplies.noticeSentAt),
     ),
   );
@@ -550,12 +543,9 @@ export function findSupportRepliesFor(viewer: SupportViewer, requestIds: readonl
  */
 function internalNotesScope(viewer: SupportViewer): SQL | undefined {
   if (viewer.role === 'admin') return undefined;
-  // A reply's visibility, not a spell's.
-  // oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
-  const isPublic = eq(supportReplies.visibility, 'public');
-  if (viewer.role === 'user') return isPublic;
+  if (viewer.role === 'user') return PUBLIC_REPLY;
   return or(
-    isPublic,
+    PUBLIC_REPLY,
     existsIn(
       supportRequests,
       and(
@@ -572,11 +562,7 @@ export async function findCardAcceptorIds(userIds: readonly string[]): Promise<S
   if (userIds.length === 0) return new Set();
   const rows = await selectFrom(
     invitations,
-    and(
-      notSoftDeleted(invitations),
-      eq(invitations.kind, 'card'),
-      inArray(invitations.acceptedBy, [...userIds]),
-    ),
+    and(notSoftDeleted(invitations), acceptedCard(inArray(invitations.acceptedBy, [...userIds]))),
   );
   return new Set(rows.flatMap((row) => (row.acceptedBy ? [row.acceptedBy] : [])));
 }
