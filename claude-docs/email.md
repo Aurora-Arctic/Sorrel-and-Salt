@@ -218,8 +218,14 @@ does it, so each piece has an email-safe stand-in.
   from `@font-face` rules that list **our own copy first and Google's second**:
   a client asks Google only when our file fails to load. The files are the
   latin subsets Google serves, committed under `public/email/fonts/` with
-  their OFL licences beside them. Gmail loads no web fonts at all and falls
-  back to Georgia and Arial.
+  their OFL licences beside them. Gmail loads no web fonts, whether from
+  `@font-face` or Google Fonts, so it shows the first installed font after the
+  brand font. Body falls back to Verdana, Tahoma and Segoe UI, Verdana being the
+  closest installed font to Lexend in width and openness. Headings fall back to
+  Garamond, Palatino Linotype, Palatino, Book Antiqua and Georgia, Garamond and
+  Palatino being the closest installed fonts to Cormorant, a Garamond design. The
+  site uses the same lists (`$font-body` and `$font-heading` in
+  `_variables.scss`), and `tests/scss/font-stacks.test.ts` holds them together.
 - **The corner photographs are pre-blended.** The site blends Backdrop's grey
   photographs into the page with `mix-blend-mode`, which no mail client
   supports, from WebP, which not all of them show. `scripts/email-ornaments.ts`
