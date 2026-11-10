@@ -1,11 +1,11 @@
 import { defineSignedInLoader } from '../../../graphql/loaders/define-loader';
 import { cupboardEntriesOf } from '../services/cupboard-entries';
 import type { Built } from '../../../graphql/loaders/types';
-import type { CupboardEntryKey, CupboardEntryRow } from '../types';
+import type { WorkspaceIngredientKey, CupboardEntryRow } from '../types';
 
 /** A coven's cupboard entry for each compendium entry a page lists, batched per coven. Keyed by ingredient and coven, as one entry can be asked about in two. */
 export const cupboardEntryByIngredient = defineSignedInLoader<
-  CupboardEntryKey,
+  WorkspaceIngredientKey,
   CupboardEntryRow | null,
   string
 >(cupboardEntriesOf, {
@@ -18,7 +18,7 @@ export const cupboardEntryByIngredient = defineSignedInLoader<
  */
 export function clearCupboardEntry(
   loaders: Built<{ cupboardEntryByIngredient: typeof cupboardEntryByIngredient }>,
-  key: CupboardEntryKey,
+  key: WorkspaceIngredientKey,
 ): void {
   loaders.cupboardEntryByIngredient.clear(key);
 }

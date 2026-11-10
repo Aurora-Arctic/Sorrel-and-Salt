@@ -32,7 +32,7 @@ import type { SubstituteFields } from '../validation/types';
 import type {
   CitedReference,
   ConvertedCompendium,
-  CupboardEntryKey,
+  WorkspaceIngredientKey,
   HoldingCoven,
   IngredientValues,
   VariantKey,
@@ -103,7 +103,7 @@ export async function getCupboardEntry(
 /** Each key's cupboard entry in its coven, or null, in key order: `Ingredient.cupboardEntry`'s batch; a refused coven gets a `Forbidden` in its slot. */
 export async function cupboardEntriesOf(
   session: Session,
-  keys: readonly CupboardEntryKey[],
+  keys: readonly WorkspaceIngredientKey[],
 ): Promise<(CupboardEntryRow | null | Forbidden)[]> {
   const covens = [...new Set(keys.map((key) => key.workspaceId))];
   const rows = new Map(
