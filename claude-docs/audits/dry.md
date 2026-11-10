@@ -780,7 +780,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/components/FacetPanel/`, `MenuButton`, `AccountMenu`, `HelpTerm`, `Combobox`.
 
 - **Estimate:** 8 hours
-- **Status:** Fixed in part. Outside-press dismissal goes through `useDismiss` in `src/lib/use-dismiss.ts`, used by AccountMenu, SectionNav, CategoryChips, HelpTerm, MenuButton, Combobox, FacetPanel and DateField, and `tests/guards/dismissal.test.ts` refuses a new hand-written `pointerdown` or `mousedown` listener in `src/components/`. The press listener now runs in the capture phase everywhere. Three sites stay as they are because they are not plain dismissals: SpellBuilder steps (a press paired with its release), ClickFeedback (it also closes on focus moving out) and Field pointer-held. Not yet shared: Escape handled in `onKeyDown` in MenuButton, FacetPanel and Combobox, and the Escape listeners in HelpOutline guides-bar and InfoTip `use-tip`. They move to MC.6.
+- **Status:** Fixed (MC.6). Outside-press dismissal goes through `useDismiss` in `src/lib/use-dismiss.ts`, and Escape through `useDismiss({ onEscape })` for a document listener or `escapeKeyHandler` for an element's `onKeyDown`. `tests/guards/dismissal.test.ts` refuses a hand-written `pointerdown`, `mousedown` or Escape comparison in `src/` outside the named files.
 
 ### D-21: "assertMembership, swallow Forbidden" written at least six times
 
@@ -2081,7 +2081,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** `tests/components/UserList/*`, `tests/components/InfoTip/*`, `tests/e2e/` specs for keeper users.
 
 - **Estimate:** 4 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-69: AdminCards and AdminInvitations small duplicates and hard-coded constants
 
@@ -2201,7 +2201,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** `tests/components/ClickFeedback/`, IngredientEntry, SpellRecipe and AddIcon component tests.
 
 - **Estimate:** 2 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-73: Help article title row and page head repeated across four Help pages and their skeletons
 
@@ -3102,7 +3102,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - `CovenCards/card-more.tsx` is the third copy: Asking state, trigger ref and alert; its `close` duplicates `settle`.
 
 - **Estimate:** 4 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-119: Navigate-to-landing-and-refresh after leaving or deleting a coven is written three times with the same comment
 
@@ -3215,7 +3215,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/components/CategoryChips/`, `tests/components/InfoTip/`.
 
 - **Estimate:** 3 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-126: Two `workingStepsOf` and two `UNAVAILABLE_INGREDIENT` constants
 
@@ -3464,7 +3464,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** tests/components/Combobox, InfoTip, CategoryChips, ClickFeedback.
 
 - **Estimate:** 3 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-141: Unverified-email sentence exists in five places
 
@@ -3957,7 +3957,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - `src/components/SectionNav/section-links.tsx` holds `TABLET_BAND` (already named in D-161 as a candidate; confirmed as a copy).
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-162: "Deleted account" and "Signed-out sender" literals repeated across the support screens
 
