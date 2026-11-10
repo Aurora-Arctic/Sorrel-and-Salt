@@ -120,6 +120,7 @@ export {
   findPrivilegeChangeCount,
   findPrivilegeChangePage,
   findProvidersOfUsers,
+  findPasskeyHoldersAmong,
   findUserByEmail,
   findUserCount,
   findUserPage,
