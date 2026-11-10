@@ -12,6 +12,7 @@ import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 import { moveByKeyboard } from '../../support/sortable';
+import { expectBefore } from '../../support/interact';
 
 // The keepers' Guides bar: the guides under their audience, Public, then Staff, then Keeper, once each, and Reorder
 // Mode, where every live guide is a row to move among its own audience's and each move saves as it happens
@@ -163,10 +164,7 @@ describe('HelpGuidesBar at rest', () => {
     const reference = nav().getByRole('list', { name: 'Reference' });
     expect(within(reference).getByRole('link', { name: 'FAQ' })).toBeTruthy();
     expect(within(reference).getByRole('link', { name: 'Glossary' })).toBeTruthy();
-    expect(
-      reference.compareDocumentPosition(nav().getByText('Guides')) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(reference, nav().getByText('Guides'));
   });
 
   it('keeps the Reference list, with its two links, once Reorder is pressed', () => {

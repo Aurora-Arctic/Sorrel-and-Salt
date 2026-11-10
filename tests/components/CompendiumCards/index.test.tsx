@@ -12,6 +12,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { filterForm, sent } from '../../support/filter-form';
 import { ADD, HELD as HELD_TEXT } from '../../support/cupboard-wording';
 import { WORKSPACE_ID } from '../../support/constants';
+import { isBefore } from '../../support/interact';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
 
@@ -258,10 +259,8 @@ describe('CompendiumCards', () => {
       const add = foot.getByRole('button', { name: /^Add to / });
       const edit = foot.getByRole('link', { name: 'Edit in Compendium Fixture Salt' });
       const dots = foot.getByRole('button', { name: 'More for Fixture Salt' });
-      const follows = (first: Element, second: Element) =>
-        Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
-      expect(follows(add, edit)).toBe(true);
-      expect(follows(edit, dots)).toBe(true);
+      expect(isBefore(add, edit)).toBe(true);
+      expect(isBefore(edit, dots)).toBe(true);
     });
   });
 

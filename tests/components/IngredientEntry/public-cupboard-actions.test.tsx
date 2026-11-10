@@ -8,7 +8,7 @@ import type { StockData } from '@/components/StockDialog/types';
 import type { AddCupboardEntryMutation, RemoveCupboardEntryMutation } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { covenChoiceModule } from '@/components/IngredientEntry/lazy-coven-choice';
-import { press } from '../../support/interact';
+import { press, expectBefore } from '../../support/interact';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 import { stockFormModule } from '@/components/StockDialog/lazy-form';
 import { cupboardEntryFormModule } from '@/components/IngredientEntry/lazy-forms';
@@ -208,7 +208,7 @@ describe('CupboardActions on the public page', () => {
 
       const plus = screen.getByRole('button', { name: /^Add to My Ingredients: / });
       const edit = screen.getByRole('link', { name: 'Edit in Compendium Testwort' });
-      expect(plus.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expectBefore(plus, edit);
       expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
 

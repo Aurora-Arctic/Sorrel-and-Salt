@@ -20,6 +20,7 @@ import {
   wrapChips,
 } from '../../support/sortable';
 import type { HarnessProps } from './types';
+import { expectBefore } from '../../support/interact';
 
 // Downshift's `useCombobox` (claude-docs/components/combobox.md).
 
@@ -934,10 +935,7 @@ describe('Combobox', () => {
       expect(move).toHaveAccessibleDescription(/\S/);
       expect(move).toHaveTextContent('Venus');
       expect(move).not.toHaveAttribute('tabindex', '-1');
-      expect(
-        move.compareDocumentPosition(screen.getByRole('button', { name: 'Remove Venus' })) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(move, screen.getByRole('button', { name: 'Remove Venus' }));
     });
 
     it('moves an entry by keyboard, saying each step, the focus kept on the moved entry', async () => {

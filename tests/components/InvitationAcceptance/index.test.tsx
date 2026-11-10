@@ -10,6 +10,7 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { router } from '../../support/next-navigation';
+import { expectBefore } from '../../support/interact';
 
 // claude-docs/components/invitation-acceptance.md
 
@@ -174,9 +175,7 @@ describe('InvitationAcceptance', () => {
 
     const firstLink = screen.getByRole('link', { name: first });
     const secondLink = screen.getByRole('link', { name: second });
-    expect(
-      firstLink.compareDocumentPosition(secondLink) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(firstLink, secondLink);
   });
 
   it('opens the dialog over the invitation in the mode each choice names', async () => {
@@ -306,10 +305,7 @@ describe('InvitationAcceptance', () => {
 
     const alert = screen.getByRole('alert');
     expect(alert).toBeVisible();
-    expect(
-      alert.compareDocumentPosition(screen.getByRole('link', { name: 'Sign In' })) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(alert, screen.getByRole('link', { name: 'Sign In' }));
   });
 
   it('says why a link cannot be accepted, with no Accept, pointing an unverified match at the email page', () => {

@@ -4,6 +4,7 @@ import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../../support/printed-text';
 import { Forbidden } from '@/lib/errors';
 import { requireSession } from '../../../support/request-session';
+import { expectBefore } from '../../../support/interact';
 
 // `/coven-paused/[slug]`, where a member whose access to one coven is paused is sent from its pages. It reads the pause itself
 // through the service, by the slug alone: a stranger gets the 404 the coven pages give, and a member with no pause standing is
@@ -126,7 +127,7 @@ describe('/coven-paused/[slug]', () => {
 
     const leave = screen.getByRole('button', { name: 'Leave Coven' });
     const others = screen.getByRole('list', { name: 'Your Other Covens' });
-    expect(leave.compareDocumentPosition(others) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(leave, others);
   });
 
   it('links to each other coven the viewer can open, passing over this one and any other paused', async () => {

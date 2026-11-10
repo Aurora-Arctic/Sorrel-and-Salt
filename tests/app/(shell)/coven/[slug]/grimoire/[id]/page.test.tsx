@@ -5,6 +5,7 @@ import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
 import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 import { requireCovenMembership, requireSession } from '../../../../../../support/request-session';
 import { renderWithQuery } from '../../../../../../support/render-with-query';
+import { expectBefore } from '../../../../../../support/interact';
 
 // The spell recipe page, with the guard and services mocked (tests/modules/grimoire/services/spell-reads.test.ts proves a private spell reads as NotFound to anyone but its author).
 // It proves the page guards itself, a refusal is the 404, and what the services give is drawn.
@@ -196,9 +197,7 @@ describe('the spell recipe page', () => {
     expect(within(match).getByText('Carried')).toBeInTheDocument();
     expect(within(match).getByText('Testwarding')).toBeInTheDocument();
     // Category Match stands over the inventory.
-    expect(
-      match.compareDocumentPosition(inventory) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(match, inventory);
     expect(stockOf).toHaveBeenCalledWith(session, [
       { ingredientId: 'ing-1', workspaceId: COVEN.id },
     ]);

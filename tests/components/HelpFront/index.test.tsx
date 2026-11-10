@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { router } from '../../support/next-navigation';
 import { HELP_LEDE } from '@/lib/help-pages';
 import { Navigating } from '../../support/navigating';
+import { isBefore } from '../../support/interact';
 
 // The address the help layout is showing, set by each test before it renders.
 const here = vi.hoisted(() => ({ pathname: '/help', search: '' }));
@@ -58,11 +59,9 @@ describe('HelpFront', () => {
 
     const heading = screen.getByRole('heading', { level: 1, name: 'Help' });
     const lede = screen.getByText(HELP_LEDE);
-    const following = (a: Node, b: Node) =>
-      a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING;
-    expect(following(heading, lede)).toBeTruthy();
-    expect(following(lede, form())).toBeTruthy();
-    expect(following(form(), page()!)).toBeTruthy();
+    expect(isBefore(heading, lede)).toBeTruthy();
+    expect(isBefore(lede, form())).toBeTruthy();
+    expect(isBefore(form(), page()!)).toBeTruthy();
     expect(screen.getAllByRole('search')).toHaveLength(1);
   });
 

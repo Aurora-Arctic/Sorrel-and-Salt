@@ -8,7 +8,7 @@ import {
 } from '@/components/IngredientForm/values';
 import { VARIANT_SECTIONS, openSectionsIn } from '../../support/ingredient-sections';
 import { waitFor } from '../../support/ingredient-form';
-import { press } from '../../support/interact';
+import { press, expectBefore } from '../../support/interact';
 import { WORKSPACE_ID } from '../../support/msw/ingredient-lookups';
 import {
   HERB_VARIANT_ID,
@@ -224,9 +224,7 @@ describe('VariantsField', () => {
 
       const cards = screen.getAllByRole('group', { name: /^(Oil|Herb)$/ });
       expect(cards).toEqual([variant('Herb'), variant('Oil')]);
-      expect(
-        newForm().compareDocumentPosition(cards[0]) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(newForm(), cards[0]);
     });
   });
 

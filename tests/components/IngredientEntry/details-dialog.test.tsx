@@ -6,6 +6,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { Navigating } from '../../support/navigating';
 import { WORKSPACE_ID } from '../../support/constants';
 import { router } from '../../support/next-navigation';
+import { expectBefore, isBefore } from '../../support/interact';
 
 const { RouteModal, RouteModalProvider } = await import('@/components/Modal');
 const { default: DetailsDialog } = await import('@/components/IngredientEntry/details-dialog');
@@ -324,15 +325,12 @@ describe('DetailsDialog plus', () => {
       </QueryClientProvider>,
     );
   };
-  const before = (first: Node, second: Node) =>
-    Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
-
   it('puts the plus before the pencil while a coven that may add lacks the entry', async () => {
     await show({ covens: [ONE, TWO], heldIn: [ONE.id] });
 
     const add = within(dialog()).getByRole('button', { name: /^Add to My Ingredients: / });
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
-    expect(before(add, edit)).toBe(true);
+    expect(isBefore(add, edit)).toBe(true);
     // Why it could be the check: one coven already holds it, but not both.
     expect(within(dialog()).queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
   });
@@ -342,7 +340,7 @@ describe('DetailsDialog plus', () => {
 
     const held = within(dialog()).getByRole('button', { name: /^In Every Cupboard: / });
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
-    expect(before(held, edit)).toBe(true);
+    expect(isBefore(held, edit)).toBe(true);
     expect(within(dialog()).queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
   });
 
@@ -378,9 +376,7 @@ describe('DetailsDialog from a compendium card', () => {
     await show(true);
     const edit = within(dialog()).getByRole('link', { name: 'Edit in Compendium Testwort' });
     const more = within(dialog()).getByRole('button', { name: 'More for Testwort' });
-    expect(Boolean(edit.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(
-      true,
-    );
+    expectBefore(edit, more);
     // Why the name is the compendium's: the same props without the flag name a plain Edit.
     expect(within(dialog()).queryByRole('link', { name: 'Edit Testwort' })).toBeNull();
   });

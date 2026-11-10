@@ -12,7 +12,7 @@ import { DEBOUNCE_MS } from '@/lib/debounce';
 import { ADDED_HOLD_MS } from '@/components/AddIcon';
 import { renderWithClient, duplicateHref } from '../../support/ingredient-form';
 import { Navigating } from '../../support/navigating';
-import { press, typeIn } from '../../support/interact';
+import { press, typeIn, expectBefore } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 import {
@@ -551,9 +551,7 @@ describe('NameField, with useDuplicateWarning', () => {
       expect(titlesIn(compendium!)).toEqual(["Cat's Claw (Uncaria tomentosa)"]);
       expect(within(compendium!).getByRole('button', { name: ADD })).toBeInTheDocument();
       expect(within(coven!).getAllByRole('button', { name: /^Quick Look / })).toHaveLength(2);
-      expect(
-        coven!.compareDocumentPosition(compendium!) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(coven!, compendium!);
       expect(screen.getByRole('heading', { name: 'In This Coven', level: 4 })).toBeInTheDocument();
       expect(
         screen.getByRole('heading', { name: 'In the Compendium', level: 4 }),

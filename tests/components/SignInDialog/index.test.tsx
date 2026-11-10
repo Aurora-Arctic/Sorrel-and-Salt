@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import SignInDialog from '@/components/SignInDialog';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { router } from '../../support/next-navigation';
+import { expectBefore } from '../../support/interact';
 
 // Sign In opened over the page it is on: a plain press opens the dialog, and the link's own
 // address, the sign-in page, is what a press for a new tab, or a browser without the script, gets.
@@ -221,7 +222,7 @@ describe('SignInDialog', () => {
 
     const back = within(dialog()).getByRole('button', { name: 'Back to Sign-In Options' });
     const heading = within(dialog()).getByRole('heading', { name: 'Sign In with Email' });
-    expect(back.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(back, heading);
     // Back is not part of the dialog's name.
     expect(dialog()).toHaveAccessibleName('Sign In with Email');
   });

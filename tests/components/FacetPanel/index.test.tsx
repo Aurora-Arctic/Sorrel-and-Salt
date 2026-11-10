@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import FacetPanel, { WIDE } from '@/components/FacetPanel';
 import type { FacetPanelFilter, FacetPanelProps } from '@/components/FacetPanel/types';
 import type { CompendiumFacetCounts } from '@/components/CompendiumList/types';
+import { expectBefore } from '../../support/interact';
 
 // claude-docs/components/facet-panel.md
 
@@ -463,8 +464,8 @@ describe('FacetPanel', () => {
       const box = screen.getByRole('combobox', { name: 'In My Covens' });
       const forms = screen.getByRole('combobox', { name: 'Forms' });
       const toxic = screen.getByRole('group', { name: 'Toxic' });
-      expect(forms.compareDocumentPosition(toxic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(toxic.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expectBefore(forms, toxic);
+      expectBefore(toxic, box);
       fireEvent.click(box);
       expect(screen.getByRole('option', { name: 'Testhollow' })).toBeInTheDocument();
       expect(screen.getByRole('option', { name: 'Testwren' })).toBeInTheDocument();

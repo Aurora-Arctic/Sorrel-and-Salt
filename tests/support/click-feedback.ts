@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { expect } from 'vitest';
+import { expectBefore } from './interact';
 
 // A control's click feedback checks (claude-docs/components/click-feedback.md).
 
@@ -12,7 +13,7 @@ export async function expectRefusalUnder(control: HTMLElement, name: string): Pr
   const alert = await screen.findByRole('alert');
   const said = alert.textContent ?? '';
   expect(said.trim()).not.toBe('');
-  expect(control.compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expectBefore(control, alert);
   expect(control).toHaveAttribute('aria-describedby');
   await waitFor(() => expect(control).toHaveFocus());
 

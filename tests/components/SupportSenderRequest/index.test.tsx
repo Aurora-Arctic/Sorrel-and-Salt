@@ -7,6 +7,7 @@ import SupportSenderRequest from '@/components/SupportSenderRequest';
 import { senderStatusLabel } from '@/components/SupportSenderRequest/status';
 import type { SupportSenderRequestEntry } from '@/components/SupportSenderRequest/types';
 import { router } from '../../support/next-navigation';
+import { expectBefore } from '../../support/interact';
 
 const request = (over: Partial<SupportSenderRequestEntry> = {}): SupportSenderRequestEntry => ({
   id: 'r1',
@@ -192,7 +193,7 @@ describe('SupportSenderRequest', () => {
     const box = screen.getByRole('textbox', { name: 'Your Reply' });
     expect(box).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
-    expect(notice.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(notice, box);
   });
 
   it('shuts the box and the button while timed out with no end date, and says it has none', () => {

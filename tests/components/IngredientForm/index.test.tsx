@@ -27,7 +27,7 @@ import {
   duplicateHref,
 } from '../../support/ingredient-form';
 import { layOutChips, moveByKeyboard } from '../../support/sortable';
-import { choose, press, redo, type, typeIn, undo } from '../../support/interact';
+import { choose, press, redo, type, typeIn, undo, expectBefore } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import {
   WORKSPACE_ID,
@@ -473,9 +473,7 @@ describe('IngredientForm', () => {
       saveIngredient();
 
       const alert = await screen.findByRole('alert');
-      expect(
-        alert.compareDocumentPosition(textbox('Name')) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(alert, textbox('Name'));
       expect(textbox('Name')).not.toBeInvalid();
     });
 
@@ -1099,9 +1097,7 @@ describe('IngredientForm', () => {
 
         const alert = await screen.findByRole('alert');
         expect(alert).toHaveTextContent('The coven cannot take new ingredients right now');
-        expect(
-          alert.compareDocumentPosition(textbox('Name')) & Node.DOCUMENT_POSITION_FOLLOWING,
-        ).toBeTruthy();
+        expectBefore(alert, textbox('Name'));
         expect(plus).not.toHaveAttribute('data-state');
         expect(plus).not.toHaveAttribute('aria-disabled');
         expect(plus).toHaveAccessibleName(/^Add to My Ingredients: Cat's Claw/);

@@ -7,6 +7,7 @@ import { TOO_MANY_ATTEMPTS, WRONG_CREDENTIALS } from '@/lib/auth-messages';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { installHistory, setQuery } from './search-params';
 import { PASSWORD } from '../../support/constants';
+import { expectBefore } from '../../support/interact';
 
 // The password sign-in form (@story-70). Better Auth's client is mocked at the two calls it makes, so each test sets the
 // answer the server gives; tests/db/password-sign-in.test.ts proves the server gives it.
@@ -294,9 +295,7 @@ describe('SignInPanel, email and password', () => {
     const back = screen.getByRole('button', { name: 'Back to Sign-In Options' });
     const headings = screen.getAllByRole('heading', { name: /Sign In with Email/ });
     expect(headings).toHaveLength(1);
-    expect(
-      back.compareDocumentPosition(headings[0]) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(back, headings[0]);
   });
 
   it('holds the buttons and the email form as two views, each its own history entry, and keeps the typed address between them', async () => {

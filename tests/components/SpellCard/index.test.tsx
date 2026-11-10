@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { press } from '../../support/interact';
+import { press, expectBefore, isBefore } from '../../support/interact';
 import SpellCard from '@/components/SpellCard';
 import type {
   RecordWorkingMutation,
@@ -67,8 +67,8 @@ describe('SpellCard', () => {
     const made = screen.getByText('Made 3 times');
     const edited = screen.getByRole('button', { name: /^Edited/ });
     const edit = screen.getByRole('link', { name: /^Edit Fixture Working/ });
-    expect(edited.compareDocumentPosition(made) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(made.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(edited, made);
+    expectBefore(made, edit);
   });
 
   it('draws a Record a Working button only when given what recording needs, and reads the spell’s steps, and no members, only once its dialog opens', async () => {
@@ -163,7 +163,7 @@ describe('SpellCard', () => {
     const names = within(screen.getByRole('article'))
       .getAllByRole('button')
       .concat(screen.getAllByRole('link', { name: /^Edit / }))
-      .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
+      .sort((a, b) => (isBefore(a, b) ? -1 : 1))
       .map((el) => el.textContent);
     expect(names.join('|')).toMatch(
       /Record a Working.*Edit Fixture Working.*More for Fixture Working/,

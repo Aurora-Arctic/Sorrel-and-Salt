@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LeaveWorkspaceButton from '@/components/LeaveWorkspaceButton';
 import { router } from '../../support/next-navigation';
+import { expectBefore } from '../../support/interact';
 
 // The requests are mocked; what the service decides is its own tests'.
 
@@ -134,9 +135,7 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Promote and Leave' }));
 
     const alert = await within(dialog).findByRole('alert');
-    expect(
-      alert.compareDocumentPosition(handOver(dialog)) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(alert, handOver(dialog));
     expect(graphqlRequest).toHaveBeenCalledTimes(1);
     expect(router.replace).not.toHaveBeenCalled();
   });
@@ -175,10 +174,8 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     const alert = await within(dialog).findByRole('alert');
     const button = within(dialog).getByRole('button', { name: 'Delete Coven' });
     expect(button.parentElement).toContainElement(alert);
-    expect(button.compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(
-      deleteIt(dialog).compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(button, alert);
+    expectBefore(deleteIt(dialog), alert);
     expect(screen.queryByRole('button', { name: /^Show the error/ })).toBeNull();
     expect(router.replace).not.toHaveBeenCalled();
   });

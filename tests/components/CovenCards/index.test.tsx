@@ -13,6 +13,7 @@ import { filterForm, sent } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { RouteModal, RouteModalProvider } from '@/components/Modal';
 import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
+import { expectBefore } from '../../support/interact';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
 
@@ -198,7 +199,7 @@ describe('CovenCards', () => {
     const list = screen.getByRole('list', { name: 'Ingredients' });
     const pencil = within(list).getByRole('button', { name: /^Edit Stock/ });
     const edit = within(list).getByRole('link', { name: /^Edit Testwort/ });
-    expect(pencil.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(pencil, edit);
   });
 
   it('draws Edit on a card only when it is given an edit address, named for the entry', () => {

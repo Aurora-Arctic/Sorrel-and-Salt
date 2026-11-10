@@ -12,7 +12,7 @@ import type {
   RemoveCupboardEntryMutation,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { press } from '../../support/interact';
+import { press, expectBefore } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 import { stockFormModule } from '@/components/StockDialog/lazy-form';
@@ -579,9 +579,7 @@ describe('CupboardActions', () => {
 
       const plus = screen.getByRole('button', { name: /^Add to My Ingredients: / });
       const annotate = screen.getByRole('link', { name: 'Annotate Testwort' });
-      expect(
-        plus.compareDocumentPosition(annotate) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(plus, annotate);
       expect(choices()).toEqual(['Make It Ours', 'Remove']);
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
 

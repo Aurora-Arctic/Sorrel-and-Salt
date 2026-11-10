@@ -73,7 +73,9 @@ export function fill(label: string, text: string): void {
 }
 
 // True when `a` comes before `b` in the document, whether or not one holds the other.
-export const isBefore = (a: Node, b: Node): boolean =>
+export const isBefore = (a: Node | null, b: Node | null): boolean =>
+  a !== null &&
+  b !== null &&
   Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 
 export function expectBefore(a: Node, b: Node): void {
