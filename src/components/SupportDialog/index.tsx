@@ -14,6 +14,8 @@ import SupportPanel from '../SupportPanel';
 import {
   SUPPORT_ERROR_PARAM,
   SUPPORT_REF_PARAM,
+  SUPPORT_DETAIL_PARAM,
+  errorDetailOf,
   errorReferenceOf,
   SUPPORT_FROM_PARAM,
   SUPPORT_PARAM,
@@ -66,15 +68,16 @@ function Dialog(): ReactElement | null {
   const closeHref = supportClosedHref(pathname, new URLSearchParams(params)) as Route;
   const errorCode = errorCodeOf(params.get(SUPPORT_ERROR_PARAM));
   const errorReference = errorReferenceOf(params.get(SUPPORT_REF_PARAM));
+  const errorDetail = errorDetailOf(params.get(SUPPORT_DETAIL_PARAM));
   const path = params.get(SUPPORT_FROM_PARAM) ?? pathname;
   const panelState: SupportPanelState | null =
     state === null
       ? null
       : state.kind === 'form'
-        ? { kind: 'form', support: supportAboutOf(asked), errorCode, errorReference }
+        ? { kind: 'form', support: supportAboutOf(asked), errorCode, errorReference, errorDetail }
         : state.kind === 'timed-out'
           ? state
-          : { kind: 'signed-out', support: supportAboutOf(asked) };
+          : { kind: 'signed-out', support: supportAboutOf(asked), errorReference, errorDetail };
   return (
     <RouteModal
       closeHref={closeHref}

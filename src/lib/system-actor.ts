@@ -6,3 +6,6 @@ export const SYSTEM_ACTOR_ID = '00000000-0000-4000-8000-00000000a111';
 export function isStandInAccount(userId: string): boolean {
   return userId === SYSTEM_ACTOR_ID || userId === SIGNED_OUT_SENDER_ID;
 }
+
+/** The session a scheduled job or a signed-out flow writes under. */
+export const SYSTEM_SESSION = { userId: SYSTEM_ACTOR_ID };

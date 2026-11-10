@@ -1,4 +1,17 @@
-import { and, asc, count, desc, exists, gt, is, lt, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  exists,
+  gt,
+  is,
+  lt,
+  sql,
+  type SQL,
+  type SQLWrapper,
+} from 'drizzle-orm';
 import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 // The choke point the rule exists to protect: lint refuses any other import of the client (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention").
 // oxlint-disable-next-line no-restricted-imports
@@ -297,6 +310,38 @@ export function existsIn<TTable extends PgTable>(table: TTable, where: SQL | und
       .from(table as never)
       .where(and(notSoftDeleted(table), where)),
   );
+}
+
+/**
+ * Runs `read` for a by-id read, or answers `empty` (an empty list unless said otherwise) with no query when `ids` is empty.
+ * The one place a by-id reader names the empty case, so the answer's shape does not drift between readers.
+ */
+export function whenIds<T>(ids: readonly unknown[], read: () => Promise<T[]>): Promise<T[]>;
+export function whenIds<T>(ids: readonly unknown[], read: () => Promise<T>, empty: T): Promise<T>;
+export function whenIds<T>(
+  ids: readonly unknown[],
+  read: () => Promise<T>,
+  empty: T = [] as T,
+): Promise<T> {
+  return ids.length === 0 ? Promise.resolve(empty) : read();
+}
+
+/** `whenIds` for a builder that returns a list at once, not a promise: no ids, no items. */
+export function forIds<T>(ids: readonly unknown[], build: () => T[]): T[] {
+  return ids.length === 0 ? [] : build();
+}
+
+/**
+ * `existsIn` for the commonest shape: the live `parent` row whose `parentKey` column equals `outerKey` (a column of the outer row), narrowed by any
+ * `also` conditions. Keeps `existsIn`'s tombstone filter on `parent`, so a deleted parent hides its children here too.
+ */
+export function existsByKey<TTable extends PgTable>(
+  parent: TTable,
+  parentKey: SQLWrapper,
+  outerKey: unknown,
+  ...also: (SQL | undefined)[]
+): SQL {
+  return existsIn(parent, and(eq(parentKey, outerKey), ...also));
 }
 
 /**

@@ -169,6 +169,7 @@ export const readOpened = cache(
       assignee: person && { ...person, paused: pause !== undefined },
       message: row.message,
       path: row.path || null,
+      errorDetail: row.errorDetail,
       issueUrl: row.issueUrl,
       resolvedBy: personOf(names, row.resolvedBy),
       resolvedAt: row.resolvedAt,

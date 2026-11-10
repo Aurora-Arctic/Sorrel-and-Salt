@@ -3,7 +3,7 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { findOneIngredient } from './ingredients';
 import { inCompendium, notSoftDeleted } from './predicates';
-import { existsIn, selectFrom, selectOne } from './select';
+import { existsByKey, existsIn, selectFrom, selectOne } from './select';
 import type { CompendiumSlugEntry, IngredientRow, SlugRedirect } from './types';
 
 // A compendium entry's slugs and retired slugs (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"); `at`
@@ -53,13 +53,12 @@ export async function findCompendiumSlugRedirect(
       eq(retiredIngredientSlugs.slug, slug),
       gt(retiredIngredientSlugs.expiresAt, at),
       excluding === undefined ? undefined : ne(retiredIngredientSlugs.ingredientId, excluding),
-      existsIn(
+      existsByKey(
         ingredients,
-        and(
-          eq(ingredients.id, retiredIngredientSlugs.ingredientId),
-          inCompendium(ingredients),
-          shownOnly(reach),
-        ),
+        ingredients.id,
+        retiredIngredientSlugs.ingredientId,
+        inCompendium(ingredients),
+        shownOnly(reach),
       ),
       not(
         existsIn(

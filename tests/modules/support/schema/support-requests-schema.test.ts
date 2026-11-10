@@ -26,6 +26,7 @@ const OWN_COLUMNS = [
   'closed_at',
   'linked_from',
   'error_reference',
+  'error_detail',
   'sender_email',
   'closing_notice_sent_at',
   'view_token_hash',

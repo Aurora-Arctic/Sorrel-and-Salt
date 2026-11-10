@@ -17,6 +17,9 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 export const workspaceRole = pgEnum('workspace_role', ['viewer', 'member', 'owner']);
 
 // The demo coven, marked by `demo`, cannot be deleted.
+/** The index that keeps a live workspace slug unique. */
+export const WORKSPACES_SLUG_UNIQUE = 'workspaces_slug_unique';
+
 export const workspaces = pgTable(
   'workspaces',
   {
@@ -27,7 +30,7 @@ export const workspaces = pgTable(
     ...auditColumns,
   },
   (table) => [
-    liveUnique('workspaces_slug_unique', table, table.slug),
+    liveUnique(WORKSPACES_SLUG_UNIQUE, table, table.slug),
     // Partial on `demo` as well as `deleted_at`: only the demo row is constrained.
     uniqueIndex('workspaces_demo_unique')
       .on(table.demo)

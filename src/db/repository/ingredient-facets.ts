@@ -23,6 +23,7 @@ import {
   toxicArm,
   workspaceListScopeIncludingSoftDeleted,
 } from './ingredients';
+import { categoryFacetJoins, withoutChosenIfAny } from './category-arms';
 import { fold, naturally, readableInTiers } from './predicates';
 import { selectFrom } from './select';
 import { curated, inLiveGroup } from './vocabularies';
@@ -269,23 +270,19 @@ async function categoryFacet(
   filter: IngredientFilter,
   { scope, membership }: FacetRead,
 ): Promise<Counted> {
-  const rest = filter.categoryMode === 'any' ? { ...filter, categoryIds: undefined } : filter;
-  const { where, over } = listed(rest, scope, membership);
+  const { where, over } = listed(withoutChosenIfAny(filter), scope, membership);
   const pair = alias(ingredientCategories, 'facet_pair');
   const counted = await selectFrom(ingredients, where, {
     aggregate: { value: sql<string>`${categories.id}`, count: entries },
     over,
     joins: [
-      {
-        type: 'inner',
+      ...categoryFacetJoins({
         table: pair,
-        on: and(eq(pair.ingredientId, ingredients.id), pairIsLive(pair)),
-      },
-      {
-        type: 'inner',
-        table: categories,
-        on: and(eq(categories.id, pair.categoryId), inLiveGroup(categories)),
-      },
+        owner: pair.ingredientId,
+        category: pair.categoryId,
+        outer: ingredients.id,
+        also: pairIsLive(pair),
+      }),
       { type: 'inner', table: categoryGroups, on: eq(categoryGroups.id, categories.groupId) },
     ],
     groupBy: [categories.id, categoryGroups.id],

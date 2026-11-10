@@ -24,7 +24,8 @@ afterEach(() => {
 });
 
 // The screens a failure lands on. Each must offer a way onward and a way to report it, and
-// must not print the error's message or stack, whatever it holds.
+// must not print the error's message or stack, whatever it holds: the name and message ride only
+// in the report link, for the bug form to show the sender.
 
 const failure = Object.assign(new Error('relation "secret_table" does not exist'), {
   digest: 'd1g3st',
@@ -33,6 +34,11 @@ failure.stack = 'Error: boom\n    at /srv/app/secret-file.ts:1:1';
 
 const home = () => screen.getByRole('link', { name: /Back to/ });
 const report = () => screen.getByRole('link', { name: 'Report This' });
+const reportQuery = () =>
+  Object.fromEntries(new URL(report().getAttribute('href') ?? '', 'http://site.test').searchParams);
+
+// Thrown in a client component: no digest, and not always an Error.
+const clientFailure = new TypeError('Testwort is not a function');
 
 describe('the error boundary', () => {
   it('offers to retry, a way home and a report, and prints no message or stack', () => {
@@ -43,9 +49,32 @@ describe('the error boundary', () => {
 
     expect(retry).toHaveBeenCalledTimes(1);
     expect(home()).toHaveAttribute('href', '/');
-    expect(report()).toHaveAttribute('href', '/gone?support=bug&error=500&ref=d1g3st');
+    expect(report().getAttribute('href')).toMatch(/^\/gone\?/);
+    expect(reportQuery()).toEqual({
+      support: 'bug',
+      error: '500',
+      ref: 'd1g3st',
+      detail: 'Error: relation "secret_table" does not exist',
+    });
     expect(container.textContent).toContain('d1g3st');
     expect(container.textContent).not.toMatch(/secret_table|secret-file/);
+  });
+
+  it('shows a reference of its own when the error has no digest, and the report carries it and the detail', () => {
+    const { container, rerender } = render(<ErrorBoundary error={clientFailure} retry={vi.fn()} />);
+    const { ref, detail } = reportQuery();
+
+    expect(ref).toBeTruthy();
+    expect(detail).toBe('TypeError: Testwort is not a function');
+    expect(container.textContent).toContain(ref);
+    rerender(<ErrorBoundary error={clientFailure} retry={vi.fn()} />);
+    expect(reportQuery().ref).toBe(ref);
+  });
+
+  it('reports a thrown value that is not an Error as text', () => {
+    render(<ErrorBoundary error={'Testwort failed' as unknown as Error} retry={vi.fn()} />);
+    expect(reportQuery().detail).toBe('Testwort failed');
+    expect(reportQuery().ref).toBeTruthy();
   });
 });
 
@@ -56,7 +85,7 @@ describe('the global error boundary', () => {
     // takes the document itself as the root.
     // The boundary's props as Next passes them: the error and its retry.
     const props = { error: failure, retry };
-    const { container } = render(<GlobalError {...props} />, {
+    render(<GlobalError {...props} />, {
       container: document,
     });
 
@@ -64,8 +93,26 @@ describe('the global error boundary', () => {
 
     expect(retry).toHaveBeenCalledTimes(1);
     expect(home()).toHaveAttribute('href', '/');
-    expect(report()).toHaveAttribute('href', '/support?support=bug&error=500&ref=d1g3st');
-    expect(container.textContent).not.toMatch(/secret_table|secret-file/);
+    expect(report().getAttribute('href')).toMatch(/^\/support\?/);
+    expect(reportQuery()).toMatchObject({ support: 'bug', error: '500', ref: 'd1g3st' });
+    expect(reportQuery().detail).toBe('Error: relation "secret_table" does not exist');
+    expect(document.body.textContent).toContain('d1g3st');
+    expect(document.body.textContent).not.toMatch(/secret_table|secret-file/);
+  });
+
+  it('shows a reference of its own when the error has no digest, and the report keeps it, the detail and the page', () => {
+    render(<GlobalError error={clientFailure} retry={vi.fn()} />, {
+      container: document,
+    });
+    const { ref, detail } = reportQuery();
+
+    expect(ref).toBeTruthy();
+    expect(detail).toBe('TypeError: Testwort is not a function');
+    expect(document.body.textContent).toContain(ref);
+    // jsdom cannot follow a link; the click's handler still runs.
+    report().addEventListener('click', (event) => event.preventDefault());
+    fireEvent.click(report());
+    expect(reportQuery()).toMatchObject({ ref, detail, from: '/gone' });
   });
 
   it('reaches Report This with a plain anchor and imports neither the router nor the report component', () => {

@@ -1,6 +1,8 @@
+import { MS_PER_DAY } from './duration';
+
 export const RECENT_DAYS = 30;
 
-const WINDOW_MS = RECENT_DAYS * 24 * 60 * 60 * 1000;
+const WINDOW_MS = RECENT_DAYS * MS_PER_DAY;
 
 export type EntryRecency = 'new' | 'updated';
 

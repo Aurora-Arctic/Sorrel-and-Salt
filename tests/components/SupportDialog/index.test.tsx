@@ -98,6 +98,24 @@ describe('SupportDialog', () => {
     );
   });
 
+  it('carries the error detail from the address into the form, read-only', async () => {
+    search.mockReturnValue('support=bug&error=500&ref=abc&detail=TypeError%3A+Testwort');
+    open();
+    const detail = await screen.findByRole('group', { name: 'Error Details' });
+    expect(detail).toHaveTextContent('TypeError: Testwort');
+    expect(within(detail).queryByRole('textbox')).toBeNull();
+  });
+
+  it('carries the error detail into the signed-out form too', async () => {
+    answer({ kind: 'signedOut', until: null });
+    search.mockReturnValue('support=bug&error=500&ref=abc&detail=TypeError%3A+Testwort');
+    open();
+    await screen.findByRole('textbox', { name: /Email/ });
+    expect(screen.getByRole('group', { name: 'Error Details' })).toHaveTextContent(
+      'TypeError: Testwort',
+    );
+  });
+
   it('reports the page named by from over the address it sits on', async () => {
     search.mockReturnValue('support=bug&error=500&from=%2Fcoven%2Fx%2Fbroken');
     open();
