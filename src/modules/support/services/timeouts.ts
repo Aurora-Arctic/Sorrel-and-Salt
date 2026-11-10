@@ -17,6 +17,7 @@ import { supportRequests } from '../schema/support-requests';
 import { supportTimeouts } from '../schema/support-timeouts';
 import type { SupportTimeoutRow, TimeoutNotifier } from '../types';
 import { mailTimedOutSender } from './timeout-start';
+import { NO_SUCH_USER } from './refusals';
 
 const REFUSAL = 'Only a site keeper may time out or restore a support sender';
 const STAND_IN_REFUSAL = 'This account is not a person, so it cannot be timed out of support';
@@ -47,7 +48,7 @@ export async function timeOutSupportSender(
   const trimmed = parsePauseNote(note, { required: true });
   const toUser = parseRequiredPauseMessage(message);
   const user = await findOneById(users, id);
-  if (!user) throw new NotFound('No such user');
+  if (!user) throw new NotFound(NO_SUCH_USER);
   if (isStandInAccount(id)) throw new Forbidden(STAND_IN_REFUSAL);
   const row = await withAudit(session, async (write) => {
     const [inserted] = await write.insert(supportTimeouts, {

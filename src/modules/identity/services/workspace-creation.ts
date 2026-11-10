@@ -3,7 +3,7 @@ import { withAudit } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
-import { adminDeclaration, liveUser } from './admin-changes';
+import { NO_SUCH_USER, adminDeclaration, liveUser } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
 import { ROLE_NOUNS } from './user-role';
 import type { UserRow } from '../types';
@@ -25,7 +25,7 @@ async function setFlag(
       const [written] = await write.updateById(users, userId, { canCreateWorkspace });
       // Soft-deleted between the read and the write: the update matches no
       // row, so the trigger never fires, and nothing is recorded.
-      if (!written) throw new NotFound('No such user');
+      if (!written) throw new NotFound(NO_SUCH_USER);
       return written;
     },
     adminDeclaration(note),

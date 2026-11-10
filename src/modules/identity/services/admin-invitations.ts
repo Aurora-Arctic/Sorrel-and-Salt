@@ -11,7 +11,7 @@ import type {
   SiteInvitationRow,
   SiteInvitationFilter,
 } from '../../../db/repository';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
 import { newToken } from '../../../lib/invitation-token';
 import { trimmedOrUndefined } from '../../../lib/text';
 import type { Session } from '../../../lib/session';
@@ -47,14 +47,10 @@ export async function createAdminInvitation(
   if (issue) throw new ValidationError([issue]);
   const holder = await findUserByEmail(email);
   if (holder && siteRole === 'user' && holder.canCreateWorkspace) {
-    throw new ValidationError([
-      { path: ['email'], message: 'That address can already create a coven' },
-    ]);
+    throw fieldRefusal('email', 'That address can already create a coven');
   }
   if (holder && siteRole !== 'user' && !outranks(siteRole, holder.role)) {
-    throw new ValidationError([
-      { path: ['email'], message: `That address belongs to ${ROLE_NOUNS[holder.role]} already` },
-    ]);
+    throw fieldRefusal('email', `That address belongs to ${ROLE_NOUNS[holder.role]} already`);
   }
 
   // The waiting site-tier invitation to this address is withdrawn in the same write. The token stored here is never told

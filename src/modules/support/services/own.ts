@@ -14,6 +14,7 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/typ
 import { RowId, parseInput } from '../../../lib/validation';
 import type { StandingTimeout, SupportDialogAnswer, SupportRequestRow } from '../types';
 import { requireVerified } from './access';
+import { NO_SUCH_REQUEST } from './refusals';
 
 // The sender's reads, behind `/account/support`. The finders AND `created_by` themselves, so what another sender wrote is
 // outside the query, never filtered after it. The issue address and the error reference (the crash digest) are staff-only, so these reads blank them.
@@ -71,7 +72,7 @@ export async function getMySupportRequest(
 ): Promise<SupportRequestRow> {
   requireVerified(session);
   const row = await findOwnSupportRequest(session.userId, parseInput(RowId, id));
-  if (!row) throw new NotFound('No such support request');
+  if (!row) throw new NotFound(NO_SUCH_REQUEST);
   return withoutStaffFields(row);
 }
 

@@ -16,12 +16,15 @@ export function refuseBatch(ids: readonly string[], reason: string): Forbidden[]
   return ids.map(() => new Forbidden(reason));
 }
 
+/** What a lookup of a user that is gone says. */
+export const NO_SUCH_USER = 'No such user';
+
 /**
  * @throws {NotFound} no live user has this id.
  */
 export async function liveUser(userId: string): Promise<UserRow> {
   const user = await findOneById(users, userId);
-  if (!user) throw new NotFound('No such user');
+  if (!user) throw new NotFound(NO_SUCH_USER);
   return user;
 }
 

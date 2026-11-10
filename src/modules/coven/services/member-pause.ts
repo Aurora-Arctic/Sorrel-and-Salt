@@ -16,10 +16,11 @@ import {
 import { isStandInAccount } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
-import { RowId } from '../../../lib/validation';
+import { isRowId } from '../../../lib/validation';
 import type { MemberPauseNotifier, WorkspaceMemberPauseRow } from '../types';
 import { mailPausedMember } from './member-pause-start';
 import { assertMembership } from './membership';
+import { notAMember } from './not-a-member';
 
 // The member keeps the seat; `assertMembership` refuses them with AccessPaused while the pause stands
 // (claude-docs/design-decisions/auth.md, "How the coven access pause refuses a member, and what it decides along the way").
@@ -28,13 +29,12 @@ const OWNER_REFUSAL =
   "A steward's access can't be paused. Change their role first if they should be paused.";
 const STAND_IN_REFUSAL = 'This account is not a person, so its access to a coven cannot be paused';
 const ALREADY_PAUSED = 'This member is already paused; lift the pause first';
-const STRANGER_REFUSAL = 'That person is not a member of this coven';
 
 /** An id that cannot name a user is refused as a stranger, as a wrong one is. */
 async function memberRoleOf(workspaceId: string, userId: string) {
-  if (!RowId.safeParse(userId).success) throw new Forbidden(STRANGER_REFUSAL);
+  if (!isRowId(userId)) throw notAMember();
   const role = await findWorkspaceRole(userId, workspaceId);
-  if (!role) throw new Forbidden(STRANGER_REFUSAL);
+  if (!role) throw notAMember();
   return role;
 }
 
@@ -114,7 +114,7 @@ export async function standingMemberPauses(
   userIds: readonly string[],
 ): Promise<WorkspaceMemberPauseRow[]> {
   const membership = await assertMembership(session, workspaceId, { member: ['pause'] });
-  const ids = userIds.filter((id) => RowId.safeParse(id).success);
+  const ids = userIds.filter(isRowId);
   return findStandingWorkspaceMemberPauses(membership, ids);
 }
 
@@ -131,6 +131,6 @@ export async function listMemberPauses(
   page: PageRequest,
 ): Promise<PageEntry<WorkspaceMemberPauseRow>[]> {
   const membership = await assertMembership(session, workspaceId, { member: ['pause'] });
-  if (!RowId.safeParse(userId).success) throw new Forbidden();
+  if (!isRowId(userId)) throw new Forbidden();
   return findWorkspaceMemberPausePage(membership, page, userId);
 }

@@ -12,6 +12,7 @@ import { readerOf, requireVerified } from './access';
 import { SEND_WINDOW_SECONDS, refuseOverLimit, refuseTimedOut, refuseTimedOutReply } from './send';
 import { reopenWithSenderReply } from './sender-reply';
 import { getSupportRequest, refuseAnonymised } from './staff';
+import { NO_SUCH_REQUEST } from './refusals';
 
 // The request lifecycle. The transitions, and who may make each:
 //
@@ -44,7 +45,7 @@ export async function sendSenderMessage(
   const id = parseInput(RowId, requestId);
   const text = parseInput(SupportMessage, body);
   const request = await findOwnSupportRequest(session.userId, id);
-  if (!request) throw new NotFound('No such support request');
+  if (!request) throw new NotFound(NO_SUCH_REQUEST);
 
   return withAudit(session, async (write) => {
     const { recent, timedOut } = await write.lockSupportSender(session.userId, SEND_WINDOW_SECONDS);
@@ -90,7 +91,7 @@ export async function resolveMySupportRequest(
   requireVerified(session);
   const id = parseInput(RowId, requestId);
   const request = await findOwnSupportRequest(session.userId, id);
-  if (!request) throw new NotFound('No such support request');
+  if (!request) throw new NotFound(NO_SUCH_REQUEST);
   const [moved] = await withAudit(session, (write) =>
     write.moveSupportRequest(id, session.userId, ['open', 'waiting_on_sender'], {
       status: 'resolved',

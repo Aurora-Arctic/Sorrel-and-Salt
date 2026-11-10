@@ -24,6 +24,7 @@ import {
   SIGNED_OUT_IP_LIMIT,
   SIGNED_OUT_WINDOW_SECONDS,
 } from './signed-out-limits';
+import { NO_SUCH_REQUEST } from './refusals';
 
 // The link in each mail about a signed-out request. Its token is minted afresh by the step that sends the mail and only its
 // SHA-256 hash is stored, so the newest mailed link alone opens the request. A request a real account holds, or one
@@ -59,8 +60,6 @@ export async function mintSupportViewToken(requestId: string): Promise<string> {
   );
   return token;
 }
-
-const NO_SUCH_REQUEST = 'No such support request';
 
 async function requestByToken(token: string): Promise<SupportRequestRow> {
   const request = token ? await findSupportRequestByViewTokenHash(hashOf(token)) : undefined;

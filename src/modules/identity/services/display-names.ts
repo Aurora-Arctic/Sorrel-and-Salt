@@ -1,7 +1,7 @@
 import 'server-only';
 import { findCoMemberNamesIncludingSoftDeleted } from '../../../db/repository';
 import type { Session } from '../../../lib/session';
-import { RowId } from '../../../lib/validation';
+import { isRowId } from '../../../lib/validation';
 import { inIdOrder } from '../../../lib/in-id-order';
 
 // The display names a member reads: a members list, and a row's last editor.
@@ -18,7 +18,7 @@ export async function displayNamesOf(
 ): Promise<(string | null)[]> {
   // An id is whatever a row carried, but one that is not a uuid would be a
   // driver error rather than a user nobody shares a coven with.
-  const ids = [...new Set(userIds.filter((id) => RowId.safeParse(id).success))];
+  const ids = [...new Set(userIds.filter(isRowId))];
   const names = await findCoMemberNamesIncludingSoftDeleted(session.userId, ids);
   return inIdOrder(userIds, names, () => null).map((found) => found?.name ?? null);
 }

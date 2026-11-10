@@ -6,6 +6,7 @@ import { USER_MODAL_ORIGINS, userListHref } from '@/components/UserList/href';
 import { ROLES } from '@/components/UserList/roles';
 import type { UserModalOrigin } from '@/components/UserList/href';
 import type { UserListEntry } from '@/components/UserList/types';
+import { answerOf } from '@/lib/errors';
 import { impersonationEnabled } from '@/lib/impersonation';
 import { requireAdminSession } from '@/lib/request-session';
 import { oneOf, single } from '@/lib/search-params';
@@ -64,9 +65,8 @@ const readUsers = cache(
       standingAccessPausesOf(session, ids),
     ]);
     const users = page.edges.map(({ node }, index): UserListEntry => {
-      const linked = providers[index];
       // A keeper's batch answers every slot; a refusal here is the guard's bug.
-      if (!linked || linked instanceof Error) throw linked ?? new Error('No providers read');
+      const linked = answerOf(providers[index]);
       return {
         ...node,
         providers: linked,

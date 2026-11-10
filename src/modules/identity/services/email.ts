@@ -2,7 +2,7 @@ import 'server-only';
 import { SECONDS_PER_DAY } from '../../../lib/duration';
 import { findOneById, findUserByEmail, withAudit } from '../../../db/repository';
 import { normaliseEmail, validateEmailAddress } from '../../../lib/email-address';
-import { ValidationError } from '../../../lib/errors';
+import { ValidationError, fieldRefusal } from '../../../lib/errors';
 import { SYSTEM_SESSION } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
@@ -131,19 +131,12 @@ export async function setEmail(
 
   // A session left open on a borrowed device must not move the account; resending the row's own link moves nothing.
   if (!unchanged && !(await sender.sessionIsFresh(EMAIL_CHANGE_WINDOW_SECONDS))) {
-    throw new ValidationError([
-      {
-        path: ['email'],
-        message: 'Sign in again to change your email address, then try again',
-      },
-    ]);
+    throw fieldRefusal('email', 'Sign in again to change your email address, then try again');
   }
 
   const wait = verificationWaitSeconds(me.verificationSentAt);
   if (wait > 0) {
-    throw new ValidationError([
-      { path: ['email'], message: `Wait ${wait} seconds before sending another confirmation` },
-    ]);
+    throw fieldRefusal('email', `Wait ${wait} seconds before sending another confirmation`);
   }
 
   if (unchanged) {

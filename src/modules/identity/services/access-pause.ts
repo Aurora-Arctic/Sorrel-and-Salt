@@ -23,6 +23,7 @@ import { assertChangesOpen } from './admin-role-pause';
 import { isPrimaryAdmin } from './primary-admin';
 import { mailPausedUser } from './access-pause-start';
 import { assertSiteAdmin } from './site-admin';
+import { NO_SUCH_USER } from './admin-changes';
 
 // Setting one ends every session the user holds; every signed-in request reads `standingAccessPause` through
 // src/lib/request-session.ts (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access").
@@ -54,7 +55,7 @@ export async function pauseUserAccess(
   const trimmed = parsePauseNote(note, { required: true });
   const toUser = parseRequiredPauseMessage(message);
   const user = await findOneById(users, id);
-  if (!user) throw new NotFound('No such user');
+  if (!user) throw new NotFound(NO_SUCH_USER);
   if (isPrimaryAdmin(user)) throw new Forbidden(PRIMARY_REFUSAL);
   if (user.id === session.userId) throw new Forbidden(SELF_REFUSAL);
   if (isStandInAccount(user.id)) throw new Forbidden(STAND_IN_REFUSAL);
@@ -92,7 +93,7 @@ export async function liftUserAccessPause(
 ): Promise<UserAccessPauseRow> {
   const admin = assertSiteAdmin(session, REFUSAL);
   const id = parseInput(RowId, userId);
-  if (!(await findOneById(users, id))) throw new NotFound('No such user');
+  if (!(await findOneById(users, id))) throw new NotFound(NO_SUCH_USER);
   const [row] = await withAudit(session, (write) => write.liftUserAccessPause(admin, id));
   if (!row) throw new NotFound('No pause stands on this user');
   return row;

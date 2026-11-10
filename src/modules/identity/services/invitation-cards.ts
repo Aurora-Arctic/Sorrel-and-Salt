@@ -22,7 +22,7 @@ import type {
   CardPosition,
   CardRow,
 } from '../../../db/repository';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
 import { batchName } from '../../../lib/invitation-cards/batch-name';
 import {
   CARDS_PER_SHEET,
@@ -51,7 +51,7 @@ function parsedBatchFilter(filter: CardBatchFilter): CardBatchFilter {
       Number.isNaN(Date.parse(value)) ||
       new Date(value).toISOString().slice(0, 10) !== value
     )
-      throw new ValidationError([{ path: ['day'], message: 'A day is written YYYY-MM-DD' }]);
+      throw fieldRefusal('day', 'A day is written YYYY-MM-DD');
     return value;
   };
   return {
