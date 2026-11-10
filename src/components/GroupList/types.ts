@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { ModalHeading } from '../Modal/types';
-import type { GroupColors, PagePosition, PagerHrefs } from '../../lib/types';
+import type { GroupColors, ListKind, PagePosition, PagerHrefs } from '../../lib/types';
 import type { UpdatedStamp } from '../DataTable/types';
 import type { GroupKind } from '../GroupForm/types';
 
@@ -41,12 +41,7 @@ export interface GroupsPlace {
   before?: string;
 }
 
-export interface GroupListKind {
-  path: Route;
-  title: string;
-  label: string;
-  noun: string;
-  plural: string;
+export interface GroupListKind extends ListKind<Route> {
   add: string;
   holds: 'category' | 'form' | 'deity';
 }
