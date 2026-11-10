@@ -28,43 +28,41 @@ export default function LinkDialog({
 
   return (
     <Modal title="Add Link" onClose={onClose} returnTo={returnTo}>
-      <div className="form">
-        {/* A div, not a form: the dialog can sit inside the document's own form. */}
-        <div
-          role="presentation"
-          onKeyDown={(event) => {
-            if (event.key !== 'Enter') return;
-            event.preventDefault();
-            add();
+      {/* A div, not a form: the dialog can sit inside the document's own form. */}
+      <div
+        role="presentation"
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter') return;
+          event.preventDefault();
+          add();
+        }}
+      >
+        <PlainTextField
+          name="address"
+          label="Address"
+          type="url"
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          enterKeyHint="done"
+          placeholder="https://example.com"
+          format={tidyLinkAddress}
+          check={linkAddressProblem}
+          value={url}
+          error={error}
+          onChange={(next) => {
+            setUrl(next);
+            setError(undefined);
           }}
-        >
-          <PlainTextField
-            name="address"
-            label="Address"
-            type="url"
-            autoComplete="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            enterKeyHint="done"
-            placeholder="https://example.com"
-            format={tidyLinkAddress}
-            check={linkAddressProblem}
-            value={url}
-            error={error}
-            onChange={(next) => {
-              setUrl(next);
-              setError(undefined);
-            }}
-          />
-        </div>
-        <div className="modal__actions">
-          <button type="button" className="btn btn--solid" onClick={add}>
-            Add Link
-          </button>
-          <button type="button" className="btn btn--quiet" onClick={onClose}>
-            Cancel
-          </button>
-        </div>
+        />
+      </div>
+      <div className="form__actions">
+        <button type="button" className="btn btn--solid" onClick={add}>
+          Add Link
+        </button>
+        <button type="button" className="btn btn--quiet" onClick={onClose}>
+          Cancel
+        </button>
       </div>
     </Modal>
   );

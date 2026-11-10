@@ -570,3 +570,52 @@ test('moving to another document keeps the same tab row and never marks Terms of
     await page.evaluate(() => (window as unknown as { termsSeen: string[] }).termsSeen),
   ).toEqual([]);
 });
+
+test('the editor link dialog spaces its field and buttons as every other form modal does', async ({
+  page,
+}) => {
+  await signInAs(page, 'link-layout@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  await page.waitForLoadState('networkidle');
+  await appendTo(page, 'Changes to This Policy', ' Fixturelink');
+  await expect(editorOf(page).getByRole('heading', { name: /Fixturelink$/ })).toBeVisible();
+  for (let i = 0; i < 'Fixturelink'.length; i++) await page.keyboard.press('Shift+ArrowLeft');
+  await expect
+    .poll(() => page.evaluate(() => window.getSelection()?.toString()))
+    .toBe('Fixturelink');
+  await page.waitForTimeout(300);
+  await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add Link' });
+  await expect(dialog).toBeVisible();
+
+  // A `.form` holding a field and `.modal__actions` is every other form modal's shape; one is built beside the
+  // real controls, and the real gaps must equal its gaps.
+  const gaps = await dialog.evaluate((root) => {
+    const field = root.querySelector('.field')!;
+    const add = [...root.querySelectorAll('button')].find((b) => b.textContent === 'Add Link')!;
+    const actions = add.parentElement!;
+    const title = root.querySelector('h2')!;
+    const real = {
+      titleToField: field.getBoundingClientRect().top - title.getBoundingClientRect().bottom,
+      fieldToActions: actions.getBoundingClientRect().top - field.getBoundingClientRect().bottom,
+    };
+    const probe = document.createElement('div');
+    probe.className = 'form';
+    probe.innerHTML =
+      '<div class="field"><label class="field__label">Probe</label><input class="input"></div><div class="modal__actions"><button class="btn btn--solid">Probe</button></div>';
+    field.parentElement!.parentElement!.prepend(probe);
+    const bottom = (el: Element) => el.getBoundingClientRect().bottom;
+    const top = (el: Element) => el.getBoundingClientRect().top;
+    const probeField = probe.querySelector('.field')!;
+    const probeActions = probe.querySelector('.modal__actions')!;
+    const result = {
+      ...real,
+      probeTitleToField: top(probeField) - bottom(title),
+      probeFieldToActions: top(probeActions) - bottom(probeField),
+    };
+    probe.remove();
+    return result;
+  });
+  expect(gaps.titleToField).toBeCloseTo(gaps.probeTitleToField, 0);
+  expect(gaps.fieldToActions).toBeCloseTo(gaps.probeFieldToActions, 0);
+});
