@@ -276,3 +276,8 @@ export interface CovenAccess {
   canUpdateWorking: boolean;
   canDeleteWorking: boolean;
 }
+
+/** What a mail-sending service needs from the request: the site origin its links point at. */
+export interface OriginNotifier {
+  origin(): Promise<string>;
+}

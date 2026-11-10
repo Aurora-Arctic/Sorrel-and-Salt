@@ -87,3 +87,9 @@ export class RateLimited extends Error {
     this.retryAfterSeconds = retryAfterSeconds;
   }
 }
+
+/** A loader answers each key with its row or the refusal, so one bad key does not fail the batch; a service reading one answer throws it. */
+export function answerOf<T>(answer: T | Error | undefined): T {
+  if (answer === undefined || answer instanceof Error) throw answer ?? new Error('No answer');
+  return answer;
+}

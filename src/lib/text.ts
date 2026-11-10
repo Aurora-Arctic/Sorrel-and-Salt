@@ -72,3 +72,11 @@ export function titleCase(text: string): string {
     })
     .join(' ');
 }
+
+/** Blank and absent read alike, as an optional field left empty. */
+export const trimmedOrUndefined = (text: string | null | undefined): string | undefined =>
+  text?.trim() || undefined;
+
+/** As `trimmedOrUndefined`, for a column that stores the absence as null. */
+export const trimmedOrNull = (text: string | null | undefined): string | null =>
+  text?.trim() || null;
