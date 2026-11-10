@@ -1,5 +1,6 @@
 'use client';
 
+import { joinList } from '@/lib/join-list';
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { asksAgreement } from '../../lib/agreement-version';
@@ -41,13 +42,11 @@ const STATE_TEXT = {
 
 const count = (n: number): string => n.toLocaleString('en-GB');
 
-const titlesOf = (titles: readonly string[]): string =>
-  titles.length <= 2
-    ? titles.join(' and ')
-    : `${titles.slice(0, -1).join(', ')}, and ${titles[titles.length - 1]}`;
-
 const MailingProgress = ({ mailing }: MailingProgressProps): ReactElement => {
-  const titles = titlesOf(mailing.documents.map((document) => document.title));
+  const titles = joinList(
+    mailing.documents.map((document) => document.title),
+    'and',
+  );
   return (
     <div className="document-mailing__mailing">
       <div
@@ -91,7 +90,10 @@ const DocumentMailingPanel = ({ overview }: DocumentMailingPanelProps): ReactEle
   const id = useId();
   const summaryOf = (versionId: string): string => summaries[versionId] ?? '';
   const written = pending.every((document) => summaryOf(document.versionId).trim() !== '');
-  const titles = titlesOf(pending.map((document) => document.title));
+  const titles = joinList(
+    pending.map((document) => document.title),
+    'and',
+  );
   const reached = open.reduce((sum, mailing) => sum + mailing.reached, 0);
   const recipients = open.reduce((sum, mailing) => sum + mailing.recipientCount, 0);
 
