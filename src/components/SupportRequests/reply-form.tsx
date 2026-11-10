@@ -143,7 +143,7 @@ const ReplyForm = ({
         />
       )}
       {!note && senderTimedOut && (
-        <Notice kind="caution" quiet>
+        <Notice kind="warn" quiet>
           The sender cannot answer {cannotAnswer(senderTimedOut.until)}.
         </Notice>
       )}

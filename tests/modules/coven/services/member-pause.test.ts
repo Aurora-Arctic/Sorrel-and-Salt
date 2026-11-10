@@ -334,7 +334,7 @@ describe('pauseMemberAccess', () => {
     ).rejects.toMatchObject({ message: 'Choose a time in the future' });
     await expect(
       pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'x'.repeat(501), noPauseNotifier),
-    ).rejects.toMatchObject({ message: 'Keep the note to 500 characters' });
+    ).rejects.toMatchObject({ message: 'Keep this to 500 characters or fewer' });
     expect(await pausesOf(covenId, B.id)).toHaveLength(0);
 
     await expect(

@@ -25,7 +25,22 @@ const request = (over: Partial<SupportSenderRequestEntry> = {}): SupportSenderRe
   ...over,
 });
 
+const leavingAsks = (): boolean => {
+  const event = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(event);
+  return event.defaultPrevented;
+};
+
 describe('SupportSenderRequest', () => {
+  it('counts a reply as unsaved only when it has more than whitespace', () => {
+    render(<SupportSenderRequest request={request({ status: 'waiting_on_sender' })} />);
+    const box = screen.getByRole('textbox', { name: 'Your Reply' });
+    fireEvent.change(box, { target: { value: '   ' } });
+    expect(leavingAsks()).toBe(false);
+    fireEvent.change(box, { target: { value: 'The red one.' } });
+    expect(leavingAsks()).toBe(true);
+  });
+
   it('draws the Page fact as the path alone', () => {
     render(<SupportSenderRequest request={request()} />);
     const page = screen.getByText('Page').closest('div');

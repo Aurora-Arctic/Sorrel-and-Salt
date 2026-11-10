@@ -1,10 +1,9 @@
 import 'server-only';
 import { z } from 'zod';
 import { isReservedCovenSlug } from '../../../lib/coven-path';
-import { limitMessage } from '../../../lib/formats';
 import { slugify } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { requiredText } from '../../../lib/validation';
+import { limitedText } from '../../../lib/validation';
 import { COVEN_NAME_LIMIT } from '../validation/workspace-name';
 import { slugHeldByAnotherCoven } from './workspace-by-slug';
 
@@ -12,9 +11,7 @@ const FALLBACK_SLUG = 'coven';
 
 /** The name a coven is created or renamed with. */
 export const CovenNameInput = z.object({
-  name: requiredText('Give the coven a name').max(COVEN_NAME_LIMIT, {
-    error: limitMessage(COVEN_NAME_LIMIT),
-  }),
+  name: limitedText('Give the coven a name', COVEN_NAME_LIMIT),
 });
 
 /** Each retry of a slug race sees the winner and takes the next number. */

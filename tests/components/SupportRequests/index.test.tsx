@@ -945,6 +945,21 @@ describe('Dates', () => {
 });
 
 describe('Unsaved input in the dialog', () => {
+  it('counts a reply as unsaved only when it has more than whitespace', () => {
+    open(ADMIN);
+    chooseReply();
+    const box = within(dialog()).getByLabelText(/^Your Reply/);
+    const leavingAsks = (): boolean => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    fireEvent.change(box, { target: { value: '   ' } });
+    expect(leavingAsks()).toBe(false);
+    fireEvent.change(box, { target: { value: 'Noted.' } });
+    expect(leavingAsks()).toBe(true);
+  });
+
   const close = () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
 
   it.each([

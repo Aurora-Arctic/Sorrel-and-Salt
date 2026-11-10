@@ -8,8 +8,14 @@ import {
   normaliseIssueLink,
 } from '../../../lib/support-path';
 import { EMAIL_MAX_LENGTH } from '../../../lib/email-address';
+import {
+  PATH_TOO_LONG,
+  SUBJECT_REQUIRED,
+  MESSAGE_REQUIRED,
+  ABOUT_REQUIRED,
+} from '../../../lib/support-messages';
 import { trimEnds } from '../../../lib/formats';
-import { requiredText } from '../../../lib/validation';
+import { limitedText } from '../../../lib/validation';
 import { supportRequestAbout } from '../schema/support-requests';
 
 import {
@@ -29,21 +35,17 @@ export {
 };
 
 // A request as its sender writes it. The reply's body shares the message's limits, so one schema serves both.
-export const SupportMessage = requiredText('Write a message', trimEnds).max(MESSAGE_MAX_LENGTH, {
-  error: `Keep the message to ${MESSAGE_MAX_LENGTH} characters`,
-});
+export const SupportMessage = limitedText(MESSAGE_REQUIRED, MESSAGE_MAX_LENGTH, trimEnds);
 
-const About = z.enum(supportRequestAbout.enumValues, { error: 'Choose what this is about' });
+const About = z.enum(supportRequestAbout.enumValues, { error: ABOUT_REQUIRED });
 
 export const SupportRequestInput = z.object({
   about: About,
-  subject: requiredText('Write a subject').max(SUBJECT_MAX_LENGTH, {
-    error: `Keep the subject to ${SUBJECT_MAX_LENGTH} characters`,
-  }),
+  subject: limitedText(SUBJECT_REQUIRED, SUBJECT_MAX_LENGTH),
   message: SupportMessage,
   path: z
     .string()
-    .max(PATH_MAX_LENGTH, { error: 'That page address is too long' })
+    .max(PATH_MAX_LENGTH, { error: PATH_TOO_LONG })
     .refine(isSitePage, { error: PAGE_NOT_ON_SITE })
     .nullish(),
   errorCode: z

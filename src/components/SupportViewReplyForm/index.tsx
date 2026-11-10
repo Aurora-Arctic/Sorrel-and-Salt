@@ -28,7 +28,7 @@ const SupportViewReplyForm = ({ token, onSent }: SupportViewReplyFormProps): Rea
   const [failure, setFailure] = useState<Failure>({});
 
   const tooLong = body.trim().length > MESSAGE_MAX_LENGTH;
-  const discard = useDiscardGuard(body !== '');
+  const discard = useDiscardGuard(body.trim() !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

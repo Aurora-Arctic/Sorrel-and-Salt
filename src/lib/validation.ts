@@ -1,6 +1,6 @@
 import { type ZodType, z } from 'zod';
 import { ValidationError } from './errors';
-import { type FieldFormat, parseQuantity, tidy, trimEnds } from './formats';
+import { type FieldFormat, limitMessage, parseQuantity, tidy, trimEnds } from './formats';
 import { QUANTITY_FORMAT_MESSAGE, amountProblem } from './quantity-rule';
 import type { ValidationIssue } from './types';
 
@@ -17,6 +17,10 @@ export const CalendarDay = z.iso.date({ error: 'Give the day as YYYY-MM-DD' });
 /** Tidied as the single-line field is on blur; a multiline field passes `trimEnds`, which keeps its line breaks. */
 export const requiredText = (message: string, format: FieldFormat = tidy) =>
   z.string({ error: message }).overwrite(format).min(1, { error: message });
+
+/** `requiredText` with at most `limit` characters, refused in the words the form shows (`limitMessage`). */
+export const limitedText = (message: string, limit: number, format: FieldFormat = tidy) =>
+  requiredText(message, format).max(limit, { error: limitMessage(limit) });
 
 /** '' is what a form sends for an untouched field, so it becomes null, which a non-blank CHECK accepts. A caller wanting `undefined`, such as a filter, maps null itself. */
 export const optionalText = (format: FieldFormat = tidy) =>

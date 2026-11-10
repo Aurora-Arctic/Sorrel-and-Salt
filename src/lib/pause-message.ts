@@ -1,10 +1,10 @@
 import { fieldRefusal } from './errors';
+import { limitMessage } from './formats';
 
 /** The most characters a pause's note or message holds, once trimmed: the pause services and the pause forms state it from here. */
 export const PAUSE_TEXT_MAX_LENGTH = 500;
 
-const LONG_MESSAGE = `Keep the message to ${PAUSE_TEXT_MAX_LENGTH} characters`;
-const LONG_NOTE = `Keep the note to ${PAUSE_TEXT_MAX_LENGTH} characters`;
+const TOO_LONG = limitMessage(PAUSE_TEXT_MAX_LENGTH);
 const PAST_END = 'Choose a time in the future';
 const NO_NOTE = 'Write a note saying why';
 
@@ -36,7 +36,7 @@ export function parsePauseNote(
 ): string | null {
   const trimmed = typeof note === 'string' ? note.trim() : '';
   if (!trimmed && options.required) throw fieldRefusal('note', NO_NOTE);
-  if (trimmed.length > PAUSE_TEXT_MAX_LENGTH) throw fieldRefusal('note', LONG_NOTE);
+  if (trimmed.length > PAUSE_TEXT_MAX_LENGTH) throw fieldRefusal('note', TOO_LONG);
   return trimmed || null;
 }
 
@@ -46,7 +46,7 @@ export function parsePauseNote(
  */
 export function parseOptionalPauseMessage(message: string | null | undefined): string | null {
   const trimmed = typeof message === 'string' ? message.trim() : '';
-  if (trimmed.length > PAUSE_TEXT_MAX_LENGTH) throw fieldRefusal('message', LONG_MESSAGE);
+  if (trimmed.length > PAUSE_TEXT_MAX_LENGTH) throw fieldRefusal('message', TOO_LONG);
   return trimmed || null;
 }
 

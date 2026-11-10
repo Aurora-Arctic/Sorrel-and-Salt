@@ -625,7 +625,7 @@ describe('admin-only changes', () => {
     const refusal = await failureOf(
       timeOutSupportSender(asUser(E), C.id, null, 'x'.repeat(501), noPauseNotifier, PAUSE_MESSAGE),
     );
-    expect((refusal as Error).message).toBe('Keep the note to 500 characters');
+    expect((refusal as Error).message).toBe('Keep this to 500 characters or fewer');
   });
 
   it.each([
