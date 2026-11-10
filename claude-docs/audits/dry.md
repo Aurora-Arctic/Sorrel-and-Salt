@@ -2169,7 +2169,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** IngredientEntry component tests, e2e specs for Delete Ingredient and Remove from Cupboard.
 
 - **Estimate:** 3.5 hours
-- **Status:** Fixed (MC.6).
+- **Status:** Fixed (MC.6). `IngredientForm/index.tsx` keeps its own delete mutation: its confirm dialog awaits the delete and needs a refusal to throw, and `useRefusableMutation` reports a refusal through a callback and stays pending after success.
 
 ### D-72: A callback-ref merge written twice
 
@@ -2283,7 +2283,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - **Tests covering the callers:** `tests/components/` for each folder named.
 
 - **Estimate:** 4 hours
-- **Status:** Fixed (MC.6).
+- **Status:** Fixed (MC.6). `IngredientEntry/review-mark.tsx` keeps its own busy guard: it shows a refusal as an inline notice and must accept the next flip as soon as a request ends, and `useGuardedAction` reports through the click-feedback callout and stays pending after success.
 
 ### D-77: "Unwrap a loader slot or throw" written three times
 
