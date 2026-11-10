@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { SITE_NAME, siteUrl, titleTemplate } from './site';
+import { SITE_NAME, TITLE_SEPARATOR, siteUrl } from './site';
 
 // The search-result text of a public page, pure so the three compendium pages share one wording. No image
 // tag: each segment's `opengraph-image` names its share card.
@@ -46,7 +46,7 @@ export function publicPageMetadata(
     title: absolute ? { absolute: title } : title,
     description,
     alternates: { canonical: url },
-    ...social(absolute ? title : titleTemplate().replace('%s', title), description, url),
+    ...social(absolute ? title : `${title}${TITLE_SEPARATOR}${SITE_NAME}`, description, url),
   };
 }
 

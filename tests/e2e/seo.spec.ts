@@ -163,3 +163,24 @@ test('off production nothing is offered to a crawler: robots disallow all and ev
     expect((await request.get(path)).headers()['x-robots-tag']).toBe('noindex');
   }
 });
+
+test('the sign-in page titles itself with the site name spelled out, and names the application and a manifest', async ({
+  page,
+  request,
+}) => {
+  // 1Password names a saved login from the title only when the name in it spells out the domain.
+  await page.goto('/sign-in');
+  await expect(page).toHaveTitle(/ \| Sorrel and Salt$/);
+
+  const html = await (await request.get('/sign-in')).text();
+  expect(metaOf(html, 'application-name')).toBe('Sorrel &amp; Salt');
+
+  const href = /<link rel="manifest" href="([^"]*)"/.exec(html)?.[1];
+  expect(href).toBeDefined();
+  const manifest = await request.get(href as string);
+  expect(manifest.status()).toBe(200);
+  expect(await manifest.json()).toMatchObject({
+    name: 'Sorrel & Salt',
+    short_name: 'Sorrel & Salt',
+  });
+});

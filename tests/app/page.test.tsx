@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SITE_TITLE_NAME } from '@/lib/site';
 import { USER_ID } from '../support/constants';
 import { getSession, sessionIsVerified } from '../support/request-session';
 
@@ -25,10 +26,15 @@ describe('the / page metadata', () => {
   const scripts = () => document.querySelectorAll('script[type="application/ld+json"]');
 
   it('names the site alone, untemplated, with the bare origin as canonical', () => {
-    expect(metadata.title).toEqual({ absolute: 'Sorrel & Salt' });
+    expect(metadata.title).toEqual({ absolute: SITE_TITLE_NAME });
     expect(metadata.alternates?.canonical).toBe('https://sorrelandsalt.com/');
     expect(metadata.description).toBeTruthy();
     expect(metadata.robots).toBeUndefined();
+  });
+
+  it('keeps the ampersand in the titles a share preview shows', () => {
+    expect(metadata.openGraph).toMatchObject({ title: 'Sorrel & Salt', siteName: 'Sorrel & Salt' });
+    expect(metadata.twitter).toMatchObject({ title: 'Sorrel & Salt' });
   });
 
   it('marks a signed-out visitor’s page up as the website', async () => {

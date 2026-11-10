@@ -44,6 +44,16 @@ describe('page metadata', () => {
     expect(meta.twitter).not.toHaveProperty('images');
   });
 
+  it("titles a public page's share previews with the site name, ampersand and all", () => {
+    const meta = publicPageMetadata('Testwort', 'About it.', '/compendium/ingredients/testwort');
+    expect(meta.title).toBe('Testwort');
+    expect(meta.openGraph).toMatchObject({
+      title: 'Testwort | Sorrel & Salt',
+      siteName: 'Sorrel & Salt',
+    });
+    expect(meta.twitter).toMatchObject({ title: 'Testwort | Sorrel & Salt' });
+  });
+
   it('gives the front page the site name alone, with the same social tags as any public page', () => {
     const meta = publicPageMetadata('Sorrel & Salt', 'About it.', '/', { absolute: true });
     expect(meta.title).toEqual({ absolute: 'Sorrel & Salt' });

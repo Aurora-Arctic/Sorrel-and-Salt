@@ -29,7 +29,7 @@ export const PUBLIC_ROUTES = [
   '/help/glossary',
   '/help/search',
   // What a crawler or a browser asks for with no cookie and no page to ask it.
-  // The icon and manifest files are listed ahead of their existence so the first favicon request
+  // The icon files are listed ahead of their existence so the first favicon request
   // is never redirected to sign-in.
   '/robots.txt',
   '/sitemap.xml',
