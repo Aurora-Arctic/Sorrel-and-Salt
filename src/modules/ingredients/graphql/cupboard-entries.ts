@@ -12,6 +12,7 @@ import {
   removeCupboardEntry,
 } from '../services/cupboard-entries';
 import { getIngredient } from '../services/compendium';
+import { NO_COMPENDIUM_ENTRY } from '../services/messages';
 import type {
   ConvertedCompendium,
   CupboardEntryNode,
@@ -121,7 +122,7 @@ async function nodeOf(
   const entry = read
     ? await read()
     : await loaders.ingredientsById.load({ id: ingredientId, workspaceId });
-  if (!entry) throw new NotFound('No such compendium entry');
+  if (!entry) throw new NotFound(NO_COMPENDIUM_ENTRY);
   return { ...row, compendiumName: entry.name };
 }
 

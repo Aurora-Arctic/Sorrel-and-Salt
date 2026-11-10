@@ -15,6 +15,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { NO_COMPENDIUM_ENTRY, assertRowId } from './messages';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
@@ -149,7 +150,6 @@ export async function findCompendiumMatches(
   return findCompendiumMatchPage(trimmed, page);
 }
 
-const NO_ENTRY = 'No such compendium entry';
 const NO_ROW = 'This coven does not hold that compendium entry';
 const HELD = 'Your coven already holds this entry';
 const ENTRY_INDEX = 'workspace_compendium_entries_workspace_ingredient_unique';
@@ -221,10 +221,10 @@ export async function addCupboardEntry(
 ): Promise<CupboardEntryRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['create'] });
   const parsed = parseInput(CupboardEntryInput, input);
-  if (!RowId.safeParse(ingredientId).success) throw new NotFound(NO_ENTRY);
+  assertRowId(ingredientId, NO_COMPENDIUM_ENTRY);
   // No proofs reads the compendium alone, so a coven's own row is never found.
   const entry = await findOneIngredient([], ingredientId);
-  if (!entry) throw new NotFound(NO_ENTRY);
+  if (!entry) throw new NotFound(NO_COMPENDIUM_ENTRY);
   if (await findCupboardEntry(membership, ingredientId)) {
     throw new ValidationError([{ path: ['ingredientId'], message: HELD }]);
   }

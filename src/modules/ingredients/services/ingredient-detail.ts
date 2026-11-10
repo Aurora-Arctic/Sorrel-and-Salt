@@ -1,5 +1,6 @@
 import 'server-only';
 import { Forbidden, NotFound } from '../../../lib/errors';
+import { NO_INGREDIENT } from './messages';
 import type { Session } from '../../../lib/session';
 import { getCupboardEntry, heldCompendiumEntry, isRetired } from './cupboard-entries';
 import {
@@ -202,11 +203,11 @@ async function retiredEntryHeld(
   entry: IngredientRow,
   workspaceId: string | undefined,
 ): Promise<{ membership: Membership; cupboardEntry: CupboardEntryRow }> {
-  if (workspaceId === undefined) throw new NotFound('No such ingredient');
+  if (workspaceId === undefined) throw new NotFound(NO_INGREDIENT);
   if (!session) throw new Forbidden();
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
   const held = await heldCompendiumEntry(membership, entry.id);
-  if (!held) throw new NotFound('No such ingredient');
+  if (!held) throw new NotFound(NO_INGREDIENT);
   return { membership, cupboardEntry: held.cupboardEntry };
 }
 

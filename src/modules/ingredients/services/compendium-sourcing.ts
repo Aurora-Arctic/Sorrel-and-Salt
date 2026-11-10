@@ -1,6 +1,7 @@
 import 'server-only';
 import { findCompendiumReview, findOneIngredient } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
+import { NO_COMPENDIUM_ENTRY } from './messages';
 import type { Session } from '../../../lib/session';
 import { RowId } from '../../../lib/validation';
 import { referencesOf, referencesOfVariants, variantsOf } from './ingredient-children';
@@ -39,7 +40,7 @@ export async function readSourcingScore(
   const curator = assertCurator(session);
   const review = RowId.safeParse(id).success ? await findCompendiumReview(curator, id) : undefined;
   const entry = review && (await findOneIngredient([], id));
-  if (!review || !entry) throw new NotFound('No such compendium entry');
+  if (!review || !entry) throw new NotFound(NO_COMPENDIUM_ENTRY);
   const [references, variants] = await Promise.all([
     children.references(entry),
     children.variants(entry),
@@ -53,6 +54,6 @@ export async function readSourcingScore(
       references: variantReferences[index] ?? [],
     })),
   });
-  if (!score) throw new NotFound('No such compendium entry');
+  if (!score) throw new NotFound(NO_COMPENDIUM_ENTRY);
   return score;
 }
