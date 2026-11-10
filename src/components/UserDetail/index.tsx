@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { agreedVersionOfColumns, formatAgreementVersion } from '../../lib/agreement-version';
 import { CheckIcon, CrossIcon } from '../IconTip/icons';
+import Day from '../Day';
 import CreationControl from '../UserList/creation-control';
 import { hasSignInMarks, Mark, SignInMarks } from '../UserList/marks';
 import PrimaryAdminMark from '../UserList/primary-admin-mark';
@@ -26,10 +27,6 @@ const ordered = (memberships: readonly UserCoven[]): UserCoven[] =>
   [...memberships].sort(
     (a, b) => workspaceRoleRank(a.role) - workspaceRoleRank(b.role) || a.name.localeCompare(b.name),
   );
-
-const Day = ({ at }: { at: Date }): ReactElement => (
-  <time dateTime={at.toISOString()}>{at.toISOString().slice(0, 10)}</time>
-);
 
 /**
  * A yes-or-no as its word, then the table's mark after it, a green check or a red cross: the

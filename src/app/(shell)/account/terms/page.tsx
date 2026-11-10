@@ -5,6 +5,7 @@ import TermsAgreement from '@/components/TermsAgreement';
 import { documentsChangedSince } from '@/lib/agreement-version';
 import { requireSession, sessionAgreedVersion } from '@/lib/request-session';
 import { signedInLanding } from '@/lib/landing';
+import { isoDayInUtc } from '@/lib/utc';
 import { safeReturnPath } from '@/lib/sign-in';
 import { agreementVersionInForce, readDocument } from '@/modules/documents';
 import type { TermsPageProps } from './types';
@@ -34,7 +35,7 @@ export default async function TermsAcceptancePage({ searchParams }: TermsPagePro
         <TermsAgreement
           version={version}
           changed={documentsChangedSince(agreed ?? NEVER_AGREED, version)}
-          updatedOn={terms.publishedAt.toISOString().slice(0, 10)}
+          updatedOn={isoDayInUtc(terms.publishedAt)}
           destination={destination}
         />
       </div>

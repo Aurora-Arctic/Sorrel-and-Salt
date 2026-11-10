@@ -5,7 +5,7 @@ import { graphql } from '@/lib/graphql-document';
 import { MS_PER_DAY } from '../../lib/duration';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { useFormSend } from '../../lib/use-form-send';
-import { expiryOfDay } from '../../lib/utc';
+import { expiryOfDay, isoDayInUtc } from '../../lib/utc';
 import {
   FieldShell,
   FormActions,
@@ -56,10 +56,10 @@ export const SHEETS_REQUIRED = 'Enter how many sheets to mint, like 3';
 const expiryOf = (day: string): string => expiryOfDay(day).toISOString();
 
 /** The day after today in UTC: the service refuses an expiry at or before now. */
-const earliestDay = (): string => new Date(Date.now() + MS_PER_DAY).toISOString().slice(0, 10);
+const earliestDay = (): string => isoDayInUtc(new Date(Date.now() + MS_PER_DAY));
 
 const defaultDay = (): string =>
-  new Date(Date.now() + DEFAULT_EXPIRY_DAYS * MS_PER_DAY).toISOString().slice(0, 10);
+  isoDayInUtc(new Date(Date.now() + DEFAULT_EXPIRY_DAYS * MS_PER_DAY));
 
 /** A decimal count is rounded to the nearest whole sheet, not refused. */
 const wholeSheets = (text: string): string => {

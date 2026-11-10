@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import Day from '../Day';
 import UserListFilter from './filter';
 import { Mark, SignInMarks } from './marks';
 import UntilMark from './until-mark';
@@ -132,11 +133,7 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
   {
     heading: 'Signed Up',
     className: 'user-list__fact',
-    cell: (user) => (
-      <time dateTime={user.createdAt.toISOString()}>
-        {user.createdAt.toISOString().slice(0, 10)}
-      </time>
-    ),
+    cell: (user) => <Day at={user.createdAt} />,
   },
   canImpersonate && {
     heading: 'Impersonate',

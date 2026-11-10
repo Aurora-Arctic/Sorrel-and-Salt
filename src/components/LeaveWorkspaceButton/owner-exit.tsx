@@ -1,9 +1,8 @@
 'use client';
 
-import { usePendingNavigation } from '../../lib/navigation';
+import { useLeaveCoven } from '../../lib/navigation';
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
-import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { failureMessage } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
@@ -102,7 +101,7 @@ const Options = ({
   onCancel,
   report,
 }: OwnerExitProps & { onCancel: () => void; report: Report }): ReactElement => {
-  const { navigate, refresh } = usePendingNavigation();
+  const leaveCoven = useLeaveCoven();
   const id = useId();
   const ownerField = fieldDescription({ id: `${id}-owner` });
   const only = successors.length === 1 ? successors[0] : undefined;
@@ -136,10 +135,8 @@ const Options = ({
       );
       return;
     }
-    // The coven is closed to this user now, so the page cannot be read again;
-    // the refresh brings the switcher's new list in, as Leave's does.
-    navigate(COVEN_LANDING_PATH, { replace: true });
-    refresh();
+    // The coven is closed to this user now, so the page cannot be read again.
+    leaveCoven();
   }
 
   return (
