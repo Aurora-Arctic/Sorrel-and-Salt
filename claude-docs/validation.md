@@ -37,7 +37,7 @@ reference formatter shares with the renderer; and `contrast.ts` and
 `drizzle-orm`, anything under `src/db` or a service, and `next build` fails a
 client bundle that reaches `server-only` however indirectly.
 
-**Email addresses.** One schema, `EmailAddress` in `src/lib/email-address-schema.ts` (apart from the helpers in `email-address.ts` so first-load client code does not pull in zod), trims and lowercases the domain, then checks the shape; every form and input schema that takes an address uses it, and the field's `format` is `emailFormat` from the same file. Support length limits (`SUBJECT_MAX_LENGTH`, `MESSAGE_MAX_LENGTH`, `PATH_MAX_LENGTH`) live in `src/modules/support/validation/limits.ts`, which client code may import; the service imports the same numbers.
+**Email addresses.** One schema, `EmailAddress` in `src/lib/email-address-schema.ts` (apart from the helpers in `email-address.ts` so first-load client code does not pull in zod), trims and lowercases the whole address, then checks the shape; every form and input schema that takes an address uses it, and the field's `format` is `emailFormat` in `email-address.ts`, the same trim and lowercase, so the box shows the address as it is saved. Support length limits (`SUBJECT_MAX_LENGTH`, `MESSAGE_MAX_LENGTH`, `PATH_MAX_LENGTH`) live in `src/modules/support/validation/limits.ts`, which client code may import; the service imports the same numbers.
 
 ## Raising the error
 

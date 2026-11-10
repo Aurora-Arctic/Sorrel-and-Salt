@@ -27,9 +27,5 @@ export function validateEmailAddress(email: string): ValidationIssue | null {
   return null;
 }
 
-/** The blur tidy: trims the ends and lower-cases the domain, since only the local part may be case-sensitive. */
-export const emailFormat: FieldFormat = (text) => {
-  const trimmed = text.trim();
-  const at = trimmed.lastIndexOf('@');
-  return at < 0 ? trimmed : `${trimmed.slice(0, at)}@${trimmed.slice(at + 1).toLowerCase()}`;
-};
+/** The blur tidy: the server's own rule, so the box shows the address as it will be saved. */
+export const emailFormat: FieldFormat = normaliseEmail;

@@ -69,7 +69,7 @@ describe('BusinessCards', () => {
     await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
 
     fillAll('  Testwort@Example.TEST ');
-    expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('Testwort@example.test');
+    expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('testwort@example.test');
     await waitFor(() => expect(generate()).toBeEnabled());
 
     fill('Email', 'testwort@example');

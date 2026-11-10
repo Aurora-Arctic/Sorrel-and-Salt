@@ -36,11 +36,11 @@ describe('ForgotPasswordForm', () => {
     expect(send()).toBeEnabled();
   });
 
-  it('tidies the address when the field is left: ends trimmed, domain lower-cased', () => {
+  it('tidies the address when the field is left: ends trimmed, lower-cased as it is saved', () => {
     fireEvent.change(email(), { target: { value: '  Name@EXAMPLE.COM  ' } });
     fireEvent.blur(email());
 
-    expect(email()).toHaveValue('Name@example.com');
+    expect(email()).toHaveValue('name@example.com');
   });
 
   it('refuses a malformed address with the shared message, without asking the server', async () => {

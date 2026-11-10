@@ -77,11 +77,11 @@ describe('SignInPanel, email and password', () => {
     document.cookie = `${LAST_USED_PROVIDER_COOKIE}=; max-age=0; path=/`;
   });
 
-  it('tidies the address when the field is left: ends trimmed, domain lower-cased', () => {
+  it('tidies the address when the field is left: ends trimmed, lower-cased as it is saved', () => {
     type('Email Address', '  Name@EXAMPLE.COM  ');
     fireEvent.blur(field('Email Address'));
 
-    expect(field('Email Address')).toHaveValue('Name@example.com');
+    expect(field('Email Address')).toHaveValue('name@example.com');
   });
 
   it('refuses a malformed address with the shared message, without asking the server', async () => {

@@ -125,13 +125,13 @@ describe('EmailForm', () => {
     expect(submit()).toBeEnabled();
   });
 
-  it('tidies the address when the field is left: ends trimmed, domain lower-cased', () => {
+  it('tidies the address when the field is left: ends trimmed, lower-cased as it is saved', () => {
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     fireEvent.change(emailField(), { target: { value: '  Name@EXAMPLE.COM  ' } });
     fireEvent.blur(emailField());
 
-    expect(emailField()).toHaveValue('Name@example.com');
+    expect(emailField()).toHaveValue('name@example.com');
   });
 
   it('refuses a malformed address with the shared message, without sending', () => {

@@ -90,11 +90,11 @@ describe('InviteDialog', () => {
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  it('tidies an address on blur: the ends trimmed and the domain lower-cased', () => {
+  it('tidies an address on blur: the ends trimmed and all of it lower-cased', () => {
     open();
     type('  Ada@Example.TEST ');
     fireEvent.blur(emailField());
-    expect(emailField()).toHaveValue('Ada@example.test');
+    expect(emailField()).toHaveValue('ada@example.test');
   });
 
   it('clears the refusal as the address is changed', async () => {

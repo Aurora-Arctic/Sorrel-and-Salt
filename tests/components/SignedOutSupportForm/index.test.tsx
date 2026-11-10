@@ -91,7 +91,7 @@ describe('SignedOutSupportForm', () => {
     const email = screen.getByRole('textbox', { name: /Email/ });
     fireEvent.change(email, { target: { value: '  Visitor@EXAMPLE.Test ' } });
     fireEvent.blur(email);
-    expect(email).toHaveValue('Visitor@example.test');
+    expect(email).toHaveValue('visitor@example.test');
   });
 
   it('refuses an address that is not one, and a subject past its limit, without sending', async () => {
