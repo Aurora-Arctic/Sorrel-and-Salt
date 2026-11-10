@@ -1,4 +1,4 @@
-import { and, eq, inArray, type SQL, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { spellWorkingDeductions } from '../../modules/grimoire/schema/spell-working-deductions';
 import { spellWorkingParticipants } from '../../modules/grimoire/schema/spell-working-participants';
 import { spellWorkings } from '../../modules/grimoire/schema/spell-workings';
@@ -22,16 +22,6 @@ import type {
 // A spell's workings, read under `readableWorkings`: the spell must be readable and a private working reaches its recorder and the
 // members named on it. The participant and deduction tables have no coven and no tombstone, so they are read through their working.
 
-/** The row whose `working_id` column names a working the reader may read: the parent check for the participant and deduction tables, which have no coven or tombstone. */
-function inReadableWorking(membership: Membership, workingIdColumn: unknown): SQL {
-  return existsByKey(
-    spellWorkings,
-    spellWorkings.id,
-    workingIdColumn,
-    readableWorkings(membership),
-  );
-}
-
 /** One working by id, or `undefined` for a missing, deleted or unreadable one: the same answer for all three. */
 export async function findOneWorking(
   membership: Membership,
@@ -54,7 +44,12 @@ export async function isParticipantOfWorking(
     and(
       eq(spellWorkingParticipants.workingId, workingId),
       eq(spellWorkingParticipants.userId, membership.userId),
-      inReadableWorking(membership, spellWorkingParticipants.workingId),
+      existsByKey(
+        spellWorkings,
+        spellWorkings.id,
+        spellWorkingParticipants.workingId,
+        readableWorkings(membership),
+      ),
     ),
   );
   return rows.length > 0;
@@ -127,7 +122,12 @@ export async function findParticipantsOfWorkings(
       spellWorkingParticipants,
       and(
         inArray(spellWorkingParticipants.workingId, [...workingIds]),
-        inReadableWorking(membership, spellWorkingParticipants.workingId),
+        existsByKey(
+          spellWorkings,
+          spellWorkings.id,
+          spellWorkingParticipants.workingId,
+          readableWorkings(membership),
+        ),
       ),
     ),
   );
@@ -144,7 +144,12 @@ export async function findDeductionsOfWorkings(
       spellWorkingDeductions,
       and(
         inArray(spellWorkingDeductions.workingId, [...workingIds]),
-        inReadableWorking(membership, spellWorkingDeductions.workingId),
+        existsByKey(
+          spellWorkings,
+          spellWorkings.id,
+          spellWorkingDeductions.workingId,
+          readableWorkings(membership),
+        ),
       ),
     ),
   );

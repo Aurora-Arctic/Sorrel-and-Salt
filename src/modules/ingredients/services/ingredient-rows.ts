@@ -293,7 +293,7 @@ export async function resolvePicks(
 
 /** One form as sent, with each `""` and `[]` the whole-row input sends for none read as none. */
 function asPicked(variant: VariantEntry, at: IssuePath): PickedVariant {
-  const listOrNone = <T>(list: T[]) => (list.length > 0 ? list : null);
+  const listOrNone = (list: readonly unknown[]) => (list.length > 0 ? list : null);
   return {
     ...variant,
     id: variant.id ?? null,
@@ -301,7 +301,7 @@ function asPicked(variant: VariantEntry, at: IssuePath): PickedVariant {
     description: variant.description || null,
     safetyNotes: variant.safetyNotes || null,
     ...mapCorrespondences<VariantEntry, Pick<PickedVariant, CorrespondenceKey>>(variant, (list) =>
-      listOrNone(list as unknown[]),
+      listOrNone(list),
     ),
     at,
   };
