@@ -113,7 +113,7 @@ export function offerCompendiumMatches(nodes: DuplicateNode[]) {
   return calls;
 }
 
-export function offerList<N>(operation: string, field: string, nodes: N[]) {
+function offerList<N>(operation: string, field: string, nodes: N[]) {
   const calls: CelestialBodySuggestionsQueryVariables[] = [];
   mockGraphQLQuery<Record<string, unknown>, CelestialBodySuggestionsQueryVariables>(
     operation,

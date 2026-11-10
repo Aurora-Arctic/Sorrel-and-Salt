@@ -9,7 +9,7 @@ const SECTION_HEADING = /^## 10\. User stories\s*$/m;
 const NEXT_SECTION = /^## \d+\./m;
 const STORY_LINE = /^(\d+)\. (.+?)\s*$/;
 
-export function parseStories(design: string): Story[] {
+function parseStories(design: string): Story[] {
   const heading = SECTION_HEADING.exec(design);
   if (!heading) {
     throw new Error('DESIGN.md has no "## 10. User stories" section to read the stories from');
