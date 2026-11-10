@@ -516,7 +516,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   min-width: 0;
   max-width: 100%;
   // A step more room above the chips than the box's own padding, on the list so one row still fits the text's line and the box stays at $control-height.
-  @include list-reset(space(1) 0, false);
+  @include list-reset(space(1) 0);
 }
 
 .combobox__entry {
@@ -526,7 +526,6 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   gap: space(1);
   min-width: 0;
   max-width: 100%;
-  margin: 0;
   padding: 0 0 0 space(2);
   border-radius: radius('sharp');
   background-color: $fill-quiet;
@@ -538,10 +537,6 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   // The fill is dropped, so an edge keeps the chip's shape.
   @include forced-colors {
     border: 1px solid CanvasText;
-  }
-
-  &::before {
-    content: none;
   }
 
   // In its group's colours: the wash chip() draws, read from the pair chipColors() sets (claude-docs/styling.md, "Category chips"),

@@ -76,3 +76,46 @@ test('a member edits a saved spell from its card and its recipe page, and a view
   await expect(page.getByRole('link', { name: /^Edit / })).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
+test('while the categories are on their way, a held category draws no list marker', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Held', 'spell-edit-held.test', {
+    A: 'owner',
+  });
+  const spellId = await withSql(async (sql) => {
+    const id = await insertSpell(
+      sql,
+      coven.id,
+      'Fixture Held',
+      'workspace',
+      coven.users.A,
+      'complete',
+    );
+    await sql`
+      insert into spell_categories (spell_id, category_id, created_by, updated_by)
+      select ${id}, id, ${coven.users.A}, ${coven.users.A}
+      from categories where deleted_at is null order by name limit 2`;
+    return id;
+  });
+  await signInAgainAs(page, coven.users.A);
+  const held: Array<() => Promise<void>> = [];
+  await page.route('**/api/graphql', (route) => {
+    const body = route.request().postDataJSON() as { operationName?: string } | null;
+    if (body?.operationName !== 'PickerCategories') return route.continue();
+    held.push(() => route.continue());
+  });
+
+  await page.goto(`/coven/${coven.slug}/grimoire?edit=${spellId}`);
+  const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Held' });
+  await edit.getByRole('button', { name: 'Open All' }).click();
+  await expect.poll(() => held.length).toBeGreaterThan(0);
+  const picks = edit.getByRole('group', { name: 'Categories' }).getByRole('listitem');
+  // Why the check means something: both held picks are drawn while their names are still on the way.
+  await expect(picks).toHaveCount(2);
+  const markers = await picks.evaluateAll((items) =>
+    items.map((item) => getComputedStyle(item, '::before').content),
+  );
+  expect(markers).toEqual(['none', 'none']);
+  await Promise.all(held.map((release) => release()));
+});
