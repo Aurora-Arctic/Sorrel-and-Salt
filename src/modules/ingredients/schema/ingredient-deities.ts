@@ -3,7 +3,7 @@ import { check, index, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle
 import { auditColumns } from '../../identity/schema/users';
 import { deities } from '../../vocabulary/schema/deities';
 import { ingredients } from './ingredients';
-import { idColumn, liveUnique } from '../../../db/schema-parts';
+import { idColumn, liveUnique, notBlank } from '../../../db/schema-parts';
 
 // The deities an ingredient names, one row per entry in order: a name, and a link to the curated deity picked, so Greek and Roman Hecate stay apart.
 // A child table, as a link cannot live in `text[]`. Full `auditColumns`: an entry is content, not a pairing (DESIGN.md §5, `ingredient_deities`).
@@ -46,6 +46,6 @@ export const ingredientDeities = pgTable(
       .where(sql`${table.deityId} is not null and ${table.deletedAt} is null`),
 
     // Required *and non-empty*: NOT NULL alone accepts ''.
-    check('ingredient_deities_name_not_blank', sql`btrim(name) <> ''`),
+    check('ingredient_deities_name_not_blank', notBlank('name')),
   ],
 );
