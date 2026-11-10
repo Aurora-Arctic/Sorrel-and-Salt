@@ -1,3 +1,4 @@
+import type { SupportDialogKind } from '../../lib/support-path';
 import type { supportReplies } from './schema/support-replies';
 import type { supportRequests } from './schema/support-requests';
 import type { supportTimeouts } from './schema/support-timeouts';
@@ -52,7 +53,7 @@ export interface RetentionBatch {
 
 /** What the Support dialog offers a visitor: `until` is set only for a dated `timedOut`, and null for one with no end date. */
 export interface SupportDialogAnswer {
-  kind: 'signedOut' | 'unverified' | 'timedOut' | 'form';
+  kind: SupportDialogKind;
   until: Date | null;
 }
 
