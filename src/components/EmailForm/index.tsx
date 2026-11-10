@@ -166,6 +166,7 @@ const EmailForm = ({
           // A new address: "email" would fill in the one the account has now.
           autoComplete="off"
           ignorePasswordManagers
+          required
           placeholder="name@example.com"
           format={emailFormat}
           check={emailAddressProblem}

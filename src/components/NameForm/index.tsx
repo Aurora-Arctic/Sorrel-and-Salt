@@ -3,6 +3,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
+import { NAME_MAX_LENGTH, NameInput } from '@/modules/identity/validation/name';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { FormActions, PlainTextField } from '../Field';
@@ -10,7 +11,7 @@ import Notice from '../Notice';
 import type { NameFormProps } from './types';
 import './index.scss';
 
-// Plain controlled input, not react-hook-form: one field, and every refusal is the server's (claude-docs/components/name-form.md).
+// Plain controlled input, not react-hook-form: one field, checked with the schema the server runs again (claude-docs/components/name-form.md).
 
 const SetNameDocument = graphql(`
   mutation SetName($name: String!) {
@@ -51,7 +52,9 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
     if (unchanged || mutation.isPending) return;
     setSavedMessage(false);
     setAlert(undefined);
-    setFieldError(undefined);
+    const refused = NameInput.safeParse({ name: value }).error?.issues[0]?.message;
+    setFieldError(refused);
+    if (refused) return;
     mutation.mutate(value);
   };
 
@@ -59,15 +62,20 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
     <div className="name-form">
       {alert && <Notice kind="error">{alert}</Notice>}
       {savedMessage && <Notice kind="success">Your name was saved.</Notice>}
-      {/* `noValidate`: every refusal is the server's, worded and placed like
-          the rest, rather than the browser's own bubble. */}
+      {/* `noValidate`: every refusal is the shared rule's or the server's, worded and
+          placed like the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
         <PlainTextField
           label="Name"
+          required
+          limit={NAME_MAX_LENGTH}
           autoComplete="name"
           placeholder="Your name"
           value={value}
-          onChange={setValue}
+          onChange={(next) => {
+            setValue(next);
+            setFieldError(undefined);
+          }}
           error={fieldError}
         />
         <FormActions noun="Name" dirty={!unchanged} submitting={mutation.isPending} />
