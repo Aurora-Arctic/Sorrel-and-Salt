@@ -133,13 +133,19 @@
 
 // Compounded so load order does not matter.
 .sign-in-panel__back.back-link {
+  @include button-reset;
+  // What the reset changes and the button had before it: `.back-link`'s chevron pull and muted ink, and a button's own weight and line height.
+  margin-inline-start: -$back-chevron-pull;
+  color: $text-muted;
+  font-weight: normal;
+  line-height: normal;
   align-self: flex-start;
-  padding: 0;
-  border: 0;
-  background: none;
-  font-family: inherit;
   font-size: type-size('caption');
-  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+  }
 }
 
 .sign-in-panel__password .form__actions > .btn {
