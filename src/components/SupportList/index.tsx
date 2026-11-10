@@ -1,5 +1,7 @@
 'use client';
 
+import { labelOf } from '@/lib/options';
+
 import type { ReactElement } from 'react';
 import { listHref } from '../../lib/list-href';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
@@ -18,9 +20,6 @@ import type { SupportListEntry, SupportListProps } from './types';
 import './index.scss';
 
 // A row opens the request in a dialog at `?request=<id>` (claude-docs/components/support-list.md).
-
-const labelOfAbout = (value: string): string =>
-  ABOUT_OPTIONS.find((about) => about.value === value)?.label ?? value;
 
 const repliesText = (count: number): string => {
   if (count === 0) return 'No reply yet';
@@ -83,7 +82,7 @@ const SupportList = ({
                 <span className={statusBadgeClass(request.status)}>
                   {senderStatusLabel(request.status, request.staffWroteLast)}
                 </span>
-                <span>{labelOfAbout(request.about)}</span>
+                <span>{labelOf(ABOUT_OPTIONS, request.about)}</span>
                 <LocalTime at={request.createdAt} short="day" />
                 <span>{repliesText(request.replyCount)}</span>
               </div>
@@ -100,7 +99,7 @@ const SupportList = ({
         content={
           opened && {
             heading: {
-              eyebrow: `Support · ${labelOfAbout(opened.about)}`,
+              eyebrow: `Support · ${labelOf(ABOUT_OPTIONS, opened.about)}`,
               title: opened.subject,
               under: (
                 <div className="badges">
