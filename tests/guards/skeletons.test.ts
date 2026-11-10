@@ -1,7 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
+import { sourceFiles } from '../support/repo-scan';
 
 // While a navigation is on its way, the shell draws the destination's own skeleton, chosen by its
 // address from the registry in src/app/skeletons.ts. A page with no entry would wait on a bare page
@@ -36,10 +37,7 @@ const SLOT = /^@/;
 
 /** Every `page.tsx` under src/app, as a path from the repo root. */
 function pages(): string[] {
-  return (readdirSync(APP, { recursive: true }) as string[])
-    .filter((file) => file === 'page.tsx' || file.endsWith('/page.tsx'))
-    .map((file) => relative(REPO_ROOT, join(APP, file)))
-    .sort();
+  return sourceFiles({ under: 'src/app/', extension: /(?:^|\/)page\.tsx$/ }).sort();
 }
 
 const segmentsOf = (file: string): string[] =>
