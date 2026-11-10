@@ -23,6 +23,12 @@ export function readGraphqlFailure(error: unknown, fields: readonly string[] = [
   return { alert: first?.message || GENERIC_FAILURE };
 }
 
+/** The code a refused request carries (`NOT_FOUND`, `VALIDATION`, ...), or undefined for any other failure. */
+export function readGraphqlFailureCode(error: unknown): string | undefined {
+  if (!(error instanceof GraphQLClientError)) return undefined;
+  return (error.errors?.[0]?.extensions as { code?: string } | undefined)?.code;
+}
+
 /** A VALIDATION refusal gives its own list; anything else is one issue with no path. */
 export function readGraphqlIssues(error: unknown): ValidationIssue[] {
   if (error instanceof GraphQLClientError) {
