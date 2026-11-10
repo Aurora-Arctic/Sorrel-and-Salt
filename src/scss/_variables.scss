@@ -860,6 +860,9 @@ $space-steps: (
   @return map.get($space-steps, $step);
 }
 
+// The air above a document section's heading, under its hairline: two thirds of the air above the rule.
+$document-section-rule-air: calc(#{space(8)} * 0.666);
+
 // The padding of a layout's `.page-column` and `.coven-layout`, which a frame inside the column takes back with a negative margin.
 $page-column-pad-block: space(6);
 $page-column-pad-inline: space(4);

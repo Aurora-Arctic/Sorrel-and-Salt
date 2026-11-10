@@ -276,7 +276,7 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   // Each section opens under a hairline, with more air above it, so the page reads as parts rather than a run of text.
   .document-page__body h2 {
     margin-block-start: space(8);
-    padding-block-start: calc(#{space(8)} * 0.666);
-    border-block-start: 1px solid $hairline;
+    padding-block-start: $document-section-rule-air;
+    border-block-start: $hairline-border;
   }
 }
