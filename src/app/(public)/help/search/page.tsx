@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import HelpSearchResults from '@/components/HelpSearchResults';
-import { HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
+import { HELP_LEDE, HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
 import { getSession } from '@/lib/request-session';
 import { searchHelp } from '@/modules/help';
 
@@ -24,6 +24,7 @@ export default async function Page({
       : await searchHelp(session, query, { limit: HELP_PAGE_LIMIT, inverted: false });
   return (
     <HelpSearchResults
+      lede={HELP_LEDE}
       query={query}
       results={results.map(({ node }) => ({
         kind: node.kind,

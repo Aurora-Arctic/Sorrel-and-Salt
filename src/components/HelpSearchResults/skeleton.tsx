@@ -8,9 +8,9 @@ import './index.scss';
 // The search page with its results still to come, in the page's own frame: the heading, the search box and the title,
 // then the count and the result cards, each a title with its kind chip at the row's end over a summary, as bars. The
 // words searched are in the address, which a skeleton does not read.
-export const HelpSearchSkeleton = (): ReactElement => (
+export const HelpSearchSkeleton = ({ lede }: { lede?: string }): ReactElement => (
   <div className="help-page help-results">
-    <PageHeader title="Help" />
+    <PageHeader title="Help" lede={lede} />
     <HelpSearchForm />
     <HelpBackLinkSkeleton>Back to Help</HelpBackLinkSkeleton>
     <h2>Search Help</h2>

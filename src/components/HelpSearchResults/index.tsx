@@ -15,9 +15,9 @@ const KIND = { faq: 'Question', term: 'Term' } as const;
 // with its title, then a chip saying what kind of page it opens and, for a row not public, a chip naming its audience (Staff or Keeper), with the searched words
 // marked. No results draws no list; an unmatched query says so in the site's No Matches status
 // (claude-docs/components/help-pages.md).
-const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactElement => (
+const HelpSearchResults = ({ lede, query, results }: HelpSearchResultsProps): ReactElement => (
   <div className="help-page help-results">
-    <PageHeader title="Help" />
+    <PageHeader title="Help" lede={lede} />
     <HelpSearchForm query={query} />
     <HelpBackLink href="/help" title="Help" />
     <h2>Search Help</h2>

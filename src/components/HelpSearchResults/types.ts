@@ -10,6 +10,8 @@ export interface HelpSearchResult {
 }
 
 export interface HelpSearchResultsProps {
+  /** The line under the heading, the help front page's own. */
+  lede?: string;
   query: string;
   results: HelpSearchResult[];
 }

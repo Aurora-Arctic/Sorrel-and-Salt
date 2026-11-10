@@ -527,6 +527,13 @@
     }
   }
 
+  // An icon giving its place to the ring that appears over it (`loading-appear`).
+  @keyframes loading-leave {
+    to {
+      visibility: hidden;
+    }
+  }
+
   @keyframes target-arrive {
     from {
       background-color: $fill-highlight-field;
