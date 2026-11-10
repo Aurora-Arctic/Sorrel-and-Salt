@@ -406,3 +406,11 @@ describe('the pillar hues clear their floors on their card wash and on the page'
     }
   });
 });
+
+describe("the printed cards' QR ink is the site's Chalk token", () => {
+  it('draws the QR code in the hex `$chalk` compiles to', async () => {
+    const { QR_TONE } = await import('@/lib/invitation-cards/qr');
+    const css = compile(`@use 'variables' as v; .probe { --chalk: #{v.$chalk}; }`);
+    expect(QR_TONE.toLowerCase()).toBe(declarations(css, '.probe')['--chalk'].toLowerCase());
+  });
+});
