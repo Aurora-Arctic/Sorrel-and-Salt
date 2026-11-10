@@ -2,10 +2,7 @@
 @use '../../scss/mixins' as *;
 
 .step-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+  @include wrap-row(space(2));
 }
 
 // The dash standing for a missing quantity, faded so the unit reads first.
@@ -37,10 +34,7 @@
 }
 
 .step-row__marks {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem 0.5rem;
+  @include wrap-row(space(1) space(2));
 
   .badge {
     @include badge-size('small');

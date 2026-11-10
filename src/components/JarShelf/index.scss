@@ -94,11 +94,8 @@ $-bracket: 7px;
 }
 
 .jar-shelf__amount {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  @include wrap-row(space(1));
   justify-content: center;
-  gap: space(1);
   color: $text-muted;
   font-size: type-size('caption');
   text-align: center;

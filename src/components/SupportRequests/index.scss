@@ -228,10 +228,7 @@
 }
 
 .support-detail__issue-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(2);
+  @include wrap-row(space(2));
   overflow-wrap: anywhere;
 }
 

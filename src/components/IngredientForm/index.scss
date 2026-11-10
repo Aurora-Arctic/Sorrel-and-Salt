@@ -247,10 +247,7 @@ $skeleton-fade: 300ms;
 
     .ingredient-form__row,
     .ingredient-form__shapes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: space(2);
-      align-items: center;
+      @include wrap-row(space(2));
       justify-content: space-between;
       will-change: opacity;
       transition:
@@ -447,10 +444,7 @@ $skeleton-fade: 300ms;
 }
 
 .ingredient-form__tier-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(1) space(3);
+  @include wrap-row(space(1) space(3));
 }
 
 // "Locator" and its box on one line. Nested, to outweigh the `.field__label-row` primitive it also carries, whose
@@ -493,10 +487,7 @@ $panel-head-gap: space(3);
   container-type: inline-size;
 
   .ingredient-form__panel-head {
-    display: flex;
-    flex-wrap: wrap;
-    gap: space(1) space(2);
-    align-items: center;
+    @include wrap-row(space(1) space(2));
   }
 
   // What an edit reaches, or that the source is loading: a caption's ink,
@@ -679,10 +670,7 @@ $panel-head-gap: space(3);
   }
 
   .notice {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: space(2);
+    @include wrap-row(space(2));
   }
 
   .notice p {

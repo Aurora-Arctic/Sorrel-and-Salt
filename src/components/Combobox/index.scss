@@ -22,10 +22,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // `.input`'s edge, fill and states, as a flex row that wraps: the entries, the text, then the indicators; compounded with `.input` so a lone class does not lose to `body .input`
 // (claude-docs/components/combobox.md, "Control").
 .input.combobox__control {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(2) space(1);
+  @include wrap-row(space(2) space(1));
   padding: space(1) space(2);
   cursor: text;
 
@@ -120,11 +117,8 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 .combobox__values {
-  display: flex;
+  @include wrap-row(space(2) space(1));
   flex: 1;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(2) space(1);
   min-width: 0;
 }
 

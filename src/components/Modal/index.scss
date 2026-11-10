@@ -295,10 +295,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 }
 
 .modal-dialog__under {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(3);
+  @include wrap-row(space(3));
 
   &:empty {
     display: none;

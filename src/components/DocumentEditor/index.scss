@@ -11,10 +11,7 @@
 }
 
 .document-editor__bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(3);
+  @include wrap-row(space(3));
   margin-block: space(4);
 }
 

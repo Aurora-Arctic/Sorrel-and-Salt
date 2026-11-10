@@ -225,11 +225,8 @@
 }
 
 .chip-color-field__ground {
-  display: flex;
-  flex-wrap: wrap;
+  @include wrap-row(space(2));
   justify-content: center;
-  align-items: center;
-  gap: space(2);
   margin-block: space(5) space(2);
   padding: space(4);
   border-radius: radius('surface');

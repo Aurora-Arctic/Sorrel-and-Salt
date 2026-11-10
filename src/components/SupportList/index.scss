@@ -8,11 +8,8 @@
 }
 
 .support-list__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  @include wrap-row(space(2) space(3));
   justify-content: space-between;
-  gap: space(2) space(3);
 }
 
 .support-list__counts {
@@ -84,10 +81,7 @@
 }
 
 .support-list__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(1) space(3);
+  @include wrap-row(space(1) space(3));
   color: $text-muted;
   font-size: type-size('small');
 }

@@ -140,10 +140,7 @@
 }
 
 .help-widget__action {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(2) space(3);
-  align-items: center;
+  @include wrap-row(space(2) space(3));
   margin: space(4) 0 0;
 
   .help-widget__explained {

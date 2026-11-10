@@ -146,10 +146,7 @@
 }
 
 .facet-panel__foot {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(4);
-  align-items: center;
+  @include wrap-row(space(4));
 }
 
 @include width-from($shell-tablet-width) {

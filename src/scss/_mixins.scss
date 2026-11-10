@@ -518,6 +518,18 @@
   display: inline-flex;
 }
 
+// A row that wraps onto further lines when it runs out of room, its items centred across. The gap is
+// one step or a row-and-column pair; leave it out to set it by hand.
+@mixin wrap-row($gap: null) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  @if $gap != null {
+    gap: $gap;
+  }
+}
+
 @mixin stack($step: 5) {
   display: flex;
   flex-direction: column;
@@ -1299,10 +1311,7 @@
 
 // Doubled selectors outrank the notice's own margin; its triangle moves with the room so it stays clear of the text.
 @mixin notice-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(3);
+  @include wrap-row(space(3));
   margin: 0;
   padding-block: space(3);
   padding-inline: calc(#{space(4)} + #{$notice-mark-size} + #{space(2)}) space(4);

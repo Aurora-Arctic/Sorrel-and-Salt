@@ -50,10 +50,7 @@
 }
 
 .timeout-panel__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(2);
+  @include wrap-row(space(2));
 }
 
 .timeout-panel__ledger {
@@ -70,9 +67,7 @@
 
 // The range never splits; the Lifted tag follows it on the line when it fits, else wraps beneath.
 .timeout-panel__ledger-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  @include wrap-row;
   column-gap: space(2);
   overflow-wrap: anywhere;
 }

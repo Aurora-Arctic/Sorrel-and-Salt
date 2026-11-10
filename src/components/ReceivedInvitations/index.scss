@@ -62,9 +62,6 @@
 // refusal floats under its button as a callout, out of the flow, so the row holds nothing
 // else.
 .received-invitations__answer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(2);
-  align-items: center;
+  @include wrap-row(space(2));
   justify-content: flex-end;
 }
