@@ -5,8 +5,7 @@ import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { emailFailure } from '../../lib/email-failure';
 import { useFormSend } from '../../lib/use-form-send';
-import { reasonProblem } from '../../modules/identity/validation/reason';
-import { EmailField, FormActions, RadioGroupField, ReasonField } from '../Field';
+import { EmailField, FormActions, RadioGroupField, ReasonField, useReasonNote } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { roleLabel, SITE_ROLE_ACCESS } from '../UserList/roles';
@@ -48,25 +47,23 @@ export const invitationRoleLabel = (role: InvitableSiteRole): string =>
 const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
   const [email, setEmail] = useState('');
   const [siteRole, setSiteRole] = useState<InvitableSiteRole>(SITE_ROLES[0]);
-  const [note, setNote] = useState('');
-  const [noteError, setNoteError] = useState<string>();
+  const reason = useReasonNote();
   const { sending, failure, setFailure, send } = useFormSend(['email']);
 
-  const discard = useDiscardGuard(email !== '' || siteRole !== SITE_ROLES[0] || note !== '');
+  const discard = useDiscardGuard(email !== '' || siteRole !== SITE_ROLES[0] || reason.note !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const noteProblem = reasonProblem(note);
-    setNoteError(noteProblem);
+    const noteOk = reason.check();
     const refused = emailFailure(email);
     if (refused) return setFailure(refused);
-    if (noteProblem) return;
+    if (!noteOk) return;
     const address = email.trim();
     const sent = await send(() =>
       graphqlRequest(CreateAdminInvitationDocument, {
         email: address,
         siteRole,
-        note: note.trim() || undefined,
+        note: reason.note.trim() || undefined,
       }),
     );
     if (!sent) return;
@@ -109,12 +106,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
       <ReasonField
         className="confirmed-action__note"
         hint={NOTE_HINT}
-        value={note}
-        onChange={(next) => {
-          setNote(next);
-          setNoteError(undefined);
-        }}
-        error={noteError}
+        {...reason.field}
         disabled={sending}
       />
       <FormActions

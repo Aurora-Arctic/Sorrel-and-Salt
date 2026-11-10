@@ -19,7 +19,7 @@ export { EditedFieldsContext, useEditedFields, useEditedFieldsContext } from './
 export { usePointerHeld, useSettledWhilePressed } from './pointer-held';
 export { FormActions } from './form-actions';
 export { FormErrorSummary } from './form-error-summary';
-export { ReasonField } from './reason-field';
+export { ReasonField, useReasonNote } from './reason-field';
 export { useFormHistory } from './use-form-history';
 export { useEntityForm } from './use-entity-form';
 export { FormHistoryContext, useFormHistoryContext } from './form-history-context';
