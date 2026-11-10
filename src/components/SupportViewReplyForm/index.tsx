@@ -3,9 +3,8 @@
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { useFormSend } from '../../lib/use-form-send';
 import { MESSAGE_MAX_LENGTH } from '../../modules/support/validation/limits';
-import type { Failure } from '../../lib/types';
 import BusyButton from '../BusyButton';
 import { PlainTextField } from '../Field/plain-text-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -24,29 +23,23 @@ const SupportViewReplyForm = ({ token, onSent }: SupportViewReplyFormProps): Rea
   const [body, setBody] = useState('');
   // The trap field: a person never sees it, so a value in it is a bot's.
   const [website, setWebsite] = useState('');
-  const [sending, setSending] = useState(false);
-  const [failure, setFailure] = useState<Failure>({});
+  const { sending, failure, send } = useFormSend(['body']);
 
   const tooLong = body.trim().length > MESSAGE_MAX_LENGTH;
   const discard = useDiscardGuard(body.trim() !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSending(true);
-    setFailure({});
-    try {
-      await graphqlRequest(ReplyByViewTokenDocument, {
+    const sent = await send(() =>
+      graphqlRequest(ReplyByViewTokenDocument, {
         token,
         body: body.trim(),
         ...(website !== '' && { website }),
-      });
-      setBody('');
-      setSending(false);
-      onSent();
-    } catch (error) {
-      setSending(false);
-      setFailure(readGraphqlFailure(error, ['body']));
-    }
+      }),
+    );
+    if (!sent) return;
+    setBody('');
+    onSent();
   }
 
   return (

@@ -5,8 +5,7 @@ import { flushSync } from 'react-dom';
 import { graphql } from '@/lib/graphql-document';
 import { MS_PER_DAY } from '../../lib/duration';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
-import type { Failure } from '../../lib/types';
+import { useFormSend } from '../../lib/use-form-send';
 import { expiryOfDay } from '../../lib/utc';
 import DateField from '../DateField';
 import { FieldShell, FormActions, PlainTextField, SwitchField, fieldDescription } from '../Field';
@@ -92,8 +91,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const [note, setNote] = useState('');
   const [beta, setBeta] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
-  const [minting, setMinting] = useState(false);
-  const [failure, setFailure] = useState<Failure>({});
+  const { sending: minting, failure, send } = useFormSend(['sheets', 'expiresAt', 'note']);
   const [minted, setMinted] = useState<MintedBatch>();
   const [pressed, setPressed] = useState(false);
   const sheetsRef = useRef<HTMLInputElement>(null);
@@ -129,21 +127,15 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
       sheetsRef.current?.focus();
       return;
     }
-    setMinting(true);
-    setFailure({});
-    try {
+    await send(async () => {
       const answer = await graphqlRequest(CreateInvitationCardsDocument, {
         sheets: wanted,
         expiresAt: expiryOf(day),
         beta,
         note: note.trim() || undefined,
       });
-      setMinting(false);
       setMinted(answer.createInvitationCards);
-    } catch (error) {
-      setMinting(false);
-      setFailure(readGraphqlFailure(error, ['sheets', 'expiresAt', 'note']));
-    }
+    });
   }
 
   if (minted) {

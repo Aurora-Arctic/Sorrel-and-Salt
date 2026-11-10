@@ -4,9 +4,8 @@ import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { EmailAddress } from '../../lib/email-address-schema';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { useFormSend } from '../../lib/use-form-send';
 import { reasonProblem } from '../../modules/identity/validation/reason';
-import type { Failure } from '../../lib/types';
 import { FormActions, RadioGroupField, ReasonField } from '../Field';
 import InviteEmailField from '../InviteDialog/email-field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
@@ -52,8 +51,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
   const [siteRole, setSiteRole] = useState<InvitableSiteRole>(SITE_ROLES[0]);
   const [note, setNote] = useState('');
   const [noteError, setNoteError] = useState<string>();
-  const [sending, setSending] = useState(false);
-  const [failure, setFailure] = useState<Failure>({});
+  const { sending, failure, setFailure, send } = useFormSend(['email']);
 
   const discard = useDiscardGuard(email !== '' || siteRole !== SITE_ROLES[0] || note !== '');
 
@@ -69,21 +67,16 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
     }
     if (noteProblem) return;
     const address = email.trim();
-    setSending(true);
-    setFailure({});
-    try {
-      await graphqlRequest(CreateAdminInvitationDocument, {
+    const sent = await send(() =>
+      graphqlRequest(CreateAdminInvitationDocument, {
         email: address,
         siteRole,
         note: note.trim() || undefined,
-      });
-      setSending(false);
-      onSent(address);
-      close();
-    } catch (error) {
-      setSending(false);
-      setFailure(readGraphqlFailure(error, ['email']));
-    }
+      }),
+    );
+    if (!sent) return;
+    onSent(address);
+    close();
   }
 
   return (

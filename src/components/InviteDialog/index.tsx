@@ -5,8 +5,7 @@ import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { EmailAddress } from '../../lib/email-address-schema';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
-import type { Failure } from '../../lib/types';
+import { useFormSend } from '../../lib/use-form-send';
 import { FormActions, RadioGroupField } from '../Field';
 import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
 import { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
@@ -45,8 +44,7 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
 
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<InviteRole>('viewer');
-  const [sending, setSending] = useState(false);
-  const [failure, setFailure] = useState<Failure>({});
+  const { sending, failure, setFailure, send } = useFormSend(['email']);
   const [sentTo, setSentTo] = useState<string>();
 
   const discard = useDiscardGuard(sentTo === undefined && email !== '');
@@ -61,18 +59,13 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
     }
     const address = email.trim();
 
-    setSending(true);
-    setFailure({});
-    try {
-      await graphqlRequest(CreateInvitationDocument, { workspaceId, email: address, role });
-      setSending(false);
-      setSentTo(address);
-      // The pending list behind the dialog reads again, so the new invitation is on it.
-      refresh();
-    } catch (error) {
-      setSending(false);
-      setFailure(readGraphqlFailure(error, ['email']));
-    }
+    const sent = await send(() =>
+      graphqlRequest(CreateInvitationDocument, { workspaceId, email: address, role }),
+    );
+    if (!sent) return;
+    setSentTo(address);
+    // The pending list behind the dialog reads again, so the new invitation is on it.
+    refresh();
   }
 
   if (sentTo !== undefined) {
