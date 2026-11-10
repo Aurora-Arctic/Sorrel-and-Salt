@@ -19,7 +19,11 @@ export function characterCountText(length: number, limit: number): string {
 
 export function CharacterCount({ id, length, limit }: CharacterCountProps): ReactElement {
   return (
-    <p id={id} className="field__hint" aria-live="polite">
+    <p
+      id={id}
+      className={length > limit ? 'field__hint field__hint--over' : 'field__hint'}
+      aria-live="polite"
+    >
       {characterCountText(length, limit)}
     </p>
   );

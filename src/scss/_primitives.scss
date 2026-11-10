@@ -1585,6 +1585,11 @@
     font-size: type-size('caption');
   }
 
+  // A count past its limit is in the error's colour.
+  .field__hint--over {
+    color: $secondary;
+  }
+
   .field__warning {
     color: $secondary;
   }
