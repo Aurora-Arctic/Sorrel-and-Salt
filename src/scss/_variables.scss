@@ -860,6 +860,10 @@ $space-steps: (
   @return map.get($space-steps, $step);
 }
 
+// The padding of a layout's `.page-column` and `.coven-layout`, which a frame inside the column takes back with a negative margin.
+$page-column-pad-block: space(6);
+$page-column-pad-inline: space(4);
+
 // Room for a row of two or three category chips and a correspondence's list of colours. Shared with the entry's wait (Skeleton).
 $side-column: calc(#{space(8)} * 5);
 
