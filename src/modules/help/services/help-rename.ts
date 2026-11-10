@@ -10,6 +10,7 @@ import { assertSiteAdmin } from '@/modules/identity';
 import { helpArticles } from '../schema/help-articles';
 import type { HelpRenameEffects } from '../types';
 import { requireHelpArticle } from './help-reads';
+import { fold } from '@/lib/text';
 import { toHelpArticles } from './rows';
 
 // Nothing redirects an old help address, so the editor reads this before a save that moves one and asks the keeper first
@@ -23,9 +24,7 @@ const holdsAddress = (body: string, path: string): boolean =>
 
 /** Whether `body` marks the term once titled `title` (`[[Title]]`), by its title in any case or by its slug. */
 const marksTerm = (body: string, title: string, slug: string): boolean =>
-  marksInMarkdown(body).some(
-    (name) => name.trim().toLowerCase() === title.trim().toLowerCase() || slugify(name) === slug,
-  );
+  marksInMarkdown(body).some((name) => fold(name) === fold(title) || slugify(name) === slug);
 
 async function parentSlugOf(row: HelpArticleRow): Promise<string | null> {
   if (!row.parentId) return null;
