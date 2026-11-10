@@ -5,7 +5,7 @@ import { listHref } from '../../lib/list-href';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import { emptyList } from '../../lib/text';
 import LocalTime from '../LocalTime';
-import { ModalLink, RouteModal, useOpenModalClick } from '../Modal';
+import { OpenModalLink, RouteModal } from '../Modal';
 import { SupportIcon } from '../IconTip/icons';
 import EmptyState from '../EmptyState';
 import Pager from '../Pager';
@@ -14,7 +14,7 @@ import { statusBadgeClass } from '../SupportRequests/status-badge';
 import SupportLink from '../SupportLink';
 import SupportSenderRequest from '../SupportSenderRequest';
 import { senderStatusLabel } from '../SupportSenderRequest/status';
-import type { SupportListEntry, SupportListProps } from './types';
+import type { SupportListProps } from './types';
 import './index.scss';
 
 // A row opens the request in a dialog at `?request=<id>` (claude-docs/components/support-list.md).
@@ -31,21 +31,6 @@ const countsText = ({ open, closed }: SupportListProps['counts']): string => {
   if (open === 0 && closed === 0) return 'No Requests Yet';
   const part = (n: number, word: string) => `${n} ${word} Request${n === 1 ? '' : 's'}`;
   return `${part(open, 'Open')} / ${part(closed, 'Closed')}`;
-};
-
-const RowLink = ({
-  request,
-  href,
-}: {
-  request: SupportListEntry;
-  href: ReturnType<typeof listHref>;
-}): ReactElement => {
-  const onClick = useOpenModalClick(href, { title: request.subject, focusTitle: true });
-  return (
-    <ModalLink href={href} onClick={onClick} className="support-list__link">
-      {request.subject}
-    </ModalLink>
-  );
 };
 
 const SupportList = ({
@@ -75,7 +60,13 @@ const SupportList = ({
         <ul className="support-list__items">
           {requests.map((request) => (
             <li key={request.id} className="support-list__item">
-              <RowLink request={request} href={hrefOf(request.id)} />
+              <OpenModalLink
+                href={hrefOf(request.id)}
+                heading={{ title: request.subject, focusTitle: true }}
+                className="support-list__link"
+              >
+                {request.subject}
+              </OpenModalLink>
               {request.status === 'waiting_on_sender' && (
                 <span className="support-list__dot" role="img" aria-label="Waiting on you" />
               )}
