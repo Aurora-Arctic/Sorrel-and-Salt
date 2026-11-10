@@ -243,6 +243,11 @@ export const rules = {
       if (['src/components/Modal/modal.tsx', 'src/components/Modal/route-modal.tsx'].includes(file))
         return {};
       const ALLOWED = {
+        'src/components/AdminCards/mint-form.tsx': {
+          calls: 1,
+          reason:
+            'not a return to the opener: a refused Mint Cards puts the focus on Number of Sheets, inside the modal that stays open, as a plain-state form does on Save',
+        },
         'src/components/FacetPanel/shell.tsx': {
           calls: 2,
           reason:
