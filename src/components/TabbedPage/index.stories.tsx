@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
-import AddAction from '../../app/(shell)/curator/add-action';
+import AddAction from '@/app/(shell)/_admin/add-action';
 import { AdminFrame, AdminTabbedFrame } from '../../../.storybook/admin-frame';
 import { INVITATIONS } from '../../../.storybook/fixtures';
 import AdminInvitations, { InviteAdmin } from '../AdminInvitations';

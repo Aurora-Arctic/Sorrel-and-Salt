@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { Route } from 'next';
 import { AdminFrame as InAdminLayout } from '../../../.storybook/admin-frame';
 import { ShellFrame } from '../../../.storybook/shell-frame';
-import AddAction from '../../app/(shell)/curator/add-action';
+import AddAction from '@/app/(shell)/_admin/add-action';
 import PageHeader from '.';
 
 const meta = {

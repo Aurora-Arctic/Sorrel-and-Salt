@@ -38,11 +38,11 @@ import {
   readFormIcons,
 } from '../../../compendium-reads';
 import { readCardCategories } from '../../../compendium-reads';
-import AddAction from '../add-action';
+import AddAction from '@/app/(shell)/_admin/add-action';
 import { pagerHrefs } from '../../../../lib/list-href';
 import { orMissing } from '../../../../lib/or-not-found';
-import { readEditPlace, readListPlace } from '../list-page';
-import MissingNotice from '../missing-notice';
+import { readEditPlace, readListPlace } from '@/app/(shell)/_admin/list-page';
+import MissingNotice from '@/app/(shell)/_admin/missing-notice';
 import CompendiumDialog from './compendium-dialog';
 import { readCompendiumEntry } from './read-entry';
 import type { AdminCompendiumPageProps, CompendiumSearchParams } from './types';

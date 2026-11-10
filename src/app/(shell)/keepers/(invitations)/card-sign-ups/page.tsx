@@ -11,16 +11,14 @@ import type { Session } from '../../../../../lib/session';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { membershipsOf } from '@/modules/coven';
 import { countCardArrivals, listCardArrivals, usersForAdmin } from '@/modules/identity';
-import { changesLocked } from '../../../../../components/UserList/lock';
-import { impersonationEnabled } from '../../../../../lib/impersonation';
 import { single } from '../../../../../lib/search-params';
 import { withParam } from '../../../../../lib/list-href';
 import { readOpenedUser } from '../../(people)/users/opened-user';
-import UserDialog from '../../(people)/users/user-dialog';
+import UserDialogHost from '../../(people)/users/user-dialog-host';
 import { userHeading } from '../../(people)/users/user-heading';
-import MissingNotice from '../../../curator/missing-notice';
+import MissingNotice from '@/app/(shell)/_admin/missing-notice';
 import { readPauseState } from '../../(people)/pause-state';
-import { readListPlace } from '../../../curator/list-page';
+import { readListPlace } from '@/app/(shell)/_admin/list-page';
 import type { ArrivalsPageProps } from '../invitation-cards/types';
 
 export const metadata: Metadata = pageTitle('Card Sign-Ups');
@@ -93,11 +91,10 @@ export default async function ArrivalsPage({ searchParams }: ArrivalsPageProps) 
       />
       {/* Rendered whatever the address opens, so a press on a name opens it at once. Close returns to this list at its
           filter and cursor. */}
-      <UserDialog
+      <UserDialogHost
         closeHref={arrivalsHref(filter, { after, before })}
         opened={opened}
-        canImpersonate={impersonationEnabled()}
-        changesPaused={Boolean(adminChanges && changesLocked(adminChanges))}
+        adminChanges={adminChanges}
       />
     </>
   );

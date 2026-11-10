@@ -28,7 +28,7 @@ import {
   listKeeperHelpArticles,
   readKeeperHelpArticle,
 } from '@/modules/help';
-import AddAction from '../../curator/add-action';
+import AddAction from '@/app/(shell)/_admin/add-action';
 
 export const metadata: Metadata = pageTitle('Help');
 

@@ -1,14 +1,9 @@
 import type { Metadata } from 'next';
 import { CuratorNav } from '../../../components/AdminNav';
-import { PendingLink } from '../../../lib/navigation';
-import ContextRow from '../../../components/ContextRow';
-import SectionBody from '../../../components/SectionBody';
-// From its own client file: the Modal index re-exports modules a server
-// component cannot import.
-import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
+import AdminAreaLayout from '@/app/(shell)/_admin/area-layout';
 import { requireCuratorSession } from '../../../lib/request-session';
 import { titleTemplate } from '../../../lib/site';
-import type { AdminLayoutProps } from './types';
+import type { AdminLayoutProps } from '@/app/(shell)/_admin/types';
 
 // Each page under `/curator` gives its own name ('Celestial Bodies') and this template
 // finishes it. Next does not apply a layout's template to a page in the same
@@ -18,26 +13,13 @@ export const metadata: Metadata = {
 };
 
 // The curation guard, passed by a curator or a keeper. Every page calls a guard too, as a layout does not
-// re-run on client navigation (claude-docs/auth/admin-guard.md, "The curator guard"). The route-modal provider
-// is shared by all.
+// re-run on client navigation (claude-docs/auth/admin-guard.md, "The curator guard").
 export default async function CuratorLayout({ children }: AdminLayoutProps) {
   await requireCuratorSession();
 
   return (
-    <RouteModalProvider>
-      {/* The area's name is its home link, as the coven row's switcher leads to the coven. */}
-      <ContextRow
-        lead={
-          <PendingLink href="/curator" className="context-row__name">
-            Curator
-          </PendingLink>
-        }
-      >
-        <CuratorNav />
-      </ContextRow>
-      <SectionBody region="admin" className="page-column">
-        {children}
-      </SectionBody>
-    </RouteModalProvider>
+    <AdminAreaLayout name="Curator" href="/curator" nav={<CuratorNav />}>
+      {children}
+    </AdminAreaLayout>
   );
 }

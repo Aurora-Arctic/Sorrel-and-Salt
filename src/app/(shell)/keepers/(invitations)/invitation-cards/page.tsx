@@ -11,7 +11,7 @@ import { requireAdminSession } from '../../../../../lib/request-session';
 import type { Session } from '../../../../../lib/session';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { cardBatchTotals, countCardBatches, listCardBatches } from '@/modules/identity';
-import { readListPlace } from '../../../curator/list-page';
+import { readListPlace } from '@/app/(shell)/_admin/list-page';
 import type { CardsPageProps } from './types';
 
 export const metadata: Metadata = pageTitle('Invitation Cards');

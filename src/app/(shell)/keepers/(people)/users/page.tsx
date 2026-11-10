@@ -3,7 +3,6 @@ import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
 import UserList from '../../../../../components/UserList';
 import { USER_MODAL_ORIGINS, userListHref } from '../../../../../components/UserList/href';
-import { changesLocked } from '../../../../../components/UserList/lock';
 import { ROLES } from '../../../../../components/UserList/roles';
 import type { UserModalOrigin } from '../../../../../components/UserList/href';
 import type { UserListEntry } from '../../../../../components/UserList/types';
@@ -21,11 +20,11 @@ import {
 } from '@/modules/identity';
 import { standingTimeoutsOf } from '@/modules/support';
 import { pagerHrefs } from '../../../../../lib/list-href';
-import { readListPlace } from '../../../curator/list-page';
+import { readListPlace } from '@/app/(shell)/_admin/list-page';
 import { readNumberedPage } from '@/lib/numbered-page';
-import MissingNotice from '../../../curator/missing-notice';
+import MissingNotice from '@/app/(shell)/_admin/missing-notice';
 import { readPauseState } from '../pause-state';
-import UserDialog from './user-dialog';
+import UserDialogHost from './user-dialog-host';
 import { readOpenedUser } from './opened-user';
 import { userHeading } from './user-heading';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
@@ -110,7 +109,6 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
     userParam ? readOpenedUser(session, userParam) : undefined,
   ]);
   const canImpersonate = impersonationEnabled();
-  const changesPaused = Boolean(adminChanges && changesLocked(adminChanges));
 
   return (
     <>
@@ -130,7 +128,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
       />
       {/* Rendered whatever the address opens, so a press on a name opens it at
           once and the covens arrive in it. */}
-      <UserDialog
+      <UserDialogHost
         closeHref={
           userParam && from
             ? USER_MODAL_ORIGINS[from]
@@ -140,8 +138,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
               )
         }
         opened={opened}
-        canImpersonate={canImpersonate}
-        changesPaused={changesPaused}
+        adminChanges={adminChanges}
       />
     </>
   );
