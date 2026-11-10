@@ -6,14 +6,16 @@ import { fromRoot } from '../support/paths';
 // A width query is written once, by a mixin in src/scss/_mixins.scss (phone-down, above-phone, tablet-down,
 // above-tablet, or width-from / width-to for a width of a component's own). Written by hand it drifts: the
 // same edge has been spelled three ways, and the `0.01rem` offset forgotten (claude-docs/styling.md).
-// A container query's step past an edge is the same `0.01rem`, owned by container-from.
+// A container width query is written the same way, by container-from or container-to, which own the step
+// past an edge; a container query on no width (a style query) is not a width query.
 
 const STYLESHEET = /^(src|\.storybook)\/.*\.scss$/;
 const MIXINS = 'src/scss/_mixins.scss';
 const OWNERS = [MIXINS, 'src/scss/_variables.scss'];
 const WIDTH_QUERY = /@media[^{;]*width/;
-// A prelude may interpolate (`#{$edge}`), so its braces do not end it.
-const CONTAINER_STEP = /@container(?:[^{;]|#\{[^}]*\})*0\.01rem/;
+// A prelude may interpolate (`#{$edge}`), so its braces do not end it. `width` covers min-, max- and the
+// range forms (`width > …`); `inline-size` is the same axis.
+const CONTAINER_WIDTH_QUERY = /@container(?:[^{;]|#\{[^}]*\})*\b(?:width|inline-size)\b/;
 
 function stylesheets(): string[] {
   const files = inject('repoFiles').filter((file) => STYLESHEET.test(file));
@@ -41,25 +43,46 @@ describe('width media queries', () => {
 });
 
 describe('container width queries', () => {
-  it('step past an edge only through container-from, never by a hand-written 0.01rem', () => {
+  it('are written only by container-from and container-to, never by hand in a stylesheet', () => {
     // Precondition: the scan reads container queries, so a sheet with one is in reach.
     expect(readFileSync('src/components/TabbedPage/index.scss', 'utf8')).toMatch(/@container/);
 
-    expect(offenders(CONTAINER_STEP)).toEqual([]);
+    expect(offenders(CONTAINER_WIDTH_QUERY)).toEqual([]);
   });
 
-  it('are written by container-from and container-to, which put an edge on exactly one side', () => {
-    const css = compileString(
+  // Each shape a stylesheet needs: a narrow side, a wide side, both edges, and a container with no name.
+  const css = () =>
+    compileString(
       `@use 'mixins' as *;
       .wide { @include container-from(page-header, 10rem) { color: red; } }
-      .narrow { @include container-to(page-header, 10rem) { color: red; } }`,
+      .narrow { @include container-to(page-header, 10rem) { color: red; } }
+      .between {
+        @include container-from(page-header, 10rem) {
+          @include container-to(page-header, 20rem) { color: red; }
+        }
+      }
+      .nearest { @include container-to(null, 10rem) { color: red; } }`,
       { style: 'expanded', loadPaths: [fromRoot('src/scss')] },
     ).css;
 
-    // container-from is above the edge: the edge itself belongs to container-to.
-    expect(css).toMatch(
-      /@container page-header \(min-width: (?:10\.01rem|calc\(10rem \+ 0\.01rem\))\) \{\s*\.wide \{/,
+  // Above the edge: the step written once here, or a range or a `not` that leaves the edge to container-to.
+  const ABOVE_10 = String.raw`(?:\(min-width: (?:10\.01rem|calc\(10rem \+ 0\.01rem\))\)|\(width > 10rem\)|not \(max-width: 10rem\))`;
+
+  it('put an edge on exactly one side: container-to holds it, container-from starts above it', () => {
+    const out = css();
+    expect(out).toMatch(new RegExp(`@container page-header ${ABOVE_10} \\{\\s*\\.wide \\{`));
+    expect(out).toMatch(/@container page-header \(max-width: 10rem\) \{\s*\.narrow \{/);
+  });
+
+  it('nest to bound a container on both sides', () => {
+    expect(css()).toMatch(
+      new RegExp(
+        `@container page-header ${ABOVE_10} \\{\\s*@container page-header \\(max-width: 20rem\\) \\{\\s*\\.between \\{`,
+      ),
     );
-    expect(css).toMatch(/@container page-header \(max-width: 10rem\) \{\s*\.narrow \{/);
+  });
+
+  it('query the nearest container when given no name', () => {
+    expect(css()).toMatch(/@container \(max-width: 10rem\) \{\s*\.nearest \{/);
   });
 });
