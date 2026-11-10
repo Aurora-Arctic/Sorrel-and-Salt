@@ -1,3 +1,4 @@
+import { covenPath } from '@/lib/coven-path';
 import type { Route } from 'next';
 import { lookHrefOf } from '@/components/GrimoireList/recipe-href';
 import type { ReactElement } from 'react';
@@ -18,7 +19,7 @@ import { readPageCursors } from '@/lib/numbered-page';
 import { requireCovenMembership } from '@/lib/request-session';
 import { RowId } from '@/lib/validation';
 import { viewerOf } from '@/lib/viewer';
-import { rolePermits } from '@/modules/coven';
+import { covenAccessOf } from '@/lib/coven-access';
 import {
   readEditedSpell,
   readGrimoire,
@@ -75,7 +76,7 @@ export async function grimoireTab({
   const query = await searchParams;
   const filter = GRIMOIRE_PARAMS.read(query);
   const { after, before } = readPageCursors(query);
-  const path = `/coven/${workspace.slug}/grimoire${beneath}` as Route;
+  const path = covenPath(workspace.slug, 'grimoire', beneath);
 
   const categories = await readCategories();
   const lookups = { categories: new Map(categories.map(({ slug, id }) => [slug, id])) };
@@ -96,14 +97,16 @@ export async function grimoireTab({
   const adding = query[NEW];
   const edit = adding === undefined ? query.edit : undefined;
   const spellId = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;
-  const canCreate = rolePermits(role, { spell: ['create'] });
-  const canUpdate = rolePermits(role, { spell: ['update'] });
-  const canDelete = rolePermits(role, { spell: ['delete'] });
+  const access = covenAccessOf(role);
+  const {
+    canCreateSpell: canCreate,
+    canUpdateSpell: canUpdate,
+    canDeleteSpell: canDelete,
+  } = access;
   const closeHref = GRIMOIRE_PARAMS.href(path, filter, { after, before });
   // The members box searches the members (`member: read`), so it needs that as well as the right to
   // record, as the spell page's. The dialog reads the steps once opened, so the list reads none.
-  const canRecord =
-    rolePermits(role, { working: ['create'] }) && rolePermits(role, { member: ['read'] });
+  const canRecord = access.canCreateWorking && access.canReadMembers;
   const recorder = canRecord
     ? { userId: membership.userId, name: (await viewerOf()).viewer.name }
     : undefined;
@@ -127,7 +130,7 @@ export async function grimoireTab({
     lookHref && lookId?.success
       ? await readLookedSpell(workspace.id, lookHref, lookId.data)
       : undefined;
-  const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
+  const entryId = single(query.entry) || undefined;
   const viewed =
     entryId && looked && !('failed' in looked)
       ? await readViewedEntry(membership, entryId)
@@ -197,7 +200,7 @@ export async function grimoireTab({
                 status: looked.spell.status,
                 visibility: looked.spell.visibility,
                 lastEdit: looked.recipe.lastEdit,
-                recipeHref: `/coven/${workspace.slug}/grimoire/${looked.spell.id}` as Route,
+                recipeHref: covenPath(workspace.slug, 'grimoire', looked.spell.id),
                 ...(canUpdate && { editHref: editHrefOf(closeHref, looked.spell.id) }),
                 children: (
                   <SpellRecipeBody

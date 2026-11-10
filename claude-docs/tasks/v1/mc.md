@@ -31,7 +31,7 @@ Minted from the duplicated-code audit (M17.8) as one of its grouped clean-up tas
 _Acceptance criteria:_
 
 - A coven path builder exists in `src/lib` with a unit test, every hand-built `/coven/<slug>/...` address named in D-41 uses it, and a guard refuses a new one
-- The two keepers and curator layouts are one file (D-114), the user-dialog block, group and value types, dialogs and the two session guards each exist once (D-83, D-92, D-208), and shared admin files live outside `curator/` (D-160)
+- The two keepers and curator layouts are one file (D-114), the user-dialog block, the group and value types and the two session guards each exist once (D-83, D-208), the group and value dialogs share one props type and stay two files, as each wraps a different form (D-92), and shared admin files live outside `curator/` (D-160)
 - Pages use `single()`, `trimmed` and the paging helpers instead of hand-written reads (D-58, D-78), one boolean search-parameter reader replaces the six copies (D-90), and `readBatches`, `readArrivals`, `readLedgerPage` and `cursorOf` are simplified (D-115, D-172)
 - `src/app` uses `@/` imports and the mail glue builds its origin path once (D-169, D-170)
 - The lede text is written once for a page and its skeleton (D-49), the account tab panel section and narrow-panel scaffold are shared components (D-117, D-185), and the help back-bar markup, the demo notice text and the `PublicLayout` branch markup each exist once (D-171, D-184, D-209)

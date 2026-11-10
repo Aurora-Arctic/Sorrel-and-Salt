@@ -9,6 +9,7 @@ import { SearchListSkeleton, SearchRowSkeleton } from '@/components/IngredientSe
 import { ListBodySkeleton } from '@/components/ListFrame/skeleton';
 import ActionFace from '@/components/ActionFace';
 import PageHeader from '@/components/PageHeader';
+import { ADD_INGREDIENT_TITLE } from '@/components/AppShell/add-href';
 export { SpellRecipeSkeleton } from '@/components/SpellRecipe/skeleton';
 
 // The coven's home, drawn from the page's own words. Moving within the coven, its name and the viewer's
@@ -35,7 +36,7 @@ export const CovenHomeSkeleton = () => {
 // The coven's Ingredients: the page's head, then its filter row and compact cards.
 export const CovenIngredientsSkeleton = () => (
   <div>
-    <PageHeader title="Ingredients" action={<ActionFace>Add Ingredient</ActionFace>} />
+    <PageHeader title="Ingredients" action={<ActionFace>{ADD_INGREDIENT_TITLE}</ActionFace>} />
     <div data-density="compact">
       <SearchListSkeleton
         row={

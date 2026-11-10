@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import Notice from '../../../components/Notice';
+import Notice from '@/components/Notice';
 import type { MissingNoticeProps } from './types';
 
 export default function MissingNotice({ noun }: MissingNoticeProps): ReactElement {

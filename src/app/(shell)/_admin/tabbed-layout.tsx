@@ -1,6 +1,6 @@
-import TabbedPage from '../../../components/TabbedPage';
-import { withSkeletons } from '../../../components/AdminNav/skeleton';
-import { ADMIN_PAGES } from '../../../components/AdminNav/sections';
+import TabbedPage from '@/components/TabbedPage';
+import { withSkeletons } from '@/components/AdminNav/skeleton';
+import { ADMIN_PAGES } from '@/components/AdminNav/sections';
 import type { TabbedLayoutProps, TabbedPageKey } from './types';
 
 // A tabbed admin page's heading and tabs, which stay while the tab's action and content swap

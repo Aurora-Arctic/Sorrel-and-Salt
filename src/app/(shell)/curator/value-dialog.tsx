@@ -1,8 +1,8 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import GroupedValueForm from '../../../components/GroupedValueForm';
-import { RouteModal } from '../../../components/Modal';
+import GroupedValueForm from '@/components/GroupedValueForm';
+import { RouteModal } from '@/components/Modal';
 import type { ValueDialogProps } from './types';
 
 // A curated value page's modal, opened by its address or at once by a press. The client edge between

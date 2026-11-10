@@ -1,7 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
-import { RowId } from '../../../../../lib/validation';
-import type { Session } from '../../../../../lib/session';
+import { RowId } from '@/lib/validation';
+import type { Session } from '@/lib/session';
 import { membershipsOf } from '@/modules/coven';
 import {
   holdsPasskey,
@@ -11,7 +11,7 @@ import {
   providersOf,
   usersForAdmin,
 } from '@/modules/identity';
-import type { AccessPauseEntry } from '../../../../../components/UserDetail/types';
+import type { AccessPauseEntry } from '@/components/UserDetail/types';
 import { readTimeoutsOf } from '../../support/reads';
 import { userHeading } from './user-heading';
 import type { OpenedUser } from './types';

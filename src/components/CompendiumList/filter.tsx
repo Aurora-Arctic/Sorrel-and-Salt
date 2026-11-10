@@ -1,5 +1,6 @@
 'use client';
 
+import { covenPath } from '@/lib/coven-path';
 import type { Route } from 'next';
 import { type ReactElement, useMemo, useState } from 'react';
 import { INGREDIENT_ELEMENTS } from '@/modules/ingredients/schema/ingredient-enums';
@@ -21,7 +22,6 @@ import {
   PUBLIC_COMPENDIUM_PATH,
   compendiumHref,
   covenIngredientsHref,
-  covenIngredientsPath,
 } from './href';
 import { COMPENDIUM_PARAMS } from './params';
 import type { CompendiumFacetCounts, CompendiumListFilterProps } from './types';
@@ -45,7 +45,7 @@ const whereOf = ({
   covenSlug,
 }: Pick<CompendiumListFilterProps, 'audience' | 'covenSlug'>): Where => {
   if (audience === 'coven' && covenSlug !== undefined) {
-    return { path: covenIngredientsPath(covenSlug), covenSlug };
+    return { path: covenPath(covenSlug, 'ingredients'), covenSlug };
   }
   return { path: audience === 'admin' ? COMPENDIUM_PATH : PUBLIC_COMPENDIUM_PATH };
 };

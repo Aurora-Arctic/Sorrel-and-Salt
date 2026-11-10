@@ -3,7 +3,7 @@ import type { CupboardPlus } from '@/components/IngredientEntry/types';
 import { Forbidden } from '@/lib/errors';
 import { getSession } from '@/lib/request-session';
 import { covenRolesIfSignedIn, viewerIfSignedIn } from '@/lib/viewer';
-import { rolePermits } from '@/modules/coven';
+import { covenAccessOf } from '@/lib/coven-access';
 import { covensHoldingEntry, type HoldingCoven } from '@/modules/ingredients';
 
 // The plus beside an entry page's pencil, public page and coven's alike: the viewer's covens and which
@@ -32,7 +32,7 @@ export async function plusCovensOf(
   const covens = writable
     .filter(({ id }) => {
       const role = roles?.get(id);
-      return role !== undefined && rolePermits(role, { ingredient: ['create'] });
+      return role !== undefined && covenAccessOf(role).canCreateIngredient;
     })
     .map(({ id, name }) => ({ id, name }));
   if (covens.length === 0) return undefined;

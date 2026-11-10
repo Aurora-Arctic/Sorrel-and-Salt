@@ -1,6 +1,6 @@
 import 'server-only';
-import type { UpdatedStamp } from '../../../components/DataTable/types';
-import type { Session } from '../../../lib/session';
+import type { UpdatedStamp } from '@/components/DataTable/types';
+import type { Session } from '@/lib/session';
 import { editorNamesForCurator, listedOnUserList } from '@/modules/identity';
 
 // The Updated column of every keeper curated list: each row's last editor by name and when. The

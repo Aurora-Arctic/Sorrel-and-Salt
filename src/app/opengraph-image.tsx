@@ -1,5 +1,5 @@
-import { SHARE_CARD_SIZE, SHARE_CARD_TYPE, siteCardImage } from '../lib/share-card';
-import { SITE_NAME } from '../lib/site';
+import { SHARE_CARD_SIZE, SHARE_CARD_TYPE, siteCardImage } from '@/lib/share-card';
+import { SITE_NAME } from '@/lib/site';
 
 // The site's share card, which a link to `/` previews (claude-docs/seo/share-card.md).
 export const alt = SITE_NAME;

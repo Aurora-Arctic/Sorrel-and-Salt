@@ -1,4 +1,3 @@
-import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
 import DetailsLink from '../IngredientEntry/details-link';
@@ -12,6 +11,7 @@ import { covenCardActions, covenCardName } from './actions';
 import EmptyCupboard from './empty';
 import type { CovenCardsProps } from './types';
 import '../CompendiumList/index.scss';
+import { covenPath } from '@/lib/coven-path';
 
 // A coven's Ingredients list, the twin of CompendiumCards: the filter row in coven mode, compact cards and the pager.
 // Render-only. The foot holds Edit or Annotate and More (`card-more.tsx`) (claude-docs/components/coven-cards.md).
@@ -60,7 +60,7 @@ const CovenCards = ({
             {entries.map((entry) => (
               <IngredientCard
                 key={entry.id}
-                href={`/coven/${covenSlug}/ingredients/${entry.id}` as Route}
+                href={covenPath(covenSlug, 'ingredients', entry.id)}
                 label={entry.label}
                 formalName={entry.canonicalName}
                 nomenclature={entry.nomenclature}

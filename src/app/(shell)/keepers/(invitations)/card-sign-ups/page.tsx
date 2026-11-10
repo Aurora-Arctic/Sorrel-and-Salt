@@ -1,75 +1,70 @@
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
-import { cache } from 'react';
-import AdminArrivals from '../../../../../components/AdminCards/arrivals';
-import { readArrivalsFilter } from '../../../../../components/AdminCards/filter-params';
-import { arrivalsHref } from '../../../../../components/AdminCards/href';
-import type { ArrivalsFilter } from '../../../../../components/AdminCards/types';
-import { pagerHrefs } from '../../../../../lib/list-href';
-import { requireAdminSession } from '../../../../../lib/request-session';
-import type { Session } from '../../../../../lib/session';
+import AdminArrivals from '@/components/AdminCards/arrivals';
+import { readArrivalsFilter } from '@/components/AdminCards/filter-params';
+import { arrivalsHref } from '@/components/AdminCards/href';
+import type { ArrivalsFilter } from '@/components/AdminCards/types';
+import { pagerHrefs } from '@/lib/list-href';
+import { requireAdminSession } from '@/lib/request-session';
+import type { Session } from '@/lib/session';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { membershipsOf } from '@/modules/coven';
 import { countCardArrivals, listCardArrivals, usersForAdmin } from '@/modules/identity';
-import { changesLocked } from '../../../../../components/UserList/lock';
-import { impersonationEnabled } from '../../../../../lib/impersonation';
-import { single } from '../../../../../lib/search-params';
-import { withParam } from '../../../../../lib/list-href';
+import { single } from '@/lib/search-params';
+import { withParam } from '@/lib/list-href';
 import { readOpenedUser } from '../../(people)/users/opened-user';
-import UserDialog from '../../(people)/users/user-dialog';
+import UserDialogHost from '../../(people)/users/user-dialog-host';
 import { userHeading } from '../../(people)/users/user-heading';
-import MissingNotice from '../../../curator/missing-notice';
+import MissingNotice from '@/app/(shell)/_admin/missing-notice';
 import { readPauseState } from '../../(people)/pause-state';
-import { readListPlace } from '../../../curator/list-page';
+import { readListPlace } from '@/app/(shell)/_admin/list-page';
 import type { ArrivalsPageProps } from '../invitation-cards/types';
 
 export const metadata: Metadata = pageTitle('Card Sign-Ups');
 
 const REMOVED_ACCOUNT = 'Removed account';
 
-const readArrivals = cache(
-  async (
-    session: Session,
-    filter: ArrivalsFilter,
-    after: string | undefined,
-    before: string | undefined,
-  ) => {
-    const page = await readNumberedPage(
-      { after, before },
-      (request) => listCardArrivals(session, filter, request),
-      (start) => countCardArrivals(session, filter, start),
-    );
-    const ids = page.edges.map(({ node }) => node.acceptedBy);
-    const [accounts, memberships] = await Promise.all([
-      usersForAdmin(session, ids),
-      membershipsOf(session, ids),
-    ]);
-    // An account that can no longer be read keeps its row, as a removed account: the card was still accepted.
-    const arrivals = page.edges.map(({ node }, index) => {
-      const account = accounts[index];
-      const covens = memberships[index];
-      return {
-        id: node.id,
-        accountName: !account || account instanceof Error ? REMOVED_ACCOUNT : account.name,
-        accountEmail: !account || account instanceof Error ? '' : account.email,
-        acceptedAt: node.acceptedAt,
-        batchId: node.batchId,
-        beta: node.beta,
-        account:
-          !account || account instanceof Error
-            ? null
-            : {
-                openHref: withParam(arrivalsHref(filter, { after, before }), 'user', account.id),
-                heading: userHeading(account),
-              },
-        covens: Array.isArray(covens)
-          ? covens.filter(({ role }) => role === 'owner').map(({ workspace }) => workspace.name)
-          : [],
-      };
-    });
-    return { arrivals, pageInfo: page.pageInfo, position: page.position };
-  },
-);
+const readArrivals = async (
+  session: Session,
+  filter: ArrivalsFilter,
+  after: string | undefined,
+  before: string | undefined,
+) => {
+  const page = await readNumberedPage(
+    { after, before },
+    (request) => listCardArrivals(session, filter, request),
+    (start) => countCardArrivals(session, filter, start),
+  );
+  const ids = page.edges.map(({ node }) => node.acceptedBy);
+  const [accounts, memberships] = await Promise.all([
+    usersForAdmin(session, ids),
+    membershipsOf(session, ids),
+  ]);
+  // An account that can no longer be read keeps its row, as a removed account: the card was still accepted.
+  const arrivals = page.edges.map(({ node }, index) => {
+    const account = accounts[index];
+    const covens = memberships[index];
+    return {
+      id: node.id,
+      accountName: !account || account instanceof Error ? REMOVED_ACCOUNT : account.name,
+      accountEmail: !account || account instanceof Error ? '' : account.email,
+      acceptedAt: node.acceptedAt,
+      batchId: node.batchId,
+      beta: node.beta,
+      account:
+        !account || account instanceof Error
+          ? null
+          : {
+              openHref: withParam(arrivalsHref(filter, { after, before }), 'user', account.id),
+              heading: userHeading(account),
+            },
+      covens: Array.isArray(covens)
+        ? covens.filter(({ role }) => role === 'owner').map(({ workspace }) => workspace.name)
+        : [],
+    };
+  });
+  return { arrivals, pageInfo: page.pageInfo, position: page.position };
+};
 
 export default async function ArrivalsPage({ searchParams }: ArrivalsPageProps) {
   const session = await requireAdminSession();
@@ -93,11 +88,10 @@ export default async function ArrivalsPage({ searchParams }: ArrivalsPageProps) 
       />
       {/* Rendered whatever the address opens, so a press on a name opens it at once. Close returns to this list at its
           filter and cursor. */}
-      <UserDialog
+      <UserDialogHost
         closeHref={arrivalsHref(filter, { after, before })}
         opened={opened}
-        canImpersonate={impersonationEnabled()}
-        changesPaused={Boolean(adminChanges && changesLocked(adminChanges))}
+        adminChanges={adminChanges}
       />
     </>
   );

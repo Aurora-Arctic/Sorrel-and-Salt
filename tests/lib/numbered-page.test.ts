@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { InvalidCursor } from '@/lib/errors';
 import { encodeCursor } from '@/lib/pagination';
-import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
+import { cursorOf, readNumberedPage, readPageCursors } from '@/lib/numbered-page';
 import type { PageRequest } from '@/lib/types';
 
 const ID = '0f9c2b1e-6a51-4c3f-9d7e-2b8a4e1c5d60';
@@ -70,5 +70,26 @@ describe('readNumberedPage', () => {
     });
     await expect(readNumberedPage({ after: CURSOR }, failing, count)).rejects.toBe(broken);
     expect(failing).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('cursorOf', () => {
+  it('answers the after cursor when the place has one, even beside a before', () => {
+    expect(cursorOf({ after: CURSOR, before: OTHER })).toEqual({ after: CURSOR });
+  });
+
+  it('answers the before cursor when it is the only one', () => {
+    expect(cursorOf({ before: OTHER })).toEqual({ before: OTHER });
+  });
+
+  it.each([[{}], [{ after: undefined, before: undefined }], [{ after: '', before: '' }]])(
+    'answers no cursor for the first page (%j)',
+    (place) => {
+      expect(cursorOf(place)).toBeUndefined();
+    },
+  );
+
+  it('takes what readPageCursors read, so a page reads and passes on its place in two calls', () => {
+    expect(cursorOf(readPageCursors({ before: OTHER }))).toEqual({ before: OTHER });
   });
 });

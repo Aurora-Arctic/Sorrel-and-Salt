@@ -425,6 +425,14 @@ instead ("No folk names recorded."), since a field is filled in rather than adde
 The plural reads true however many rows the list could have held, and naming each
 filter, not calling it "that filter", shows a keeper which one to change.
 
+### Building a coven or compendium address
+
+`covenPath(slug, ...segments)` in `src/lib/coven-path.ts` and `compendiumEntryPath(slug)` in
+`src/lib/compendium-path.ts` build these addresses, typed `Route`, with every part encoded. A
+segment that is `false` or `undefined` is left out, so `covenPath(slug, 'grimoire', drafts && 'drafts')`
+is one call either way. The caller adds a query or hash after it. A template literal starting
+`/coven/${` or `/compendium/ingredients/${` is refused by `tests/guards/coven-paths.test.ts`.
+
 ### Moving a page to another coven
 
 `pathInCoven` in `coven-path.ts` answers where the same page is in another

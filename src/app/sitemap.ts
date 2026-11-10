@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { listHelpArticlePaths } from '@/modules/help';
 import { listCompendiumSlugs } from '@/modules/ingredients';
 import { siteUrl } from '@/lib/site';
+import { compendiumEntryPath } from '@/lib/compendium-path';
 
 // Read per request, not at build: the page is a Route Handler that Next would otherwise run once at
 // build time and keep, so a new entry would wait for the next deploy. The read underneath is the data
@@ -25,7 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: siteUrl('/help/glossary') },
     ...helpPaths.map((path) => ({ url: siteUrl(path) })),
     ...entries.map(({ slug, lastModified }) => ({
-      url: siteUrl(`/compendium/ingredients/${slug}`),
+      url: siteUrl(compendiumEntryPath(slug)),
       lastModified,
     })),
   ];

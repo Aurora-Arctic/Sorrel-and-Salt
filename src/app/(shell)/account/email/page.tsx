@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
+import { EMAIL_TITLE } from '@/components/EmailForm/head';
 import { pageTitle } from '@/lib/page-metadata';
 import { getMe, isPlaceholderEmail, verificationWaitSeconds } from '@/modules/identity';
-import EmailForm from '../../../../components/EmailForm';
-import { hasVerifiedFlag, verifyErrorMessage } from '../../../../lib/account-email';
-import { requireSession } from '../../../../lib/request-session';
-import { signedInLanding } from '../../../../lib/landing';
-import { ACCOUNT_PATH, safeReturnPath } from '../../../../lib/sign-in';
+import EmailForm from '@/components/EmailForm';
+import { hasVerifiedFlag, verifyErrorMessage } from '@/lib/account-email';
+import { requireSession } from '@/lib/request-session';
+import { signedInLanding } from '@/lib/landing';
+import { ACCOUNT_PATH, safeReturnPath } from '@/lib/sign-in';
 import type { EmailPageProps } from './types';
 import PageFrame from '@/components/PageFrame';
 
-export const metadata: Metadata = pageTitle('Your Email');
+export const metadata: Metadata = pageTitle(EMAIL_TITLE);
 
 export default async function EmailPage({ searchParams }: EmailPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);

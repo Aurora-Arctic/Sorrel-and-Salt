@@ -1,4 +1,4 @@
-import { NotFoundScreen } from '../components/ErrorScreens';
+import { NotFoundScreen } from '@/components/ErrorScreens';
 
 // What `notFound()` renders from a page outside the shell and the unmatched group, with a 404.
 // `(shell)/not-found.tsx` renders the same screen inside the shell, and `(unmatched)` draws an unknown

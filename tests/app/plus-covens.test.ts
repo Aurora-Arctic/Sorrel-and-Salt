@@ -11,7 +11,10 @@ const viewerIfSignedIn = vi.fn();
 const covenRolesIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
 const covensHoldingEntry = vi.fn();
-vi.mock('@/modules/ingredients', () => ({ covensHoldingEntry }));
+vi.mock('@/modules/ingredients', () => ({
+  covensHoldingEntry,
+  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
+}));
 
 const { covensHolding, plusCovensOf } = await import('@/app/plus-covens');
 

@@ -4,7 +4,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import type { Route } from 'next';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { type ReactElement, Suspense, useRef, useState } from 'react';
-import { covenSlugOf } from '../../lib/coven-path';
+import { covenSlugOf, covenPath } from '../../lib/coven-path';
 import { sectionsFor } from '../MenuButton/sections';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { joinList } from '@/lib/join-list';
@@ -13,9 +13,17 @@ import type { SavedIngredient } from '../IngredientForm/types';
 import Modal from '../Modal';
 import ModalLoading from '../Modal/loading';
 import { useLazyModule } from '@/lib/use-lazy-module';
-import { NEW, NEW_COMPENDIUM_ENTRY, askedCoven, closedHref, openHref } from './add-href';
+import {
+  ADD_INGREDIENT_TITLE,
+  NEW,
+  NEW_COMPENDIUM_ENTRY,
+  askedCoven,
+  closedHref,
+  openHref,
+} from './add-href';
 import AddIngredientMenu from './add-ingredient-menu';
 import type { AddDestination, AddIngredientButtonProps } from './types';
+import { compendiumEntryPath } from '@/lib/compendium-path';
 
 // The form's code loads the first time the dialog opens; the dialog's frame draws first.
 const loadForm = () => import('../IngredientForm');
@@ -24,7 +32,6 @@ const loadForm = () => import('../IngredientForm');
 // coven's dialog opens at `?new=ingredient-coven-<slug>` by `pushState`; the compendium's New Entry
 // is a navigation (claude-docs/components/modal.md, "Add Ingredient").
 
-const LABEL = 'Add Ingredient';
 const CLASSES = 'btn btn--solid btn--medium app-shell__add';
 const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
 
@@ -76,8 +83,8 @@ function AddIngredientBody({
         onSaved(saved);
         close();
       }}
-      duplicateHref={(match) => `/coven/${workspace.slug}/ingredients/${match.id}`}
-      entryHref={({ slug, isGlobal }) => (isGlobal ? `/compendium/ingredients/${slug}` : undefined)}
+      duplicateHref={(match) => covenPath(workspace.slug, 'ingredients', match.id)}
+      entryHref={({ slug, isGlobal }) => (isGlobal ? compendiumEntryPath(slug) : undefined)}
     />
   );
 }
@@ -188,7 +195,7 @@ const AddIngredientButton = ({
     if (created) {
       setCreated(null);
       if (!leaving.current) {
-        navigate(`/coven/${created.slug}/ingredients` as Route, { replace: true });
+        navigate(covenPath(created.slug, 'ingredients'), { replace: true });
       }
       return;
     }
@@ -202,7 +209,7 @@ const AddIngredientButton = ({
       {saved && <output className="app-shell__saved">{saved}</output>}
       <span className="app-shell__add-group">
         <button ref={main} type="button" className={CLASSES} onClick={() => go(initial)}>
-          {LABEL}
+          {ADD_INGREDIENT_TITLE}
         </button>
         {all.length > 1 && (
           <AddIngredientMenu sections={sections} className={MORE_CLASSES} onChoose={go} />
@@ -213,7 +220,7 @@ const AddIngredientButton = ({
           // Another coven's address is another form.
           key={adding.id}
           destination={adding.name}
-          title={LABEL}
+          title={ADD_INGREDIENT_TITLE}
           onClose={close}
           loading={!form}
           // Focus returns to the bar's main part: the menu item that opened this goes with the
@@ -230,7 +237,7 @@ const AddIngredientButton = ({
                 window.history.replaceState(
                   null,
                   '',
-                  `/coven/${adding.slug}/ingredients?edit=${ingredient.id}`,
+                  `${covenPath(adding.slug, 'ingredients')}?edit=${ingredient.id}`,
                 );
                 setCreated(adding);
               }}
@@ -239,8 +246,8 @@ const AddIngredientButton = ({
                 // Save Ingredient opens the new ingredient's page, an address
                 // without `?new`, which closes the dialog.
                 leaving.current = true;
-                const href = `/coven/${adding.slug}/ingredients/${ingredient.id}`;
-                navigate(href as Route);
+                const href = covenPath(adding.slug, 'ingredients', ingredient.id);
+                navigate(href);
               }}
             />
           )}

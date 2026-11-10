@@ -5,7 +5,7 @@ import type { Route } from 'next';
 
 export type SearchLookups = Readonly<Record<string, ReadonlyMap<string, string>>>;
 
-type Raw = string | string[] | undefined;
+type Raw = string | readonly string[] | undefined;
 type Written = string | readonly string[] | boolean | undefined;
 
 /** Methods rather than properties, so an entry typed for its own value is accepted where the table takes any. */
@@ -71,6 +71,19 @@ export const textListParam = (name: string, variable: string): SearchParam<strin
   },
   write: (value) => value,
   toVariable: (value) => (value.length > 0 ? value : undefined),
+});
+
+/** An on/off switch: `1` is on and off stays out of the address. `toVariable` turns the flag into the value its query takes when that is not `true`. */
+export const flagParam = (
+  name: string,
+  variable: string = name,
+  toVariable: (on: boolean) => unknown = (on) => on || undefined,
+): SearchParam<boolean> => ({
+  name,
+  variable,
+  read: (raw) => single(raw) === '1',
+  write: (on) => (on ? '1' : undefined),
+  toVariable,
 });
 
 /** The variable is the ids the page's `lookupKey` lookup holds; a slug it does not hold (a renamed one) is dropped and the rest still filter. Slugs, as an id means nothing to a reader. */

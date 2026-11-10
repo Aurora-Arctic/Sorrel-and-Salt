@@ -11,6 +11,7 @@ import { needOf, supplyOf } from './steps/supply';
 import type { SpellStepValue } from './steps/types';
 import { verdictOf, type VerdictKind, VerdictMark } from './verdict-mark';
 import { isInstruction, stepNameOf } from './steps/values';
+import { INVENTORY_TITLE } from '../SpellRecipe/sections';
 
 // In the Cupboard: one line per form, at its first step's place, setting `needOf` against the jar's `supplyOf`, with a `VerdictMark` and `doorsOf` doors; used by the recipe page alone
 // (claude-docs/components/spell-recipe.md, "The side column" and "The inventory panel").
@@ -106,7 +107,7 @@ export function InCovenInventory({
   );
   return (
     <section id={id} className="spell-inventory" aria-labelledby="spell-inventory-heading">
-      <h2 id="spell-inventory-heading">In the Cupboard</h2>
+      <h2 id="spell-inventory-heading">{INVENTORY_TITLE}</h2>
       {lines.length === 0 ? (
         <EmptyState size="compact">Nothing in the jar yet.</EmptyState>
       ) : (

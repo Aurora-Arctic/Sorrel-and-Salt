@@ -17,7 +17,7 @@ component taking the workspace's `workspaceId` and `name`.
 - **A success goes to the coven landing** (`/coven`) with `router.replace`, then `router.refresh()`,
   as Leave Coven does ([`leave-workspace-button.md`](leave-workspace-button.md)). A re-read would
   be a 404, since the deleting user has no membership of the coven any more.
-- **The page decides who sees it**, from `rolePermits(role, { workspace: ['delete'] })`, never from a
+- **The page decides who sees it**, from `canDeleteCoven` of `covenAccessOf(role)`, never from a
   rank. The service checks the same permission whatever the page shows.
 - **Placement**: the coven index gives it a section of its own, "Delete This Coven", shown to
   stewards only, so it is never beside Leave Coven.

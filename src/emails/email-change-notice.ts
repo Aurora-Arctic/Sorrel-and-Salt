@@ -1,5 +1,6 @@
 import { Fragment, createElement as h } from 'react';
 import { EmailLayout, IgnoreNote, Paragraph, defineMessage } from './parts/layout';
+import { inUtc } from '@/lib/utc';
 import type { EmailChangeNoticeProps } from './types';
 
 // Sent to the address an account is leaving, on the request and on the completion. It carries no action: a link here would be one a thief could
@@ -14,15 +15,6 @@ const PREVIEW = {
   requested: 'Someone asked to move your account to another email address.',
   completed: 'Your account now uses another email address.',
 };
-
-/** In UTC, because the mail is read in a zone the server cannot know. */
-function whenOf(at: Date): string {
-  return `${new Intl.DateTimeFormat('en-GB', {
-    dateStyle: 'long',
-    timeStyle: 'short',
-    timeZone: 'UTC',
-  }).format(at)} UTC`;
-}
 
 export function EmailChangeNotice({
   stage,
@@ -39,7 +31,7 @@ export function EmailChangeNotice({
           h(
             Paragraph,
             null,
-            `On ${whenOf(at)}, a signed-in session asked to use an address at ${newDomain} for your Sorrel & Salt account.`,
+            `On ${inUtc(at)}, a signed-in session asked to use an address at ${newDomain} for your Sorrel & Salt account.`,
           ),
           h(
             Paragraph,
@@ -50,7 +42,7 @@ export function EmailChangeNotice({
       : h(
           Paragraph,
           null,
-          `On ${whenOf(at)}, your Sorrel & Salt account moved to an address at ${newDomain}. This address no longer receives its mail.`,
+          `On ${inUtc(at)}, your Sorrel & Salt account moved to an address at ${newDomain}. This address no longer receives its mail.`,
         );
   return h(
     EmailLayout,
