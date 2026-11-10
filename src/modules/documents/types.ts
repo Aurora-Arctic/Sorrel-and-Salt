@@ -1,3 +1,4 @@
+import type { OriginNotifier } from '../../lib/types';
 export type DocumentKey = 'privacy' | 'about' | 'disclaimer' | 'code-of-ethics' | 'terms';
 
 export type PublishedDocument = {
@@ -75,7 +76,4 @@ export type DocumentMailingOverview = {
   lastSent: DocumentMailingSummary | null;
 };
 
-export interface DocumentMailingNotifier {
-  /** @throws {Error} where none resolves. */
-  origin(): Promise<string>;
-}
+export type DocumentMailingNotifier = OriginNotifier;
