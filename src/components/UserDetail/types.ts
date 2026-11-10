@@ -19,6 +19,7 @@ export type UserDetailUser = Pick<
   | 'primaryAdmin'
   | 'canCreateWorkspace'
   | 'providers'
+  | 'hasPasskey'
   | 'createdAt'
   | 'agreedTermsVersion'
   | 'agreedDisclaimerVersion'

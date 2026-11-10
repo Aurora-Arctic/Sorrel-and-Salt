@@ -18,6 +18,7 @@ const providersOf = vi.fn();
 vi.mock('@/modules/identity', () => ({
   adminRoleChangePauseState,
   countCardArrivals,
+  holdsPasskey: vi.fn(async () => [false]),
   isPrimaryAdmin: () => false,
   listCardArrivals,
   listedOnUserList,

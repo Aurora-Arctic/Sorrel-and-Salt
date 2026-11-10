@@ -17,6 +17,7 @@ vi.mock('@/lib/request-session', () => import('../../../../../support/request-se
 const listUsers = vi.fn();
 const countUsers = vi.fn();
 const providersOf = vi.fn();
+const holdsPasskey = vi.fn();
 const isPrimaryAdmin = vi.fn();
 const adminRoleChangePauseState = vi.fn();
 const usersForAdmin = vi.fn();
@@ -26,6 +27,7 @@ const standingAccessPausesOf = vi.fn();
 vi.mock('@/modules/identity', () => ({
   adminRoleChangePauseState,
   countUsers,
+  holdsPasskey,
   isPrimaryAdmin,
   listedOnUserList,
   listUserAccessPauses,
@@ -111,6 +113,8 @@ beforeEach(() => {
   providersOf.mockImplementation(async (_session, ids: string[]) =>
     ids.map((_, index) => (index === 0 ? ['google'] : [])),
   );
+  holdsPasskey.mockReset();
+  holdsPasskey.mockImplementation(async (_session, ids: string[]) => ids.map(() => false));
   isPrimaryAdmin.mockReset();
   isPrimaryAdmin.mockReturnValue(false);
   adminRoleChangePauseState.mockReset();
@@ -172,6 +176,18 @@ describe('the /keepers/users page', () => {
 
     expect(cellUnder('Listed Fixture 01', 'Logins')).toHaveTextContent('Google');
     expect(cellUnder('Listed Fixture 02', 'Logins')).toHaveTextContent(/^$/);
+  });
+
+  it("reads in one batch, as the guard's session, which users hold a passkey, and marks their rows", async () => {
+    holdsPasskey.mockImplementation(async (_session, ids: string[]) =>
+      ids.map((id) => id === user(2).id),
+    );
+    await renderPage();
+
+    expect(holdsPasskey).toHaveBeenCalledExactlyOnceWith(ADMIN, [user(1).id, user(2).id]);
+    expect(screen.getByRole('cell', { name: /Passkey/ })).toBe(
+      cellUnder('Listed Fixture 02', 'Logins'),
+    );
   });
 
   it('reads the page’s standing time-outs and pauses in one batch each, as the guard’s session, and marks each row', async () => {
@@ -304,13 +320,16 @@ describe('the /keepers/users page', () => {
 
 describe('the /keepers/users page, the user modal', () => {
   it('reads the user and their covens as the guard’s session, and shows them in the modal', async () => {
+    holdsPasskey.mockImplementation(async (_session, ids: string[]) => ids.map(() => true));
     await renderPage({ query: 'listed', user: user(1).id });
 
     expect(usersForAdmin).toHaveBeenCalledExactlyOnceWith(ADMIN, [user(1).id]);
     expect(listedOnUserList).toHaveBeenCalledWith(user(1).id);
     expect(membershipsOf).toHaveBeenCalledExactlyOnceWith(ADMIN, [user(1).id]);
     expect(providersOf).toHaveBeenCalledWith(ADMIN, [user(1).id]);
+    expect(holdsPasskey).toHaveBeenCalledWith(ADMIN, [user(1).id]);
     const dialog = screen.getByRole('dialog', { name: VIEWING_01 });
+    expect(within(dialog).getAllByText('Passkey')[0]).toBeInTheDocument();
     expect(
       within(within(dialog).getByRole('list', { name: 'Covens' })).getByRole('listitem'),
     ).toHaveTextContent('Fixture Coven');

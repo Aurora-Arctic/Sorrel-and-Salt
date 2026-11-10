@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { ReactElement } from 'react';
 import type { ModalHeading } from '../Modal/types';
 import type { UserRole } from '../../lib/session';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
@@ -15,6 +16,8 @@ export interface UserListEntry {
   agreedDisclaimerVersion: number | null;
   agreedEthicsVersion: number | null;
   providers: readonly string[];
+  /** Whether they hold at least one passkey, which is not an account and so not among the providers. */
+  hasPasskey: boolean;
   emailVerified: boolean;
   primaryAdmin: boolean;
   openHref: Route;
@@ -123,6 +126,13 @@ export interface LockedControlProps {
 
 export interface ProviderLogoProps {
   id: string;
+}
+
+export type SignInMarksProps = Pick<UserListEntry, 'providers' | 'hasPasskey'>;
+
+export interface OwnLoginMarkProps {
+  label: string;
+  icon: ReactElement;
 }
 
 export interface UntilMarkProps {

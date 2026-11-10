@@ -910,6 +910,13 @@
     }
   }
 
+  // A way in with no brand (email & password, a passkey): the quiet wash with a hairline edge, its outline glyph in the body ink.
+  .provider-mark--own {
+    border: 1px solid $hairline;
+    color: $text-primary;
+    background-color: $fill-quiet;
+  }
+
   .provider-mark--facebook > svg {
     width: 100%;
     height: 100%;

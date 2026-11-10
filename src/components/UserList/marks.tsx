@@ -3,7 +3,8 @@ import { isRosterProvider, SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import ProviderMark from '../ProviderMark';
 import Hint from './hint';
 import { CheckIcon, CrossIcon } from '../IconTip/icons';
-import type { MarkProps, ProviderLogoProps } from './types';
+import { EmailPasswordIcon, PasskeyIcon } from './icons';
+import type { MarkProps, OwnLoginMarkProps, ProviderLogoProps, SignInMarksProps } from './types';
 import './index.scss';
 
 // The table's two drawn facts, shared with the user's modal so the
@@ -24,6 +25,38 @@ export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
     </Hint>
   );
 };
+
+// Better Auth's provider id for an email & password account.
+const CREDENTIAL = 'credential';
+
+const OwnLoginMark = ({ label, icon }: OwnLoginMarkProps): ReactElement => (
+  <Hint className="user-list__hint" label={label}>
+    <span className="provider-mark provider-mark--own" aria-hidden="true">
+      {icon}
+    </span>
+    <span className="visually-hidden">{label}</span>
+  </Hint>
+);
+
+/** Whether a user has any way in to draw; the modal says None when not. */
+export function hasSignInMarks({ providers, hasPasskey }: SignInMarksProps): boolean {
+  return hasPasskey || providers.length > 0;
+}
+
+/** A user's ways in: each linked social provider's mark, then email & password, then a passkey. */
+export const SignInMarks = ({ providers, hasPasskey }: SignInMarksProps): ReactElement => (
+  <>
+    {providers
+      .filter((id) => id !== CREDENTIAL)
+      .map((id) => (
+        <ProviderLogo key={id} id={id} />
+      ))}
+    {providers.includes(CREDENTIAL) && (
+      <OwnLoginMark label="Email & Password" icon={<EmailPasswordIcon />} />
+    )}
+    {hasPasskey && <OwnLoginMark label="Passkey" icon={<PasskeyIcon />} />}
+  </>
+);
 
 /**
  * A yes-or-no as a green check or a red cross, its word in the page for a screen reader since the mark is drawn alone.

@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { agreedVersionOfColumns, formatAgreementVersion } from '../../lib/agreement-version';
 import { CheckIcon, CrossIcon } from '../IconTip/icons';
 import CreationControl from '../UserList/creation-control';
-import { Mark, ProviderLogo } from '../UserList/marks';
+import { hasSignInMarks, Mark, SignInMarks } from '../UserList/marks';
 import PrimaryAdminMark from '../UserList/primary-admin-mark';
 import RoleControl from '../UserList/role-control';
 import { roleLabel } from '../UserList/roles';
@@ -116,9 +116,11 @@ const UserDetail = ({
         <div>
           <dt>Sign-In Methods</dt>
           <dd className="user-list__providers">
-            {user.providers.length === 0
-              ? 'None'
-              : user.providers.map((id) => <ProviderLogo key={id} id={id} />)}
+            {hasSignInMarks(user) ? (
+              <SignInMarks providers={user.providers} hasPasskey={user.hasPasskey} />
+            ) : (
+              'None'
+            )}
           </dd>
         </div>
         <div>

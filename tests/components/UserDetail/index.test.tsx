@@ -38,6 +38,7 @@ const FACTS = {
   primaryAdmin: false,
   canCreateWorkspace: false,
   providers: ['google', 'discord'],
+  hasPasskey: false,
   createdAt: new Date('2026-02-03T04:05:06Z'),
   agreedTermsVersion: 1,
   agreedDisclaimerVersion: 4,
@@ -134,6 +135,23 @@ describe('UserDetail', () => {
 
     renderDetail({ user: { ...BO, providers: [] } });
     expect(screen.queryAllByText('Google')).toHaveLength(0);
+  });
+
+  it('draws the email & password and passkey marks among the sign-in methods, never the raw id', () => {
+    renderDetail({ user: { ...BO, providers: ['credential'], hasPasskey: true } });
+
+    const methods = factOf('Sign-In Methods');
+    expect(within(methods).getAllByText('Email & Password')[0]).toBeInTheDocument();
+    expect(within(methods).getAllByText('Passkey')[0]).toBeInTheDocument();
+    expect(methods.querySelectorAll('svg')).toHaveLength(2);
+    expect(methods).not.toHaveTextContent('credential');
+  });
+
+  it('counts a passkey alone as a sign-in method rather than saying None', () => {
+    renderDetail({ user: { ...BO, providers: [], hasPasskey: true } });
+
+    expect(within(factOf('Sign-In Methods')).queryByText('None')).not.toBeInTheDocument();
+    expect(within(factOf('Sign-In Methods')).getAllByText('Passkey')[0]).toBeInTheDocument();
   });
 
   it('marks the primary keeper, and no one else', () => {
