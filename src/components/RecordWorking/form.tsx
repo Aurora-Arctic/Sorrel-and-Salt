@@ -6,7 +6,7 @@ import type { RecordWorkingMembersQuery, WorkingParticipantInput } from '../../g
 import { trimEnds } from '../../lib/formats';
 import { CalendarDay } from '../../lib/validation';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { readGraphqlFailure, fieldMessage } from '../../lib/graphql-failure';
 import { useDebouncedValue } from '../../lib/debounce';
 import { usePendingNavigation } from '../../lib/navigation';
 import type { Failure } from '../../lib/types';
@@ -163,9 +163,9 @@ export default function RecordWorkingForm({
 
   const dateField = fieldDescription({
     id: `${ids}-date`,
-    error: failure.field?.name === 'workedOn' ? failure.field.message : undefined,
+    error: fieldMessage(failure, 'workedOn'),
   });
-  const peopleError = failure.field?.name === 'participants' ? failure.field.message : undefined;
+  const peopleError = fieldMessage(failure, 'participants');
 
   const typed = text.trim();
   // The search waits for typed text, as the box takes the focus when the dialog opens and opening asks nothing.
@@ -305,7 +305,7 @@ export default function RecordWorkingForm({
         format={trimEnds}
         value={note}
         onChange={setNote}
-        error={failure.field?.name === 'note' ? failure.field.message : undefined}
+        error={fieldMessage(failure, 'note')}
         disabled={submitting}
       />
       <VisibilitySwitch

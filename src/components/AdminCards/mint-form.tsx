@@ -12,6 +12,7 @@ import { FieldShell, FormActions, PlainTextField, SwitchField, fieldDescription 
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import MintedCards from './minted';
+import { fieldMessage } from '../../lib/graphql-failure';
 import type { MintedBatch } from './minted';
 import {
   CARDS_PER_SHEET,
@@ -102,11 +103,11 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
     error:
       sheetsRefusal(sheets) ??
       (pressed && sheets.trim() === '' ? SHEETS_REQUIRED : undefined) ??
-      (failure.field?.name === 'sheets' ? failure.field.message : undefined),
+      fieldMessage(failure, 'sheets'),
   });
   const dayField = fieldDescription({
     id: dayId,
-    error: failure.field?.name === 'expiresAt' ? failure.field.message : undefined,
+    error: fieldMessage(failure, 'expiresAt'),
   });
   const { aria: sheetsAria, ...sheetsShell } = sheetsField;
   const { aria: dayAria, ...dayShell } = dayField;
@@ -215,7 +216,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         limit={MAX_NOTE_LENGTH}
         value={note}
         disabled={minting}
-        error={failure.field?.name === 'note' ? failure.field.message : undefined}
+        error={fieldMessage(failure, 'note')}
         onChange={setNote}
       />
       <div className="admin-cards__switches">

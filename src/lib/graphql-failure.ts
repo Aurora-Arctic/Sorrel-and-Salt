@@ -66,3 +66,8 @@ export function placeServerIssues<Name extends string>(
   }
   return placed;
 }
+
+/** The server's message for the input `name`, or undefined where the refusal sits beside another input or is an alert. */
+export function fieldMessage(failure: Failure, name: string): string | undefined {
+  return failure.field?.name === name ? failure.field.message : undefined;
+}

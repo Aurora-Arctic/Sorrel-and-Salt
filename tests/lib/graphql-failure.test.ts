@@ -1,7 +1,7 @@
 import type { UseFormSetError } from 'react-hook-form';
 import { describe, expect, it, vi } from 'vitest';
 import { GraphQLClientError } from '@/lib/graphql-client-error';
-import { GENERIC_FAILURE, placeServerIssues } from '@/lib/graphql-failure';
+import { GENERIC_FAILURE, fieldMessage, placeServerIssues } from '@/lib/graphql-failure';
 
 type Values = { name: string; description: string };
 
@@ -76,5 +76,14 @@ describe('placeServerIssues', () => {
 
     expect(placed).toBe(false);
     expect(setError).not.toHaveBeenCalled();
+  });
+});
+
+describe('fieldMessage', () => {
+  it('gives the message only for the input the failure names', () => {
+    const failure = { field: { name: 'note', message: 'Too long' } };
+    expect(fieldMessage(failure, 'note')).toBe('Too long');
+    expect(fieldMessage(failure, 'body')).toBeUndefined();
+    expect(fieldMessage({ alert: 'Down' }, 'note')).toBeUndefined();
   });
 });

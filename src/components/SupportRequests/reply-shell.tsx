@@ -7,6 +7,7 @@ import BusyButton from '../BusyButton';
 import { PlainTextField } from '../Field/plain-text-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
+import { fieldMessage } from '../../lib/graphql-failure';
 
 interface SupportReplyShellProps {
   body: string;
@@ -66,7 +67,7 @@ const SupportReplyShell = ({
         limit={MESSAGE_MAX_LENGTH}
         disabled={shut || busy}
         value={body}
-        error={failure.field?.name === 'body' ? failure.field.message : undefined}
+        error={fieldMessage(failure, 'body')}
         onChange={onBody}
       />
       {below}
