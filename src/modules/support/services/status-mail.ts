@@ -1,6 +1,6 @@
 import 'server-only';
 import { findOneById } from '../../../db/repository';
-import { deliver } from '../../../lib/mail-transport';
+import { deliverMessageFor } from '../../../lib/deliver-message-for';
 import { supportStatusMessage } from '../../../lib/support-job-mail';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import { supportRequests } from '../schema/support-requests';
@@ -32,7 +32,5 @@ export async function supportStatusMessageFor(mail: SupportStatusMail): Promise<
 
 /** Builds and sends `mail`; true once the transport took it, false when there was none to send. A transport failure throws, so a job's step is retried. */
 export async function sendSupportStatusMail(mail: SupportStatusMail): Promise<boolean> {
-  const message = await supportStatusMessageFor(mail);
-  if (!message) return false;
-  return deliver(message);
+  return deliverMessageFor(supportStatusMessageFor, mail);
 }

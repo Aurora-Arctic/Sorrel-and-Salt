@@ -7,6 +7,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
+import { notifyAfterSave } from '../../../lib/mail-job';
 import {
   parsePauseEnd,
   parsePauseNote,
@@ -74,12 +75,10 @@ export async function pauseUserAccess(
     return row;
   });
   // The pause is saved, so a mail that cannot start or send is logged by the start and never thrown.
-  try {
-    await mailPausedUser(pause.id, await notifier.origin());
-  } catch (error) {
-    // oxlint-disable-next-line no-console -- the log is how a failed send is seen
-    console.error('Could not start an access pause notice', error);
-  }
+  await notifyAfterSave(
+    async () => mailPausedUser(pause.id, await notifier.origin()),
+    'an access pause notice',
+  );
   return pause;
 }
 

@@ -1,6 +1,7 @@
 import 'server-only';
 import { findOneById, findSupportTimeoutById, withAudit } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
+import { notifyAfterSave } from '../../../lib/mail-job';
 import type { Session } from '../../../lib/session';
 import {
   parsePauseEnd,
@@ -58,12 +59,10 @@ export async function timeOutSupportSender(
     return inserted as SupportTimeoutRow;
   });
   // The time-out is saved, so a mail that cannot start or send is logged by the start and never thrown.
-  try {
-    await mailTimedOutSender(row.id, await notifier.origin());
-  } catch (error) {
-    // oxlint-disable-next-line no-console -- the log is how a failed send is seen
-    console.error('Could not start a support time-out notice', error);
-  }
+  await notifyAfterSave(
+    async () => mailTimedOutSender(row.id, await notifier.origin()),
+    'a support time-out notice',
+  );
   return row;
 }
 

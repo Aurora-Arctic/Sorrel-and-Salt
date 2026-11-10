@@ -7,6 +7,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
+import { notifyAfterSave } from '../../../lib/mail-job';
 import {
   parseOptionalPauseMessage,
   parsePauseEnd,
@@ -75,12 +76,10 @@ export async function pauseMemberAccess(
     return row;
   });
   // The pause is saved, so a mail that cannot start or send is logged by the start and never thrown.
-  try {
-    await mailPausedMember(pause.id, await notifier.origin());
-  } catch (error) {
-    // oxlint-disable-next-line no-console -- the log is how a failed send is seen
-    console.error('Could not start a coven access pause notice', error);
-  }
+  await notifyAfterSave(
+    async () => mailPausedMember(pause.id, await notifier.origin()),
+    'a coven access pause notice',
+  );
   return pause;
 }
 
