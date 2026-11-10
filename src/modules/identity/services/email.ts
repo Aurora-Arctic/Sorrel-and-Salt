@@ -1,8 +1,9 @@
 import 'server-only';
+import { SECONDS_PER_DAY } from '../../../lib/duration';
 import { findOneById, findUserByEmail, withAudit } from '../../../db/repository';
 import { normaliseEmail, validateEmailAddress } from '../../../lib/email-address';
 import { ValidationError } from '../../../lib/errors';
-import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
+import { SYSTEM_SESSION } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
 import { getMe } from './profile';
@@ -35,7 +36,7 @@ export async function isEmailHeldByVerifiedAccount(email: string): Promise<boole
 }
 
 /** How recently the session must have been created to ask for a new address; the day Better Auth's `freshAge` gives unlinking a provider. */
-export const EMAIL_CHANGE_WINDOW_SECONDS = 24 * 60 * 60;
+export const EMAIL_CHANGE_WINDOW_SECONDS = SECONDS_PER_DAY;
 
 export const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -78,7 +79,7 @@ export async function emailChangeStanding(
 
 /** Does nothing if a later change restamped the row since `sentAt`. */
 export async function lapseEmailChange(userId: string, sentAt: Date): Promise<boolean> {
-  const cleared = await withAudit({ userId: SYSTEM_ACTOR_ID }, (write) =>
+  const cleared = await withAudit(SYSTEM_SESSION, (write) =>
     write.lapseEmailChange(userId, sentAt),
   );
   return cleared.length > 0;
@@ -98,7 +99,7 @@ export async function clearFormerEmail(
   formerEmail: string,
   email: string,
 ): Promise<boolean> {
-  const cleared = await withAudit({ userId: SYSTEM_ACTOR_ID }, (write) =>
+  const cleared = await withAudit(SYSTEM_SESSION, (write) =>
     write.clearFormerEmail(userId, formerEmail, email),
   );
   return cleared.length > 0;

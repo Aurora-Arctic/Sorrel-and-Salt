@@ -12,15 +12,13 @@ import {
 } from '@/db/repository';
 import { documentUpdateNotice } from '@/lib/document-mail';
 import { deliver, isUndeliverableAddress, MailNotSent } from '@/lib/mail-transport';
-import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
+import { SYSTEM_SESSION } from '@/lib/system-actor';
 import { MAILING_BATCH_SIZE, MAILING_DAILY_CAP } from '../mailing-pace';
 
 // A file of its own, so the workflow bundle never holds the database code the steps reach.
 
 // The log is how a mailing lost after every retry is seen.
 /* oxlint-disable no-console */
-
-const SYSTEM = { userId: SYSTEM_ACTOR_ID };
 
 export type BatchResult = 'more' | 'sent' | 'replaced' | 'paused' | 'queued' | 'tomorrow';
 
@@ -34,7 +32,7 @@ export type BatchResult = 'more' | 'sent' | 'replaced' | 'paused' | 'queued' | '
 export async function mailBatchStep(mailingId: string, origin: string): Promise<BatchResult> {
   let sent = 0;
   while (sent < MAILING_BATCH_SIZE) {
-    const outcome = await withAudit(SYSTEM, (write) => mailNext(write, mailingId, origin));
+    const outcome = await withAudit(SYSTEM_SESSION, (write) => mailNext(write, mailingId, origin));
     if (outcome === 'mailed') sent += 1;
     else if (outcome !== 'skipped') return outcome;
   }

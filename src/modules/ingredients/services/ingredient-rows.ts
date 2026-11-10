@@ -23,6 +23,7 @@ import { ingredientDeities } from '../schema/ingredient-deities';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { ingredientVariants } from '../schema/ingredient-variants';
+import { INGREDIENT_VARIANTS_FORM_UNIQUE } from '@/modules/vocabulary/schema/ingredient-forms';
 import { referenceLinks } from '../schema/reference-links';
 import { type Membership, tryMembership } from '@/modules/coven';
 import type { Curator } from '@/modules/identity';
@@ -798,7 +799,7 @@ async function writeVariant(
     colors,
   };
   const refuse = (error: unknown): never => {
-    if (violatedUniqueIndex(error) !== 'ingredient_variants_form_unique') throw error;
+    if (violatedUniqueIndex(error) !== INGREDIENT_VARIANTS_FORM_UNIQUE) throw error;
     throw new ValidationError([
       {
         path: [...variant.at, 'form'],

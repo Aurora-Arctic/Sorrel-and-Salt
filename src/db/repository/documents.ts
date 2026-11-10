@@ -20,10 +20,7 @@ import { documentMailings } from '../../modules/documents/schema/document-mailin
 import { documentVersions } from '../../modules/documents/schema/document-versions';
 import { documents } from '../../modules/documents/schema/documents';
 import { users } from '../../modules/identity/schema/users';
-import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
-import { SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
-import { BOOTSTRAP_USER_ID } from '../bootstrap';
-import { applyAudit } from '../audit';
+import { notStandIn } from './user-filters';
 import type { SiteAdmin } from '@/modules/identity';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import { StaleWrite } from '../../lib/errors';
@@ -222,15 +219,12 @@ export function findUnsentDocumentMailingRecipientPage(
 
 export type MailingAccount = Pick<typeof users.$inferSelect, 'id' | 'email' | 'name'>;
 
-// The seeded accounts that stand in for no one: they hold no mailbox.
-const STAND_INS = [BOOTSTRAP_USER_ID, SYSTEM_ACTOR_ID, SIGNED_OUT_SENDER_ID];
-
 // The accounts a mailing reaches: live, with a verified address a mailbox can hold (RFC 2606 reserves `.invalid`).
 const mailable = and(
   notSoftDeleted(users),
   eq(users.emailVerified, true),
   not(ilike(users.email, '%.invalid')),
-  notInArray(users.id, STAND_INS),
+  notStandIn,
 );
 
 export async function countDocumentMailingAccounts(): Promise<number> {
@@ -325,7 +319,7 @@ export async function findOldestSendingDocumentMailing(): Promise<DocumentMailin
 
 export function documentWrites({
   tx,
-  session,
+  stampInsert,
   update,
   softDelete,
   updateAtRevision,
@@ -387,11 +381,11 @@ export function documentWrites({
       return tx
         .insert(documentVersions)
         .values(
-          applyAudit(
-            'insert',
-            { documentId, number: (highest ?? 0) + 1, body: givenBody ?? latest?.body ?? '' },
-            session,
-          ) as never,
+          stampInsert({
+            documentId,
+            number: (highest ?? 0) + 1,
+            body: givenBody ?? latest?.body ?? '',
+          }),
         )
         .returning();
     },
@@ -433,18 +427,13 @@ export function documentWrites({
       if (versions.length !== versionIds.length) return [];
       const started: DocumentMailingRow[] = await tx
         .insert(documentMailings)
-        .values(applyAudit('insert', { recipientCount }, session) as never)
+        .values(stampInsert({ recipientCount }))
         .returning();
       await tx
         .insert(documentMailingItems)
         .values(
-          items.map(
-            ({ versionId, summary }) =>
-              applyAudit(
-                'insert',
-                { mailingId: started[0]!.id, documentVersionId: versionId, summary },
-                session,
-              ) as never,
+          items.map(({ versionId, summary }) =>
+            stampInsert({ mailingId: started[0]!.id, documentVersionId: versionId, summary }),
           ),
         );
       return started;
@@ -457,11 +446,7 @@ export function documentWrites({
       if (userIds.length === 0) return Promise.resolve([]);
       return tx
         .insert(documentMailingRecipients)
-        .values(
-          [...new Set(userIds)].map(
-            (userId) => applyAudit('insert', { mailingId, userId }, session) as never,
-          ),
-        )
+        .values([...new Set(userIds)].map((userId) => stampInsert({ mailingId, userId })))
         .onConflictDoNothing()
         .returning();
     },

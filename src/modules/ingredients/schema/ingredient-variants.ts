@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { INGREDIENT_VARIANTS_FORM_UNIQUE } from '../../vocabulary/schema/ingredient-forms';
 import { boolean, check, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredientForms } from '../../vocabulary/schema/ingredient-forms';
@@ -39,7 +40,7 @@ export const ingredientVariants = pgTable(
     // A variant's identity: one live row per ingredient and folded form, the
     // fold the form took when it was part of the ingredient's identity.
     liveUnique(
-      'ingredient_variants_form_unique',
+      INGREDIENT_VARIANTS_FORM_UNIQUE,
       table,
       table.ingredientId,
       sql`lower(btrim(${table.form}))`,

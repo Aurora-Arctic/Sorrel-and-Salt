@@ -14,7 +14,11 @@ import { joinAnd, plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { assertCurator } from '@/modules/identity';
-import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
+import {
+  INGREDIENT_VARIANTS_FORM_UNIQUE,
+  ingredientFormGroups,
+  ingredientForms,
+} from '../schema/ingredient-forms';
 import { IngredientFormValueInput } from '../validation/ingredient-form-value';
 import { cachedFilteredList } from './curated-lists';
 import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-writes';
@@ -161,7 +165,7 @@ async function refuseDoubledForms(
   rename: { id: string; from: string; to: string },
   error?: unknown,
 ): Promise<void> {
-  if (error !== undefined && violatedUniqueIndex(error) !== 'ingredient_variants_form_unique') {
+  if (error !== undefined && violatedUniqueIndex(error) !== INGREDIENT_VARIANTS_FORM_UNIQUE) {
     return;
   }
   const renaming = `Renaming "${rename.from}" to "${rename.to}"`;
