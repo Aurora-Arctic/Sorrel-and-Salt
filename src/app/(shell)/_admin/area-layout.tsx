@@ -1,10 +1,10 @@
 import type { ReactElement } from 'react';
-import { PendingLink } from '../../../lib/navigation';
-import ContextRow from '../../../components/ContextRow';
-import SectionBody from '../../../components/SectionBody';
+import { PendingLink } from '@/lib/navigation';
+import ContextRow from '@/components/ContextRow';
+import SectionBody from '@/components/SectionBody';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
-import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
+import { RouteModalProvider } from '@/components/Modal/route-modal-provider';
 import type { AdminAreaLayoutProps } from './types';
 
 // The frame of the keepers and curator areas: the context row with the area's name and navigation over
