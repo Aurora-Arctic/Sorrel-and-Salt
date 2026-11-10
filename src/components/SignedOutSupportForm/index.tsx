@@ -1,23 +1,23 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import type { SupportAbout } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { emailAddressProblem, emailFormat, normaliseEmail } from '../../lib/email-address';
-import { limitMessage } from '../../lib/formats';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { emailAddressProblem, normaliseEmail } from '../../lib/email-address';
+import { useFormSend } from '../../lib/use-form-send';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
-import { ABOUT_REQUIRED, MESSAGE_REQUIRED, SUBJECT_REQUIRED } from '../../lib/support-messages';
-import { MESSAGE_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../../modules/support/validation/limits';
-import type { Failure } from '../../lib/types';
-import { PlainTextField } from '../Field/plain-text-field';
+import { ABOUT_REQUIRED } from '../../lib/support-messages';
+import { EmailField } from '../Field/email-field';
 import { FormActions } from '../Field/form-actions';
 import { RadioGroupField } from '../Field/radio-group-field';
+import { usePlainProblems, type PlainProblems } from '../Field/use-plain-problems';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { ErrorDetails } from '../SupportForm/error-details';
+import { BotTrapField } from '../SupportForm/bot-trap-field';
+import { SupportMessageFields } from '../SupportForm/message-fields';
+import { subjectAndMessageProblems } from '../SupportForm/problems';
 import type { SignedOutSupportFormProps } from './types';
 
 // Sends `sendSignedOutSupportRequest`; the reply comes by email alone.
@@ -32,7 +32,7 @@ const SIGNED_OUT_TOPICS = SUPPORT_ABOUTS.filter(({ value }) =>
   ['accessibility', 'bug', 'account', 'privacy', 'question'].includes(value),
 );
 
-type Problems = Partial<Record<'about' | 'email' | 'subject' | 'message', string>>;
+const FIELDS = ['about', 'email', 'subject', 'message'] as const;
 
 const SignedOutSupportForm = ({
   about: initialAbout,
@@ -42,7 +42,6 @@ const SignedOutSupportForm = ({
 }: SignedOutSupportFormProps): ReactElement => {
   const aboutId = useId();
   const aboutBoxId = `${aboutId}-choices`;
-  const formRef = useRef<HTMLFormElement>(null);
   const [about, setAbout] = useState<SupportAbout | null>(
     SIGNED_OUT_TOPICS.find(({ value }) => value === initialAbout)?.value ?? null,
   );
@@ -51,57 +50,32 @@ const SignedOutSupportForm = ({
   const [message, setMessage] = useState('');
   // The trap field: a person never sees it, so a value in it is a bot's.
   const [website, setWebsite] = useState('');
-  const [sending, setSending] = useState(false);
-  const [failure, setFailure] = useState<Failure>({});
+  const { sending, failure, setFailure, send } = useFormSend(FIELDS);
   const [sent, setSent] = useState(false);
 
-  const [problems, setProblems] = useState<Problems>({});
-  const shown: Problems = {
-    ...(failure.field && { [failure.field.name]: failure.field.message }),
-    ...problems,
-  };
-  const edited = (name: keyof Problems) => setProblems((now) => ({ ...now, [name]: undefined }));
-
   // The topic group's first radio stands for the group.
-  function focusFirst(wrong: Problems) {
-    const target = wrong.about
-      ? document.getElementById(aboutBoxId)?.querySelector<HTMLElement>('input')
-      : formRef.current?.querySelector<HTMLElement>(
-          `[name="${wrong.email ? 'email' : wrong.subject ? 'subject' : 'message'}"]`,
-        );
-    target?.focus();
-  }
+  const { formRef, shown, edited, refuse } = usePlainProblems(FIELDS, failure, {
+    about: aboutBoxId,
+  });
 
-  function problemsOf(): Problems {
-    const found: Problems = {};
+  function problemsOf() {
+    const found: PlainProblems<(typeof FIELDS)[number]> = subjectAndMessageProblems(
+      subject,
+      message,
+    );
     if (about === null) found.about = ABOUT_REQUIRED;
     const emailProblem = emailAddressProblem(normaliseEmail(email));
     if (emailProblem) found.email = emailProblem;
-    if (subject.trim() === '') found.subject = SUBJECT_REQUIRED;
-    else if (subject.trim().length > SUBJECT_MAX_LENGTH)
-      found.subject = limitMessage(SUBJECT_MAX_LENGTH);
-    if (message.trim() === '') found.message = MESSAGE_REQUIRED;
-    else if (message.trim().length > MESSAGE_MAX_LENGTH)
-      found.message = limitMessage(MESSAGE_MAX_LENGTH);
     return found;
   }
   const discard = useDiscardGuard(!sent && (email !== '' || subject !== '' || message !== ''));
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const found = problemsOf();
-    if (Object.keys(found).length > 0) {
-      flushSync(() => setProblems(found));
-      setFailure({});
-      focusFirst(found);
-      return;
-    }
-    setProblems({});
+    if (refuse(problemsOf())) return setFailure({});
     if (about === null) return;
-    setSending(true);
-    setFailure({});
-    try {
-      await graphqlRequest(SendSignedOutSupportRequestDocument, {
+    const done = await send(() =>
+      graphqlRequest(SendSignedOutSupportRequestDocument, {
         input: {
           about,
           email: email.trim(),
@@ -112,15 +86,9 @@ const SignedOutSupportForm = ({
           ...(errorDetail && { errorDetail }),
           ...(website !== '' && { website }),
         },
-      });
-      setSending(false);
-      setSent(true);
-    } catch (error) {
-      setSending(false);
-      const failed = readGraphqlFailure(error, ['about', 'email', 'subject', 'message']);
-      flushSync(() => setFailure(failed));
-      if (failed.field) focusFirst({ [failed.field.name]: failed.field.message });
-    }
+      }),
+    );
+    if (done) setSent(true);
   }
 
   if (sent) {
@@ -149,18 +117,12 @@ const SignedOutSupportForm = ({
           edited('about');
         }}
       />
-      <PlainTextField
+      <EmailField
         name="email"
         label="Email"
-        required
         note="We reply to this address"
-        type="email"
         autoComplete="email"
-        autoCapitalize="none"
-        spellCheck={false}
         placeholder="Add an email"
-        format={emailFormat}
-        check={emailAddressProblem}
         disabled={sending}
         value={email}
         error={shown.email}
@@ -169,54 +131,23 @@ const SignedOutSupportForm = ({
           edited('email');
         }}
       />
-      <PlainTextField
-        name="subject"
-        label="Subject"
-        required
-        autoComplete="off"
-        placeholder="Add a subject"
-        limit={SUBJECT_MAX_LENGTH}
-        disabled={sending}
-        value={subject}
-        error={shown.subject}
-        onChange={(next) => {
+      <SupportMessageFields
+        subject={subject}
+        message={message}
+        onSubject={(next) => {
           setSubject(next);
           edited('subject');
         }}
-      />
-      {errorDetail && <ErrorDetails detail={errorDetail} />}
-      <PlainTextField
-        name="message"
-        label="Message"
-        required
-        multiline
-        rows={6}
-        note={
-          <span className="field__warning">
-            Don’t include passwords, payment details or other private information.
-          </span>
-        }
-        placeholder="Write a message"
-        limit={MESSAGE_MAX_LENGTH}
-        disabled={sending}
-        value={message}
-        error={shown.message}
-        onChange={(next) => {
+        onMessage={(next) => {
           setMessage(next);
           edited('message');
         }}
+        subjectError={shown.subject}
+        messageError={shown.message}
+        disabled={sending}
+        between={errorDetail && <ErrorDetails detail={errorDetail} />}
       />
-      <div hidden>
-        <input
-          type="text"
-          name="website"
-          tabIndex={-1}
-          autoComplete="off"
-          aria-hidden
-          value={website}
-          onChange={(event) => setWebsite(event.target.value)}
-        />
-      </div>
+      <BotTrapField value={website} onChange={setWebsite} />
       {discard.asking && <DiscardQuestion guard={discard} />}
       <FormActions
         noun="Request"

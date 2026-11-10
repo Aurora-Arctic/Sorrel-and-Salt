@@ -21,7 +21,8 @@ import { graphqlQuery } from '../../lib/graphql-client';
 import type { VariablesArg } from '../../lib/types';
 import FormIcon from '../FormIcon';
 import type { ComboboxOption, Suggestions } from '../Combobox/types';
-import { ListField, SuggestField } from './fields';
+import { SuggestField } from '../Field';
+import { ListField } from './fields';
 import type {
   Claimant,
   CorrespondenceNode,

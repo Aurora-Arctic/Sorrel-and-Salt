@@ -123,3 +123,12 @@ export function shortMinuteInZone(at: Date, timeZone?: string): string {
 export function utcMinute(at: Date): string {
   return `${at.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
+
+/** How a pause or time-out ends, as a phrase after its subject: "until <date>", or `noEnd` where it has no end. */
+export function untilPhrase(
+  until: Date | null,
+  timeZone?: string,
+  noEnd = 'with no end date',
+): string {
+  return until ? `until ${longMinuteInZone(until, timeZone)}` : noEnd;
+}

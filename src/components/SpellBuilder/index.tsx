@@ -1,6 +1,6 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { typedResolver } from '../../lib/typed-resolver';
 import type { Route } from 'next';
 import { type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -143,11 +143,10 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
  * null for blank, so the form sends what the service will store, and refuses
  * what it would.
  */
-const schemaResolver = zodResolver(SpellInput) as unknown as Resolver<
+const schemaResolver = typedResolver<
   Omit<SpellBuilderValues, 'steps'> & { steps: SpellStepSend[] },
-  unknown,
   SpellBuilderInput
->;
+>(SpellInput);
 
 /**
  * The unit rule needs the coven's jars, so it is not the schema's: a refused unit is said under

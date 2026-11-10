@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { signInPath } from '../../lib/sign-in';
 import { SUPPORT_PATH } from '../../lib/support-path';
-import LocalTime from '../LocalTime';
+import TimedOutSentence from '../SupportRequests/timed-out-sentence';
 import Notice from '../Notice';
 import SignedOutSupportForm from '../SignedOutSupportForm';
 import SupportForm from '../SupportForm';
@@ -36,13 +36,7 @@ const SupportPanel = ({
   if (state.kind === 'timed-out') {
     return (
       <Notice kind="caution" quiet>
-        {state.until ? (
-          <>
-            You cannot send a request until <LocalTime at={state.until} long />.
-          </>
-        ) : (
-          'You cannot send a request: you are timed out with no end date.'
-        )}
+        <TimedOutSentence cannot="You cannot send a request" until={state.until} />
       </Notice>
     );
   }

@@ -8,6 +8,7 @@ import type { StackColumn } from '../DataTable/types';
 import { emptyList, noMatchText } from '../../lib/text';
 import LedgerFilterForm from './filter';
 import { privilegeLabel } from './privileges';
+import { DELETED_ACCOUNT } from '../SupportRequests/labels';
 import type {
   LedgerPersonProps,
   LedgerRoute,
@@ -39,7 +40,7 @@ function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
 }
 
 const Person = ({ person }: LedgerPersonProps): ReactElement => {
-  if (!person) return <em>Deleted account</em>;
+  if (!person) return <em>{DELETED_ACCOUNT}</em>;
   return person.href ? <a href={person.href}>{person.name}</a> : <span>{person.name}</span>;
 };
 

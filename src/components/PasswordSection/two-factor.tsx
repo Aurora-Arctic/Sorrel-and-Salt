@@ -3,6 +3,7 @@
 import { type FormEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { twoFactor, useSession } from '../../lib/auth-client';
+import { settled, type AuthFailure } from '../../lib/auth-call';
 import { TOO_MANY_ATTEMPTS, WRONG_CODE, rateLimited } from '../../lib/auth-messages';
 import { useLeaveGuard } from '../../lib/navigation';
 import { saveFile } from '../../lib/save-file';
@@ -37,18 +38,13 @@ interface Enrolment {
   backupCodes: string[];
 }
 
-interface Failure {
-  status?: number;
-  code?: string;
-}
-
 interface Refusal {
   alert?: string;
   password?: string;
   code?: string;
 }
 
-function refusal(failure: Failure): Refusal {
+function refusal(failure: AuthFailure): Refusal {
   if (failure.code === 'PASSWORD_SIGN_IN_PAUSED') return { alert: PASSWORD_SIGN_IN_PAUSED_MESSAGE };
   if (failure.code === 'INVALID_PASSWORD') return { password: WRONG_PASSWORD };
   if (failure.code === 'INVALID_CODE') return { code: WRONG_CODE };
@@ -183,12 +179,12 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
   // Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both
   // arrive here.
   const run = async <T,>(
-    call: () => Promise<{ data: T | null; error: Failure | null }>,
+    call: () => Promise<{ data: T | null; error: AuthFailure | null }>,
   ): Promise<T | undefined> => {
     setPending(true);
     setProblem({});
     setSaved(undefined);
-    const { data, error } = await call().catch(() => ({ data: null, error: {} as Failure }));
+    const { data, error } = await settled(call());
     setPending(false);
     if (error || !data) {
       setProblem(refusal(error ?? {}));

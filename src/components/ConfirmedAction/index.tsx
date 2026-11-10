@@ -3,9 +3,8 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { failureMessage } from '../../lib/graphql-failure';
-import { reasonProblem } from '../../modules/identity/validation/reason';
 import { useClickFeedback } from '../ClickFeedback';
-import { ReasonField } from '../Field';
+import { ReasonField, useReasonNote } from '../Field';
 import Modal, { ConfirmOverlay } from '../Modal';
 import Notice from '../Notice';
 import ConfirmAnswersRow from '../ConfirmDialog/answers';
@@ -43,8 +42,7 @@ const ConfirmedAction = ({
 
   const [step, setStep] = useState<ConfirmStep>('idle');
   const [failure, setFailure] = useState<string>();
-  const [note, setNote] = useState('');
-  const [noteError, setNoteError] = useState<string>();
+  const reason = useReasonNote();
   const confirmRef = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
@@ -75,13 +73,11 @@ const ConfirmedAction = ({
   }
 
   async function confirm() {
-    const problem = withNote ? reasonProblem(note) : undefined;
-    setNoteError(problem);
-    if (problem) return;
+    if (withNote && !reason.check()) return;
     setStep('sending');
     report(undefined);
     try {
-      await send(note.trim() || undefined);
+      await send(reason.note.trim() || undefined);
       if (announcement) feedback.announce(announcement);
       // Busy until the re-read replaces this control with one offering the
       // other action, or until the page is left.
@@ -116,16 +112,7 @@ const ConfirmedAction = ({
       )}
       {typeof choices === 'function' ? choices(sending) : choices}
       {withNote && (
-        <ReasonField
-          className="confirmed-action__note"
-          value={note}
-          onChange={(next) => {
-            setNote(next);
-            setNoteError(undefined);
-          }}
-          error={noteError}
-          disabled={sending}
-        />
+        <ReasonField className="confirmed-action__note" {...reason.field} disabled={sending} />
       )}
     </>
   );
@@ -152,8 +139,7 @@ const ConfirmedAction = ({
         aria-label={accessibleName}
         onClick={() => {
           report(undefined);
-          setNote('');
-          setNoteError(undefined);
+          reason.reset();
           setStep('confirming');
         }}
       >
