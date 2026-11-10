@@ -21,12 +21,7 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
     const sender = await browser.newContext();
     const senderPage = await sender.newPage();
     const { userId: senderId } = await signInAs(senderPage, 'sender@story-90.test');
-    const { userId: curatorId } = await signInAs(
-      page,
-      'curator@story-90.test',
-      ['discord'],
-      'curator',
-    );
+    await signInAs(page, 'curator@story-90.test', ['discord'], 'curator');
     await signInAs(page, 'admin@story-90.test', ['discord'], 'admin');
 
     // The sender's own session, through the API the form would call.
@@ -77,8 +72,17 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
     });
 
     await test.step('the admin assigns it and shares it with curators', async () => {
-      await dialog.getByLabel('Assignee').selectOption(curatorId);
-      await expect(dialog.getByLabel('Assignee')).toHaveValue(curatorId);
+      // Every fixture account is named alike, so the curator is the last choice: keepers are listed before curators.
+      const assignee = dialog.getByRole('combobox', { name: 'Assignee' });
+      await expect(assignee).toHaveText('Unassigned');
+      await assignee.click();
+      await page
+        .getByRole('listbox', { name: 'Assignee choices' })
+        .getByRole('option')
+        .last()
+        .click();
+      await expect(dialog.getByRole('status')).toHaveText(/Request assigned\./);
+      await expect(assignee).toHaveText('Fixture Person');
       await dialog.getByRole('switch', { name: 'Shared With Curators' }).click();
       await expect(dialog.getByRole('switch', { name: 'Shared With Curators' })).toBeChecked();
     });
