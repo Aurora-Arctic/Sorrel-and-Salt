@@ -419,7 +419,7 @@ Each remaining question needs a choice from the owner before its cases move. "I 
 
 - claude-docs/testing/where-tests-live.md:61–77 lists nine guards; tests/guards holds 19.
 - claude-docs/testing/layer-ownership.md: add the page-test rule (§5 shape 1) and the rollback rule (shape 9); rule 8's list gains `bump_revision`'s sweep; rule 6's text or the sweep comment at workspace-isolation.test.ts:301 (the comment loses).
-- claude-docs/tasks/m13.md:195 and :197 (M13.15's criteria) to name the proofs that stay.
+- claude-docs/tasks/v1/m13.md:195 and :197 (M13.15's criteria) to name the proofs that stay.
 - The story count: 54 in DESIGN.md §10, 52 in acceptance.md and CLAUDE.md (L7-36).
 - Stale spec headers naming deleted specs or denying a story that exists: compendium-entry.spec.ts:11–17, workspace-invitation.spec.ts:1–6, sign-in-configured-providers.spec.ts:7, shell.spec.ts:14, route-protection.spec.ts:8, workshop/click-feedback.spec.ts:7.
 - tests/db/workspace-isolation.test.ts:268 and :323 say the grimoire services do not exist.

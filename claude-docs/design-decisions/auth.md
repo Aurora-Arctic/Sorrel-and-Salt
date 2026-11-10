@@ -1298,7 +1298,7 @@ The way out, for a later task if it is ever wanted: a custom `password.hash` and
 | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `DESIGN.md` §8, "Passwords"                                                                        | The policy table, the hashing, and refusal while the breach list is unreachable |
 | `DESIGN.md` §10, stories 70–75                                                                     | The six user stories                                                            |
-| [`../tasks/m16.md`](../tasks/m16.md)                                                               | The tasks and the sources the policy comes from                                 |
+| [`../tasks/v1/m16.md`](../tasks/v1/m16.md)                                                         | The tasks and the sources the policy comes from                                 |
 | [`../auth/plugins.md`](../auth/plugins.md), [`../auth/rate-limiting.md`](../auth/rate-limiting.md) | The plugins' status and the rate rules each adds                                |
 
 ## Two repository files that import the database client and write outside `withAudit`
@@ -2278,7 +2278,7 @@ token's hash is stored, and it expires in seven days. `createAdminInvitation`
 only a signed-in account whose verified email matches the invitation's.
 Accepting is a grant through MB.59's `setUserRole`, so it writes the ledger
 row and is refused while changes are paused. The two entries in
-[`tasks/mb.md`](../tasks/mb.md) hold the columns, the rejections and the
+[`tasks/v1/mb.md`](../tasks/v1/mb.md) hold the columns, the rejections and the
 admin list's controls.
 
 ### Which of MB.60's restrictions each follow-up lifts

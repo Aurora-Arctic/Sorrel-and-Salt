@@ -1,47 +1,54 @@
 // A range is the headings between its ends in file order (claude-docs/task-tracking.md, "Order").
 
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { DEFAULT_PROJECT, PROJECTS, projectBySlug } from './task-projects.mjs';
 
-export const TASKS_FILES = [
-  'claude-docs/TASKS.md',
-  'claude-docs/tasks/m0.md',
-  'claude-docs/tasks/m1.md',
-  'claude-docs/tasks/m2.md',
-  'claude-docs/tasks/m3.md',
-  'claude-docs/tasks/m4.md',
-  'claude-docs/tasks/m5.md',
-  'claude-docs/tasks/m6.md',
-  'claude-docs/tasks/m7.md',
-  'claude-docs/tasks/m8.md',
-  'claude-docs/tasks/m9.md',
-  'claude-docs/tasks/m10.md',
-  'claude-docs/tasks/m11.md',
-  'claude-docs/tasks/m12.md',
-  'claude-docs/tasks/m13.md',
-  'claude-docs/tasks/m14.md',
-  'claude-docs/tasks/m15.md',
-  'claude-docs/tasks/m16.md',
-  'claude-docs/tasks/m17.md',
-  'claude-docs/tasks/m18.md',
-  'claude-docs/tasks/m19.md',
-  'claude-docs/tasks/m20.md',
-  'claude-docs/tasks/m21.md',
-  'claude-docs/tasks/m22.md',
-  'claude-docs/tasks/m7a.md',
-  'claude-docs/tasks/mb.md',
-  'claude-docs/tasks/mc.md',
-  'claude-docs/tasks/mw.md',
-];
+export const TASKS_INDEX = 'claude-docs/TASKS.md';
+const TASKS_DIR = 'claude-docs/tasks';
+const naturally = (a, b) => a.localeCompare(b, 'en', { numeric: true });
+
+/**
+ * The breakdown's files in reading order, picked out of a list of repo paths: TASKS.md, then each Project's `tasks/<slug>/*.md` in config order.
+ * A ref from before the split by Project holds its files directly under `tasks/`, read after TASKS.md as the default Project's.
+ */
+export function orderTaskFiles(paths, projects = PROJECTS) {
+  const files = paths.filter((path) => path.startsWith(`${TASKS_DIR}/`) && path.endsWith('.md'));
+  const flat = files.filter((path) => path.split('/').length === 3).sort(naturally);
+  const of = (project) =>
+    files
+      .filter(
+        (path) => path.split('/').length === 4 && path.startsWith(`${TASKS_DIR}/${project.slug}/`),
+      )
+      .sort(naturally);
+  return [...(paths.includes(TASKS_INDEX) ? [TASKS_INDEX] : []), ...flat, ...projects.flatMap(of)];
+}
+
+/** The Project whose directory holds `path`; TASKS.md and a file directly under `tasks/` or `waves/` are the default's. */
+export function projectOfDocPath(path, projects = PROJECTS) {
+  const match = /^claude-docs\/(?:tasks|waves)\/([^/]+)\/[^/]+\.md$/.exec(path);
+  return (
+    (match && projectBySlug(match[1], projects)) || projects.find((project) => project.default)
+  );
+}
 
 const fromRepo = (path) => fileURLToPath(new URL(`../${path}`, import.meta.url));
+
+function treeOf(dir) {
+  return readdirSync(fromRepo(dir), { withFileTypes: true }).flatMap((entry) =>
+    entry.isDirectory() ? treeOf(`${dir}/${entry.name}`) : [`${dir}/${entry.name}`],
+  );
+}
+
+export const TASKS_FILES = orderTaskFiles([TASKS_INDEX, ...treeOf(TASKS_DIR)]);
+export { DEFAULT_PROJECT };
 
 // `ID` and `HEADING` are what the project-progress tally imports, so the skill reads the same headings the same way.
 export const ID = String.raw`[A-Z]+[0-9]*(?:\.[A-Z0-9]+)*[a-z]?`;
 // `**<id> — Title** · 2h …` or `**<id> — ~~Title~~** · **RETIRED …**`
 export const HEADING = new RegExp(String.raw`^\*\*(${ID}) — .*?\*\* · (?:([0-9.]+)h|\*\*RETIRED)`);
-// `| **7 — GraphQL** | <id> → <id> · <id> · … |` in the execution-order table.
-export const WAVE_ROW = /^\| \*\*(\d+) — ([^|*]+?)\*\*\s*\|([^|]*)\|/;
+// `| **7 — GraphQL** | <id> → <id> · <id> · … |` in the execution-order table; `**N · 01 — Privacy**` names another Project's wave by its prefix.
+export const WAVE_ROW = /^\| \*\*(?:([A-Z]) · )?(\d+) — ([^|*]+?)\*\*\s*\|([^|]*)\|/;
 export const ID_ONLY = new RegExp(String.raw`^(${ID})$`);
 export const ID_RANGE = new RegExp(String.raw`^(${ID})\s*→\s*(${ID})$`);
 
@@ -77,7 +84,8 @@ export function readTasksMd(text) {
       continue;
     }
     const row = WAVE_ROW.exec(line);
-    if (row) waves.push({ number: Number(row[1]), name: row[2].trim(), cell: row[3] });
+    if (row)
+      waves.push({ letter: row[1], number: Number(row[2]), name: row[3].trim(), cell: row[4] });
   }
   const unresolved = [];
   for (const wave of waves) {
@@ -109,6 +117,15 @@ export function readEntry(text, id) {
     hours: heading[2] === undefined ? undefined : Number(heading[2]),
     body: (end === -1 ? rest : rest.slice(0, end)).join('\n').trim(),
   };
+}
+
+/** The entry headed `<id> — …`, with the path of the file holding it, or null. */
+export function findEntry(id, files = TASKS_FILES) {
+  for (const path of files) {
+    const entry = readEntry(readFileSync(fromRepo(path), 'utf8'), id);
+    if (entry) return { ...entry, path };
+  }
+  return null;
 }
 
 export const loadTasksMdText = () =>

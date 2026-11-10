@@ -2,12 +2,12 @@
 name: create-bug-task
 model: sonnet
 effort: medium
-description: Use when the user wants to log a bug as a tracked task (e.g. "create a bug task", "log this bug", "/create-bug-task"). Asks for the bug and its steps to reproduce, drafts a user story, acceptance criteria and a name for review, then on approval files the issue in the Z. Bugfixes milestone of the Sorrel & Salt board and adds its entry to `claude-docs/tasks/mb.md`.
+description: Use when the user wants to log a bug as a tracked task (e.g. "create a bug task", "log this bug", "/create-bug-task"). Asks for the bug and its steps to reproduce, drafts a user story, acceptance criteria and a name for review, then on approval files the issue in the bug milestone of the Project it belongs to (Z. Bugfixes on Sorrel & Salt, N · Z. Bugfixes on Sorrel & Salt V1.Next) and adds its entry to that Project's bug file.
 ---
 
 # create-bug-task
 
-Turn a bug report into a tracked `MB.*` task: an issue in the **Z. Bugfixes** milestone and its entry in `claude-docs/tasks/mb.md`. Nothing is written until the user approves the draft.
+Turn a bug report into a tracked bug task on the Project it belongs to: an `MB.*` task in **Z. Bugfixes** with its entry in `claude-docs/tasks/v1/mb.md` for Sorrel & Salt, or an `NB.*` task in **N · Z. Bugfixes** with its entry in `claude-docs/tasks/v1-next/nb.md` for Sorrel & Salt V1.Next. A bug in work a V1.Next task built, or in a part of the site only V1.Next has, is V1.Next's; every other bug is Sorrel & Salt's. When the description does not settle it, ask in step 2. Nothing is written until the user approves the draft.
 
 Shared mechanics (drafting rules, the approval gate, minting, the doc edits) are in [`reference-mint.md`](reference-mint.md); this file holds only what is specific to bugs.
 
@@ -20,11 +20,11 @@ Shared mechanics (drafting rules, the approval gate, minting, the doc edits) are
 5. **Wait for approval with AskUserQuestion**, per `reference-mint.md` "Approval".
 6. **Mint**, following `reference-mint.md` "Minting" with these values:
 
-| Value     | For a bug                                                                                             |
-| --------- | ----------------------------------------------------------------------------------------------------- |
-| Id        | The next free `MB.<n>`                                                                                |
-| Type      | `Bug`                                                                                                 |
-| Milestone | `Z. Bugfixes` (not a wave, so there is no id line to update, no wave row and no `reorder`)            |
-| Labels    | `tracked`, plus `hotfix` only if the user confirmed it                                                |
-| Docs      | A summary-table row (Status column: `Bugfixes`) and a full entry in `claude-docs/tasks/mb.md`         |
-| Entry     | A "Found on <date>" paragraph carrying the bug and its steps to reproduce, between story and criteria |
+| Value     | For a bug                                                                                                                                                                                 |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Id        | The next free `MB.<n>` (Sorrel & Salt) or `NB.<n>` (Sorrel & Salt V1.Next)                                                                                                                |
+| Type      | `Bug`                                                                                                                                                                                     |
+| Milestone | The Project's `bugfixes` milestone in `scripts/task-projects.mjs`: `Z. Bugfixes` or `N · Z. Bugfixes` (not a wave, so there is no id line to update, no wave row and no `reorder`)        |
+| Labels    | `tracked`, plus `v1-next` on Sorrel & Salt V1.Next, plus `hotfix` only if the user confirmed it                                                                                           |
+| Docs      | Sorrel & Salt: a summary-table row (Status column: `Bugfixes`) and a full entry in `claude-docs/tasks/v1/mb.md`. Sorrel & Salt V1.Next: a full entry in `claude-docs/tasks/v1-next/nb.md` |
+| Entry     | A "Found on <date>" paragraph carrying the bug and its steps to reproduce, between story and criteria                                                                                     |

@@ -539,9 +539,9 @@ Tests `tests/components/StockDialog/index.test.tsx` with fetch mocked at `/api/g
 
 **11. Task docs, synced in the same turn** (`node scripts/task-board.mjs sync <ID>` after each edit; keep heading hours consistent, M9.9 re-estimated for the larger scope):
 
-- `claude-docs/tasks/m9.md` M9.9 → "Edit stock from the card": dialog, pencil through `covenCardActions`, Quick Look Forms section, single worst-state badge, coven-card forms removed, `saveStock`; acceptance criteria rewritten accordingly.
+- `claude-docs/tasks/v1/m9.md` M9.9 → "Edit stock from the card": dialog, pencil through `covenCardActions`, Quick Look Forms section, single worst-state badge, coven-card forms removed, `saveStock`; acceptance criteria rewritten accordingly.
 - M9.10: keeps a local entry's Delete only; jar removal is the dialog's Remove.
-- `claude-docs/tasks/m12.md` M12.29: entry-page Stock section listing jars with badges, heading carries the same pencil opening `StockDialog`; no per-line Edit, no Add Stock dialog.
+- `claude-docs/tasks/v1/m12.md` M12.29: entry-page Stock section listing jars with badges, heading carries the same pencil opening `StockDialog`; no per-line Edit, no Add Stock dialog.
 
 ### Agents and order (owner's call, 2026-10-20: two lanes, then merge)
 
@@ -967,7 +967,7 @@ second hatch-named scope, `workspaceListScopeIncludingSoftDeleted`
 
 ## Linking Goes One Way
 
-**Decided:** 2026-10-20, by the owner. In v1 a coven can annotate a compendium entry and make it its own (Make It Ours, Annotate). It cannot link one of its own ingredients to a compendium entry. That direction is a v2 feature ([`../DESIGN.md`](../DESIGN.md) §13, "Link to the Compendium"). The task is M12.42 in [`../tasks/m12.md`](../tasks/m12.md).
+**Decided:** 2026-10-20, by the owner. In v1 a coven can annotate a compendium entry and make it its own (Make It Ours, Annotate). It cannot link one of its own ingredients to a compendium entry. That direction is a v2 feature ([`../DESIGN.md`](../DESIGN.md) §13, "Link to the Compendium"). The task is M12.42 in [`../tasks/v1/m12.md`](../tasks/v1/m12.md).
 
 ### What "linking" meant
 
@@ -991,13 +991,13 @@ Linking a coven's own ingredient to the compendium meant the own entry stopped e
 
 ### What went where
 
-| Work                                                                                                    | Now                                                                                                                   |
-| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| The Link dialog, the split service, the form map, the pick summaries, and the M12.38–M12.41 task drafts | The pushed branch `feature/link-to-compendium-v2`, commit 6adcd849, as they stood                                     |
-| M8.17's Link parts                                                                                      | Stripped from M8.17's branch; its entry in [`../tasks/m8.md`](../tasks/m8.md) says so                                 |
-| M12.21's conversion and M12.22's This Is It                                                             | Removed by M12.42                                                                                                     |
-| M12.38–M12.41 (issues #1138–#1141)                                                                      | Retired, 2026-10-20, closed as not planned; their entries in [`../tasks/m12.md`](../tasks/m12.md) point at the branch |
-| The v2 description                                                                                      | [`../DESIGN.md`](../DESIGN.md) §13, "Link to the Compendium"; the out-of-scope list in `CLAUDE.md`                    |
+| Work                                                                                                    | Now                                                                                                                         |
+| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| The Link dialog, the split service, the form map, the pick summaries, and the M12.38–M12.41 task drafts | The pushed branch `feature/link-to-compendium-v2`, commit 6adcd849, as they stood                                           |
+| M8.17's Link parts                                                                                      | Stripped from M8.17's branch; its entry in [`../tasks/v1/m8.md`](../tasks/v1/m8.md) says so                                 |
+| M12.21's conversion and M12.22's This Is It                                                             | Removed by M12.42                                                                                                           |
+| M12.38–M12.41 (issues #1138–#1141)                                                                      | Retired, 2026-10-20, closed as not planned; their entries in [`../tasks/v1/m12.md`](../tasks/v1/m12.md) point at the branch |
+| The v2 description                                                                                      | [`../DESIGN.md`](../DESIGN.md) §13, "Link to the Compendium"; the out-of-scope list in `CLAUDE.md`                          |
 
 The records (see "Editing a coven's own ingredient") and (see "A coven's cupboard names the compendium's entry, rather than hiding it") carry a dated note at the top and are otherwise left as approved.
 
@@ -1691,7 +1691,7 @@ disclaimer rests on.
 
 ## The compendium seed as markdown files, a formal-name rule and curator review
 
-The compendium seed moves from seven TypeScript shards to one markdown file per entry. A content hash tells the seed when a file changed, and the seed applies the change only when the owner has marked that file for update and no curator or editor has touched the row. Every citation records how its source's name was matched to the entry's formal name. A curator can mark an entry reviewed. The full plan, with every file and table it touches, is [`process.md`, "Compendium seed as markdown files, with a hash-gated update path, a formal-name rule and curator review (plan)"](process.md#compendium-seed-as-markdown-files-with-a-hash-gated-update-path-a-formal-name-rule-and-curator-review-plan); this record says what was decided and why. The tasks are M14.4 to M14.13 ([`tasks/m14.md`](../tasks/m14.md)).
+The compendium seed moves from seven TypeScript shards to one markdown file per entry. A content hash tells the seed when a file changed, and the seed applies the change only when the owner has marked that file for update and no curator or editor has touched the row. Every citation records how its source's name was matched to the entry's formal name. A curator can mark an entry reviewed. The full plan, with every file and table it touches, is [`process.md`, "Compendium seed as markdown files, with a hash-gated update path, a formal-name rule and curator review (plan)"](process.md#compendium-seed-as-markdown-files-with-a-hash-gated-update-path-a-formal-name-rule-and-curator-review-plan); this record says what was decided and why. The tasks are M14.4 to M14.13 ([`tasks/v1/m14.md`](../tasks/v1/m14.md)).
 
 **It supersedes two rows of (see "A researched, sourced compendium seed")**: "One file per entry" and "The entries repeated in markdown", both rejected there on 2026-10-11. Their reasons were a shard of 100 files in one pull request and about 700 KB of markdown that nothing checked against the literal. Here the markdown file is the source of truth, not a copy, so there is nothing to drift, and the guard reads the files. Pull requests stay small because the shards were already per-lane and lanes still add their own files.
 
@@ -1819,7 +1819,7 @@ The seed writes `approved` files only. CI fails a `draft` file on `staging` and 
 
 ## The sourcing score: facts, weights and the data they need (plan)
 
-_The plan as the owner approved it on 2026-10-31. The task entries in [`tasks/m14.md`](../tasks/m14.md) carry the acceptance criteria; this record carries the reasoning._
+_The plan as the owner approved it on 2026-10-31. The task entries in [`tasks/v1/m14.md`](../tasks/v1/m14.md) carry the acceptance criteria; this record carries the reasoning._
 
 ### Context
 
@@ -2018,9 +2018,9 @@ One task builds all of the above: M14.39, "Result Cards Show A Form's Categories
 
 ## Subscription Billing Scope
 
-Decided by the owner on 2026-11-06 while M17.1 (#1356) was re-scoped. This record holds every decision the research behind it needed, and the brief for the proof of concept that settles the one question left open. The research is in [`claude-docs/billing/`](../billing/README.md): [`subscription-models.md`](../billing/subscription-models.md) (the models, the processor, the break-even), [`running-costs.md`](../billing/running-costs.md) (the cost model) and [`scripts/billing-model.mjs`](../../scripts/billing-model.mjs) (the script that computes every figure in them). The build is Wave 21 — Billing and memberships, `M21.1 → M21.20` ([`tasks/m21.md`](../tasks/m21.md), [`waves/wave-21.md`](../waves/wave-21.md)).
+Decided by the owner on 2026-11-06 while M17.1 (#1356) was re-scoped. This record holds every decision the research behind it needed, and the brief for the proof of concept that settles the one question left open. The research is in [`claude-docs/billing/`](../billing/README.md): [`subscription-models.md`](../billing/subscription-models.md) (the models, the processor, the break-even), [`running-costs.md`](../billing/running-costs.md) (the cost model) and [`scripts/billing-model.mjs`](../../scripts/billing-model.mjs) (the script that computes every figure in them). The build is N · Wave 04 — Billing and memberships, `N4.1 → N4.20` ([`tasks/v1-next/n4.md`](../tasks/v1-next/n4.md), [`waves/v1-next/wave-04.md`](../waves/v1-next/wave-04.md)).
 
-This record does not edit `documents/privacy.md`. The Wave 21 task that adds Stripe as a processor (M21.4 for the table row, M21.7 for the checkout page script) edits it, in the same PR as the code that makes it true.
+This record does not edit `documents/privacy.md`. The N · Wave 04 task that adds Stripe as a processor (N4.4 for the table row, N4.7 for the checkout page script) edits it, in the same PR as the code that makes it true.
 
 ### The Chosen Model: (i) One Price List
 
@@ -2049,7 +2049,7 @@ The owner chose model (i). The other models stay in `subscription-models.md` as 
 - A person who pays for a seat of their own gets **$1 off each later self-paid practitioner seat or personal plan**, and a **later self-paid observer seat is free**. The first seat they pay for is full price.
 - An **observer upgrade counts as paying**: an observer who pays only the upgrade price earns the discount on seats they pay for elsewhere.
 - The discount **never lands on another payer's invoice**. A member whose seat is on a steward's invoice gets none.
-- On Stripe's side a person holds **one customer and one subscription with one line per seat**, so every discounted seat is a line on the payer's own subscription and no cross-customer coupon is needed. Stripe's coupon rules were not checked. M21.8 confirms them (see "Owner to confirm").
+- On Stripe's side a person holds **one customer and one subscription with one line per seat**, so every discounted seat is a line on the payer's own subscription and no cross-customer coupon is needed. Stripe's coupon rules were not checked. N4.8 confirms them (see "Owner to confirm").
 
 **Final inputs behind the break-even.** Observer share 20%, each-member-pays share 66.66% (both the owner's estimates, no source). Break-evens in paying seats, for (i), against cash only, then cash plus labour in the low contact-rate row and the median row on the salary line, then the job:
 
@@ -2094,11 +2094,11 @@ A switch between coven pays and each member pays takes effect at the next renewa
 - **Stripe's review:** the owner agreed to describe the site to it.
 - The site's PCI self-assessment is expected to be SAQ A. That was not found in the fetched sources; see "Owner to confirm".
 
-**The scoped exception.** The Privacy Policy line "runs no tracking script" and the Code of Ethics line on browser-side scripts need one scoped exception: "one payment script from Stripe runs on the checkout page only". **M21.7 edits `documents/code-of-ethics.md` and `documents/privacy.md` in the same PR that adds the checkout page**, and M21.4 adds Stripe to the privacy policy's processor table. Neither is edited here.
+**The scoped exception.** The Privacy Policy line "runs no tracking script" and the Code of Ethics line on browser-side scripts need one scoped exception: "one payment script from Stripe runs on the checkout page only". **N4.7 edits `documents/code-of-ethics.md` and `documents/privacy.md` in the same PR that adds the checkout page**, and N4.4 adds Stripe to the privacy policy's processor table. Neither is edited here.
 
 ### The Proof-of-Concept Brief
 
-M21.1 runs this. This record does not choose between the candidates.
+N4.1 runs this. This record does not choose between the candidates.
 
 **Candidates.**
 
@@ -2120,17 +2120,17 @@ M21.1 runs this. This record does not choose between the candidates.
 - Whether `@better-auth/stripe` supports a **site-hosted checkout page** (Elements or embedded Checkout), or whether the Stripe SDK route is required. This is **not found** in the research.
 - **Stripe Elements against embedded Checkout** for that page. No recommendation was found. Both load Stripe.js on the one page. The PoC chooses.
 - The **peer-range bump** that using the plugin would force on `stripe` and `better-auth`.
-- Webhooks replayed from the Events API, signed locally, and the captured events saved as fixtures for M21.2.
+- Webhooks replayed from the Events API, signed locally, and the captured events saved as fixtures for N4.2.
 - Whether Stripe's coupon rules allow R5 as a line on the payer's own subscription (the question in "Owner to confirm").
 - Whether `pause_collection` behaves as the pause rule needs, and whether a test clock covers a renewal.
 
-**Setup.** The PoC needs a test-mode secret in the environment variable **`STRIPE_SECRET_KEY`**, in `.env.local`, named in `claude-docs/secrets.md`. The work runs on the throwaway branch **`spike/m17-stripe`**, which is never merged. M21.1's record, `m21.1-billing-plugin-or-sdk.md`, states the choice and what the spike showed.
+**Setup.** The PoC needs a test-mode secret in the environment variable **`STRIPE_SECRET_KEY`**, in `.env.local`, named in `claude-docs/secrets.md`. The work runs on the throwaway branch **`spike/m17-stripe`**, which is never merged. N4.1's record, `n4.1-billing-plugin-or-sdk.md`, states the choice and what the spike showed.
 
 ### The Data Model
 
-Settled here as the shape the build tasks follow. M21.1 may move the plugin-or-SDK part of it.
+Settled here as the shape the build tasks follow. N4.1 may move the plugin-or-SDK part of it.
 
-- **A billing reference on `workspaces`, or a `workspace_subscriptions` table.** M21.4 chooses by the PoC's result, and decides it in its own record.
+- **A billing reference on `workspaces`, or a `workspace_subscriptions` table.** N4.4 chooses by the PoC's result, and decides it in its own record.
 - **A per-coven `payer` mode** (coven pays, each member pays).
 - **An exemption** per coven with an **end date** and a **confirmed permanent flag**. A permanent exemption needs a confirming step, is listed on the keeper billing page and can be revoked. The keeper exemption schedule is 5%, 3%, 1.5% and 0.5% of paying seats, falling as the site grows.
 - **Trial length per coven**, one month as standard.
@@ -2156,7 +2156,7 @@ Each view is a screen, reached through the normal rules: server components call 
 
 ### The Billing Test Plan
 
-Copied verbatim from the plan's testing standard. Every Wave 21 task's acceptance criteria name the tests it ships from this list, over and above CLAUDE.md's rules.
+Copied verbatim from the plan's testing standard. Every N · Wave 04 task's acceptance criteria name the tests it ships from this list, over and above CLAUDE.md's rules.
 
 - **Test target**: PR gates run the billing tests against the processor's **official mock server** where it publishes one (Stripe's `stripe-mock`, started as a CI service container beside Postgres and Mailpit, and in the compose stack locally), falling back to a hand-written double only for a processor without one; webhook tests replay events the PoC captured from real test mode, signed locally. A **scheduled or manually dispatched workflow** holding the test-mode secret replays the same suite against the processor's real test mode, so mock drift is caught without putting the secret on PR gates — fork and Dependabot PRs stay green. The payment-processor comparison records which candidates publish a mock. The mock service and the capture fixtures land as their own task before the first behaviour task; the scheduled workflow is its own task.
 - **Money is integers in the smallest unit**, never floats; the discount, proration and seat arithmetic have exhaustive table-driven tests including rounding at every boundary, zero seats, the exemption, and a member in 1, 2 and 10 covens.
@@ -2172,7 +2172,7 @@ Copied verbatim from the plan's testing standard. Every Wave 21 task's acceptanc
 
 - **Vercel Bot Protection in log mode only.** It records suspicious requests and runs no test in visitors' browsers.
 - **Vercel pause-on-budget stays off.**
-- **`/.well-known/security.txt` is added to the public list in CLAUDE.md rule 1**, beside `/llms.txt` and the other `/.well-known/*.json` files. It is sessionless, carries no application data, and M21.19 adds it and edits rule 1 in the same PR.
+- **`/.well-known/security.txt` is added to the public list in CLAUDE.md rule 1**, beside `/llms.txt` and the other `/.well-known/*.json` files. It is sessionless, carries no application data, and N4.19 adds it and edits rule 1 in the same PR.
 - **No operations-stack task is minted.** The cost model prices and recommends error tracking, uptime, alerting, security monitoring and backup verification, and nothing sets them up.
 
 ### The Labour and Salary Decisions
@@ -2182,7 +2182,7 @@ Copied verbatim from the plan's testing standard. Every Wave 21 task's acceptanc
 - **The salary line is A:** a $250,000 gross salary, filing jointly, with the spouse's income confirmed as zero.
 - **The tax structure is B\*:** an S corporation paying a $190,000 wage, the rest as distributions, **pending the accountant**. C (a sole proprietor or single-member LLC) stays the model's cheapest.
 - **The owner does the hours up to 160 a month** and the site hires only the rest. Until the salary is affordable, the owner is paid for those hours at the loaded rates: $53.80 an hour for support and $100.88 for engineering. The draw is the smaller of that value and net revenue less cash costs and hired help, never below zero. The tables are in `running-costs.md`.
-- **The living wage is a floor, not a maximum.** M21.18 scopes an executive pay maximum: a ratio of the highest to the lowest pay on the site.
+- **The living wage is a floor, not a maximum.** N4.18 scopes an executive pay maximum: a ratio of the highest to the lowest pay on the site.
 - **"Pricing as modelled is fair enough."** Regional pricing, a self-requested hardship exemption and a stated wage gap are not modelled.
 
 ### The Exemption Schedule, the Trial and the Four Departures
@@ -2277,19 +2277,19 @@ Copied from `subscription-models.md`, "Owner Decisions Recorded for the Design R
 - **Labour scales with paying seats.** Hours a month = fixed hours + variable hours per 1,000 paying seats. The low contact-rate row is the primary case and the median is the stress case; both are shown everywhere. Support, dispute and privacy-request hours are priced at a living wage without health cover ($41.47 an hour, derived), loaded with employer payroll taxes and benefits to $53.80 an hour; engineering hours at the BLS Washington developer median ($80.07), loaded to $100.88. See "Labour and the One-Person Ceiling" under Break-Even.
 - **No free tier (2026-11-06).** There is no free tier. The only free things are a trial period on a new coven (one month as standard; keepers may set a longer one for promotions and beta testers), each site curator's free coven, keeper exemptions, the demo coven's observer seat, and the public compendium. The four departures from DESIGN.md §13 under "New Requirements Beyond DESIGN.md §13" follow from it.
 - **Pricing as modelled is fair enough (2026-11-06).** After reviewing regional pricing, a self-requested hardship exemption and a stated wage gap, the owner decided: "pricing as modelled is fair enough". None of the three is modelled. No numbers change.
-- **The living wage is a floor (2026-11-06).** "The living wage is a minimum. Not a maximum." The $250,000 salary target is above that floor by the owner's choice. A task, to be minted on Wave 21 by M17.1 (no id yet), will scope an executive pay maximum: a ratio of the highest to the lowest pay on the site, researched against published pay-ratio policies.
+- **The living wage is a floor (2026-11-06).** "The living wage is a minimum. Not a maximum." The $250,000 salary target is above that floor by the owner's choice. A task, to be minted on N · Wave 04 by M17.1 (no id yet), will scope an executive pay maximum: a ratio of the highest to the lowest pay on the site, researched against published pay-ratio policies.
 - **Model (i) chosen (owner, 2026-11-06).** The owner chose model (i), One price list ($7 base, +$2.50 for each extra seat if the coven pays, $3 if members pay, $1.25 observer seat, $1 off a second coven, personal plan $3.50; the prices were raised later the same day, see the next entry). The remaining owner questions are written against (i) and quote (i)'s figures first; the other models' sections and tables stay as the record of what was compared. Questions 6 and 16 and the (g)-only and (c)-only options are gone; a question that applies to only some models carries a models list.
 - **Processor: Stripe Billing + Stripe Tax, the site as merchant, with a checkout page the site hosts; Stripe.js loads on that page and on no other (owner, 2026-11-06).** The owner first said "And stripe as the processor: Stripe Billing + Tax, hosted Checkout", then amended it: "I want to host my own checkout. And only have the scripts on absolutely necessary pages." Questions 1 (merchant or merchant of record), 2 (Sold through Link) and 13 (Stripe.js; now answered as: on the checkout page only) are decided. The research's earlier recommendation, Stripe-hosted Checkout, is overridden by the owner; the reason is fewer vendor pages and the script confined to the one page that needs it. Fees are unchanged. The consequences are under "A Site-Hosted Checkout Page". Question 4 stays, as a yes or no on describing the site to Stripe's review. Fee figures use Stripe option 1 as primary; Managed Payments stays in the comparison as the recorded fallback, and it requires Stripe's hosted Checkout, so using the fallback would also mean giving up the site-hosted page.
 
 ### Owner to Confirm
 
-Nothing blocks the Wave 21 tasks. These facts were not found in the sources, and the task that needs each one confirms it. The full list, with the numbered items, is "What the Repository Doesn't Say" in [`running-costs.md`](../billing/running-costs.md).
+Nothing blocks the N · Wave 04 tasks. These facts were not found in the sources, and the task that needs each one confirms it. The full list, with the numbered items, is "What the Repository Doesn't Say" in [`running-costs.md`](../billing/running-costs.md).
 
 - **Accountant items:** the reasonable-compensation wage for structure B\*, the qualified business income thresholds, the Form 2553 election, unemployment and L&I cover for an officer, Paid Family and Medical Leave, WA Cares, how Washington B&O treats the site as merchant, and current payroll fees. The owner takes these to the accountant.
 - **Spouse income:** confirmed zero on 2026-11-06. Every joint figure assumes it, and the structure table changes if it changes.
-- **Stripe's coupon rules** for R5 as a line on the payer's own subscription. M21.1 tests it and M21.8 confirms it before the discount is built.
+- **Stripe's coupon rules** for R5 as a line on the payer's own subscription. N4.1 tests it and N4.8 confirms it before the discount is built.
 - **SAQ A:** that a site-hosted page with Stripe's frames keeps the site at the lightest PCI self-assessment was not found. Stripe's Dashboard compliance page or the accountant confirms it.
-- **Plugin support:** whether `@better-auth/stripe` supports a site-hosted checkout page. M21.1 tests it.
+- **Plugin support:** whether `@better-auth/stripe` supports a site-hosted checkout page. N4.1 tests it.
 
 ### Appendix: The Plan
 
@@ -2327,7 +2327,7 @@ Decisions the owner gave in planning (recorded here so the docs don't re-ask):
 | Model choice              | During M17.1: docs drafted and committed, owner chooses, then the record and tasks are written                                                                                             |
 | Doc home                  | `claude-docs/billing/` (new), Markdown                                                                                                                                                     |
 
-Repo facts the inventory established (paths relative to the worktree): Vercel Hobby, $0 (DESIGN.md §4); M17.4 records a Pro move; three daily crons in `vercel.json`; Vercel Workflows via `withWorkflow` in `next.config.ts`; Neon free tier, `main` + `staging` branches, snapshot branches before each production migration; Resend in production, Mailtrap in previews, Mailpit locally, 100-mails-a-day assumption in `claude-docs/tasks/m15.md`; Better Auth with Discord/Google/Microsoft/Facebook, no paid auth; public repo, GitHub-hosted `ubuntu-26.04` runners, ~500 gate runs a month (`claude-docs/ci/runner-budget.md`); no error tracking, uptime, alerting, log drain, CodeQL, SECURITY.md or incident runbook beyond `claude-docs/db/snapshot-and-restore.md`; privacy policy names Vercel, Neon, Resend and the four sign-in providers as processors (`documents/privacy.md`); the Code of Ethics forbids browser-side analytics and any advertising (`documents/code-of-ethics.md`, "Developers").
+Repo facts the inventory established (paths relative to the worktree): Vercel Hobby, $0 (DESIGN.md §4); ND.1 records a Pro move; three daily crons in `vercel.json`; Vercel Workflows via `withWorkflow` in `next.config.ts`; Neon free tier, `main` + `staging` branches, snapshot branches before each production migration; Resend in production, Mailtrap in previews, Mailpit locally, 100-mails-a-day assumption in `claude-docs/tasks/v1/m15.md`; Better Auth with Discord/Google/Microsoft/Facebook, no paid auth; public repo, GitHub-hosted `ubuntu-26.04` runners, ~500 gate runs a month (`claude-docs/ci/runner-budget.md`); no error tracking, uptime, alerting, log drain, CodeQL, SECURITY.md or incident runbook beyond `claude-docs/db/snapshot-and-restore.md`; privacy policy names Vercel, Neon, Resend and the four sign-in providers as processors (`documents/privacy.md`); the Code of Ethics forbids browser-side analytics and any advertising (`documents/code-of-ethics.md`, "Developers").
 
 ##### Worktree and branch
 
@@ -2339,11 +2339,11 @@ Repo facts the inventory established (paths relative to the worktree): Vercel Ho
 2. **`claude-docs/billing/subscription-models.md`** — the proposals. For each model: structure, price points (from comparables), which of the five §13 requirements it keeps/drops/alters, how the multi-coven discount and the keeper exemption map onto it, Stripe objects it needs (products, prices, coupons, per-seat vs tiered), reception evidence (comparable products' pricing pages, published surveys, community discussion — linked), free-tier recommendation with cost, break-even table per size against (a) cash costs, (b) cash + contractor-rate time, (c) cash + $250k-plus-load. Ends with a recommendation and the questions the owner must answer.
 3. **`claude-docs/billing/README.md`** — what the folder holds and how to re-run the model (the inputs table, dated; prices expire).
 4. **`claude-docs/design-decisions/ingredients.md`, "Subscription Billing Scope"** — the record. Renamed from the criterion's `m17.1-billing-plugin-or-sdk.md` because the plugin-or-SDK choice now belongs to the PoC task; the criterion in `m17.md` is corrected in place. Holds: the chosen model (owner's pick); the PoC's brief (both candidates, the five requirements, what the PoC must show for each, the env var name `STRIPE_SECRET_KEY`, the throwaway-branch rule); the data model (billing reference on `workspaces` or a `workspace_subscriptions` table, `billing_exempt_until_cleared` flag, entitlement service, all through `withAudit` with `auditColumns`); the multi-coven discount definition; the pause rule (site pause M15.52, coven pause M15.55: pauses/keeps running/extends; discount counting); the membership-management section (the four views, who may reach each, which GraphQL fields they need); the minted tasks in order. Also carries this plan verbatim as an appendix ([[feedback_store_plan_beside_design_decisions]]).
-5. **Board and task docs**: `claude-docs/tasks/m17.md` M17.1 entry corrected (story, criteria, estimate) and `claude-docs/waves/wave-17.md` saying the minted tasks live on Wave 21; the new wave's files (`tasks/m21.md`, `waves/wave-21.md`, the `TASKS.md` row, the `tasks-md.mjs` entry, the milestone); `node scripts/task-board.mjs sync` run from the worktree ([[project_task_board_sync_reads_own_checkout]]); DESIGN.md §13 "Subscription billing", §14 row, §15 bullet updated to say the scope is decided and point at the record and tasks; `claude-docs/backlog.md` V2 item moved to V Fast Follow naming the tasks; `documents/privacy.md` is **not** edited here (a build task that adds Stripe as a processor edits it then — say so in the record).
+5. **Board and task docs**: `claude-docs/tasks/v1/m17.md` M17.1 entry corrected (story, criteria, estimate) and `claude-docs/waves/v1/wave-17.md` saying the minted tasks live on N · Wave 04; the new wave's files (`tasks/v1-next/n4.md`, `waves/v1-next/wave-04.md`, the `TASKS.md` row, the `tasks-md.mjs` entry, the milestone); `node scripts/task-board.mjs sync` run from the worktree ([[project_task_board_sync_reads_own_checkout]]); DESIGN.md §13 "Subscription billing", §14 row, §15 bullet updated to say the scope is decided and point at the record and tasks; `claude-docs/backlog.md` V2 item moved to V Fast Follow naming the tasks; `documents/privacy.md` is **not** edited here (a build task that adds Stripe as a processor edits it then — say so in the record).
 
-##### Tasks to mint: a new wave, **Wave 21 — Billing and memberships**
+##### Tasks to mint: a new wave, **N · Wave 04 — Billing and memberships**
 
-M17.1 stays on Wave 17. Everything it mints is `M21.1 → M21.n`, on a new milestone **Wave 21 — Billing and memberships** (the board has no command to create a milestone, so it is one `gh api` POST to `repos/…/milestones`, description = the id list then the wave link, as `task-tracking.md` says), with `claude-docs/tasks/m21.md` (header like `m20.md`: "minted by M17.1 on <date> from the record"), `claude-docs/waves/wave-21.md`, a `21 — Billing and memberships` row in `TASKS.md`'s Execution order, and `claude-docs/tasks/m21.md` added to the list in `scripts/tasks-md.mjs` (the criterion allows that file). Ids confirmed against the board at minting, since parallel sessions mint ([[project_parallel_sessions_mint_ids]]).
+M17.1 stays on Wave 17. Everything it mints is `N4.1 → N4.n`, on a new milestone **N · Wave 04 — Billing and memberships** (the board has no command to create a milestone, so it is one `gh api` POST to `repos/…/milestones`, description = the id list then the wave link, as `task-tracking.md` says), with `claude-docs/tasks/v1-next/n4.md` (header like `n3.md`: "minted by M17.1 on <date> from the record"), `claude-docs/waves/v1-next/wave-04.md`, a `N · 04 — Billing and memberships` row in `TASKS.md`'s Execution order, and `claude-docs/tasks/v1-next/n4.md` added to the list in `scripts/tasks-md.mjs` (the criterion allows that file). Ids confirmed against the board at minting, since parallel sessions mint ([[project_parallel_sessions_mint_ids]]).
 
 Table task before every behaviour task that depends on it. Estimates set at minting. Draft list; the chosen model may add or remove a task:
 
@@ -2360,7 +2360,7 @@ Table task before every behaviour task that depends on it. Estimates set at mint
 11. **Public pricing page** — `/pricing`, sessionless, indexable, no application data.
 12. **Billing stories** — Playwright stories for subscribe, seat change, cancel, exemption, discount.
 
-**Testing standard for every Wave 21 task** (errors in billing are unacceptable). The record carries a "Billing test plan" section and each minted task's acceptance criteria name the tests it must ship, over and above CLAUDE.md's rules:
+**Testing standard for every N · Wave 04 task** (errors in billing are unacceptable). The record carries a "Billing test plan" section and each minted task's acceptance criteria name the tests it must ship, over and above CLAUDE.md's rules:
 
 - **Test target**: PR gates run the billing tests against the processor's **official mock server** where it publishes one (Stripe's `stripe-mock`, started as a CI service container beside Postgres and Mailpit, and in the compose stack locally), falling back to a hand-written double only for a processor without one; webhook tests replay events the PoC captured from real test mode, signed locally. A **scheduled or manually dispatched workflow** holding the test-mode secret replays the same suite against the processor's real test mode, so mock drift is caught without putting the secret on PR gates — fork and Dependabot PRs stay green. The payment-processor comparison records which candidates publish a mock. The mock service and the capture fixtures land as their own task before the first behaviour task; the scheduled workflow is its own task.
 - **Money is integers in the smallest unit**, never floats; the discount, proration and seat arithmetic have exhaustive table-driven tests including rounding at every boundary, zero seats, the exemption, and a member in 1, 2 and 10 covens.
@@ -2397,7 +2397,7 @@ Main session reads the two docs, then `AskUserQuestion` (plus `PushNotification`
 
 ###### Record and minting (writer agent, same context)
 
-Writes the decision record, the `m17.md` entry (M17.1 corrected and re-estimated), `wave-17.md`, the Wave 21 files (`m21.md`, `wave-21.md`, `TASKS.md` row, `tasks-md.mjs` entry) and creates the milestone, then DESIGN §13/§14/§15 and `backlog.md`; appends this plan to the record; runs `node scripts/task-board.mjs sync` from the worktree, then `estimate` per new task; comments progress on #1356 (names only, no values).
+Writes the decision record, the `m17.md` entry (M17.1 corrected and re-estimated), `wave-17.md`, the N · Wave 04 files (`n4.md`, `wave-04.md`, `TASKS.md` row, `tasks-md.mjs` entry) and creates the milestone, then DESIGN §13/§14/§15 and `backlog.md`; appends this plan to the record; runs `node scripts/task-board.mjs sync` from the worktree, then `estimate` per new task; comments progress on #1356 (names only, no values).
 
 ##### Verification
 
@@ -2406,7 +2406,7 @@ Prose-only diff ([[feedback_skip_tests_doc_only]]):
 - `cd /home/node/worktrees/m17.1 && npm run format:check > .reports/format.log; echo exit $?; tail -5 .reports/format.log`
 - `npm run lint` the same way (markdown-lint is in `checks.yml`'s lint job — confirm which linter covers `claude-docs/`).
 - `git diff --stat origin/staging` shows only `claude-docs/**`, `documents/` untouched, no `src/`, no `package*.json`.
-- `node scripts/task-board.mjs find M21.<n>` for each minted id returns one match, each on the Wave 21 milestone; `reorder` dry-run (never `--apply` from this worktree — [[feedback_reorder_from_staging_rows]]) shows the row; `node scripts/tasks-md.mjs` (whatever its check mode is) passes.
+- `node scripts/task-board.mjs find N4.<n>` for each minted id returns one match, each on the N · Wave 04 milestone; `reorder` dry-run (never `--apply` from this worktree — [[feedback_reorder_from_staging_rows]]) shows the row; `node scripts/tasks-md.mjs` (whatever its check mode is) passes.
 - Every link in the three billing docs resolves (a `node -e` fetch loop over the `](http` links, HEAD requests, report non-200s).
 - Owner reads the record and the two docs before `/create-pr`; no PR is opened unasked ([[feedback_no_pr_unless_asked]]).
 
@@ -2435,7 +2435,7 @@ M14.29 gathered closed-practice statements into `compendium/ethics/`, a folder t
 
 Stacte (`unknown/stacte`) carried the only row M14.29 recorded, from Wikipedia alone. The owner's answer removes it (below).
 
-Peyote's entry leaves the compendium under M19.1, because peyote is a controlled substance (the section "No controlled substances in the compendium"). Its mark is recorded in its ethics file as the finding, and is seeded for no entry.
+Peyote's entry leaves the compendium under N2.1, because peyote is a controlled substance (the section "No controlled substances in the compendium"). Its mark is recorded in its ethics file as the finding, and is seeded for no entry.
 
 Each file's source handles are files in `compendium/ethics/sources/`.
 
@@ -2461,32 +2461,32 @@ So a closed practice is never inferred from a tradition's name (M14.29's rule st
 
 ### How an entry records the tradition of its lore
 
-The Code of Ethics (`documents/code-of-ethics.md`, line 54) says the compendium names a source for each piece of lore but not yet the tradition it comes from. The fix is a nullable `tradition_id` on `reference_links`, the table that links a source to the row it supports, pointing at `deity_traditions`. A curator picks the tradition in the source panel, and the entry's references list shows it. M19.9 adds the column and M19.10 the pick and the display, updating line 54 of the Code of Ethics in the same PR.
+The Code of Ethics (`documents/code-of-ethics.md`, line 54) says the compendium names a source for each piece of lore but not yet the tradition it comes from. The fix is a nullable `tradition_id` on `reference_links`, the table that links a source to the row it supports, pointing at `deity_traditions`. A curator picks the tradition in the source panel, and the entry's references list shows it. N2.9 adds the column and N2.10 the pick and the display, updating line 54 of the Code of Ethics in the same PR.
 
 ### The data model
 
 The vocabulary of traditions already exists: `deity_traditions`, "a people or a religion", which groups the deity vocabulary and is already a target of `reference_links`. The mark is keyed to it:
 
-- **`ingredient_closed_practices`** (M19.4): `id`, `ingredient_id`, `tradition_id` (to `deity_traditions`), `kind`, `statement` (text), `seed_key`, and the audit columns. A partial unique index on (`ingredient_id`, `tradition_id`) allows one mark per tradition on an entry.
+- **`ingredient_closed_practices`** (N2.4): `id`, `ingredient_id`, `tradition_id` (to `deity_traditions`), `kind`, `statement` (text), `seed_key`, and the audit columns. A partial unique index on (`ingredient_id`, `tradition_id`) allows one mark per tradition on an entry.
 - **`kind`** is an enum of two values: `closed` and `asked-not-to-use`, set by rules 1 and 2 above.
 - **Sources.** `reference_links.ingredient_closed_practice_id` makes a mark the seventh kind of row a source can support, so each mark cites its statement. The check that a link names exactly one row, `reference_links_one_row`, widens to count it.
-- **On screen** the traditions vocabulary is called "Traditions", the vocabulary of peoples and religions (M19.3). The table keeps its name.
+- **On screen** the traditions vocabulary is called "Traditions", the vocabulary of peoples and religions (N2.3). The table keeps its name.
 
 In `compendium/ethics/`, each `closedPractice` item gains a `kind` key with the same two values (`claude-docs/compendium/compendium-seed/README.md`, the ethics-file field table).
 
 ### What the warning shows, and who sets it
 
-**Who.** A curator or a keeper may set, change and clear a mark, through the check every compendium change uses, `assertCurator` (M19.5). The statement is length-limited and, by rule, never describes the ceremony.
+**Who.** A curator or a keeper may set, change and clear a mark, through the check every compendium change uses, `assertCurator` (N2.5). The statement is length-limited and, by rule, never describes the ceremony.
 
-**What it shows** (M19.6):
+**What it shows** (N2.6):
 
 - On the entry page, a warning notice under the badges, titled by its kind, naming the people, giving their statement and its sources, and linking to the help page.
 - On each compendium card, a "Closed Practice" mark beside the entry's other marks, and a filter facet on the compendium list.
-- M19.6 also edits the Code of Ethics lines 13, 54 and 55, which say the warning is planned. It restores the promise that an entry from a closed practice says so, names the people and does not describe the ceremony, and a keeper republishes the document.
+- N2.6 also edits the Code of Ethics lines 13, 54 and 55, which say the warning is planned. It restores the promise that an entry from a closed practice says so, names the people and does not describe the ceremony, and a keeper republishes the document.
 
-**The help pages** (M19.8) are help articles in MB.175's system, not a legal document: one general article, `/help/closed-practices`, and one sub page per marked practice, `/help/closed-practices/<practice>`, each written in the people's own words with its sources. A sub page needs a parent article, which MB.175's entry gained on 2026-11-06. Until MB.175's build tasks land, the notice links the Code of Ethics section "Closed Practices and Where Lore Comes From".
+**The help pages** (N2.8) are help articles in MB.175's system, not a legal document: one general article, `/help/closed-practices`, and one sub page per marked practice, `/help/closed-practices/<practice>`, each written in the people's own words with its sources. A sub page needs a parent article, which MB.175's entry gained on 2026-11-06. Until MB.175's build tasks land, the notice links the Code of Ethics section "Closed Practices and Where Lore Comes From".
 
-**The seed** (M19.7) reads one file per marked entry from `compendium/closed-practices/`, with a `seedKey`, and copies the sources into `compendium/sources/`. It never revives a mark a curator cleared. Under the controlled-substances rule only white sage is seeded.
+**The seed** (N2.7) reads one file per marked entry from `compendium/closed-practices/`, with a `seedKey`, and copies the sources into `compendium/sources/`. It never revives a mark a curator cleared. Under the controlled-substances rule only white sage is seeded.
 
 ### The owner's answers, file by file
 
@@ -2495,31 +2495,31 @@ Every file below is `approved`. Each answer is written into its file under `ques
 | Entry             | What the sources say                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Answer                                                                                                                                                                                            |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | White sage        | No tribal government or religious body says the plant is closed. High Country News, "Sage advice" by Taylar Dawn Stagner (Arapaho and Shoshone), 1 October 2020, quotes Weshoyot Alvitre (Tongva): "I have a firm stance in regards to medicinal plants that they are not to be sold: period." The author writes: "The burning of California white sage, especially, has become an accepted form of cultural appropriation." Wikipedia's "Salvia apiana", section Conservation, says "many Native Americans have asked non-Natives to refrain from the usage of white sage." That sentence cites no source, and no source found carries a named member asking that white sage not be used: the named voices ask that it not be sold or bought.                                                                                                                                                                                                                                                                                             | Mark it `asked-not-to-use`, naming the Indigenous peoples of California and the wider Americas, whose ceremony smudging is. It qualifies under rule 2 as a request not to sell or buy white sage. |
-| Peyote            | The National Council of Native American Churches' statement of 13 February 2016, signed by the presidents of the Native American Church of North America, Azzee' Bee Nahagha of Dine Nation, and the Native American Churches of Oklahoma and South Dakota, and by the Consejo Regional Wixarika: "We oppose the attempts of non-Natives to come in and misuse government protection of traditional Native American religion to conduct illegal activity that has nothing to do with our traditional ways." and "We reject the attempts to grasp onto our indigenous ways and deceive the public by claiming them as their own for their own personal enjoyment or for profit." (ICT, 19 February 2016). NARF's report: "The only plant that serves as a sacrament is Peyote, and without Peyote, indigenous Native American Church ceremonies cannot take place." The 2021 open letter of the Indigenous Peyote Conservation Initiative says the council and the initiative "ask that Peyote not be decriminalized" (Chacruna's reprint). | Mark it `closed`, naming the Native American Church and the Wixárika. The legal restriction goes to M17.3. The entry itself leaves under M19.1, so the mark is seeded for no entry.               |
+| Peyote            | The National Council of Native American Churches' statement of 13 February 2016, signed by the presidents of the Native American Church of North America, Azzee' Bee Nahagha of Dine Nation, and the Native American Churches of Oklahoma and South Dakota, and by the Consejo Regional Wixarika: "We oppose the attempts of non-Natives to come in and misuse government protection of traditional Native American religion to conduct illegal activity that has nothing to do with our traditional ways." and "We reject the attempts to grasp onto our indigenous ways and deceive the public by claiming them as their own for their own personal enjoyment or for profit." (ICT, 19 February 2016). NARF's report: "The only plant that serves as a sacrament is Peyote, and without Peyote, indigenous Native American Church ceremonies cannot take place." The 2021 open letter of the Indigenous Peyote Conservation Initiative says the council and the initiative "ask that Peyote not be decriminalized" (Chacruna's reprint). | Mark it `closed`, naming the Native American Church and the Wixárika. The legal restriction goes to M17.3. The entry itself leaves under N2.1, so the mark is seeded for no entry.                |
 | Stacte and onycha | Exodus 30:37 forbids making the incense "in the same proportions for yourselves". The Talmud, Keritot 6a: "One who blends the incense in order to teach himself how to prepare it or in order to transfer it to the community is exempt from liability." Maimonides makes liability turn on incense prepared "from these eleven spices according to these proportions". Wikipedia's "Incense offering in rabbinic literature" says that burning incense "by making use of part of the same components" to scent clothing or a house "was permitted in Judaism". The Temple Institute forbids preparing the Ketoret for any use outside the Temple and says nothing of one spice. No source restricts a single ingredient.                                                                                                                                                                                                                                                                                                                  | No mark on either. Stacte's row is removed. The rule binds Jews and restricts the compound in its proportions; it is not a people's claim against outsiders.                                      |
 | Yopo              | Rodd and Sumabila (2011) compare Piaroa and Cuiva yopo use. By the summary of their abstract, Piaroa use is restricted to trained shamans inside the community, and the article says nothing of outsiders. The article refused the fetch, so this rests on the summary.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | No mark (rule 3).                                                                                                                                                                                 |
 | Cowrie shell      | The Canadian Encyclopedia's "Midewiwin" says that while the society "is a structured society with various classes of leaders, it does offer services to the public", and that colonials may have called it secretive "because they did not understand the society's practices or because they were not welcome at Midewiwin ceremonies". Migiis shells are sacred, "used in the healing practices and ceremonies of the Midewiwin", and not said to be restricted.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | No mark.                                                                                                                                                                                          |
 | Lava stone        | Hawaiʻi Volcanoes National Park makes taking lava from the park illegal; its Pele page says it is customary to ask Pele's permission. A sourcing rule and a custom, not a closure.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | No mark. The park rule passes to M17.3 as a sourcing concern.                                                                                                                                     |
 | Strychnos icaja   | Samorini, initiated into the Ndea Narizanga sect of Bwiti in 1993, writes that "Some White men, mostly French permanently living in Gabon, made themselves initiate in other Bwitist sects, particularly in Dissumba, the most widespread sect", and that the Fang "consider Bwiti a universal religion, hence approachable by anyone who seriously intends to join it". He adds that among the Pygmy population the traditional use of iboga "is still considered and kept secret", and that initiates may not tell the details of the rite. Neither restriction names Strychnos icaja.                                                                                                                                                                                                                                                                                                                                                                                                                                                   | No mark.                                                                                                                                                                                          |
 
-### The build tasks, Wave 19
+### The build tasks, N · Wave 02
 
-The build went to a new wave, **Wave 19 — Compendium ethics**, on the owner's call of 2026-11-06, not to Wave 17 as M17.2's entry first said. The reasons: the build is ten tasks with a trigger of its own (M17.2 done), the size of Wave 18, and Wave 17 is a holding wave for scoping and audits. The tasks are in `claude-docs/tasks/m19.md` and the wave in `claude-docs/waves/wave-19.md`. The wave runs after Wave 18 in board order. M19.1 and M19.2 come first, because removing the controlled substances is the owner's priority.
+The build went to a new wave, **N · Wave 02 — Compendium ethics**, on the owner's call of 2026-11-06, not to Wave 17 as M17.2's entry first said. The reasons: the build is ten tasks with a trigger of its own (M17.2 done), the size of N · Wave 01, and Wave 17 is a holding wave for scoping and audits. The tasks are in `claude-docs/tasks/v1-next/n2.md` and the wave in `claude-docs/waves/v1-next/wave-02.md`. The wave runs after N · Wave 01 in board order. N2.1 and N2.2 come first, because removing the controlled substances is the owner's priority.
 
-| Order  | Task                                                                                              | Depends on                      |
-| ------ | ------------------------------------------------------------------------------------------------- | ------------------------------- |
-| M19.1  | Remove the entries unlawful to grow, and the alcohol, cannabis and tobacco entries, from the seed | —                               |
-| M19.2  | Retire the removed entries from seeded databases                                                  | M19.1                           |
-| M19.3  | Call the deity traditions "Traditions" on screen, as the vocabulary of peoples and religions      | —                               |
-| M19.4  | The `ingredient_closed_practices` table                                                           | M19.3                           |
-| M19.5  | A curator sets, changes and clears an entry's closed-practice mark                                | M19.4                           |
-| M19.6  | The warning shows on the entry page and the compendium list, and the Code of Ethics says so       | M19.5                           |
-| M19.7  | Seed the closed-practice marks from `compendium/closed-practices/`                                | M19.5                           |
-| M19.8  | Help pages on closed practices: one general, one per marked practice                              | M19.6, and MB.175's build tasks |
-| M19.9  | The `reference_links.tradition_id` column                                                         | M19.3                           |
-| M19.10 | A citation says which tradition its lore comes from                                               | M19.9                           |
+| Order | Task                                                                                              | Depends on                     |
+| ----- | ------------------------------------------------------------------------------------------------- | ------------------------------ |
+| N2.1  | Remove the entries unlawful to grow, and the alcohol, cannabis and tobacco entries, from the seed | —                              |
+| N2.2  | Retire the removed entries from seeded databases                                                  | N2.1                           |
+| N2.3  | Call the deity traditions "Traditions" on screen, as the vocabulary of peoples and religions      | —                              |
+| N2.4  | The `ingredient_closed_practices` table                                                           | N2.3                           |
+| N2.5  | A curator sets, changes and clears an entry's closed-practice mark                                | N2.4                           |
+| N2.6  | The warning shows on the entry page and the compendium list, and the Code of Ethics says so       | N2.5                           |
+| N2.7  | Seed the closed-practice marks from `compendium/closed-practices/`                                | N2.5                           |
+| N2.8  | Help pages on closed practices: one general, one per marked practice                              | N2.6, and MB.175's build tasks |
+| N2.9  | The `reference_links.tradition_id` column                                                         | N2.3                           |
+| N2.10 | A citation says which tradition its lore comes from                                               | N2.9                           |
 
-M19.4 is the table task ahead of the behaviour task M19.5, as the table-then-behaviour rule asks. M19.9 and M19.10 need only M19.3 and may run beside the warning. M17.3's ethical warnings may join this wave when M17.3 runs; that is M17.3's decision.
+N2.4 is the table task ahead of the behaviour task N2.5, as the table-then-behaviour rule asks. N2.9 and N2.10 need only N2.3 and may run beside the warning. M17.3's ethical warnings may join this wave when M17.3 runs; that is M17.3's decision.
 
 ### Sources
 
@@ -2545,7 +2545,7 @@ Every page below was opened on 2026-11-06 unless the entry says otherwise.
 
 ## No controlled substances in the compendium
 
-The compendium will hold no entry whose plant, fungus or substance is itself unlawful to grow or possess under United States federal law or Washington State law, and no alcohol, cannabis or tobacco. A plant that is lawful to grow stays. The owner set the rule on 2026-11-06, while M17.2 was scoped. M17.2 deletes no entry: M19.1 applies the rule and M19.2 retires what has already been seeded. The approved plan is `design-decisions/support.md`, "Scope the Closed-Practice Warning (plan)", beside this file; it is not maintained, and this record is.
+The compendium will hold no entry whose plant, fungus or substance is itself unlawful to grow or possess under United States federal law or Washington State law, and no alcohol, cannabis or tobacco. A plant that is lawful to grow stays. The owner set the rule on 2026-11-06, while M17.2 was scoped. M17.2 deletes no entry: N2.1 applies the rule and N2.2 retires what has already been seeded. The approved plan is `design-decisions/support.md`, "Scope the Closed-Practice Warning (plan)", beside this file; it is not maintained, and this record is.
 
 ### The owner's words
 
@@ -2568,7 +2568,7 @@ The compendium will hold no entry whose plant, fungus or substance is itself unl
 
 #### Err on the side of safety
 
-A kept entry says nothing that instructs preparation or dosing. Where a source says a person without the knowledge could harm themselves with the ingredient, the entry's safety note says what the harm is. That is the owner's safety rule above, and the reason is theirs: someone who does not know the plant could hurt themselves by accident. M19.1 checks every kept candidate for both. It removes any sentence that instructs, and adds a sourced `safetyNotes` line, with `toxic` where the source says so, to a kept entry that lacks one, as the yopo and peyote entries already do.
+A kept entry says nothing that instructs preparation or dosing. Where a source says a person without the knowledge could harm themselves with the ingredient, the entry's safety note says what the harm is. That is the owner's safety rule above, and the reason is theirs: someone who does not know the plant could hurt themselves by accident. N2.1 checks every kept candidate for both. It removes any sentence that instructs, and adds a sourced `safetyNotes` line, with `toxic` where the source says so, to a kept entry that lacks one, as the yopo and peyote entries already do.
 
 ### The jurisdiction
 
@@ -2585,7 +2585,7 @@ A kept entry says nothing that instructs preparation or dosing. Where a source s
 
 ### The test, per entry
 
-M19.1 decides each entry from its own sources, not from its file name. An entry is removed when one of these holds:
+N2.1 decides each entry from its own sources, not from its file name. An entry is removed when one of these holds:
 
 1. A source read says the plant, fungus or substance itself is named in 21 CFR Part 1308 or RCW 69.50 (peyote, marihuana, the opium poppy, coca leaves).
 2. A source read says growing or possessing it is unlawful under either. A fungus that contains psilocybin is treated as the substance.
@@ -2597,7 +2597,7 @@ Each removal is recorded as the endangered removals were (the section "No endang
 
 ### The candidates
 
-These come from the file names under `compendium/ingredients/`. Each is unverified until M19.1 reads the entry's sources.
+These come from the file names under `compendium/ingredients/`. Each is unverified until N2.1 reads the entry's sources.
 
 **Removed under the test (10):**
 
@@ -2614,21 +2614,21 @@ These come from the file names under `compendium/ingredients/`. Each is unverifi
 | `unknown/rum`                              | Alcohol.                                                                      |
 | `unknown/palm-wine`                        | Alcohol.                                                                      |
 
-**Kept as plants lawful to grow, pending M19.1's check:** San Pedro cactus, chacruna, yopo, iboga, ololiuqui and morning glory, _Salvia divinorum_, the ayahuasca vine, Syrian rue, kava, fly agaric, the daturas, belladonna, the henbanes, mandrake, nutmeg, areca and betel, and the ephedras. Each gets the safety check above.
+**Kept as plants lawful to grow, pending N2.1's check:** San Pedro cactus, chacruna, yopo, iboga, ololiuqui and morning glory, _Salvia divinorum_, the ayahuasca vine, Syrian rue, kava, fly agaric, the daturas, belladonna, the henbanes, mandrake, nutmeg, areca and betel, and the ephedras. Each gets the safety check above.
 
-**Iboga is left for M19.1.** Ibogaine is in Schedule I, federal (21 CFR 1308.11(d)(21)) and Washington (RCW 69.50.204(c)(21)); the schedule items read name the substance, not the plant _Tabernanthe iboga_. M19.1 decides from a source whether the plant itself is unlawful to grow or possess, and records why.
+**Iboga is left for N2.1.** Ibogaine is in Schedule I, federal (21 CFR 1308.11(d)(21)) and Washington (RCW 69.50.204(c)(21)); the schedule items read name the substance, not the plant _Tabernanthe iboga_. N2.1 decides from a source whether the plant itself is unlawful to grow or possess, and records why.
 
 ### Where it is written down
 
 - `claude-docs/compendium/compendium-seed/README.md`, section "No controlled substances", beside "No endangered species".
-- The Code of Ethics' sourcing section (`documents/code-of-ethics.md`) gains the rule in M19.1's PR.
+- The Code of Ethics' sourcing section (`documents/code-of-ethics.md`) gains the rule in N2.1's PR.
 
 ### The tasks
 
-- **M19.1 — Remove the entries unlawful to grow, and the alcohol, cannabis and tobacco entries, from the seed.** It checks each candidate against 21 CFR Part 1308 and RCW 69.50 by its sources, keeps every plant lawful to grow, gives each kept candidate a sourced safety note where a source names a harm, leaves no preparation or dosing sentence, records each removal, and updates the Code of Ethics.
-- **M19.2 — Retire the removed entries from seeded databases.** A forward-only data migration on M14.30's pattern (`0090_retire-endangered-entries.sql`): it soft-deletes each entry by seed key, keeps the variants a coven holds, and later seed runs report the key as `retired`.
+- **N2.1 — Remove the entries unlawful to grow, and the alcohol, cannabis and tobacco entries, from the seed.** It checks each candidate against 21 CFR Part 1308 and RCW 69.50 by its sources, keeps every plant lawful to grow, gives each kept candidate a sourced safety note where a source names a harm, leaves no preparation or dosing sentence, records each removal, and updates the Code of Ethics.
+- **N2.2 — Retire the removed entries from seeded databases.** A forward-only data migration on M14.30's pattern (`0090_retire-endangered-entries.sql`): it soft-deletes each entry by seed key, keeps the variants a coven holds, and later seed runs report the key as `retired`.
 
-Both open Wave 19 — Compendium ethics (`claude-docs/waves/wave-19.md`), because the removal is the owner's priority.
+Both open N · Wave 02 — Compendium ethics (`claude-docs/waves/v1-next/wave-02.md`), because the removal is the owner's priority.
 
 ### Sources
 
@@ -2643,7 +2643,7 @@ Opened on 2026-11-06.
 
 ## The ethical warnings on ingredients
 
-The owner decided the five points below on 2026-11-06. This record says which conservation listings and animal parts raise a warning on a compendium entry, what the warning shows, who sets it, which entries the gathered data marks today, which task answers each open question, and the tasks that build it. It is the reasoning behind Wave 20 (`claude-docs/tasks/m20.md`, `claude-docs/waves/wave-20.md`). The plan it was written from is `claude-docs/design-decisions/support.md`, "Scope the ethical warnings on ingredients (plan)".
+The owner decided the five points below on 2026-11-06. This record says which conservation listings and animal parts raise a warning on a compendium entry, what the warning shows, who sets it, which entries the gathered data marks today, which task answers each open question, and the tasks that build it. It is the reasoning behind N · Wave 03 (`claude-docs/tasks/v1-next/n3.md`, `claude-docs/waves/v1-next/wave-03.md`). The plan it was written from is `claude-docs/design-decisions/support.md`, "Scope the ethical warnings on ingredients (plan)".
 
 Nothing under `src/` or `compendium/` changes in M17.3. The numbers below were counted by script from `compendium/ethics/` on 2026-11-06; the files are the source, and the lists will move as the question tasks run.
 
@@ -2654,7 +2654,7 @@ M14.29 gathered conservation listings and animal-part statements into `compendiu
 - 420 listing rows. By scheme: IUCN 314, CITES 12 (2 Appendix I, 10 Appendix II), state listings 5, NatureServe 2, and 87 under `other`, of which 25 are United Plant Savers rows and 62 are prose or national claims (10 global, 42 for one place, 10 of unknown scope).
 - 15 files carry an animal part.
 - 276 files are `approved` and 114 are `needs-review`. 118 questions sit in 93 of those 114 files; 21 files carry none.
-- 9 entries have been removed under M14.29 and keep their ethics file. Ten more are pending removal under M19.1 of Wave 19; of those, only peyote is in the marked list below.
+- 9 entries have been removed under M14.29 and keep their ethics file. Ten more are pending removal under N2.1 of N · Wave 02; of those, only peyote is in the marked list below.
 
 ### What raises a warning
 
@@ -2696,13 +2696,13 @@ The 15 files, all under `compendium/ethics/`, with the statement each holds:
 | `unknown/sea-cucumber`                                | whole animal             | Overfishing; India banned harvest under Schedule I of its Wildlife Protection Act in 2001 (`wikipedia-sea-cucumber`)                   | approved                |
 | `unknown/shilajit`                                    | coprolites               | Coprolitic types are semi-fossilised animal faeces (`wikipedia-shilajit`)                                                              | needs-review            |
 
-The statements differ in kind (killed for the part, depleted, avoided on religious grounds, harmless, identity uncertain), which is why the notice only quotes. Question group H (M20.8) asks whether honey, shilajit, musk, human mummia and sacred ash count as animal parts at all.
+The statements differ in kind (killed for the part, depleted, avoided on religious grounds, harmless, identity uncertain), which is why the notice only quotes. Question group H (N3.8) asks whether honey, shilajit, musk, human mummia and sacred ash count as animal parts at all.
 
 ### Exceptions for Indigenous peoples' religious and cultural use
 
 The warning row has a nullable exception statement, a short quoted line saying what the law or the listing allows for Indigenous peoples' religious and cultural use, with its own sources. The entry-page notice shows it under the warning. A curator or keeper writes it.
 
-What the data holds today: no exception. A search of every ethics file and source for "eagle" finds nothing. The one legal exemption in the files is a question in `compendium/ethics/botanical/peyote-lophophora-williamsii.yaml`: US law (the American Indian Religious Freedom Act as amended in 1994, and 21 CFR 1307.31) exempts bona fide Native American Church ceremonial use, and _United States v. Boyll_ extended it to all persons in traditional Indian religious use. Peyote leaves the compendium under M19.1, so it will carry no warning. The only other statement of an exception is in the Code of Ethics (`documents/code-of-ethics.md`, "Ethical and Sustainable Sourcing", "Animal parts"), which names the US National Eagle Repository. The build leaves the field empty on every seeded row; a curator fills it where a source supports it. The seed does not invent one.
+What the data holds today: no exception. A search of every ethics file and source for "eagle" finds nothing. The one legal exemption in the files is a question in `compendium/ethics/botanical/peyote-lophophora-williamsii.yaml`: US law (the American Indian Religious Freedom Act as amended in 1994, and 21 CFR 1307.31) exempts bona fide Native American Church ceremonial use, and _United States v. Boyll_ extended it to all persons in traditional Indian religious use. Peyote leaves the compendium under N2.1, so it will carry no warning. The only other statement of an exception is in the Code of Ethics (`documents/code-of-ethics.md`, "Ethical and Sustainable Sourcing", "Animal parts"), which names the US National Eagle Repository. The build leaves the field empty on every seeded row; a curator fills it where a source supports it. The seed does not invent one.
 
 An exception is a legal fact. It is never a closed-practice mark (see the section "The closed-practice warning"), and the field does not say a practice is closed.
 
@@ -2710,29 +2710,29 @@ An exception is a legal fact. It is never a closed-practice mark (see the sectio
 
 The shape follows `ingredient_closed_practices` in the section "The closed-practice warning": one table, sources through `reference_links` as a further kind of row, and a seed keyed on `seed_key` that never revives a mark someone cleared.
 
-- **`ingredient_ethical_warnings`** (M20.10): `id`, `ingredient_id`, `kind` (`listing` or `animal-part`), `scheme` (`iucn` or `cites`, for a listing), `category` (`cr`, `en`, `vu`, `ew`, `appendix-i` or `appendix-ii`, for a listing), `scope` (`global` or a place name, for a listing), `statement` (the quoted text), `exception_statement` (nullable), `seed_key`, and the audit columns. Checks tie `scheme`, `category` and `scope` to `kind` (set for a listing, empty for an animal part) and `category` to `scheme`. A partial unique index on `seed_key` stops the seed adding a row twice; a second partial unique index on (`ingredient_id`, `scheme`, `scope`) allows one listing per scheme and place on an entry.
-- **Sources.** `reference_links.ingredient_ethical_warning_id` makes a warning another kind of row a source can support, and the `reference_links_one_row` check widens to count it. The exception has its own sources, so the link also records which part of the warning it supports (`statement` or `exception`). M19.4 widens the same check for the closed-practice table; whichever migration lands second widens the already-widened check, so M20.10 follows M19.4 only if both widen the check.
+- **`ingredient_ethical_warnings`** (N3.10): `id`, `ingredient_id`, `kind` (`listing` or `animal-part`), `scheme` (`iucn` or `cites`, for a listing), `category` (`cr`, `en`, `vu`, `ew`, `appendix-i` or `appendix-ii`, for a listing), `scope` (`global` or a place name, for a listing), `statement` (the quoted text), `exception_statement` (nullable), `seed_key`, and the audit columns. Checks tie `scheme`, `category` and `scope` to `kind` (set for a listing, empty for an animal part) and `category` to `scheme`. A partial unique index on `seed_key` stops the seed adding a row twice; a second partial unique index on (`ingredient_id`, `scheme`, `scope`) allows one listing per scheme and place on an entry.
+- **Sources.** `reference_links.ingredient_ethical_warning_id` makes a warning another kind of row a source can support, and the `reference_links_one_row` check widens to count it. The exception has its own sources, so the link also records which part of the warning it supports (`statement` or `exception`). N2.4 widens the same check for the closed-practice table; whichever migration lands second widens the already-widened check, so N3.10 follows N2.4 only if both widen the check.
 - **Scope of the warning.** It belongs to a compendium entry. A coven's own ingredient has none, as it has no ethics file.
 - **Caching.** The warnings are compendium data, the same for every viewer, so they use the `compendium` cache tag and the keeper mutations revalidate it (`CLAUDE.md`, rule 6).
 
 ### What the warning shows
 
-**On the entry page** (M20.13), a notice under the badges:
+**On the entry page** (N3.13), a notice under the badges:
 
 - for a listing, titled by its category and scheme, for example "Listed as Vulnerable by the IUCN Red List" or "Listed in CITES Appendix II"; it names the place when the scope is not global, quotes the statement, lists the sources, shows the exception statement when there is one, and links to the help page;
 - for an animal part, titled "Animal Part", quoting the gathered statement with its source and linking to the help page.
 
-Until the help page (M20.15) lands, the notice links the Code of Ethics section "Ethical and Sustainable Sourcing". The notice shows only facts the sources print. It never says a practice is wrong and never removes an entry; removal is M14.29's rule.
+Until the help page (N3.15) lands, the notice links the Code of Ethics section "Ethical and Sustainable Sourcing". The notice shows only facts the sources print. It never says a practice is wrong and never removes an entry; removal is M14.29's rule.
 
-**On each compendium card and in the list** (M20.13): a "Conservation Listing" mark for an entry with a listing warning, an "Animal Part" mark for one with an animal-part warning, and a filter facet for each on the compendium list.
+**On each compendium card and in the list** (N3.13): a "Conservation Listing" mark for an entry with a listing warning, an "Animal Part" mark for one with an animal-part warning, and a filter facet for each on the compendium list.
 
 ### Who sets it
 
-A curator or a keeper sets, changes and clears a warning, its exception statement and their sources, through the check every compendium change uses, `assertCurator` (M20.11, M20.12). The seed (M20.14) sets the rows from the files and never revives a warning a curator cleared.
+A curator or a keeper sets, changes and clears a warning, its exception statement and their sources, through the check every compendium change uses, `assertCurator` (N3.11, N3.12). The seed (N3.14) sets the rows from the files and never revives a warning a curator cleared.
 
 ### The entries the data marks today
 
-These are the compendium entries the threshold marks as the files stand: 33 entries, from 36 listing rows. 32 of them come from the live IUCN Critically Endangered, Endangered and Vulnerable rows and CITES Appendix I and II rows; the 33rd is the one Extinct in the Wild entry, `angels-trumpet-brugmansia`. No live entry has a CITES Appendix I listing; its two entries, costus and grey parrot, were removed by M14.29. Peyote is pending removal under M19.1, which leaves 32.
+These are the compendium entries the threshold marks as the files stand: 33 entries, from 36 listing rows. 32 of them come from the live IUCN Critically Endangered, Endangered and Vulnerable rows and CITES Appendix I and II rows; the 33rd is the one Extinct in the Wild entry, `angels-trumpet-brugmansia`. No live entry has a CITES Appendix I listing; its two entries, costus and grey parrot, were removed by M14.29. Peyote is pending removal under N2.1, which leaves 32.
 
 "Live" means the entry file still exists under `compendium/ingredients/`. The 9 entries M14.29 removed also hold listings that meet the threshold; they carry no warning, as they have no entry.
 
@@ -2779,28 +2779,28 @@ These are the compendium entries the threshold marks as the files stand: 33 entr
 
 ### The question tasks
 
-The 114 `needs-review` files carry 118 questions in 93 of them; 21 files carry none. The owner answers the questions one at a time on a review page with a Copy Table button, as for earlier review waves. There is one task per kind of question. On 2026-11-06 the owner folded the re-review of the 22 already-decided questions (group I) and the 21 files with no question (group J) into one task, M20.9.
+The 114 `needs-review` files carry 118 questions in 93 of them; 21 files carry none. The owner answers the questions one at a time on a review page with a Copy Table button, as for earlier review waves. There is one task per kind of question. On 2026-11-06 the owner folded the re-review of the 22 already-decided questions (group I) and the 21 files with no question (group J) into one task, N3.9.
 
 A file appears under every group it holds a question from, so seven files appear twice or three times: kutki, `seahorse-hippocampus` (groups C, D and E), `vanilla-vanilla-planifolia` (C and I), and clivia, iboga, swertia and hyraceum (D and E). The file counts below add to more than 114 for that reason. A file's `status` becomes `approved` only when no question of it is open, so the last task to answer a file's last question sets it.
 
-| Group | Task  | Kind of question                                                | Questions | Files |
-| ----- | ----- | --------------------------------------------------------------- | --------- | ----- |
-| A     | M20.1 | A Wikipedia rating whose assessment was not identified or found | 25        | 25    |
-| B     | M20.2 | The assessment is of another name, taxon, variety or genus page | 10        | 10    |
-| C     | M20.3 | A CITES listing wider or narrower than the entry                | 25        | 24    |
-| D     | M20.4 | A prose claim with no assessor named                            | 18        | 18    |
-| E     | M20.5 | A prose status whose scope is unknown                           | 7         | 7     |
-| F     | M20.6 | A listing scoped to Hawaii                                      | 2         | 2     |
-| G     | M20.7 | A United Plant Savers genus-level listing                       | 4         | 4     |
-| H     | M20.8 | Whether something counts as an animal part                      | 5         | 5     |
-| I     | M20.9 | Re-review of the 22 questions already decided                   | 22        | 7     |
-| J     | M20.9 | The files with no question: approve each, or give it one        | 0         | 21    |
+| Group | Task | Kind of question                                                | Questions | Files |
+| ----- | ---- | --------------------------------------------------------------- | --------- | ----- |
+| A     | N3.1 | A Wikipedia rating whose assessment was not identified or found | 25        | 25    |
+| B     | N3.2 | The assessment is of another name, taxon, variety or genus page | 10        | 10    |
+| C     | N3.3 | A CITES listing wider or narrower than the entry                | 25        | 24    |
+| D     | N3.4 | A prose claim with no assessor named                            | 18        | 18    |
+| E     | N3.5 | A prose status whose scope is unknown                           | 7         | 7     |
+| F     | N3.6 | A listing scoped to Hawaii                                      | 2         | 2     |
+| G     | N3.7 | A United Plant Savers genus-level listing                       | 4         | 4     |
+| H     | N3.8 | Whether something counts as an animal part                      | 5         | 5     |
+| I     | N3.9 | Re-review of the 22 questions already decided                   | 22        | 7     |
+| J     | N3.9 | The files with no question: approve each, or give it one        | 0         | 21    |
 
 Group H covers honey, mumia, musk, sacred ash and shilajit. Group I covers peyote, vanilla, snow lotus, ferula-aucheri, African ginger, Asian ginseng and desert broomrape. Group J includes `himalayan-yew` and `indian-atees`, whose entries are already removed.
 
 #### The files each task takes
 
-##### M20.1, group A (25 files)
+##### N3.1, group A (25 files)
 
 - `compendium/ethics/botanical/annual-mercury-mercurialis-annua.yaml`
 - `compendium/ethics/botanical/bay-laurel-laurus-nobilis.yaml`
@@ -2828,7 +2828,7 @@ Group H covers honey, mumia, musk, sacred ash and shilajit. Group I covers peyot
 - `compendium/ethics/botanical/witch-hazel-hamamelis-virginiana.yaml`
 - `compendium/ethics/botanical/yerba-mate-ilex-paraguariensis.yaml`
 
-##### M20.2, group B (10 files)
+##### N3.2, group B (10 files)
 
 - `compendium/ethics/botanical/african-violet-streptocarpus-ionanthus.yaml`
 - `compendium/ethics/botanical/balsam-of-peru-myroxylon-balsamum-var-pereirae.yaml`
@@ -2841,7 +2841,7 @@ Group H covers honey, mumia, musk, sacred ash and shilajit. Group I covers peyot
 - `compendium/ethics/botanical/pepper-fruit-dennettia-tripetala.yaml`
 - `compendium/ethics/botanical/samphire-crithmum-maritimum.yaml`
 
-##### M20.3, group C (24 files)
+##### N3.3, group C (24 files)
 
 - `compendium/ethics/botanical/agarwood-aquilaria-malaccensis.yaml` (entry already removed)
 - `compendium/ethics/botanical/aloiampelos-commixta-aloiampelos-commixta.yaml`
@@ -2868,7 +2868,7 @@ Group H covers honey, mumia, musk, sacred ash and shilajit. Group I covers peyot
 - `compendium/ethics/zoological/seahorse-hippocampus.yaml`
 - `compendium/ethics/zoological/snakeskin-serpentes.yaml`
 
-##### M20.4, group D (18 files)
+##### N3.4, group D (18 files)
 
 - `compendium/ethics/botanical/clivia-gardenii-clivia-gardenii.yaml`
 - `compendium/ethics/botanical/egyptian-mimusops-mimusops-laurifolia.yaml`
@@ -2889,7 +2889,7 @@ Group H covers honey, mumia, musk, sacred ash and shilajit. Group I covers peyot
 - `compendium/ethics/unknown/hyraceum.yaml`
 - `compendium/ethics/zoological/seahorse-hippocampus.yaml`
 
-##### M20.5, group E (7 files)
+##### N3.5, group E (7 files)
 
 - `compendium/ethics/botanical/clivia-gardenii-clivia-gardenii.yaml`
 - `compendium/ethics/botanical/iboga-tabernanthe-iboga.yaml`
@@ -2899,19 +2899,19 @@ Group H covers honey, mumia, musk, sacred ash and shilajit. Group I covers peyot
 - `compendium/ethics/unknown/hyraceum.yaml`
 - `compendium/ethics/zoological/seahorse-hippocampus.yaml`
 
-##### M20.6, group F (2 files)
+##### N3.6, group F (2 files)
 
 - `compendium/ethics/botanical/kava-piper-methysticum.yaml`
 - `compendium/ethics/botanical/sandalwood-santalum-album.yaml`
 
-##### M20.7, group G (4 files)
+##### N3.7, group G (4 files)
 
 - `compendium/ethics/botanical/arnica-arnica-montana.yaml`
 - `compendium/ethics/botanical/barberry-berberis-vulgaris.yaml`
 - `compendium/ethics/botanical/eyebright-euphrasia-officinalis.yaml`
 - `compendium/ethics/botanical/gentian-gentiana-lutea.yaml`
 
-##### M20.8, group H (5 files)
+##### N3.8, group H (5 files)
 
 - `compendium/ethics/unknown/mumia.yaml`
 - `compendium/ethics/unknown/musk.yaml`
@@ -2919,7 +2919,7 @@ Group H covers honey, mumia, musk, sacred ash and shilajit. Group I covers peyot
 - `compendium/ethics/unknown/shilajit.yaml`
 - `compendium/ethics/zoological/honey-apis-mellifera.yaml`
 
-##### M20.9, group I (7 files)
+##### N3.9, group I (7 files)
 
 - `compendium/ethics/botanical/african-ginger-siphonochilus-aethiopicus.yaml`
 - `compendium/ethics/botanical/asian-ginseng-panax-ginseng.yaml`
@@ -2929,7 +2929,7 @@ Group H covers honey, mumia, musk, sacred ash and shilajit. Group I covers peyot
 - `compendium/ethics/botanical/snow-lotus-saussurea.yaml`
 - `compendium/ethics/botanical/vanilla-vanilla-planifolia.yaml`
 
-##### M20.9, group J (21 files with no question)
+##### N3.9, group J (21 files with no question)
 
 - `compendium/ethics/botanical/ashwagandha-withania-somnifera.yaml`
 - `compendium/ethics/botanical/chaste-tree-vitex-agnus-castus.yaml`
@@ -2955,20 +2955,20 @@ Group H covers honey, mumia, musk, sacred ash and shilajit. Group I covers peyot
 
 ### The build tasks
 
-| Task   | Builds                                                                                                                                                                               | Follows                                                                          |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| M20.10 | The `ingredient_ethical_warnings` table, the widened `reference_links` link, and the checks and indexes                                                                              | Nothing in Wave 20; M19.4 only if both widen the `reference_links_one_row` check |
-| M20.11 | The service and GraphQL: read a warning, and set, change and clear one with its sources, through `assertCurator`                                                                     | M20.10                                                                           |
-| M20.12 | The curator's and keeper's controls on the entry's edit screen                                                                                                                       | M20.11                                                                           |
-| M20.13 | The entry-page notice, the two card marks and their list filters, and the Code of Ethics update (below)                                                                              | M20.11, and M19.6 if it reuses that notice component                             |
-| M20.14 | The seed: reads `approved` files in `compendium/ethics/`, keyed on `seed_key`, never revives a cleared mark. It writes without the services, so it does not wait on M20.11 or M20.12 | M20.10 and M20.1 to M20.9                                                        |
-| M20.15 | The help page that explains the warnings, and the notice's link moved to it                                                                                                          | M20.13 and the build tasks of MB.175                                             |
+| Task  | Builds                                                                                                                                                                             | Follows                                                                             |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| N3.10 | The `ingredient_ethical_warnings` table, the widened `reference_links` link, and the checks and indexes                                                                            | Nothing in N · Wave 03; N2.4 only if both widen the `reference_links_one_row` check |
+| N3.11 | The service and GraphQL: read a warning, and set, change and clear one with its sources, through `assertCurator`                                                                   | N3.10                                                                               |
+| N3.12 | The curator's and keeper's controls on the entry's edit screen                                                                                                                     | N3.11                                                                               |
+| N3.13 | The entry-page notice, the two card marks and their list filters, and the Code of Ethics update (below)                                                                            | N3.11, and N2.6 if it reuses that notice component                                  |
+| N3.14 | The seed: reads `approved` files in `compendium/ethics/`, keyed on `seed_key`, never revives a cleared mark. It writes without the services, so it does not wait on N3.11 or N3.12 | N3.10 and N3.1 to N3.9                                                              |
+| N3.15 | The help page that explains the warnings, and the notice's link moved to it                                                                                                        | N3.13 and the build tasks of MB.175                                                 |
 
-M20.13 updates the Code of Ethics in the same PR: it replaces the "planned" item in "Closed Practices and Where Lore Comes From" and the IUCN and CITES paragraph in "Ethical and Sustainable Sourcing" with what the site now does.
+N3.13 updates the Code of Ethics in the same PR: it replaces the "planned" item in "Closed Practices and Where Lore Comes From" and the IUCN and CITES paragraph in "Ethical and Sustainable Sourcing" with what the site now does.
 
 ### What I could not source
 
-- The plan counts 32 marked entries. The files give 33 today, because the plan's count leaves out the Extinct in the Wild entry, `angels-trumpet-brugmansia`; 32 remain once peyote leaves under M19.1.
+- The plan counts 32 marked entries. The files give 33 today, because the plan's count leaves out the Extinct in the Wild entry, `angels-trumpet-brugmansia`; 32 remain once peyote leaves under N2.1.
 - The column names, the `kind`, `scheme` and `category` values, the part marker on `reference_links`, the two index shapes, the "Conservation Listing" mark name and the order of the build tasks are design choices of this record, not the owner's. The owner's decisions are the five points in the plan.
 - No source in the files describes an Indigenous-use exception for any entry that stays in the compendium, so the exception field starts empty.
 
@@ -3985,7 +3985,7 @@ alone.
 
 - **The rename's rewrite grows with the compendium.** Each rename is one
   set-based `UPDATE` in the rename's transaction, estimated (not measured) at
-  under 50 ms at 5,000 compendium entries. **MB.163** moves it into a
+  under 50 ms at 5,000 compendium entries. **ND.2** moves it into a
   background job, after launch: the owner's call, unscheduled by design until a
   measured rewrite time nears the function's time limit, so the in-transaction
   rewrite is v1's behaviour. It picks the mechanism from those the site runs
@@ -4008,7 +4008,7 @@ alone.
   [`db/astrology-vocabularies.md`](../db/astrology-vocabularies.md),
   [`db/deity-vocabulary.md`](../db/deity-vocabulary.md) and the three seed
   docs.
-- M5.6a, M5.6b, MB.95 and MB.132, amended; MB.163, minted, for after launch.
+- M5.6a, M5.6b, MB.95 and MB.132, amended; ND.2, minted, for after launch.
 - The `standard` seed's Ginger moves from `rhizome` to the curated `Root`,
   its compendium values take the curated rows' spelling, and `rhizome` moves
   to a coven entry in the `demo` scenario.
