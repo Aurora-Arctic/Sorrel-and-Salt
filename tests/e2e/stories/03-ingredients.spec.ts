@@ -781,7 +781,8 @@ test(
     // claude-docs/components/coven-cards.md, "The empty and no-match states".
     const empty = main.getByRole('status', { name: 'No Ingredients' });
     const noMatch = main.getByRole('status', { name: 'No Matches' });
-    const firstAdd = main.getByRole('button', { name: 'Add Ingredient' });
+    // The header's action is the one way to add, an empty cupboard included.
+    const firstAdd = main.getByRole('link', { name: 'Add Ingredient' });
 
     await test.step('with nothing held, the page offers the first add', async () => {
       const response = await page.goto(listPath(coven));
@@ -789,7 +790,8 @@ test(
       await expect(empty).toBeVisible();
       await expect(noMatch).toHaveCount(0);
       await expect(cardsIn(ingredientList(page))).toHaveCount(0);
-      await expect(empty.getByRole('button', { name: 'Add Ingredient' })).toBeVisible();
+      await expect(firstAdd).toBeVisible();
+      await expect(empty.getByRole('button')).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
 
       // Filters is a button only once the page has hydrated (claude-docs/components/facet-panel.md).
@@ -814,7 +816,6 @@ test(
       await searchCovenList(page, 'Knitbone');
       await expect(noMatch).toBeVisible();
       await expect(empty).toHaveCount(0);
-      await expect(firstAdd).toHaveCount(0);
       await expect(noMatch.getByRole('button')).toHaveCount(0);
       await expect(noMatch.getByRole('link', { name: 'Search the Compendium' })).toHaveAttribute(
         'href',

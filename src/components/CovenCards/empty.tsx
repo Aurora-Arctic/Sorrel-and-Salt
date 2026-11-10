@@ -10,7 +10,6 @@ import {
 } from '../CompendiumList/href';
 import EmptyState from '../EmptyState';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
-import FirstAdd from './first-add';
 import type { EmptyCupboardProps } from './types';
 
 // What a coven's Ingredients list draws with no card, as a status region: No Ingredients (an empty
@@ -39,7 +38,6 @@ const EmptyCupboard = ({ covenSlug, filter, canAdd }: EmptyCupboardProps): React
         label="No Ingredients"
         action={
           <>
-            {canAdd && <FirstAdd covenSlug={covenSlug} />}
             <PendingLink href={INGREDIENTS_GUIDE}>Learn More</PendingLink>
           </>
         }

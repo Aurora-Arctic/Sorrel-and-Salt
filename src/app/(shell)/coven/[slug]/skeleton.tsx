@@ -7,6 +7,7 @@ import { useNavigationState } from '@/lib/navigation';
 import { EntrySkeleton } from '@/components/IngredientEntry/skeleton';
 import { SearchListSkeleton, SearchRowSkeleton } from '@/components/IngredientSearch/skeleton';
 import { ListBodySkeleton } from '@/components/ListFrame/skeleton';
+import ActionFace from '@/components/ActionFace';
 import PageHeader from '@/components/PageHeader';
 import PageNav from '@/components/PageNav';
 import Skeleton from '@/components/Skeleton';
@@ -35,7 +36,7 @@ export const CovenHomeSkeleton = () => {
 // The coven's Ingredients: the page's head, then its filter row and compact cards.
 export const CovenIngredientsSkeleton = () => (
   <div>
-    <PageHeader title="Ingredients" />
+    <PageHeader title="Ingredients" action={<ActionFace>Add Ingredient</ActionFace>} />
     <div data-density="compact">
       <SearchListSkeleton
         row={
