@@ -10,6 +10,7 @@ import { assertAdminChangesOpen } from './admin-role-pause';
 import { isPrimaryAdmin } from './primary-admin';
 import type { SiteAdmin } from './site-admin';
 import type { UserRow } from '../types';
+import { NO_SUCH_USER } from './admin-changes';
 
 // A keeper sets a user's site role from `/keepers/users`. Each change is declared `via: 'admin'` and the trigger on `users` records it;
 // the service writes no ledger row. Rules: claude-docs/design-decisions/auth.md, "Granting and revoking admin" and design-decisions/auth.md, "A third site role, `curator`";
@@ -17,7 +18,8 @@ import type { UserRow } from '../types';
 
 const REFUSAL = 'Only a site keeper may change a site role';
 
-const ROLE_NOUNS: Record<UserRole, string> = {
+/** A site role with its article, for a sentence: 'an admin'. */
+export const ROLE_NOUNS: Record<UserRole, string> = {
   user: 'a user',
   curator: 'a curator',
   admin: 'an admin',
@@ -76,7 +78,7 @@ async function writeRole(
       : await writeSiteRoleGrant(write, user.id, role);
   // Soft-deleted between the read and the write: the update matches no row,
   // so the trigger never fires and nothing is recorded.
-  if (!written) throw new NotFound('No such user');
+  if (!written) throw new NotFound(NO_SUCH_USER);
   if (user.role === 'admin') await unseatDemoOwner(write, user.id);
   return written;
 }

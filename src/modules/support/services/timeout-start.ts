@@ -1,6 +1,5 @@
 import 'server-only';
-import { send } from '../../../lib/mail';
-import { startMailJob } from '../../../lib/mail-job';
+import { startMessageMail } from '../../../lib/mail-job';
 import { supportTimeoutMail } from '../jobs/support-timeout-mail';
 import { supportTimeoutMessageFor } from './timeout-mail';
 import type { SupportTimeoutMail } from '../types';
@@ -14,8 +13,5 @@ import type { SupportTimeoutMail } from '../types';
  */
 export async function mailTimedOutSender(timeoutId: string, origin: string): Promise<void> {
   const mail: SupportTimeoutMail = { kind: 'support-time-out', timeoutId, origin };
-  await startMailJob(supportTimeoutMail, [mail], 'support time-out', async () => {
-    const message = await supportTimeoutMessageFor(mail);
-    if (message) await send(message);
-  });
+  await startMessageMail(supportTimeoutMail, mail, 'support time-out', supportTimeoutMessageFor);
 }

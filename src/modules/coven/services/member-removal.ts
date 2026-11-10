@@ -1,10 +1,10 @@
 import 'server-only';
-import { withAudit } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { RowId } from '../../../lib/validation';
-import { assertNotLastOwner } from './last-owner';
+import { isRowId } from '../../../lib/validation';
 import { assertMembership, assertSeatToLeave } from './membership';
+import { notAMember } from './not-a-member';
+import { removeSeat } from './seat-removal';
 import { assertNotSystemSeat } from './system-seat';
 
 // Both soft-delete the row and run the last-owner guard in the writing transaction.
@@ -20,14 +20,10 @@ export async function removeMember(
   userId: string,
 ): Promise<void> {
   const membership = await assertMembership(session, workspaceId, { member: ['remove'] });
-  if (!RowId.safeParse(userId).success) throw new Forbidden();
+  if (!isRowId(userId)) throw new Forbidden();
   assertNotSystemSeat(userId);
 
-  await withAudit(session, async (write) => {
-    await assertNotLastOwner(write, membership, userId, null);
-    const [row] = await write.softDeleteMembership(membership, userId);
-    if (!row) throw new Forbidden('That person is not a member of this coven');
-  });
+  await removeSeat(session, membership, userId, notAMember());
 }
 
 /**
@@ -39,10 +35,6 @@ export async function removeMember(
 export async function leaveWorkspace(session: Session, workspaceId: string): Promise<void> {
   const membership = await assertSeatToLeave(session, workspaceId);
 
-  await withAudit(session, async (write) => {
-    await assertNotLastOwner(write, membership, session.userId, null);
-    const [row] = await write.softDeleteMembership(membership, session.userId);
-    // Two tabs leaving at once: the second finds the seat already gone.
-    if (!row) throw new Forbidden();
-  });
+  // Two tabs leaving at once: the second finds the seat already gone.
+  await removeSeat(session, membership, session.userId, new Forbidden());
 }

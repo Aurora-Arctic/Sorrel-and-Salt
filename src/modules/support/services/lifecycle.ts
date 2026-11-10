@@ -5,11 +5,14 @@ import type { Session } from '../../../lib/session';
 import { RowId, parseInput } from '../../../lib/validation';
 import { supportReplies } from '../schema/support-replies';
 import { supportRequests } from '../schema/support-requests';
+import type { SupportSenderTier } from '../../../lib/support-path';
 import type { SupportReplyRow, SupportRequestRow } from '../types';
 import { SupportMessage } from '../validation/support';
 import { readerOf, requireVerified } from './access';
 import { SEND_WINDOW_SECONDS, refuseOverLimit, refuseTimedOut, refuseTimedOutReply } from './send';
+import { reopenWithSenderReply } from './sender-reply';
 import { getSupportRequest, refuseAnonymised } from './staff';
+import { NO_SUCH_REQUEST } from './refusals';
 
 // The request lifecycle. The transitions, and who may make each:
 //
@@ -42,7 +45,7 @@ export async function sendSenderMessage(
   const id = parseInput(RowId, requestId);
   const text = parseInput(SupportMessage, body);
   const request = await findOwnSupportRequest(session.userId, id);
-  if (!request) throw new NotFound('No such support request');
+  if (!request) throw new NotFound(NO_SUCH_REQUEST);
 
   return withAudit(session, async (write) => {
     const { recent, timedOut } = await write.lockSupportSender(session.userId, SEND_WINDOW_SECONDS);
@@ -50,27 +53,8 @@ export async function sendSenderMessage(
     if (request.status === 'closed') refuseTimedOut(timedOut);
     else refuseTimedOutReply(timedOut);
 
-    const [moved] = await write.moveSupportRequest(
-      id,
-      session.userId,
-      ['open', 'waiting_on_sender', 'resolved'],
-      {
-        status: 'open',
-        resolvedAt: null,
-        resolvedBy: null,
-        closingNoticeSentAt: null,
-        lastSenderActivityAt: new Date(),
-      },
-    );
-    if (moved) {
-      await write.insert(supportReplies, {
-        requestId: id,
-        body: text,
-        authorRole: 'sender',
-        visibility: 'public',
-      });
-      return moved;
-    }
+    const moved = await reopenWithSenderReply(write, id, session.userId, text, new Date());
+    if (moved) return moved;
 
     if (request.status !== 'closed') {
       throw new Forbidden(
@@ -107,7 +91,7 @@ export async function resolveMySupportRequest(
   requireVerified(session);
   const id = parseInput(RowId, requestId);
   const request = await findOwnSupportRequest(session.userId, id);
-  if (!request) throw new NotFound('No such support request');
+  if (!request) throw new NotFound(NO_SUCH_REQUEST);
   const [moved] = await withAudit(session, (write) =>
     write.moveSupportRequest(id, session.userId, ['open', 'waiting_on_sender'], {
       status: 'resolved',
@@ -149,8 +133,6 @@ export async function addSupportInternalNote(
     return row as SupportReplyRow;
   });
 }
-
-export type SupportSenderTier = 'beta_tester' | 'standard';
 
 /**
  * Each sender's tier, in the order asked: `beta_tester` for an account that accepted a printed card, `standard` for any other.

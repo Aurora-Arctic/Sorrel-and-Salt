@@ -1,6 +1,7 @@
 import 'server-only';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { assertEmailConfirmed } from './email-confirmed';
 import { getMe } from './profile';
 import type { PasswordSetter } from '../types';
 
@@ -23,7 +24,7 @@ export async function setPassword(
   setter: PasswordSetter,
 ): Promise<boolean> {
   const me = await getMe(session);
-  if (!me.emailVerified) throw new Forbidden('Confirm your email address first');
+  assertEmailConfirmed(me);
   if (!(await setter.sessionIsFresh())) throw new Forbidden(STALE_SESSION);
   await setter.set(newPassword);
   return true;

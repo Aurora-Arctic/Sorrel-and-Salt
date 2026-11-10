@@ -5,6 +5,7 @@ import { isSiteAdmin, refuseBatch } from './admin-changes';
 import { assertSiteAdmin } from './site-admin';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
+import { trimmedOrUndefined } from '../../../lib/text';
 import type { UserFilter, UserRow } from '../types';
 
 // A read, so the mutation sweep does not reach it: the check is here, by direct call, and the page confers no workspace access (claude-docs/auth/admin-users.md, "The user list").
@@ -36,7 +37,7 @@ export async function countUsers(
 }
 
 function trimmedFilter(filter: UserFilter): UserFilter {
-  return { ...filter, query: filter.query?.trim() || undefined };
+  return { ...filter, query: trimmedOrUndefined(filter.query) };
 }
 
 /** A DataLoader's batch. A site admin's alone, their own row included: every slot of anyone else's is a `Forbidden`. */

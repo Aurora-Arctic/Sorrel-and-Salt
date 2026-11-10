@@ -22,7 +22,7 @@ import type {
   CardPosition,
   CardRow,
 } from '../../../db/repository';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
 import { batchName } from '../../../lib/invitation-cards/batch-name';
 import {
   CARDS_PER_SHEET,
@@ -35,6 +35,7 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/typ
 import { RowId, parseInput } from '../../../lib/validation';
 import { users } from '../schema/users';
 import { assertSiteAdmin } from './site-admin';
+import { trimmedOrNull, trimmedOrUndefined } from '../../../lib/text';
 import type { CardState, LiveCard, MintedCards } from '../types';
 
 // What a card admits is invitation-acceptance.ts's (claude-docs/design-decisions/auth.md, "An invitation card is a third shape of `invitations`").
@@ -50,11 +51,11 @@ function parsedBatchFilter(filter: CardBatchFilter): CardBatchFilter {
       Number.isNaN(Date.parse(value)) ||
       new Date(value).toISOString().slice(0, 10) !== value
     )
-      throw new ValidationError([{ path: ['day'], message: 'A day is written YYYY-MM-DD' }]);
+      throw fieldRefusal('day', 'A day is written YYYY-MM-DD');
     return value;
   };
   return {
-    batch: filter.batch?.trim() || undefined,
+    batch: trimmedOrUndefined(filter.batch),
     status: filter.status,
     mintedFrom: day(filter.mintedFrom),
     mintedTo: day(filter.mintedTo),
@@ -64,7 +65,7 @@ function parsedBatchFilter(filter: CardBatchFilter): CardBatchFilter {
 }
 
 function parsedArrivalFilter(filter: CardArrivalFilter): CardArrivalFilter {
-  return { query: filter.query?.trim() || undefined };
+  return { query: trimmedOrUndefined(filter.query) };
 }
 
 const REFUSAL = 'Only a site keeper may mint, list or revoke invitation cards';
@@ -92,7 +93,7 @@ export async function mintInvitationCards(
   if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
     issues.push({ path: ['expiresAt'], message: 'Choose an expiry date in the future' });
   }
-  const trimmedNote = note?.trim() || null;
+  const trimmedNote = trimmedOrNull(note);
   if (trimmedNote !== null && trimmedNote.length > MAX_NOTE_LENGTH) {
     issues.push({
       path: ['note'],

@@ -14,7 +14,7 @@ import type {
   SupportRequestStatus,
   SupportViewCounts,
 } from '../../../db/repository';
-import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
@@ -27,6 +27,7 @@ import { IssueUrlInput } from '../validation/support';
 import { readerOf } from './access';
 import { mailSender } from './mail-sender';
 import { redactPathForCurator } from './redact-path';
+import { NO_SUCH_REQUEST, NO_SUCH_USER } from './refusals';
 
 // What the staff do to a request. A keeper reads every request and may do everything; a curator reads the requests marked for
 // curators or assigned to them, and may reply to and resolve the ones assigned to them. Both are checked here, by direct call.
@@ -88,7 +89,7 @@ export async function getSupportRequest(session: Session, id: string): Promise<S
 
 async function visibleRequest(reader: SupportReader, id: string): Promise<SupportRequestRow> {
   const row = await findSupportRequestForReader(reader, id);
-  if (!row) throw new NotFound('No such support request');
+  if (!row) throw new NotFound(NO_SUCH_REQUEST);
   return row;
 }
 
@@ -138,7 +139,7 @@ async function change(
   values: Partial<typeof supportRequests.$inferInsert>,
 ): Promise<SupportRequestRow> {
   const [row] = await withAudit(session, (write) => write.updateById(supportRequests, id, values));
-  if (!row) throw new NotFound('No such support request');
+  if (!row) throw new NotFound(NO_SUCH_REQUEST);
   return asRead(session, row as SupportRequestRow);
 }
 
@@ -158,11 +159,9 @@ export async function assignSupportRequest(
   const requestId = await changeable(session, parseInput(RowId, id));
   if (assigneeId !== null) {
     const assignee = await findOneById(users, parseInput(RowId, assigneeId));
-    if (!assignee) throw new NotFound('No such user');
+    if (!assignee) throw new NotFound(NO_SUCH_USER);
     if (assignee.role !== 'curator' && assignee.role !== 'admin') {
-      throw new ValidationError([
-        { path: ['assigneeId'], message: 'Assign a request to a curator or an admin' },
-      ]);
+      throw fieldRefusal('assigneeId', 'Assign a request to a curator or an admin');
     }
   }
   return change(session, requestId, { assignedTo: assigneeId });

@@ -1,3 +1,4 @@
+import { trimmedOrUndefined } from '../../../lib/text';
 import 'server-only';
 import { findMemberEmails, findMemberPage } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
@@ -19,7 +20,7 @@ export async function listMembers(
   query?: string,
 ): Promise<PageEntry<MembershipWithWorkspace>[]> {
   const membership = await assertMembership(session, workspace.id, { member: ['read'] });
-  const entries = await findMemberPage(membership, page, query?.trim() || undefined);
+  const entries = await findMemberPage(membership, page, trimmedOrUndefined(query));
   return entries.map(({ node, ...entry }) => ({ ...entry, node: { ...node, workspace } }));
 }
 

@@ -17,7 +17,7 @@ import type {
 } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import { looksLikeCardToken } from '../../../lib/invitation-token';
-import { RowId } from '../../../lib/validation';
+import { isRowId } from '../../../lib/validation';
 import { sameAddress } from '../../../lib/primary-admin';
 import type { Session } from '../../../lib/session';
 import { outranks } from '../../../lib/site-roles';
@@ -30,6 +30,7 @@ import type {
   InvitationStanding,
   WorkspaceInvitationRow,
 } from '../types';
+import { NO_SUCH_USER } from './admin-changes';
 
 // The session's verified address admits (claude-docs/db/invitations.md, "Invitation acceptance details"). No message names a workspace, as the reader is not yet a member.
 
@@ -136,7 +137,7 @@ async function standingOf(session: Session, token: string): Promise<InvitationCh
 
 /** The same checks over an id the account page listed; the read is the session's own, so any id that is not its own reads as none. */
 async function standingById(session: Session, id: string): Promise<InvitationCheck> {
-  if (!RowId.safeParse(id).success) return { refusal: 'invalid' };
+  if (!isRowId(id)) return { refusal: 'invalid' };
   const standing = await checkInvitation(session, await findReceivedInvitation(session, id));
   // The account page lists live covens only, so an id into a deleted one reads as none; only the link names the reason.
   return standing.refusal === 'closed' ? { refusal: 'invalid' } : standing;
@@ -218,7 +219,7 @@ async function grantCreation(
 ): Promise<void> {
   if (user.canCreateWorkspace) return;
   const [granted] = await write.updateById(users, user.id, { canCreateWorkspace: true });
-  if (!granted) throw new NotFound('No such user');
+  if (!granted) throw new NotFound(NO_SUCH_USER);
 }
 
 async function acceptChecked(
@@ -252,7 +253,7 @@ async function acceptChecked(
         if (outranks(siteRole, user.role)) {
           const [granted] = await writeSiteRoleGrant(write, user.id, siteRole);
           // Soft-deleted since the read: roll the stamp back with it.
-          if (!granted) throw new NotFound('No such user');
+          if (!granted) throw new NotFound(NO_SUCH_USER);
         }
         return stamped;
       }
