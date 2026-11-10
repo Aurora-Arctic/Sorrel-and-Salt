@@ -19,7 +19,14 @@ import { cardInvitationAttempts } from '../../modules/coven/schema/card-invitati
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
 import { nameOrEmailHolds } from './user-filters';
-import { containsText, newestFirst, notSoftDeleted, scopedTo, startsWithText } from './predicates';
+import {
+  caseFoldedEq,
+  containsText,
+  newestFirst,
+  notSoftDeleted,
+  scopedTo,
+  startsWithText,
+} from './predicates';
 import { findPageCountInScope, findPageInScope } from './finders';
 import { existsByKey, existsIn, selectFrom, selectOne, whenIds } from './select';
 import { hashToken } from './tokens';
@@ -123,7 +130,7 @@ function heldVerifiedBySession(session: AuditSession) {
     users.id,
     session.userId,
     eq(users.emailVerified, true),
-    eq(sql`lower(${users.email})`, sql`lower(${invitations.email})`),
+    caseFoldedEq(users.email, invitations.email),
   );
 }
 
@@ -681,10 +688,7 @@ export function invitationWrites({
       update(
         invitations,
         { revokedAt: sql`now()` },
-        pendingInvitation(
-          inTierOf(proof),
-          eq(sql`lower(${invitations.email})`, sql`lower(${email})`),
-        ),
+        pendingInvitation(inTierOf(proof), caseFoldedEq(invitations.email, email)),
       ),
   };
 }

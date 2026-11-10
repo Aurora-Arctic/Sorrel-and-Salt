@@ -4,8 +4,8 @@ import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { notSoftDeleted, readableInTiers, scopedTo } from './predicates';
-import { existsByKey, pageBounds, selectFrom, whenIds } from './select';
-import { readableSpells } from './spells';
+import { pageBounds, selectFrom, whenIds } from './select';
+import { inReadableSpell, readableSpells } from './spells';
 import type {
   Identified,
   Keyset,
@@ -203,7 +203,7 @@ function readableSpellRows(
 ): SQL | undefined {
   if (table === spells) return readableSpells(membership);
   const child = table as SpellScoped;
-  return existsByKey(spells, spells.id, child.spellId, readableSpells(membership));
+  return inReadableSpell(membership, child.spellId);
 }
 
 /**
