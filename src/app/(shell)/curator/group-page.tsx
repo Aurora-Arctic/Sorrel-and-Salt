@@ -1,13 +1,13 @@
 import 'server-only';
 import type { ReactElement } from 'react';
 import { cache } from 'react';
-import type { GroupKind } from '../../../components/GroupForm/types';
-import GroupList from '../../../components/GroupList';
-import { groupsHref } from '../../../components/GroupList/href';
-import { KINDS } from '../../../components/GroupList/kinds';
-import type { GroupListEntry } from '../../../components/GroupList/types';
-import { readNumberedPage } from '../../../lib/numbered-page';
-import { requireCuratorSession } from '../../../lib/request-session';
+import type { GroupKind } from '@/components/GroupForm/types';
+import GroupList from '@/components/GroupList';
+import { groupsHref } from '@/components/GroupList/href';
+import { KINDS } from '@/components/GroupList/kinds';
+import type { GroupListEntry } from '@/components/GroupList/types';
+import { readNumberedPage } from '@/lib/numbered-page';
+import { requireCuratorSession } from '@/lib/request-session';
 import {
   countCategories,
   countCategoryGroups,
@@ -25,11 +25,11 @@ import {
 import GroupDialog from './group-dialog';
 import { GROUP_READERS } from './group-readers';
 import { editorStamps } from './editors';
-import AddAction from './add-action';
-import { pagerHrefs } from '../../../lib/list-href';
-import { readEditPlace, readListPlace } from './list-page';
-import MissingNotice from './missing-notice';
-import type { ModalHeading } from '../../../components/Modal/types';
+import AddAction from '@/app/(shell)/_admin/add-action';
+import { pagerHrefs } from '@/lib/list-href';
+import { readEditPlace, readListPlace } from '@/app/(shell)/_admin/list-page';
+import MissingNotice from '@/app/(shell)/_admin/missing-notice';
+import type { ModalHeading } from '@/components/Modal/types';
 import type { GroupKindPage, GroupPageProps, GroupSearchParams } from './types';
 
 const GROUP_KINDS: Record<GroupKind, GroupKindPage> = {

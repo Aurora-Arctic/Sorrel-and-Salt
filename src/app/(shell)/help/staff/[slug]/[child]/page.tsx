@@ -2,11 +2,9 @@ import type { Metadata } from 'next';
 import { noIndexMetadata } from '@/lib/page-metadata';
 import { notFound } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
-import { readGlossaryTerms } from '@/lib/help-glossary';
-import { guideSteps, linkTo } from '@/lib/help-pages';
+import { helpArticleProps } from '@/lib/help-article-props';
+import { linkTo } from '@/lib/help-pages';
 import { orNotFound } from '@/lib/or-not-found';
-import { helpPath, keeperHelpEditPath } from '@/lib/help-paths';
-import { helpViewerOffers } from '@/lib/help-viewer';
 import { requireCuratorSession } from '@/lib/request-session';
 import { readStaffHelpArticle } from '@/modules/help';
 
@@ -28,14 +26,9 @@ export default async function Page({
   const parent = await orNotFound(() => readStaffHelpArticle(session, slug));
   return (
     <HelpArticleView
-      terms={await readGlossaryTerms()}
       heading="Staff Help"
-      title={found.title}
-      body={found.body}
-      subpages={found.children.map(linkTo)}
+      {...await helpArticleProps(found, parent)}
       parent={linkTo(parent)}
-      editHref={(await helpViewerOffers()).edit ? keeperHelpEditPath(found.id) : undefined}
-      steps={guideSteps(linkTo(parent), parent.children.map(linkTo), helpPath(found))}
     />
   );
 }

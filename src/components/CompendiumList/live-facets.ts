@@ -22,6 +22,40 @@ import type {
 // the clicking settles, and TanStack Query keys it by filter, so a replaced filter's answer is never
 // shown (claude-docs/components/compendium-list.md, "The panel's counts").
 
+// Defined for its side effect: both queries below borrow it by name when sent.
+graphql(`
+  fragment IngredientFacetCountsFields on IngredientFacetCounts {
+    forms {
+      value
+      count
+    }
+    deities {
+      value
+      count
+    }
+    categories {
+      value
+      count
+    }
+    zodiacSigns {
+      value
+      count
+    }
+    celestialBodies {
+      value
+      count
+    }
+    elements {
+      value
+      count
+    }
+    toxic {
+      value
+      count
+    }
+  }
+`);
+
 const CompendiumFacetCountsDocument = graphql(`
   query CompendiumFacetCounts(
     $query: String
@@ -57,34 +91,7 @@ const CompendiumFacetCountsDocument = graphql(`
       covenIds: $covenIds
       covensNot: $covensNot
     ) {
-      forms {
-        value
-        count
-      }
-      deities {
-        value
-        count
-      }
-      categories {
-        value
-        count
-      }
-      zodiacSigns {
-        value
-        count
-      }
-      celestialBodies {
-        value
-        count
-      }
-      elements {
-        value
-        count
-      }
-      toxic {
-        value
-        count
-      }
+      ...IngredientFacetCountsFields
       withoutReferences
       withoutForms
       reviewed {
@@ -126,34 +133,7 @@ const CovenFacetCountsDocument = graphql(`
       inStock: $inStock
       lowStockOnly: $lowStockOnly
     ) {
-      forms {
-        value
-        count
-      }
-      deities {
-        value
-        count
-      }
-      categories {
-        value
-        count
-      }
-      zodiacSigns {
-        value
-        count
-      }
-      celestialBodies {
-        value
-        count
-      }
-      elements {
-        value
-        count
-      }
-      toxic {
-        value
-        count
-      }
+      ...IngredientFacetCountsFields
       source {
         value
         count
@@ -164,16 +144,16 @@ const CovenFacetCountsDocument = graphql(`
   }
 `);
 
-/**
- * The counts for `held` while `enabled`, and whether they are on their way. `facets` is
- * undefined until the first answer, and after a failed ask: the caller keeps the counts the
- * page drew. Never throws, since a count that cannot be read is not worth an error page.
- */
 /** The keeper's variables with hidden entries counted in unless the Hidden switch narrows to them; anyone else's are left as they are. */
 function withListing<T extends { listing?: string }>(variables: T, admin: boolean): T {
   return admin ? { ...variables, listing: variables.listing ?? 'all' } : variables;
 }
 
+/**
+ * The counts for `held` while `enabled`, and whether they are on their way. `facets` is
+ * undefined until the first answer, and after a failed ask: the caller keeps the counts the
+ * page drew. Never throws, since a count that cannot be read is not worth an error page.
+ */
 export function useLiveFacets({
   held,
   enabled,

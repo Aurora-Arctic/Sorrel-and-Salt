@@ -18,12 +18,7 @@ import type {
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import type { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
-import type {
-  ComboboxQualifier,
-  ComboboxOption,
-  EntryAction,
-  Suggestions,
-} from '../Combobox/types';
+import type { ComboboxOption, EntryAction, Suggestions } from '../Combobox/types';
 import type { FieldProps, SelectOption } from '../Field/types';
 import type { Announce, LegendAction } from '../CategoryPicker/types';
 import type { ShortCitationFields } from '@/lib/types';
@@ -94,7 +89,7 @@ export interface ListEntry {
   value: string;
 }
 
-export interface FolkNameListEntry extends ListEntry {
+interface FolkNameListEntry extends ListEntry {
   id?: string;
 }
 
@@ -125,7 +120,7 @@ export interface DeityLink {
   description: string | null;
 }
 
-export interface DeityListEntry extends ListEntry {
+interface DeityListEntry extends ListEntry {
   link?: DeityLink;
 }
 
@@ -205,7 +200,7 @@ export interface IngredientFormValues {
   drafts: Record<DraftName, string>;
 }
 
-export type DraftName = IngredientListName | 'references' | 'variants';
+type DraftName = IngredientListName | 'references' | 'variants';
 
 /**
  * One form the ingredient comes in, as the form edits it (DESIGN.md §5, `ingredient_variants`):
@@ -235,9 +230,9 @@ export interface VariantFormValues {
   drafts: Record<VariantDraftName, string>;
 }
 
-export type VariantListName = (typeof VARIANT_LISTS)[number];
+type VariantListName = (typeof VARIANT_LISTS)[number];
 
-export type VariantDraftName = VariantListName | 'references';
+type VariantDraftName = VariantListName | 'references';
 
 export type VariantPath = `variants.${number}`;
 
@@ -259,14 +254,7 @@ export type IngredientFormInput = z.input<typeof LocalIngredientInput> & {
   variants: NonNullable<z.input<typeof LocalIngredientInput>['variants']>;
 };
 
-export type TextFieldName =
-  | 'name'
-  | 'canonicalName'
-  | 'description'
-  | 'safetyNotes'
-  | `${VariantPath}.${'form' | 'description' | 'safetyNotes'}`;
-
-export type ToggleFieldName = 'toxic' | `${VariantPath}.toxic`;
+type ToggleFieldName = 'toxic' | `${VariantPath}.toxic`;
 
 export interface ToggleFieldProps {
   name: ToggleFieldName;
@@ -277,7 +265,7 @@ export interface ToggleFieldProps {
 export type MultiSelectFieldName =
   'elements' | `${VariantPath}.elements` | `${ReferenceListName}.${number}.supports`;
 
-export type ReferenceListName = 'references' | `${VariantPath}.references`;
+type ReferenceListName = 'references' | `${VariantPath}.references`;
 
 export type IngredientListName = (typeof LIST_FIELDS)[number];
 
@@ -290,21 +278,6 @@ export interface MultiSelectFieldProps extends FieldProps {
   placeholder?: string;
   options: readonly SelectOption[];
   action?: ReactNode;
-}
-
-export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> extends FieldProps {
-  name: TextFieldName;
-  placeholder?: string;
-  suggestions: Suggestions<O>;
-  onActivate: () => void;
-  onPick?: (option: O | null) => void;
-  onEdit?: (text: string) => void;
-  qualifier?: ComboboxQualifier;
-  icon?: ReactNode;
-  /** Whether the typed row is offered: false for a box whose text must be a pick. */
-  offerTyped?: boolean;
-  typedIcon?: ReactNode;
-  after?: ReactNode;
 }
 
 export interface ListFieldProps {

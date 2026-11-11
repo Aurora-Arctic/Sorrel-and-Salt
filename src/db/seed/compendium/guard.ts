@@ -7,6 +7,7 @@ import { CELESTIAL_BODIES, ZODIAC_SIGNS } from '../astrology';
 import { identityOf } from '../coven-content';
 import { citationText } from '../../../lib/citation';
 import { ingredientSlug, slugify } from '../../../lib/slugify';
+import { fold } from '../../../lib/text';
 import { entryFilePath } from './parse-entry';
 import { UNAUDITED_LIST, type LoadedCompendium } from './load';
 import type { CitationFields } from '../../../lib/types';
@@ -52,8 +53,8 @@ export const CURATED: CuratedNames = {
 };
 
 /** An entry's word count bounds, and a form's ceiling: the curator's defaults (README, rule 5). */
-export const ENTRY_WORDS = { min: 100, max: 250 } as const;
-export const VARIANT_WORDS_MAX = 120;
+const ENTRY_WORDS = { min: 100, max: 250 } as const;
+const VARIANT_WORDS_MAX = 120;
 
 // A binomial, a trinomial with or without its rank (`subsp.`, `var.`, `f.`), a hybrid's `×`, a quoted cultivar, a genus or
 // higher taxon alone (`Usnea`), or a group within a genus named by rank (`Rubus subg. Rubus`).
@@ -111,9 +112,9 @@ function repeats(values: readonly string[]): string[] {
   const seen = new Set<string>();
   const repeated = new Set<string>();
   for (const value of values) {
-    const fold = value.trim().toLowerCase();
-    if (seen.has(fold)) repeated.add(value);
-    seen.add(fold);
+    const folded = fold(value);
+    if (seen.has(folded)) repeated.add(value);
+    seen.add(folded);
   }
   return [...repeated];
 }

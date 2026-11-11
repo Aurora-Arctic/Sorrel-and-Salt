@@ -13,11 +13,11 @@ coven's Members page renders it (`claude-docs/auth/coven-guard.md`, "The invitat
   declined, the badge in the `attention` palette's red so a declined row stands out among the expiry
   dates. A declined row stays listed past its expiry, since an answer is something to read and not a
   link that lapses, until a steward removes it.
-- **Revoke** (`revoke-control.tsx`) is a `ConfirmedAction`, as admin's invitation Revoke and the
+- **Revoke** (`invitation-action.tsx`) is a `ConfirmedAction`, as admin's invitation Revoke and the
   roll's Remove are: it names the address, sends `revokeInvitation` with the coven and the id, and
   refreshes the page. A refusal is said in a callout under the control, which keeps the focus
   ([`click-feedback.md`](click-feedback.md)). It is plain as a row's control is; the red is the confirm's own.
-- **Remove** (`remove-control.tsx`) on a declined row sends the same `revokeInvitation` mutation. Nothing
+- **Remove** (the same `invitation-action.tsx`, with `declined`) on a declined row sends the same `revokeInvitation` mutation. Nothing
   is withdrawn, because the invitee already said no; the stamp only clears the row, which stays in
   the table for the audit. The coven's revoke accepts a declined row, expired or not. The declined
   link keeps saying it was declined, not withdrawn.

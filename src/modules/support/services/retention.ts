@@ -1,4 +1,5 @@
 import 'server-only';
+import { MS_PER_DAY } from '../../../lib/duration';
 import {
   RESOLVED_CLOSES_AFTER_DAYS,
   findClosingNoticesDue,
@@ -10,7 +11,7 @@ import {
 } from '../../../db/repository';
 import { MailNotSent, deliver } from '../../../lib/mail-transport';
 import { supportClosingNoticeMessage } from '../../../lib/support-job-mail';
-import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
+import { SYSTEM_SESSION } from '../../../lib/system-actor';
 import { supportRequests } from '../schema/support-requests';
 import { supportRecipientFor } from './recipient';
 import { RETENTION_PAGE_SIZE } from '../jobs/support-retention-pages';
@@ -23,11 +24,13 @@ import type { RetentionBatch, RetentionStage, SupportRequestRow } from '../types
 // ids due for each stage a page at a time and hands each page to a batch, and each batch reads its rows' status and dates again
 // before it writes, so a batch run twice, two runs at once, or a batch that follows a reopen, changes nothing.
 
-export const NOTICE_AFTER_DAYS = 5;
-export const ANONYMISE_AFTER_MONTHS = 12;
+const NOTICE_AFTER_DAYS = 5;
+const ANONYMISE_AFTER_MONTHS = 12;
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-const SYSTEM = { userId: SYSTEM_ACTOR_ID };
+/** Requests resolved before this instant have waited out their days and are due to close. */
+function closesBefore(now: number): Date {
+  return new Date(now - RESOLVED_CLOSES_AFTER_DAYS * MS_PER_DAY);
+}
 
 function monthsBefore(when: Date, months: number): Date {
   const shifted = new Date(when);
@@ -64,18 +67,18 @@ async function closingNoticeFor(
  *
  * @throws {MailNotSent} the transport failed this attempt; nothing is stamped, so a retry sends it.
  */
-export async function sendClosingNotice(
+async function sendClosingNotice(
   requestId: string,
   origin: string,
   now: Date = new Date(),
 ): Promise<boolean> {
   const row = await findOneById(supportRequests, requestId);
   if (!row || row.status !== 'resolved' || !row.resolvedAt || row.closingNoticeSentAt) return false;
-  const closeAt = row.resolvedAt.getTime() + RESOLVED_CLOSES_AFTER_DAYS * DAY_MS;
+  const closeAt = row.resolvedAt.getTime() + RESOLVED_CLOSES_AFTER_DAYS * MS_PER_DAY;
   if (now.getTime() >= closeAt) return false;
   const notice = await closingNoticeFor(row, origin, closeAt, now);
   if (!notice || !(await deliver(notice))) return false;
-  await withAudit(SYSTEM, (write) => write.markClosingNoticeSent(requestId, new Date()));
+  await withAudit(SYSTEM_SESSION, (write) => write.markClosingNoticeSent(requestId, new Date()));
   return true;
 }
 
@@ -88,7 +91,7 @@ export function findRetentionDue(
   now: number,
   after: string | null,
 ): Promise<string[]> {
-  const lapsedBy = new Date(now - RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
+  const lapsedBy = closesBefore(now);
   switch (stage) {
     case 'notice':
       return findClosingNoticesDue(noticeDueBy(now), lapsedBy, after, RETENTION_PAGE_SIZE);
@@ -104,7 +107,7 @@ export function findRetentionDue(
 }
 
 function noticeDueBy(now: number): Date {
-  return new Date(now - NOTICE_AFTER_DAYS * DAY_MS);
+  return new Date(now - NOTICE_AFTER_DAYS * MS_PER_DAY);
 }
 
 /**
@@ -122,7 +125,7 @@ export async function runRetentionBatch(batch: RetentionBatch): Promise<number> 
     case 'notice': {
       let noticed = 0;
       let refused: MailNotSent | null = null;
-      const lapsedBy = new Date(batch.now - RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
+      const lapsedBy = closesBefore(batch.now);
       const due = await findClosingNoticesDueAmong(noticeDueBy(batch.now), lapsedBy, batch.ids);
       for (const requestId of due) {
         try {
@@ -136,15 +139,15 @@ export async function runRetentionBatch(batch: RetentionBatch): Promise<number> 
       return noticed;
     }
     case 'close': {
-      const cutoff = new Date(batch.now - RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
-      const closed = await withAudit(SYSTEM, (write) =>
+      const cutoff = closesBefore(batch.now);
+      const closed = await withAudit(SYSTEM_SESSION, (write) =>
         write.closeIdleResolvedSupportRequests(cutoff, batch.ids),
       );
       return closed.length;
     }
     case 'anonymise': {
       const cutoff = monthsBefore(now, ANONYMISE_AFTER_MONTHS);
-      const anonymised = await withAudit(SYSTEM, (write) =>
+      const anonymised = await withAudit(SYSTEM_SESSION, (write) =>
         write.anonymiseClosedSupportRequests(cutoff, batch.ids),
       );
       return anonymised.length;

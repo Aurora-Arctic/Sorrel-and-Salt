@@ -6,9 +6,8 @@ import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../suppor
 import { server } from '../../support/msw/server';
 import { warmImport } from '../../support/warm-import';
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/keepers/documents/disclaimer',
 }));
 

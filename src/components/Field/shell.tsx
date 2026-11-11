@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 import InfoTip from '../InfoTip';
 import type { FieldErrorProps, FieldShellProps } from './types';
+import { cx } from '@/lib/class-names';
 
 // The shell and its parts, apart from the react-hook-form fields: no hook and
 // no form library here, so a plain-state form, or a server component, renders
@@ -53,7 +54,7 @@ export function FieldShell({
   errorInto,
 }: FieldShellProps): ReactElement {
   return (
-    <div className={['field', className].filter(Boolean).join(' ')}>
+    <div className={cx('field', className)}>
       {/* Positioned by the primitive: the hint's tip places itself above its
           nearest positioned ancestor (claude-docs/components/info-tip.md). */}
       <div className="field__label-row">

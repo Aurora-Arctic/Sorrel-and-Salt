@@ -1,12 +1,14 @@
 import type { ReactElement, ReactNode } from 'react';
 import { RichTextEditorSkeleton } from '../RichTextEditor/skeleton';
-import { BackChevron } from '../IngredientEntry/back-chevron';
+import { BackChevron } from '../BackLink/chevron';
+import { HelpArticlePage } from './page';
 import PageHeader from '../PageHeader';
 import Skeleton from '../Skeleton';
 import SkeletonText from '../Skeleton/text';
 import '../FacetPanel/choice-chip.scss';
 import '../IconTip/index.scss';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // The form while it loads, drawn from the form's own classes and fixed words: a guide's fields, as an article opens on, so
 // every label, control, hint and the Save row stand where the real ones will. Words are drawn as bars at their own size.
@@ -21,7 +23,7 @@ const Label = ({ children, required }: { children: string; required?: boolean })
 );
 
 const Hint = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <p className={['field__hint', className].filter(Boolean).join(' ')}>
+  <p className={cx('field__hint', className)}>
     <SkeletonText>{children}</SkeletonText>
   </p>
 );
@@ -150,13 +152,15 @@ export const HelpArticleFormSkeleton = ({ heading }: { heading?: string }): Reac
 
 /** The whole page while it is on its way: the back link, the heading, and the form. An edited row's title is not known yet. */
 export const HelpArticlePageSkeleton = ({ editing }: { editing: boolean }): ReactElement => (
-  <div className="help-article-page">
-    <div className="back-bar help-article-form__bar">
+  <HelpArticlePage
+    as="div"
+    back={
       <span className="back-link" aria-hidden="true">
         <BackChevron />
         Back to Help
       </span>
-    </div>
+    }
+  >
     {editing ? (
       <>
         <div className="help-article-form__pending-head">
@@ -167,5 +171,5 @@ export const HelpArticlePageSkeleton = ({ editing }: { editing: boolean }): Reac
     ) : (
       <HelpArticleFormSkeleton heading="Add Article" />
     )}
-  </div>
+  </HelpArticlePage>
 );

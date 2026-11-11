@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
-import HelpSearchForm from '../HelpSearchForm';
-import { BackChevron } from '../IngredientEntry/back-chevron';
-import PageHeader from '../PageHeader';
+import { HelpPageHead } from '../HelpChrome';
+import { BackChevron } from '../BackLink/chevron';
 import { SkeletonWords } from '../Skeleton/text';
 import { HelpBackLinkSkeleton } from './back-link';
 import './index.scss';
@@ -26,23 +25,19 @@ const Step = ({ next = false }: { next?: boolean }) => (
   </span>
 );
 
-// An article with its text still to come: the heading and the search box (left to the help header when framed), the way back (to the
+// An article with its text still to come: the heading and the search box, left to the public help header when it holds them, the way back (to the
 // help index on a guide, to a guide still to come on a sub page), the title, paragraphs under a section heading, the In This Guide list a guide draws (a sub
 // page has none beneath it), and the guide's steps at the foot. Words still to come are bars of about their length.
 export const HelpArticleSkeleton = ({
   heading = 'Help',
   parent = false,
-  framed = false,
 }: {
   heading?: string;
   parent?: boolean;
-  /** A public article under the help header, drawn without the heading and box. */
-  framed?: boolean;
 }): ReactElement => (
   <article className="help-page help-article">
     <div className="help-article__head">
-      {!framed && <PageHeader title={heading} />}
-      {!framed && <HelpSearchForm />}
+      <HelpPageHead heading={heading} />
       <HelpBackLinkSkeleton>
         {parent ? <SkeletonWords count={3} /> : `Back to ${heading}`}
       </HelpBackLinkSkeleton>

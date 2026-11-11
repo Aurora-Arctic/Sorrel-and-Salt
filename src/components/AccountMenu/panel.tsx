@@ -8,13 +8,14 @@ import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
 import IconTip from '../IconTip';
 import SupportLink from '../SupportLink';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
+import { supportHref } from '../SupportRequests/href';
 import SignOutButton from './sign-out-button';
-import { countText, supportTip } from './counts';
+import { accountCounts, countText, supportTip } from './counts';
 import type { AccountMenuProps } from './types';
 
 // The rows of the account menu's panel (claude-docs/components/account-menu.md).
 
-const ADMIN_ASSIGNED_PATH = '/keepers/support?view=mine';
+const ADMIN_ASSIGNED_PATH = supportHref({ view: 'mine' });
 
 function MenuCount({
   count,
@@ -56,10 +57,12 @@ export default function AccountMenuPanel({
   close,
 }: AccountMenuPanelProps): ReactElement {
   const pathname = usePathname();
-  const pending = verified && pendingInvitations > 0;
-  const staffCount = verified ? assignedSupport : 0;
-  const senderCount = verified ? waitingSupport : 0;
-  const invitations = `${pendingInvitations} Coven ${pendingInvitations === 1 ? 'Invitation' : 'Invitations'}`;
+  const { pending, staffCount, senderCount, invitations } = accountCounts({
+    verified,
+    pendingInvitations,
+    assignedSupport,
+    waitingSupport,
+  });
   return (
     <>
       {verified && (
@@ -118,7 +121,7 @@ export default function AccountMenuPanel({
                 <span className="account-menu__count">
                   <IconTip tip={tip} placement="below">
                     <PendingLink
-                      href={ADMIN_ASSIGNED_PATH as typeof href}
+                      href={ADMIN_ASSIGNED_PATH}
                       className="account-menu__count-mark"
                       onClick={close}
                     >

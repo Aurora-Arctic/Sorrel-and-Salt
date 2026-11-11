@@ -2,21 +2,16 @@ import type { Route } from 'next';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { UpdatedStamp } from '../DataTable/types';
 import type { ModalHeading } from '../Modal/types';
-import type { GroupColors, PagePosition, PagerHrefs } from '../../lib/types';
+import type { GroupColors, ListKind, PagePosition, PagerHrefs } from '../../lib/types';
 import type { GroupedValueKind } from '../GroupedValueForm/types';
 
-export interface GroupedValueListGroup {
+interface GroupedValueListGroup {
   label: string;
   plural: string;
   param: string;
 }
 
-export interface GroupedValueListKind {
-  path: Route;
-  title: string;
-  label: string;
-  noun: string;
-  plural: string;
+export interface GroupedValueListKind extends ListKind<Route> {
   group?: GroupedValueListGroup;
 }
 

@@ -3,7 +3,7 @@ import { check, foreignKey, index, pgTable, text, uniqueIndex, uuid } from 'driz
 import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from './ingredients';
 import { ingredientVariants } from './ingredient-variants';
-import { idColumn } from '../../../db/schema-parts';
+import { idColumn, notBlankIfSet } from '../../../db/schema-parts';
 
 // What an ingredient may be replaced with, one row per entry: a link to another ingredient, or a name typed for one not entered.
 // A child table, as a link cannot live in `text[]`. Full `auditColumns`: a substitute is content, not a pairing (DESIGN.md §5, `ingredient_substitutes`).
@@ -81,7 +81,7 @@ export const ingredientSubstitutes = pgTable(
 
     check('ingredient_substitutes_link_or_name', sql`num_nonnulls(substitute_id, name) = 1`),
     // A blank name would satisfy `num_nonnulls` and name nothing.
-    check('ingredient_substitutes_name_not_blank', sql`name is null or btrim(name) <> ''`),
+    check('ingredient_substitutes_name_not_blank', notBlankIfSet('name')),
     // Not the same form of the same ingredient: a sibling form may
     // stand in, as leaves for stems. `IS NOT DISTINCT FROM` so the parent's
     // own row, both null, still cannot name its own ingredient whole.

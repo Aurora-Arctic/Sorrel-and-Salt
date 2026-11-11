@@ -1,10 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import SupportPanel from '@/components/SupportPanel';
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
-}));
 
 describe('SupportPanel', () => {
   it('offers a signed-out visitor Sign In, returning here, and the form for the five topics open to them', () => {
@@ -21,6 +17,18 @@ describe('SupportPanel', () => {
       'privacy',
       'question',
     ]);
+  });
+
+  it('gives a signed-out visitor the error detail from the error screen, read-only', () => {
+    render(
+      <SupportPanel
+        state={{ kind: 'signed-out', errorReference: 'abc123', errorDetail: 'TypeError: Testwort' }}
+        path="/broken"
+      />,
+    );
+    expect(screen.getByRole('group', { name: 'Error Details' })).toHaveTextContent(
+      'TypeError: Testwort',
+    );
   });
 
   it('tells a timed-out sender when it ends, in place of the form', () => {

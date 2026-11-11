@@ -1,38 +1,12 @@
 @use '../../scss/variables' as *;
 
-// The day button is a `.input` box with the calendar mark at its end; the calendar's look is `calendar.scss`.
-// As wide as the widest date: the invisible sizer and the text share one grid cell, so the box never changes width.
+// The day button is a `.input` box with the calendar mark at its end; the calendar's look is `calendar.scss`. It fills its
+// column like the other Field controls.
 .input.date-field__button {
-  display: inline-grid;
-  grid-template-columns: auto auto;
-  column-gap: space(2);
+  display: flex;
   align-items: center;
-  inline-size: auto;
-  max-inline-size: 100%;
-  align-content: center;
+  justify-content: space-between;
+  gap: space(2);
   text-align: start;
   cursor: pointer;
-
-  .calendar-icon {
-    grid-area: 1 / 2;
-  }
-}
-
-.date-field__sizer,
-.date-field__text {
-  grid-area: 1 / 1;
-}
-
-.date-field__sizer {
-  visibility: hidden;
-  white-space: pre;
-}
-
-// Each stack lays its candidates in one cell, so it is as wide as the widest.
-.date-field__stack {
-  display: inline-grid;
-
-  > span {
-    grid-area: 1 / 1;
-  }
 }

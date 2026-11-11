@@ -3,6 +3,7 @@ import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './par
 import { providerList } from './parts/providers';
 import type { ProviderId } from '../lib/types';
 import type { PasswordLockedProps } from './types';
+import { plural } from '@/lib/text';
 
 const SUBJECT = 'Password Sign-In Paused';
 
@@ -11,7 +12,7 @@ const PREVIEW =
 
 export function lockLength(minutes: number): string {
   if (minutes % 60 === 0) return minutes === 60 ? '1 hour' : `${minutes / 60} hours`;
-  return minutes === 1 ? '1 minute' : `${minutes} minutes`;
+  return `${minutes} ${plural(minutes, 'minute', 'minutes')}`;
 }
 
 /** The account's other ways in as a sentence, or `''` when it has none. */
@@ -21,7 +22,7 @@ function otherWays(providers: readonly ProviderId[], hasPasskey: boolean): strin
 }
 
 // Sent when a lock starts, so the holder learns of guessing they did not do; it offers a way in the lock does not hold back.
-export function PasswordLocked({
+function PasswordLocked({
   url,
   minutes,
   providers = [],

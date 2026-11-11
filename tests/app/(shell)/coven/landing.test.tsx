@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { requireSession } from '../../../support/request-session';
 
 // The `/coven` landing: a member goes into their first coven, anyone else is told what they can do next, and someone with invitations waiting is told so, with a link to the account page's Invitations section.
 // The viewer is mocked: who is a member, who may create and how many invitations wait are tests/lib/viewer's, and which are theirs the identity service's.
@@ -8,12 +9,11 @@ const REDIRECTED = new Error('NEXT_REDIRECT');
 const redirect = vi.fn((_to: string): never => {
   throw REDIRECTED;
 });
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
   redirect,
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
-const requireSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireSession }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 const viewerOf = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerOf }));
 

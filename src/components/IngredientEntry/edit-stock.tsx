@@ -1,10 +1,9 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import Modal from '../Modal';
 import { StockDialogModal } from '../StockDialog';
 import type { StockData } from '../StockDialog/types';
-import CovenChoice from './lazy-coven-choice';
+import CovenPickModal from './coven-pick-modal';
 
 // Edit Stock from a compendium entry's three dots: the coven card's own dialog, opened at once for
 // one coven that may update stock and after asking which for two or more
@@ -54,24 +53,16 @@ export default function EditStock({
     );
   }
   return (
-    <Modal title="Edit Stock" onClose={onClose} returnTo={returnTo}>
-      {(close) => (
-        <div className="form">
-          <CovenChoice
-            options={places.map(({ workspaceId, name }) => ({ id: workspaceId, name }))}
-            chosen={chosen}
-            onChoose={setChosen}
-          />
-          <div className="modal__actions">
-            <button type="button" className="btn btn--solid" onClick={() => setAsked(true)}>
-              Continue
-            </button>
-            <button type="button" className="btn btn--quiet" onClick={close}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-    </Modal>
+    <CovenPickModal
+      title="Edit Stock"
+      places={places}
+      defaultWorkspaceId={defaultWorkspaceId}
+      onContinue={(workspaceId) => {
+        setChosen(workspaceId);
+        setAsked(true);
+      }}
+      onClose={onClose}
+      returnTo={returnTo}
+    />
   );
 }

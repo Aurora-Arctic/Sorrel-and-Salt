@@ -1,7 +1,7 @@
-import { autoUpdate, flip, offset, shift, useFloating } from '@floating-ui/react-dom';
+import { flip, offset, shift, useFloating } from '@floating-ui/react-dom';
 import type { Middleware } from '@floating-ui/react-dom';
-import { useEffect } from 'react';
 import type { CSSProperties } from 'react';
+import { useAutoPosition } from '../../lib/use-auto-position';
 
 // Where the callout and badge go, on Floating UI as InfoTip's bubble is (InfoTip/use-tip.ts). The
 // callout is fixed, so no ancestor cuts it; the badge is absolute, so it scrolls and clips with its
@@ -87,18 +87,6 @@ interface Placed {
   placed: boolean;
 }
 
-function useFollow(
-  active: boolean,
-  reference: Element | null,
-  floating: HTMLElement | null,
-  update: () => void,
-): void {
-  useEffect(() => {
-    if (!active || !reference || !floating) return;
-    return autoUpdate(reference, floating, update);
-  }, [active, reference, floating, update]);
-}
-
 /**
  * The callout's place: bottom-start, else bottom-end, else pinned inside its box. Never above: the
  * arrow points up, and a callout over the control would cover what it is about.
@@ -125,7 +113,7 @@ export function useCalloutPlace(anchor: HTMLElement | null, drawn: boolean): Pla
       pointAt,
     ],
   });
-  useFollow(drawn, elements.reference as Element | null, elements.floating, update);
+  useAutoPosition(drawn, elements.reference as Element | null, elements.floating, update);
 
   const arrow = (middlewareData.pointAt as { x?: number } | undefined)?.x;
   return {
@@ -160,7 +148,7 @@ export function useBadgePlace(anchor: HTMLElement | null, drawn: boolean, beside
       }),
     ],
   });
-  useFollow(drawn, elements.reference as Element | null, elements.floating, update);
+  useAutoPosition(drawn, elements.reference as Element | null, elements.floating, update);
 
   return {
     setFloating: refs.setFloating,

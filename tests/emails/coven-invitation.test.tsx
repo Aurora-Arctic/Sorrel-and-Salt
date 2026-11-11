@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { covenInvitationMessage } from '@/emails/coven-invitation';
+import { ORIGIN } from '../support/constants';
 
-const URL = 'http://localhost:8000/invite/fixture-token';
+const URL = `${ORIGIN}/invite/fixture-token`;
 const INPUT = {
   to: 'someone@coven-invitation.test',
   url: URL,

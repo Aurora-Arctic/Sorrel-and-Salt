@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { supportReplyNoticeMessage } from '@/emails/support-reply-notice';
+import { ORIGIN } from '../support/constants';
 
-const SUPPORT_PAGE = 'http://localhost:8000/account/support';
+const SUPPORT_PAGE = `${ORIGIN}/account/support`;
 
 describe('supportReplyNoticeMessage', () => {
   it('goes to the sender and links to the support page alone', async () => {
@@ -15,9 +16,7 @@ describe('supportReplyNoticeMessage', () => {
     expect(message.text).toContain(SUPPORT_PAGE);
     const hrefs = [...message.html.matchAll(/href="([^"]*)"/g)].map((match) => match[1]);
     expect(hrefs).toContain(SUPPORT_PAGE);
-    expect(hrefs.every((href) => href === SUPPORT_PAGE || href === 'http://localhost:8000')).toBe(
-      true,
-    );
+    expect(hrefs.every((href) => href === SUPPORT_PAGE || href === ORIGIN)).toBe(true);
   });
 
   it('names the request in the subject line, the heading and the plain text', async () => {

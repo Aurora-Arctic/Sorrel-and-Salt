@@ -30,8 +30,10 @@ const { dark, light } = EMAIL_THEMES;
 /** The one media query the light theme sits under; the workshop preview rewrites it to show either theme. */
 export const LIGHT_MEDIA = '@media (prefers-color-scheme: light)';
 
-const BODY_FONT = 'Lexend, Arial, Helvetica, sans-serif';
-const HEADING_FONT = "'Cormorant Unicase', Georgia, 'Times New Roman', serif";
+// The lists after the brand font must match $font-body and $font-heading in src/scss/_variables.scss.
+export const BODY_FONT = "Lexend, Verdana, Tahoma, 'Segoe UI', sans-serif";
+export const HEADING_FONT =
+  "'Cormorant Unicase', Garamond, 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif";
 
 // Our own copy first; Google's only if ours fails to load.
 const FONT_FACES = [
@@ -395,7 +397,7 @@ export function LinkOnlyNote() {
 }
 
 /** Renders a template once per part, so the text part is written for text, not stripped from the HTML. */
-export async function renderParts(
+async function renderParts(
   email: (part: Part) => ReactElement,
 ): Promise<{ html: string; text: string }> {
   return {

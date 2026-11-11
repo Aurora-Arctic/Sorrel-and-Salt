@@ -3,11 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { GraphQLClientError } from '@/lib/graphql-client-error';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
+import { router } from '../../support/next-navigation';
 
 // The modal closes when the answer comes back, since the member's row survives the re-read and does not replace it.
 
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
 const graphqlRequest = vi.fn();
 vi.mock('@/lib/graphql-client', () => ({ graphqlRequest }));
 
@@ -40,7 +39,7 @@ describe('RoleControl', () => {
     const name = 'Change Role for Testwort';
     const said = await expectRefusalUnder(screen.getByRole('button', { name }), name);
     expect(said).toBe('A coven needs at least one owner.');
-    expect(refresh).not.toHaveBeenCalled();
+    expect(router.refresh).not.toHaveBeenCalled();
   });
 
   it('sends the chosen role, closes the modal when the answer comes back, and says so', async () => {
@@ -57,7 +56,7 @@ describe('RoleControl', () => {
       userId: 'u',
       role: 'owner',
     });
-    expect(refresh).toHaveBeenCalled();
+    expect(router.refresh).toHaveBeenCalled();
     expect(announced()).toContain('Testwort');
   });
 

@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { CrossIcon } from '../IconTip/icons';
+import { setRef } from '../../lib/set-ref';
 import { useFade } from './fade';
 import { useBadgePlace, useCalloutPlace } from './position';
 import { useAnnounce } from './status-region';
 import type { ClickFeedback, ClickFeedbackOptions } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // What a click outside a form says when it fails: the service's sentence in an alert callout under the
 // control, a badge that brings it back, and the control described by the failure until a later try
@@ -57,7 +59,7 @@ function retoken(node: Element, attribute: string, token: string, present: boole
  * `feedback` is rendered directly after it: the badge is then the next tab
  * stop, and the callout the one after.
  */
-export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback {
+export function useClickFeedback({ name, ref }: ClickFeedbackOptions): ClickFeedback {
   const announce = useAnnounce();
   const id = useId();
   const calloutId = `${id}callout`;
@@ -85,10 +87,14 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
   // control's first render is over (a press on mount) would read the state as
   // null, and take the corner and no opener.
   const anchorNode = useRef<HTMLElement | null>(null);
-  const anchorRef = useCallback((node: HTMLElement | null) => {
-    anchorNode.current = node;
-    setAnchor(node);
-  }, []);
+  const anchorRef = useCallback(
+    (node: HTMLElement | null) => {
+      anchorNode.current = node;
+      setRef(ref, node);
+      setAnchor(node);
+    },
+    [ref],
+  );
 
   const ours = useCallback(
     // Asked of the target rather than `instanceof Node`, false across an iframe.
@@ -180,14 +186,12 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
             badgePlace.setFloating(node);
           }}
           type="button"
-          className={[
+          className={cx(
             'click-feedback__badge',
             beside && 'click-feedback__badge--beside',
             badgePlace.placed && 'is-placed',
             badgeFade.closing && 'is-closing',
-          ]
-            .filter(Boolean)
-            .join(' ')}
+          )}
           style={badgePlace.style}
           aria-label={`Show the error for ${name}`}
           aria-expanded={open}
@@ -214,13 +218,11 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
           }}
           id={calloutFade.closing ? undefined : calloutId}
           role={calloutFade.closing ? undefined : 'alert'}
-          className={[
+          className={cx(
             'click-feedback__callout',
             calloutPlace.placed && 'is-placed',
             calloutFade.closing && 'is-closing',
-          ]
-            .filter(Boolean)
-            .join(' ')}
+          )}
           style={calloutPlace.style}
           inert={calloutFade.closing || undefined}
           aria-hidden={calloutFade.closing || undefined}

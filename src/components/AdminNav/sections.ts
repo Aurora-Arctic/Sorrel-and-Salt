@@ -144,7 +144,7 @@ export const CURATOR_SECTIONS: readonly AdminSection[] = [
   GUIDES,
 ];
 
-export const KEEPERS_SECTIONS: readonly AdminSection[] = [
+const KEEPERS_SECTIONS: readonly AdminSection[] = [
   {
     name: 'People & Support',
     pages: [

@@ -10,20 +10,18 @@ import { accessPauseStep } from '@/modules/identity/jobs/access-pause-mail-steps
 import { A, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { ORIGIN } from '../../../support/constants';
+import { send } from '../../../support/mail';
 
 type Mail = { to: string; subject: string; text: string; html: string };
-const { sent, startJob, send } = vi.hoisted(() => {
+const { sent, startJob } = vi.hoisted(() => {
   const sent = [] as { to: string; subject: string; text: string; html: string }[];
   return {
     sent,
     startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
-    send: vi.fn(async (message: (typeof sent)[number]) => {
-      sent.push(message);
-    }),
   };
 });
 vi.mock('@/lib/jobs', () => ({ startJob }));
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../../../support/mail'));
 vi.mock('@/lib/mail-transport', () => ({
   deliver: async (message: Mail) => {
     sent.push(message);
@@ -60,7 +58,10 @@ async function sendPauseRuns() {
 
 beforeEach(async () => {
   startJob.mockClear();
-  send.mockClear();
+  send.mockReset();
+  send.mockImplementation(async (message: Mail) => {
+    sent.push(message);
+  });
   sent.length = 0;
   await sql`truncate user_access_pauses`;
   // A primary keeper who is none of the fixture users, so pausing A is refused by nothing but the role check.

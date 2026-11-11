@@ -12,10 +12,9 @@
 // The page around it is `.page-frame--narrow`. Compounded with `.panel` because in the app the primitives compile as
 // `body .panel`, which outranks a lone class, while the workshop scopes them with `:where()`.
 .sign-in-panel.panel {
-  box-sizing: border-box;
   width: 100%;
 
-  padding: space(5) space(6) space(6);
+  padding: $sign-in-card-padding;
 }
 
 // The code step alone: with the buttons gone nothing sets the column's width, so it takes the
@@ -119,7 +118,6 @@
   // would otherwise widen the column past the card.
   > .notice,
   > p {
-    box-sizing: border-box;
     width: 0;
     min-width: 100%;
   }
@@ -133,31 +131,21 @@
   }
 }
 
-.sign-in-panel__divider {
-  display: flex;
-  gap: space(3);
-  align-items: center;
-  margin-top: space(4);
-  color: $text-muted;
-  text-align: center;
-
-  &::before,
-  &::after {
-    flex: 1;
-    border-top: 1px solid $text-muted;
-    content: '';
-  }
-}
-
 // Compounded so load order does not matter.
 .sign-in-panel__back.back-link {
+  @include button-reset;
+  // What the reset changes and the button had before it: `.back-link`'s chevron pull and muted ink, and a button's own weight and line height.
+  margin-inline-start: -$back-chevron-pull;
+  color: $text-muted;
+  font-weight: normal;
+  line-height: normal;
   align-self: flex-start;
-  padding: 0;
-  border: 0;
-  background: none;
-  font-family: inherit;
   font-size: type-size('caption');
-  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+  }
 }
 
 .sign-in-panel__password .form__actions > .btn {

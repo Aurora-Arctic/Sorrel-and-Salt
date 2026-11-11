@@ -1,9 +1,16 @@
 import type { AutoFill, HTMLInputTypeAttribute, ReactNode, RefObject } from 'react';
 import type { FieldMask } from '../../lib/formats';
 import type { FieldPath, FieldValues } from 'react-hook-form';
+import type { ComboboxOption, ComboboxQualifier, Suggestions } from '../Combobox/types';
+
+/** What the browser may capitalise as the person types. */
+export type AutoCapitalize = 'none' | 'sentences' | 'words' | 'characters';
+
+/** The label on a phone keyboard's Enter key. */
+export type EnterKeyHint = 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
 
 /** A specific autofill token, or `off`. Never `on` or empty, which would let a password manager fill any field. */
-export type AutofillToken = Exclude<AutoFill, 'on' | ''>;
+type AutofillToken = Exclude<AutoFill, 'on' | ''>;
 
 export interface FieldProps {
   label: string;
@@ -93,9 +100,9 @@ export interface TextControlProps extends FieldProps {
   /** On for prose (the default for multiline), off for an identifier (the default for a single-line email, url or tel). */
   spellCheck?: boolean;
   /** `none` by default for email and url. */
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  autoCapitalize?: AutoCapitalize;
   /** The label on a phone keyboard's Enter key: `next` between fields, `done` or `send` on the last. */
-  enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
+  enterKeyHint?: EnterKeyHint;
   /** Takes focus when the field appears, for a step that replaces the form the person was typing in. */
   autoFocus?: boolean;
   describedBy?: string;
@@ -124,6 +131,10 @@ export interface PlainTextFieldProps extends TextControlProps {
    */
   check?: (value: string) => string | undefined;
   onBlur?: () => void;
+  /** Marks the box as the one the form is waiting on (`aria-current`), as the range picker’s End is while Start is set. */
+  current?: boolean;
+  /** Takes the Enter key: the key is claimed, so it never submits the form round the box. */
+  onEnter?: () => void;
 }
 
 export interface SelectOption {
@@ -144,6 +155,38 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
   deps?: FieldPath<V>[];
   errorInto?: HTMLElement | null;
   onChange?: (value: string) => void;
+}
+
+/** A closed set in a form that holds its values in state: the caller holds `value` and the `error` text. */
+export interface PlainSelectFieldProps {
+  /** The ids' base, where the caller must name the label outside the field; one is made when it is left out. */
+  id?: string;
+  label: string;
+  hint?: string;
+  required?: boolean;
+  /** A short action shown until a choice is made, and not itself a choice: "Choose a group". */
+  placeholder?: string;
+  options: readonly SelectOption[];
+  disabled?: boolean;
+  busy?: boolean;
+  error?: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+/** The bare slide toggle: the label is its children, and `tip` and `footer` sit beside and beneath it. */
+export interface SwitchControlProps {
+  id: string;
+  name: string;
+  value: string;
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  busy?: boolean;
+  describedBy?: string;
+  tip?: ReactNode;
+  footer?: ReactNode;
 }
 
 /**
@@ -324,4 +367,21 @@ export interface CharacterCountProps {
   id: string;
   length: number;
   limit: number;
+}
+
+export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> extends FieldProps {
+  name: string;
+  placeholder?: string;
+  suggestions: Suggestions<O>;
+  onActivate?: () => void;
+  onPick?: (option: O | null) => void;
+  onEdit?: (text: string) => void;
+  qualifier?: ComboboxQualifier;
+  icon?: ReactNode;
+  /** Whether the typed row is offered: false for a box whose text must be a pick. */
+  offerTyped?: boolean;
+  typedIcon?: ReactNode;
+  after?: ReactNode;
+  autoCapitalize?: AutoCapitalize;
+  enterKeyHint?: EnterKeyHint;
 }

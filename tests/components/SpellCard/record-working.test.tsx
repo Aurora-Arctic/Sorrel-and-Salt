@@ -1,7 +1,5 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { makeQueryClient } from '@/lib/graphql-client';
 import {
   beginPress,
   focusOn,
@@ -11,6 +9,7 @@ import {
   waitForLoads,
   watchLoads,
 } from '../../support/preload';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // The date field's calendar is kept out of the compendium's and a coven's first-load scripts, and starts
 // loading before Record a Working opens: once the page is idle, and when a person points at, focuses or
@@ -21,16 +20,14 @@ const DATE_PICKER = ['react-day-picker', 'react-day-picker/locale'];
 async function renderRecordWorking() {
   const loaded = watchLoads(DATE_PICKER);
   const { default: CardRecordWorking } = await import('@/components/SpellCard/record-working');
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <CardRecordWorking
-        workspaceId="00000000-0000-4000-8000-000000000001"
-        spellId="00000000-0000-4000-8000-000000000002"
-        spellName="Fixture Working"
-        spellVisibility="workspace"
-        recorder={{ userId: 'u1', name: 'Testa Owner' }}
-      />
-    </QueryClientProvider>,
+  renderWithQuery(
+    <CardRecordWorking
+      workspaceId="00000000-0000-4000-8000-000000000001"
+      spellId="00000000-0000-4000-8000-000000000002"
+      spellName="Fixture Working"
+      spellVisibility="workspace"
+      recorder={{ userId: 'u1', name: 'Testa Owner' }}
+    />,
   );
   // Effects that start a load on mount have run, so an empty count below means nothing started it.
   await act(async () => {});

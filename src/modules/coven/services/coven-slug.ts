@@ -2,6 +2,8 @@ import 'server-only';
 import { z } from 'zod';
 import { isReservedCovenSlug } from '../../../lib/coven-path';
 import { slugify } from '../../../lib/slugify';
+import { WORKSPACE_SLUGS_SLUG_UNIQUE } from '../schema/workspace-slugs';
+import { WORKSPACES_SLUG_UNIQUE } from '../schema/workspaces';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { limitedText } from '../../../lib/validation';
 import { COVEN_NAME_LIMIT } from '../validation/workspace-name';
@@ -22,7 +24,7 @@ const SLUG_ATTEMPTS = 5;
  * live coven's current address count as taken; an old address does not, and the coven's own (`exceptWorkspaceId`) does not. Free as
  * of this read; the unique index decides a race.
  */
-export async function freeCovenSlug(name: string, exceptWorkspaceId?: string): Promise<string> {
+async function freeCovenSlug(name: string, exceptWorkspaceId?: string): Promise<string> {
   const base = slugify(name) || FALLBACK_SLUG;
   for (let n = 1; ; n++) {
     const candidate = n === 1 ? base : `${base}-${n}`;
@@ -46,7 +48,7 @@ export async function withFreeCovenSlug<T>(
       return await write(slug);
     } catch (error) {
       const index = violatedUniqueIndex(error);
-      const raced = index === 'workspaces_slug_unique' || index === 'workspace_slugs_slug_unique';
+      const raced = index === WORKSPACES_SLUG_UNIQUE || index === WORKSPACE_SLUGS_SLUG_UNIQUE;
       if (!raced || attempt >= SLUG_ATTEMPTS) throw error;
     }
   }

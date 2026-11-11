@@ -3,12 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useEffect } from 'react';
 import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
+import { router } from '../../support/next-navigation';
 
 const pathname = vi.fn<() => string>();
-const push = vi.fn();
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => pathname(),
-  useRouter: () => ({ push }),
 }));
 
 const { default: WorkspaceSwitcher } = await import('@/components/WorkspaceSwitcher');
@@ -35,7 +35,7 @@ const WORKSPACES = [
 const box = () => screen.getByRole('combobox', { name: 'Coven' });
 
 beforeEach(() => {
-  push.mockClear();
+  router.push.mockClear();
   pathname.mockReturnValue('/coven/fixture-coven/ingredients');
 });
 
@@ -86,7 +86,7 @@ describe('WorkspaceSwitcher', () => {
     fireEvent.click(box());
     fireEvent.click(screen.getByRole('option', { name: /fixture-coven-2/ }));
 
-    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven-2/ingredients');
+    expect(router.push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven-2/ingredients');
   });
 
   it('marks a coven whose access is paused, with when the pause ends', () => {
@@ -116,7 +116,7 @@ describe('WorkspaceSwitcher', () => {
     fireEvent.click(box());
     fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
 
-    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
+    expect(router.push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
   });
 
   it('goes to the coven index when the viewer cannot read members there', () => {
@@ -130,7 +130,7 @@ describe('WorkspaceSwitcher', () => {
     fireEvent.click(box());
     fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
 
-    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle');
+    expect(router.push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle');
   });
 
   it('goes to the members page, not a 404, from invitations when the viewer cannot invite there', () => {
@@ -143,7 +143,7 @@ describe('WorkspaceSwitcher', () => {
 
     // Why the members page: they may read it there, only the invite right is missing.
     expect(workspaces[1]!.canReadMembers).toBe(true);
-    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/members');
+    expect(router.push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/members');
   });
 
   describe('from a page that says which covens it opens in', () => {
@@ -167,7 +167,9 @@ describe('WorkspaceSwitcher', () => {
 
       switchTo('Testwort Circle');
 
-      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients/some-id');
+      expect(router.push).toHaveBeenCalledExactlyOnceWith(
+        '/coven/testwort-circle/ingredients/some-id',
+      );
     });
 
     it('ignores a registration made for another address', () => {
@@ -176,7 +178,7 @@ describe('WorkspaceSwitcher', () => {
 
       switchTo('Testwort Circle');
 
-      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
+      expect(router.push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
     });
   });
 
@@ -189,7 +191,7 @@ describe('WorkspaceSwitcher', () => {
     fireEvent.click(box());
     fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
 
-    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle');
+    expect(router.push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle');
   });
 
   it('goes from another coven straight to a paused coven’s paused page, naming that page while it loads', async () => {
@@ -203,7 +205,7 @@ describe('WorkspaceSwitcher', () => {
     }
     const workspaces = [WORKSPACES[0]!, { ...WORKSPACES[1]!, paused: { until: null } }];
     render(
-      <Navigating push={push}>
+      <Navigating push={router.push}>
         <WorkspaceSwitcher workspaces={workspaces} />
         <Probe />
       </Navigating>,
@@ -216,8 +218,8 @@ describe('WorkspaceSwitcher', () => {
       fireEvent.click(screen.getByRole('option', { name: /Testwort Circle/ }));
     });
 
-    expect(push).toHaveBeenCalledTimes(1);
-    expect(push.mock.calls[0]?.[0]).toBe('/coven-paused/testwort-circle');
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(router.push.mock.calls[0]?.[0]).toBe('/coven-paused/testwort-circle');
     expect(target).toBe('/coven-paused/testwort-circle');
   });
 
@@ -251,7 +253,7 @@ describe('WorkspaceSwitcher', () => {
 
       fireEvent.click(box());
       fireEvent.click(screen.getByRole('option', { name: 'Create Coven' }));
-      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/new');
+      expect(router.push).toHaveBeenCalledExactlyOnceWith('/coven/new');
     });
 
     it('shows no workspace as chosen on the create page itself', () => {
@@ -267,7 +269,7 @@ describe('WorkspaceSwitcher', () => {
     let arrive = () => {};
     afterEach(async () => {
       await act(async () => arrive());
-      push.mockReset();
+      router.push.mockReset();
     });
 
     it('marks the control busy and shows the picked coven as its value until the new coven renders', async () => {
@@ -275,7 +277,7 @@ describe('WorkspaceSwitcher', () => {
         arrive = resolve;
       });
       render(
-        <Navigating push={push} arrives={arrives}>
+        <Navigating push={router.push} arrives={arrives}>
           <WorkspaceSwitcher workspaces={WORKSPACES} />
         </Navigating>,
       );
@@ -288,8 +290,8 @@ describe('WorkspaceSwitcher', () => {
         fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
       });
 
-      expect(push).toHaveBeenCalledTimes(1);
-      expect(push.mock.calls[0]?.[0]).toBe('/coven/testwort-circle/ingredients');
+      expect(router.push).toHaveBeenCalledTimes(1);
+      expect(router.push.mock.calls[0]?.[0]).toBe('/coven/testwort-circle/ingredients');
       expect(box()).toHaveAttribute('aria-busy', 'true');
       expect(box()).toHaveTextContent('Testwort Circle');
 
@@ -305,7 +307,7 @@ describe('WorkspaceSwitcher', () => {
         arrive = resolve;
       });
       const first = render(
-        <Navigating push={push} arrives={arrives}>
+        <Navigating push={router.push} arrives={arrives}>
           <WorkspaceSwitcher workspaces={WORKSPACES} />
         </Navigating>,
       );

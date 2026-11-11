@@ -2,7 +2,7 @@
 // repository: the converter imports only schema/units.ts, so it can load
 // anywhere (claude-docs/db/stock.md, "One module owns the units").
 
-export type ConversionRefusal = 'dimension' | 'count';
+type ConversionRefusal = 'dimension' | 'count';
 
 /**
  * A conversion's outcome, which the caller must test: a refusal carries no

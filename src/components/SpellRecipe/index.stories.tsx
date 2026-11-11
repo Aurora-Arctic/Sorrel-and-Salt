@@ -1,3 +1,4 @@
+import { covenPath } from '@/lib/coven-path';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
@@ -39,7 +40,7 @@ export default meta;
 type Story = StoryObj<{ state?: ReactNode }>;
 
 const COVEN = 'fixture-coven';
-const GRIMOIRE = `/coven/${COVEN}/grimoire` as Route;
+const GRIMOIRE = covenPath(COVEN, 'grimoire');
 const RECIPE = `${GRIMOIRE}/${FIXTURE_SPELL}` as Route;
 const TITLE = 'Fixture Working';
 const LAST_EDIT = { by: 'Testa Owner', at: '2026-10-01T12:00:00.000Z' };

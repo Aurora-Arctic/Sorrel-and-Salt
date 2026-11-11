@@ -8,7 +8,7 @@ const PREVIEW = 'Choose a new password for your account. The link works for 15 m
 
 // No greeting by name: a stranger can ask for this mail for any address, so it says nothing the address
 // does not already know.
-export function ResetPassword({ url, origin = new URL(url).origin, part }: ResetPasswordProps) {
+function ResetPassword({ url, origin = new URL(url).origin, part }: ResetPasswordProps) {
   return h(
     EmailLayout,
     { preview: PREVIEW, heading: SUBJECT, origin },

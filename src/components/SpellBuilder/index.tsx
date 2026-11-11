@@ -1,6 +1,6 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { typedResolver } from '../../lib/typed-resolver';
 import type { Route } from 'next';
 import { type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -29,7 +29,7 @@ import { moonPhaseIcon } from '../MoonPhaseIcon/for-phase';
 import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
 import { DeleteSpellWords, useDeleteSpell } from '../SpellRecipe/delete-spell';
-import { UNTITLED_SPELL } from '../SpellCard';
+import { spellNameOf } from '../SpellCard/untitled';
 import Notice from '../Notice';
 import SaveStatus, { RecoveryNotice } from '../SaveStatus';
 import Skeleton from '../Skeleton';
@@ -63,6 +63,7 @@ import type {
   SpellBuilderValues,
 } from './types';
 import './index.scss';
+import { plural } from '@/lib/text';
 
 // The spell builder: four folding sections inside the dialog (./spell-dialog.tsx). It autosaves (./autosave.ts) and
 // Close saves first (./save-on-close.ts) (claude-docs/components/spell-builder.md, "The builder's sections and autosave").
@@ -113,7 +114,7 @@ function lineOfField(
     case 'steps': {
       const laid = (values.steps ?? []).filter((step) => step.name !== null).length;
       if (laid === 0) return '';
-      return laid === 1 ? '1 ingredient' : `${laid} ingredients`;
+      return `${laid} ${plural(laid, 'ingredient', 'ingredients')}`;
     }
     default:
       return oneLine(values[field] ?? '');
@@ -143,11 +144,10 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
  * null for blank, so the form sends what the service will store, and refuses
  * what it would.
  */
-const schemaResolver = zodResolver(SpellInput) as unknown as Resolver<
+const schemaResolver = typedResolver<
   Omit<SpellBuilderValues, 'steps'> & { steps: SpellStepSend[] },
-  unknown,
   SpellBuilderInput
->;
+>(SpellInput);
 
 /**
  * The unit rule needs the coven's jars, so it is not the schema's: a refused unit is said under
@@ -446,7 +446,7 @@ const SpellBuilder = ({
 
   const [deleting, setDeleting] = useState(false);
   const spellId = createdId ?? opened?.id ?? null;
-  const name = useWatch({ control, name: 'title' })?.trim() || UNTITLED_SPELL;
+  const name = spellNameOf(useWatch({ control, name: 'title' }));
   // `removed` holds the autosave and the save on close once the delete is sent.
   const { remove, pending: removed } = useDeleteSpell({
     workspaceId,

@@ -1,4 +1,4 @@
-export interface ListedUserNode {
+interface ListedUserNode {
   id: string;
   name: string;
   email: string;
@@ -6,6 +6,7 @@ export interface ListedUserNode {
   canCreateWorkspace: boolean;
   emailVerified: boolean;
   providers: string[];
+  hasPasskey: boolean;
   audit: { createdAt: string };
 }
 
@@ -28,12 +29,12 @@ export interface SetUserRoleResult {
   setUserRole: { id: string; role: string; canCreateWorkspace: boolean };
 }
 
-export interface LedgerUser {
+interface LedgerUser {
   id: string;
   name: string;
 }
 
-export interface PrivilegeChangeNode {
+interface PrivilegeChangeNode {
   id: string;
   subject: LedgerUser | null;
   privilege: string;

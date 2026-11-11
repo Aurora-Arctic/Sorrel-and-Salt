@@ -11,7 +11,8 @@ import FormIcon from '../FormIcon';
 import Skeleton from '../Skeleton';
 import ReadFailure from './read-failure';
 import type { EntrySummary } from '../Combobox/types';
-import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from './options';
+import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from './options';
+import { labelOf } from '@/lib/options';
 import type { EntryHref, SubstituteListEntry, SubstituteSummaryProps } from './types';
 import { tierOf } from './values';
 
@@ -59,11 +60,7 @@ const joined = (own: readonly string[] | null, form: readonly string[] | null | 
   ...new Set([...(own ?? []), ...(form ?? [])]),
 ];
 
-export function SubstituteSummary({
-  link,
-  variantId,
-  workspaceId,
-}: SubstituteSummaryProps): ReactElement {
+function SubstituteSummary({ link, variantId, workspaceId }: SubstituteSummaryProps): ReactElement {
   const hrefOf = useContext(EntryHrefContext);
   const { data, error, isPending, refetch, isRefetching } = useQuery({
     ...graphqlQuery(IngredientSummaryDocument, { id: link.id, workspaceId }),

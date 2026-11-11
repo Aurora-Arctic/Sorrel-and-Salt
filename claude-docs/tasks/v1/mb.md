@@ -728,6 +728,82 @@ _Acceptance criteria:_
 - The Delete placement in item 1 is agreed with the owner before it is built
 - Docs corrected: `claude-docs/components/section-nav.md` (item 4), `claude-docs/components/account-menu.md` (item 5), `claude-docs/styling.md` and `claude-docs/components/entry-marks.md` (item 6), `.claude/rules/writing.md` (item 7)
 
+**MB.294 — Compendium Page 19 Fails and the Error Screen Shows No Error Number** · 3h
+
+_Story:_ As a site keeper, I want every compendium page to open, and any error screen to show a reference number that goes with my bug report, so that a failure can be traced.
+
+Found on 2026-11-10 by the owner on production, signed in as a site keeper. Opening page 19 of the compendium showed a "not available" screen. The screen showed no error number, and the bug report sent from it carried none. `src/app/error.tsx` and `src/app/global-error.tsx` show Next's digest and pass it to the bug form as `ref`; a screen with no digest shows and sends nothing. Steps to reproduce:
+
+1. Sign in as a site keeper
+2. Open `/compendium`
+3. Page forward to page 19
+
+Actual: a "not available" screen with no error number, and a bug report sent from it carries no reference.
+
+Expected: page 19 lists its entries. If a page does fail, the screen shows a reference number and the bug report carries the same one (assumed).
+
+The page-19 failure no longer reproduces. The likely cause, unproven, was a tab loaded before the 0.14.0 deploy failing to load code from the old build. The owner approved carrying the support request's new error-detail column in this task, rather than in a table task of its own.
+
+_Acceptance criteria:_
+
+- Every error screen except the 404 shows a reference number, and the submitted report carries the same one. The reference is Next's digest where there is one; otherwise the browser makes a short random one. The report also carries the error's name and message, which the bug form shows read-only, held to one shared length limit in the form and on the server
+- Docs corrected: `claude-docs/components/compendium-list.md` if the pager's behaviour changes
+
+**MB.295 — 1Password Saves the Login Under "Sorrelandsalt"** · 1.5h
+
+_Story:_ As a member, I want my password manager to save my login under the site name, so that I can find it.
+
+Found on 2026-11-10 by the owner on production. When 1Password offers to save a login, it names the entry "Sorrelandsalt". The passkey site name (`rpName` in `src/lib/auth.ts`) is already "Sorrel & Salt", so the name most likely comes from the domain or the page metadata. Steps to reproduce:
+
+1. Signed out, open the sign-in page in a browser with 1Password installed
+2. Sign in with an email and password
+
+Actual: 1Password offers to save the entry as "Sorrelandsalt".
+
+Expected: it offers "Sorrel and Salt". 1Password names a saved login from the page title only when the name in it spells out the domain letters, so a title with "&" falls back to the capitalised domain; the application name and the web app manifest make no difference (the owner tested each on static pages).
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: the sign-in page title ends "Sorrel and Salt", and every page title writes the name that way, while share titles and page text keep "Sorrel & Salt"
+- The cause found is stated in the PR body
+
+**MB.296 — Emails Show the Wrong Fonts in Gmail** · 2h
+
+_Story:_ As a member, I want emails to look like Sorrel & Salt in Gmail, so that they read as ours.
+
+Found on 2026-11-10 by the owner on production. `src/emails/parts/layout.ts` loads the brand fonts with `@font-face`. Gmail does not load web fonts, so it falls back to whatever comes next in each font list, which is not a deliberate choice. Steps to reproduce:
+
+1. Trigger any email (for example an invitation) to a Gmail address
+2. Open it in Gmail on the web
+
+Actual: the brand fonts do not show, and the fallback font is not one chosen for the look.
+
+Expected: the brand fonts show wherever the email client loads web fonts; in Gmail, a chosen fallback font list close in look shows instead.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: every font family the email layout sets ends in a chosen fallback list of fonts Gmail can show
+- Docs corrected: the email doc in `claude-docs/` names Gmail's limit and the fallback
+
+**MB.297 — A Paused Keeper or Curator Can Be Assigned a Support Request** · 1.5h
+
+_Story:_ As a site keeper, I want only keepers and curators whose access is not paused to be offered for assignment, so that no support request sits with someone who cannot act on it.
+
+Found on 2026-11-10 by the owner on production. `assignSupportRequest` in `src/modules/support/services/staff.ts` checks the assignee's role but not whether their access is paused. Steps to reproduce:
+
+1. Sign in as a site keeper
+2. Pause a curator's access
+3. Open a support request and assign it to that curator
+
+Actual: the assignment succeeds.
+
+Expected: the service refuses it with an explaining error, and the assignee picker does not offer paused keepers or curators.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: assigning a request by direct id to a paused curator, and to a paused keeper, is refused; the same test asserts the same user can be assigned once the pause ends, so it fails with the guard removed
+- The assignee picker lists no paused keeper or curator
+
 **MB.298 — Deploys Stop on Vercel's Daily Upload Limit** · 0.5h
 
 _Story:_ As the site's owner, I want a deploy to upload the build as one file, so that a release with many changed files still ships.

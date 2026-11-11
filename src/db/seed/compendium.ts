@@ -10,7 +10,6 @@ import {
   citing,
   deityRows,
   entryRow,
-  foldForm,
   folkNameRows,
   linkColumns,
   namesCategory,
@@ -33,6 +32,7 @@ import {
 } from './compendium/update';
 import { WORKS } from './compendium/works';
 import { ingredientSlug } from '../../lib/slugify';
+import { fold } from '../../lib/text';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
@@ -77,7 +77,7 @@ export function assertCompendiumValid(input: LoadedCompendium): void {
  * `approved` files only, each with its mark. A `draft` or `needs-review`
  * file is not seeded, wherever it runs.
  */
-export function seedItems(input: LoadedCompendium): SeedItem[] {
+function seedItems(input: LoadedCompendium): SeedItem[] {
   const sources = { ...WORKS, ...input.sources };
   return input.files
     .filter((file) => file.status === 'approved')
@@ -224,7 +224,7 @@ async function insertEntries(
     })),
   );
   // Read back by entry and folded form, which the variant's unique index keys.
-  const variantKey = (ingredientId: string, form: string) => `${ingredientId}|${foldForm(form)}`;
+  const variantKey = (ingredientId: string, form: string) => `${ingredientId}|${fold(form)}`;
   const variantIds = new Map(
     variants.map((row) => [variantKey(row.ingredientId, row.form), row.id]),
   );

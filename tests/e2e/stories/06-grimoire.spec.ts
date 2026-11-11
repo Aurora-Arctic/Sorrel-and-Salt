@@ -17,6 +17,7 @@ import {
   openFilters,
   seedCoven,
   withSql,
+  grimoireList,
 } from './coven-ingredients';
 import { categoryChip, pickCategoryIn } from './ingredient-dialogs';
 import { makeVariant } from '../../support/fixtures/ingredient';
@@ -38,10 +39,6 @@ async function openBuilder(page: Page, slug: string): Promise<Locator> {
 
 function stepList(page: Page): Locator {
   return page.getByRole('list', { name: 'Steps' });
-}
-
-function grimoireList(page: Page): Locator {
-  return page.getByRole('list', { name: /^(Spells|Drafts)$/ });
 }
 
 async function addIngredientStep(page: Page, name: string): Promise<Locator> {
@@ -351,7 +348,7 @@ test(
     await expect(look.getByRole('button', { name: 'Out' })).toHaveCount(1);
     const emptyStep = look.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
     await expect(emptyStep.getByRole('button', { name: 'Out' })).toBeVisible();
-    await look.getByRole('link', { name: 'See Full Recipe' }).click();
+    await look.getByRole('link', { name: 'See Full Spell' }).click();
     await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire/${spellId}$`));
     const inventory = page.getByRole('region', { name: 'In the Cupboard' });
     await expect(inventory.getByRole('button', { name: 'Out' })).toHaveCount(1);

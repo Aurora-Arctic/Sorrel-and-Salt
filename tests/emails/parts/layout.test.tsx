@@ -444,3 +444,27 @@ describe('the templates', () => {
     expect(jsx).toEqual([]);
   });
 });
+
+describe('the fonts Gmail can show', () => {
+  // Gmail loads no web fonts, so it shows the first installed family after the brand font; the @font-face rule is not an inline family.
+  const BODY_FALLBACK = "Verdana, Tahoma, 'Segoe UI', sans-serif";
+  const HEADING_FALLBACK =
+    "Garamond, 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif";
+
+  it.each(MAILS.map(({ name }) => name))(
+    'ends every font family %s sets in a fallback list of fonts Gmail can show',
+    (name) => {
+      const html = rendered.get(name)!.html.replace(/&#x27;|&quot;/g, "'");
+      const families = [...html.matchAll(/\sstyle="[^"]*?font-family:\s*([^;"]*)/g)].map(
+        ([, family]) => family.trim(),
+      );
+
+      expect(families.length).toBeGreaterThan(0);
+      for (const family of families) {
+        const body = family === `Lexend, ${BODY_FALLBACK}`;
+        const heading = family === `'Cormorant Unicase', ${HEADING_FALLBACK}`;
+        expect(body || heading, family).toBe(true);
+      }
+    },
+  );
+});

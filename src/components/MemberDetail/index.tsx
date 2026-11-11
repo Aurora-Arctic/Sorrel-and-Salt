@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
-import RemoveControl from '../MemberList/remove-control';
+import Day from '../Day';
+import RemoveMemberControl from '../MemberList/remove-control';
 import RoleControl from '../MemberList/role-control';
-import { workspaceRoleLabel } from '../UserDetail/roles';
+import { workspaceRoleLabel } from '../MemberList/roles';
 import CovenAccessPanel from './coven-access-panel';
 import type { MemberDetailProps } from './types';
 import '../UserDetail/index.scss';
@@ -10,10 +11,6 @@ import './index.scss';
 // The body of the modal over `/coven/[slug]/members` on a member: the row's facts, and for a steward the role change,
 // the pause on their access to the coven and their removal (claude-docs/components/member-detail.md). Laid out as the
 // user modal is, on its classes; render-only, the page deciding what the viewer may do.
-
-const Day = ({ at }: { at: Date }): ReactElement => (
-  <time dateTime={at.toISOString()}>{at.toISOString().slice(0, 10)}</time>
-);
 
 const MemberDetail = ({
   workspaceId,
@@ -91,7 +88,7 @@ const MemberDetail = ({
     {/* Not on your own: leaving is the coven page's, for every role. */}
     {canRemove && member.userId !== currentUserId && (
       <div className="user-detail__actions">
-        <RemoveControl
+        <RemoveMemberControl
           workspaceId={workspaceId}
           userId={member.userId}
           name={member.name}

@@ -48,29 +48,29 @@ describe('a single-line TextField tidies on blur by default', () => {
 });
 
 describe('the limit', () => {
-  const type = async (length: number) => {
+  const typeLength = async (length: number) => {
     await act(async () => {
       fireEvent.change(box(), { target: { value: 'a'.repeat(length) } });
     });
   };
   it('shows nothing until three quarters of it is used', async () => {
     render(<Form limit={20} />);
-    await type(10);
+    await typeLength(10);
     expect(box().getAttribute('aria-describedby')).toBeTruthy();
     expect(screen.queryByText(/left|over/)).toBeNull();
   });
   it('shows what is left near the limit and the overrun past it, and never stops typing', async () => {
     render(<Form limit={20} />);
-    await type(18);
+    await typeLength(18);
     expect(screen.getByText('2 characters left')).toBeTruthy();
-    await type(23);
+    await typeLength(23);
     expect(screen.getByText('3 characters over')).toBeTruthy();
     expect(box().value).toHaveLength(23);
     expect(box().maxLength).toBe(-1);
   });
   it('names the count in the description of the control', async () => {
     render(<Form limit={20} />);
-    await type(19);
+    await typeLength(19);
     const ids = box().getAttribute('aria-describedby')?.split(' ') ?? [];
     expect(ids.some((id) => document.getElementById(id)?.textContent === '1 character left')).toBe(
       true,
@@ -79,18 +79,18 @@ describe('the limit', () => {
   it('refuses Save past the limit and accepts it at the limit', async () => {
     const saved: Values[] = [];
     render(<Form limit={5} onValues={(v) => saved.push(v)} />);
-    await type(6);
+    await typeLength(6);
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save' })));
     expect(saved).toHaveLength(0);
     expect(box().getAttribute('aria-invalid')).toBe('true');
-    await type(5);
+    await typeLength(5);
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save' })));
     expect(saved).toHaveLength(1);
   });
 });
 
 describe('browser attributes', () => {
-  it('passes type, inputMode, autoComplete, autoCapitalize, spellCheck and enterKeyHint through', () => {
+  it('passes typeLength, inputMode, autoComplete, autoCapitalize, spellCheck and enterKeyHint through', () => {
     render(
       <Form
         type="tel"

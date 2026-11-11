@@ -1,4 +1,4 @@
-export interface HelpTerm {
+interface HelpTerm {
   slug: string;
   title: string;
   /** Markdown. */

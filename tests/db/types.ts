@@ -14,7 +14,7 @@ export interface UserRow {
  * What a null session gets: an answer, a refusal at the field, a NotFound from a resolver that takes no session but found
  * nothing for the probe's argument, or, for a null sent where the SDL requires an id, a refusal before any resolver runs.
  */
-export type Outcome = 'answers' | 'nulls' | 'refuses' | 'not-found' | 'invalid';
+type Outcome = 'answers' | 'nulls' | 'refuses' | 'not-found' | 'invalid';
 
 export interface ScopeProbe {
   source: string;

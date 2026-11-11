@@ -1,6 +1,6 @@
 export type AccessMark = 'yes' | 'part' | 'no';
 
-export interface AccessCell {
+interface AccessCell {
   /** The mark drawn for the cell, set with the text so a reworded cell cannot change its mark. */
   mark: AccessMark;
   text: string;

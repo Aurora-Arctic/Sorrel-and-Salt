@@ -1,5 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,16 +10,16 @@ import type {
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderStep, SpellDialogProps } from '@/components/SpellBuilder/types';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 const address = vi.hoisted(() => ({ search: '' }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   useSearchParams: () => new URLSearchParams(address.search),
 }));
 
@@ -92,24 +91,23 @@ function answerSteps(steps: SpellBuilderStep[] = [], landed?: Promise<void>) {
 }
 
 function renderDialog(opened: SpellDialogProps['opened'], canCreate = true) {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SpellDialog
-        workspaceId="w1"
-        covenSlug="testwort-coven"
-        covenName="Testwort Coven"
-        closeHref={CLOSE}
-        opened={opened}
-        canCreate={canCreate}
-      />
-    </QueryClientProvider>,
+  return renderWithQuery(
+    <SpellDialog
+      workspaceId="w1"
+      covenSlug="testwort-coven"
+      covenName="Testwort Coven"
+      closeHref={CLOSE}
+      opened={opened}
+      canCreate={canCreate}
+    />,
   );
 }
 
 const dialog = () => screen.getByRole('dialog');
 const field = (name: string) => within(dialog()).getByRole('textbox', { name });
-const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
-const save = () => within(dialog()).getByRole('button', { name: /^Sav/ });
+const typeInField = (name: string, value: string) =>
+  fireEvent.change(field(name), { target: { value } });
+const saveInDialog = () => within(dialog()).getByRole('button', { name: /^Sav/ });
 const close = () => within(dialog()).getByRole('button', { name: 'Close' });
 const openAll = () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Open All' }));
 const stepsLanded = () => within(dialog()).findByRole('list', { name: 'Steps' });
@@ -241,10 +239,10 @@ describe('SpellDialog', () => {
     const steps = await stepsLanded();
     expect(within(steps).getByRole('listitem')).toHaveTextContent('Fixture Rosewort');
     expect(reads).toEqual([{ workspaceId: 'w1', id: SAVED.id }]);
-    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
+    expect(saveInDialog().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
-    type('Intent', 'Calmer');
-    fireEvent.click(save());
+    typeInField('Intent', 'Calmer');
+    fireEvent.click(saveInDialog());
 
     await waitFor(() => expect(updated).toHaveLength(1));
     expect(updated[0]?.input.steps).toEqual([ROSEWORT_SENT]);
@@ -256,9 +254,9 @@ describe('SpellDialog', () => {
     const updated = acceptUpdate();
     renderDialog({ spell: SAVED });
     openAll();
-    type('Intent', 'Calmer');
+    typeInField('Intent', 'Calmer');
 
-    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
+    expect(saveInDialog().matches(':disabled, [aria-disabled="true"]')).toBe(true);
     // Enter in a field submits the form even with Save off.
     fireEvent.submit(field('Title').closest('form') as HTMLFormElement);
     await act(async () => {});
@@ -267,7 +265,7 @@ describe('SpellDialog', () => {
     land();
     await stepsLanded();
     expect(field('Intent')).toHaveValue('Calmer');
-    fireEvent.click(save());
+    fireEvent.click(saveInDialog());
     await waitFor(() => expect(updated).toHaveLength(1));
     expect(updated[0]?.input).toMatchObject({ intent: 'Calmer', steps: [ROSEWORT_SENT] });
   });
@@ -281,9 +279,9 @@ describe('SpellDialog', () => {
   it('swaps the address for the saved draft’s on its first save, keeping what is typed', async () => {
     const created = acceptCreate('s1');
     renderDialog({});
-    type('Title', 'Fixture Working');
+    typeInField('Title', 'Fixture Working');
 
-    fireEvent.click(save());
+    fireEvent.click(saveInDialog());
 
     await waitFor(() => expect(created).toHaveLength(1));
     await waitFor(() =>
@@ -298,13 +296,15 @@ describe('SpellDialog', () => {
     acceptCreate('s1');
     const updated = acceptUpdate();
     renderDialog({});
-    type('Title', 'Fixture Working');
-    fireEvent.click(save());
+    typeInField('Title', 'Fixture Working');
+    fireEvent.click(saveInDialog());
     await waitFor(() => expect(router.replace).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
+    await waitFor(() =>
+      expect(saveInDialog().matches(':disabled, [aria-disabled="true"]')).toBe(true),
+    );
 
-    type('Intent', 'Calm');
-    fireEvent.click(save());
+    typeInField('Intent', 'Calm');
+    fireEvent.click(saveInDialog());
 
     await waitFor(() => expect(updated).toHaveLength(1));
     expect(updated[0]).toMatchObject({ id: 's1', input: { expectedRevision: 1, intent: 'Calm' } });
@@ -316,12 +316,14 @@ describe('SpellDialog', () => {
     renderDialog({ spell: SAVED });
     openAll();
     await stepsLanded();
-    type('Intent', 'Calmer');
+    typeInField('Intent', 'Calmer');
 
-    fireEvent.click(save());
+    fireEvent.click(saveInDialog());
 
     await waitFor(() => expect(updated).toHaveLength(1));
-    await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
+    await waitFor(() =>
+      expect(saveInDialog().matches(':disabled, [aria-disabled="true"]')).toBe(true),
+    );
     expect(router.replace).not.toHaveBeenCalled();
   });
 
@@ -347,10 +349,10 @@ describe('SpellDialog', () => {
     it('saves a new spell’s typed fields before it closes, asking nothing', async () => {
       const created = acceptCreate();
       renderDialog({});
-      type('Title', 'Fixture Working');
+      typeInField('Title', 'Fixture Working');
 
       // The precondition the save answers: the form has something unsaved.
-      expect(save()).toBeEnabled();
+      expect(saveInDialog()).toBeEnabled();
       await act(async () => {
         fireEvent.click(close());
       });
@@ -369,7 +371,7 @@ describe('SpellDialog', () => {
       renderDialog({ spell: SAVED });
       openAll();
       await stepsLanded();
-      type('Intent', 'Calmer');
+      typeInField('Intent', 'Calmer');
 
       await act(async () => {
         fireEvent.click(close());
@@ -389,7 +391,7 @@ describe('SpellDialog', () => {
       const updated = acceptUpdate();
       renderDialog({ spell: SAVED });
       openAll();
-      type('Intent', 'Calmer');
+      typeInField('Intent', 'Calmer');
 
       await act(async () => {
         fireEvent.click(close());
@@ -425,10 +427,10 @@ describe('SpellDialog', () => {
       const updated = acceptUpdate();
       renderDialog({ spell: SAVED });
       openAll();
-      type('Intent', 'Calmer');
+      typeInField('Intent', 'Calmer');
 
       expect(await within(dialog()).findByRole('alert')).toBeInTheDocument();
-      expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
+      expect(saveInDialog().matches(':disabled, [aria-disabled="true"]')).toBe(true);
       await act(async () => {
         fireEvent.click(close());
       });
@@ -443,7 +445,7 @@ describe('SpellDialog', () => {
         message: 'Observers cannot write spells',
       });
       renderDialog({});
-      type('Title', 'Fixture Working');
+      typeInField('Title', 'Fixture Working');
 
       await act(async () => {
         fireEvent.click(close());

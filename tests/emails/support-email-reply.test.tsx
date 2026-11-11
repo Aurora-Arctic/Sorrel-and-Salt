@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { supportEmailReplyMessage } from '@/emails/support-email-reply';
+import { ORIGIN } from '../support/constants';
 
-const REQUEST_PAGE = 'http://localhost:8000/support/request/token';
+const REQUEST_PAGE = `${ORIGIN}/support/request/token`;
 
 describe('supportEmailReplyMessage', () => {
   it('goes to the visitor naming the request and linking its page', async () => {

@@ -3,9 +3,16 @@
 import type { ReactElement } from 'react';
 import ErrorPage from '../ErrorPage';
 import ReportThis from '../ReportThis';
+import { useErrorReport } from '../../lib/error-report';
 import { PendingLink } from '../../lib/navigation';
 
 // The 404 and 500 screens, shared by the root routes and the shell's (claude-docs/components/error-page.md).
+
+const BackToSite = (): ReactElement => (
+  <PendingLink className="btn btn--quiet" href="/">
+    Back to Sorrel &amp; Salt
+  </PendingLink>
+);
 
 export const NotFoundScreen = ({ withinMain = false }: { withinMain?: boolean }): ReactElement => (
   <ErrorPage
@@ -13,9 +20,7 @@ export const NotFoundScreen = ({ withinMain = false }: { withinMain?: boolean })
     withinMain={withinMain}
     reason="There is nothing at this address."
   >
-    <PendingLink className="btn btn--quiet" href="/">
-      Back to Sorrel &amp; Salt
-    </PendingLink>
+    <BackToSite />
     <PendingLink className="btn btn--quiet" href="/help">
       Help
     </PendingLink>
@@ -24,23 +29,24 @@ export const NotFoundScreen = ({ withinMain = false }: { withinMain?: boolean })
 );
 
 export const ErrorScreen = ({
-  digest,
+  error,
   retry,
 }: {
-  digest?: string;
+  error: unknown;
   retry: () => void;
-}): ReactElement => (
-  <ErrorPage
-    title="Something Went Wrong"
-    reason="The page could not be shown. Trying again often works."
-    reference={digest}
-  >
-    <button type="button" className="btn btn--solid" onClick={() => retry()}>
-      Try Again
-    </button>
-    <PendingLink className="btn btn--quiet" href="/">
-      Back to Sorrel &amp; Salt
-    </PendingLink>
-    <ReportThis code={500} reference={digest} />
-  </ErrorPage>
-);
+}): ReactElement => {
+  const { reference, detail } = useErrorReport(error);
+  return (
+    <ErrorPage
+      title="Something Went Wrong"
+      reason="The page could not be shown. Trying again often works."
+      reference={reference}
+    >
+      <button type="button" className="btn btn--solid" onClick={() => retry()}>
+        Try Again
+      </button>
+      <BackToSite />
+      <ReportThis code={500} reference={reference} detail={detail} />
+    </ErrorPage>
+  );
+};

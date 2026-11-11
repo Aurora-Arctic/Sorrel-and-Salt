@@ -5,6 +5,8 @@ import UserDetail from '@/components/UserDetail';
 import type { UserCoven, UserDetailProps, UserDetailUser } from '@/components/UserDetail/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { leavingAtEachLoad, stubLocationAssign } from '../../support/location';
+import { router } from '../../support/next-navigation';
+import { expectBefore } from '../../support/interact';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
 // navigates, which happy-dom cannot follow.
@@ -13,8 +15,6 @@ vi.mock('@/lib/auth-client', () => ({
   impersonateUser: (...args: unknown[]) => impersonateUserMock(...args),
 }));
 const assignMock = vi.fn();
-const router = { refresh: vi.fn(), push: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/user-detail.md
 
@@ -38,6 +38,7 @@ const FACTS = {
   primaryAdmin: false,
   canCreateWorkspace: false,
   providers: ['google', 'discord'],
+  hasPasskey: false,
   createdAt: new Date('2026-02-03T04:05:06Z'),
   agreedTermsVersion: 1,
   agreedDisclaimerVersion: 4,
@@ -134,6 +135,24 @@ describe('UserDetail', () => {
 
     renderDetail({ user: { ...BO, providers: [] } });
     expect(screen.queryAllByText('Google')).toHaveLength(0);
+  });
+
+  it('draws the email & password and passkey marks among the sign-in methods, never the raw id', () => {
+    renderDetail({ user: { ...BO, providers: ['credential'], hasPasskey: true } });
+
+    const methods = factOf('Sign-In Methods');
+    expect(within(methods).getAllByText('Email & Password')[0]).toBeInTheDocument();
+    expect(within(methods).getAllByText('Passkey')[0]).toBeInTheDocument();
+    expect(methods.querySelectorAll('svg')).toHaveLength(2);
+    expect(within(methods).getAllByRole('listitem')).toHaveLength(2);
+    expect(methods).not.toHaveTextContent('credential');
+  });
+
+  it('counts a passkey alone as a sign-in method rather than saying None', () => {
+    renderDetail({ user: { ...BO, providers: [], hasPasskey: true } });
+
+    expect(within(factOf('Sign-In Methods')).queryByText('None')).not.toBeInTheDocument();
+    expect(within(factOf('Sign-In Methods')).getAllByText('Passkey')[0]).toBeInTheDocument();
   });
 
   it('marks the primary keeper, and no one else', () => {
@@ -407,9 +426,7 @@ describe('UserDetail, when the service refuses a change', () => {
         expect(within(alert).getByRole('button', { name: 'Dismiss' })).toBeInTheDocument();
         expect(screen.getAllByRole('alert')).toHaveLength(1);
         expect(screen.getByRole('dialog')).toContainElement(alert);
-        expect(
-          control().compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING,
-        ).toBeTruthy();
+        expectBefore(control(), alert);
         expect(control()).toHaveAccessibleDescription(`Last try failed: ${refusal.message}`);
         await waitFor(() => expect(control()).toHaveFocus());
         expect(badge()).toBeInTheDocument();

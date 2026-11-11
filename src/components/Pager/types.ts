@@ -12,18 +12,20 @@ export interface PagerProps {
   position?: PagePosition;
 }
 
+type PagerLabel = 'Prev' | 'Next';
+
 export interface PagerEndProps {
   href?: string;
   soft: boolean;
-  label: 'Prev' | 'Next';
+  label: PagerLabel;
 }
 
 export interface PagerLinkProps {
   href: string;
-  label: 'Prev' | 'Next';
+  label: PagerLabel;
   soft: boolean;
 }
 
 export interface PagerEndContentProps {
-  label: 'Prev' | 'Next';
+  label: PagerLabel;
 }

@@ -2,13 +2,14 @@ import { InvitationCardRef, InvitationRef, cardArrivalsCsv } from '@/modules/ide
 import { builder } from '../../../graphql/builder';
 import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
 import { membershipsOf } from '../services/memberships';
+import { INVITABLE_ROLES } from '../../../lib/invitable-roles';
 import { createInvitation, revokeWorkspaceInvitation } from '../services/invitations';
 import { WorkspaceRef } from './workspace';
 
 // No field carries the token or a link (claude-docs/db/invitations.md, "Inviting into a coven").
 
 // Not `WorkspaceRole`: an owner is not invitable.
-const InvitableRoleEnum = builder.enumType('InvitableRole', { values: ['viewer', 'member'] });
+const InvitableRoleEnum = builder.enumType('InvitableRole', { values: INVITABLE_ROLES });
 
 builder.objectField(InvitationRef, 'role', (t) =>
   t.field({

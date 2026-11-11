@@ -1,9 +1,9 @@
 'use client';
 
+import { cx } from '@/lib/class-names';
 import { FADE_LIMIT_MS, prefersReducedMotion } from '@/lib/motion';
 import {
   type FocusEvent,
-  type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
   type ReactNode,
@@ -14,12 +14,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useDismiss } from '../../lib/use-dismiss';
+import { escapeKeyHandler, useDismiss } from '../../lib/use-dismiss';
 import { useHydrated } from '../../lib/hydrated';
 import { pressFeedback } from '../../lib/press-feedback';
 import { FieldError } from '../Field/shell';
 import InfoTip from '../InfoTip';
-import { useTip } from '../InfoTip/use-tip';
+import TipAnchor from '../InfoTip/tip-anchor';
 import { FacetCount } from './facet-count';
 import './choice-chip.scss';
 
@@ -36,7 +36,7 @@ const clipRight = (from: HTMLElement): number => {
 
 type Phase = 'closed' | 'opening' | 'open' | 'closing';
 
-export interface ChoiceChipOption<T extends string> {
+interface ChoiceChipOption<T extends string> {
   value: T;
   label: string;
   display?: ReactNode;
@@ -83,7 +83,6 @@ export function ChoiceChip<T extends string>({
   const chipHintId = `${id}-chip-hint`;
   const noteId = `${id}-note`;
   const errorId = `${id}-error`;
-  const tip = useTip();
   const hydrated = useHydrated();
   const root = useRef<HTMLDetailsElement>(null);
   const summary = useRef<HTMLElement>(null);
@@ -142,11 +141,7 @@ export function ChoiceChip<T extends string>({
     else open();
   };
   // Escape is this menu's: marked handled so the panel around it stays open.
-  const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key !== 'Escape' || phase === 'closed') return;
-    event.preventDefault();
-    close(true);
-  };
+  const onKeyDown = escapeKeyHandler(() => close(true), { active: phase !== 'closed' });
   // Tabbing out of the menu shuts it. A focus with no destination is a press that landed on
   // something that takes no focus, and the pointer handler above deals with it.
   const onBlur = (event: FocusEvent) => {
@@ -164,9 +159,11 @@ export function ChoiceChip<T extends string>({
   };
 
   const describedBy =
-    [chipHint ? chipHintId : hint && hintId, note && noteId, error && errorId]
-      .filter(Boolean)
-      .join(' ') || undefined;
+    cx(
+      chipHint ? chipHintId : hint ? hintId : false,
+      note ? noteId : false,
+      error ? errorId : false,
+    ) || undefined;
 
   const face = (
     <>
@@ -190,103 +187,97 @@ export function ChoiceChip<T extends string>({
           &#8203;
         </span>
       )}
-      <div
-        ref={tip.anchor}
+      <TipAnchor
+        as="div"
         className="facet-chip__bar"
-        // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
-        onMouseEnter={chipHint ? tip.showSoon : undefined}
-        onMouseLeave={chipHint ? tip.hideSoon : undefined}
+        bubbleClass="info-tip__bubble"
+        bubbleId={chipHintId}
+        bubble={chipHint || undefined}
+        suppressed={shown}
       >
-        <fieldset
-          className="fieldset facet-chip__group"
-          disabled={disabled}
-          aria-describedby={describedBy}
-          aria-invalid={error ? true : undefined}
-        >
-          <legend className="visually-hidden">{legend}</legend>
-          {disabled ? (
-            // Really disabled, so unfocusable; a disabled button may swallow mouse events, so the
-            // hover is taken on the bar around it (its pointer events are off, see the scss).
-            <button type="button" className="facet-chip__summary" disabled>
-              {face}
-            </button>
-          ) : (
-            // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the handlers hear events bubbling from the summary, which is the control
-            <details
-              ref={root}
-              className={
-                hydrated ? 'facet-chip__details facet-chip--script' : 'facet-chip__details'
-              }
-              // Before the script the browser opens and shuts it; after, the state does.
-              {...(hydrated ? { open: phase !== 'closed' } : {})}
-              onKeyDown={onKeyDown}
-              onBlur={onBlur}
+        {({ show, hide }) => (
+          <>
+            <fieldset
+              className="fieldset facet-chip__group"
+              disabled={disabled}
+              aria-describedby={describedBy}
+              aria-invalid={error ? true : undefined}
             >
-              <summary
-                ref={summary}
-                className="facet-chip__summary"
-                onFocus={chipHint ? tip.show : undefined}
-                onBlur={chipHint ? tip.hide : undefined}
-                onClick={hydrated ? toggle : undefined}
-              >
-                {face}
-              </summary>
-              <div
-                ref={menuRef}
-                className={[
-                  'facet-chip__menu',
-                  phase === 'open' && 'is-open',
-                  alignEnd && 'facet-chip__menu--end',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                onTransitionEnd={onFadeEnd}
-              >
-                {options.map((option) => (
-                  <label key={option.value} className="radio facet-chip__option" {...pressFeedback}>
-                    <input
-                      type="radio"
-                      name={name}
-                      value={option.value}
-                      checked={option.value === value}
-                      disabled={option.disabled}
-                      aria-invalid={error ? true : undefined}
-                      onChange={() => {
-                        onChange(option.value);
-                        if (hydrated) close(true);
-                      }}
-                      {...pressFeedback}
-                    />
-                    <span>
-                      {option.icon && <span className="facet-chip__icon">{option.icon}</span>}
-                      {option.display ?? option.label}
-                      {option.count !== undefined && <FacetCount count={option.count} />}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </details>
-          )}
-        </fieldset>
-        {chipHint && (
-          <span
-            ref={tip.bubble}
-            id={chipHintId}
-            role="tooltip"
-            className={tip.open && !shown ? 'info-tip__bubble is-open' : 'info-tip__bubble'}
-            // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
-            aria-hidden={!(tip.open && !shown)}
-            style={tip.bubbleStyle}
-          >
-            {chipHint}
-          </span>
+              <legend className="visually-hidden">{legend}</legend>
+              {disabled ? (
+                // Really disabled, so unfocusable; a disabled button may swallow mouse events, so the
+                // hover is taken on the bar around it (its pointer events are off, see the scss).
+                <button type="button" className="facet-chip__summary" disabled>
+                  {face}
+                </button>
+              ) : (
+                // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the handlers hear events bubbling from the summary, which is the control
+                <details
+                  ref={root}
+                  className={
+                    hydrated ? 'facet-chip__details facet-chip--script' : 'facet-chip__details'
+                  }
+                  // Before the script the browser opens and shuts it; after, the state does.
+                  {...(hydrated ? { open: phase !== 'closed' } : {})}
+                  onKeyDown={onKeyDown}
+                  onBlur={onBlur}
+                >
+                  <summary
+                    ref={summary}
+                    className="facet-chip__summary"
+                    onFocus={chipHint ? show : undefined}
+                    onBlur={chipHint ? hide : undefined}
+                    onClick={hydrated ? toggle : undefined}
+                  >
+                    {face}
+                  </summary>
+                  <div
+                    ref={menuRef}
+                    className={cx(
+                      'facet-chip__menu',
+                      phase === 'open' && 'is-open',
+                      alignEnd && 'facet-chip__menu--end',
+                    )}
+                    onTransitionEnd={onFadeEnd}
+                  >
+                    {options.map((option) => (
+                      <label
+                        key={option.value}
+                        className="radio facet-chip__option"
+                        {...pressFeedback}
+                      >
+                        <input
+                          type="radio"
+                          name={name}
+                          value={option.value}
+                          checked={option.value === value}
+                          disabled={option.disabled}
+                          aria-invalid={error ? true : undefined}
+                          onChange={() => {
+                            onChange(option.value);
+                            if (hydrated) close(true);
+                          }}
+                          {...pressFeedback}
+                        />
+                        <span>
+                          {option.icon && <span className="facet-chip__icon">{option.icon}</span>}
+                          {option.display ?? option.label}
+                          {option.count !== undefined && <FacetCount count={option.count} />}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </fieldset>
+            {hint && (
+              <InfoTip id={hintId} label={legend}>
+                {hint}
+              </InfoTip>
+            )}
+          </>
         )}
-        {hint && (
-          <InfoTip id={hintId} label={legend}>
-            {hint}
-          </InfoTip>
-        )}
-      </div>
+      </TipAnchor>
       {note && (
         <p id={noteId} className="field__hint">
           {note}

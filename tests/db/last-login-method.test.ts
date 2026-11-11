@@ -12,18 +12,18 @@ import {
   signIn as signInThrough,
   PROVIDER_CREDENTIALS,
 } from '../support/oauth';
-import type { Message, ProviderId } from '@/lib/types';
+import type { ProviderId } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
 import { ORIGIN } from '../support/constants';
+import { send } from '../support/mail';
 
 // Through Better Auth's real endpoints: the lastLoginMethod plugin
 // writes a readable cookie naming the provider whenever a callback sets the
 // session, and at no other point (claude-docs/auth/plugins.md, "Plugins").
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
 // A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset; its job is tests/workflows/secret-link-mail.test.ts.
 vi.stubEnv('MAIL_TRANSPORT', '');
 

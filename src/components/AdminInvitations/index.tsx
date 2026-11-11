@@ -10,11 +10,11 @@ import ConfirmedAction from '../ConfirmedAction';
 import LockedControl from '../UserList/locked-control';
 import ListFrame, { ListBody } from '../ListFrame';
 import { AdminInvitationsBodySkeleton } from './skeleton';
-import { ModalLink, useOpenModalClick } from '../Modal';
+import { OpenModalLink } from '../Modal';
 import Notice from '../Notice';
 import Pager from '../Pager';
 import AdminInvitationsFilter from './filter';
-import { invitationsHref } from './href';
+import { invitationsHref, NO_INVITATIONS_FILTER } from './href';
 import InviteForm, { INVITE_TITLE, invitationRoleLabel } from './invite-form';
 import type {
   RevokeInvitationProps,
@@ -27,8 +27,6 @@ import './index.scss';
 // The People page's Invitations tab, `/keepers/invitations`: a filter, a page of pending invitations
 // (address, site role, reason, expiry, Revoke), the pager, and the invite form `?invite` opens. While
 // keeper changes are paused both are locked for any keeper but the primary (claude-docs/components/admin-invitations.md).
-
-const NO_FILTER: Filter = { email: '', expiringSoon: false };
 
 /**
  * The empty list, naming the filters in use as the other admin lists do, so an
@@ -89,17 +87,16 @@ const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => 
  */
 export const InviteAdmin = ({
   locked,
-  filter = NO_FILTER,
+  filter = NO_INVITATIONS_FILTER,
   cursor,
 }: InviteAdminProps): ReactElement => {
   const href = invitationsHref(filter, cursor, true);
-  const onClick = useOpenModalClick(href, { title: INVITE_TITLE });
   return locked ? (
     <LockedControl label={INVITE_TITLE} className="btn btn--solid" reason={locked} />
   ) : (
-    <ModalLink className="btn btn--solid" href={href} onClick={onClick}>
+    <OpenModalLink className="btn btn--solid" href={href} heading={{ title: INVITE_TITLE }}>
       {INVITE_TITLE}
-    </ModalLink>
+    </OpenModalLink>
   );
 };
 
@@ -108,7 +105,7 @@ export const InviteAdmin = ({
 // state, set before the form closes, so it outlasts `?invite`.
 const AdminInvitations = ({
   invitations,
-  filter = NO_FILTER,
+  filter = NO_INVITATIONS_FILTER,
   cursor,
   previousHref,
   nextHref,

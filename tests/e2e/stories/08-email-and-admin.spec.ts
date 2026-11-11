@@ -3,6 +3,7 @@ import type { Browser, Page, Response } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
 import { recreateE2eDatabase, withE2eSql } from '../database';
+import { graphqlFromPage } from '../graphql';
 import { VERIFY_LINK, latestMessageTo } from '../mailpit';
 import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 
@@ -63,25 +64,6 @@ async function mailedPath(
 async function signedOutPage(browser: Browser, baseURL: string | undefined): Promise<Page> {
   const context = await browser.newContext({ baseURL });
   return context.newPage();
-}
-
-/** The direct action behind a control the page withholds, so a refusal must come from the server. */
-async function sendFromPage(
-  page: Page,
-  query: string,
-  variables: Record<string, unknown>,
-): Promise<{ data?: unknown; errors?: { extensions?: { code?: string } }[] }> {
-  return page.evaluate(
-    async ({ query, variables }) => {
-      const response = await fetch('/api/graphql', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ query, variables }),
-      });
-      return response.json();
-    },
-    { query, variables },
-  );
 }
 
 const SET_USER_ROLE = `
@@ -375,7 +357,7 @@ test.describe('the primary admin', () => {
       await expect(modal.getByRole('radio')).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
 
-      const result = await sendFromPage(page, SET_USER_ROLE, { userId: primary, role: 'user' });
+      const result = await graphqlFromPage(page, SET_USER_ROLE, { userId: primary, role: 'user' });
       expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
 
       const reread = await userRow(page, PRIMARY_ADMIN_EMAIL);
@@ -431,7 +413,10 @@ test.describe('the primary admin', () => {
       const approve = modal.getByRole('button', { name: 'Approve Fixture Person' });
       await expect(approve).toHaveAttribute('aria-disabled', 'true');
       await expect(approve).toHaveAccessibleDescription(/\S/);
-      const refused = await sendFromPage(page, SET_USER_ROLE, { userId: grantee, role: 'admin' });
+      const refused = await graphqlFromPage(page, SET_USER_ROLE, {
+        userId: grantee,
+        role: 'admin',
+      });
       expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
       await visit(page, list);
       await expect(roleCell(row)).toHaveText(/^User/);
@@ -737,7 +722,7 @@ test(
     await expect(page.getByRole('link', { name: 'Confirm Your Email' })).toHaveCount(0);
     await assertNoAccessibilityViolations(page);
     const token = path.split('/').pop()!;
-    const refused = await sendFromPage(page, ACCEPT_INVITATION, { token });
+    const refused = await graphqlFromPage(page, ACCEPT_INVITATION, { token });
     expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     await expectAdminArea(page, false);
 
@@ -899,7 +884,7 @@ test(
     await signInAgainAs(page, accounts[withdrawnEmail]);
     const withdrawnReason = await expectInvitationRefused(page, withdrawn);
     await assertNoAccessibilityViolations(page);
-    const refused = await sendFromPage(page, ACCEPT_INVITATION, {
+    const refused = await graphqlFromPage(page, ACCEPT_INVITATION, {
       token: withdrawn.split('/').pop(),
     });
     expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');

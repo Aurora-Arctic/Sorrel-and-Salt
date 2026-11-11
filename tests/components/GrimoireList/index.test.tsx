@@ -1,11 +1,10 @@
 import type { Route } from 'next';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { router } from '../../support/next-navigation';
 import GrimoireList from '@/components/GrimoireList';
 import type { GrimoireListProps } from '@/components/GrimoireList/types';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { GRIMOIRE_PARAMS } from '@/components/GrimoireList/params';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { filterForm, sent } from '../../support/filter-form';
@@ -13,19 +12,13 @@ import { waitFor } from '../../support/ingredient-form';
 import { typeIn } from '../../support/interact';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { Navigating } from '../../support/navigating';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/grimoire-list.md
 
-const client = makeQueryClient();
-const List = (props: GrimoireListProps): ReactElement => (
-  <QueryClientProvider client={client}>
-    <GrimoireList {...props} />
-  </QueryClientProvider>
-);
+const List = (props: GrimoireListProps): ReactElement => <GrimoireList {...props} />;
 
 const PATH = '/coven/fixture-coven/grimoire' as Route;
 const GROUP = { id: 'g1', name: 'Fixture Group', colorDark: '#a0c4ff', colorLight: '#1d3557' };
@@ -95,7 +88,7 @@ describe('GrimoireList', () => {
   });
 
   it('lists each spell as an item of the Spells list, its card named by its title', () => {
-    render(<List {...props()} />);
+    renderWithQuery(<List {...props()} />);
     const list = screen.getByRole('list', { name: 'Spells' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(2);
     expect(within(list).getByRole('article', { name: 'Fixture Working' })).toBeInTheDocument();
@@ -103,19 +96,19 @@ describe('GrimoireList', () => {
   });
 
   it('names the list Drafts on the Drafts tab', () => {
-    render(<List {...props({ status: 'draft' })} />);
+    renderWithQuery(<List {...props({ status: 'draft' })} />);
     expect(screen.getByRole('list', { name: 'Drafts' })).toBeInTheDocument();
     expect(screen.queryByRole('list', { name: 'Spells' })).not.toBeInTheDocument();
   });
 
   it('leaves each item unnamed, so the title is heard once, on its card', () => {
-    render(<List {...props()} />);
+    renderWithQuery(<List {...props()} />);
     const items = within(screen.getByRole('list', { name: 'Spells' })).getAllByRole('listitem');
     for (const item of items) expect(item).not.toHaveAccessibleName();
   });
 
   it("links each card's title to the spell's recipe page", () => {
-    render(<List {...props()} />);
+    renderWithQuery(<List {...props()} />);
     expect(screen.getByRole('link', { name: /Fixture Working/ })).toHaveAttribute(
       'href',
       '/coven/fixture-coven/grimoire/s1',
@@ -135,7 +128,7 @@ describe('GrimoireList', () => {
     });
 
     it('offers the Compact switch in the filter row, on by default, and draws the cards compact', () => {
-      render(<List {...props()} />);
+      renderWithQuery(<List {...props()} />);
       const control = screen.getByRole('switch', { name: 'Compact' });
       expect(control).toBeChecked();
       expect(screen.getByRole('list', { name: 'Spells' })).toHaveAttribute(
@@ -145,7 +138,7 @@ describe('GrimoireList', () => {
     });
 
     it('turning it off writes the one stored choice the Ingredients list reads', () => {
-      render(<List {...props()} />);
+      renderWithQuery(<List {...props()} />);
       fireEvent.click(screen.getByRole('switch', { name: 'Compact' }));
       expect(html.getAttribute('data-card-density')).toBe('regular');
       expect(window.localStorage.getItem('card-density')).toBe('regular');
@@ -153,13 +146,13 @@ describe('GrimoireList', () => {
 
     it('starts off when the page already carries a stored regular choice', () => {
       html.setAttribute('data-card-density', 'regular');
-      render(<List {...props()} />);
+      renderWithQuery(<List {...props()} />);
       expect(screen.getByRole('switch', { name: 'Compact' })).not.toBeChecked();
     });
   });
 
   it('says there are no spells, and no list, when the tab holds none and no filter is in force', () => {
-    render(<List {...props({ spells: [], total: 0, position: undefined })} />);
+    renderWithQuery(<List {...props({ spells: [], total: 0, position: undefined })} />);
     expect(screen.getByRole('status', { name: 'No Spells' })).toBeInTheDocument();
     expect(screen.queryByRole('status', { name: 'No Matches' })).toBeNull();
     expect(screen.queryByRole('list', { name: 'Spells' })).toBeNull();
@@ -173,18 +166,20 @@ describe('GrimoireList', () => {
     'names, to a viewer only, the roles that can write a spell on an empty %s tab',
     (status, name) => {
       const empty = { status, spells: [], total: 0, position: undefined };
-      const { unmount } = render(<List {...props({ ...empty, canCreate: false })} />);
+      const { unmount } = renderWithQuery(<List {...props({ ...empty, canCreate: false })} />);
       const state = () => screen.getByRole('status', { name });
       expect(state()).toHaveTextContent(/\bpractitioner\b/i);
       expect(state()).toHaveTextContent(/\bsteward\b/i);
       unmount();
-      render(<List {...props(empty)} />);
+      renderWithQuery(<List {...props(empty)} />);
       expect(state()).not.toHaveTextContent(/\bpractitioner\b|\bsteward\b/i);
     },
   );
 
   it('links an empty tab to the Grimoire help article', () => {
-    render(<List {...props({ status: 'complete', spells: [], total: 0, position: undefined })} />);
+    renderWithQuery(
+      <List {...props({ status: 'complete', spells: [], total: 0, position: undefined })} />,
+    );
 
     expect(
       within(screen.getByRole('status', { name: 'No Spells' })).getByRole('link', {
@@ -194,7 +189,7 @@ describe('GrimoireList', () => {
   });
 
   it('names the drafts tab in its empty region', () => {
-    render(
+    renderWithQuery(
       <List
         {...props({
           status: 'draft',
@@ -209,7 +204,7 @@ describe('GrimoireList', () => {
   });
 
   it('says nothing matched, rather than that there are none, when a filter is in force', () => {
-    render(
+    renderWithQuery(
       <List
         {...props({
           spells: [],
@@ -230,11 +225,11 @@ describe('GrimoireList', () => {
     // The title box's results announcer is a status region too, empty until a search offers titles.
     const saying = () => screen.getAllByRole('status').filter((region) => region.textContent);
     const empty = { spells: [], total: 0, position: undefined };
-    const { unmount } = render(<List {...props(empty)} />);
+    const { unmount } = renderWithQuery(<List {...props(empty)} />);
     expect(saying()).toEqual([screen.getByRole('status', { name: 'No Spells' })]);
     unmount();
 
-    render(
+    renderWithQuery(
       <List
         {...props({
           ...empty,
@@ -249,7 +244,7 @@ describe('GrimoireList', () => {
   // dropped. An empty tab with no filter has nothing to clear.
   it('offers Clear Filters where a filter matched nothing, back to the tab with no filter', () => {
     const empty = { spells: [], total: 0, position: undefined };
-    render(
+    renderWithQuery(
       <List
         {...props({
           ...empty,
@@ -266,12 +261,12 @@ describe('GrimoireList', () => {
     );
     cleanup();
 
-    render(<List {...props(empty)} />);
+    renderWithQuery(<List {...props(empty)} />);
     expect(screen.queryByRole('link', { name: 'Clear Filters' })).toBeNull();
   });
 
   it("searches by title from its own tab's address", () => {
-    render(
+    renderWithQuery(
       <List
         {...props({ filter: { query: 'hearth', categories: [], categoryMode: 'all', ...OPEN } })}
       />,
@@ -283,7 +278,7 @@ describe('GrimoireList', () => {
   });
 
   it('applies a category picked in the panel to the tab address, as its slug', async () => {
-    render(
+    renderWithQuery(
       <Navigating push={router.push}>
         <List {...props()} />
       </Navigating>,
@@ -311,7 +306,7 @@ describe('GrimoireList', () => {
       group: GROUP,
       count,
     });
-    render(
+    renderWithQuery(
       <Navigating push={router.push}>
         <List
           {...props({
@@ -354,7 +349,7 @@ describe('GrimoireList', () => {
     };
 
     it('applies a moon phase and a day picked in the panel to the address', async () => {
-      render(
+      renderWithQuery(
         <Navigating push={router.push}>
           <List {...props()} />
         </Navigating>,
@@ -368,7 +363,7 @@ describe('GrimoireList', () => {
     });
 
     it('applies a visibility and a member picked in the panel to the address', async () => {
-      render(
+      renderWithQuery(
         <Navigating push={router.push}>
           <List {...props()} />
         </Navigating>,
@@ -386,7 +381,7 @@ describe('GrimoireList', () => {
     });
 
     it('offers a value with its count, and leaves out one that holds no spell', () => {
-      render(
+      renderWithQuery(
         <Navigating push={router.push}>
           <List {...props()} />
         </Navigating>,
@@ -398,7 +393,7 @@ describe('GrimoireList', () => {
     });
 
     it('offers Any, Private and Shared with their counts, resting on Any', () => {
-      render(
+      renderWithQuery(
         <Navigating push={router.push}>
           <List {...props()} />
         </Navigating>,
@@ -411,7 +406,7 @@ describe('GrimoireList', () => {
     });
 
     it('leaves visibility out of the address when Any is chosen again', async () => {
-      render(
+      renderWithQuery(
         <Navigating push={router.push}>
           <List
             {...props({
@@ -437,7 +432,7 @@ describe('GrimoireList', () => {
     });
 
     it('rests on Any, disabled, when Private or Shared holds no spell', () => {
-      render(
+      renderWithQuery(
         <Navigating push={router.push}>
           <List
             {...props({
@@ -460,7 +455,7 @@ describe('GrimoireList', () => {
     });
 
     it('names each box in the plural, as it takes several, and says when it has none to offer', () => {
-      render(
+      renderWithQuery(
         <Navigating push={router.push}>
           <List {...props({ facets: { ...props().facets, makers: [] } })} />
         </Navigating>,
@@ -475,7 +470,7 @@ describe('GrimoireList', () => {
     });
 
     it('draws the icon of a moon phase beside it in the list', () => {
-      render(
+      renderWithQuery(
         <Navigating push={router.push}>
           <List {...props()} />
         </Navigating>,
@@ -488,7 +483,7 @@ describe('GrimoireList', () => {
     });
 
     it('counts the facets in the Filters button and says them in the search sentence', () => {
-      render(
+      renderWithQuery(
         <List
           {...props({
             filter: {
@@ -510,7 +505,7 @@ describe('GrimoireList', () => {
     });
 
     it('says nothing matched, not that there are none, when only a facet is in force', () => {
-      render(
+      renderWithQuery(
         <List
           {...props({
             spells: [],
@@ -546,7 +541,7 @@ describe('GrimoireList', () => {
         moonPhases: ['Full'],
       };
       const cursor = { after: 'cursor-x' };
-      render(<List {...props({ filter, cursor })} />);
+      renderWithQuery(<List {...props({ filter, cursor })} />);
 
       const box = screen.getByRole('combobox', { name: 'Title' });
       act(() => box.focus());

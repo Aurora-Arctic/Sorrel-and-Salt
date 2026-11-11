@@ -29,20 +29,34 @@ const filterTexts = z
     return kept.length > 0 ? kept : undefined;
   });
 
+/** A list of `item` as a filter takes it: an empty, null or missing list is no filter. */
+const listOrNone = <Item extends z.ZodType>(item: Item) =>
+  z
+    .array(item)
+    .nullish()
+    .transform((list) => (list && list.length > 0 ? list : undefined));
+
+/** An option of one of `values`, where null or missing is no filter. */
+const nullishEnum = <const Values extends readonly [string, ...string[]]>(values: Values) =>
+  z
+    .enum(values)
+    .nullish()
+    .transform((value) => value ?? undefined);
+
+/** A to-do list switch: true narrows the list, and false, null or missing is no filter. */
+const onlyTrue = z
+  .boolean()
+  .nullish()
+  .transform((only) => (only === true ? true : undefined));
+
 /**
- * A list of row ids as a filter takes it: an empty, null or missing list is no filter. Each is checked as a uuid, because it reaches a `uuid`
+ * A list of row ids as a filter takes it. Each is checked as a uuid, because it reaches a `uuid`
  * comparison inside the keyset query, where a malformed id would come back as "Invalid cursor".
  */
-const filterIds = z
-  .array(RowId)
-  .nullish()
-  .transform((ids) => (ids && ids.length > 0 ? ids : undefined));
+const filterIds = listOrNone(RowId);
 
-/** A list of elements as a filter takes it: a value that is none of the five is refused rather than matched to nothing. An empty, null or missing list is no filter. */
-const filterElements = z
-  .array(z.enum(INGREDIENT_ELEMENTS))
-  .nullish()
-  .transform((elements) => (elements && elements.length > 0 ? elements : undefined));
+/** A list of elements as a filter takes it: a value that is none of the five is refused rather than matched to nothing. */
+const filterElements = listOrNone(z.enum(INGREDIENT_ELEMENTS));
 
 export const CompendiumFilter = z.object({
   // Counted in composed code points, so `ñ` is one character however it was typed.
@@ -68,15 +82,9 @@ export const CompendiumFilter = z.object({
     .nullish()
     .transform((setting) => (setting === 'any' ? undefined : (setting ?? undefined))),
   // The keeper's to-do list: entries citing nothing. False is no filter.
-  withoutReferences: z
-    .boolean()
-    .nullish()
-    .transform((only) => (only === true ? true : undefined)),
+  withoutReferences: onlyTrue,
   // The keeper's other to-do list: entries with no live form. False is no filter.
-  withoutForms: z
-    .boolean()
-    .nullish()
-    .transform((only) => (only === true ? true : undefined)),
+  withoutForms: onlyTrue,
   // A curator's review mark: true keeps the reviewed entries, false the
   // ones needing review; null or missing is no filter. The service refuses it
   // without a curator's session, so the coven list never picks it.
@@ -92,22 +100,13 @@ export const CompendiumFilter = z.object({
     .transform((listing) => listing ?? 'shown'),
   // The column the list sorts on: name, or the sourcing score. Null or missing is the default order, by name or best match. The
   // service refuses the sourcing score without a curator's session, as the score is a curator's alone.
-  sort: z
-    .enum(COMPENDIUM_SORTS)
-    .nullish()
-    .transform((sort) => sort ?? undefined),
+  sort: nullishEnum(COMPENDIUM_SORTS),
   // Which way the sort runs; `desc` reverses it. Read only beside a sort, so it never reverses best match.
-  order: z
-    .enum(COMPENDIUM_ORDERS)
-    .nullish()
-    .transform((order) => order ?? undefined),
+  order: nullishEnum(COMPENDIUM_ORDERS),
   // Carry each entry's sourcing score: the admin list's alone, which the service refuses without a curator's session.
   withSourcingScore: z.boolean().optional(),
   // How the entries are classified; `unknown` is the formal names still to look up.
-  nomenclature: z
-    .enum(NOMENCLATURE_KINDS)
-    .nullish()
-    .transform((kind) => kind ?? undefined),
+  nomenclature: nullishEnum(NOMENCLATURE_KINDS),
 });
 
 export type CompendiumFilterInput = z.input<typeof CompendiumFilter>;
@@ -128,20 +127,11 @@ export const WorkspaceIngredientFilter = CompendiumFilter.pick({
   toxic: true,
 }).extend({
   // Where an entry came from; null or missing keeps both.
-  source: z
-    .enum(INGREDIENT_SOURCES)
-    .nullish()
-    .transform((source) => source ?? undefined),
+  source: nullishEnum(INGREDIENT_SOURCES),
   // Entries with a jar not at 0. False is no filter.
-  inStock: z
-    .boolean()
-    .nullish()
-    .transform((only) => (only === true ? true : undefined)),
+  inStock: onlyTrue,
   // Entries with a jar badged Low Stock or Out of Stock. False is no filter.
-  lowStockOnly: z
-    .boolean()
-    .nullish()
-    .transform((only) => (only === true ? true : undefined)),
+  lowStockOnly: onlyTrue,
 });
 
 export type WorkspaceIngredientFilterInput = z.input<typeof WorkspaceIngredientFilter>;

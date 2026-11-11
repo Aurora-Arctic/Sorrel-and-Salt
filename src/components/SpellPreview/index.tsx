@@ -10,8 +10,9 @@ import {
   useRef,
 } from 'react';
 import Notice from '../Notice';
-import IconTip, { CloseIcon, LiddedEyeIcon, PreviewButton } from '../IconTip';
+import IconTip, { CloseIcon, IconButton, LiddedEyeIcon, PreviewButton } from '../IconTip';
 import { SpellCardFilters } from '../SpellCard';
+import { BurnLayers, FaceLayers } from '../SpellCard/layers';
 import SpellRecipeBody from '../SpellRecipe/body';
 import SpellRecipeSummary from '../SpellRecipe/summary';
 import { holdPage } from '../Modal/page-hold';
@@ -19,6 +20,7 @@ import { EDGE_EMBERS, HEARTH_EMBERS } from './embers';
 import type { Ember, SpellPreviewProps } from './types';
 import { useWakeLock } from './use-wake-lock';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // Spell Preview: a button opening the spell in a pane of its own, with no links or controls. A native modal `<dialog>`
 // holds the page inert and gives Escape; full screen is added where the browser has it
@@ -52,13 +54,11 @@ const embers = (list: readonly Ember[], edge: boolean): ReactElement[] =>
   list.map((ember, i) => (
     <i
       key={i}
-      className={[
+      className={cx(
         'spell-preview__ember',
         `spell-preview__ember--${ember.kind}`,
         edge && 'spell-preview__ember--edge',
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      )}
       style={emberStyle(ember)}
     />
   ));
@@ -68,23 +68,10 @@ const Scene = (): ReactElement => (
     <SpellCardFilters />
     <div className="spell-preview__scene" aria-hidden="true">
       <span className="spell-preview__glow" />
-      <span className="spell-preview__face">
-        <span className="spell-preview__face-paper">
-          <span className="spell-preview__face-corner">
-            <span className="spell-preview__face-hole" />
-          </span>
-        </span>
-      </span>
+      <FaceLayers block="spell-preview" />
       <span className="spell-preview__hearth" />
       <span className="spell-preview__embers">{embers(HEARTH_EMBERS, false)}</span>
-      <span className="spell-preview__burn">
-        <span className="spell-preview__burn-paper">
-          <span className="spell-preview__burn-corner">
-            <span className="spell-preview__burn-hole" />
-          </span>
-          <span className="spell-preview__burn-curve" />
-        </span>
-      </span>
+      <BurnLayers block="spell-preview" />
       <span className="spell-preview__embers">{embers(EDGE_EMBERS, true)}</span>
     </div>
   </>
@@ -174,21 +161,21 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
               tip={wake.held ? 'Let the Screen Sleep' : 'Keep the Screen from Sleeping'}
               placement="below"
             >
-              <button
-                type="button"
-                className="icon-tip__edit icon-tip__edit--plain spell-preview__awake"
-                aria-pressed={wake.held}
+              <IconButton
+                label="Screen Awake"
+                icon={<LiddedEyeIcon open={wake.held} />}
+                className="icon-tip__edit--plain spell-preview__awake"
+                pressed={wake.held}
                 onClick={wake.toggle}
-              >
-                <LiddedEyeIcon open={wake.held} />
-                <span className="visually-hidden">Screen Awake</span>
-              </button>
+              />
             </IconTip>
           )}
-          <button type="button" className="icon-tip__edit icon-tip__edit--plain" onClick={close}>
-            <CloseIcon />
-            <span className="visually-hidden">Close</span>
-          </button>
+          <IconButton
+            label="Close"
+            icon={<CloseIcon />}
+            className="icon-tip__edit--plain"
+            onClick={close}
+          />
         </div>
         {/* Drawn only while open, so the page holds no second copy of the spell. */}
         {open && (

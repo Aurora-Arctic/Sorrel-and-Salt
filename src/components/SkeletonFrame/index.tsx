@@ -6,6 +6,17 @@ import Skeleton from '../Skeleton';
 import type { SkeletonHost } from '../../lib/navigation/skeleton-for';
 import './index.scss';
 
+/** The context row a page draws above itself, its lead a bar the size of the switcher. */
+export const SkeletonContextRow = (): ReactElement => (
+  <ContextRow
+    lead={
+      <span className="skeleton-frame__lead">
+        <Skeleton shape="block" quiet />
+      </span>
+    }
+  />
+);
+
 // A section's page drawn by the shell's body, because its section is not standing (a move in from
 // the compendium or from another area). The section's own layout is not mounted yet, so this draws
 // the context row it will have and the frame its body keeps, so the
@@ -31,13 +42,7 @@ export function framed(host: SkeletonHost, Page: ComponentType): ComponentType {
   const className = host === 'coven' ? 'coven-layout' : 'page-column';
   const Framed = (): ReactElement => (
     <>
-      <ContextRow
-        lead={
-          <span className="skeleton-frame__lead">
-            <Skeleton shape="block" quiet />
-          </span>
-        }
-      />
+      <SkeletonContextRow />
       <div className={className}>
         <Page />
       </div>
@@ -46,14 +51,3 @@ export function framed(host: SkeletonHost, Page: ComponentType): ComponentType {
   frames.set(Page, Framed);
   return Framed;
 }
-
-/** The context row a page draws above itself, its lead a bar the size of the switcher. */
-export const SkeletonContextRow = (): ReactElement => (
-  <ContextRow
-    lead={
-      <span className="skeleton-frame__lead">
-        <Skeleton shape="block" quiet />
-      </span>
-    }
-  />
-);

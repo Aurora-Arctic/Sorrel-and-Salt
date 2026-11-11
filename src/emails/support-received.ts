@@ -15,7 +15,7 @@ import type { SupportReceivedProps } from './types';
 const titleOf = (requestSubject: string): string =>
   supportTitle('We have your support request', requestSubject);
 
-export function SupportReceived({
+function SupportReceived({
   url,
   origin = new URL(url).origin,
   part,

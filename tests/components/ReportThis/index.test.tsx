@@ -3,7 +3,10 @@ import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const pathname = vi.fn<() => string | null>();
-vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: () => ({}) }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
+  usePathname: () => pathname(),
+}));
 
 const { default: ReportThis } = await import('@/components/ReportThis');
 
@@ -26,6 +29,20 @@ describe('ReportThis', () => {
     browserAt('/coven/x/spells');
     render(<ReportThis code={500} reference="abc123" />);
     expect(link()).toHaveAttribute('href', '/coven/x/spells?support=bug&error=500&ref=abc123');
+  });
+
+  it('carries the error detail beside the reference', () => {
+    pathname.mockReturnValue('/coven/x/spells');
+    browserAt('/coven/x/spells');
+    render(<ReportThis code={500} reference="abc123" detail="TypeError: a & b" />);
+    const href = link().getAttribute('href') ?? '';
+    expect(href.split('?')[0]).toBe('/coven/x/spells');
+    expect(Object.fromEntries(new URLSearchParams(href.split('?')[1]))).toEqual({
+      support: 'bug',
+      error: '500',
+      ref: 'abc123',
+      detail: 'TypeError: a & b',
+    });
   });
 
   it("leaves the page out of the server-rendered link when the router gives the framework's route", () => {

@@ -70,7 +70,7 @@ function renderControlled(initial: string[] = [], props: Partial<CategoryPickerP
 const box = () => screen.getByRole('combobox', { name: 'Category' });
 const open = () =>
   fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
-const type = (text: string) => fireEvent.change(box(), { target: { value: text } });
+const typeInBox = (text: string) => fireEvent.change(box(), { target: { value: text } });
 const option = (name: string) => screen.getByRole('option', { name: new RegExp(`^${name}`) });
 const removeButton = (name: string) => screen.getByRole('button', { name: `Remove ${name}` });
 const entry = (name: string) => removeButton(name).closest('li')!;
@@ -123,7 +123,7 @@ describe('CategoryPicker', () => {
     renderPicker();
 
     open();
-    type('test');
+    typeInBox('test');
 
     expect(screen.getAllByRole('option').map((row) => row.textContent)).toEqual([
       expect.stringMatching(/^Testcraft/),
@@ -136,7 +136,7 @@ describe('CategoryPicker', () => {
     renderControlled(['c-zz']);
 
     open();
-    type('able');
+    typeInBox('able');
     fireEvent.click(option('Ablefix'));
 
     expect(box()).toHaveValue('');
@@ -196,12 +196,12 @@ describe('CategoryPicker', () => {
     renderControlled();
 
     act(() => box().focus());
-    type('test');
+    typeInBox('test');
     fireEvent.keyDown(box(), { key: 'Enter' });
     expect(screen.queryByRole('button', { name: /^Remove / })).not.toBeInTheDocument();
     expect(box()).toHaveValue('test');
 
-    type('testward');
+    typeInBox('testward');
     fireEvent.keyDown(box(), { key: 'Enter' });
     expect(removeButton('Testward')).toBeInTheDocument();
     expect(box()).toHaveValue('');

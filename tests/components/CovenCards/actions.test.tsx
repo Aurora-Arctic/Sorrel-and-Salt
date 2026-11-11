@@ -1,9 +1,8 @@
 import type { Route } from 'next';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { renderWithQuery } from '../../support/render-with-query';
 import type { CovenCardActionsEntry } from '@/components/CovenCards/actions';
-import { makeQueryClient } from '@/lib/graphql-client';
 import {
   beginPress,
   focusOn,
@@ -15,8 +14,10 @@ import {
 } from '../../support/preload';
 import { WORKSPACE_ID } from '../../support/constants';
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => LIST }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
+  usePathname: () => LIST,
+}));
 
 // The sortable list field (the ordered lists of Edit Ingredient and Annotate) is kept out of a coven's
 // Ingredients first-load scripts, and starts loading before either dialog opens: once the page is idle,
@@ -58,11 +59,7 @@ const HELD: CovenCardActionsEntry = {
 async function renderActions(entry: CovenCardActionsEntry, watched: readonly string[] = SORTABLE) {
   const loaded = watchLoads(watched);
   const { covenCardActions } = await import('@/components/CovenCards/actions');
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <main>{covenCardActions(entry, WORKSPACE_ID, 'fixture-coven')}</main>
-    </QueryClientProvider>,
-  );
+  renderWithQuery(<main>{covenCardActions(entry, WORKSPACE_ID, 'fixture-coven')}</main>);
   // Effects that start a load on mount have run, so an empty count below means nothing started it.
   await act(async () => {});
   return loaded;

@@ -1,19 +1,10 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { describe, expect, inject, it } from 'vitest';
-import { REPO_ROOT } from '../support/paths';
+import { describe, expect, it } from 'vitest';
+import { filesMatching, readSource, sourceFiles } from '../support/repo-scan';
 
 // A daily job starts from its Vercel Cron route alone, so it never depends on traffic; a further caller is argued for in the diff (claude-docs/design-decisions/support.md, "Daily jobs start from Vercel Cron, and no job sleeps waiting").
 
-const sources = () =>
-  inject('repoFiles').filter(
-    (file) =>
-      file.startsWith('src/') && /\.[cm]?tsx?$/.test(file) && !file.includes('__lint-probe'),
-  );
-const callers = (call: RegExp) =>
-  sources()
-    .filter((file) => call.test(readFileSync(join(REPO_ROOT, file), 'utf8')))
-    .sort();
+const sources = () => sourceFiles({ under: 'src/' });
+const callers = (call: RegExp) => filesMatching(sources(), call).sort();
 
 describe('a daily job starts from its cron route alone', () => {
   it('only the support-retention route starts the support-retention job', () => {
@@ -43,17 +34,14 @@ describe('a daily job starts from its cron route alone', () => {
   });
 
   it('the coordinator ends: it neither sleeps nor holds a hook', () => {
-    const job = readFileSync(
-      join(REPO_ROOT, 'src/modules/identity/jobs/provisional-cleanup.ts'),
-      'utf8',
-    );
+    const job = readSource('src/modules/identity/jobs/provisional-cleanup.ts');
     // Precondition: the file is the coordinator.
     expect(job).toMatch(/export async function provisionalCleanup\(/);
     expect(job).not.toMatch(/\b(?:sleep|createHook)\b/);
   });
 
   it('the admin Support page starts no support job', () => {
-    const page = readFileSync(join(REPO_ROOT, 'src/app/(shell)/keepers/support/page.tsx'), 'utf8');
+    const page = readSource('src/app/(shell)/keepers/support/page.tsx');
     // Precondition: the page is the one that reads the support requests.
     expect(page).toMatch(/requireCuratorSession/);
     expect(page).not.toMatch(/Retention|Sweep|\bafter\(/);

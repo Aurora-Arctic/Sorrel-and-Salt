@@ -8,10 +8,8 @@ import {
   useWatch,
   type FieldError as FormFieldError,
 } from 'react-hook-form';
-import { tidy } from '../../lib/formats';
 import Combobox, { ComboboxEntry, ComboboxMultiSelect } from '../Combobox';
 import { LazySortableEntries } from '../Combobox/lazy-sortable';
-import type { ComboboxOption } from '../Combobox/types';
 import { FieldError, FieldShell, SwitchField, useField } from '../Field';
 import InfoTip from '../InfoTip';
 import { substituteSummary } from './substitute-summary';
@@ -22,7 +20,6 @@ import type {
   ListOption,
   MultiSelectFieldProps,
   SubstituteListEntry,
-  SuggestFieldProps,
   ToggleFieldProps,
 } from './types';
 import {
@@ -39,66 +36,6 @@ import {
 // IngredientForm's own fields, on the shared field shell (../Field, claude-docs/components/
 // field.md). Each reads its own error out of the form state, so a field re-renders for its own
 // error alone. CupboardEntryForm also imports ListField and MultiSelectField.
-
-/**
- * A text field whose box suggests as it is typed in (claude-docs/components/combobox.md): a pick fills the field with
- * the suggestion's value, and free text stays as typed. What a pick links is the caller's, told of
- * each pick and each edit; what it adds to the box is its qualifier.
- */
-export function SuggestField<O extends ComboboxOption = ComboboxOption>({
-  name,
-  label,
-  hint,
-  placeholder,
-  suggestions,
-  onActivate,
-  onPick,
-  onEdit,
-  qualifier,
-  icon,
-  typedIcon,
-  offerTyped,
-  note,
-  after,
-}: SuggestFieldProps<O>): ReactElement {
-  const { control } = useFormContext<IngredientFormValues>();
-  const { field } = useController({ control, name });
-  const { aria, ...shell } = useField<IngredientFormValues>(name, hint, note);
-  return (
-    <FieldShell label={label} hint={hint} note={note} after={after} {...shell}>
-      <Combobox
-        id={shell.controlId}
-        label={label}
-        labelId={shell.labelId}
-        value={field.value}
-        onChange={(text) => {
-          field.onChange(text);
-          onEdit?.(text);
-        }}
-        onFocus={onActivate}
-        onBlur={() => {
-          const tidied = tidy(field.value ?? '');
-          if (tidied !== field.value) field.onChange(tidied);
-          field.onBlur();
-        }}
-        spellCheck={false}
-        onPick={(value, option) => {
-          field.onChange(value);
-          onPick?.(option);
-        }}
-        suggestions={suggestions}
-        qualifier={qualifier}
-        icon={icon}
-        typedIcon={typedIcon}
-        offerTyped={offerTyped}
-        placeholder={placeholder}
-        inputRef={field.ref}
-        name={field.name}
-        {...aria}
-      />
-    </FieldShell>
-  );
-}
 
 /**
  * A closed set holding several values, on the combobox's multi-select box, its choices as chips

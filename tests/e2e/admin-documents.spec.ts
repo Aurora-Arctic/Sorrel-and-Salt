@@ -25,6 +25,26 @@ async function appendTo(page: Page, anchor: string, addition: string): Promise<v
   await page.keyboard.type(addition);
 }
 
+// The editor copies the browser's selection into its own on a throttle of about 100ms, and a redraw writes its copy back to
+// the page, so a redraw that lands just after a press undoes it. The presses are topped up until the selection holds across
+// that throttle, which also means the Link button, reading the editor's copy, sees all of it.
+async function selectBack(page: Page, text: string): Promise<void> {
+  for (let i = 0; i < text.length; i++) await page.keyboard.press('Shift+ArrowLeft');
+  let previous: string | undefined;
+  await expect
+    .poll(
+      async () => {
+        const selected = await page.evaluate(() => window.getSelection()?.toString() ?? '');
+        if (selected.length < text.length) await page.keyboard.press('Shift+ArrowLeft');
+        const held = selected === previous;
+        previous = selected;
+        return held ? selected : undefined;
+      },
+      { intervals: [300] },
+    )
+    .toBe(text);
+}
+
 test('an admin edits the disclaimer, saves a draft no reader sees, then publishes it', async ({
   page,
   browser,
@@ -461,13 +481,7 @@ test('a bare address typed into the link dialog becomes an https link, and stays
 
   await appendTo(page, 'Changes to This Policy', ' Fixturelink');
   await expect(editorOf(page).getByRole('heading', { name: /Fixturelink$/ })).toBeVisible();
-  for (let i = 0; i < 'Fixturelink'.length; i++) await page.keyboard.press('Shift+ArrowLeft');
-  // The selection is read back, then given a beat: the editor copies the browser’s selection into its own on a throttle of about
-  // 100ms, and the Link button reads the editor’s copy, which would still be one letter short if it ran first.
-  await expect
-    .poll(() => page.evaluate(() => window.getSelection()?.toString()))
-    .toBe('Fixturelink');
-  await page.waitForTimeout(300);
+  await selectBack(page, 'Fixturelink');
   await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
   const dialog = page.getByRole('dialog', { name: 'Add Link' });
   const address = dialog.getByRole('textbox', { name: 'Address' });
@@ -579,11 +593,7 @@ test('the editor link dialog spaces its field and buttons as every other form mo
   await page.waitForLoadState('networkidle');
   await appendTo(page, 'Changes to This Policy', ' Fixturelink');
   await expect(editorOf(page).getByRole('heading', { name: /Fixturelink$/ })).toBeVisible();
-  for (let i = 0; i < 'Fixturelink'.length; i++) await page.keyboard.press('Shift+ArrowLeft');
-  await expect
-    .poll(() => page.evaluate(() => window.getSelection()?.toString()))
-    .toBe('Fixturelink');
-  await page.waitForTimeout(300);
+  await selectBack(page, 'Fixturelink');
   await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
   const dialog = page.getByRole('dialog', { name: 'Add Link' });
   await expect(dialog).toBeVisible();

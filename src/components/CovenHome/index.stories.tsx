@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import CovenHome from '.';
 import type { CovenHomeAccess } from './types';
+import { covenPath } from '@/lib/coven-path';
 
 const meta = {
   title: 'Coven / Coven Home',
@@ -99,7 +100,7 @@ export const States: Story = {
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   // The page inside the shell with the coven switcher and nav, as src/app/(shell)/coven/[slug]/page.tsx has it.
   render: ({ state }) => (
-    <ShellFrame area="coven" open={`/coven/${SLUG}`}>
+    <ShellFrame area="coven" open={covenPath(SLUG)}>
       {state}
     </ShellFrame>
   ),

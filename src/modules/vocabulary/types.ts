@@ -53,7 +53,7 @@ export interface CuratedVocabulary<TTable extends CuratedTable = CuratedTable> {
   addressHint?: string;
 }
 
-export type GroupedTable = typeof categories | typeof ingredientForms | typeof deities;
+type GroupedTable = typeof categories | typeof ingredientForms | typeof deities;
 
 export type GroupTable =
   typeof categoryGroups | typeof ingredientFormGroups | typeof deityTraditions;

@@ -1,5 +1,6 @@
 import { useId, type ReactElement } from 'react';
 import InfoTip from '../InfoTip';
+import { Icon } from '../IconTip/icons';
 import type { SourcingScoreProps } from './types';
 import './index.scss';
 
@@ -17,19 +18,11 @@ const kindOf = (points: number): Kind => (points > 0 ? 'gain' : points < 0 ? 'co
 const KIND_ORDER: readonly Kind[] = ['gain', 'cost', 'none'];
 
 const Glyph = ({ kind }: { kind: Kind }): ReactElement => (
-  <svg
-    className="sourcing-score__glyph"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    aria-hidden="true"
-    focusable="false"
-  >
+  <Icon className="sourcing-score__glyph" viewBox="0 0 24 24" strokeWidth={2}>
     <circle cx="12" cy="12" r="9" />
     {kind === 'gain' && <path d="M8 12l3 3 5-6" />}
     {kind === 'cost' && <path d="M8 12h8" />}
-  </svg>
+  </Icon>
 );
 
 function Facts({

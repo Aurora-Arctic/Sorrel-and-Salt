@@ -1,7 +1,12 @@
 import type { UseFormSetError } from 'react-hook-form';
 import { describe, expect, it, vi } from 'vitest';
 import { GraphQLClientError } from '@/lib/graphql-client-error';
-import { GENERIC_FAILURE, placeServerIssues } from '@/lib/graphql-failure';
+import {
+  GENERIC_FAILURE,
+  fieldMessage,
+  placeServerIssues,
+  readGraphqlFailureCode,
+} from '@/lib/graphql-failure';
 
 type Values = { name: string; description: string };
 
@@ -76,5 +81,25 @@ describe('placeServerIssues', () => {
 
     expect(placed).toBe(false);
     expect(setError).not.toHaveBeenCalled();
+  });
+});
+
+describe('fieldMessage', () => {
+  it('gives the message only for the input the failure names', () => {
+    const failure = { field: { name: 'note', message: 'Too long' } };
+    expect(fieldMessage(failure, 'note')).toBe('Too long');
+    expect(fieldMessage(failure, 'body')).toBeUndefined();
+    expect(fieldMessage({ alert: 'Down' }, 'note')).toBeUndefined();
+  });
+});
+
+describe('readGraphqlFailureCode', () => {
+  it('reads the code of a refused request and nothing from any other failure', () => {
+    const refused = new GraphQLClientError({
+      status: 200,
+      errors: [{ message: 'Gone', extensions: { code: 'NOT_FOUND' } }],
+    });
+    expect(readGraphqlFailureCode(refused)).toBe('NOT_FOUND');
+    expect(readGraphqlFailureCode(new Error('offline'))).toBeUndefined();
   });
 });

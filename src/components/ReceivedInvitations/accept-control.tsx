@@ -1,14 +1,13 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import type { Route } from 'next';
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { failureMessage } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { useClickFeedback } from '../ClickFeedback';
+import { useGuardedAction } from '../ClickFeedback/use-guarded-action';
 import type { AcceptControlProps } from './types';
+import { covenPath } from '@/lib/coven-path';
 
 // A received invitation's Accept: it sends `acceptInvitationById`, which checks the address match
 // and decides. The landing is the coven; a refusal shows in a floating callout so a phone card does
@@ -27,45 +26,34 @@ const AcceptControl = ({
   invitation: { id, covenName, covenSlug },
 }: AcceptControlProps): ReactElement => {
   const { navigate, refresh } = usePendingNavigation();
-  const [sending, setSending] = useState(false);
-  const feedback = useClickFeedback({ name: `Accept the invitation to ${covenName}` });
-
-  async function accept() {
-    // aria-disabled rather than disabled while sending, so the focus stays on
-    // the button and the callout of a refusal is read from it; a second press
-    // meanwhile sends nothing.
-    if (sending) return;
-    setSending(true);
-    feedback.report(undefined);
-    try {
+  // aria-disabled rather than disabled while sending, so the focus stays on the button and the
+  // callout of a refusal is read from it.
+  const { anchorRef, run, pending, feedback } = useGuardedAction({
+    name: `Accept the invitation to ${covenName}`,
+    action: async () => {
       await graphqlRequest(AcceptInvitationByIdDocument, { id });
       // Busy until the coven replaces this page. A cast: the built routes
       // know `/coven/[slug]`, not this literal. The refresh redraws the shell
       // too, whose layout a navigation keeps, so the menu's count drops.
-      navigate(`/coven/${covenSlug}` as Route);
+      navigate(covenPath(covenSlug));
       refresh();
-    } catch (error) {
-      setSending(false);
-      // No fields of its own, so the reader always answers with an alert.
-      feedback.report(failureMessage(error));
-    }
-  }
+    },
+  });
 
   return (
     <>
       <BusyButton
-        ref={feedback.anchorRef}
+        ref={anchorRef}
         className="btn btn--solid btn--small"
         aria-label={`Accept the invitation to ${covenName}`}
-        aria-disabled={sending || undefined}
-        busy={sending}
+        aria-disabled={pending || undefined}
+        busy={pending}
         busyLabel="Accepting"
-        onClick={() => void accept()}
+        onClick={() => void run()}
       >
         Accept
       </BusyButton>
-      {/* oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering */}
-      {feedback.feedback}
+      {feedback}
     </>
   );
 };

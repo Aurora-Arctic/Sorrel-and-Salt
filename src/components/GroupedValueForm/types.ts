@@ -44,14 +44,14 @@ export interface GroupedValueFormProps {
 }
 
 /** A grouped kind's group field: what it is called, what it shows until one is chosen, and its hint. */
-export interface GroupedValueGroupField {
+interface GroupedValueGroupField {
   label: string;
   /** What the field shows until one is chosen: "Choose a group". */
   placeholder: string;
   hint?: string;
 }
 
-export interface GroupedValueCopy {
+interface GroupedValueCopy {
   noun: string;
   descriptionHint?: string;
   group?: GroupedValueGroupField;
@@ -66,7 +66,7 @@ export interface GroupedValueCopy {
  * the form's own name where the kind has one, and a deity's other names. The
  * box's draft is never parsed.
  */
-export type GroupedValueParsed = Pick<GroupedValueValues, 'name' | 'description'> &
+type GroupedValueParsed = Pick<GroupedValueValues, 'name' | 'description'> &
   Partial<Pick<GroupedValueValues, 'groupId' | 'folkNames'>>;
 
 export interface GroupedValueKindSpec<Input extends object> extends GroupedValueCopy {

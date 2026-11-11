@@ -2,7 +2,7 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_PROJECT, PROJECTS, projectBySlug } from './task-projects.mjs';
+import { PROJECTS, defaultOf, projectBySlug } from './task-projects.mjs';
 
 export const TASKS_INDEX = 'claude-docs/TASKS.md';
 const TASKS_DIR = 'claude-docs/tasks';
@@ -27,9 +27,7 @@ export function orderTaskFiles(paths, projects = PROJECTS) {
 /** The Project whose directory holds `path`; TASKS.md and a file directly under `tasks/` or `waves/` are the default's. */
 export function projectOfDocPath(path, projects = PROJECTS) {
   const match = /^claude-docs\/(?:tasks|waves)\/([^/]+)\/[^/]+\.md$/.exec(path);
-  return (
-    (match && projectBySlug(match[1], projects)) || projects.find((project) => project.default)
-  );
+  return (match && projectBySlug(match[1], projects)) || defaultOf(projects);
 }
 
 const fromRepo = (path) => fileURLToPath(new URL(`../${path}`, import.meta.url));
@@ -41,7 +39,6 @@ function treeOf(dir) {
 }
 
 export const TASKS_FILES = orderTaskFiles([TASKS_INDEX, ...treeOf(TASKS_DIR)]);
-export { DEFAULT_PROJECT };
 
 // `ID` and `HEADING` are what the project-progress tally imports, so the skill reads the same headings the same way.
 export const ID = String.raw`[A-Z]+[0-9]*(?:\.[A-Z0-9]+)*[a-z]?`;

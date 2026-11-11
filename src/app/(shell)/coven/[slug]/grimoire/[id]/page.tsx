@@ -1,3 +1,4 @@
+import { single } from '@/lib/search-params';
 import { orNotFound } from '@/lib/or-not-found';
 import type { Metadata, Route } from 'next';
 import { notFound } from 'next/navigation';
@@ -15,12 +16,12 @@ import EditWorkingAction from '@/components/SpellWorkings/edit-working';
 import SpellWorkings from '@/components/SpellWorkings';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import { deletedHrefOf } from '@/components/SpellRecipe/deleted-href';
-import { UNTITLED_SPELL } from '@/components/SpellCard';
-import { DEMO_NOTICE, DEMO_OWNER_NOTICE } from '@/lib/demo-notice';
+import { spellNameOf } from '@/components/SpellCard/untitled';
+import { demoNoticeOf } from '@/lib/demo-notice';
 import { Forbidden } from '@/lib/errors';
-import { RowId } from '@/lib/validation';
+import { isRowId } from '@/lib/validation';
 import { viewerOf } from '@/lib/viewer';
-import { rolePermits } from '@/modules/coven';
+import { covenAccessOf } from '@/lib/coven-access';
 import { requireCovenMembership, requireSession } from '@/lib/request-session';
 import RecordWorkingButton from '@/components/RecordWorking';
 import { readSpell } from '@/modules/grimoire';
@@ -32,6 +33,7 @@ import { readWorkingsOf } from './workings-read';
 import { readRecipeAsideOf } from './recipe-aside';
 import { workingStepsOf } from './recipe-steps';
 import type { SpellRecipeParams } from './types';
+import { covenPath } from '@/lib/coven-path';
 
 // One saved spell as a page. `readSpell` keeps a private spell its author's in SQL, so a stranger, another coven's
 // spell and another member's private spell all read as the same 404. Per request, never cached (rule 6).
@@ -39,7 +41,7 @@ import type { SpellRecipeParams } from './types';
 
 const spellOf = cache(async (slug: string, id: string) => {
   // A malformed id names no spell, so it is a 404 before any read.
-  if (!RowId.safeParse(id).success) notFound();
+  if (!isRowId(id)) notFound();
   const { workspace, membership } = await requireCovenMembership(slug);
   const session = await requireSession();
   const spell = await orNotFound(() => readSpell(session, workspace.id, id), Forbidden);
@@ -49,13 +51,14 @@ const spellOf = cache(async (slug: string, id: string) => {
 export async function generateMetadata({ params }: SpellRecipeParams): Promise<Metadata> {
   const { slug, id } = await params;
   const { spell } = await spellOf(slug, id);
-  return { title: spell.title?.trim() || UNTITLED_SPELL };
+  return { title: spellNameOf(spell.title) };
 }
 
 export default async function SpellRecipePage({ params, searchParams }: SpellRecipeParams) {
   const { slug, id } = await params;
   const { workspace, membership, session, spell } = await spellOf(slug, id);
-  const recipePath = `/coven/${workspace.slug}/grimoire/${spell.id}` as Route;
+  const access = covenAccessOf(membership.role);
+  const recipePath = covenPath(workspace.slug, 'grimoire', spell.id);
   const recipe = await readRecipeOf(session, spell, recipePath);
   const aside = await readRecipeAsideOf(
     session,
@@ -64,27 +67,28 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     recipe.categories,
     recipePath,
     // Edit Stock on the inventory's lines, on the permission `saveStock` asserts: none for an observer.
-    rolePermits(membership.role, { inventory: ['update'] }),
+    access.canUpdateStock,
   );
   const workings = await readWorkingsOf(
     session,
     workspace.id,
     spell.id,
     recipe.steps,
-    rolePermits(membership.role, { working: ['delete'] }),
-    rolePermits(membership.role, { working: ['update'] }),
+    access.canDeleteWorking,
+    access.canUpdateWorking,
   );
   const ingredientSteps = workingStepsOf(
     recipe.views,
     recipePath,
     new Map(aside.doors.map(({ stepId, stock }) => [stepId, stock])),
   );
-  const canUpdate = rolePermits(membership.role, { spell: ['update'] });
-  const canDelete = rolePermits(membership.role, { spell: ['delete'] });
-  const canDuplicate = rolePermits(membership.role, { spell: ['create'] });
-  const canRecord =
-    spell.status === 'complete' && rolePermits(membership.role, { working: ['create'] });
-  const name = spell.title?.trim() || UNTITLED_SPELL;
+  const {
+    canUpdateSpell: canUpdate,
+    canDeleteSpell: canDelete,
+    canCreateSpell: canDuplicate,
+  } = access;
+  const canRecord = spell.status === 'complete' && access.canCreateWorking;
+  const name = spellNameOf(spell.title);
   const { viewer } = await viewerOf();
   const recordButton = (
     <RecordWorkingButton
@@ -96,17 +100,15 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
       steps={ingredientSteps}
     />
   );
-  const listPath = `/coven/${workspace.slug}/grimoire${spell.status === 'draft' ? '/drafts' : ''}`;
-  const deletedHref = deletedHrefOf(listPath as Route, spell.title);
+  const listPath = covenPath(workspace.slug, 'grimoire', spell.status === 'draft' && 'drafts');
+  const deletedHref = deletedHrefOf(listPath, spell.title);
   const query = await searchParams;
   const edit = query.edit;
-  const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
+  const entryId = single(query.entry) || undefined;
   const viewed = entryId ? await readViewedEntry(membership, entryId) : undefined;
-  const wanted = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;
+  const wanted = typeof edit === 'string' && isRowId(edit) ? edit : undefined;
   const saved =
-    canUpdate && wanted?.success && wanted.data === spell.id
-      ? await readEditedSpell(workspace.id, spell.id)
-      : undefined;
+    canUpdate && wanted === spell.id ? await readEditedSpell(workspace.id, spell.id) : undefined;
   return (
     <main>
       <RouteModalProvider>
@@ -173,13 +175,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                 moonPhase={spell.moonPhase}
                 dayOfWeek={spell.dayOfWeek}
                 steps={previewStepsOf(recipe.steps)}
-                demoNotice={
-                  workspace.demo
-                    ? membership.role === 'owner'
-                      ? DEMO_OWNER_NOTICE
-                      : DEMO_NOTICE
-                    : undefined
-                }
+                demoNotice={demoNoticeOf(workspace, membership.role)}
               />
               <SpellMoreMenu
                 workspaceId={workspace.id}
@@ -194,7 +190,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
               />
             </div>
           }
-          back={{ href: `/coven/${workspace.slug}/grimoire` as Route, label: 'Grimoire' }}
+          back={{ href: covenPath(workspace.slug, 'grimoire'), label: 'Grimoire' }}
         />
         <SpellDialog
           workspaceId={workspace.id}
@@ -204,7 +200,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           opened={saved && { spell: saved }}
           canCreate={false}
           canDelete={canDelete}
-          deletedFromHref={listPath as Route}
+          deletedFromHref={listPath}
           canDuplicate={canDuplicate}
           userId={membership.userId}
         />

@@ -17,12 +17,13 @@ import { cachedHelpRead } from '@/lib/help-cache';
 import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import type { PageEntry, PageRequest } from '@/lib/types';
-import { RowId } from '@/lib/validation';
+import { trimmedOrUndefined } from '@/lib/text';
+import { isRowId } from '@/lib/validation';
 import { assertCurator, assertSiteAdmin } from '@/modules/identity';
 import { helpArticles } from '../schema/help-articles';
 import type { HelpArticle, HelpArticleWithChildren, HelpKeeperFilter, HelpReach } from '../types';
 import { reachOf } from './reach';
-import { toHelpArticles } from './rows';
+import { HELP_LIST_LIMIT, NO_HELP_ARTICLE, toHelpArticles } from './rows';
 
 // The public reads take no session: a signed-out reader sees what any reader sees, and a staff or keeper row, a hidden or a deleted one is never answered.
 // Every read but the keeper's two answers shown rows alone, a keeper's included: a keeper sees a hidden row only in the list and the editor.
@@ -30,8 +31,8 @@ import { toHelpArticles } from './rows';
 
 /** One live row by id; a malformed id is the same NotFound as a missing one, so Postgres never sees it. */
 export async function requireHelpArticle(id: string): Promise<HelpArticleRow> {
-  const row = RowId.safeParse(id).success ? await findOneById(helpArticles, id) : undefined;
-  if (!row) throw new NotFound('Help article not found');
+  const row = isRowId(id) ? await findOneById(helpArticles, id) : undefined;
+  if (!row) throw new NotFound(NO_HELP_ARTICLE);
   return row;
 }
 
@@ -46,6 +47,15 @@ async function mapPage(
   return entries.map(({ cursor }, index) => ({ node: nodes[index], cursor }));
 }
 
+async function withAnsweredChildren(
+  row: HelpArticleRow,
+  children: readonly HelpArticleRow[],
+  reach: HelpReach,
+): Promise<HelpArticleWithChildren> {
+  const [article, ...answered] = await toHelpArticles([row, ...children], reach);
+  return { ...article, children: answered };
+}
+
 async function withChildren(
   row: HelpArticleRow,
   reach: HelpReach,
@@ -54,8 +64,7 @@ async function withChildren(
     row.kind === 'guide' || row.kind === 'article'
       ? await findHelpArticleChildren(reach, [row.id])
       : [];
-  const [article, ...answered] = await toHelpArticles([row, ...children], reach);
-  return { ...article, children: answered };
+  return withAnsweredChildren(row, children, reach);
 }
 
 async function publicFaq(page: PageRequest) {
@@ -70,11 +79,8 @@ async function publicGlossary(page: PageRequest) {
   return mapPage(await findHelpGlossaryPage(page), 'public');
 }
 
-// Wide enough for every public article the help centre will hold; the sitemap lists no more.
-const PATHS_LIMIT = 2001;
-
 async function publicPaths(): Promise<string[]> {
-  const entries = await findHelpArticlePathPage({ limit: PATHS_LIMIT, inverted: false });
+  const entries = await findHelpArticlePathPage({ limit: HELP_LIST_LIMIT, inverted: false });
   const rows = entries.map((entry) => entry.node);
   const topLevel = new Map(rows.filter((row) => !row.parentId).map((row) => [row.id, row.slug]));
   return rows.flatMap((row) => {
@@ -86,7 +92,7 @@ async function publicPaths(): Promise<string[]> {
 
 async function publicArticle(slug: string): Promise<HelpArticleWithChildren> {
   const row = await findHelpArticleBySlug(slug, 'public');
-  if (!row) throw new NotFound('Help article not found');
+  if (!row) throw new NotFound(NO_HELP_ARTICLE);
   return withChildren(row, 'public');
 }
 
@@ -122,7 +128,7 @@ export async function readStaffHelpArticle(
   assertCurator(session);
   const reach = reachOf(session);
   const row = await findHelpArticleBySlug(slug, reach);
-  if (!row) throw new NotFound('Help article not found');
+  if (!row) throw new NotFound(NO_HELP_ARTICLE);
   return withChildren(row, reach);
 }
 
@@ -146,8 +152,8 @@ export async function searchHelp(
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<HelpArticle, { score: number }>[]> {
-  const text = query.trim();
-  if (text === '') return [];
+  const text = trimmedOrUndefined(query);
+  if (text === undefined) return [];
   const reach = reachOf(session);
   const entries = await findHelpArticleSearchPage(reach, text, page);
   const nodes = await toHelpArticles(
@@ -184,6 +190,5 @@ export async function readKeeperHelpArticle(
   assertSiteAdmin(session);
   const row = await requireHelpArticle(id);
   const children = await findAllHelpArticleChildren(row.id);
-  const [article, ...answered] = await toHelpArticles([row, ...children], 'keeper');
-  return { ...article, children: answered };
+  return withAnsweredChildren(row, children, 'keeper');
 }

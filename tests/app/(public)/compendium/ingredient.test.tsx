@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { entryDetail } from '../../../support/entry-detail';
+import { getSession } from '../../../support/request-session';
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');
@@ -10,8 +11,11 @@ const notFound = vi.fn(() => {
 const permanentRedirect = vi.fn((_to: string) => {
   throw new Error('redirected');
 });
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ notFound, permanentRedirect, useRouter: () => router }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
+  notFound,
+  permanentRedirect,
+}));
 
 const viewerIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
@@ -22,14 +26,14 @@ const getIngredient = vi.fn();
 // The sourcing score's read, for a curator or keeper; its tests are slug-page.test.tsx's.
 const readSourcingScore = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
+  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
   readCompendiumEntry,
   readCompendiumReview,
   getIngredient,
   readSourcingScore,
 }));
 const SESSION = { userId: 'user-fixture' };
-const getSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 vi.mock('@/components/IngredientForm', () => ({
   default: ({ review }: { review?: { reviewed: boolean } }) => (

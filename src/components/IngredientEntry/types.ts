@@ -100,7 +100,7 @@ export interface PublicCupboardActionsProps extends PublicCupboardProps {
   edit?: { href: Route; entry: EditableEntry };
 }
 
-export interface CupboardProps {
+interface CupboardProps {
   workspaceId: string;
   covenSlug: string;
   canAdd: boolean;

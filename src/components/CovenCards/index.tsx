@@ -1,5 +1,5 @@
-import type { Route } from 'next';
 import type { ReactElement } from 'react';
+import { cardName } from '../../lib/ingredient-name';
 import CompendiumListFilter from '../CompendiumList/filter';
 import DetailsLink from '../IngredientEntry/details-link';
 import IngredientCard from '../IngredientCard';
@@ -8,10 +8,11 @@ import IngredientCardList from '../IngredientCardList';
 import { ListBodySkeleton } from '../ListFrame/skeleton';
 import IngredientSearch from '../IngredientSearch';
 import JarLines from '../JarLines';
-import { covenCardActions, covenCardName } from './actions';
+import { covenCardActions } from './actions';
 import EmptyCupboard from './empty';
 import type { CovenCardsProps } from './types';
 import '../CompendiumList/index.scss';
+import { covenPath } from '@/lib/coven-path';
 
 // A coven's Ingredients list, the twin of CompendiumCards: the filter row in coven mode, compact cards and the pager.
 // Render-only. The foot holds Edit or Annotate and More (`card-more.tsx`) (claude-docs/components/coven-cards.md).
@@ -60,7 +61,7 @@ const CovenCards = ({
             {entries.map((entry) => (
               <IngredientCard
                 key={entry.id}
-                href={`/coven/${covenSlug}/ingredients/${entry.id}` as Route}
+                href={covenPath(covenSlug, 'ingredients', entry.id)}
                 label={entry.label}
                 formalName={entry.canonicalName}
                 nomenclature={entry.nomenclature}
@@ -73,7 +74,12 @@ const CovenCards = ({
                 retired={entry.retired}
                 lastEdit={entry.lastEdit}
                 actions={covenCardActions(entry, workspaceId, covenSlug)}
-                startActions={<DetailsLink opens={entry.details} name={covenCardName(entry)} />}
+                startActions={
+                  <DetailsLink
+                    opens={entry.details}
+                    name={cardName(entry.label, entry.canonicalName)}
+                  />
+                }
               >
                 {entry.jars.length > 0 && <JarLines jars={entry.jars} />}
               </IngredientCard>

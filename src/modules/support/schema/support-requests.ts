@@ -58,6 +58,8 @@ export const supportRequests = pgTable(
     linkedFrom: uuid('linked_from').references((): AnyPgColumn => supportRequests.id),
     // The digest Next gives an error page, so a request can be matched to the server log line.
     errorReference: text('error_reference'),
+    // The name and message of the error the sender reported from, which the bug form showed them.
+    errorDetail: text('error_detail'),
     // The address of a signed-out visitor who sent this; null on a request an account sent.
     senderEmail: text('sender_email'),
     // The SHA-256 hex of the token in the link mailed about this request; only the newest mailed link matches, and a claim clears it.

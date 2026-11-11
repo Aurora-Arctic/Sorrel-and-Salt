@@ -1,6 +1,5 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { Route } from 'next';
 import type {
   CreateSpellMutation,
@@ -11,13 +10,11 @@ import type {
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
 import { VISIBILITY_LABELS } from '@/components/GrimoireList/params';
-import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
@@ -29,11 +26,7 @@ beforeEach(() => {
 // That the service keeps a complete spell titled is tests/modules/grimoire's; here the builder refuses a blank title on the title field and sends the chosen status.
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
-  const view = render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SpellBuilder workspaceId="w1" {...props} />
-    </QueryClientProvider>,
-  );
+  const view = renderWithQuery(<SpellBuilder workspaceId="w1" {...props} />);
   if (props.spell) fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
   return view;
 }

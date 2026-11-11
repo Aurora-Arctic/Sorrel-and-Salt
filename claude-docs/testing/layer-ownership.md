@@ -29,7 +29,8 @@ cited by number in the PR table of the task that applies it.
 1. **Functional requirements only.** A test proves a behaviour a user, admin
    or operator depends on. Tests of the harness, CI YAML, docs, scripts, the
    Dockerfile, `package.json` wiring or another test's helper are not
-   written, and **code used only by Claude agents is never tested** —
+   written (a helper under `tests/support/` or `tests/e2e/` is proved by the
+   tests that use it; the files in `tests/guards/` are not helpers), and **code used only by Claude agents is never tested** —
    `scripts/task-board.mjs`, the doc-splitting and citation tools, skills
    tooling, the CI summarizers: a bug there is seen by the agent that runs it,
    not a user. Three tests of the harness stay on purpose:
@@ -64,7 +65,7 @@ cited by number in the PR table of the task that applies it.
    component's or module's own config table (`KINDS`, `VOCABULARY_COPY`,
    `VARIANTS`, `UNITS`, the vocabulary registry) runs the shared behaviour on
    one row; every other row gets only what it changes — its mutation name, its
-   path, its parameter. An env matrix needs an env branch in the source. A
+   path, its parameter. An env matrix needs an env branch in the source, and so does a loop over widths, themes or personas: a loop whose rows run identical code is cut to one row (the axe sweep's themes are outside this). A
    fixed list is proven by one accepted value, one refused, and one equality
    check of the database's list against the code's.
 6. **Each layer proves only what it adds** ("The owning layer" above). A service refusal is asserted once, as one non-keeper fixture with
@@ -83,7 +84,7 @@ cited by number in the PR table of the task that applies it.
    **A page or parent test does not render its children.** It mocks its heavy
    children, or awaits `Page(...)` and walks the returned element tree (as
    `tests/app/(public)/compendium/held.test.tsx` does), and it owns only what
-   it passes down and what it asks the services for. A form field is proved
+   it passes down and what it asks the services for. A form field or one builder step is proved
    in a `FormProvider` harness (as
    `tests/components/IngredientForm/list-field.test.tsx` does), not by
    rendering the whole form. The reason: whole-tree renders are most of the
@@ -142,7 +143,7 @@ A file's `startTime` to `endTime` in Vitest's JSON results spans its first test'
 
 Why 10 s: the suite's summed time divided by its workers is the floor for the wall clock, and one file over the budget is the wall clock whatever the worker count, because a file is never split across workers.
 
-A file over the budget is split along the owning layer above, not argued for: render the smaller component, seed once per file instead of per test, move the rule to the layer that owns it. The budget is not raised.
+A file over the budget is split along the owning layer above, not argued for: render the smaller component, seed once per file instead of per test, move the rule to the layer that owns it. Expensive setup (a PDF render, a password hash, a whole-form render, a real seed) runs once per file, and boundary values are tested on the pure function, not on the expensive output. Setup a file's tests only read runs once; a test that writes gets its own. The budget is not raised.
 
 Two files stand over it by decision, and the ⚠ on them is expected:
 

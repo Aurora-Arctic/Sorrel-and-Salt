@@ -1,6 +1,7 @@
 import 'server-only';
 import type { Route } from 'next';
 import { readCategories } from '@/app/compendium-reads';
+import { cardCategoryReader } from '@/components/CategoryChips/card-categories';
 import type { CardCategory } from '@/components/IngredientCard/types';
 import type { RecipeStep } from '@/components/SpellRecipe/types';
 import type { Session } from '@/lib/session';
@@ -34,14 +35,10 @@ export async function readRecipeOf(
   ]);
   if (steps instanceof Error || assigned instanceof Error)
     throw steps instanceof Error ? steps : assigned;
-  const byId = new Map(known.map((category) => [category.id, category]));
   return {
     steps: recipeStepsOf(steps ?? [], hereHref),
     views: steps ?? [],
-    categories: (assigned ?? []).flatMap(({ id }): CardCategory[] => {
-      const category = byId.get(id);
-      return category ? [{ category: { id, name: category.name }, group: category.group }] : [];
-    }),
+    categories: cardCategoryReader(known)(assigned ?? []),
     lastEdit: { by: editor ?? null, at: spell.updatedAt.toISOString() },
   };
 }

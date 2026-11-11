@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import SupportRequests from '@/components/SupportRequests';
 import { supportHref, supportViewTabs } from '@/components/SupportRequests/href';
@@ -11,6 +11,8 @@ import type {
   SupportViewer,
 } from '@/components/SupportRequests/types';
 import type {
+  AssignSupportRequestMutation,
+  AssignSupportRequestMutationVariables,
   LiftSupportTimeoutMutation,
   LiftSupportTimeoutMutationVariables,
   ReplyToSupportRequestMutation,
@@ -20,14 +22,19 @@ import type {
   TimeOutSupportSenderMutation,
   TimeOutSupportSenderMutationVariables,
 } from '@/gql/graphql';
-import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import {
+  mockGraphQLError,
+  mockGraphQLMutation,
+  mockGraphQLPendingMutation,
+} from '../../support/msw/graphql';
+import { choose } from '../../support/interact';
 import { rowCells } from '../../support/table';
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/support-requests.md
 
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/keepers/support',
 }));
 
@@ -59,6 +66,7 @@ const DETAIL: SupportRequestDetailEntry = {
   ...ROW,
   message: 'There is no moon on the spell page.',
   path: '/coven/[slug]/grimoire',
+  errorDetail: null,
   issueUrl: null,
   resolvedBy: null,
   resolvedAt: null,
@@ -86,6 +94,15 @@ const timeOutSubmit = () => within(dialog()).getByRole('button', { name: 'Time O
 
 const confirmTimeOut = () => fireEvent.click(screen.getByRole('button', { name: 'Time Out' }));
 const resolveQuestion = () => screen.findByRole('group', { name: /sender sees it as resolved/ });
+
+// The assignee is the select-only combobox: opened by its label, chosen from its list.
+const assigneeBox = () => within(dialog()).getByRole('combobox', { name: 'Assignee' });
+const assigneeList = () => screen.getByRole('listbox', { name: 'Assignee choices' });
+const assigneeOptions = (name: RegExp) => within(assigneeList()).queryAllByRole('option', { name });
+const chooseAssignee = (name: string) => {
+  fireEvent.click(assigneeBox());
+  fireEvent.click(within(assigneeList()).getByRole('option', { name }));
+};
 
 const BASE = { id: 'u0', name: 'Bea Hollis', email: 'bea@example.test' };
 
@@ -132,6 +149,25 @@ describe('Error reference', () => {
   it('is left out when the request has none', () => {
     open(ADMIN);
     expect(within(dialog()).queryByRole('button', { name: 'Copy Error Reference' })).toBeNull();
+  });
+});
+
+describe('Error detail', () => {
+  it.each([
+    ['a keeper', ADMIN],
+    ['a curator', CURATOR],
+  ])('is shown to %s with the error', (_name, viewer) => {
+    open(viewer, { errorReference: 'abc123', errorDetail: 'TypeError: Testwort' });
+    expect(within(dialog()).getByText('TypeError: Testwort')).toBeInTheDocument();
+  });
+
+  it('is left out when the request has none', () => {
+    open(ADMIN, { errorReference: 'abc123' });
+    expect(
+      within(dialog())
+        .getAllByRole('term')
+        .map((term) => term.textContent),
+    ).not.toContain('Error Details');
   });
 });
 
@@ -191,6 +227,37 @@ describe('Reply', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Reply' }));
     await waitFor(() => expect(sent).toHaveLength(1));
     expect(sent[0]?.waitingOnSender).toBe(true);
+  });
+
+  it('holds the Waiting on Sender choice still while the reply sends, without showing it as loading', async () => {
+    const answer = mockGraphQLPendingMutation<ReplyToSupportRequestMutation>(
+      'ReplyToSupportRequest',
+      { replyToSupportRequest: { id: 'x' } },
+    );
+    // Answered however the test ends, so a failed assertion leaves no request open to stall the next test.
+    onTestFinished(answer);
+    open(ADMIN);
+    chooseReply();
+    const waiting = within(dialog()).getByRole('switch', { name: /Waiting on Sender/ });
+    // Precondition: the choice can be changed before the reply goes.
+    expect(waiting).toBeEnabled();
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Your Reply/ }), {
+      target: { value: 'Which jar?' },
+    });
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Reply' }));
+
+    // The reply is in flight once its own button reports busy.
+    await waitFor(() =>
+      expect(within(dialog()).getByRole('button', { name: /Replying/ })).toHaveAttribute(
+        'aria-busy',
+        'true',
+      ),
+    );
+    expect(waiting).toBeDisabled();
+    expect(waiting).not.toHaveAttribute('aria-busy');
+
+    answer();
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
   });
 });
 
@@ -326,7 +393,7 @@ describe('Time-Out', () => {
     writeMessage();
     expect(timeOutSubmit()).toBeEnabled();
 
-    fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'date' } });
+    choose('For', 'Until a Date');
     expect(timeOutSubmit()).toBeDisabled();
   });
 
@@ -334,7 +401,7 @@ describe('Time-Out', () => {
     const sent = timeOutSent();
     open(ADMIN);
     openTimeOut();
-    fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'none' } });
+    choose('For', 'No End Date');
     writeNote();
     writeMessage();
     fireEvent.click(timeOutSubmit());
@@ -534,11 +601,11 @@ describe('Issue', () => {
     });
     open(ADMIN);
     const field = within(dialog()).getByRole('textbox', { name: 'GitHub Issue' });
-    const save = within(dialog()).getByRole('button', { name: 'Save Address' });
-    expect(save).toBeDisabled();
+    const saveAddress = within(dialog()).getByRole('button', { name: 'Save Address' });
+    expect(saveAddress).toBeDisabled();
 
     fireEvent.change(field, { target: { value: 'https://example.test/issues/4' } });
-    fireEvent.click(save);
+    fireEvent.click(saveAddress);
 
     await waitFor(() => expect(field).toHaveAttribute('aria-invalid', 'true'));
     expect(field).toHaveAccessibleDescription(/Paste a GitHub issue link/);
@@ -964,11 +1031,18 @@ describe('Unsaved input in the dialog', () => {
 
   it.each([
     ['GitHub Issue', 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9'],
-    ['For', 'week'],
     [/^Note/, 'Warned twice'],
   ])('asks before closing with %s typed, though the reply is untouched', async (label, value) => {
     open(ADMIN);
     fireEvent.change(within(dialog()).getByLabelText(label), { target: { value } });
+    close();
+    expect(await screen.findByText('You have unsaved changes. Discard them?')).toBeInTheDocument();
+  });
+
+  it('asks before closing with For changed, though the reply is untouched', async () => {
+    open(ADMIN);
+    openTimeOut();
+    choose('For', '1 Week');
     close();
     expect(await screen.findByText('You have unsaved changes. Discard them?')).toBeInTheDocument();
   });
@@ -1004,7 +1078,7 @@ describe('Status line in the dialog', () => {
     mockGraphQLMutation(operation, () => ({ saved: { __typename: 'Saved', id: 'r1' } }));
     open(ADMIN);
     const d = within(dialog());
-    if (action === 'assign') await userEvent.selectOptions(d.getByLabelText('Assignee'), 'Curtis');
+    if (action === 'assign') chooseAssignee('Curtis');
     if (action === 'share')
       fireEvent.click(d.getByRole('switch', { name: 'Shared With Curators' }));
     if (action === 'link') {
@@ -1341,5 +1415,65 @@ describe('the date columns', () => {
     const cells = rowCells(screen.getByRole('row', { name: /The moon icon/ }));
     expect(cells[columns.indexOf('Created')]).toHaveTextContent('2026-10-29 9:00 am');
     expect(cells[columns.indexOf('Last From Sender')]).toHaveTextContent('2026-10-30 2:05 pm');
+  });
+});
+
+describe('The assignee picker', () => {
+  const PAUSED = { id: 'keeper-2', name: 'Petra Vane', paused: true };
+
+  function sentAssigns(): AssignSupportRequestMutationVariables[] {
+    const sent: AssignSupportRequestMutationVariables[] = [];
+    mockGraphQLMutation<AssignSupportRequestMutation, AssignSupportRequestMutationVariables>(
+      'AssignSupportRequest',
+      (variables) => {
+        sent.push(variables);
+        return { assignSupportRequest: { id: 'r1' } };
+      },
+    );
+    return sent;
+  }
+
+  it('still shows a paused assignee the picker no longer offers, chosen and not choosable again, beside the offered ones', async () => {
+    const sent = sentAssigns();
+    open(ADMIN, { assignee: PAUSED });
+
+    expect(assigneeBox()).toHaveTextContent(PAUSED.name);
+    fireEvent.click(assigneeBox());
+    // The precondition: the assignee is not among those offered, so only the paused mark can put them in the list.
+    expect(assigneeOptions(/Curtis/)).toHaveLength(1);
+    const paused = assigneeOptions(new RegExp(PAUSED.name));
+    expect(paused).toHaveLength(1);
+    expect(paused[0]).toHaveAttribute('aria-selected', 'true');
+    expect(paused[0]).toHaveAttribute('aria-disabled', 'true');
+    expect(assigneeOptions(/Curtis/)[0]).not.toHaveAttribute('aria-disabled', 'true');
+    expect(assigneeOptions(/Unassigned/)[0]).not.toHaveAttribute('aria-disabled', 'true');
+
+    fireEvent.click(within(assigneeList()).getByRole('option', { name: 'Curtis' }));
+    await waitFor(() => expect(sent).toEqual([{ id: 'r1', assigneeId: 'curator-1' }]));
+  });
+
+  it('shows an unpaused assignee once, as one of those offered, chosen and choosable', () => {
+    open(ADMIN, { assignee: { id: 'curator-1', name: 'Curtis', paused: false } });
+    expect(assigneeBox()).toHaveTextContent('Curtis');
+    fireEvent.click(assigneeBox());
+    const named = assigneeOptions(/Curtis/);
+    expect(named).toHaveLength(1);
+    expect(named[0]).toHaveAttribute('aria-selected', 'true');
+    expect(named[0]).not.toHaveAttribute('aria-disabled', 'true');
+    expect(within(assigneeList()).getAllByRole('option')).toHaveLength(2);
+  });
+
+  it('sends the chosen assignee by id, and Unassigned as none', async () => {
+    const sent = sentAssigns();
+    open(ADMIN);
+    expect(assigneeBox()).toHaveTextContent('Unassigned');
+    chooseAssignee('Curtis');
+    await waitFor(() => expect(sent).toEqual([{ id: 'r1', assigneeId: 'curator-1' }]));
+
+    cleanup();
+    sent.length = 0;
+    open(ADMIN, { assignee: { id: 'curator-1', name: 'Curtis', paused: false } });
+    chooseAssignee('Unassigned');
+    await waitFor(() => expect(sent).toEqual([{ id: 'r1', assigneeId: null }]));
   });
 });

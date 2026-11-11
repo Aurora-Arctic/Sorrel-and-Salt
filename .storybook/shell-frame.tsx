@@ -18,7 +18,7 @@ import type { ShellFrameProps } from './types';
 // page's row is the page's own, drawn only for someone with a coven to switch to, as `new` does here.
 // `role` is the admin area's: an admin sees People in its nav, a curator does not.
 
-export const FIXTURE_VIEWER: ShellViewer = {
+const FIXTURE_VIEWER: ShellViewer = {
   name: 'Fixture Member',
   canCurate: false,
   canCreate: true,

@@ -2,8 +2,8 @@ import { render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/here',
 }));
 
@@ -46,7 +46,7 @@ describe('SpellLookDialog', () => {
     expect(within(dialog()).getByRole('button', { name: /^Edited/ })).toHaveAccessibleDescription(
       /Fixture A/,
     );
-    expect(within(dialog()).getByRole('link', { name: 'See Full Recipe' })).toHaveAttribute(
+    expect(within(dialog()).getByRole('link', { name: 'See Full Spell' })).toHaveAttribute(
       'href',
       RECIPE,
     );
@@ -88,7 +88,7 @@ describe('SpellLookDialog', () => {
       </RouteModalProvider>,
     );
     expect(within(dialog()).queryByRole('link', { name: /^Edit/ })).not.toBeInTheDocument();
-    expect(within(dialog()).getByRole('link', { name: 'See Full Recipe' })).toBeInTheDocument();
+    expect(within(dialog()).getByRole('link', { name: 'See Full Spell' })).toBeInTheDocument();
     rerender(
       <RouteModalProvider>
         <SpellLookDialog closeHref={LIST} opened={{ ...OPENED, editHref: EDIT }} />
@@ -96,7 +96,7 @@ describe('SpellLookDialog', () => {
     );
     const edit = within(dialog()).getByRole('link', { name: 'Edit Fixture Working' });
     expect(edit).toHaveAttribute('href', EDIT);
-    const foot = within(dialog()).getByRole('link', { name: 'See Full Recipe' }).parentElement!;
+    const foot = within(dialog()).getByRole('link', { name: 'See Full Spell' }).parentElement!;
     expect(within(foot).getAllByRole('link')).toHaveLength(1);
     expect(foot).not.toContainElement(edit);
     expect(within(dialog()).queryByRole('link', { name: 'Edit Spell' })).toBeNull();

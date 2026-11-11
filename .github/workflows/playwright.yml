@@ -233,6 +233,7 @@ jobs:
           path: |
             /app/.reports/playwright-report/
             /app/.reports/test-results/
+            /app/.reports/e2e-servers/
           retention-days: 7
 
       - name: Write job summary

@@ -16,7 +16,7 @@ import { users } from '../../identity/schema/users';
 import type { SupportReplyRow, SupportTimeoutRow } from '../types';
 import { requireVerified, viewerOf } from './access';
 import { supportTiersForSenders } from './lifecycle';
-import type { SupportSenderTier } from './lifecycle';
+import type { SupportSenderTier } from '../../../lib/support-path';
 
 /**
  * The replies to each request, oldest first, none where the viewer may not read the request: a reader's scope is in the
@@ -32,20 +32,32 @@ export async function repliesForRequests(
   return requestIds.map((id) => sorted.filter((reply) => reply.requestId === id));
 }
 
+/** The answers `answer` gives, or when it throws Forbidden, that refusal in each slot of the batch; any other error passes. */
+async function refuseEach<T>(
+  slots: readonly unknown[],
+  answer: () => Promise<T[]>,
+): Promise<(T | Forbidden)[]> {
+  try {
+    return await answer();
+  } catch (error) {
+    if (!(error instanceof Forbidden)) throw error;
+    return slots.map(() => error);
+  }
+}
+
+const newestFirst = (timeouts: readonly SupportTimeoutRow[]): SupportTimeoutRow[] =>
+  [...timeouts].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
 /** The time-outs set on each sender, newest first, to a site keeper alone: anyone else's batch is refused in every slot. */
 export async function timeoutsForSenders(
   session: Session,
   userIds: readonly string[],
 ): Promise<(SupportTimeoutRow[] | Forbidden)[]> {
-  try {
+  return refuseEach(userIds, async () => {
     assertSiteAdmin(session, 'Only a site keeper may read a sender’s time-outs');
-  } catch (error) {
-    if (!(error instanceof Forbidden)) throw error;
-    return userIds.map(() => error);
-  }
-  const rows = await findSupportTimeoutsFor(userIds);
-  const sorted = [...rows].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  return userIds.map((id) => sorted.filter((timeout) => timeout.userId === id));
+    const sorted = newestFirst(await findSupportTimeoutsFor(userIds));
+    return userIds.map((id) => sorted.filter((timeout) => timeout.userId === id));
+  });
 }
 
 /**
@@ -56,16 +68,12 @@ export async function timeoutsForAddresses(
   session: Session,
   emails: readonly string[],
 ): Promise<(SupportTimeoutRow[] | Forbidden)[]> {
-  try {
+  return refuseEach(emails, async () => {
     assertSiteAdmin(session, 'Only a site keeper may read a sender’s time-outs');
-  } catch (error) {
-    if (!(error instanceof Forbidden)) throw error;
-    return emails.map(() => error);
-  }
-  const keys = emails.map(addressCountKey);
-  const rows = await findSupportTimeoutsForAddresses(keys);
-  const sorted = [...rows].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  return keys.map((key) => sorted.filter((timeout) => timeout.addressKey === key));
+    const keys = emails.map(addressCountKey);
+    const sorted = newestFirst(await findSupportTimeoutsForAddresses(keys));
+    return keys.map((key) => sorted.filter((timeout) => timeout.addressKey === key));
+  });
 }
 
 /**
@@ -110,10 +118,5 @@ export async function tiersForSenders(
   session: Session,
   userIds: readonly string[],
 ): Promise<(SupportSenderTier | Forbidden)[]> {
-  try {
-    return await supportTiersForSenders(session, userIds);
-  } catch (error) {
-    if (!(error instanceof Forbidden)) throw error;
-    return userIds.map(() => error);
-  }
+  return refuseEach(userIds, () => supportTiersForSenders(session, userIds));
 }

@@ -8,6 +8,7 @@
 
 // A lifted card in place of the tip's tint: a definition is read, not glanced at, so it takes the body's colours.
 .help-term__bubble {
+  box-sizing: content-box;
   @include tip-above;
 
   padding: space(3);

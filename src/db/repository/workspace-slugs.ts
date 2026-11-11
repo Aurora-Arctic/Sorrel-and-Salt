@@ -1,10 +1,14 @@
 import { and, eq, inArray, ne, notInArray } from 'drizzle-orm';
 import { workspaceSlugs } from '../../modules/coven/schema/workspace-slugs';
 import { workspaces } from '../../modules/coven/schema/workspaces';
-import type { Membership } from '@/modules/coven';
-import { notSoftDeleted, scopedTo } from './predicates';
+import { notSoftDeleted } from './predicates';
 import { selectFrom, selectOne } from './select';
-import type { AuditWriter, WorkspaceRow, WorkspaceSlugRow, WriterContext } from './types';
+import type { AuditWriter, WorkspaceRow, WriterContext } from './types';
+
+/** The live coven with this id, or `undefined`. */
+function findLiveWorkspace(id: string) {
+  return selectOne(workspaces, and(notSoftDeleted(workspaces), eq(workspaces.id, id)));
+}
 
 /**
  * The live coven holding `slug`, as its current address or as an old one, with which of the two it is. Takes no proof, so no
@@ -19,19 +23,8 @@ export async function findWorkspaceHoldingSlug(
     and(notSoftDeleted(workspaceSlugs), eq(workspaceSlugs.slug, slug)),
   );
   if (!address) return undefined;
-  const workspace = await selectOne(
-    workspaces,
-    and(notSoftDeleted(workspaces), eq(workspaces.id, address.workspaceId)),
-  );
+  const workspace = await findLiveWorkspace(address.workspaceId);
   return workspace ? { workspace, current: workspace.slug === slug } : undefined;
-}
-
-/** Every live address, current and old, of the proof's coven. */
-export function findWorkspaceSlugs(membership: Membership): Promise<WorkspaceSlugRow[]> {
-  return selectFrom(
-    workspaceSlugs,
-    and(notSoftDeleted(workspaceSlugs), scopedTo(membership, workspaceSlugs)),
-  );
 }
 
 /**
@@ -66,10 +59,7 @@ export function workspaceSlugWrites({
     );
     const stale: string[] = [];
     for (const row of others) {
-      const owner = await selectOne(
-        workspaces,
-        and(notSoftDeleted(workspaces), eq(workspaces.id, row.workspaceId)),
-      );
+      const owner = await findLiveWorkspace(row.workspaceId);
       if (!owner || owner.slug !== slug) stale.push(row.id);
     }
     if (stale.length > 0) await softDelete(workspaceSlugs, inArray(workspaceSlugs.id, stale));
@@ -87,10 +77,7 @@ export function workspaceSlugWrites({
     // The previous address is recorded too, since a coven made before the table may hold no row for it. Every other row of the
     // coven is retired, and returning to its previous address reuses that row.
     updateWorkspaceName: async (membership, { name, slug }) => {
-      const before = await selectOne(
-        workspaces,
-        and(notSoftDeleted(workspaces), eq(workspaces.id, membership.workspaceId)),
-      );
+      const before = await findLiveWorkspace(membership.workspaceId);
       if (!before) return [];
       await claim(before.id, before.slug);
       if (slug === before.slug) return update(workspaces, { name }, eq(workspaces.id, before.id));

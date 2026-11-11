@@ -11,11 +11,11 @@
     // The rules and the highlight reach the same step past the text each side; the padding keeps the text where it was.
     margin-inline: calc(-1 * #{$ruled-row-overhang});
     padding: space(4) $ruled-row-overhang;
-    border-block-start: 1px solid $hairline;
+    border-block-start: $hairline-border;
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 
     &:last-child {
-      border-block-end: 1px solid $hairline;
+      border-block-end: $hairline-border;
     }
 
     // The term an address names (a mark’s link, “See in Glossary”).

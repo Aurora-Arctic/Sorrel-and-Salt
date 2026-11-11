@@ -61,3 +61,6 @@ export interface FieldMask {
   format: FieldFormat;
   isSignificant: (character: string) => boolean;
 }
+
+/** An authenticator-app code as typed, without the spaces people group its digits with. */
+export const codeDigits = (text: string): string => text.replace(/\s/g, '');

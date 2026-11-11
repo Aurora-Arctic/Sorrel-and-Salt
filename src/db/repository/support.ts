@@ -23,9 +23,12 @@ import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
 import { ANONYMISED_SUBJECT, SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
 import type { SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
+import { MS_PER_DAY } from '../../lib/duration';
 import { findPage, findPageCount } from './finders';
-import { newestFirst, noEndOrAhead, notSoftDeleted } from './predicates';
-import { existsIn, selectFrom, selectOne } from './select';
+import { acceptedCard, cardAcceptedBy } from './invitations';
+import { newestFirst, notSoftDeleted } from './predicates';
+import { standingPause } from './pause-ledger';
+import { existsByKey, existsIn, selectFrom, selectOne, whenIds } from './select';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import type {
   AuditWriter,
@@ -44,8 +47,6 @@ import type {
 
 export const RESOLVED_CLOSES_AFTER_DAYS = 7;
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 /**
  * A resolved request whose seven days have passed reads as closed, whether or not its job has closed it yet, so a lost run only
  * delays the stored move. Every finder and move below reads status through this. `coalesce` keeps a resolved request with no
@@ -55,7 +56,7 @@ const lapsedResolved = sql`(${supportRequests.status} = 'resolved' and coalesce(
 
 function asOfNow<Row extends typeof supportRequests.$inferSelect>(row: Row): Row {
   if (row.status !== 'resolved' || row.resolvedAt === null) return row;
-  const closedAt = new Date(row.resolvedAt.getTime() + RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
+  const closedAt = new Date(row.resolvedAt.getTime() + RESOLVED_CLOSES_AFTER_DAYS * MS_PER_DAY);
   return closedAt.getTime() <= Date.now() ? { ...row, status: 'closed', closedAt } : row;
 }
 
@@ -153,12 +154,16 @@ function viewArm(reader: SupportReader, view: SupportView): SQL {
   }
 }
 
+// A reply's visibility, not a spell's.
+// oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
+const PUBLIC_REPLY = eq(supportReplies.visibility, 'public');
+
 /** The sender is in the group. A beta tester accepted a printed card: derived from the
  * invitation, never stored. */
 function senderArm(group: SupportSenderGroup): SQL {
   switch (group) {
     case 'beta_tester':
-      return sql`exists (select 1 from ${invitations} where ${invitations.kind} = 'card' and ${invitations.acceptedBy} = ${supportRequests.createdBy} and ${invitations.deletedAt} is null)`;
+      return cardAcceptedBy(supportRequests.createdBy);
   }
 }
 
@@ -175,17 +180,18 @@ function filterArms(
   ];
 }
 
+// What the page and the count of a reader's requests both read.
+const requestsOf = (reader: SupportReader, filter: SupportRequestFilter) =>
+  and(readerScope(reader), ...filterArms(reader, filter));
+
 export function findSupportRequestPage(
   reader: SupportReader,
   filter: SupportRequestFilter,
   page: PageRequest,
 ) {
-  return findPage(
-    supportRequests,
-    orderOf(filter),
-    page,
-    and(readerScope(reader), ...filterArms(reader, filter)),
-  ).then(readAsOfNow);
+  return findPage(supportRequests, orderOf(filter), page, requestsOf(reader, filter)).then(
+    readAsOfNow,
+  );
 }
 
 export function findSupportRequestCount(
@@ -193,12 +199,7 @@ export function findSupportRequestCount(
   filter: SupportRequestFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCount(
-    supportRequests,
-    orderOf(filter),
-    start,
-    and(readerScope(reader), ...filterArms(reader, filter)),
-  );
+  return findPageCount(supportRequests, orderOf(filter), start, requestsOf(reader, filter));
 }
 
 /**
@@ -238,21 +239,21 @@ export function findSupportRequestForReader(reader: SupportReader, id: string) {
   ).then(oneAsOfNow);
 }
 
+const ownedBy = (userId: string) => eq(supportRequests.createdBy, userId);
+
 /** One page of the sender's own requests, newest first. The finder ANDs `created_by` itself. */
 export function findOwnSupportRequestPage(
   userId: string,
   page: PageRequest,
 ): Promise<PageEntry<typeof supportRequests.$inferSelect>[]> {
-  return findPage(supportRequests, OWN_ORDER, page, eq(supportRequests.createdBy, userId)).then(
-    readAsOfNow,
-  );
+  return findPage(supportRequests, OWN_ORDER, page, ownedBy(userId)).then(readAsOfNow);
 }
 
 export function findOwnSupportRequestCount(
   userId: string,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCount(supportRequests, OWN_ORDER, start, eq(supportRequests.createdBy, userId));
+  return findPageCount(supportRequests, OWN_ORDER, start, ownedBy(userId));
 }
 
 export async function findOwnSupportStatusCounts(userId: string): Promise<SupportStatusCounts> {
@@ -317,13 +318,7 @@ export function findSupportRequestByViewTokenHash(hash: string) {
 export function findPublicSupportReplies(requestId: string) {
   return selectFrom(
     supportReplies,
-    and(
-      notSoftDeleted(supportReplies),
-      eq(supportReplies.requestId, requestId),
-      // A reply's visibility, not a spell's.
-      // oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
-      eq(supportReplies.visibility, 'public'),
-    ),
+    and(notSoftDeleted(supportReplies), eq(supportReplies.requestId, requestId), PUBLIC_REPLY),
   );
 }
 
@@ -351,10 +346,7 @@ export function findOwnSupportFollowUp(userId: string, id: string) {
   ).then(oneAsOfNow);
 }
 
-export const timeoutStands = and(
-  isNull(supportTimeouts.liftedAt),
-  noEndOrAhead(supportTimeouts.until),
-) as SQL;
+export const timeoutStands = standingPause(supportTimeouts);
 
 // The rows that stand on a sender; the send lock reads them inside its own transaction by the same predicate.
 const standingOnUser = (userId: string): SQL =>
@@ -399,9 +391,7 @@ export function findReplyAwaitingNotice(id: string) {
       notSoftDeleted(supportReplies),
       eq(supportReplies.id, id),
       eq(supportReplies.authorRole, 'staff'),
-      // A reply's visibility, not a spell's.
-      // oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
-      eq(supportReplies.visibility, 'public'),
+      PUBLIC_REPLY,
       isNull(supportReplies.noticeSentAt),
     ),
   );
@@ -455,15 +445,16 @@ export function findClosingNoticesDueAmong(
   lapsedBy: Date,
   ids: readonly string[],
 ): Promise<string[]> {
-  if (ids.length === 0) return Promise.resolve([]);
-  return retentionPage(
-    and(
-      notSoftDeleted(supportRequests),
-      closingNoticeDue(dueBy, lapsedBy),
-      inArray(supportRequests.id, [...ids]),
+  return whenIds(ids, () =>
+    retentionPage(
+      and(
+        notSoftDeleted(supportRequests),
+        closingNoticeDue(dueBy, lapsedBy),
+        inArray(supportRequests.id, [...ids]),
+      ),
+      null,
+      ids.length,
     ),
-    null,
-    ids.length,
   );
 }
 
@@ -525,21 +516,22 @@ export function findSupportTimeoutById(id: string) {
  * reply to a request outside the viewer's scope never leaves the database.
  */
 export function findSupportRepliesFor(viewer: SupportViewer, requestIds: readonly string[]) {
-  if (requestIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    supportReplies,
-    and(
-      notSoftDeleted(supportReplies),
-      inArray(supportReplies.requestId, [...requestIds]),
-      existsIn(
-        supportRequests,
-        and(
-          notSoftDeleted(supportRequests),
-          eq(supportRequests.id, supportReplies.requestId),
-          viewerScope(viewer),
+  return whenIds(requestIds, () =>
+    selectFrom(
+      supportReplies,
+      and(
+        notSoftDeleted(supportReplies),
+        inArray(supportReplies.requestId, [...requestIds]),
+        existsIn(
+          supportRequests,
+          and(
+            notSoftDeleted(supportRequests),
+            eq(supportRequests.id, supportReplies.requestId),
+            viewerScope(viewer),
+          ),
         ),
+        internalNotesScope(viewer),
       ),
-      internalNotesScope(viewer),
     ),
   );
 }
@@ -550,18 +542,14 @@ export function findSupportRepliesFor(viewer: SupportViewer, requestIds: readonl
  */
 function internalNotesScope(viewer: SupportViewer): SQL | undefined {
   if (viewer.role === 'admin') return undefined;
-  // A reply's visibility, not a spell's.
-  // oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
-  const isPublic = eq(supportReplies.visibility, 'public');
-  if (viewer.role === 'user') return isPublic;
+  if (viewer.role === 'user') return PUBLIC_REPLY;
   return or(
-    isPublic,
-    existsIn(
+    PUBLIC_REPLY,
+    existsByKey(
       supportRequests,
-      and(
-        eq(supportRequests.id, supportReplies.requestId),
-        or(eq(supportRequests.curatorVisible, true), eq(supportRequests.assignedTo, viewer.userId)),
-      ),
+      supportRequests.id,
+      supportReplies.requestId,
+      or(eq(supportRequests.curatorVisible, true), eq(supportRequests.assignedTo, viewer.userId)),
     ),
   );
 }
@@ -569,13 +557,10 @@ function internalNotesScope(viewer: SupportViewer): SQL | undefined {
 /** The ids among `userIds` that accepted a printed card: derived from the invitation, never
  * stored. */
 export async function findCardAcceptorIds(userIds: readonly string[]): Promise<Set<string>> {
-  if (userIds.length === 0) return new Set();
-  const rows = await selectFrom(
-    invitations,
-    and(
-      notSoftDeleted(invitations),
-      eq(invitations.kind, 'card'),
-      inArray(invitations.acceptedBy, [...userIds]),
+  const rows = await whenIds(userIds, () =>
+    selectFrom(
+      invitations,
+      and(notSoftDeleted(invitations), acceptedCard(inArray(invitations.acceptedBy, [...userIds]))),
     ),
   );
   return new Set(rows.flatMap((row) => (row.acceptedBy ? [row.acceptedBy] : [])));
@@ -584,20 +569,22 @@ export async function findCardAcceptorIds(userIds: readonly string[]): Promise<S
 /** The live time-outs set on these senders, newest first. The service lets a keeper alone
  * ask. */
 export function findSupportTimeoutsFor(userIds: readonly string[]) {
-  if (userIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    supportTimeouts,
-    and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.userId, [...userIds])),
+  return whenIds(userIds, () =>
+    selectFrom(
+      supportTimeouts,
+      and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.userId, [...userIds])),
+    ),
   );
 }
 
 /** The live time-outs set on these addresses, newest first. The service lets a keeper alone
  * ask. */
 export function findSupportTimeoutsForAddresses(addressKeys: readonly string[]) {
-  if (addressKeys.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    supportTimeouts,
-    and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.addressKey, [...addressKeys])),
+  return whenIds(addressKeys, () =>
+    selectFrom(
+      supportTimeouts,
+      and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.addressKey, [...addressKeys])),
+    ),
   );
 }
 
@@ -606,13 +593,14 @@ export function findSupportTimeoutsForAddresses(addressKeys: readonly string[]) 
  * Time-Out column for a page of users. Under the `SiteAdmin` proof: who is timed out is a keeper's to read.
  */
 export function findStandingSupportTimeoutsFor(_admin: SiteAdmin, userIds: readonly string[]) {
-  if (userIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    supportTimeouts,
-    and(
-      notSoftDeleted(supportTimeouts),
-      inArray(supportTimeouts.userId, [...userIds]),
-      timeoutStands,
+  return whenIds(userIds, () =>
+    selectFrom(
+      supportTimeouts,
+      and(
+        notSoftDeleted(supportTimeouts),
+        inArray(supportTimeouts.userId, [...userIds]),
+        timeoutStands,
+      ),
     ),
   );
 }
@@ -621,7 +609,7 @@ export function findStandingSupportTimeoutsFor(_admin: SiteAdmin, userIds: reado
  * The first number of the two-number advisory lock a sender's support sends take (the second hashes the sender's id). A fixed
  * namespace keeps it from meeting any other advisory lock.
  */
-export const SUPPORT_SEND_LOCK_NAMESPACE = 0x53555031;
+const SUPPORT_SEND_LOCK_NAMESPACE = 0x53555031;
 
 export function supportWrites({
   tx,
@@ -789,6 +777,7 @@ export function supportWrites({
           subject: ANONYMISED_SUBJECT,
           message: '',
           path: '',
+          errorDetail: null,
           senderEmail: null,
           viewTokenHash: null,
           viewTokenExpiresAt: null,

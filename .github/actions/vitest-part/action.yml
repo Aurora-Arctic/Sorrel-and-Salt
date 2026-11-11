@@ -1,0 +1,79 @@
+name: Vitest Part
+description: >-
+  Runs one part of the Vitest suite with coverage written as a blob, uploads the
+  blob, summarises the results and posts the part's section of the PR comment.
+  Runs after checkout-to-app, in the job's /app container. The 80% thresholds
+  are switched off here and applied by the `vitest` merge job: a part covers
+  only its own projects' share of src/.
+
+inputs:
+  name:
+    description: Part name, used for the blob file, the artifact and the comment section, e.g. "dom"
+    required: true
+  projects:
+    description: Space-separated Vitest projects the part runs, e.g. "unit rsc"
+    required: true
+  pr-number:
+    description: Pull request number to comment on (omit to skip PR commenting)
+    required: false
+    default: ''
+  merge-queue:
+    description: Passed to pr-comment as its merge-queue input
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Run vitest (${{ inputs.projects }})
+      id: run
+      shell: bash
+      working-directory: /app
+      env:
+        VITEST_PART_NAME: ${{ inputs.name }}
+        VITEST_PART_PROJECTS: ${{ inputs.projects }}
+      run: |
+        set -o pipefail
+        echo "nproc: $(nproc)"
+        project_flags=()
+        for project in $VITEST_PART_PROJECTS; do project_flags+=(--project "$project"); done
+        npx vitest run "${project_flags[@]}" --coverage --reporter=blob --outputFile.blob="/app/.reports/blobs/blob-$VITEST_PART_NAME.json" --reporter=json --outputFile.json=/app/.reports/vitest-part.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 2>&1 | tee /app/output.log
+
+    # A failing test still leaves a blob, so the merge job reports it.
+    - name: Upload blob
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: vitest-blob-${{ inputs.name }}
+        path: /app/.reports/blobs/
+        if-no-files-found: error
+        retention-days: 1
+
+    # This part's counts for its row of the comment and its failing tests for
+    # its section. A part that crashed before writing its results still gets a
+    # row saying so.
+    - name: Summarize output
+      id: summarize
+      if: ${{ !cancelled() }}
+      shell: bash
+      working-directory: /app
+      env:
+        VITEST_RESULTS: /app/.reports/vitest-part.json
+        VITEST_PART: 'true'
+        VITEST_OUTCOME: ${{ steps.run.outcome }}
+      run: node .github/scripts/summarize-vitest.mjs
+
+    # This part's own section of the Vitest comment (.github/actions/pr-comment).
+    - name: Comment on PR
+      if: ${{ !cancelled() && inputs.pr-number != '' }}
+      uses: ./.github/actions/pr-comment
+      with:
+        check-name: Vitest
+        marker-slug: vitest
+        section: ${{ inputs.name }}
+        pr-number: ${{ inputs.pr-number }}
+        merge-queue: ${{ inputs.merge-queue }}
+        outcome: ${{ steps.run.outcome }}
+        log-file: /app/output.log
+        summary: ${{ steps.summarize.outputs.summary }}
+        details: ${{ steps.summarize.outputs.details }}

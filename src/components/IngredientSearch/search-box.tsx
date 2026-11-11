@@ -1,5 +1,6 @@
 'use client';
 
+import { hasText } from '@/lib/text';
 import { usePendingNavigation } from '../../lib/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useDeferredValue, useId, useMemo, useRef, useState } from 'react';
@@ -8,8 +9,8 @@ import { graphql } from '@/lib/graphql-document';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import Combobox from '../Combobox';
-import { UNTITLED_SPELL } from '../SpellCard/untitled';
-import { MagnifierIcon } from '../Field/icons';
+import { spellNameOf } from '../SpellCard/untitled';
+import { SearchSubmit } from '../Field/search-submit';
 import { useApplyFilter } from '../FilterForm';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import type {
@@ -18,6 +19,7 @@ import type {
   IngredientSearchOption,
 } from './types';
 import './index.scss';
+import { bracketedName } from '../../lib/ingredient-name';
 
 // The search row's first control: a type-ahead over the compendium's ranked search, with the magnifier as the form's one
 // submit. The list changes only on Enter, the clear, a pick or the last row.
@@ -114,7 +116,7 @@ const ingredientRow = ({
 }: IngredientSearchMatch): IngredientSearchOption => ({
   key: id,
   value: name,
-  label: canonicalName ? `${name} (${canonicalName})` : name,
+  label: bracketedName(name, canonicalName),
   match: { id, slug, name, canonicalName, nomenclature },
 });
 
@@ -140,7 +142,7 @@ const IngredientSearchBox = ({
   const query = useDebouncedValue(text.trim());
   const searchesNow = searchable(query);
   // Text under the floor is never asked about, so the dropdown says to keep typing at once.
-  const belowFloor = text.trim() !== '' && !searchable(text.trim());
+  const belowFloor = hasText(text) && !searchable(text.trim());
   const compendium = useQuery({
     ...graphqlQuery(IngredientSearchMatchesDocument, { query, first: MATCH_ROWS }),
     enabled: active && searchesNow && source.kind === 'compendium',
@@ -181,11 +183,11 @@ const IngredientSearchBox = ({
             rows: page.edges.map(({ node }) => ({
               key: node.id,
               value: node.title?.trim() || query,
-              label: node.title?.trim() || UNTITLED_SPELL,
+              label: spellNameOf(node.title),
               match: {
                 id: node.id,
                 slug: node.id,
-                name: node.title?.trim() || UNTITLED_SPELL,
+                name: spellNameOf(node.title),
                 canonicalName: null,
                 nomenclature: 'none',
               },
@@ -278,11 +280,8 @@ const IngredientSearchBox = ({
       leading={
         // The form's one submit, as SearchField's was, at the start of the box:
         // Enter in the closed box reaches it too, and before hydration it
-        // sends the whole form. Its own id lets FilterForm give it the focus back.
-        <button id={`${controlId}-submit`} type="submit" className="combobox__indicator">
-          <MagnifierIcon />
-          <span className="visually-hidden">Search</span>
-        </button>
+        // sends the whole form.
+        <SearchSubmit id={`${controlId}-submit`} className="combobox__indicator" />
       }
     />
   );

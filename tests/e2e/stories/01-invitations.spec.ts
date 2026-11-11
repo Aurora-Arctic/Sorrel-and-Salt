@@ -3,7 +3,9 @@ import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
 import { recreateE2eDatabase, withE2eSql } from '../database';
-import { latestMessageTo } from '../mailpit';
+import { graphqlFromPage } from '../graphql';
+import { sendInvitationFromDialog, refusalAt as sharedRefusalAt } from '../invitations';
+import { countMessagesTo, latestMessageTo, mailedInvitePath } from '../mailpit';
 import { signInAgainAs, signInAs } from '../session';
 import { newToken } from '@/lib/invitation-token';
 import { slugify } from '@/lib/slugify';
@@ -33,46 +35,6 @@ async function signInNamed(page: Page, email: string, name: string): Promise<Per
   const { userId } = await signInAs(page, email);
   await withE2eSql((sql) => sql`update users set name = ${name} where id = ${userId}`);
   return { id: userId, name, email };
-}
-
-/** The build's origin is its fallback, not this server. */
-async function mailedInvitePath(to: string): Promise<string> {
-  const message = await latestMessageTo(to);
-  const link = message.text.match(/https?:\/\/\S+\/invite\/[A-Za-z0-9_-]+/)?.[0];
-  if (!link) throw new Error(`no invitation link in the mail to ${to}`);
-  return new URL(link).pathname;
-}
-
-async function messagesTo(to: string): Promise<number> {
-  const base = process.env.MAILPIT_URL;
-  if (!base)
-    throw new Error("MAILPIT_URL is not set; the e2e run needs compose's `mailpit` service");
-  const search = new URL('/api/v1/search', base);
-  search.searchParams.set('query', `to:"${to}"`);
-  const response = await fetch(search);
-  const { messages } = (await response.json()) as { messages: unknown[] };
-  return messages.length;
-}
-
-async function sendFromPage(
-  page: Page,
-  query: string,
-  variables: Record<string, string>,
-): Promise<{ data?: unknown; errors?: unknown[] }> {
-  return page.evaluate(
-    async ({ query, variables }) => {
-      const response = await fetch('/api/graphql', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          accept: 'application/graphql-response+json, application/json',
-        },
-        body: JSON.stringify({ query, variables }),
-      });
-      return (await response.json()) as { data?: unknown; errors?: unknown[] };
-    },
-    { query, variables },
-  );
 }
 
 const CREATE_INVITATION = `mutation ($workspaceId: ID!, $email: String!, $role: InvitableRole!) {
@@ -139,13 +101,7 @@ async function ownerInvites(
 ): Promise<void> {
   await signInAgainAs(page, people.owner.id);
   await page.goto(`/coven/${COVEN_SLUG}/invitations`);
-  await page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }).click();
-  const dialog = page.getByRole('dialog');
-  await dialog.getByRole('textbox', { name: 'Email Address' }).fill(email);
-  await dialog.getByRole('radio', { name: role }).check();
-  await dialog.getByRole('button', { name: 'Send Invitation' }).click();
-  await dialog.getByRole('button', { name: 'Done' }).click();
-  await expect(dialog).toHaveCount(0);
+  await sendInvitationFromDialog(page, email, role);
   await expect(pendingRow(page, email)).toBeVisible();
 }
 
@@ -175,17 +131,10 @@ async function ownerReadsRoll(page: Page, absent?: string): Promise<number> {
   return rows.count();
 }
 
-async function refusalAt(page: Page, path: string): Promise<string> {
-  await page.goto(path);
-  const refusal = page.getByRole('main').getByRole('alert');
-  await expect(refusal).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
-  await expect(page.getByRole('main')).not.toContainText(COVEN_NAME);
-  return (await refusal.textContent()) ?? '';
-}
+const refusalAt = (page: Page, path: string) => sharedRefusalAt(page, path, COVEN_NAME);
 
 async function directAcceptRefused(page: Page, path: string): Promise<void> {
-  const answer = await sendFromPage(page, ACCEPT_INVITATION, { token: tokenOf(path) });
+  const answer = await graphqlFromPage(page, ACCEPT_INVITATION, { token: tokenOf(path) });
   expect(answer.errors?.length).toBeGreaterThan(0);
   expect((await page.goto(`/coven/${COVEN_SLUG}`))?.status()).toBe(404);
 }
@@ -255,7 +204,7 @@ test(
 
     const message = await latestMessageTo(invited);
     expect(message.to).toEqual([invited]);
-    expect(await messagesTo(people.owner.email)).toBe(0);
+    expect(await countMessagesTo(people.owner.email)).toBe(0);
     const invitedPath = await mailedInvitePath(invited);
     expect(await page.content()).not.toContain(tokenOf(invitedPath));
     await done.click();
@@ -275,7 +224,7 @@ test(
     expect(await page.content()).not.toContain(tokenOf(invitedPath));
 
     const ownerRole = address('would-be-owner');
-    const answer = await sendFromPage(page, CREATE_OWNER_INVITATION, {
+    const answer = await graphqlFromPage(page, CREATE_OWNER_INVITATION, {
       workspaceId: covenId,
       email: ownerRole,
     });
@@ -283,7 +232,7 @@ test(
     await page.reload();
     await expect(pendingRow(page, invited)).toBeVisible();
     await expect(pendingRow(page, ownerRole)).toHaveCount(0);
-    expect(await messagesTo(ownerRole)).toBe(0);
+    expect(await countMessagesTo(ownerRole)).toBe(0);
   },
 );
 
@@ -322,13 +271,13 @@ test(
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       await expect(page.getByRole('button', { name: /^Revoke/ })).toHaveCount(0);
 
-      const invite = await sendFromPage(page, CREATE_INVITATION, {
+      const invite = await graphqlFromPage(page, CREATE_INVITATION, {
         workspaceId: covenId,
         email: tried,
         role: 'viewer',
       });
       expect(invite.errors?.length).toBeGreaterThan(0);
-      const revoke = await sendFromPage(page, REVOKE_INVITATION, {
+      const revoke = await graphqlFromPage(page, REVOKE_INVITATION, {
         workspaceId: covenId,
         id: pendingId,
       });
@@ -343,7 +292,7 @@ test(
       }),
     ).toBeVisible();
     await expect(pendingRow(page, tried)).toHaveCount(0);
-    expect(await messagesTo(tried)).toBe(0);
+    expect(await countMessagesTo(tried)).toBe(0);
   },
 );
 
@@ -360,7 +309,7 @@ test(
       (sql) => sql`select email_verified from users where id = ${stranger.id}`,
     );
     expect(row.email_verified).toBe(true);
-    expect(await messagesTo(stranger.email)).toBe(0);
+    expect(await countMessagesTo(stranger.email)).toBe(0);
 
     await refusalAt(page, invitedPath);
     await assertNoAccessibilityViolations(page);
@@ -373,7 +322,7 @@ test(
     await expect(
       section.getByRole('button', { name: `Accept the invitation to ${COVEN_NAME}` }),
     ).toHaveCount(0);
-    const byId = await sendFromPage(page, ACCEPT_INVITATION_BY_ID, {
+    const byId = await graphqlFromPage(page, ACCEPT_INVITATION_BY_ID, {
       id: await invitationIdFor(invited.email),
     });
     expect(byId.errors?.length).toBeGreaterThan(0);
@@ -466,7 +415,7 @@ test(
     await signInAgainAs(page, people.owner.id);
     await page.goto(`/coven/${COVEN_SLUG}/invitations`);
     await expectInvitationsTab(page);
-    const answer = await sendFromPage(page, REVOKE_INVITATION, {
+    const answer = await graphqlFromPage(page, REVOKE_INVITATION, {
       workspaceId: covenId,
       id: acceptedId,
     });

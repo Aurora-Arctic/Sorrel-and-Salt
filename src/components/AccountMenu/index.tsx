@@ -3,7 +3,7 @@
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { useDismiss } from '../../lib/use-dismiss';
 import { ChevronIcon } from '../IconTip/icons';
-import { countText } from './counts';
+import { accountCounts, countText } from './counts';
 import { initialsOf } from './initials';
 import Panel from './panel';
 import type { AccountMenuProps } from './types';
@@ -22,12 +22,13 @@ const AccountMenu = ({
   waitingSupport = 0,
 }: AccountMenuProps): ReactElement => {
   const [open, setOpen] = useState(false);
-  // An unverified account cannot reach the account page the count leads to.
-  const pending = verified && pendingInvitations > 0;
-  const staffCount = verified ? assignedSupport : 0;
-  const senderCount = verified ? waitingSupport : 0;
+  const { pending, staffCount, senderCount, invitations } = accountCounts({
+    verified,
+    pendingInvitations,
+    assignedSupport,
+    waitingSupport,
+  });
   const dotted = pending || staffCount > 0 || senderCount > 0;
-  const invitations = `${pendingInvitations} Coven ${pendingInvitations === 1 ? 'Invitation' : 'Invitations'}`;
   // The dot is drawn only; the button's name carries the count as hidden text that repeats the visible
   // name, whole, so a browser joins it with no stray space. Not an `aria-label`, which must repeat every
   // visible word, the avatar's initials among them (axe's label-content-name-mismatch).

@@ -1,22 +1,19 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import OwnEntryActions from '@/components/IngredientEntry/own-actions';
 import type { IngredientEntryEdit } from '@/components/IngredientEntry/types';
 import type {
   DeleteOwnIngredientMutation,
   DeleteOwnIngredientMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { stockFormModule } from '@/components/StockDialog/lazy-form';
 import { ingredientFormModule } from '@/components/IngredientEntry/lazy-forms';
 import { WORKSPACE_ID } from '../../support/constants';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // claude-docs/components/ingredient-entry.md
 
@@ -36,18 +33,14 @@ const EDIT: IngredientEntryEdit = {
 
 const ENTRY = { id: ID, name: 'Testwort', canonicalName: null, nomenclature: 'unknown' as const };
 
-let queryClient = makeQueryClient();
 const onPage = (edit: IngredientEntryEdit = EDIT) => (
-  <QueryClientProvider client={queryClient}>
-    <main>
-      <h1>Testwort</h1>
-      <OwnEntryActions edit={edit} entry={ENTRY} />
-    </main>
-  </QueryClientProvider>
+  <main>
+    <h1>Testwort</h1>
+    <OwnEntryActions edit={edit} entry={ENTRY} />
+  </main>
 );
 function renderOnPage(edit?: IngredientEntryEdit) {
-  queryClient = makeQueryClient();
-  return render(onPage(edit));
+  return renderWithQuery(onPage(edit));
 }
 
 const dots = () => screen.getByRole('button', { name: 'More for Testwort' });
@@ -120,11 +113,9 @@ describe('OwnEntryActions', () => {
     ).toBeDisabled();
 
     view.rerender(
-      <QueryClientProvider client={queryClient}>
-        <main>
-          <h1>Ingredients</h1>
-        </main>
-      </QueryClientProvider>,
+      <main>
+        <h1>Ingredients</h1>
+      </main>,
     );
     await waitFor(() =>
       expect(screen.getByRole('heading', { level: 1, name: 'Ingredients' })).toHaveFocus(),

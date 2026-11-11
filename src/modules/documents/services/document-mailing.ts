@@ -16,10 +16,9 @@ import { NotFound, ValidationError } from '@/lib/errors';
 import { jobTokenActive, startJob } from '@/lib/jobs';
 import { allPages } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
-import { trimEnds } from '@/lib/formats';
-import { parseInput, requiredText } from '@/lib/validation';
+import { parseInput } from '@/lib/validation';
+import { SummariesInput } from '../validation/documents';
 import { assertSiteAdmin } from '@/modules/identity';
-import { z } from 'zod';
 import { documentMailing } from '../jobs/document-mailing';
 import { MAILING_DAILY_CAP, documentMailingHookToken, mailingDays } from '../mailing-pace';
 import type {
@@ -38,12 +37,6 @@ import type {
 
 /** So a statement stays under the driver's parameter limit. */
 const RECIPIENT_CHUNK = 500;
-
-const SummariesInput = z.object({
-  summaries: z.array(
-    z.object({ versionId: z.string(), summary: requiredText('Write what changed', trimEnds) }),
-  ),
-});
 
 function stateOf(
   mailing: DocumentMailingRow,

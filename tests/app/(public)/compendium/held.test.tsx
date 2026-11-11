@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
+import { getSession } from '../../../support/request-session';
 
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 
 const viewerIfSignedIn = vi.fn();
 const covenRolesIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
-const getSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 const readEntryStock = vi.fn();
 vi.mock('@/app/entry-stock', () => ({

@@ -5,7 +5,8 @@
 ## Contracts
 
 - **Every error page is centred, down the window and across it.** `.page-frame` centres the column vertically (its `min-height` leaves the bars' and the footer's room, so a short window scrolls once and nothing is hidden); the mixin `centred-block` (`src/scss/_mixins.scss`) makes the page body as wide as its content, so the frame centres that block across the window; the text and buttons inside stay left-aligned. `ErrorPage` and `NotAuthorized` both include it, so the 404, 500, global-error and 403 cannot drift. The public 404 (`withinMain`) draws a `div.page-frame.page-frame--in-column`, which takes back the surrounding `.page-column`'s padding (`_primitives.scss`) so it fills the window like a frame of its own.
-- **It takes a reason written for the reader and Next's `digest`, never an `Error`**, so a message or stack cannot be printed through it. In production Next already strips a server error's message down to the digest, which is shown as a reference to quote when reporting the problem. `tests/app/error.test.tsx` passes an error whose message and stack hold marker strings and checks neither appears.
+- **It takes a reason written for the reader and a reference, never an `Error`**, so a message or stack cannot be printed through it. `tests/app/error.test.tsx` passes an error whose message and stack hold marker strings and checks neither appears on the screen.
+- **Every error screen but the 404 shows a reference, and its report carries the same one.** `ErrorScreen` and `global-error.tsx` take the error and call `useErrorReport` (`src/lib/error-report.ts`), which gives the reference and the error's detail. The reference is Next's `digest` when the error has one, which only an error from a Server Component does, so it can be matched to the server log; otherwise the browser makes one with `newErrorReference`, a `c` and ten hex digits, made once per screen. A `c` reference has no server log line. The detail is the error's name and message (`errorDetailFrom`: `TypeError: …`, or the thrown value as text when it is not an `Error`), cut to `ERROR_DETAIL_MAX_LENGTH` (500, `src/lib/support-path.ts`). In production Next replaces a server error's message with a generic one, so the detail is useful mainly for an error thrown in the browser. `tests/guards/error-reference.test.ts` fails an `error.tsx` or `global-error.tsx` that reads `.digest` itself or skips the helper. The 404 has no error, and so no reference.
 - **Redirects and framework signals never reach an `error.tsx`.** Next's `redirect()`, `notFound()`, `forbidden()` and `unauthorized()` are handled by the framework, so a guard's redirect to `/sign-in` or `/account/email` still happens (`tests/e2e/route-protection.spec.ts`) and a `forbidden()` still renders `(shell)/forbidden.tsx` (`tests/e2e/admin.spec.ts`). A service's `Forbidden` error is an ordinary error and does land on the boundary.
 - **A workspace slug that is not yours and one that does not exist render the same page** (CLAUDE.md, "`/coven/[slug]` returns 404 to a non-member").
 - **The `(shell)` copies of `not-found.tsx` and `error.tsx` exist because a boundary replaces everything beneath its own layout.** The root one would drop the shell's bar for a signed-in page.
@@ -13,19 +14,19 @@
 
 ## Used by
 
-| File                                         | Catches                                        | Way onward                                                 |
-| -------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------- |
-| `src/app/not-found.tsx`                      | `notFound()` and an address with no page (404) | link to `/`                                                |
-| `src/app/error.tsx`                          | an error thrown while a page renders (500)     | Try Again, link to `/`                                     |
-| `src/app/global-error.tsx`                   | an error in the root layout itself             | plain links to `/` and to `/support?support=bug&error=500` |
-| `src/app/(shell)/not-found.tsx`, `error.tsx` | the same two, re-exported inside the shell     | as above                                                   |
+| File                                         | Catches                                        | Way onward                                        |
+| -------------------------------------------- | ---------------------------------------------- | ------------------------------------------------- |
+| `src/app/not-found.tsx`                      | `notFound()` and an address with no page (404) | link to `/`                                       |
+| `src/app/error.tsx`                          | an error thrown while a page renders (500)     | Try Again, link to `/`                            |
+| `src/app/global-error.tsx`                   | an error in the root layout itself             | plain links to `/` and to the `/support` bug form |
+| `src/app/(shell)/not-found.tsx`, `error.tsx` | the same two, re-exported inside the shell     | as above                                          |
 
 ## Report This
 
 `src/components/ReportThis/` — the link on the 404, 500 and global-error screens. It builds a bug request with the status (`error`) and the page filled in, and opens the Support dialog over the same page. It is an icon-only quiet button in an `IconTip` ("Report This"), the same icon and button as the footer's Support link.
 
 - **It reads the page from `useActualPathname`** (`src/lib/use-actual-pathname.ts`), not `usePathname`. An address no route matches renders on the framework's own `/_not-found` route, which `usePathname` reports, so the link would send `/_not-found` as the page. In the server's render the hook gives nothing when the router's path is `/_not-found`: the link is then a bare query (`?support=bug&error=404`, which keeps the address it is at).
-- **An error page with a digest (the 500 pages) passes it as `reference`, and the link carries it as `ref`.** The Support dialog and the `/support` page read `ref` through `errorReferenceOf` (blank or over 100 characters is dropped) and hand it to the form. `global-error.tsx` builds the same `ref` into its plain link.
+- **The 500 screens pass the reference and the detail, and the link carries them as `ref` and `detail`.** `bugReportQuery` (`src/lib/support-path.ts`) builds the query for both `ReportThis` and `global-error.tsx`'s plain link. The Support dialog and the `/support` page read `ref` through `errorReferenceOf` (blank or over 100 characters is dropped) and `detail` through `errorDetailOf` (blank or over 500 is dropped) and hand both to the form, signed in or signed out. `supportClosedHref` drops both when the dialog closes.
 
 ## Not Authorized
 

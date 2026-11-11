@@ -27,6 +27,10 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
       ['discord'],
       'curator',
     );
+    // Every fixture account is named alike, so the curator gets a name of their own to be picked by.
+    await withE2eSql(
+      (sql) => sql`update users set name = 'Testwort Curator' where id = ${curatorId}`,
+    );
     await signInAs(page, 'admin@story-90.test', ['discord'], 'admin');
 
     // The sender's own session, through the API the form would call.
@@ -77,8 +81,12 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
     });
 
     await test.step('the admin assigns it and shares it with curators', async () => {
-      await dialog.getByLabel('Assignee').selectOption(curatorId);
-      await expect(dialog.getByLabel('Assignee')).toHaveValue(curatorId);
+      const assignee = dialog.getByRole('combobox', { name: 'Assignee' });
+      await expect(assignee).toHaveText('Unassigned');
+      await assignee.click();
+      await page.getByRole('option', { name: 'Testwort Curator' }).click();
+      await expect(dialog.getByRole('status')).toHaveText(/Request assigned\./);
+      await expect(assignee).toHaveText('Testwort Curator');
       await dialog.getByRole('switch', { name: 'Shared With Curators' }).click();
       await expect(dialog.getByRole('switch', { name: 'Shared With Curators' })).toBeChecked();
     });

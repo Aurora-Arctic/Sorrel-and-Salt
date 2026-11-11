@@ -1,9 +1,9 @@
 'use client';
 
 import type { Route } from 'next';
-import { type ReactElement, useRef, useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { preloadOnIntent, usePreloadWhenIdle } from '../../lib/use-lazy-module';
-import { MoreMenu } from '../IconTip';
+import { MoreMenu, useAskingMenu } from '../IconTip';
 import { covenChoiceModule } from '../IngredientEntry/lazy-coven-choice';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
 import AnnotatePicker from '../IngredientEntry/annotate-picker';
@@ -37,12 +37,17 @@ export default function CompendiumCardMore({
   leaveHref,
 }: CompendiumCardMoreProps): ReactElement | null {
   usePreloadWhenIdle(covenChoiceModule);
-  const [asking, setAsking] = useState<Asking>();
-  const [alert, setAlert] = useState<string>();
+  const {
+    asking,
+    setAsking,
+    ask: openQuestion,
+    settle,
+    alert,
+    setAlert,
+    trigger,
+    back,
+  } = useAskingMenu<Asking>();
   const [target, setTarget] = useState(places[0]?.workspaceId);
-  const trigger = useRef<HTMLButtonElement>(null);
-  const back = () => (trigger.current?.isConnected ? trigger.current : null);
-  const settle = () => setAsking(undefined);
 
   const stockers = places.flatMap(({ workspaceId, name: coven, stock }): StockPlace[] =>
     stock ? [{ workspaceId, name: coven, stock }] : [],
@@ -71,11 +76,10 @@ export default function CompendiumCardMore({
   if (gone) setAsking(undefined);
 
   const ask = (what: Asking, list: readonly CompendiumCardPlace[]) => () => {
-    setAlert(undefined);
     writes.makeOurs.reset?.();
     writes.remove.reset?.();
     setTarget(list[0].workspaceId);
-    setAsking(what);
+    openQuestion(what);
   };
   const choiceOf = (list: readonly CompendiumCardPlace[]) =>
     list.length > 1

@@ -21,7 +21,7 @@ import { SKIP_REASON } from './warnings';
 // The step before a working is completed: the preview from `workingDeductionPreview`, then `completeWorking`. Both
 // share one plan on the server (claude-docs/components/record-working.md).
 
-export const WorkingDeductionPreviewDocument = graphql(`
+const WorkingDeductionPreviewDocument = graphql(`
   query WorkingDeductionPreview($workspaceId: ID!, $spellId: ID!) {
     workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) {
       deductions {
@@ -43,7 +43,7 @@ export const WorkingDeductionPreviewDocument = graphql(`
   }
 `);
 
-export const CompleteWorkingDocument = graphql(`
+const CompleteWorkingDocument = graphql(`
   mutation CompleteWorking($workspaceId: ID!, $id: ID!) {
     completeWorking(workspaceId: $workspaceId, id: $id) {
       working {

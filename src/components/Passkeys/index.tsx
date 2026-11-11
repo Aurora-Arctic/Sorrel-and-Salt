@@ -3,6 +3,7 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useState } from 'react';
 import { passkey as passkeyActions } from '../../lib/auth-client';
+import { settled } from '../../lib/auth-call';
 import type { AccountPasskey } from '../../lib/types';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
@@ -38,9 +39,7 @@ const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
     add.report(undefined);
     setAdding(true);
     // A cancelled prompt answers `error`; a dropped connection throws. Both say so.
-    const result = await passkeyActions
-      .addPasskey()
-      .catch((thrown: unknown) => ({ error: thrown }));
+    const result = await settled(passkeyActions.addPasskey());
     const fresh = result?.error
       ? undefined
       : await passkeyActions.listUserPasskeys().catch(() => undefined);
@@ -55,9 +54,7 @@ const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
   };
 
   const handleRename = async (target: AccountPasskey, name: string) => {
-    const result = await passkeyActions
-      .updatePasskey({ id: target.id, name })
-      .catch(() => ({ error: { code: undefined } }));
+    const result = await settled(passkeyActions.updatePasskey({ id: target.id, name }));
     if (result?.error) return refusal(result.error.code);
     setRows((current) => current.map((row) => (row.id === target.id ? { ...row, name } : row)));
     refresh();
@@ -66,9 +63,7 @@ const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
   };
 
   const handleRemove = async (target: AccountPasskey): Promise<void> => {
-    const result = await passkeyActions
-      .deletePasskey({ id: target.id })
-      .catch(() => ({ error: { code: undefined } }));
+    const result = await settled(passkeyActions.deletePasskey({ id: target.id }));
     if (result?.error) throw new Error(refusal(result.error.code));
     setRows((current) => current.filter((row) => row.id !== target.id));
     refresh();

@@ -1,9 +1,9 @@
-import type { CardCategory } from '../../../../../components/IngredientCard/types';
-import type { SafetyVariant } from '../../../../../components/SafetyNote/types';
-import type { Page, PagePosition } from '../../../../../lib/types';
+import type { CardCategory } from '@/components/IngredientCard/types';
+import type { SafetyVariant } from '@/components/SafetyNote/types';
+import type { Page, PagePosition } from '@/lib/types';
 import type { CupboardEntryRow, IngredientRow, LastEdit, StockRow } from '@/modules/ingredients';
 
-export interface CovenListEdge {
+interface CovenListEdge {
   cupboardEntry: CupboardEntryRow | null;
 }
 

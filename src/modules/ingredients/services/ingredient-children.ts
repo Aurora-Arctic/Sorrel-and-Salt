@@ -280,7 +280,6 @@ function citedBy(
       }));
 }
 
-/** The proof for one coven, or `undefined` where the check refuses it. */
 function byName(a: { name: string }, b: { name: string }): number {
   return a.name.localeCompare(b.name);
 }

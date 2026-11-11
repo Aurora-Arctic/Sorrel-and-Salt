@@ -23,6 +23,7 @@
 }
 
 .last-edit__bubble {
+  box-sizing: content-box;
   @include tip-above;
 }
 

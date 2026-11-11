@@ -14,7 +14,7 @@ const CARD = CARD_REFUSAL_MESSAGES;
 const EVERY_MESSAGE = [...Object.values(LINK), ...Object.values(CARD)];
 
 const picker = () => screen.getByRole('combobox', { name: 'The Message You Saw' });
-const type = (text: string) => fireEvent.change(picker(), { target: { value: text } });
+const typeInPicker = (text: string) => fireEvent.change(picker(), { target: { value: text } });
 const optionNames = () => screen.queryAllByRole('option').map((option) => option.textContent);
 const answer = () => screen.getByRole('status', { name: 'What It Means' });
 const facts = () =>
@@ -51,38 +51,38 @@ describe('InvitationRefusals', () => {
   it('finds a half-remembered message: a typo, words out of order, a partial word', () => {
     render(<InvitationRefusals />);
 
-    type('expird invitaton');
+    typeInPicker('expird invitaton');
     expect(optionNames()[0]).toBe(LINK.expired);
 
     // "This card has been withdrawn", asked for the other way round.
-    type('withdrawn card');
+    typeInPicker('withdrawn card');
     expect(optionNames()[0]).toBe(CARD.revoked);
 
-    type('emial confirmd');
+    typeInPicker('emial confirmd');
     expect(optionNames()[0]).toBe(LINK.unverified);
 
-    type('diffrent adress');
+    typeInPicker('diffrent adress');
     expect(optionNames()[0]).toBe(LINK['different-address']);
 
-    type('delet cov');
+    typeInPicker('delet cov');
     expect(optionNames()[0]).toBe(LINK.closed);
   });
 
   it('leaves out messages nothing typed resembles', () => {
     render(<InvitationRefusals />);
 
-    type('withdrawn card');
+    typeInPicker('withdrawn card');
     expect(optionNames()).not.toContain(LINK.expired);
     expect(optionNames()).not.toContain(LINK.paused);
 
-    type('zzqqx');
+    typeInPicker('zzqqx');
     expect(optionNames()).toEqual([]);
   });
 
   it('draws a picked message as the accept page does, with who can fix it and what to do now', () => {
     render(<InvitationRefusals />);
 
-    type('withdrawn card');
+    typeInPicker('withdrawn card');
     fireEvent.click(screen.getByRole('option', { name: CARD.revoked }));
 
     expect(answer()).toHaveTextContent(CARD.revoked as string);
@@ -90,7 +90,7 @@ describe('InvitationRefusals', () => {
     // The accept page offers no button for a withdrawn card, so neither does the answer.
     expect(within(answer()).queryByRole('link')).toBeNull();
 
-    type('paused');
+    typeInPicker('paused');
     fireEvent.click(screen.getByRole('option', { name: LINK.paused }));
 
     expect(answer()).toHaveTextContent(LINK.paused);
@@ -101,7 +101,7 @@ describe('InvitationRefusals', () => {
   it('draws the error with nothing in it the accept page’s error lacks, the printed card mark outside it', () => {
     render(<InvitationRefusals />);
 
-    type('withdrawn card');
+    typeInPicker('withdrawn card');
     fireEvent.click(screen.getByRole('option', { name: CARD.revoked }));
 
     // getByText matches an element whose whole text is the message, so a badge inside the error would fail it.
@@ -113,14 +113,14 @@ describe('InvitationRefusals', () => {
   it('offers the accept page’s own button where it shows one', () => {
     render(<InvitationRefusals />);
 
-    type('already used this card');
+    typeInPicker('already used this card');
     fireEvent.click(screen.getByRole('option', { name: LINK['used-by-you'] }));
     expect(within(answer()).getByRole('link', { name: 'Start a Coven' })).toHaveAttribute(
       'href',
       '/coven/new',
     );
 
-    type('email isnt confirmed');
+    typeInPicker('email isnt confirmed');
     fireEvent.click(screen.getByRole('option', { name: LINK.unverified }));
     expect(within(answer()).getByRole('link', { name: 'Confirm Your Email' })).toHaveAttribute(
       'href',

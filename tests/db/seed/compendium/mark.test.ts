@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { markFile } from '@/db/seed/compendium/mark';
 import { entryFilePath, parseEntryFile } from '@/db/seed/compendium/parse-entry';
-import { renderEntryFile } from '@/db/seed/compendium/render-entry';
+import { renderEntryFile } from '../../../support/seed/render-entry';
 import { fileOf, TESTWORT } from './files-fixture';
 
 // `seed:mark` is the one move that lets the seed update a present entry. It writes the file's own hash

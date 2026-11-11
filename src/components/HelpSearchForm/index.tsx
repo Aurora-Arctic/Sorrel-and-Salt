@@ -1,10 +1,10 @@
 'use client';
 
+import { hasText } from '@/lib/text';
 import { type FormEvent, type ReactElement, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { usePendingNavigation } from '../../lib/navigation';
-import { MagnifierIcon } from '../Field/icons';
-import Spinner from '../Spinner';
+import { SEARCH_INPUT_ATTRIBUTES, SearchSubmit } from '../Field/search-submit';
 import type { HelpSearchFormProps } from './types';
 import './index.scss';
 
@@ -28,7 +28,7 @@ const HelpSearchForm = ({ query = '', size }: HelpSearchFormProps): ReactElement
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const value = new FormData(event.currentTarget).get('q');
-    if (typeof value !== 'string' || value.trim() === '') {
+    if (typeof value !== 'string' || !hasText(value)) {
       if (pathname !== '/help') navigate('/help');
       return;
     }
@@ -42,22 +42,16 @@ const HelpSearchForm = ({ query = '', size }: HelpSearchFormProps): ReactElement
       method="get"
       onSubmit={submit}
     >
-      <button className="help-search__submit" type="submit" aria-busy={pending || undefined}>
-        <MagnifierIcon />
-        {pending && <Spinner />}
-        <span className="visually-hidden">Search</span>
-      </button>
+      <SearchSubmit className="help-search__submit" busy={pending} />
       <input
         ref={box}
         className="input"
-        type="search"
+        {...SEARCH_INPUT_ATTRIBUTES}
         name="q"
         defaultValue={query}
         aria-label="Search Help"
         placeholder="Search Help"
         autoComplete="off"
-        // Not a sign-in field; 1Password documents this attribute to leave a field alone.
-        data-1p-ignore
       />
     </form>
   );

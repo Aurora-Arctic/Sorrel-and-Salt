@@ -1,46 +1,15 @@
-import type { ADMIN_PAGES } from '../../../components/AdminNav/sections';
 import type { Route } from 'next';
-import type { ReactNode } from 'react';
+import type { ListSearchParams } from '../_admin/types';
 import type {
   EditedGroupedValue,
   GroupedValueGroupChoice,
   GroupedValueKind,
-} from '../../../components/GroupedValueForm/types';
-import type { EditedGroup, GroupChoice, GroupKind } from '../../../components/GroupForm/types';
-import type { ModalHeading } from '../../../components/Modal/types';
-import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
+} from '@/components/GroupedValueForm/types';
+import type { EditedGroup, GroupChoice, GroupKind } from '@/components/GroupForm/types';
+import type { ModalHeading } from '@/components/Modal/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/types';
 import type { GroupFilter } from '@/modules/vocabulary';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
-
-export interface AdminLayoutProps {
-  children: ReactNode;
-}
-
-export interface TabbedLayoutProps extends AdminLayoutProps {
-  action: ReactNode;
-}
-
-/** A list page's address as Next hands it over: each parameter may come once, many times or not at all. */
-export interface ListSearchParams {
-  query?: string | string[];
-  after?: string | string[];
-  before?: string | string[];
-  new?: string | string[];
-  edit?: string | string[];
-}
-
-export interface ListPlace {
-  query: string;
-  /** At most one cursor: `before` is dropped when `after` is given. Unreadable is none. */
-  after: string | undefined;
-  before: string | undefined;
-  editSlug: string | undefined;
-  adding: boolean;
-}
-
-export interface MissingNoticeProps {
-  noun: string;
-}
 
 export interface ValueSearchParams extends ListSearchParams {
   group?: string | string[];
@@ -54,27 +23,22 @@ export interface ValuePageProps {
 
 export type ValueRouteProps = Pick<ValuePageProps, 'searchParams'>;
 
-export interface ValueRow {
+/** What a curated vocabulary's rows, values and groups alike, share. */
+interface CuratedRow {
   id: string;
   name: string;
   slug: string;
   description: string;
-  groupId?: string;
-  otherNames?: readonly string[];
   updatedBy: string;
   updatedAt: Date;
 }
 
-export interface ValueGroupRow {
-  id: string;
-  slug: string;
-  name: string;
-  colorDark?: string;
-  colorLight?: string;
-  icon?: FormGroupIcon | null;
+export interface ValueRow extends CuratedRow {
+  groupId?: string;
+  otherNames?: readonly string[];
 }
 
-export interface ValueFilter {
+interface ValueFilter {
   query?: string;
   groupId?: string;
 }
@@ -86,18 +50,25 @@ export interface ValueKindSource {
   readGroups?: () => Promise<ValueGroupRow[]>;
 }
 
-export interface OpenedValue {
+interface OpenedValue {
   heading: ModalHeading;
   value?: EditedGroupedValue;
 }
 
-export interface ValueDialogProps {
-  kind: GroupedValueKind;
+/** A curated vocabulary's dialog: its kind, where Close goes, what the address opens and the groups to choose from. */
+interface EntityDialogProps<Kind, Opened, Choice> {
+  kind: Kind;
   closeHref: Route;
   /** What the address opens; none when it opens nothing, or while a press's is on its way. */
-  opened?: OpenedValue;
-  groups: readonly GroupedValueGroupChoice[];
+  opened?: Opened;
+  groups: readonly Choice[];
 }
+
+export type ValueDialogProps = EntityDialogProps<
+  GroupedValueKind,
+  OpenedValue,
+  GroupedValueGroupChoice
+>;
 
 export type GroupSearchParams = ListSearchParams;
 
@@ -108,17 +79,17 @@ export interface GroupPageProps {
   searchParams: Promise<GroupSearchParams>;
 }
 
-export interface GroupRow {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
+interface GroupRow extends CuratedRow {
   colorDark?: string;
   colorLight?: string;
   icon?: FormGroupIcon | null;
-  updatedBy: string;
-  updatedAt: Date;
 }
+
+/** A group as a value's choices and filter need it. */
+export type ValueGroupRow = Pick<
+  GroupRow,
+  'id' | 'slug' | 'name' | 'colorDark' | 'colorLight' | 'icon'
+>;
 
 export interface GroupKindPage {
   search: boolean;
@@ -128,28 +99,10 @@ export interface GroupKindPage {
   countMembers: (groupId: string) => Promise<number>;
 }
 
-export interface OpenedGroup {
+interface OpenedGroup {
   heading: ModalHeading;
   group?: EditedGroup;
   memberCount?: number;
 }
 
-export interface GroupDialogProps {
-  kind: GroupKind;
-  closeHref: Route;
-  /** What the address opens; none when it opens nothing, or while a press's is on its way. */
-  opened?: OpenedGroup;
-  groups: readonly GroupChoice[];
-}
-
-export type TabbedPageKey = Exclude<keyof typeof ADMIN_PAGES, 'compendium'>;
-
-export interface AddActionProps {
-  href: Route;
-  /** The head of the modal it opens, "Add Category", shown at once while the form loads; left out, the Add opens a full page. */
-  heading?: ModalHeading;
-  /** True when the dialog draws its form from the address in the browser: a press uses `pushState`. */
-  drawnHere?: boolean;
-  /** The label, "Add Category": the link's name at every width, and the tip over the plus at a phone's. */
-  children: string;
-}
+export type GroupDialogProps = EntityDialogProps<GroupKind, OpenedGroup, GroupChoice>;

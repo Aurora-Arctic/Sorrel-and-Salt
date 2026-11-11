@@ -5,7 +5,7 @@ import type { JarShapeName } from './types';
 export const LIQUID =
   /oil|tincture|essence|water|vinegar|syrup|extract|juice|elixir|infusion|hydrosol/i;
 
-export function hash(text: string): number {
+function hash(text: string): number {
   let h = 5381;
   for (const c of text) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0;
   return h;

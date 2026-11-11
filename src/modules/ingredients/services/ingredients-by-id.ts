@@ -2,7 +2,7 @@ import 'server-only';
 import { findManyIngredients } from '../../../db/repository';
 import { inIdOrder } from '../../../lib/in-id-order';
 import type { Session } from '../../../lib/session';
-import { RowId } from '../../../lib/validation';
+import { isRowId } from '../../../lib/validation';
 import type { Membership } from '@/modules/coven';
 import { proofFor } from './ingredient-rows';
 import { seesReview } from './compendium-filter';
@@ -23,7 +23,7 @@ export async function ingredientsOf(
 
   // An id is whatever a row carried, but one that is not a uuid would be a
   // driver error rather than an ingredient nobody holds.
-  const ids = [...new Set(refs.map((ref) => ref.id).filter((id) => RowId.safeParse(id).success))];
+  const ids = [...new Set(refs.map((ref) => ref.id).filter((id) => isRowId(id)))];
   const rows = await findManyIngredients(memberships, ids);
 
   // The read is scoped to every coven the batch proves at once, so a ref

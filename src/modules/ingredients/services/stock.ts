@@ -1,5 +1,6 @@
 import 'server-only';
 import {
+  type AuditWriter,
   type StockRow,
   findCupboardEntry,
   findOneIngredient,
@@ -14,8 +15,8 @@ import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { ValidationIssue } from '../../../lib/types';
 import type { Session } from '../../../lib/session';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId, parseInput } from '../../../lib/validation';
-import { inventoryItems } from '../schema/inventory-items';
+import { isRowId, parseInput } from '../../../lib/validation';
+import { INVENTORY_ITEMS_VARIANT_UNIQUE, inventoryItems } from '../schema/inventory-items';
 import { workspaceCompendiumEntries } from '../schema/workspace-compendium-entries';
 import { dimensionOf } from '../schema/units';
 import { defaultThreshold } from '../validation/default-threshold';
@@ -47,7 +48,7 @@ export async function createStock(
   const membership = await assertMembership(session, workspaceId, { inventory: ['update'] });
   const parsed = parseInput(StockInput, input);
   // An id that is not a uuid names nothing and would be a driver error at the comparison.
-  if (!RowId.safeParse(variantId).success) throw new NotFound(NO_FORM);
+  if (!isRowId(variantId)) throw new NotFound(NO_FORM);
   // With `membership` as `heldBy`, a retired compendium entry this coven's cupboard names takes a jar too.
   const variant = await findReadableVariant([membership], variantId, membership);
   if (!variant) throw new NotFound(NO_FORM);
@@ -56,16 +57,7 @@ export async function createStock(
   try {
     const [row] = await withAudit(session, async (write) => {
       await write.lockCovenStock(membership);
-      // A jar of a compendium form puts the entry in the cupboard once; a retired entry is never put back
-      // (claude-docs/db/stock.md, "Stock service details").
-      if (!entry) {
-        if (!(await heldCompendiumEntry(membership, variant.ingredientId)))
-          throw new NotFound(NO_FORM);
-      } else if (entry.workspaceId === null && !(await findCupboardEntry(membership, entry.id))) {
-        await write.insertInWorkspace(membership, workspaceCompendiumEntries, {
-          ingredientId: entry.id,
-        });
-      }
+      await ensureHeld(write, membership, entry, variant.ingredientId);
       return write.insertInWorkspace(membership, inventoryItems, {
         ingredientId: variant.ingredientId,
         variantId: variant.id,
@@ -75,10 +67,34 @@ export async function createStock(
     return row;
   } catch (error) {
     // The partial unique index is the check, so two creates racing for one form are refused alike.
-    if (violatedUniqueIndex(error) === 'inventory_items_workspace_id_variant_id_unique')
-      throw new ValidationError([{ path: ['variantId'], message: HELD }]);
+    refuseHeldVariant(error, ['variantId']);
     throw error;
   }
+}
+
+/**
+ * A jar of a compendium form puts the entry in the cupboard once; a retired entry is never put back
+ * (claude-docs/db/stock.md, "Stock service details").
+ */
+async function ensureHeld(
+  write: AuditWriter,
+  membership: Membership,
+  entry: Awaited<ReturnType<typeof findOneIngredient>> | null,
+  ingredientId: string,
+): Promise<void> {
+  if (!entry) {
+    if (!(await heldCompendiumEntry(membership, ingredientId))) throw new NotFound(NO_FORM);
+  } else if (entry.workspaceId === null && !(await findCupboardEntry(membership, entry.id))) {
+    await write.insertInWorkspace(membership, workspaceCompendiumEntries, {
+      ingredientId: entry.id,
+    });
+  }
+}
+
+/** Turns a race on the one-live-jar-per-form index into the HELD refusal at `path`; any other error passes through. */
+function refuseHeldVariant(error: unknown, path: (string | number)[]): void {
+  if (violatedUniqueIndex(error) === INVENTORY_ITEMS_VARIANT_UNIQUE)
+    throw new ValidationError([{ path, message: HELD }]);
 }
 
 /**
@@ -124,9 +140,7 @@ export async function saveStock(
 ): Promise<StockRow[]> {
   const membership = await assertMembership(session, workspaceId, { inventory: ['update'] });
   if (batch.create.length + batch.update.length + batch.delete.length === 0) {
-    return RowId.safeParse(ingredientId).success
-      ? findStockOfIngredients(membership, [ingredientId])
-      : [];
+    return isRowId(ingredientId) ? findStockOfIngredients(membership, [ingredientId]) : [];
   }
 
   const issues: ValidationIssue[] = [];
@@ -160,13 +174,13 @@ export async function saveStock(
 
   // Every id is read before anything is written, and every unreadable id is the same refusal of the whole batch.
   const ids = [...batch.update.map((row) => row.id), ...batch.delete];
-  if (!ids.every((id) => RowId.safeParse(id).success)) throw new NotFound(NO_JAR);
+  if (!ids.every((id) => isRowId(id))) throw new NotFound(NO_JAR);
   const held = new Map((await findStockByIds(membership, ids)).map((jar) => [jar.id, jar]));
   for (const id of ids) if (held.get(id)?.ingredientId !== ingredientId) throw new NotFound(NO_JAR);
 
   const variants = await Promise.all(
     batch.create.map(async ({ variantId }) => {
-      if (!RowId.safeParse(variantId).success) throw new NotFound(NO_FORM);
+      if (!isRowId(variantId)) throw new NotFound(NO_FORM);
       const variant = await findReadableVariant([membership], variantId, membership);
       if (variant?.ingredientId !== ingredientId) throw new NotFound(NO_FORM);
       return variant;
@@ -180,14 +194,7 @@ export async function saveStock(
     await withAudit(session, async (write) => {
       await write.lockCovenStock(membership);
       if (batch.create.length > 0) {
-        // As `createStock`: a first compendium jar puts the entry in the cupboard once.
-        if (!entry) {
-          if (!(await heldCompendiumEntry(membership, ingredientId))) throw new NotFound(NO_FORM);
-        } else if (entry.workspaceId === null && !(await findCupboardEntry(membership, entry.id))) {
-          await write.insertInWorkspace(membership, workspaceCompendiumEntries, {
-            ingredientId: entry.id,
-          });
-        }
+        await ensureHeld(write, membership, entry, ingredientId);
       }
       for (index = 0; index < batch.create.length; index++) {
         await write.insertInWorkspace(membership, inventoryItems, {
@@ -213,8 +220,7 @@ export async function saveStock(
     });
   } catch (error) {
     // The partial unique index is the check, as in `createStock`.
-    if (violatedUniqueIndex(error) === 'inventory_items_workspace_id_variant_id_unique')
-      throw new ValidationError([{ path: ['create', index, 'variantId'], message: HELD }]);
+    refuseHeldVariant(error, ['create', index, 'variantId']);
     throw error;
   }
   return findStockOfIngredients(membership, [ingredientId]);
@@ -292,7 +298,7 @@ export async function heldFormsOf(
             refs
               .filter((ref) => ref.workspaceId === workspaceId)
               .map((ref) => ref.ingredientId)
-              .filter((id) => RowId.safeParse(id).success),
+              .filter((id) => isRowId(id)),
           ),
         ];
         return [workspaceId, await formsHeldBy(session, workspaceId, ids)] as const;
@@ -356,7 +362,7 @@ async function jarsOf(
 
 /** The live jar, read through its live form and ingredient (claude-docs/db/stock.md, "Stock service details"). */
 async function readableJar(membership: Membership, id: string): Promise<StockRow> {
-  if (!RowId.safeParse(id).success) throw new NotFound(NO_JAR);
+  if (!isRowId(id)) throw new NotFound(NO_JAR);
   const row = await findStockById(membership, id);
   if (!row) throw new NotFound(NO_JAR);
   return row;

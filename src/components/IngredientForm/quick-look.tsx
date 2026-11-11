@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
+import { amountOf } from '@/lib/quantity';
 import { graphql } from '@/lib/graphql-document';
 import type { DuplicateQuickLookQuery } from '../../gql/graphql';
 import { graphqlQuery } from '../../lib/graphql-client';
@@ -104,7 +105,7 @@ type Looked = DuplicateQuickLookQuery['ingredient'];
  * The answer as the entry page's own shape, so the modal's head and body are the details modal's
  * own components. The rows are cast: the parts drawn read only the fields asked for above.
  */
-export function detailOf(looked: Looked, workspaceId: string): IngredientDetail {
+function detailOf(looked: Looked, workspaceId: string): IngredientDetail {
   const tier = looked.isGlobal ? null : workspaceId;
   return {
     entry: {
@@ -141,12 +142,12 @@ export function detailOf(looked: Looked, workspaceId: string): IngredientDetail 
   };
 }
 
-export const jarsOf = (looked: Looked): SummaryJar[] =>
+const jarsOf = (looked: Looked): SummaryJar[] =>
   looked.stock.map((jar) => ({
     variantId: jar.variant.id,
-    quantity: jar.quantityOnHand === null ? null : Number(jar.quantityOnHand),
+    quantity: amountOf(jar.quantityOnHand),
     unit: jar.unit,
-    threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
+    threshold: amountOf(jar.lowStockThreshold),
   }));
 
 export function DuplicateQuickLook({

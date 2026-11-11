@@ -4,7 +4,13 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { Forbidden } from '@/lib/errors';
-import { countUsers, listUsers, providersOf, usersForAdmin } from '@/modules/identity';
+import {
+  countUsers,
+  holdsPasskey,
+  listUsers,
+  providersOf,
+  usersForAdmin,
+} from '@/modules/identity';
 import type { UserFilter } from '@/modules/identity';
 import type { PageRequest } from '@/lib/types';
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
@@ -81,6 +87,13 @@ beforeAll(async () => {
     values ('a-google', 'google', ${A.id}, now()),
            ('a-discord', 'discord', ${A.id}, now()),
            ('b-microsoft', 'microsoft', ${B.id}, now())
+  `;
+  // A holds two passkeys, so a user counts once however many they hold.
+  await sql`
+    insert into passkeys (public_key, user_id, credential_id, counter, device_type, backed_up)
+    values ('key-a1', ${A.id}, 'cred-a1', 0, 'singleDevice', false),
+           ('key-a2', ${A.id}, 'cred-a2', 0, 'multiDevice', true),
+           ('key-b1', ${B.id}, 'cred-b1', 0, 'singleDevice', false)
   `;
 });
 
@@ -232,6 +245,23 @@ describe('listUsers by support time-out and site access pause', () => {
     // Both at once is the users under both, none here.
     expect(await ids({ paused: true, timedOut: true })).toEqual([]);
   });
+
+  it('drops the users a site access pause stands on, keeping one lifted or run out', async () => {
+    const everyone = await ids({});
+    const standing = await ids({ paused: true });
+    expect(standing.length).toBeGreaterThan(0);
+
+    const unpaused = await ids({ unpaused: true });
+    expect(unpaused).toEqual(everyone.filter((id) => !standing.includes(id)));
+    expect(unpaused).not.toContain(PAUSED_OPEN);
+    expect(unpaused).not.toContain(PAUSED_DATED);
+    expect(unpaused).toEqual(expect.arrayContaining([PAUSED_LIFTED, PAUSED_RUN_OUT, E.id]));
+    expect((await names({ unpaused: true, query: 'paused' })).sort()).toEqual([
+      'Paused Lifted Testwort',
+      'Paused Run Out Testwort',
+    ]);
+    expect(await ids({ unpaused: true, paused: true })).toEqual([]);
+  });
 });
 
 describe('countUsers', () => {
@@ -246,6 +276,7 @@ describe('countUsers', () => {
       { role: 'user', awaitingApproval: true, query: 'pending' },
       { timedOut: true },
       { paused: true },
+      { unpaused: true, role: 'user' },
     ];
     const listed = await Promise.all(filters.map((filter) => names(filter)));
     // Each filter keeps some and narrows, or a count ignoring it would pass.
@@ -267,6 +298,30 @@ describe('providersOf', () => {
     const answer = await providersOf(asUser(E), [B.id, A.id, C.id, A.id]);
 
     expect(answer).toEqual([['microsoft'], ['discord', 'google'], [], ['discord', 'google']]);
+  });
+});
+
+describe('holdsPasskey', () => {
+  it('answers whether each user holds a passkey, one slot per id in order', async () => {
+    const answer = await holdsPasskey(asUser(E), [B.id, A.id, C.id, A.id]);
+
+    expect(answer).toEqual([true, true, false, true]);
+  });
+
+  it("answers false once a user's last passkey is removed", async () => {
+    expect(await holdsPasskey(asUser(E), [B.id])).toEqual([true]);
+    await sql`delete from passkeys where user_id = ${B.id}`;
+
+    expect(await holdsPasskey(asUser(E), [B.id])).toEqual([false]);
+  });
+
+  it('answers Forbidden in every slot to anyone but a keeper, their own row included', async () => {
+    // Why it could have answered: A holds a passkey, and a keeper is told so.
+    expect(await holdsPasskey(asUser(E), [A.id])).toEqual([true]);
+
+    const answer = await holdsPasskey(asUser(A), [A.id, C.id]);
+
+    expect(answer).toEqual([expect.any(Forbidden), expect.any(Forbidden)]);
   });
 });
 

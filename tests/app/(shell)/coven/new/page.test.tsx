@@ -1,21 +1,20 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
+import { requireSession } from '../../../../support/request-session';
+import { renderWithQuery } from '../../../../support/render-with-query';
 
 // The create-workspace page, `/coven/new`. The session and the row are
 // mocked; what they are is tests/lib/request-session.test.ts's and the
 // identity service's, and the creation gate is the coven service's.
 
-const requireSession = vi.fn<() => Promise<Session>>();
-vi.mock('@/lib/request-session', () => ({ requireSession }));
+vi.mock('@/lib/request-session', () => import('../../../../support/request-session'));
 const getMe = vi.fn();
 vi.mock('@/modules/identity', () => ({ getMe }));
 const viewerOf = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerOf }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn() }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../../support/next-navigation')),
   usePathname: () => '/coven/new',
 }));
 
@@ -39,10 +38,8 @@ async function renderPage(
     workspaces,
   });
   getMe.mockResolvedValue({ name: 'Ada Fixture', canCreateWorkspace });
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      {await NewCovenPage({ searchParams: searchParams && Promise.resolve(searchParams) })}
-    </QueryClientProvider>,
+  renderWithQuery(
+    await NewCovenPage({ searchParams: searchParams && Promise.resolve(searchParams) }),
   );
 }
 

@@ -1,13 +1,12 @@
 import type { ReactElement, ReactNode } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { capitalise } from '../../lib/text';
+import { capitalise, hasText } from '../../lib/text';
 import type { CategoryDetail, DeityDetail, IngredientRow } from '@/modules/ingredients';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
-export const said = (text: string | null | undefined): text is string => (text ?? '').trim() !== '';
-
-export const listed = (values: readonly string[] | null | undefined): string[] =>
-  (values ?? []).filter(said);
+const listed = (values: readonly string[] | null | undefined): string[] =>
+  (values ?? []).filter(hasText);
 
 export interface Row {
   label: string;
@@ -77,10 +76,7 @@ export function ListBlock({
     <div className="ingredient-entry__block">
       <Heading id={block.id}>{title}</Heading>
       {children.length > 0 ? (
-        <ul
-          className={className ? `ingredient-entry__list ${className}` : 'ingredient-entry__list'}
-          aria-labelledby={block.labelledBy}
-        >
+        <ul className={cx('ingredient-entry__list', className)} aria-labelledby={block.labelledBy}>
           {children}
         </ul>
       ) : (

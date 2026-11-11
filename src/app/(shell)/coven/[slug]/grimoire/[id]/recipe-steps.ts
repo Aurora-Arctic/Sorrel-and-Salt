@@ -1,11 +1,11 @@
 import type { Route } from 'next';
+import { UNAVAILABLE_INGREDIENT } from '@/components/RecordWorking/warnings';
 import type { WorkingStep } from '@/components/RecordWorking/types';
 import type { StockDialogProps } from '@/components/StockDialog/types';
 import type { RecipeStep } from '@/components/SpellRecipe/types';
 import { withParam } from '@/lib/list-href';
+import { fold } from '@/lib/text';
 import type { SpellStepView } from '@/modules/grimoire';
-
-export const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
 
 export const entryHrefOf = (hereHref: Route, id: string): Route => withParam(hereHref, 'entry', id);
 
@@ -58,12 +58,12 @@ export function recipeStepsOf(views: readonly SpellStepView[], hereHref: Route):
   views.forEach((view, i) => {
     const step = steps[i];
     if (step?.kind !== 'ingredient') return;
-    const key = step.name.trim().toLowerCase();
+    const key = fold(step.name);
     owners.set(key, (owners.get(key) ?? new Set()).add(view.ingredientId ?? `one-off:${view.id}`));
   });
   return steps.map((step, i) => {
     if (step.kind !== 'ingredient') return step;
-    if ((owners.get(step.name.trim().toLowerCase())?.size ?? 0) < 2) return step;
+    if ((owners.get(fold(step.name))?.size ?? 0) < 2) return step;
     return { ...step, formal: views[i]?.ingredient?.canonicalName ?? null };
   });
 }

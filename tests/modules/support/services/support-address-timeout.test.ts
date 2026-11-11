@@ -12,6 +12,7 @@ import { run } from '../../../support/graphql/run';
 import { insertSupportRequest } from '../../../support/db/insert-support-request';
 import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 import { PAUSE_MESSAGE, noPauseNotifier } from '../../../support/email-verification';
+import { ORIGIN } from '../../../support/constants';
 
 // Every signed-out request is written as the one seeded stand-in, so the time-out names the address's HMAC key and no account (claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link").
 
@@ -29,7 +30,6 @@ const timeOutSignedOutSender = (
       requestId: string,
       until: Date | null,
       note: string,
-      notifier: typeof noPauseNotifier,
       message: string | null,
     ) => Promise<SupportTimeoutRow>;
   }
@@ -57,7 +57,7 @@ afterEach(() => {
 });
 
 const TIMED_OUT = 'timed-out@example.test';
-const mail: SupportNotifier = { origin: async () => 'http://localhost:3000' };
+const mail: SupportNotifier = { origin: async () => ORIGIN };
 
 const input = (email: string, subject = `Testwort from ${email}`) =>
   ({ about: 'account', email, subject, message: 'The code never arrives.' }) as const;
@@ -140,14 +140,7 @@ describe('a keeper timing out a signed-out request’s sender', () => {
       senderEmail: 'Newest@Example.test',
     });
 
-    const { id } = await timeOutSignedOutSender(
-      asUser(E),
-      request,
-      null,
-      'Spam',
-      noPauseNotifier,
-      PAUSE_MESSAGE,
-    );
+    const { id } = await timeOutSignedOutSender(asUser(E), request, null, 'Spam', PAUSE_MESSAGE);
 
     const [row] = await sql`select user_id, address_key from support_timeouts where id = ${id}`;
     expect(row!.user_id).toBeNull();
@@ -164,7 +157,7 @@ describe('a keeper timing out a signed-out request’s sender', () => {
     await sendSignedOut(TIMED_OUT);
     expect(await requestsFrom(TIMED_OUT)).toBe(2);
 
-    await timeOutSignedOutSender(asUser(E), request, null, 'Spam', noPauseNotifier, PAUSE_MESSAGE);
+    await timeOutSignedOutSender(asUser(E), request, null, 'Spam', PAUSE_MESSAGE);
 
     expect(await failureOf(sendSignedOut(TIMED_OUT))).toBeInstanceOf(Forbidden);
     expect(await requestsFrom(TIMED_OUT)).toBe(2);
@@ -174,7 +167,7 @@ describe('a keeper timing out a signed-out request’s sender', () => {
     const request = await insertSupportRequest(sql, { createdBy: C.id });
 
     const error = await failureOf(
-      timeOutSignedOutSender(asUser(E), request, null, 'Spam', noPauseNotifier, PAUSE_MESSAGE),
+      timeOutSignedOutSender(asUser(E), request, null, 'Spam', PAUSE_MESSAGE),
     );
 
     expect(error).toBeInstanceOf(Forbidden);
@@ -187,11 +180,11 @@ describe('a keeper timing out a signed-out request’s sender', () => {
       senderEmail: TIMED_OUT,
     });
     // Precondition: the same call as a keeper writes one, so the refusal below is the role's.
-    await timeOutSignedOutSender(asUser(E), request, null, 'Spam', noPauseNotifier, PAUSE_MESSAGE);
+    await timeOutSignedOutSender(asUser(E), request, null, 'Spam', PAUSE_MESSAGE);
     await sql`truncate support_timeouts`;
 
     const error = await failureOf(
-      timeOutSignedOutSender(asUser(F), request, null, 'Spam', noPauseNotifier, PAUSE_MESSAGE),
+      timeOutSignedOutSender(asUser(F), request, null, 'Spam', PAUSE_MESSAGE),
     );
 
     expect(error).toBeInstanceOf(Forbidden);

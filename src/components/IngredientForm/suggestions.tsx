@@ -21,7 +21,8 @@ import { graphqlQuery } from '../../lib/graphql-client';
 import type { VariablesArg } from '../../lib/types';
 import FormIcon from '../FormIcon';
 import type { ComboboxOption, Suggestions } from '../Combobox/types';
-import { ListField, SuggestField } from './fields';
+import { SuggestField } from '../Field';
+import { ListField } from './fields';
 import type {
   Claimant,
   CorrespondenceNode,
@@ -35,6 +36,7 @@ import type {
   UseSuggestions,
 } from './types';
 import { COMPENDIUM_HEADING, YOUR_INGREDIENTS, draftOf, renamedTo, tierOf } from './values';
+import { bracketedName } from '../../lib/ingredient-name';
 
 // The lookups on the form's boxes: each waits for the typing to settle, asks /api/graphql for a
 // page and shapes the answer into the combobox's rows. None asks until its box has been focused, so
@@ -181,13 +183,11 @@ const CompendiumSubstitutesDocument = graphql(`
 `);
 
 /** Rows a lookup asks for: enough to choose from, few enough to read. */
-export const SUGGESTION_ROWS = 10;
+const SUGGESTION_ROWS = 10;
 
 function usedBy(claimants: Claimant[]): string | undefined {
   if (claimants.length === 0) return undefined;
-  const names = claimants.map(({ name, canonicalName }) =>
-    canonicalName ? `${name} (${canonicalName})` : name,
-  );
+  const names = claimants.map(({ name, canonicalName }) => bracketedName(name, canonicalName));
   return `Used by ${names.join(', ')}`;
 }
 

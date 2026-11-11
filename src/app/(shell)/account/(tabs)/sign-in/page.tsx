@@ -1,26 +1,26 @@
+import { single } from '@/lib/search-params';
+import { SIGN_IN_NAV } from '../nav';
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
-import PageNav from '../../../../../components/PageNav';
-import Passkeys from '../../../../../components/Passkeys';
-import PasswordSection from '../../../../../components/PasswordSection';
-import TwoFactorSettings from '../../../../../components/PasswordSection/two-factor';
-import SignInMethods from '../../../../../components/SignInMethods';
+import PageNav from '@/components/PageNav';
+import Passkeys from '@/components/Passkeys';
+import PasswordSection from '@/components/PasswordSection';
+import TwoFactorSettings from '@/components/PasswordSection/two-factor';
+import SignInMethods from '@/components/SignInMethods';
 import {
   accountPasskeys,
   hasPassword,
   linkedAccounts,
   requireSession,
   sessionIsFresh,
-} from '../../../../../lib/request-session';
-import { ACCOUNT_PASSWORD_PATH, linkErrorMessage } from '../../../../../lib/sign-in';
-import { isRosterProvider } from '../../../../../lib/social-providers';
-// Server-only — see social-providers-config.ts's own header. Only the
-// resulting `configured` ids reach the client component.
-// oxlint-disable-next-line no-restricted-imports
-import { configuredProviders } from '../../../../../lib/social-providers-config';
+} from '@/lib/request-session';
+import { ACCOUNT_PASSWORD_PATH, linkErrorMessage } from '@/lib/sign-in';
+import { isRosterProvider } from '@/lib/social-providers';
+import { providersToPass } from '@/lib/configured-providers';
 import { getMe } from '@/modules/identity';
 import type { SignInPageProps } from './types';
 import PageWithNav from '@/components/PageWithNav';
+import PanelSection from '@/components/PanelSection';
 import { PendingLink } from '@/lib/navigation';
 
 export const metadata: Metadata = pageTitle('Sign-In');
@@ -37,70 +37,47 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
     accountPasskeys(),
   ]);
   const linkError = linkErrorMessage(params.error);
+  const provider = single(params.provider);
   const failedProvider =
-    typeof params.provider === 'string' && isRosterProvider(params.provider)
-      ? params.provider
-      : undefined;
+    provider !== undefined && isRosterProvider(provider) ? provider : undefined;
 
   return (
     <PageWithNav as="div" headless>
-      <PageNav
-        label="On This Page"
-        entries={[
-          { href: '#sign-in-methods', label: 'Sign-In Methods' },
-          { href: '#password', label: 'Password' },
-          { href: '#two-factor', label: 'Two-Factor Sign-In' },
-          { href: '#passkeys', label: 'Passkeys' },
-        ]}
-      />
-      <section
+      <PageNav label="On This Page" entries={SIGN_IN_NAV} />
+      <PanelSection
         id="sign-in-methods"
-        className="page-frame__section panel"
-        aria-labelledby="account-sign-in-methods-heading"
+        title="Sign-In Methods"
+        lede="You can sign in to this account with any of these."
       >
-        <div className="header">
-          <h2 id="account-sign-in-methods-heading">Sign-In Methods</h2>
-          <p className="lede">You can sign in to this account with any of these.</p>
-        </div>
         <SignInMethods
           passwordHeld={passwordHeld}
           passkeyCount={passkeys.length}
           linked={linked}
-          configured={configuredProviders()}
+          configured={providersToPass()}
           // Better Auth refuses a removal from a session older than a day,
           // so a stale one is offered a fresh sign-in instead of Remove.
           fresh={fresh}
           error={linkError ? { providerId: failedProvider, message: linkError } : undefined}
         />
-      </section>
-      <section
+      </PanelSection>
+      <PanelSection
         id="password"
-        className="page-frame__section panel"
-        aria-labelledby="account-password-heading"
+        title="Password"
+        lede={
+          passwordHeld
+            ? 'Changing your password signs out every other device signed in to your account.'
+            : linked.length > 0
+              ? 'Set a password to sign in with your email address as well as your providers.'
+              : 'Set a password to sign in with your email address as well.'
+        }
       >
-        <div className="header">
-          <h2 id="account-password-heading">Password</h2>
-          <p className="lede">
-            {passwordHeld
-              ? 'Changing your password signs out every other device signed in to your account.'
-              : linked.length > 0
-                ? 'Set a password to sign in with your email address as well as your providers.'
-                : 'Set a password to sign in with your email address as well.'}
-          </p>
-        </div>
         <PasswordSection hasPassword={passwordHeld} />
-      </section>
-      <section
+      </PanelSection>
+      <PanelSection
         id="two-factor"
-        className="page-frame__section panel"
-        aria-labelledby="account-two-factor-heading"
+        title="Two-Factor Sign-In"
+        lede="Ask for a code from an authenticator app, as well as your password, when you sign in."
       >
-        <div className="header">
-          <h2 id="account-two-factor-heading">Two-Factor Sign-In</h2>
-          <p className="lede">
-            Ask for a code from an authenticator app, as well as your password, when you sign in.
-          </p>
-        </div>
         {/* Two-factor guards password sign-ins alone, so an account with no password has nothing to turn on. */}
         {passwordHeld ? (
           <TwoFactorSettings enabled={me.twoFactorEnabled} />
@@ -110,21 +87,19 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
             <PendingLink href={ACCOUNT_PASSWORD_PATH}>Set a Password</PendingLink> first.
           </p>
         )}
-      </section>
-      <section
+      </PanelSection>
+      <PanelSection
         id="passkeys"
-        className="page-frame__section panel"
-        aria-labelledby="account-passkeys-heading"
-      >
-        <div className="header">
-          <h2 id="account-passkeys-heading">Passkeys</h2>
-          <p className="lede">
+        title="Passkeys"
+        lede={
+          <>
             A passkey is tied to this website&rsquo;s address and to the device or password manager
             that holds it.
-          </p>
-        </div>
+          </>
+        }
+      >
         <Passkeys passkeys={passkeys} />
-      </section>
+      </PanelSection>
     </PageWithNav>
   );
 }

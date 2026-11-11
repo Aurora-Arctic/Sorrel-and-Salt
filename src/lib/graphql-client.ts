@@ -1,11 +1,12 @@
 import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
-import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
+import { type Query, QueryClient, queryOptions, useMutation } from '@tanstack/react-query';
 import type { GraphQLFormattedError } from 'graphql';
 import { CLIENT_HEADER, CLIENT_HEADER_VALUE } from '../graphql/csrf';
 import { ACCESS_PAUSED_CODE, covenPausedPath } from './access-paused';
 import { covenSlugOf } from './coven-path';
 import { apiPath } from './api-path';
 import { GraphQLClientError, StaleWriteError } from './graphql-client-error';
+import { failureMessage } from './graphql-failure';
 import { reportLeaving } from './navigation/store';
 import type { VariablesArg } from './types';
 
@@ -106,6 +107,32 @@ export function saveRequest<Input extends object>(
     // `Input` is generic; the parameter has already held the document to it.
     const widened = create as DocumentTypeDecoration<unknown, { input: object }>;
     await graphqlRequest<unknown, { input: object }>(widened, { input });
+  };
+}
+
+/**
+ * A write that leaves the page on success. `onDone` follows the answer and `onRefused` gets the one
+ * sentence to show for a failure. `pending` stays true past the answer, until the page the write led
+ * to arrives, so a second press cannot ask again.
+ */
+export function useRefusableMutation<Variables = void, Result = unknown>({
+  request,
+  onDone,
+  onRefused,
+}: {
+  request: (variables: Variables) => Promise<Result>;
+  onDone: (result: Result, variables: Variables) => void;
+  onRefused: (message: string) => void;
+}): { run: (variables: Variables) => void; pending: boolean; reset: () => void } {
+  const write = useMutation({
+    mutationFn: request,
+    onSuccess: onDone,
+    onError: (error) => onRefused(failureMessage(error)),
+  });
+  return {
+    run: (variables) => write.mutate(variables),
+    pending: write.isPending || write.isSuccess,
+    reset: write.reset,
   };
 }
 

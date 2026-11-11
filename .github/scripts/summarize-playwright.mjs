@@ -1,15 +1,12 @@
 // Playwright's JSON reporter output, into the `summary` stat and `details`
 // block job-summary and pr-comment consume.
 import fs from 'node:fs';
-import { collectFailures, formatFailures } from './lib/playwright-failures.mjs';
+import { formatFailures } from './lib/failure-list.mjs';
+import { setOutput } from './lib/github-output.mjs';
+import { collectFailures } from './lib/playwright-failures.mjs';
 
 // Set by the job; the fallback is the same path.
 const RESULTS_PATH = process.env.PLAYWRIGHT_JSON_OUTPUT_NAME || '/app/playwright-results.json';
-
-function setOutput(name, value) {
-  const delim = `ghadelim_${Math.random().toString(36).slice(2)}`;
-  fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}<<${delim}\n${value}\n${delim}\n`);
-}
 
 const data = JSON.parse(fs.readFileSync(RESULTS_PATH, 'utf8'));
 const { expected = 0, unexpected = 0, skipped = 0, flaky = 0 } = data.stats ?? {};

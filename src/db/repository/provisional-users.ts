@@ -6,15 +6,23 @@ import { users } from '../../modules/identity/schema/users';
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { notSoftDeleted } from './predicates';
-import { existsIn } from './select';
+import { existsByKey } from './select';
 
 /** The rows a lapse can reach: unverified, holding a provider, and not vouched for by a keeper. */
 function provisional(userId?: string) {
   return and(
     userId === undefined ? undefined : eq(users.id, userId),
     eq(users.emailVerified, false),
-    existsIn(accounts, eq(accounts.userId, users.id)),
-    not(existsIn(userPrivilegeChanges, eq(userPrivilegeChanges.userId, users.id))),
+    existsByKey(accounts, accounts.userId, users.id),
+    not(existsByKey(userPrivilegeChanges, userPrivilegeChanges.userId, users.id)),
+  );
+}
+
+/** Idle past the lifetime, or older than the cap whatever its activity. */
+function lapsed(lifetimeSeconds: number, capSeconds: number) {
+  return or(
+    lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
+    lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
   );
 }
 
@@ -29,15 +37,7 @@ export async function deleteLapsedProvisionalUser(
 ): Promise<boolean> {
   const rows = await db
     .delete(users)
-    .where(
-      and(
-        provisional(userId),
-        or(
-          lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
-          lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
-        ),
-      ),
-    )
+    .where(and(provisional(userId), lapsed(lifetimeSeconds, capSeconds)))
     .returning({ id: users.id });
   return rows.length > 0;
 }
@@ -82,10 +82,7 @@ export async function findLapsedProvisionalUserIds(
         notSoftDeleted(users),
         provisional(),
         after === null ? undefined : gt(users.id, after),
-        or(
-          lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
-          lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
-        ),
+        lapsed(lifetimeSeconds, capSeconds),
       ),
     )
     .orderBy(users.id)

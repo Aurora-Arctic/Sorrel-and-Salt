@@ -12,8 +12,8 @@ import type {
 // or null for the compendium's. Apart from the component so the rule is read
 // in one place (claude-docs/components/cupboard-entry-form.md, "Contracts").
 
-export const TEXT_FIELDS: readonly TextField[] = ['label', 'description', 'safetyNotes'];
-export const LIST_FIELDS: readonly ListFieldName[] = [
+const TEXT_FIELDS: readonly TextField[] = ['label', 'description', 'safetyNotes'];
+const LIST_FIELDS: readonly ListFieldName[] = [
   'elements',
   'celestialBodies',
   'zodiacSigns',
@@ -21,7 +21,7 @@ export const LIST_FIELDS: readonly ListFieldName[] = [
 ];
 export const FIELDS: readonly CupboardField[] = [...TEXT_FIELDS, ...LIST_FIELDS];
 
-const isText = (field: CupboardField): field is TextField =>
+export const isTextField = (field: CupboardField): field is TextField =>
   (TEXT_FIELDS as readonly string[]).includes(field);
 
 const sameList = (a: readonly string[], b: readonly string[]): boolean =>
@@ -33,34 +33,25 @@ const sameList = (a: readonly string[], b: readonly string[]): boolean =>
  * shown as its placeholder and a typed label is the coven's own word.
  */
 export function baselineOf(compendium: CompendiumValues): CupboardValues {
-  return {
-    label: '',
-    description: compendium.description ?? '',
-    safetyNotes: compendium.safetyNotes ?? '',
-    elements: compendium.elements,
-    celestialBodies: compendium.celestialBodies,
-    zodiacSigns: compendium.zodiacSigns,
-    colors: compendium.colors,
-  };
+  return Object.fromEntries(
+    FIELDS.map((field) => [
+      field,
+      field === 'label' ? '' : (compendium[field] ?? (isTextField(field) ? '' : [])),
+    ]),
+  ) as unknown as CupboardValues;
 }
 
 export function openingValues(
   baseline: CupboardValues,
   overrides: CupboardOverrides,
 ): CupboardValues {
-  return {
-    label: overrides.label ?? baseline.label,
-    description: overrides.description ?? baseline.description,
-    safetyNotes: overrides.safetyNotes ?? baseline.safetyNotes,
-    elements: overrides.elements ?? baseline.elements,
-    celestialBodies: overrides.celestialBodies ?? baseline.celestialBodies,
-    zodiacSigns: overrides.zodiacSigns ?? baseline.zodiacSigns,
-    colors: overrides.colors ?? baseline.colors,
-  };
+  return Object.fromEntries(
+    FIELDS.map((field) => [field, overrides[field] ?? baseline[field]]),
+  ) as unknown as CupboardValues;
 }
 
 export function differs(field: CupboardField, a: CupboardValues, b: CupboardValues): boolean {
-  if (isText(field)) return a[field].trim() !== b[field].trim();
+  if (isTextField(field)) return a[field].trim() !== b[field].trim();
   return !sameList(a[field], b[field]);
 }
 
@@ -73,7 +64,7 @@ export function isOwn(
 ): boolean {
   if (handedBack.has(field)) return false;
   if (overrides[field] !== null) return true;
-  if (isText(field) && values[field].trim() === '') return false;
+  if (isTextField(field) && values[field].trim() === '') return false;
   return differs(field, values, baseline);
 }
 
@@ -95,7 +86,7 @@ export function changesOf(
       if (held !== null) changes[field] = null;
       continue;
     }
-    if (isText(field)) {
+    if (isTextField(field)) {
       const text = values[field].trim();
       const heldText = held as string | null;
       if (held === null) {

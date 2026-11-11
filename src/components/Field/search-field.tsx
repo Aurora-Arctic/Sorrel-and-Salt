@@ -2,8 +2,8 @@
 
 import { type ReactElement, useEffect, useId, useRef } from 'react';
 import { fieldDescription } from './description';
-import { MagnifierIcon } from './icons';
 import { FieldShell } from './shell';
+import { SEARCH_INPUT_ATTRIBUTES, SearchSubmit } from './search-submit';
 import type { SearchFieldProps } from './types';
 
 export function SearchField({
@@ -43,21 +43,14 @@ export function SearchField({
           onKeyDown={(event) => {
             entered.current = event.key === 'Enter';
           }}
-          type="search"
-          // Not a sign-in field; 1Password documents this attribute to leave a field alone.
-          data-1p-ignore
+          {...SEARCH_INPUT_ATTRIBUTES}
           name={name}
           placeholder={placeholder}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           {...aria}
         />
-        {/* An id of its own, so a filter applied by a press on it can give
-            it the focus back once the new list arrives (FilterForm). */}
-        <button id={`${field.controlId}-submit`} type="submit" className="search-field__submit">
-          <MagnifierIcon />
-          <span className="visually-hidden">Search</span>
-        </button>
+        <SearchSubmit id={`${field.controlId}-submit`} className="search-field__submit" />
       </div>
     </FieldShell>
   );

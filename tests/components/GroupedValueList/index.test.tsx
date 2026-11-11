@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { router } from '../../support/next-navigation';
 import GroupedValueList from '@/components/GroupedValueList';
 import { groupedValuesHref } from '@/components/GroupedValueList/href';
 import type {
@@ -9,9 +10,6 @@ import type {
 import type { ListDialog } from '@/lib/types';
 import { FILTER_ROWS, drawnOnServer, filterForm } from '../../support/filter-form';
 import type { FilterFormSubject, GroupedValueListSubject } from '../../support/types';
-
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/grouped-value-list.md
 

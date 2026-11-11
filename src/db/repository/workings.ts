@@ -1,14 +1,13 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, type SQL, sql } from 'drizzle-orm';
 import { spellWorkingDeductions } from '../../modules/grimoire/schema/spell-working-deductions';
 import { spellWorkingParticipants } from '../../modules/grimoire/schema/spell-working-participants';
 import { spellWorkings } from '../../modules/grimoire/schema/spell-workings';
 import { spells } from '../../modules/grimoire/schema/spells';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { Membership } from '@/modules/coven';
-import { applyAudit } from '../audit';
 import { findPageInScope } from './finders';
 import { newestFirst, scopedTo } from './predicates';
-import { existsIn, selectFrom } from './select';
+import { existsByKey, selectFrom, whenIds } from './select';
 import { readableWorkings } from './spells';
 import type {
   AuditWriter,
@@ -22,6 +21,16 @@ import type {
 
 // A spell's workings, read under `readableWorkings`: the spell must be readable and a private working reaches its recorder and the
 // members named on it. The participant and deduction tables have no coven and no tombstone, so they are read through their working.
+
+/** The row whose `working_id` column names a working the reader may read: the parent check for the participant and deduction tables, which have no coven or tombstone. */
+function inReadableWorking(membership: Membership, workingIdColumn: unknown): SQL {
+  return existsByKey(
+    spellWorkings,
+    spellWorkings.id,
+    workingIdColumn,
+    readableWorkings(membership),
+  );
+}
 
 /** One working by id, or `undefined` for a missing, deleted or unreadable one: the same answer for all three. */
 export async function findOneWorking(
@@ -45,10 +54,7 @@ export async function isParticipantOfWorking(
     and(
       eq(spellWorkingParticipants.workingId, workingId),
       eq(spellWorkingParticipants.userId, membership.userId),
-      existsIn(
-        spellWorkings,
-        and(eq(spellWorkings.id, spellWorkingParticipants.workingId), readableWorkings(membership)),
-      ),
+      inReadableWorking(membership, spellWorkingParticipants.workingId),
     ),
   );
   return rows.length > 0;
@@ -91,22 +97,23 @@ export function findCompleteWorkingCounts(
   membership: Membership,
   spellIds: readonly string[],
 ): Promise<WorkingCount[]> {
-  if (spellIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    spellWorkings,
-    and(
-      readableWorkings(membership),
-      eq(spellWorkings.status, 'complete'),
-      inArray(spellWorkings.spellId, [...spellIds]),
-    ),
-    {
-      aggregate: {
-        spellId: sql<string>`${spellWorkings.spellId}`,
-        count: sql<number>`count(*)::int`,
+  return whenIds(spellIds, () =>
+    selectFrom(
+      spellWorkings,
+      and(
+        readableWorkings(membership),
+        eq(spellWorkings.status, 'complete'),
+        inArray(spellWorkings.spellId, [...spellIds]),
+      ),
+      {
+        aggregate: {
+          spellId: sql<string>`${spellWorkings.spellId}`,
+          count: sql<number>`count(*)::int`,
+        },
+        over: {},
+        groupBy: [spellWorkings.spellId],
       },
-      over: {},
-      groupBy: [spellWorkings.spellId],
-    },
+    ),
   );
 }
 
@@ -115,14 +122,12 @@ export async function findParticipantsOfWorkings(
   membership: Membership,
   workingIds: readonly string[],
 ): Promise<WorkingParticipantRow[]> {
-  if (workingIds.length === 0) return [];
-  const rows = await selectFrom(
-    spellWorkingParticipants,
-    and(
-      inArray(spellWorkingParticipants.workingId, [...workingIds]),
-      existsIn(
-        spellWorkings,
-        and(eq(spellWorkings.id, spellWorkingParticipants.workingId), readableWorkings(membership)),
+  const rows = await whenIds(workingIds, () =>
+    selectFrom(
+      spellWorkingParticipants,
+      and(
+        inArray(spellWorkingParticipants.workingId, [...workingIds]),
+        inReadableWorking(membership, spellWorkingParticipants.workingId),
       ),
     ),
   );
@@ -134,14 +139,12 @@ export async function findDeductionsOfWorkings(
   membership: Membership,
   workingIds: readonly string[],
 ): Promise<WorkingDeductionRow[]> {
-  if (workingIds.length === 0) return [];
-  return selectFrom(
-    spellWorkingDeductions,
-    and(
-      inArray(spellWorkingDeductions.workingId, [...workingIds]),
-      existsIn(
-        spellWorkings,
-        and(eq(spellWorkings.id, spellWorkingDeductions.workingId), readableWorkings(membership)),
+  return whenIds(workingIds, () =>
+    selectFrom(
+      spellWorkingDeductions,
+      and(
+        inArray(spellWorkingDeductions.workingId, [...workingIds]),
+        inReadableWorking(membership, spellWorkingDeductions.workingId),
       ),
     ),
   );
@@ -153,7 +156,7 @@ export async function findDeductionsOfWorkings(
  */
 export function workingWrites({
   tx,
-  session,
+  stampInsert,
   update,
   softDelete,
 }: WriterContext): Pick<
@@ -189,16 +192,12 @@ export function workingWrites({
         const [row] = await tx
           .insert(spellWorkingParticipants)
           .values(
-            applyAudit(
-              'insert',
-              {
-                workingId,
-                userId: participant.userId ?? null,
-                name: participant.name ?? null,
-                position,
-              },
-              session,
-            ) as never,
+            stampInsert({
+              workingId,
+              userId: participant.userId ?? null,
+              name: participant.name ?? null,
+              position,
+            }),
           )
           .returning();
         written.push(row as WorkingParticipantRow);
@@ -211,7 +210,7 @@ export function workingWrites({
         spellWorkings,
         and(
           eq(spellWorkings.spellId, spellId),
-          existsIn(spells, and(eq(spells.id, spellWorkings.spellId), scopedTo(membership, spells))),
+          existsByKey(spells, spells.id, spellWorkings.spellId, scopedTo(membership, spells)),
         ),
       ),
   };

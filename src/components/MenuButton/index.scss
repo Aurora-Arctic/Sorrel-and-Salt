@@ -20,13 +20,14 @@
 }
 
 .menu-button__menu {
+  box-sizing: content-box;
   z-index: layer('floating');
   min-width: $menu-min-width;
   // A step of air all round, so an item's hover, focus and chosen fill sits inset from the
   // panel's edge and is never cut by it. The panel needs no clipping: nothing touches its
   // corners.
   padding: space(1);
-  border: 1px solid $text-muted;
+  border: $muted-border;
   border-radius: radius('surface');
   background-color: $surface-card;
   box-shadow: $shadow-floating;
@@ -70,14 +71,13 @@
 .menu-button__rule {
   height: 0;
   margin: space(1) space(2);
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 }
 
 .menu-button__item {
   @include button-reset;
 
   display: block;
-  box-sizing: border-box;
   width: 100%;
   padding: space(2) space(4);
   // All four corners of the fill rounded, one step tighter than the panel's `surface` radius

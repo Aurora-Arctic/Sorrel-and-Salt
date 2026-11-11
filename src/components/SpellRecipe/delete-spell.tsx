@@ -1,10 +1,8 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
-import { graphqlRequest } from '../../lib/graphql-client';
-import { failureMessage } from '../../lib/graphql-failure';
+import { graphqlRequest, useRefusableMutation } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
 import ConfirmDialog from '../ConfirmDialog';
 import type { DeleteSpellActionProps } from './types';
@@ -14,7 +12,7 @@ import type { SpellVisibility } from '@/modules/grimoire';
 // the page leaves for the grimoire list, replacing the history entry so Back does not return to a 404.
 // Not a `ConfirmQuestion`, which asks over a form and the More menu has none (claude-docs/components/spell-recipe.md, "The actions row").
 
-export const DeleteSpellDocument = graphql(`
+const DeleteSpellDocument = graphql(`
   mutation DeleteSpell($workspaceId: ID!, $id: ID!) {
     deleteSpell(workspaceId: $workspaceId, id: $id)
   }
@@ -36,15 +34,15 @@ export function useDeleteSpell({
   onClosed: () => void;
 }) {
   const { navigate } = usePendingNavigation();
-  const remove = useMutation({
-    mutationFn: () => graphqlRequest(DeleteSpellDocument, { id: spellId, workspaceId }),
-    onSuccess: () => navigate(deletedHref, { replace: true }),
-    onError: (error) => {
+  const remove = useRefusableMutation({
+    request: () => graphqlRequest(DeleteSpellDocument, { id: spellId, workspaceId }),
+    onDone: () => navigate(deletedHref, { replace: true }),
+    onRefused: (message) => {
       onClosed();
-      onRefused(failureMessage(error));
+      onRefused(message);
     },
   });
-  return { remove: remove.mutate, pending: remove.isPending || remove.isSuccess };
+  return { remove: () => remove.run(), pending: remove.pending };
 }
 
 export function DeleteSpellWords({

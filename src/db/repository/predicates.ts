@@ -71,16 +71,21 @@ export function ownedByIngredient<TTable extends PgTable>(table: TTable): SQL | 
   return variantId ? isNull(variantId) : undefined;
 }
 
+// Reads `%`, `_` and `\` in a LIKE pattern literally.
+function escapeLike(text: string): string {
+  return text.replace(/[\\%_]/g, '\\$&');
+}
+
 /**
  * `column` holds `query` anywhere, case-insensitively, its `%`, `_` and `\` read literally: how an admin list narrows by
  * a fragment. `ilike` rather than trigram, which scores part of a name or address poorly.
  */
 export function containsText(column: AnyPgColumn, query: string): SQL {
-  return ilike(column, `%${query.replace(/[\\%_]/g, '\\$&')}%`);
+  return ilike(column, `%${escapeLike(query)}%`);
 }
 
 export function startsWithText(column: AnyPgColumn, prefix: string): SQL {
-  return ilike(sql`${column}::text`, `${prefix.replace(/[\\%_]/g, '\\$&')}%`);
+  return ilike(sql`${column}::text`, `${escapeLike(prefix)}%`);
 }
 
 /**
@@ -99,6 +104,14 @@ export function listFolds(list: SQLWrapper): SQL {
  */
 export function fold(value: SQLWrapper | string): SQL {
   return sql`lower(btrim(${value}))`;
+}
+
+/**
+ * `left` equals `right`, case aside. Raw, as `lower` has no builder. Neither side is trimmed: the JS fold in `lib/text.ts` also trims, so a
+ * caller holding a JS-folded value compares it to `fold(column)` instead.
+ */
+export function caseFoldedEq(left: SQLWrapper, right: SQLWrapper | string): SQL {
+  return eq(sql`lower(${left})`, sql`lower(${right})`);
 }
 
 /**
@@ -139,7 +152,7 @@ export function foldedWordMatch(query: string): WordMatch {
  * The natural-language collation facet lists and the category picker sort names under: case set aside, accents beside
  * plain letters. Named rather than the database default so the order is the same everywhere; needs Postgres built with ICU.
  */
-export const NATURAL_COLLATION = sql.raw('"en-US-x-icu"');
+const NATURAL_COLLATION = sql.raw('"en-US-x-icu"');
 
 /** `value` sorted under `NATURAL_COLLATION`: the one place the COLLATE clause is written. */
 export function naturally(value: SQL | AnyPgColumn): SQL {

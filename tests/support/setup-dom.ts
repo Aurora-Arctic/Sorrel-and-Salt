@@ -1,5 +1,6 @@
 import type { Window } from 'happy-dom';
-import { afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
+import { router } from './next-navigation';
 import { act, cleanup } from '@testing-library/react';
 import { installConsoleGuard } from './console-guard';
 import HTMLElementConfig from 'happy-dom/lib/config/HTMLElementConfig.js';
@@ -98,12 +99,10 @@ afterEach(async () => {
 // a router whose calls do nothing. A test that mocks the module with its own factory replaces this one.
 vi.mock('next/navigation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/navigation')>()),
-  useRouter: () => ({
-    push: () => undefined,
-    replace: () => undefined,
-    refresh: () => undefined,
-    back: () => undefined,
-    forward: () => undefined,
-    prefetch: () => undefined,
-  }),
+  ...(await import('./next-navigation')),
 }));
+
+// The shared router keeps no calls from one test to the next.
+beforeEach(() => {
+  for (const call of Object.values(router)) call.mockClear();
+});

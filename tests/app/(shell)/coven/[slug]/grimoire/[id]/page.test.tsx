@@ -1,10 +1,11 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
 import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
+import { requireCovenMembership, requireSession } from '../../../../../../support/request-session';
+import { renderWithQuery } from '../../../../../../support/render-with-query';
+import { expectBefore } from '../../../../../../support/interact';
 
 // The spell recipe page, with the guard and services mocked (tests/modules/grimoire/services/spell-reads.test.ts proves a private spell reads as NotFound to anyone but its author).
 // It proves the page guards itself, a refusal is the 404, and what the services give is drawn.
@@ -13,14 +14,12 @@ const SPELL_ID = '0f6d2c8e-3b1a-4e5f-9a7c-2d4b6e8f1a3c';
 const OTHER_SPELL_ID = '7b2e4f10-9c3d-4a8e-b1f2-5d6c7e8f9a0b';
 const COVEN = { id: 'c0ffee00-0000-4000-8000-000000000001', slug: 'fixture-coven' };
 const session = { user: { id: 'fixture-user' } };
-const requireSession = vi.fn(async () => session);
-const requireCovenMembership = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireCovenMembership, requireSession }));
-vi.mock('next/navigation', () => ({
+vi.mock('@/lib/request-session', () => import('../../../../../../support/request-session'));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../../../../support/next-navigation')),
   notFound: () => {
     throw new Error('NEXT_NOT_FOUND');
   },
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
   usePathname: () => `/coven/fixture-coven/grimoire/${SPELL_ID}`,
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -107,11 +106,7 @@ const params = (id = SPELL_ID, search: Record<string, string> = {}) => ({
   searchParams: Promise.resolve(search),
 });
 const draw = async (...args: Parameters<typeof params>) =>
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      {await Page(params(...args))}
-    </QueryClientProvider>,
-  );
+  renderWithQuery(await Page(params(...args)));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -123,6 +118,7 @@ beforeEach(() => {
     addEventListener: () => undefined,
     removeEventListener: () => undefined,
   }));
+  requireSession.mockResolvedValue(session);
   requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role: 'member' } });
   readSpell.mockResolvedValue(SPELL);
   stepsOfSpells.mockResolvedValue([
@@ -201,9 +197,7 @@ describe('the spell recipe page', () => {
     expect(within(match).getByText('Carried')).toBeInTheDocument();
     expect(within(match).getByText('Testwarding')).toBeInTheDocument();
     // Category Match stands over the inventory.
-    expect(
-      match.compareDocumentPosition(inventory) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(match, inventory);
     expect(stockOf).toHaveBeenCalledWith(session, [
       { ingredientId: 'ing-1', workspaceId: COVEN.id },
     ]);

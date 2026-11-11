@@ -1,7 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
-import type { Message } from '@/lib/types';
 import { PROVIDER_CREDENTIALS, cookieHeader, signIn as signInThrough } from '../support/oauth';
 import { importAuth } from '../support/auth-module';
 import { softKey } from '../support/passkey-authenticator';
@@ -13,8 +12,7 @@ import { ORIGIN } from '../support/constants';
 // Passkey management (@story-74) through Better Auth's real endpoints: an account renames and removes its own passkeys, no other's, and
 // never the last way it has to sign in (claude-docs/auth/plugins.md, "Passkeys").
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
 
 const DOMAIN = '@passkey-account.test';
 const OWNER = `owner${DOMAIN}`;

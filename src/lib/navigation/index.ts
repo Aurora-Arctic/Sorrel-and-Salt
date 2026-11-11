@@ -9,4 +9,5 @@ export type {
   NavigationState,
   PendingNavigation,
 } from './types';
+export { useLeaveCoven } from './use-leave-coven';
 export { useNavigationState, usePendingNavigation } from './use-navigation';

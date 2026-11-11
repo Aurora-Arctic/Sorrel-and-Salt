@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import SafetyNote, { CautionMark, SafetyMark, ToxicMark } from '@/components/SafetyNote';
 import { capitalise } from '@/lib/text';
+import { expectBefore } from '../../support/interact';
 
 // claude-docs/components/safety-note.md
 
@@ -67,7 +68,7 @@ describe('SafetyNote', () => {
     ]);
 
     const own = within(region).getByText(INGREDIENT_NOTES);
-    expect(own.compareDocumentPosition(terms[0]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(own, terms[0]!);
   });
 
   it('renders for a form alone when the ingredient has no notes of its own', () => {
@@ -85,7 +86,7 @@ describe('SafetyNote', () => {
     const region = screen.getByRole('region', { name: 'Caution' });
     const own = within(region).getByText(INGREDIENT_NOTES);
     const footnote = within(region).getByText('Fixture footnote.');
-    expect(own.compareDocumentPosition(footnote) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(own, footnote);
     unmount();
 
     render(<SafetyNote safetyNotes="" footnote={<p>Fixture footnote.</p>} />);

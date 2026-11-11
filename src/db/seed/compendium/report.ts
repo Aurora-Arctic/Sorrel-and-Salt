@@ -2,7 +2,7 @@
 // was refused.
 
 /** One entry the run met, by its file's path, with the fields the file and the row disagree on. */
-export interface EntryOutcome {
+interface EntryOutcome {
   /** The entry file's path under the compendium root. */
   where: string;
   /** The top-level fields that differ between the file and the row, `description` or `categories`; empty when none. */
@@ -10,7 +10,7 @@ export interface EntryOutcome {
 }
 
 /** An entry the run refused to update, with the reason in the words the run prints. */
-export interface RefusedEntry extends EntryOutcome {
+interface RefusedEntry extends EntryOutcome {
   reason: string;
 }
 

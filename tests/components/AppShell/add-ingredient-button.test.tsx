@@ -1,18 +1,14 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
 const pathname = vi.fn<() => string>();
-// A push moves the address as the router's would, so a save's navigation closes the dialog.
-const push = vi.fn((href: string) => {
-  window.history.pushState(null, '', href);
-  pathname.mockReturnValue(new URL(href, window.location.origin).pathname);
-});
 // `?new` moves through the history API, which Next's router follows and the test follows by drawing again (`sync`).
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => pathname(),
   useSearchParams: () => new URLSearchParams(window.location.search),
-  useRouter: () => ({ push }),
 }));
 vi.mock('@/components/IngredientForm', () => ({
   default: ({
@@ -124,7 +120,11 @@ const target = async () => (await formArrived()).dataset.workspace;
 beforeEach(() => {
   pathname.mockReturnValue('/coven/fixture-coven');
   window.history.replaceState(null, '', '/coven/fixture-coven');
-  push.mockClear();
+  // A push moves the address as the router's would, so a save's navigation closes the dialog.
+  router.push.mockImplementation((href: string) => {
+    window.history.pushState(null, '', href);
+    pathname.mockReturnValue(new URL(href, window.location.origin).pathname);
+  });
 });
 
 describe('AddIngredientButton', () => {
@@ -179,7 +179,7 @@ describe('AddIngredientButton', () => {
       expect(screen.queryByRole('menu')).toBeNull();
       expect(window.location.search).toBe('?new=ingredient-coven-fixture-coven');
       expect(await target()).toBe('id-fixture-coven');
-      expect(push).not.toHaveBeenCalled();
+      expect(router.push).not.toHaveBeenCalled();
     });
 
     it('opens the coven chosen off the admin pages, naming it on the address', async () => {
@@ -192,7 +192,7 @@ describe('AddIngredientButton', () => {
         screen.getByRole('dialog', { name: 'Add Ingredient to Testwort Circle' }),
       ).toBeInTheDocument();
       expect(await target()).toBe('id-testwort-circle');
-      expect(push).not.toHaveBeenCalled();
+      expect(router.push).not.toHaveBeenCalled();
     });
 
     it('sends the compendium choice to its add dialog', () => {
@@ -200,7 +200,7 @@ describe('AddIngredientButton', () => {
       fireEvent.click(chevron());
       press(within(menuOf()).getByRole('menuitem', { name: 'to Compendium' }));
 
-      expect(push).toHaveBeenCalledWith('/curator/compendium?new=ingredient-compendium');
+      expect(router.push).toHaveBeenCalledWith('/curator/compendium?new=ingredient-compendium');
       expect(screen.queryByRole('dialog')).toBeNull();
     });
 
@@ -211,7 +211,7 @@ describe('AddIngredientButton', () => {
         draw(ADMIN, [FIXTURE]);
         open();
 
-        expect(push).toHaveBeenCalledWith('/curator/compendium?new=ingredient-compendium');
+        expect(router.push).toHaveBeenCalledWith('/curator/compendium?new=ingredient-compendium');
       },
     );
 
@@ -220,7 +220,7 @@ describe('AddIngredientButton', () => {
       draw(ADMIN, [FIXTURE, TESTWORT]);
       open();
 
-      expect(push).not.toHaveBeenCalled();
+      expect(router.push).not.toHaveBeenCalled();
       expect(await target()).toBe('id-testwort-circle');
     });
 
@@ -428,7 +428,9 @@ describe('AddIngredientButton', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Save Ingredient' }));
 
     await closed();
-    expect(push).toHaveBeenCalledExactlyOnceWith(`/coven/${FIXTURE.slug}/ingredients/saved-id`);
+    expect(router.push).toHaveBeenCalledExactlyOnceWith(
+      `/coven/${FIXTURE.slug}/ingredients/saved-id`,
+    );
     // The address is the push's to move: a replace under it would hold the page where it was.
     expect(window.location.pathname).toBe(`/coven/${FIXTURE.slug}/ingredients/saved-id`);
   });
@@ -466,6 +468,6 @@ describe('AddIngredientButton', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.queryByRole('status')).toBeNull();
-    expect(push).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 });

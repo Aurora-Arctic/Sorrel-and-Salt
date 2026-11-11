@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 import { REASON_LIMIT, reasonProblem } from '../../modules/identity/validation/reason';
 import { PlainTextField } from './plain-text-field';
 import type { ReasonFieldProps } from './types';
@@ -32,4 +32,34 @@ export function ReasonField({
       />
     </div>
   );
+}
+
+/**
+ * A reason note held by the form around a ReasonField: the text, the refusal beside it, a check
+ * that sets the refusal and a reset. Spread `field` onto the ReasonField.
+ */
+export function useReasonNote() {
+  const [note, setNote] = useState('');
+  const [error, setError] = useState<string>();
+  return {
+    note,
+    /** Says whether the note passes, drawing the refusal beside the field when it does not. */
+    check: (): boolean => {
+      const problem = reasonProblem(note);
+      setError(problem);
+      return problem === undefined;
+    },
+    reset: (): void => {
+      setNote('');
+      setError(undefined);
+    },
+    field: {
+      value: note,
+      error,
+      onChange: (next: string): void => {
+        setNote(next);
+        setError(undefined);
+      },
+    },
+  };
 }

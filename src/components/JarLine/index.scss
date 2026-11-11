@@ -12,9 +12,8 @@
   column-gap: space(2);
 
   &.is-one-off .jar-line__jar {
-    .jar-shelf__glass,
-    .jar-shelf__lid,
-    .jar-shelf__facet,
+    @include jar-muted-stroke;
+
     .jar-shelf__wave {
       stroke: $text-muted;
     }

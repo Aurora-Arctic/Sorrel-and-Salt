@@ -5,9 +5,9 @@
 ## Contracts
 
 - **No permission check lives here.** The page decides which columns to draw and what the modal offers (CLAUDE.md rule 1).
-- **No row holds an action**, as on the admin users table. The name is a link, `MemberLink` (`member-link.tsx`), to `?member=<id>` with the cursor kept; a press opens the modal at once with its heading, through the page's `RouteModalProvider`. It is still a link, so a new tab opens the address.
+- **No row holds an action**, as on the admin users table. The name is an `OpenModalLink` (`Modal/open-modal-link.tsx`) to `?member=<id>` with the cursor kept; a press opens the modal at once with its heading, through the page's `RouteModalProvider`. It is still a link, so a new tab opens the address.
 - **Columns:** Name, Email (stewards only), Role, Joined, Invited By, Updated, Access (stewards only). Joined, Invited By and Updated are muted facts no control changes.
-- **Roles are told apart by their word**, from `workspaceRoleLabel` (`UserDetail/roles.ts`). A steward is also bold, but weight is never the only cue.
+- **Roles are told apart by their word**, from `workspaceRoleLabel` (`MemberList/roles.ts`). A steward is also bold, but weight is never the only cue.
 - **Every role carries a tip saying what it may do**: a [`RoleTip`](role-tip.md), its text `WORKSPACE_ROLE_ACCESS[role]`, the same sentence Change Role shows beside that role, on every row, so a member reads it too.
 - **Invited By** is the display name of whoever sent the invitation that seated the member, resolved by the page (`displayNamesOf`). It is empty for a coven's creator and where the name is withheld.
 - **Updated** is the row's audit stamp: who last changed the membership, a display name the page resolves (`displayNamesOf`), as "by **Fixture A** on 2026-10-12". Where the service withholds the editor's name the cell is empty, date included. A role change moves it; the joined date stays.
@@ -21,7 +21,7 @@
 `?member=<id>` opens [`MemberDetail`](member-detail.md) over the list. The page finds the member among the rows it has already read, so the modal reads nothing more for its facts; an id not on this page of the list shows an error notice above the list instead. The controls it holds, `role-control.tsx` and `remove-control.tsx`, live here, beside the role words they share.
 
 - **`role-control.tsx` is one Change Role button**, asking first which role the member moves to (`ConfirmedAction`, `inModal`), then sending `updateMemberRole`. It is offered to stewards only; the service is the guard.
-- **The question has a radio per role**, each with what that role may do (`role-access.ts`). The first other role in viewer, member, owner order is chosen to start. The confirm follows the choice: **Promote**, green (`btn--solid`), for a role above their own, and **Demote**, red (`btn--destructive`), for one below.
+- **The question has a radio per role**, each with what that role may do (`roles.ts`). The first other role in viewer, member, owner order is chosen to start. The confirm follows the choice: **Promote**, green (`btn--solid`), for a role above their own, and **Demote**, red (`btn--destructive`), for one below.
 - **`remove-control.tsx` is a `ConfirmedAction`** naming the member and sending `removeMember`. In the modal its button is plain (`btn btn--quiet`): the red is the confirm's own. A success closes the modal back to the list (`onSent`); a refusal is a notice in the modal.
 - **Both controls say what happened through `ConfirmedAction`'s click feedback** ([`click-feedback.md`](click-feedback.md)). Change Role's refusal floats under its button in a callout (`refusalInModal="callout"`), with a badge on the button to bring it back; nothing in the modal moves, and the next attempt clears it. A success is said in the page's status region.
 

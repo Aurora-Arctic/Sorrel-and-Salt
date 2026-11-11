@@ -1,5 +1,6 @@
 import 'server-only';
 import {
+  type AuditWriter,
   type CompendiumListEdge,
   findCompendiumCount,
   findCompendiumEntryByIdentity,
@@ -12,12 +13,13 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { fieldRefusal, NotFound, ValidationError } from '../../../lib/errors';
+import { NO_COMPENDIUM_ENTRY, NO_INGREDIENT, assertRowId } from './messages';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
-import { addressTaken } from '../../../lib/text';
+import { addressTaken, fold } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId, parseInput } from '../../../lib/validation';
+import { isRowId, parseInput } from '../../../lib/validation';
 import { compendiumFilterFor, seesReview } from './compendium-filter';
 import { heldCompendiumEntry } from './cupboard-entries';
 import { ingredientDetailOf } from './ingredient-detail';
@@ -41,7 +43,6 @@ import {
   type CuratedField,
   curatedSpellings,
   describeEntry,
-  foldVocabularyValue,
   redirectRefusal,
 } from '@/modules/vocabulary';
 import type {
@@ -109,12 +110,12 @@ export async function getIngredient(
   const memberships = await readersOf(session, workspaceId, { ingredient: ['read'] });
 
   // An id that is not a uuid names nothing and would be a driver error at the comparison.
-  const row = RowId.safeParse(id).success ? await findOneIngredient(memberships, id) : undefined;
+  const row = isRowId(id) ? await findOneIngredient(memberships, id) : undefined;
   // A hidden compendium entry is a curator's to read; a coven that holds it still has it through its cupboard below.
   if (row && (row.workspaceId !== null || row.shown || seesReview(session))) return row;
   const [membership] = memberships;
   const held = membership && (await heldCompendiumEntry(membership, id));
-  if (!held) throw new NotFound('No such ingredient');
+  if (!held) throw new NotFound(NO_INGREDIENT);
   return held.entry;
 }
 
@@ -178,24 +179,22 @@ export async function updateCompendiumEntry(
     picked,
   } = splitChildren(parseInput(CompendiumIngredientInput, input));
   // An id that is not a uuid names nothing and would be a driver error at the comparison.
-  if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
+  assertRowId(id, NO_COMPENDIUM_ENTRY);
   const held = await heldDeities([], id);
   const curated = await inCuratedValues(input, parsed, picked, held);
   const { fields } = curated;
   const current = await findOneIngredient([], id);
-  if (!current) throw new NotFound('No such compendium entry');
+  if (!current) throw new NotFound(NO_COMPENDIUM_ENTRY);
 
   const columns = {
     ...ingredientColumns(fields),
     ...(input.shown != null && { shown: input.shown }),
   };
   const { slug } = columns;
-  const at = new Date();
-  const moves = slug !== current.slug;
-  if (moves) await refuseEndingARedirect(slug, at, input.endRedirect, id);
+  const move = await planSlugMove(current, slug, input.endRedirect);
 
   const written = await withAudit(session, async (write) => {
-    await write.deleteLapsedSlugRetirements(curator, at);
+    await write.deleteLapsedSlugRetirements(curator, move.at);
     const [row] = await write.updateRevisionedInCompendium(
       curator,
       ingredients,
@@ -203,14 +202,8 @@ export async function updateCompendiumEntry(
       expectedRevision,
       columns,
     );
-    if (!row) throw new NotFound('No such compendium entry');
-    if (moves) {
-      await write.insertInCompendium(curator, retiredIngredientSlugs, {
-        ingredientId: id,
-        slug: current.slug,
-        retiredAt: at,
-      });
-    }
+    if (!row) throw new NotFound(NO_COMPENDIUM_ENTRY);
+    await retireSlug(write, curator, current, move);
     const touched = await writeChildren(
       write,
       [],
@@ -239,32 +232,24 @@ export async function promoteCompendiumFolkName(
   folkNameId: string,
 ): Promise<IngredientRow> {
   const curator = assertCurator(session);
-  if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
+  assertRowId(id, NO_COMPENDIUM_ENTRY);
   const current = await findOneIngredient([], id);
-  if (!current) throw new NotFound('No such compendium entry');
+  if (!current) throw new NotFound(NO_COMPENDIUM_ENTRY);
   const { promoted, others } = await readPromotedFolkName([], id, folkNameId);
 
   const fields = { name: promoted.name, canonicalName: current.canonicalName };
   const slug = ingredientSlug(fields.name, fields.canonicalName);
-  const at = new Date();
-  const moves = slug !== current.slug;
-  if (moves) await refuseEndingARedirect(slug, at, undefined, id);
+  const move = await planSlugMove(current, slug, undefined);
 
   const written = await withAudit(session, async (write) => {
-    await write.deleteLapsedSlugRetirements(curator, at);
+    await write.deleteLapsedSlugRetirements(curator, move.at);
     await swapFolkName(write, id, promoted.id, current.name, others);
     const [row] = await write.updateByIdInCompendium(curator, ingredients, id, {
       name: fields.name,
       slug,
     });
-    if (!row) throw new NotFound('No such compendium entry');
-    if (moves) {
-      await write.insertInCompendium(curator, retiredIngredientSlugs, {
-        ingredientId: id,
-        slug: current.slug,
-        retiredAt: at,
-      });
-    }
+    if (!row) throw new NotFound(NO_COMPENDIUM_ENTRY);
+    await retireSlug(write, curator, current, move);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug, id));
   expireCompendium();
@@ -282,10 +267,10 @@ export async function setCompendiumEntryReviewed(
   reviewed: boolean,
 ): Promise<IngredientRow> {
   const curator = assertCurator(session);
-  if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
+  assertRowId(id, NO_COMPENDIUM_ENTRY);
   const written = await withAudit(session, async (write) => {
     const [row] = await write.setReviewInCompendium(curator, id, reviewed);
-    if (!row) throw new NotFound('No such compendium entry');
+    if (!row) throw new NotFound(NO_COMPENDIUM_ENTRY);
     return row;
   });
   expireCompendium();
@@ -304,10 +289,10 @@ export async function setCompendiumEntryShown(
   shown: boolean,
 ): Promise<IngredientRow> {
   const curator = assertCurator(session);
-  if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
+  assertRowId(id, NO_COMPENDIUM_ENTRY);
   const written = await withAudit(session, async (write) => {
     const [row] = await write.setShownInCompendium(curator, id, shown);
-    if (!row) throw new NotFound('No such compendium entry');
+    if (!row) throw new NotFound(NO_COMPENDIUM_ENTRY);
     return row;
   });
   expireCompendium();
@@ -325,8 +310,8 @@ export async function readCompendiumReview(
   id: string,
 ): Promise<CompendiumReview | null> {
   const curator = assertCurator(session);
-  const found = RowId.safeParse(id).success ? await findCompendiumReview(curator, id) : undefined;
-  if (!found) throw new NotFound('No such compendium entry');
+  const found = isRowId(id) ? await findCompendiumReview(curator, id) : undefined;
+  if (!found) throw new NotFound(NO_COMPENDIUM_ENTRY);
   return found.reviewedAt ? { reviewedAt: found.reviewedAt } : null;
 }
 
@@ -350,19 +335,23 @@ export async function resolveCompendiumSlug(
   }
   const redirect = await findCompendiumSlugRedirect(slug, at, undefined, reach);
   if (redirect) return { kind: 'moved', slug: redirect.entry.slug };
-  throw new NotFound('No such compendium entry');
+  throw new NotFound(NO_COMPENDIUM_ENTRY);
 }
 
-// The public entry route's read, cached whole beside the list's (claude-docs/db/compendium-cache.md).
-const cachedEntry = cachedCompendiumRead('compendium-entry', async (slug: string) => {
-  const address = await resolveCompendiumSlug(slug);
-  if (address.kind === 'moved') return address satisfies CompendiumEntryPage;
+// The page is read without a viewer, so the cached read and the curator's read both build it here.
+async function entryPageOf(address: CompendiumAddress): Promise<CompendiumEntryPage> {
+  if (address.kind === 'moved') return address;
   const { entry, movedAway } = address;
   return {
     kind: 'entry',
     detail: await ingredientDetailOf(null, entry),
     movedAway: movedAway ? { name: movedAway.name, slug: movedAway.slug } : null,
-  } satisfies CompendiumEntryPage;
+  };
+}
+
+// The public entry route's read, cached whole beside the list's (claude-docs/db/compendium-cache.md).
+const cachedEntry = cachedCompendiumRead('compendium-entry', async (slug: string) => {
+  return entryPageOf(await resolveCompendiumSlug(slug));
 });
 
 /**
@@ -387,14 +376,7 @@ export async function readCompendiumEntryAsCurator(
   slug: string,
 ): Promise<CompendiumEntryPage> {
   assertCurator(session);
-  const address = await resolveCompendiumSlug(slug, session);
-  if (address.kind === 'moved') return address satisfies CompendiumEntryPage;
-  const { entry, movedAway } = address;
-  return {
-    kind: 'entry',
-    detail: await ingredientDetailOf(null, entry),
-    movedAway: movedAway ? { name: movedAway.name, slug: movedAway.slug } : null,
-  } satisfies CompendiumEntryPage;
+  return entryPageOf(await resolveCompendiumSlug(slug, session));
 }
 
 const NOUN_OF: Record<CuratedField, string> = {
@@ -430,8 +412,7 @@ async function inCuratedValues(
     curatedSpellings('zodiacSigns', valuesOf('zodiacSigns')),
   ]);
   const spellingsOf = { celestialBodies, zodiacSigns };
-  const spellingOf = (field: CuratedField, value: string) =>
-    spellingsOf[field].get(foldVocabularyValue(value));
+  const spellingOf = (field: CuratedField, value: string) => spellingsOf[field].get(fold(value));
 
   const sent = [
     { at: [], lists: input },
@@ -492,6 +473,35 @@ async function refuseEndingARedirect(
   if (refused) throw refused;
 }
 
+/** When a rename happens, and whether it leaves the old address behind to redirect from. */
+type SlugMove = { at: Date; moves: boolean };
+
+async function planSlugMove(
+  current: IngredientRow,
+  slug: string,
+  endRedirect: boolean | undefined,
+): Promise<SlugMove> {
+  const at = new Date();
+  const moves = slug !== current.slug;
+  if (moves) await refuseEndingARedirect(slug, at, endRedirect, current.id);
+  return { at, moves };
+}
+
+/** Runs after the lapsed retirements are deleted, so the address it retires is never one that has just lapsed. */
+async function retireSlug(
+  write: AuditWriter,
+  curator: ReturnType<typeof assertCurator>,
+  current: IngredientRow,
+  move: SlugMove,
+): Promise<void> {
+  if (!move.moves) return;
+  await write.insertInCompendium(curator, retiredIngredientSlugs, {
+    ingredientId: current.id,
+    slug: current.slug,
+    retiredAt: move.at,
+  });
+}
+
 /**
  * Its folk names and category links stay (claude-docs/db/spell-visibility.md, "What a spell holds").
  *
@@ -500,7 +510,7 @@ async function refuseEndingARedirect(
  */
 export async function deleteCompendiumEntry(session: Session, id: string): Promise<void> {
   const curator = assertCurator(session);
-  await softDeleteIngredient(session, id, 'No such compendium entry', (write) =>
+  await softDeleteIngredient(session, id, NO_COMPENDIUM_ENTRY, (write) =>
     write.softDeleteByIdInCompendium(curator, ingredients, id),
   );
   expireCompendium();
@@ -513,8 +523,8 @@ export async function deleteCompendiumEntry(session: Session, id: string): Promi
  */
 export async function countCompendiumEntryUsers(session: Session, id: string): Promise<number> {
   const curator = assertCurator(session);
-  const entry = RowId.safeParse(id).success ? await findOneIngredient([], id) : undefined;
-  if (!entry) throw new NotFound('No such compendium entry');
+  const entry = isRowId(id) ? await findOneIngredient([], id) : undefined;
+  if (!entry) throw new NotFound(NO_COMPENDIUM_ENTRY);
   return countCovensUsing(curator, id);
 }
 
@@ -528,7 +538,7 @@ async function refuseCollision(
   id: string | undefined,
 ): Promise<never> {
   const refuse = (path: string, message: string) => {
-    throw new ValidationError([{ path: [path], message }]);
+    throw fieldRefusal(path, message);
   };
   const identity = (holder: IngredientRow | undefined) =>
     refuse(
@@ -549,8 +559,15 @@ async function refuseCollision(
       refuse(
         'name',
         addressTaken(
-          holder ? describeEntry(holder) : 'Another compendium entry',
-          slug,
+          fields.name,
+          holder
+            ? {
+                label: describeEntry(holder),
+                same:
+                  fold(holder.name) === fold(fields.name) &&
+                  fold(holder.canonicalName ?? '') === fold(fields.canonicalName ?? ''),
+              }
+            : 'the name of another compendium entry',
           'change the name or formal name',
         ),
       );

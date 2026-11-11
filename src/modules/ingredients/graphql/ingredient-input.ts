@@ -1,6 +1,7 @@
 import { builder } from '../../../graphql/builder';
 import type { SchemaTypes } from '../../../graphql/types';
-import { IngredientElementEnum, NomenclatureEnum } from './ingredient';
+import { correspondenceInputFields } from './correspondences';
+import { NomenclatureEnum } from './ingredient';
 import { ReferenceLinkInput } from './references';
 import type { Tier } from '../types';
 
@@ -53,10 +54,7 @@ const IngredientVariantInput = builder.inputType('IngredientVariantInput', {
       required: true,
       description: "Whether this form is toxic: its own flag, whatever the ingredient's says.",
     }),
-    elements: t.field({ type: [IngredientElementEnum], required: true }),
-    celestialBodies: t.stringList({ required: true }),
-    zodiacSigns: t.stringList({ required: true }),
-    colors: t.stringList({ required: true }),
+    ...correspondenceInputFields(t, true),
     categoryIds: t.idList({
       required: true,
       description: 'The categories this form is filed under.',
@@ -87,11 +85,8 @@ export function ingredientInputFields<T extends Tier, Whole extends boolean>(
     canonicalName: t.string({ required: whole }),
     nomenclature: t.field({ type: NomenclatureEnum, required: nomenclatureRequired }),
     description: t.string({ required: whole }),
-    elements: t.field({ type: [IngredientElementEnum], required: whole }),
-    celestialBodies: t.stringList({ required: whole }),
-    zodiacSigns: t.stringList({ required: whole }),
+    ...correspondenceInputFields(t, whole),
     deities: t.field({ type: [IngredientDeityInput], required: whole }),
-    colors: t.stringList({ required: whole }),
     safetyNotes: t.string({ required: whole }),
     toxic: t.boolean({
       required: whole,

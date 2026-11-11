@@ -12,7 +12,7 @@ import type {
 
 // One entry per v1 story whether or not anything tested it: a story with no test yet is a line on the report, not an omission.
 
-export function statusOf(states: StoryState[]): StoryStatus {
+function statusOf(states: StoryState[]): StoryStatus {
   if (states.length === 0) return 'untested';
   if (states.some((state) => state === 'failed')) return 'failed';
   if (states.some((state) => state === 'skipped')) return 'skipped';
@@ -61,7 +61,7 @@ const SUFFIX: Record<StoryStatus, string> = {
   untested: ' — no test yet',
 };
 
-export function summarizeChecklist({ counts, total }: Checklist): string {
+function summarizeChecklist({ counts, total }: Checklist): string {
   const parts = [`${counts.passed} of ${total} stories passing`];
   if (counts.failed) parts.push(`${counts.failed} failing`);
   if (counts.skipped) parts.push(`${counts.skipped} skipped`);
@@ -69,7 +69,7 @@ export function summarizeChecklist({ counts, total }: Checklist): string {
   return parts.join(' · ');
 }
 
-export function groupBySection(entries: readonly StoryEntry[]): Array<[string, StoryEntry[]]> {
+function groupBySection(entries: readonly StoryEntry[]): Array<[string, StoryEntry[]]> {
   const groups = new Map<string, StoryEntry[]>();
   for (const entry of entries)
     groups.set(entry.section, [...(groups.get(entry.section) ?? []), entry]);

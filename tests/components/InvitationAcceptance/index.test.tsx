@@ -9,12 +9,14 @@ import type {
   RecordCardAttemptMutationVariables,
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { router } from '../../support/next-navigation';
+import { expectBefore, fillSignUp } from '../../support/interact';
+import { PASSWORD } from '../../support/constants';
 
 // claude-docs/components/invitation-acceptance.md
 
-const router = { push: vi.fn() };
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -174,9 +176,7 @@ describe('InvitationAcceptance', () => {
 
     const firstLink = screen.getByRole('link', { name: first });
     const secondLink = screen.getByRole('link', { name: second });
-    expect(
-      firstLink.compareDocumentPosition(secondLink) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(firstLink, secondLink);
   });
 
   it('opens the dialog over the invitation in the mode each choice names', async () => {
@@ -229,12 +229,10 @@ describe('InvitationAcceptance', () => {
     await act(async () =>
       fireEvent.click(within(dialog).getByRole('button', { name: 'Continue with Email' })),
     );
-    const field = (label: string) =>
-      within(dialog).getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
-    fireEvent.change(field('Name'), { target: { value: 'Testwort Hedge' } });
-    fireEvent.change(field('Email Address'), { target: { value: 'someone@invitation.test' } });
-    fireEvent.change(field('Password'), {
-      target: { value: 'Testwort crowns the eastern hedge' },
+    fillSignUp(dialog, {
+      name: 'Testwort Hedge',
+      email: 'someone@invitation.test',
+      password: PASSWORD,
     });
 
     await act(async () =>
@@ -306,10 +304,7 @@ describe('InvitationAcceptance', () => {
 
     const alert = screen.getByRole('alert');
     expect(alert).toBeVisible();
-    expect(
-      alert.compareDocumentPosition(screen.getByRole('link', { name: 'Sign In' })) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(alert, screen.getByRole('link', { name: 'Sign In' }));
   });
 
   it('says why a link cannot be accepted, with no Accept, pointing an unverified match at the email page', () => {

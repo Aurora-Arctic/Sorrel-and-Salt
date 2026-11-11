@@ -1,7 +1,6 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { StockDialogProps } from '@/components/StockDialog/types';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import CompleteWorkingAction from '@/components/RecordWorking/complete-action';
 import type { WorkingStep } from '@/components/RecordWorking/types';
 import type {
@@ -12,12 +11,10 @@ import type {
   WorkingDeductionPreviewQuery,
 } from '@/gql/graphql';
 import { press, typeIn } from '../../support/interact';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { WORKSPACE_ID } from '../../support/constants';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // claude-docs/components/record-working.md
 
@@ -72,15 +69,13 @@ function open(steps: readonly WorkingStep[] = STEPS) {
       warnings: WARNINGS_ALL,
     },
   }));
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <CompleteWorkingAction
-        workspaceId={WORKSPACE_ID}
-        spellId={SPELL}
-        workingId={WORKING}
-        steps={steps}
-      />
-    </QueryClientProvider>,
+  renderWithQuery(
+    <CompleteWorkingAction
+      workspaceId={WORKSPACE_ID}
+      spellId={SPELL}
+      workingId={WORKING}
+      steps={steps}
+    />,
   );
   fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
 }
@@ -123,15 +118,13 @@ describe('Complete on a working', () => {
         warnings: [],
       },
     }));
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <CompleteWorkingAction
-          workspaceId={WORKSPACE_ID}
-          spellId={SPELL}
-          workingId={WORKING}
-          steps={[STEPS[0]!]}
-        />
-      </QueryClientProvider>,
+    renderWithQuery(
+      <CompleteWorkingAction
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        workingId={WORKING}
+        steps={[STEPS[0]!]}
+      />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
     expect(
@@ -149,15 +142,13 @@ describe('Complete on a working', () => {
         warnings: [{ position: 1, reason: 'UNSTOCKED', stepId: 's1', stepName: 'Testwort' }],
       },
     }));
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <CompleteWorkingAction
-          workspaceId={WORKSPACE_ID}
-          spellId={SPELL}
-          workingId={WORKING}
-          steps={[STEPS[0]!]}
-        />
-      </QueryClientProvider>,
+    renderWithQuery(
+      <CompleteWorkingAction
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        workingId={WORKING}
+        steps={[STEPS[0]!]}
+      />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
     expect(await screen.findByText('have no jar · takes nothing')).toBeVisible();
@@ -204,15 +195,13 @@ describe('Complete on a working', () => {
     mockGraphQLMutation<SaveStockMutation, SaveStockMutationVariables>('SaveStock', () => ({
       saveStock: [],
     }));
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <CompleteWorkingAction
-          workspaceId={WORKSPACE_ID}
-          spellId={SPELL}
-          workingId={WORKING}
-          steps={[{ ...STEPS[0]!, stock: STOCK }]}
-        />
-      </QueryClientProvider>,
+    renderWithQuery(
+      <CompleteWorkingAction
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        workingId={WORKING}
+        steps={[{ ...STEPS[0]!, stock: STOCK }]}
+      />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
     expect(await screen.findByText(/short by 1 g/)).toBeVisible();
@@ -261,16 +250,14 @@ describe('Complete on a draft dated ahead', () => {
     ['a future day', '2999-01-01', true],
     ['today', new Date().toLocaleDateString('en-CA'), false],
   ])('is off for %s: %s', (_name, workedOn, off) => {
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <CompleteWorkingAction
-          workspaceId={WORKSPACE_ID}
-          spellId={SPELL}
-          workingId={WORKING}
-          steps={STEPS}
-          workedOn={workedOn}
-        />
-      </QueryClientProvider>,
+    renderWithQuery(
+      <CompleteWorkingAction
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        workingId={WORKING}
+        steps={STEPS}
+        workedOn={workedOn}
+      />,
     );
     const button = screen.getByRole('button', { name: 'Complete' });
     if (off) expect(button).toHaveAttribute('aria-disabled', 'true');
@@ -278,16 +265,14 @@ describe('Complete on a draft dated ahead', () => {
   });
 
   it('keeps an early Complete in the tab order, says why it is off, and opens nothing on a press', () => {
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <CompleteWorkingAction
-          workspaceId={WORKSPACE_ID}
-          spellId={SPELL}
-          workingId={WORKING}
-          steps={STEPS}
-          workedOn="2999-01-01"
-        />
-      </QueryClientProvider>,
+    renderWithQuery(
+      <CompleteWorkingAction
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        workingId={WORKING}
+        steps={STEPS}
+        workedOn="2999-01-01"
+      />,
     );
     const button = screen.getByRole('button', { name: 'Complete' });
     expect(button).toBeEnabled();

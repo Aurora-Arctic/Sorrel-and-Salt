@@ -1,20 +1,13 @@
 import { expectSummaryLinksTo } from '../../support/error-summary';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
 import ReferencePanel from '@/components/IngredientForm/reference-panel';
 import type { CreateReferenceMutation, CreateReferenceMutationVariables } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
-import {
-  chooseKind,
-  inPanel,
-  labelled,
-  referencePanel,
-  renderWithClient,
-} from '../../support/ingredient-form';
+import { chooseKind, inPanel, labelled, referencePanel } from '../../support/ingredient-form';
 import { press, typeIn } from '../../support/interact';
+import { renderWithQuery } from '../../support/render-with-query';
 import { graphqlLink, mockGraphQLError } from '../../support/msw/graphql';
 import {
   NEW_REFERENCE_ID,
@@ -26,22 +19,19 @@ import { server } from '../../support/msw/server';
 
 // claude-docs/components/ingredient-form.md, "Stories and tests"
 
-/** The panel, asked for `summons` times; `summon` asks for it again, as New Reference does. Rendered here rather than by `renderWithClient`, because a summons re-renders the panel under the client it opened with. */
+/** The panel, asked for `summons` times; `summon` asks for it again, as New Reference does. */
 function renderPanel() {
   const onSaved = vi.fn();
   const onCancel = vi.fn();
-  const client = makeQueryClient();
   const panelFor = (summons: number) => (
-    <QueryClientProvider client={client}>
-      <ReferencePanel
-        workspaceId={WORKSPACE_ID}
-        summons={summons}
-        onSaved={onSaved}
-        onCancel={onCancel}
-      />
-    </QueryClientProvider>
+    <ReferencePanel
+      workspaceId={WORKSPACE_ID}
+      summons={summons}
+      onSaved={onSaved}
+      onCancel={onCancel}
+    />
   );
-  const { rerender } = render(panelFor(1));
+  const { rerender } = renderWithQuery(panelFor(1));
   return { onSaved, onCancel, summon: (summons: number) => rerender(panelFor(summons)) };
 }
 
@@ -437,7 +427,7 @@ describe('ReferencePanel', () => {
       code: 'VALIDATION',
       fieldErrors: [{ path: ['published'], message: 'Give the year it was published' }],
     });
-    renderWithClient(
+    renderWithQuery(
       <ReferencePanel
         workspaceId={WORKSPACE_ID}
         editing={{

@@ -1,14 +1,16 @@
 'use client';
 
+import { EMAIL_TITLE } from './head';
 import type { Route } from 'next';
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useEffect, useState } from 'react';
-import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
+import { validateEmailAddress } from '../../lib/email-address';
 import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { fold } from '../../lib/text';
-import { FormActions, PlainTextField } from '../Field';
+import { UNCONFIRMED_EMAIL } from '../../lib/sign-in';
+import { EmailField, FormActions } from '../Field';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { EmailFormProps } from './types';
@@ -42,8 +44,7 @@ function normalise(input: string): string {
 // state, so the tests read them from here rather than restating the words.
 export const VERIFIED_STATUS = "Your email address is confirmed. We'll send your emails here.";
 export const NO_EMAIL_STATUS = 'No email address yet. Enter the one we should write to.';
-export const UNVERIFIED_STATUS =
-  "Your email address isn't confirmed yet. Open the link we sent you, or send a new one.";
+export const UNVERIFIED_STATUS = `${UNCONFIRMED_EMAIL} Open the link we sent you, or send a new one.`;
 export const CHANGE_STATUS = "Enter a new email address and we'll send it a confirmation link.";
 
 function statusLine(email: string, verified: boolean): string {
@@ -122,7 +123,7 @@ const EmailForm = ({
     embedded ? (
       <p className="lede email-form__status">{status}</p>
     ) : (
-      <PageHeader title="Your Email" lede={status} />
+      <PageHeader title={EMAIL_TITLE} lede={status} />
     );
 
   if (confirmed && !embedded) {
@@ -161,16 +162,10 @@ const EmailForm = ({
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
-        <PlainTextField
-          label="Email Address"
-          type="email"
+        <EmailField
           // A new address: "email" would fill in the one the account has now.
           autoComplete="off"
           ignorePasswordManagers
-          required
-          placeholder="name@example.com"
-          format={emailFormat}
-          check={emailAddressProblem}
           value={value}
           onChange={(next) => {
             setValue(next);

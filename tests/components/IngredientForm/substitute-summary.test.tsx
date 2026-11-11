@@ -10,7 +10,7 @@ import type {
 } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
 import type { IngredientSummaryQuery, IngredientSummaryQueryVariables } from '@/gql/graphql';
-import { renderWithClient } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 import { WORKSPACE_ID } from '../../support/msw/ingredient-lookups';
 
@@ -90,7 +90,7 @@ function renderSubstitutes(entryHref?: (ingredient: { slug: string }) => string)
       </FormProvider>
     );
   };
-  renderWithClient(<Harness />);
+  renderWithQuery(<Harness />);
 }
 
 const LINKED_TEXT = 'Mockwort (Fixtura vulgaris) · Dried Leaf';

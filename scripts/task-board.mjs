@@ -40,6 +40,38 @@ export function gh(args, { input } = {}) {
 
 export const ghJson = (args, options) => JSON.parse(gh(args, options));
 
+/** The `gh api graphql` arguments for a query: a string variable goes as `-f`, a number as `-F`, which GitHub types as an Int. */
+export const graphqlArgs = (query, variables = {}, flags = []) => [
+  'api',
+  'graphql',
+  ...flags,
+  '-f',
+  `query=${query}`,
+  ...Object.entries(variables).flatMap(([name, value]) => [
+    typeof value === 'number' ? '-F' : '-f',
+    `${name}=${value}`,
+  ]),
+];
+
+// The Project's fields, with each single-select field's options: where a Status or Estimate write finds its field and option ids.
+const PROJECT_FIELDS = `fields(first: 30) {
+  nodes {
+    ... on ProjectV2Field { id name }
+    ... on ProjectV2SingleSelectField { id name options { id name } }
+  }
+}`;
+
+// One item: its id, its Project, and the two values the board writes.
+const itemSelection = (projectSelection) => `
+  id
+  project { id number ${projectSelection} }
+  status: fieldValueByName(name: "Status") {
+    ... on ProjectV2ItemFieldSingleSelectValue { name }
+  }
+  estimate: fieldValueByName(name: "Estimate") {
+    ... on ProjectV2ItemFieldNumberValue { number }
+  }`;
+
 // Issues are read through REST, because the GraphQL listing tripped GitHub's secondary rate limit.
 
 /** `<id> — `: the id plus the separator, so a short id cannot match a longer one that starts with it. */
@@ -101,24 +133,7 @@ const ITEM_QUERY = `
     repository(owner: $owner, name: $name) {
       issue(number: $number) {
         projectItems(first: 10) {
-          nodes {
-            id
-            project {
-              id
-              number
-              fields(first: 30) {
-                nodes {
-                  ... on ProjectV2Field { id name }
-                  ... on ProjectV2SingleSelectField { id name options { id name } }
-                }
-              }
-            }
-            status: fieldValueByName(name: "Status") {
-              ... on ProjectV2ItemFieldSingleSelectValue { name }
-            }
-            estimate: fieldValueByName(name: "Estimate") {
-              ... on ProjectV2ItemFieldNumberValue { number }
-            }
+          nodes {${itemSelection(PROJECT_FIELDS)}
           }
         }
       }
@@ -161,8 +176,7 @@ export function shapeItem(nodes, number) {
 
 function readItemNodes(issue) {
   const [owner, name] = REPO.split('/');
-  const query = ['-f', `query=${ITEM_QUERY}`, '-f', `owner=${owner}`, '-f', `name=${name}`];
-  const data = ghJson(['api', 'graphql', ...query, '-F', `number=${issue.number}`]);
+  const data = ghJson(graphqlArgs(ITEM_QUERY, { owner, name, number: issue.number }));
   return data.data.repository.issue.projectItems.nodes;
 }
 
@@ -199,6 +213,19 @@ function editItem(item, field, valueArgs) {
   gh([...args, '--field-id', field.id, ...valueArgs]);
 }
 
+/** Writes `target` to the item's Status, whatever it holds now. The caller decides whether the move is allowed. */
+function writeStatus(item, target) {
+  const field = projectField(item, 'Status');
+  const option = field.options?.find((candidate) => candidate.name === target);
+  if (!option)
+    throw new BoardError(`Project ${item.projectNumber}'s Status has no "${target}" option.`);
+  editItem(item, field, ['--single-select-option-id', option.id]);
+}
+
+function writeEstimate(item, hours) {
+  editItem(item, projectField(item, 'Estimate'), ['--number', String(hours)]);
+}
+
 /**
  * Moves Status forward. `Done` is the merge's, so it is refused unless `force`, the migration's flag for tasks already done on Asana. `item` is read unless given.
  */
@@ -219,10 +246,7 @@ export function setStatus(issue, target, { force = false, item } = {}) {
       `Status moves forward only: "${from}" → "${target}" is a step back. A PR closed without merging goes back to "In Progress" by hand and nothing else.`,
     );
   }
-  const field = projectField(current, 'Status');
-  const option = field.options?.find((candidate) => candidate.name === target);
-  if (!option) throw new BoardError(`The Status field has no "${target}" option.`);
-  editItem(current, field, ['--single-select-option-id', option.id]);
+  writeStatus(current, target);
   current.status = target;
   return { from, to: target, changed: true };
 }
@@ -235,7 +259,7 @@ export function setEstimate(issue, hours, { item } = {}) {
   const current = item ?? requireItem(issue);
   const from = current.estimate;
   if (from === value) return { from, to: value, changed: false };
-  editItem(current, projectField(current, 'Estimate'), ['--number', String(value)]);
+  writeEstimate(current, value);
   current.estimate = value;
   return { from, to: value, changed: true };
 }
@@ -288,8 +312,8 @@ export function shapeListing(pages) {
 }
 
 export function listItems(number) {
-  const args = ['-f', `query=${ITEMS_QUERY}`, '-f', `owner=${OWNER}`, '-F', `number=${number}`];
-  return shapeListing(ghJson(['api', 'graphql', '--paginate', '--slurp', ...args]));
+  const args = graphqlArgs(ITEMS_QUERY, { owner: OWNER, number }, ['--paginate', '--slurp']);
+  return shapeListing(ghJson(args));
 }
 
 function longestIncreasing(values) {
@@ -432,18 +456,8 @@ const POSITION_MUTATION = `
     }
   }`;
 
-export const reorderMutationArgs = (projectId, move) => [
-  'api',
-  'graphql',
-  '-f',
-  `query=${POSITION_MUTATION}`,
-  '-f',
-  `projectId=${projectId}`,
-  '-f',
-  `itemId=${move.itemId}`,
-  '-f',
-  `afterId=${move.afterId}`,
-];
+export const reorderMutationArgs = (projectId, move) =>
+  graphqlArgs(POSITION_MUTATION, { projectId, itemId: move.itemId, afterId: move.afterId });
 
 // Content creation on GitHub: ~80/min, 500/hour (secondary limit).
 const WRITE_INTERVAL_MS = 1500;
@@ -635,12 +649,7 @@ const projectMetaQuery = (numbers) => `
           (number) => `p${number}: projectV2(number: ${number}) {
         id
         number
-        fields(first: 30) {
-          nodes {
-            ... on ProjectV2Field { id name }
-            ... on ProjectV2SingleSelectField { id name options { id name } }
-          }
-        }
+        ${PROJECT_FIELDS}
       }`,
         )
         .join('\n')}
@@ -650,8 +659,7 @@ const projectMetaQuery = (numbers) => `
 /** Each configured Project's node id and fields, in one query. */
 export function readProjects(projects = PROJECTS) {
   const numbers = projects.map((project) => project.number);
-  const query = ['-f', `query=${projectMetaQuery(numbers)}`, '-f', `owner=${OWNER}`];
-  const data = ghJson(['api', 'graphql', ...query]).data.organization;
+  const data = ghJson(graphqlArgs(projectMetaQuery(numbers), { owner: OWNER })).data.organization;
   return new Map(
     numbers.map((number) => {
       const project = data[`p${number}`];
@@ -674,19 +682,14 @@ export function readItemsOf(numbers) {
       .map(
         (number) => `i${number}: issue(number: ${number}) {
         projectItems(first: 10) {
-          nodes {
-            id
-            project { id number }
-            status: fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } }
-            estimate: fieldValueByName(name: "Estimate") { ... on ProjectV2ItemFieldNumberValue { number } }
+          nodes {${itemSelection('')}
           }
         }
       }`,
       )
       .join('\n');
     const query = `query ($owner: String!, $name: String!) { repository(owner: $owner, name: $name) { ${aliases} } }`;
-    const args = ['-f', `query=${query}`, '-f', `owner=${owner}`, '-f', `name=${name}`];
-    const repository = ghJson(['api', 'graphql', ...args]).data.repository;
+    const repository = ghJson(graphqlArgs(query, { owner, name })).data.repository;
     for (const number of chunk) {
       found.set(number, shapeItems(repository[`i${number}`]?.projectItems.nodes ?? []));
     }
@@ -711,27 +714,11 @@ const DELETE_MUTATION = `
     deleteProjectV2Item(input: { projectId: $projectId, itemId: $itemId }) { deletedItemId }
   }`;
 
-export const addItemArgs = (projectId, contentId) => [
-  'api',
-  'graphql',
-  '-f',
-  `query=${ADD_MUTATION}`,
-  '-f',
-  `projectId=${projectId}`,
-  '-f',
-  `contentId=${contentId}`,
-];
+export const addItemArgs = (projectId, contentId) =>
+  graphqlArgs(ADD_MUTATION, { projectId, contentId });
 
-export const deleteItemArgs = (projectId, itemId) => [
-  'api',
-  'graphql',
-  '-f',
-  `query=${DELETE_MUTATION}`,
-  '-f',
-  `projectId=${projectId}`,
-  '-f',
-  `itemId=${itemId}`,
-];
+export const deleteItemArgs = (projectId, itemId) =>
+  graphqlArgs(DELETE_MUTATION, { projectId, itemId });
 
 export const addLabelArgs = (number, label) => [
   'api',
@@ -785,15 +772,11 @@ export async function applyPlacements(plans, { log = () => {} } = {}) {
     if (!onTarget) continue;
     const item = { ...onTarget, projectId: project.id, fields: project.fields };
     if (plan.status !== null && item.status !== plan.status) {
-      const field = projectField(item, 'Status');
-      const option = field.options?.find((candidate) => candidate.name === plan.status);
-      if (!option) throw new BoardError(`Project ${plan.to}'s Status has no "${plan.status}".`);
-      await pacedWrite(() => editItem(item, field, ['--single-select-option-id', option.id]));
+      await pacedWrite(() => writeStatus(item, plan.status));
       log(`${plan.id}: Status ${item.status ?? '(unset)'} → ${plan.status}`);
     }
     if (plan.estimate !== null && item.estimate !== plan.estimate) {
-      const field = projectField(item, 'Estimate');
-      await pacedWrite(() => editItem(item, field, ['--number', String(plan.estimate)]));
+      await pacedWrite(() => writeEstimate(item, plan.estimate));
       log(`${plan.id}: Estimate ${item.estimate ?? '(unset)'} → ${plan.estimate}h`);
     }
   }

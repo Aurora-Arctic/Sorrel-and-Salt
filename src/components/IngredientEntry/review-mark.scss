@@ -67,7 +67,7 @@ body .review-mark {
 body .review-row {
   inline-size: 100%;
   padding-block: space(4);
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 }
 
 body .review-row__line {
@@ -89,8 +89,8 @@ body .review-row__standing {
 }
 
 body .review-mark .switch .switch__spinner {
-  inline-size: $thumb-size;
-  block-size: $thumb-size;
+  inline-size: calc(#{$thumb-size} - #{$spinner-border * 2});
+  block-size: calc(#{$thumb-size} - #{$spinner-border * 2});
   inset-inline-start: $inset;
 }
 

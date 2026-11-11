@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { getSession, sessionIsVerified } from '../support/request-session';
 
 // What a help reader page draws for its viewer beyond the text, read per request beside the cached help reads. The edit
 // page refuses anyone but a keeper on its own; this decides only what is drawn.
 
-const getSession = vi.fn();
-const sessionIsVerified = vi.fn();
-vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
+vi.mock('@/lib/request-session', () => import('../support/request-session'));
 
 const { helpViewerOffers } = await import('@/lib/help-viewer');
 

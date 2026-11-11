@@ -12,7 +12,7 @@ export interface SafetyVariant {
   toxic?: boolean | null;
 }
 
-export type SafetyHeadingLevel = 2 | 3 | 4 | 5 | 6;
+type SafetyHeadingLevel = 2 | 3 | 4 | 5 | 6;
 
 export interface SafetyNoteProps {
   safetyNotes?: string | null;

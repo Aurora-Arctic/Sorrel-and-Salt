@@ -2,7 +2,7 @@
 
 import type { ReactElement } from 'react';
 import { useLocalTime } from '../LocalTime/use-local-time';
-import { longMinuteInZone } from '../../lib/utc';
+import { longMinuteInZone, untilPhrase } from '../../lib/utc';
 import { Mark } from './marks';
 import type { UntilMarkProps } from './types';
 
@@ -13,10 +13,11 @@ import type { UntilMarkProps } from './types';
  */
 const UntilMark = ({ standing, until }: UntilMarkProps): ReactElement => {
   const end = useLocalTime((zone) => (until ? longMinuteInZone(until, zone) : ''));
+  const phrase = useLocalTime((zone) => untilPhrase(until, zone));
   return (
     <Mark
       value={false}
-      label={until ? `${standing} until ${end}` : `${standing} with no end date`}
+      label={`${standing} ${phrase}`}
       tip={until ? `Until ${end}` : 'No end date'}
     />
   );

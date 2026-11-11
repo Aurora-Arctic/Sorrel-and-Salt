@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { signInPath } from '../../lib/sign-in';
 import { SUPPORT_PATH } from '../../lib/support-path';
-import LocalTime from '../LocalTime';
+import TimedOutSentence from '../SupportRequests/timed-out-sentence';
 import Notice from '../Notice';
 import SignedOutSupportForm from '../SignedOutSupportForm';
 import SupportForm from '../SupportForm';
@@ -24,20 +24,19 @@ const SupportPanel = ({
           about anything. Without one, you can write to us about accessibility, a bug, signing in,
           privacy or a question.
         </Notice>
-        <SignedOutSupportForm about={state.support} path={path} />
+        <SignedOutSupportForm
+          about={state.support}
+          errorReference={state.errorReference}
+          errorDetail={state.errorDetail}
+          path={path}
+        />
       </div>
     );
   }
   if (state.kind === 'timed-out') {
     return (
       <Notice kind="caution" quiet>
-        {state.until ? (
-          <>
-            You cannot send a request until <LocalTime at={state.until} long />.
-          </>
-        ) : (
-          'You cannot send a request: you are timed out with no end date.'
-        )}
+        <TimedOutSentence cannot="You cannot send a request" until={state.until} />
       </Notice>
     );
   }
@@ -46,6 +45,7 @@ const SupportPanel = ({
       about={state.support}
       errorCode={state.errorCode}
       errorReference={state.errorReference}
+      errorDetail={state.errorDetail}
       path={path}
       onDone={onDone}
     />

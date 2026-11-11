@@ -6,6 +6,7 @@ export { default } from './modal';
 export { default as RouteModal } from './route-modal';
 export { default as ModalButton } from './modal-button';
 export { default as ModalLink } from './modal-link';
+export { default as OpenModalLink } from './open-modal-link';
 export { RouteModalProvider, useOpenModalClick } from './route-modal-provider';
 export { ConfirmOverlay } from './confirm-overlay';
 export { DiscardQuestion, useDiscardGuard } from './discard';

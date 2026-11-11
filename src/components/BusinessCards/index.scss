@@ -8,7 +8,6 @@
 
 // The header takes the form's width and centring, so the heading lines up with the form's left edge.
 .tabbed-page:has(.business-cards) > .page-header {
-  box-sizing: border-box;
   width: 100%;
   max-width: $narrow-column;
   margin-inline: auto;

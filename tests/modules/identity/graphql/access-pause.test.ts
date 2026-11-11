@@ -14,7 +14,7 @@ const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
 }));
 vi.mock('@/lib/jobs', () => ({ startJob }));
-vi.mock('@/lib/mail', () => ({ send: async () => {} }));
+vi.mock('@/lib/mail', () => import('../../../support/mail'));
 
 const PAUSE = /* GraphQL */ `
   mutation ($userId: ID!, $until: DateTime, $note: String!, $message: String!) {

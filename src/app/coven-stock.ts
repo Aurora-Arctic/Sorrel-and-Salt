@@ -1,5 +1,6 @@
 import 'server-only';
 import type { StockDialogProps } from '@/components/StockDialog/types';
+import { amountOf } from '@/lib/quantity';
 import type { Session } from '@/lib/session';
 import { stockOf, type StockRow } from '@/modules/ingredients';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -26,8 +27,8 @@ export const stockDialogOf = (
   jars: jars.map((jar) => ({
     id: jar.id,
     variantId: jar.variantId,
-    quantity: jar.quantityOnHand === null ? null : Number(jar.quantityOnHand),
+    quantity: amountOf(jar.quantityOnHand),
     unit: jar.unit,
-    threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
+    threshold: amountOf(jar.lowStockThreshold),
   })),
 });

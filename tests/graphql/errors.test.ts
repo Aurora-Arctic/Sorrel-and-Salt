@@ -6,6 +6,7 @@ import { maskedErrors } from '@/graphql/errors';
 import {
   AccessPaused,
   Forbidden,
+  InUse,
   NotFound,
   RateLimited,
   StaleWrite,
@@ -54,6 +55,13 @@ scratch.queryType({
     pausedOpenEnded: t.boolean({
       resolve: () => {
         throw new AccessPaused(null);
+      },
+    }),
+    inUse: t.boolean({
+      resolve: () => {
+        throw new InUse('"Testcraft" is filed on 1 compendium entry', {
+          categories: ['testcraft'],
+        });
       },
     }),
     limited: t.boolean({
@@ -142,6 +150,20 @@ describe('service errors over GraphQL', () => {
         locations: [{ line: 1, column: 3 }],
         path: ['forbidden'],
         extensions: { code: 'FORBIDDEN' },
+      },
+    ]);
+  });
+
+  it('answers an InUse with IN_USE, its message and the compendium filter for the entries holding the row', async () => {
+    const { body } = await run('{ inUse }');
+
+    expect(body.data).toBeNull();
+    expect(body.errors).toEqual([
+      {
+        message: '"Testcraft" is filed on 1 compendium entry',
+        locations: [{ line: 1, column: 3 }],
+        path: ['inUse'],
+        extensions: { code: 'IN_USE', heldBy: { categories: ['testcraft'] } },
       },
     ]);
   });

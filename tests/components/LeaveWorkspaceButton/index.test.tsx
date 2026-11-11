@@ -3,21 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import LeaveWorkspaceButton from '@/components/LeaveWorkspaceButton';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
+import { router } from '../../support/next-navigation';
 
-const { replace, refresh, graphqlRequest } = vi.hoisted(() => ({
-  replace: vi.fn(),
-  refresh: vi.fn(),
-  graphqlRequest: vi.fn(),
-}));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh }) }));
+const { graphqlRequest } = vi.hoisted(() => ({ graphqlRequest: vi.fn() }));
 vi.mock('@/lib/graphql-client', () => ({ graphqlRequest }));
 
 const ID = '00000000-0000-0000-0000-000000000001';
 
 describe('LeaveWorkspaceButton', () => {
   beforeEach(() => {
-    replace.mockReset();
-    refresh.mockReset();
+    router.replace.mockReset();
+    router.refresh.mockReset();
     graphqlRequest.mockReset();
   });
 
@@ -32,9 +28,9 @@ describe('LeaveWorkspaceButton', () => {
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Leave Coven' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/coven'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/coven'));
     // The switcher lists covens from a layout the replace does not re-run.
-    expect(refresh).toHaveBeenCalledOnce();
+    expect(router.refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest).toHaveBeenCalledWith(expect.anything(), { workspaceId: ID });
     // The landing it opens is the news; the status region says nothing.
     expect(announced()).toBe('');
@@ -51,6 +47,6 @@ describe('LeaveWorkspaceButton', () => {
     });
 
     await expectRefusalUnder(screen.getByRole('button', { name: 'Leave Coven' }), 'Leave Coven');
-    expect(replace).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
   });
 });

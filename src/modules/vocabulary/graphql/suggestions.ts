@@ -13,7 +13,7 @@ import {
 
 import { FormGroupIconEnum } from './ingredient-form-groups';
 
-export const CorrespondenceSuggestionRef = builder
+const CorrespondenceSuggestionRef = builder
   .objectRef<VocabularySuggestion>('CorrespondenceSuggestion')
   .implement({
     fields: (t) => ({

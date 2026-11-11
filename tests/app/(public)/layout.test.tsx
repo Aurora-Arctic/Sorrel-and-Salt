@@ -1,8 +1,9 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../support/printed-text';
 import type { ShellContext } from '@/lib/types';
+import { expectSignInDialogProviders } from '../../support/interact';
 
 // The public frame's layout: the session decides which chrome, and
 // nothing here may redirect. The viewer read is mocked (tests/lib/viewer.test.ts
@@ -10,9 +11,9 @@ import type { ShellContext } from '@/lib/types';
 
 const viewerIfSignedIn = vi.fn<() => Promise<ShellContext | null>>();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/compendium',
-  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock('@/lib/auth-client', () => ({
@@ -20,7 +21,7 @@ vi.mock('@/lib/auth-client', () => ({
   signIn: { social: vi.fn() },
   getLastUsedLoginMethod: () => null,
 }));
-vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => ['google'] }));
+vi.mock('@/lib/configured-providers', () => ({ providersToPass: () => ['google'] }));
 
 const { default: PublicLayout } = await import('@/app/(public)/layout');
 
@@ -72,12 +73,7 @@ describe('the (public) layout', () => {
 
     await act(async () => fireEvent.click(screen.getByRole('link', { name: 'Sign In' })));
 
-    const dialog = screen.getByRole('dialog', { name: 'Sign In' });
-    expect(within(dialog).getByRole('button', { name: 'Continue with Google' })).toBeEnabled();
-    expect(within(dialog).getByRole('button', { name: 'Continue with Discord' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+    expectSignInDialogProviders();
   });
 
   it('gives a signed-in visitor the application shell, not the way in', async () => {

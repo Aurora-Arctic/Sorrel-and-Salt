@@ -17,14 +17,13 @@ import {
 } from '../../../support/oauth';
 import { importAuth } from '../../../support/auth-module';
 import type { AuthInstance, Profile } from '../../../support/types';
-import type { Message, ProviderId } from '@/lib/types';
+import type { ProviderId } from '@/lib/types';
 import { useTestDatabase } from '../../../support/db/database';
 
 // The primary keeper is promoted at a sign-in whose fresh provider profile is Google or Discord and verified (claude-docs/design-decisions/auth.md, "The primary keeper").
 // The sign-in half drives the real `/api/auth/callback/:id` endpoint with MSW standing in for each provider, so what is under test is Better Auth's own flow with our hooks attached.
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../../../support/mail'));
 
 const PRIMARY = 'owner@primary-admin.test';
 

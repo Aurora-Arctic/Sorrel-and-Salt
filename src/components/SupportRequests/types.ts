@@ -40,7 +40,7 @@ export interface SupportRequestEntry {
   resolvedBySender: boolean;
 }
 
-export interface SupportReplyEntry {
+interface SupportReplyEntry {
   id: string;
   body: string;
   author: SupportPerson | null;
@@ -63,9 +63,17 @@ export interface SupportTimeoutEntry {
   liftedBy: SupportPerson | null;
 }
 
+/** A request's assignee, as its detail gives it: `paused` while a site access pause stands on them, which leaves them out of the picker. */
+interface SupportAssignee extends SupportPerson {
+  paused?: boolean;
+}
+
 export interface SupportRequestDetailEntry extends SupportRequestEntry {
+  assignee: SupportAssignee | null;
   message: string;
   path: string | null;
+  /** The error's name and message, as the bug form sent it. */
+  errorDetail: string | null;
   issueUrl: string | null;
   resolvedBy: SupportPerson | null;
   resolvedAt: Date | null;

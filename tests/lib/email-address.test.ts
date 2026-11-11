@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { emailFormat, normaliseEmail, validateEmailAddress } from '@/lib/email-address';
+import { normaliseEmail, validateEmailAddress } from '@/lib/email-address';
 import { EmailAddress } from '@/lib/email-address-schema';
 
 // The empty, over-long and reserved-domain refusals are tests/modules/identity/services/email.test.ts's.
@@ -13,16 +13,13 @@ describe('validateEmailAddress', () => {
   });
 });
 
-describe('emailFormat', () => {
+describe('normaliseEmail', () => {
   it('trims the address and lower-cases all of it, as the server saves it', () => {
-    expect(emailFormat('  Ada.Lovelace@Example.TEST ')).toBe('ada.lovelace@example.test');
-    expect(emailFormat('  Ada.Lovelace@Example.TEST ')).toBe(
-      normaliseEmail('  Ada.Lovelace@Example.TEST '),
-    );
+    expect(normaliseEmail('  Ada.Lovelace@Example.TEST ')).toBe('ada.lovelace@example.test');
   });
 
   it('treats text with no @ the same way', () => {
-    expect(emailFormat(' Ada ')).toBe('ada');
+    expect(normaliseEmail(' Ada ')).toBe('ada');
   });
 });
 

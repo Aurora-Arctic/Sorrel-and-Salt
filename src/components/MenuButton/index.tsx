@@ -10,13 +10,15 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useDismiss } from '../../lib/use-dismiss';
+import { setRef } from '../../lib/set-ref';
+import { escapeKeyHandler, useDismiss } from '../../lib/use-dismiss';
 import { useListPosition } from '../Combobox/position';
 import { CheckIcon, ChevronIcon } from '../IconTip/icons';
 import Spinner from '../Spinner';
 import type { MenuButtonItem, MenuButtonProps, MenuSection } from './types';
 import './index.scss';
 import { PendingLink } from '../../lib/navigation';
+import { cx } from '@/lib/class-names';
 
 // A labelled button with a chevron opening a menu, the APG menu-button pattern
 // (claude-docs/components/menu-button.md). Placed on Floating UI, fixed so a scrolling dialog
@@ -36,14 +38,12 @@ const greenFirst = (items: readonly MenuButtonItem[]): MenuButtonItem[] => {
 };
 
 const itemClass = (item: MenuButtonItem, chosen: boolean): string =>
-  [
+  cx(
     'menu-button__item',
     item.destructive && 'menu-button__item--destructive',
     item.primary && 'menu-button__item--primary',
     chosen && 'is-chosen',
-  ]
-    .filter(Boolean)
-    .join(' ');
+  );
 
 /**
  * One section: a group named by its visible label (APG: `role="group"` and `aria-labelledby`), a
@@ -135,6 +135,11 @@ export default function MenuButton({
     onOutsidePress: () => setOpen(false),
   });
 
+  const closeOnEscape = escapeKeyHandler<KeyboardEvent>(() => {
+    setOpen(false);
+    toggle.current?.focus();
+  });
+
   const onMenuKey = (event: KeyboardEvent): void => {
     const list = all();
     const at = list.indexOf(document.activeElement as HTMLElement);
@@ -146,11 +151,8 @@ export default function MenuButton({
     else if (event.key === 'ArrowUp') move(at - 1);
     else if (event.key === 'Home') move(0);
     else if (event.key === 'End') move(list.length - 1);
-    else if (event.key === 'Escape') {
-      event.preventDefault();
-      setOpen(false);
-      toggle.current?.focus();
-    } else if (event.key === 'Tab') setOpen(false);
+    else if (event.key === 'Tab') setOpen(false);
+    else closeOnEscape(event);
   };
 
   const drawItem = (item: MenuButtonItem): ReactElement =>
@@ -205,8 +207,7 @@ export default function MenuButton({
         ref={(node) => {
           toggle.current = node;
           setControl(node);
-          if (typeof ref === 'function') ref(node);
-          else if (ref) ref.current = node;
+          setRef(ref, node);
         }}
         type="button"
         className={className}
@@ -255,13 +256,11 @@ export default function MenuButton({
         inert={!open}
         hidden={!drawn}
         style={listStyle}
-        className={[
+        className={cx(
           'menu-button__menu',
           buttonType && 'menu-button__menu--button-type',
           !open && 'is-closing',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        )}
         onKeyDown={onMenuKey}
         onAnimationEnd={(event) => {
           if (!open && event.target === event.currentTarget) setDrawn(false);

@@ -9,6 +9,7 @@ import {
 } from './parts/layout';
 import { supportTitle } from './parts/support-title';
 import type { SupportClosingSoonProps } from './types';
+import { plural } from '@/lib/text';
 
 // Names the request and carries none of the thread.
 
@@ -17,15 +18,15 @@ const HOUR_MS = 60 * 60 * 1000;
 export function timeLeft(ms: number): string {
   const hours = Math.round(ms / HOUR_MS);
   if (hours < 1) return 'less than an hour';
-  if (hours < 24) return hours === 1 ? '1 hour' : `${hours} hours`;
+  if (hours < 24) return `${hours} ${plural(hours, 'hour', 'hours')}`;
   const days = Math.round(hours / 24);
-  return days === 1 ? '1 day' : `${days} days`;
+  return `${days} ${plural(days, 'day', 'days')}`;
 }
 
 const titleOf = (requestSubject: string): string =>
   supportTitle('Your support request closes soon', requestSubject);
 
-export function SupportClosingSoon({
+function SupportClosingSoon({
   url,
   origin = new URL(url).origin,
   part,

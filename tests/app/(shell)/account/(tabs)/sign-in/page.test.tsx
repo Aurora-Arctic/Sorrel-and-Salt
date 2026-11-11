@@ -1,36 +1,24 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeQueryClient } from '@/lib/graphql-client';
-import type { Session } from '@/lib/session';
+import {
+  accountPasskeys,
+  hasPassword,
+  linkedAccounts,
+  requireSession,
+  sessionIsFresh,
+} from '../../../../../support/request-session';
+import { renderWithQuery } from '../../../../../support/render-with-query';
 
 // The Sign-In tab of the account: the Sign-In Methods, Password, Two-Factor Sign-In and Passkeys sections, each linked from the page's own nav (claude-docs/auth/admin-bootstrap.md, "The account page").
 // The session, linked accounts and passkeys are mocked (tests/lib/request-session.test.ts's and the identity service's); that an unverified account never reaches the page is `requireSession()`'s, asserted there and in tests/e2e/account.spec.ts.
 
-const requireSession = vi.fn<() => Promise<Session>>();
-const linkedAccounts = vi.fn(async () => [{ id: 'a1', providerId: 'discord', accountId: 'd-1' }]);
-const sessionIsFresh = vi.fn(async () => true);
-const hasPassword = vi.fn(async () => true);
-const accountPasskeys = vi.fn(async () => [
-  { id: 'pk-1', name: 'Fixture Laptop', createdAt: '2026-10-01T09:00:00.000Z' },
-]);
-vi.mock('@/lib/request-session', () => ({
-  requireSession,
-  linkedAccounts,
-  sessionIsFresh,
-  hasPassword,
-  accountPasskeys,
-}));
+vi.mock('@/lib/request-session', () => import('../../../../../support/request-session'));
 // The password and two-factor forms read the session's address from the client, which a page test has no server to answer.
 vi.mock('@/lib/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/auth-client')>()),
   useSession: () => ({ data: null }),
 }));
-vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => [] }));
-vi.mock('next/navigation', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('next/navigation')>()),
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-}));
+vi.mock('@/lib/configured-providers', () => ({ providersToPass: () => [] }));
 
 const getMe = vi.fn();
 vi.mock('@/modules/identity', () => ({ getMe }));
@@ -47,13 +35,19 @@ async function renderPage(searchParams: Record<string, string> = {}) {
     twoFactorEnabled: false,
   });
   const page = await SignInPage({ searchParams: Promise.resolve(searchParams) });
-  render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+  renderWithQuery(page);
 }
 
 const section = (name: string) => screen.getByRole('region', { name });
 
 beforeEach(() => {
   requireSession.mockReset();
+  linkedAccounts.mockResolvedValue([{ id: 'a1', providerId: 'discord', accountId: 'd-1' }]);
+  sessionIsFresh.mockResolvedValue(true);
+  hasPassword.mockResolvedValue(true);
+  accountPasskeys.mockResolvedValue([
+    { id: 'pk-1', name: 'Fixture Laptop', createdAt: '2026-10-01T09:00:00.000Z' },
+  ]);
   getMe.mockReset();
 });
 

@@ -1,14 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Session } from '@/lib/session';
+import { SITE_TITLE_NAME } from '@/lib/site';
 import { USER_ID } from '../support/constants';
+import { getSession, sessionIsVerified } from '../support/request-session';
 
 // `/` offers a signed-in visitor the landing for their role and a signed-out one the sign-in page (claude-docs/components/welcome.md).
 // The session is tests/lib/request-session.test.ts's and the landing per role tests/lib/sign-in.test.ts's; here both and the viewer's first coven are mocked.
 
-const getSession = vi.fn<() => Promise<Session | null>>();
-const sessionIsVerified = vi.fn<() => Promise<boolean>>();
-vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
+vi.mock('@/lib/request-session', () => import('../support/request-session'));
 
 const firstCovenSlugOf = vi.fn<() => Promise<string | undefined>>();
 vi.mock('@/modules/coven', () => ({ firstCovenSlugOf }));
@@ -27,10 +26,15 @@ describe('the / page metadata', () => {
   const scripts = () => document.querySelectorAll('script[type="application/ld+json"]');
 
   it('names the site alone, untemplated, with the bare origin as canonical', () => {
-    expect(metadata.title).toEqual({ absolute: 'Sorrel & Salt' });
+    expect(metadata.title).toEqual({ absolute: SITE_TITLE_NAME });
     expect(metadata.alternates?.canonical).toBe('https://sorrelandsalt.com/');
     expect(metadata.description).toBeTruthy();
     expect(metadata.robots).toBeUndefined();
+  });
+
+  it('keeps the ampersand in the titles a share preview shows', () => {
+    expect(metadata.openGraph).toMatchObject({ title: 'Sorrel & Salt', siteName: 'Sorrel & Salt' });
+    expect(metadata.twitter).toMatchObject({ title: 'Sorrel & Salt' });
   });
 
   it('marks a signed-out visitor’s page up as the website', async () => {

@@ -6,7 +6,7 @@ import '../Modal/index.scss';
 // that comes last. One row for the confirm dialog, the confirmation over a form and the discard
 // question, so the buttons keep one order, one style and one busy state (claude-docs/components/confirm-dialog.md).
 
-export interface ConfirmAnswersRowProps {
+interface ConfirmAnswersRowProps {
   /** The confirm's text. */
   label: ReactNode;
   /** The confirm's button style, `btn btn--destructive` unless the answer can be taken back. */

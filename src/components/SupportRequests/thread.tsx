@@ -1,7 +1,7 @@
 import { type ReactElement, useId } from 'react';
 import LocalTime from '../LocalTime';
 
-export interface SupportThreadEntry {
+interface SupportThreadEntry {
   id: string;
   name?: string;
   tag: string;

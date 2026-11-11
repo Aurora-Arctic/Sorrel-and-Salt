@@ -1,12 +1,13 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { failureMessage } from '../../lib/graphql-failure';
+import { CHECK_INBOX } from '../../lib/sign-in';
 import BusyButton from '../BusyButton';
-import { useClickFeedback } from '../ClickFeedback';
+import ConfirmEmailLink from '../ConfirmEmailLink';
+import { useGuardedAction } from '../ClickFeedback/use-guarded-action';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import SignInDialog from '../SignInDialog';
@@ -49,8 +50,7 @@ const CARD_SIGNED_OUT_GRANT =
   "You've been given a card to join Sorrel & Salt. Create an account or sign in to accept it.";
 
 /** To every unverified account that matched the address, new or not: a resend is the same press either way. */
-const UNVERIFIED_GRANT =
-  "Your email address isn't confirmed yet. Check your inbox for our message, or press Confirm Your Email to send a new one. Its link brings you back here to accept this invitation.";
+const UNVERIFIED_GRANT = `${CHECK_INBOX} Its link brings you back here to accept this invitation.`;
 
 /** When a verification link came back refused, whatever the reason, by the state it comes back to. */
 const LINK_FAILED = {
@@ -79,23 +79,14 @@ const Accept = ({
   landing,
 }: Extract<InvitationAcceptanceProps, { status: 'acceptable' }>): ReactElement => {
   const { navigate } = usePendingNavigation();
-  const [sending, setSending] = useState(false);
-  const { anchorRef, report, feedback } = useClickFeedback({ name: 'Accept Invitation' });
-
-  async function accept() {
-    if (sending) return;
-    setSending(true);
-    report(undefined);
-    try {
+  const { anchorRef, run, pending, feedback } = useGuardedAction({
+    name: 'Accept Invitation',
+    action: async () => {
       await graphqlRequest(AcceptInvitationDocument, { token });
       // A success is the landing itself, so nothing is announced.
       navigate(landing);
-    } catch (error) {
-      setSending(false);
-      // The fallback only satisfies the type: the reader always answers with an alert.
-      report(failureMessage(error));
-    }
-  }
+    },
+  });
 
   // A `div`, not the other states' `p`: the callout is a `div`, and a `div` in a `p` is
   // invalid HTML.
@@ -106,10 +97,10 @@ const Accept = ({
       <BusyButton
         ref={anchorRef}
         className="btn btn--solid"
-        aria-disabled={sending || undefined}
-        busy={sending}
+        aria-disabled={pending || undefined}
+        busy={pending}
         busyLabel="Accepting Invitation"
-        onClick={() => void accept()}
+        onClick={() => void run()}
       >
         Accept Invitation
       </BusyButton>
@@ -171,9 +162,7 @@ const InvitationAcceptance = ({
       )}
       {props.status === 'unverified' && (
         <p className="invitation-acceptance__actions invitation-acceptance__row">
-          <a className="btn btn--quiet" href={props.emailHref}>
-            Confirm Your Email
-          </a>
+          <ConfirmEmailLink href={props.emailHref} />
           <a className="btn btn--quiet" href="/">
             Back to Home
           </a>
@@ -197,9 +186,7 @@ const InvitationAcceptance = ({
           </p>
           {props.emailHref && (
             <p className="invitation-acceptance__actions">
-              <a className="btn btn--solid" href={props.emailHref}>
-                Confirm Your Email
-              </a>
+              <ConfirmEmailLink href={props.emailHref} tone="solid" />
             </p>
           )}
         </>

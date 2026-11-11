@@ -503,6 +503,9 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
       const attempt = deleteAstrologyValue(admin, field, id);
       await expect(attempt).rejects.toThrow(Forbidden);
       await expect(attempt).rejects.toThrow('Testwort');
+      await expect(attempt).rejects.toMatchObject({
+        heldBy: { [field === 'zodiacSigns' ? 'zodiac' : 'celestialBodies']: ['Fixture Body'] },
+      });
       expect((await rowOf(id)).deleted_at).toBeNull();
     });
 

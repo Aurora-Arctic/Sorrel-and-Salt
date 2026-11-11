@@ -49,17 +49,16 @@ export type IngredientVariantRow = typeof ingredientVariants.$inferSelect &
 /** A variant as its children's loaders key it; `workspaceId` is its ingredient's, and never the scope. */
 export type VariantKey = Pick<IngredientVariantRow, 'id' | 'ingredientId' | 'workspaceId'>;
 
-/** An ingredient's stock as `Ingredient.stock`'s loader keys it; `workspaceId` is the coven the caller named, always a coven. */
-export interface StockKey {
+/**
+ * A coven's ingredient as `Ingredient.stock`'s and `Ingredient.cupboardEntry`'s loaders key it; `workspaceId` is the coven the caller
+ * named, always a coven.
+ */
+export interface WorkspaceIngredientKey {
   ingredientId: string;
   workspaceId: string;
 }
 
-/** A compendium entry as `Ingredient.cupboardEntry`'s loader keys it: the entry and the coven named by the caller. */
-export interface CupboardEntryKey {
-  ingredientId: string;
-  workspaceId: string;
-}
+export type StockKey = WorkspaceIngredientKey;
 
 export type CupboardEntryNode = CupboardEntryRow & { compendiumName: string };
 
@@ -150,13 +149,13 @@ export interface IngredientChildren extends Pick<
   variants?: readonly PickedVariant[];
 }
 
-/** One deity as `Ingredient.deities` reads it: the name the row holds and the curated deity picked, null on a typed name or once the deity or its tradition is retired. */
 /** One live folk name as `Ingredient.folkNames` reads it: the row's id, so it can be promoted, and its text. */
 export interface FolkNameRow {
   id: string;
   name: string;
 }
 
+/** One deity as `Ingredient.deities` reads it: the name the row holds and the curated deity picked, null on a typed name or once the deity or its tradition is retired. */
 export interface IngredientDeityRow {
   name: string;
   deity: DeityRow | null;
@@ -314,7 +313,7 @@ export type CompendiumEntryPage =
   | { kind: 'moved'; slug: string };
 
 /** A compendium entry an own entry is or may be, as its page links it. */
-export interface ReplacedCompendiumEntry {
+interface ReplacedCompendiumEntry {
   id: string;
   slug: string;
   name: string;

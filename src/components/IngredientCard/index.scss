@@ -261,7 +261,6 @@
 // block filling it.
 .ingredient-card--skeleton {
   @include card-skeleton-fill;
-  box-sizing: border-box;
 }
 
 @each $kind in ('cupboard', 'compendium') {

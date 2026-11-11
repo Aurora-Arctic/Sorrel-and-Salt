@@ -1,5 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
@@ -9,13 +8,11 @@ import type {
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
 import { VISIBILITY_LABELS } from '@/components/GrimoireList/params';
-import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps } from '@/components/SpellBuilder/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
@@ -40,11 +37,7 @@ const deletedHrefOf = (title: string | null) =>
   `/coven/fixture-coven/grimoire?deleted=${encodeURIComponent(title ?? 'Untitled')}` as Route;
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SpellBuilder workspaceId="w1" userId="u1" {...props} />
-    </QueryClientProvider>,
-  );
+  return renderWithQuery(<SpellBuilder workspaceId="w1" userId="u1" {...props} />);
 }
 const del = (title = 'Fixture Working') =>
   screen.queryByRole('button', { name: `Delete Spell ${title}` });

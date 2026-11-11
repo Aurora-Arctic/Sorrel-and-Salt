@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const liveCardOf = vi.fn();
 vi.mock('@/modules/identity', () => ({ liveCardOf }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({}),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
   usePathname: () => '/i/betatoken',
   useSearchParams: () => new URLSearchParams(),
 }));

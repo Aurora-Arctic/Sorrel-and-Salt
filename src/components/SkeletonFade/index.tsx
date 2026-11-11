@@ -5,6 +5,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { ARRIVE_MS } from '../../lib/navigation/timing';
 import { forgetScroll, listenForTraversals, saveScroll } from './back-scroll';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // The skeleton's way out: the bodies keep the last skeleton over the arrived page and fade it away, as an out-of-layout overlay, not by wrapping the page
 // (claude-docs/components/skeleton.md).
@@ -64,7 +65,7 @@ export const skeletonCoverHost = (waiting: boolean): string =>
  * (claude-docs/components/skeleton.md, "Skeleton fade").
  */
 export const heldPage = (waiting: boolean, className?: string) => ({
-  className: [className, waiting && 'skeleton-held'].filter(Boolean).join(' ') || undefined,
+  className: cx(className, waiting && 'skeleton-held') || undefined,
   inert: waiting || undefined,
   'aria-hidden': waiting || undefined,
 });
@@ -82,9 +83,7 @@ export const SkeletonCover = ({
   children: ReactNode;
 }): ReactElement => (
   <div className="skeleton-cover">
-    <div className={className ? `skeleton-cover__pin ${className}` : 'skeleton-cover__pin'}>
-      {children}
-    </div>
+    <div className={cx('skeleton-cover__pin', className)}>{children}</div>
   </div>
 );
 

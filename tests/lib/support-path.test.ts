@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ERROR_DETAIL_MAX_LENGTH,
   ISSUE_REPOSITORY,
   SUPPORT_ABOUTS,
+  bugReportQuery,
+  errorDetailOf,
   errorCodeOf,
   errorReferenceOf,
   normaliseIssueLink,
@@ -76,6 +79,37 @@ describe('errorReferenceOf', () => {
     expect(supportClosedHref('/x', new URLSearchParams('support=bug&error=500&ref=abc'))).toBe(
       '/x',
     );
+  });
+});
+
+describe('errorDetailOf', () => {
+  it('reads a detail and refuses a blank or overlong one', () => {
+    expect(errorDetailOf(' TypeError: x is undefined ')).toBe('TypeError: x is undefined');
+    expect(errorDetailOf('  ')).toBeUndefined();
+    expect(errorDetailOf(null)).toBeUndefined();
+    expect(errorDetailOf('x'.repeat(ERROR_DETAIL_MAX_LENGTH))).toHaveLength(
+      ERROR_DETAIL_MAX_LENGTH,
+    );
+    expect(errorDetailOf('x'.repeat(ERROR_DETAIL_MAX_LENGTH + 1))).toBeUndefined();
+  });
+
+  it('is dropped with the other support parameters when the dialog closes', () => {
+    expect(
+      supportClosedHref('/x', new URLSearchParams('support=bug&error=500&ref=abc&detail=Error')),
+    ).toBe('/x');
+  });
+});
+
+describe('bugReportQuery', () => {
+  it('names a bug and the error number, and adds the reference and detail it is given', () => {
+    const read = (query: string) => Object.fromEntries(new URLSearchParams(query));
+    expect(read(bugReportQuery({ code: 404 }))).toEqual({ support: 'bug', error: '404' });
+    expect(read(bugReportQuery({ code: 500, reference: 'abc', detail: 'Error: a & b' }))).toEqual({
+      support: 'bug',
+      error: '500',
+      ref: 'abc',
+      detail: 'Error: a & b',
+    });
   });
 });
 

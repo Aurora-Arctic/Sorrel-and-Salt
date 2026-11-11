@@ -5,19 +5,28 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
+  useCallback,
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { fold } from '@/lib/text';
+import { fold, hasText, plural } from '@/lib/text';
 import Spinner from '../Spinner';
-import { ChevronIcon, CrossIcon } from '../IconTip/icons';
+import { ChevronIcon } from '../IconTip/icons';
+import {
+  ClearButton,
+  IndicatorSeparator,
+  OptionGroup,
+  OptionLabel,
+  preventDownshiftDefault,
+} from './parts';
 import { EmptyMessage, noMatch, Popup } from './popup';
 import { useListPosition } from './position';
 import { chipsRoom } from './room';
-import { useTip } from '../InfoTip/use-tip';
+import TipAnchor, { type TipControls } from '../InfoTip/tip-anchor';
 import type {
   Bucket,
   ComboboxOption,
@@ -28,6 +37,7 @@ import type {
   TypedRow,
 } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 export { ComboboxEntry } from './entry';
 export { ComboboxMultiSelect } from './multi-select';
@@ -151,7 +161,7 @@ function statusOf(
   if (!suggestions) return '';
   if (!isOpen) return empty ?? '';
   const count = suggestions.options.length;
-  if (count > 0) return `${count} ${noun}${count === 1 ? '' : 's'}`;
+  if (count > 0) return `${count} ${noun}${plural(count, '', 's')}`;
   return suggestions.pending ? `Looking for ${noun}s` : `No ${noun}s`;
 }
 
@@ -203,8 +213,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const qualifierId = useId();
   const detail = qualifier?.detail;
   // Opened on the box's focus as well as the qualifier's hover; the first printable key and the list opening close it, and the box's description still holds the detail.
-  const tip = useTip(() => Boolean(detail), 'top-start');
-  const hideTip = tip.hide;
+  const tip = useRef<TipControls>(null);
+  const hasDetail = useCallback(() => Boolean(detail), [detail]);
   // Whether the list would be open had it rows: it opens as they arrive.
   const [wantsOpen, setWantsOpen] = useState(false);
   const hasSource = suggestions !== undefined;
@@ -236,7 +246,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     message !== undefined &&
     wantsOpen &&
     suggestions?.pending === false &&
-    value.trim() !== '' &&
+    hasText(value) &&
     items.length === 0;
   const popupOpen = listOpen || showEmpty;
   const wrapped = message !== undefined;
@@ -244,8 +254,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
 
   // The list opens where the tip would be read, and is what typing is for.
   useEffect(() => {
-    if (popupOpen) hideTip();
-  }, [popupOpen, hideTip]);
+    if (popupOpen) tip.current?.hide();
+  }, [popupOpen]);
 
   const {
     getInputProps,
@@ -286,7 +296,9 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // Enter with nothing highlighted is the caller's and never the form's submit; Backspace or Delete in an empty box takes the last entry.
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.nativeEvent.isComposing) return;
-    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) hideTip();
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      tip.current?.hide();
+    }
     // Escape on a box with no open list is the dialog's, unless the "no matches" message or the loading row is showing, which Downshift cannot see and Escape closes alone
     // (claude-docs/components/combobox.md, "Typed box and Escape").
     if (event.key === 'Escape' && !isOpen) {
@@ -295,9 +307,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         event.preventDefault();
         return;
       }
-      (
-        event as KeyboardEvent<HTMLInputElement> & { preventDownshiftDefault?: boolean }
-      ).preventDownshiftDefault = true;
+      preventDownshiftDefault(event);
       return;
     }
     if ((event.key === 'Backspace' || event.key === 'Delete') && value === '') {
@@ -338,15 +348,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     return (
       <li
         key={keyOf(item)}
-        className={[
+        className={cx(
           'combobox__option',
           (isTyped(item) || isAction(item)) && 'combobox__option--typed',
           colors && 'is-coloured',
           !isTyped(item) && !isAction(item) && item.disabled && 'is-disabled',
           highlighted && 'is-highlighted',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        )}
         style={colors && chipColors(colors)}
         {...getItemProps({ item, index: at })}
       >
@@ -363,22 +371,9 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         )}
         {!isAction(item) && !isTyped(item) && (
           <>
-            <span className="combobox__label">
-              {item.icon && (
-                <span className="combobox__icon" aria-hidden="true">
-                  {item.icon}
-                </span>
-              )}
+            <OptionLabel icon={item.icon} count={item.count} badge={item.badge}>
               {item.label ?? item.value}
-              {/* The space is a text node of the label's own, as a span's leading one is dropped from the name. */}
-              {item.count !== undefined && (
-                <>
-                  {' '}
-                  <span className="combobox__count">{item.count}</span>
-                </>
-              )}
-              {item.badge && <> {item.badge}</>}
-            </span>
+            </OptionLabel>
             {(item.note || item.meta) && (
               <div className={item.meta ? 'combobox__note combobox__note--meta' : 'combobox__note'}>
                 {item.note}
@@ -450,11 +445,11 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                   // (claude-docs/components/combobox.md, "Typing always wants the list").
                   onChange: () => setWantsOpen(true),
                   onFocus: () => {
-                    tip.show();
+                    tip.current?.show();
                     onFocus?.();
                   },
                   onBlur: () => {
-                    tip.hide();
+                    tip.current?.hide();
                     // An open list is Downshift's to close on blur; one wanted but empty is not open to it, so the wish is dropped here.
                     if (!isOpen) setWantsOpen(false);
                     onBlur?.();
@@ -465,57 +460,29 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           </span>
           {qualifier && (
             // Hover on a wrapper holding the tooltip, so the pointer can move onto it without closing it.
-            <span
-              ref={tip.anchor}
+            <TipAnchor
               className="combobox__qualifier"
-              // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
-              onMouseEnter={tip.showSoon}
-              onMouseLeave={tip.hideSoon}
+              bubbleClass="combobox__qualifier-tip"
+              canOpen={hasDetail}
+              placement="top-start"
+              handle={tip}
+              // In the page while closed, faded out and aria-hidden, as an entry's is; read through the box's description.
+              bubble={detail ? <span id={`${qualifierId}-detail`}>{detail}</span> : undefined}
             >
               {/* In brackets, as the row picked read: "Wax (Animal)". */}
               <span id={`${qualifierId}-text`}>({qualifier.text})</span>
-              {/* In the page while closed, faded out and aria-hidden, as an entry's is; read through the box's description. */}
-              {detail && (
-                <span
-                  ref={tip.bubble}
-                  role="tooltip"
-                  className={
-                    tip.open ? 'combobox__qualifier-tip is-open' : 'combobox__qualifier-tip'
-                  }
-                  // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
-                  aria-hidden={!tip.open}
-                  style={tip.bubbleStyle}
-                >
-                  <span id={`${qualifierId}-detail`}>{detail}</span>
-                </span>
-              )}
-            </span>
+            </TipAnchor>
           )}
         </div>
         {(clear || (hasSource && toggle) || busy) && (
           <div className="combobox__indicators">
             {/* Always drawn once the caller has a clear, hidden when empty, so the control's width never changes. */}
             {clear && (
-              <button
-                type="button"
-                className={clear.empty ? 'combobox__indicator is-empty' : 'combobox__indicator'}
-                aria-label={clear.label}
-                aria-hidden={clear.empty || undefined}
-                tabIndex={clear.empty ? -1 : undefined}
-                disabled={clear.empty}
-                onClick={clear.onClear}
-              >
-                <CrossIcon />
-              </button>
+              <ClearButton empty={clear.empty} label={clear.label} onClear={clear.onClear} />
             )}
             {/* After the clear, as react-select draws it, so the spinner sits by the chevron. */}
             {busy && <Spinner />}
-            {clear && hasSource && toggle && (
-              <span
-                className={clear.empty ? 'combobox__separator is-empty' : 'combobox__separator'}
-                aria-hidden="true"
-              />
-            )}
+            {clear && hasSource && toggle && <IndicatorSeparator empty={clear.empty} />}
             {hasSource && toggle && (
               <button
                 type="button"
@@ -538,9 +505,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         after={<>{showEmpty && <EmptyMessage>{message}</EmptyMessage>}</>}
       >
         <ul
-          className={['combobox__list', listOpen && 'is-open', wrapped && 'is-inset']
-            .filter(Boolean)
-            .join(' ')}
+          className={cx('combobox__list', listOpen && 'is-open', wrapped && 'is-inset')}
           style={wrapped ? undefined : listStyle}
           data-placement={wrapped ? undefined : placement}
           {...getMenuProps({
@@ -556,20 +521,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               bucket.heading === null ? (
                 bucket.rows.map(row)
               ) : (
-                // A div with ARIA's `group` inside a presentational li: ARIA allows no `group`
-                // role on an li.
-                // oxlint-disable jsx-a11y/prefer-tag-over-role
-                <li key={bucket.key} role="presentation" className="combobox__group">
-                  <div role="group" aria-labelledby={`${headingId}-${bucket.key}`}>
-                    <div id={`${headingId}-${bucket.key}`} className="combobox__heading">
-                      {bucket.heading}
-                    </div>
-                    <ul role="presentation" className="combobox__rows">
-                      {bucket.rows.map(row)}
-                    </ul>
-                  </div>
-                </li>
-                // oxlint-enable jsx-a11y/prefer-tag-over-role
+                <OptionGroup
+                  key={bucket.key}
+                  headingId={`${headingId}-${bucket.key}`}
+                  heading={bucket.heading}
+                >
+                  {bucket.rows.map(row)}
+                </OptionGroup>
               ),
             )}
           {isOpen && !actionFirst && lastRow && row(lastRow)}

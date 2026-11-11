@@ -50,7 +50,7 @@ export interface HelpArticlePatch {
   childIds?: readonly string[] | null;
 }
 
-export type HelpListing = 'shown' | 'hidden' | 'all';
+type HelpListing = 'shown' | 'hidden' | 'all';
 
 /** What the keeper's list narrows by; each left out admits every row. */
 export interface HelpKeeperFilter {

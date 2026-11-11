@@ -1,28 +1,21 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ShownToggle from '@/components/IngredientEntry/shown-toggle';
 import type {
   SetCompendiumEntryShownMutation,
   SetCompendiumEntryShownMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 const ID = '00000000-0000-4000-8000-000000000002';
 
 function renderToggle(shown: boolean) {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <ShownToggle ingredientId={ID} shown={shown} name="Testwort" />
-    </QueryClientProvider>,
-  );
+  return renderWithQuery(<ShownToggle ingredientId={ID} shown={shown} name="Testwort" />);
 }
 
 function accept() {
@@ -109,15 +102,13 @@ describe('ShownToggle', () => {
   it('only reports the flip when given onChange, sending nothing', async () => {
     const calls = accept();
     const onChange = vi.fn();
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <ShownToggle
-          shown
-          name="Testwort"
-          onChange={onChange}
-          accessibleName="Shown in Compendium"
-        />
-      </QueryClientProvider>,
+    renderWithQuery(
+      <ShownToggle
+        shown
+        name="Testwort"
+        onChange={onChange}
+        accessibleName="Shown in Compendium"
+      />,
     );
 
     press(screen.getByRole('switch', { name: 'Shown in Compendium' }));

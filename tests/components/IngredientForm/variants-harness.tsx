@@ -12,7 +12,8 @@ import {
   openingValues,
 } from '@/components/IngredientForm/values';
 import { VARIANT_SECTIONS, openSectionsIn } from '../../support/ingredient-sections';
-import { renderWithClient, waitFor } from '../../support/ingredient-form';
+import { waitFor } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { offerForms, offerIngredients, offerNothing } from '../../support/msw/ingredient-lookups';
 import type { FormNode, IngredientNode } from './types';
 
@@ -20,7 +21,7 @@ import type { FormNode, IngredientNode } from './types';
 
 export const OIL_ID = '8d2c4e6f-1a3b-4c5d-9e7f-0a1b2c3d4e5f';
 export const HERB_VARIANT_ID = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
-export const HERB_FORM_ID = '9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b';
+const HERB_FORM_ID = '9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b';
 
 export const OIL: FormNode = {
   id: OIL_ID,
@@ -32,8 +33,8 @@ export const OIL: FormNode = {
   claimants: [],
 };
 
-export const PLAINWORT_ID = '2a3b4c5d-6e7f-4a8b-9c0d-1e2f3a4b5c6d';
-export const TINCTWORT_ID = '3b4c5d6e-7f8a-4b9c-8d0e-2f3a4b5c6d7e';
+const PLAINWORT_ID = '2a3b4c5d-6e7f-4a8b-9c0d-1e2f3a4b5c6d';
+const TINCTWORT_ID = '3b4c5d6e-7f8a-4b9c-8d0e-2f3a4b5c6d7e';
 export const OILWORT_ID = '4c5d6e7f-8a9b-4c0d-9e1f-3a4b5c6d7e8f';
 export const OILWORT_OIL_ID = '5d6e7f8a-9b0c-4d1e-8f2a-4b5c6d7e8f9a';
 export const substitute = (
@@ -48,7 +49,7 @@ export const substitute = (
   isGlobal: true,
   variants,
 });
-export const SUBSTITUTES = [
+const SUBSTITUTES = [
   substitute(PLAINWORT_ID, 'Plainwort', []),
   substitute(TINCTWORT_ID, 'Tinctwort', [
     {
@@ -83,7 +84,7 @@ const byLabel = (scope: HTMLElement, name: string, selector: string) =>
   });
 export const control = (scope: HTMLElement, name: string) =>
   byLabel(scope, name, 'input:not([role]), textarea, [role="combobox"]');
-export const type = (scope: HTMLElement, name: string, value: string) =>
+export const typeInScope = (scope: HTMLElement, name: string, value: string) =>
   fireEvent.change(control(scope, name), { target: { value } });
 export const newForm = () => control(document.body, 'New Form');
 
@@ -141,7 +142,7 @@ export const CATEGORY_A = '8a9b0c1d-2e3f-4b4c-8d5e-6f7a8b9c0d1e';
 export const CATEGORY_B = '9b0c1d2e-3f4a-4c5d-9e6f-7a8b9c0d1e2f';
 export const REFERENCE_ID = '6f7a8b9c-0d1e-4f2a-8b3c-4d5e6f7a8b9c';
 export const OTHER_REFERENCE_ID = '7a8b9c0d-1e2f-4a3b-9c4d-5e6f7a8b9c0d';
-export const reference = (id: string, title: string, locator: string) => ({
+const reference = (id: string, title: string, locator: string) => ({
   value: title,
   link: { id, isGlobal: true, kind: 'book' as const, title, authors: null, container: null },
   locator,
@@ -228,7 +229,7 @@ export const skippedNotice = (scope: HTMLElement) =>
   within(scope).getByRole('status', { name: 'Substitute Ingredients skipped' });
 
 export const addVariant = (form: string) => {
-  type(document.body, 'New Form', form);
+  typeInScope(document.body, 'New Form', form);
   fireEvent.click(screen.getByLabelText('Add Form', { selector: 'button' }));
 };
 
@@ -285,7 +286,7 @@ export function renderVariants({
       </FormProvider>
     );
   };
-  renderWithClient(<Harness />);
+  renderWithQuery(<Harness />);
   return onSubmit;
 }
 

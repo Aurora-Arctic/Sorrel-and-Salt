@@ -1,3 +1,4 @@
+import { single } from '@/lib/search-params';
 import type { Metadata, Route } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
@@ -7,9 +8,9 @@ import {
   listMySupportRequests,
   repliesForRequests,
 } from '@/modules/support';
-import SupportList from '../../../../../components/SupportList';
-import { requireSession } from '../../../../../lib/request-session';
-import { SUPPORT_LIST_PATH } from '../../../../../lib/support-path';
+import SupportList from '@/components/SupportList';
+import { requireSession } from '@/lib/request-session';
+import { SUPPORT_LIST_PATH } from '@/lib/support-path';
 import { readOpenedRequest } from './reads';
 import type { SupportListPageProps } from './types';
 import PageWithNav from '@/components/PageWithNav';
@@ -21,7 +22,7 @@ export const metadata: Metadata = pageTitle('Your Support Requests');
 export default async function SupportListPage({ searchParams }: SupportListPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);
-  const requestParam = Array.isArray(params.request) ? params.request[0] : params.request;
+  const requestParam = single(params.request);
   const [page, opened, counts] = await Promise.all([
     readNumberedPage(
       { after, before },

@@ -101,7 +101,7 @@ Each field has a one- or two-word placeholder and no info tip ([`info-tip.md`](i
 
 ## The suggest field
 
-`SpellSuggestField` suggests from a fixed list. The ingredient form's SuggestField is bound to that form's values and asks a server lookup, so this is the builder's own.
+`SpellSuggestField` suggests from a fixed list, filtering it as the text changes, and draws the shared `SuggestField` (`../Field`).
 
 ## Steps
 

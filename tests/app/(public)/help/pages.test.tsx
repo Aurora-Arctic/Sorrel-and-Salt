@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { hrefs } from '../../../support/links';
+import { getSession, sessionIsVerified } from '../../../support/request-session';
 
 // The public help pages read the public finders, which take no session, filter `audience = 'public'` in SQL and are
 // cached (tests/modules/help/services/help-reads.test.ts). Search reads the session, since its results follow the
@@ -20,18 +21,16 @@ const permanentRedirect = vi.fn((to: string) => {
 const redirect = vi.fn((to: string) => {
   throw new Error(`NEXT_REDIRECT 307 ${to}`);
 });
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
   notFound,
   permanentRedirect,
   redirect,
   usePathname: () => '/help',
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
 
-const getSession = vi.fn<() => Promise<Session | null>>();
-const sessionIsVerified = vi.fn<() => Promise<boolean>>();
-vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 const readHelpFaq = vi.fn();
 const readHelpArticleIndex = vi.fn();
@@ -124,6 +123,9 @@ beforeEach(() => {
   sessionIsVerified.mockResolvedValue(true);
 });
 
+// The help layout's frame, which holds the heading and search box the page leaves out.
+const helpHeader = async () => (await import('@/components/HelpChrome')).HelpFrame;
+
 describe('/help', () => {
   const load = async () => (await import('@/app/(public)/help/page')) as unknown as Mod;
 
@@ -139,7 +141,7 @@ describe('/help', () => {
     readHelpGlossary.mockResolvedValue(entries([]));
     const { default: Page } = await load();
 
-    render((await Page()) as React.ReactElement);
+    render((await Page()) as React.ReactElement, { wrapper: await helpHeader() });
 
     expect(readHelpFaq).toHaveBeenCalledWith(
       expect.objectContaining({ limit: expect.any(Number) }),
@@ -170,7 +172,7 @@ describe('/help', () => {
     readHelpGlossary.mockResolvedValue(entries([]));
     const { default: Page } = await load();
 
-    render((await Page()) as React.ReactElement);
+    render((await Page()) as React.ReactElement, { wrapper: await helpHeader() });
 
     // Precondition: the page drew the FAQ, so a missing pencil is the viewer's, not an empty FAQ's.
     expect(
@@ -201,7 +203,7 @@ describe('/help/glossary', () => {
     readHelpGlossary.mockResolvedValue(entries(terms));
     const { default: Page } = await load();
 
-    render((await Page()) as React.ReactElement);
+    render((await Page()) as React.ReactElement, { wrapper: await helpHeader() });
 
     expect(readHelpGlossary).toHaveBeenCalled();
     expect(screen.getAllByRole('term').map((term) => term.textContent)).toEqual([
@@ -223,7 +225,7 @@ describe('/help/glossary', () => {
     readHelpGlossary.mockResolvedValue(entries([row('steward', { kind: 'term' })]));
     const { default: Page } = await load();
 
-    render((await Page()) as React.ReactElement);
+    render((await Page()) as React.ReactElement, { wrapper: await helpHeader() });
 
     // Precondition: the page drew its title, so a missing pencil is the viewer's, not an empty page's.
     expect(screen.getByRole('heading', { level: 2, name: 'Glossary' })).toBeInTheDocument();
@@ -253,7 +255,9 @@ describe('/help/[slug]', () => {
     });
     const { default: Page } = await load();
 
-    render((await Page(article('testwort-guide'))) as React.ReactElement);
+    render((await Page(article('testwort-guide'))) as React.ReactElement, {
+      wrapper: await helpHeader(),
+    });
 
     expect(readHelpArticle).toHaveBeenCalledWith('testwort-guide');
     expect(screen.getByRole('heading', { level: 2, name: 'Testwort Guide' })).toBeInTheDocument();
@@ -302,7 +306,9 @@ describe('/help/[slug]', () => {
     });
     const { default: Page } = await load();
 
-    render((await Page(article('testwort-grove'))) as React.ReactElement);
+    render((await Page(article('testwort-grove'))) as React.ReactElement, {
+      wrapper: await helpHeader(),
+    });
 
     expect(notFound).not.toHaveBeenCalled();
     const words = screen.getByText('The guide’s own words.');
@@ -355,7 +361,9 @@ describe('/help/[slug]/[child]', () => {
     });
     const { default: Page } = await load();
 
-    render((await Page(child('testwort-guide', 'testwort-signing-in'))) as React.ReactElement);
+    render((await Page(child('testwort-guide', 'testwort-signing-in'))) as React.ReactElement, {
+      wrapper: await helpHeader(),
+    });
 
     expect(readHelpArticle).toHaveBeenCalledWith('testwort-signing-in');
     expect(

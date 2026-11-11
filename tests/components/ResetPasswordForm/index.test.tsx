@@ -19,11 +19,11 @@ const press = (element: Element) =>
   });
 
 const newPassword = () => screen.getByLabelText(/^New Password/, { selector: 'input' });
-const save = () => screen.getByRole('button', { name: 'Set New Password' });
+const setPasswordButton = () => screen.getByRole('button', { name: 'Set New Password' });
 
 async function choose(password = PASSWORD) {
   fireEvent.change(newPassword(), { target: { value: password } });
-  await press(save());
+  await press(setPasswordButton());
 }
 
 describe('ResetPasswordForm', () => {
@@ -44,9 +44,9 @@ describe('ResetPasswordForm', () => {
   it('keeps Set New Password disabled until a password is typed', async () => {
     render(<ResetPasswordForm token="tok" />);
 
-    expect(save()).toBeDisabled();
+    expect(setPasswordButton()).toBeDisabled();
     await act(async () => fireEvent.change(newPassword(), { target: { value: PASSWORD } }));
-    expect(save()).toBeEnabled();
+    expect(setPasswordButton()).toBeEnabled();
   });
 
   it('sends the password as typed with the token, then offers sign-in in place of the form', async () => {

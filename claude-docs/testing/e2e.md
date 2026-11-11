@@ -8,6 +8,11 @@ server together, the first on **8001** (`PORT` env override; `start` defaults to
 when the script prints `e2e servers ready`. The script attaches to a server it
 finds already answering, and skips the build when the first slot's does, except
 whenever `CI` is set, so a CI run always builds and starts its own servers.
+Each server the script starts writes its stdout and stderr to
+`.reports/e2e-servers/<port>.log`, emptied when that server starts and kept off
+the runner's console; a server it attaches to keeps writing to the file of the
+run that started it. On CI the files go up with the Playwright report when a
+run fails or is flaky (`playwright.yml`, "Upload Playwright report").
 
 **A spec proves what only a real server and browser can** (rule 9 of
 [`layer-ownership.md`](layer-ownership.md), "What a test may assert"):
@@ -167,12 +172,17 @@ against it, and `chromium` ignores that spec
   pathname to that database, by default the calling worker's slot's; the
   config passes each server its own as `webServer.env.DATABASE_URL`.
   `recreateE2eDatabase()` re-clones the calling worker's slot database alone,
-  then sends its server ten session lookups at once, repeated until all
-  answer 200: the drop kills the server's pooled connections and the server
-  reads each socket's close only some milliseconds later, and a test's first
-  request in that gap writes to a dead socket and gets a 500
+  then sends its server ten session lookups at once, repeated every 500 ms
+  until all answer 200: the drop kills the server's pooled connections and the
+  server reads each socket's close only some milliseconds later, and a test's
+  first request in that gap writes to a dead socket and gets a 500
   (`CONNECTION_CLOSED`, `EPIPE` or `57P01`). The lookups find the dead
-  connections first, and the pool replaces them.
+  connections first, and the pool replaces them. A lookup that lands while the
+  database is being recreated fails to connect, and `postgres` then refuses
+  every query at once until its reconnect backoff passes, which grows to 20 s;
+  so the lookups go on for up to 30 s (`untilSessionLookupsAnswer`, tested by
+  `tests/e2e-database.test.ts`) before the spec file's setup fails with the
+  elapsed time and the last burst's status codes.
 - **`globalSetup: './tests/e2e/global-setup.ts'`** calls `seedE2eTemplate()`
   and then `cloneE2eDatabases()`, once per run. It runs _after_ the servers
   have started, since Playwright sets up the `webServer` entries first, and

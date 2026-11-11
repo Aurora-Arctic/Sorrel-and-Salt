@@ -6,7 +6,7 @@ import type { ClientOptions } from './types';
 // at a call site is kept. Resolved by tests/support/db-project.mts's plugin, as postgres.js's env var for `max`
 // makes any value a pool of one (claude-docs/testing/db-harness.md, "Connections per run").
 
-export const TEST_POOL_MAX = 4;
+const TEST_POOL_MAX = 4;
 
 function bounded(first?: string | ClientOptions, second?: ClientOptions) {
   const [url, options] = typeof first === 'string' ? [first, second] : [undefined, first];

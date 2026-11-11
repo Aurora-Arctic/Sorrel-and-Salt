@@ -13,7 +13,13 @@ import {
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from './ingredient-enums';
 import { auditColumns, revisionColumn, users } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
-import { idColumn, liveUnique, seedKeyColumn, seedKeyUnique } from '../../../db/schema-parts';
+import {
+  idColumn,
+  liveUnique,
+  notBlankIfSet,
+  seedKeyColumn,
+  seedKeyUnique,
+} from '../../../db/schema-parts';
 
 // DESIGN.md §5's seven values. `nomenclature` names the naming system, not a rank within it; `fungal` is split from botanical
 // because curators shelve mushrooms apart from herbs. `none` claims no system names this, `unknown` that nobody has looked
@@ -22,6 +28,49 @@ export const nomenclatureKind = pgEnum('nomenclature_kind', NOMENCLATURE_KINDS);
 
 // A correspondence, not identity: five values, closed, unlike a variant's `form`, which is free text.
 export const ingredientElement = pgEnum('ingredient_element', INGREDIENT_ELEMENTS);
+
+/**
+ * The four correspondence lists an ingredient, a variant and a coven's own entry each carry: the five elements, then the planets, zodiac signs and
+ * colours, each of which can be several (claude-docs/db/identity-model.md, "The ingredient identity model").
+ */
+export function correspondenceColumns() {
+  return {
+    elements: ingredientElement('elements').array(),
+    celestialBodies: text('celestial_bodies').array(),
+    zodiacSigns: text('zodiac_signs').array(),
+    colors: text('colors').array(),
+  };
+}
+
+export const CORRESPONDENCE_KEYS = [
+  'elements',
+  'celestialBodies',
+  'zodiacSigns',
+  'colors',
+] as const;
+
+export type CorrespondenceKey = (typeof CORRESPONDENCE_KEYS)[number];
+
+/** Fails to compile when a correspondence column has no key in `CORRESPONDENCE_KEYS`, or a key has no column. */
+export type CorrespondenceKeysMatchColumns<
+  Match extends true = [CorrespondenceKey] extends [keyof ReturnType<typeof correspondenceColumns>]
+    ? [keyof ReturnType<typeof correspondenceColumns>] extends [CorrespondenceKey]
+      ? true
+      : false
+    : false,
+> = Match;
+
+/**
+ * The four correspondence lists of `source`, each passed through `transform`. `Out` names the result the transform makes;
+ * it defaults to the lists as they stand.
+ */
+export function mapCorrespondences<
+  Source extends Partial<Record<CorrespondenceKey, unknown>>,
+  Out extends Partial<Record<CorrespondenceKey, unknown>> = Pick<Source, CorrespondenceKey>,
+>(source: Source, transform: (list: Source[CorrespondenceKey]) => unknown): Out {
+  // Safe because the check above ties the keys to the columns.
+  return Object.fromEntries(CORRESPONDENCE_KEYS.map((key) => [key, transform(source[key])])) as Out;
+}
 
 /** An ingredient's identity: its formal name, falling back to the label, never the form. One builder gives the column and its finders one spelling. */
 export function identityKeyOf(name: SQLWrapper, canonicalName: SQLWrapper): SQL {
@@ -49,12 +98,7 @@ export const ingredients = pgTable(
     // direct write (claude-docs/db/identity-model.md, "The ingredient identity model").
     identityKey: text('identity_key').notNull().generatedAlwaysAs(IDENTITY_KEY),
     description: text('description'),
-    // A list of the five elements (claude-docs/db/identity-model.md, "The ingredient identity model").
-    elements: ingredientElement('elements').array(),
-    // Lists, as the planet, zodiac and colour each can be several (claude-docs/db/identity-model.md, "The ingredient identity model").
-    celestialBodies: text('celestial_bodies').array(),
-    zodiacSigns: text('zodiac_signs').array(),
-    colors: text('colors').array(),
+    ...correspondenceColumns(),
     safetyNotes: text('safety_notes'),
     // Whether the ingredient as a whole is dangerous. Its own, never read into a form or out of one (DESIGN.md §5, "The toxic flag is the one exception").
     toxic: boolean('toxic').notNull().default(false),
@@ -83,10 +127,7 @@ export const ingredients = pgTable(
       sql`nomenclature = 'unknown' or (nomenclature = 'none') = (canonical_name is null)`,
     ),
     // A blank formal name would satisfy the CHECK above while keying nothing.
-    check(
-      'ingredients_canonical_name_not_blank',
-      sql`canonical_name is null or btrim(canonical_name) <> ''`,
-    ),
+    check('ingredients_canonical_name_not_blank', notBlankIfSet('canonical_name')),
     // A hash is 64 lower-case hex characters or nothing, else it would queue a correction forever.
     check(
       'ingredients_seed_content_hash_is_sha256',

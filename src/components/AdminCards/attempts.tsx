@@ -14,8 +14,8 @@ import Notice from '../Notice';
 import { CardAttemptsBodySkeleton } from './skeleton';
 import { userListHref } from '../UserList/href';
 import LoadingStatus from '../Skeleton/loading-status';
-import UserLink from '../UserList/user-link';
-import { batchName } from './batches';
+import { OpenModalLink } from '../Modal';
+import { batchName } from '../../lib/invitation-cards/batch-name';
 import type { CardAttemptEntry, CardAttemptReason } from './types';
 
 // The refused opens of one batch's cards: who tried, why it was refused, how often, and when last. The keeper opens it
@@ -135,15 +135,16 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
               heading: 'Name',
               cell: (a) =>
                 a.accountId && a.accountName ? (
-                  <UserLink
+                  <OpenModalLink
                     href={userListHref(NO_FILTER, undefined, a.accountId, 'invitation-cards')}
                     heading={{
                       eyebrow: 'User',
                       title: a.accountName,
                       qualifier: <span className="user-list__modal-email">{a.accountEmail}</span>,
                     }}
-                    name={a.accountName}
-                  />
+                  >
+                    {a.accountName}
+                  </OpenModalLink>
                 ) : (
                   'Removed account'
                 ),

@@ -1,11 +1,11 @@
 'use client';
 
+import { labelByKey } from '@/lib/options';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
 import type { MouseEvent, ReactElement, ReactNode } from 'react';
-import { PendingLink } from '../../lib/navigation';
-import { BackChevron } from './back-chevron';
+import { BackTo } from '../BackLink';
 import { listReturnHref } from './back-href';
 
 interface BackLinkProps {
@@ -57,7 +57,7 @@ export default function BackLink({
 
   // The server and the hydrating render say the list the page names; the browser then says the one it returns to.
   const historyPath = historyHref?.split(/[?#]/)[0];
-  const shownLabel = also.find(({ path }) => path === historyPath)?.label ?? label;
+  const shownLabel = labelByKey(also, 'path', historyPath, label);
 
   const goBack = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!historyHref) return;
@@ -71,14 +71,8 @@ export default function BackLink({
   };
 
   return (
-    <PendingLink
-      className={className ? `back-link ${className}` : 'back-link'}
-      href={(historyHref ?? href) as Route}
-      onClick={goBack}
-    >
-      <BackChevron />
-      Back to {shownLabel}
-      {children && <> {children}</>}
-    </PendingLink>
+    <BackTo className={className} href={historyHref ?? href} label={shownLabel} onClick={goBack}>
+      {children}
+    </BackTo>
   );
 }

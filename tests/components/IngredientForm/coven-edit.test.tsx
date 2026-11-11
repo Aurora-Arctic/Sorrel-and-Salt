@@ -9,7 +9,8 @@ import type {
   DeleteWorkspaceIngredientMutationVariables,
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { duplicateHref, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
+import { duplicateHref, textbox, waitFor } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { openSections } from '../../support/ingredient-sections';
 import { choose, press, type } from '../../support/interact';
 import {
@@ -32,7 +33,7 @@ const TESTWORT: IngredientFormValues = {
 function renderEdit(props: Pick<IngredientFormProps, 'onDeleted'> = {}) {
   const onSaved = vi.fn();
   offerNothing();
-  renderWithClient(
+  renderWithQuery(
     <IngredientForm
       duplicateHref={duplicateHref}
       workspaceId={WORKSPACE_ID}

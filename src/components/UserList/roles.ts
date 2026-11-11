@@ -1,3 +1,4 @@
+import { labelOf } from '@/lib/options';
 import type { UserRole } from '../../lib/session';
 import type { SelectOption } from '../Field/types';
 
@@ -19,5 +20,4 @@ export const SITE_ROLE_ACCESS: Record<UserRole, string> = {
   admin: 'Everything a curator can do, plus managing who uses the site and who may create covens.',
 };
 
-export const roleLabel = (role: UserRole): string =>
-  ROLE_LABELS.find(({ value }) => value === role)?.label ?? role;
+export const roleLabel = (role: UserRole): string => labelOf(ROLE_LABELS, role);

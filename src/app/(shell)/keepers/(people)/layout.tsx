@@ -1,3 +1,3 @@
-import { tabbedLayout } from '../../curator/tabbed-layout';
+import { tabbedLayout } from '@/app/(shell)/_admin/tabbed-layout';
 
 export default tabbedLayout('people');

@@ -10,6 +10,7 @@ import {
 import type { SupportNotifier } from '@/modules/support';
 import { C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { ORIGIN } from '../../../support/constants';
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -21,7 +22,7 @@ beforeEach(async () => {
 });
 
 const mail: SupportNotifier = {
-  origin: async () => 'http://localhost:3000',
+  origin: async () => ORIGIN,
 };
 
 describe('the thread the sender’s page receives', () => {

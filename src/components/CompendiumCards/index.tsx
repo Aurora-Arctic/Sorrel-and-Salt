@@ -1,4 +1,3 @@
-import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
 import { emptyText } from '../CompendiumList';
@@ -7,7 +6,7 @@ import EmptyState from '../EmptyState';
 import { CompendiumEditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
 import { CardCategoryVocabulary } from '../IngredientCard/category-vocabulary';
-import { cardName } from '../IngredientCard/card-name';
+import { cardName } from '../../lib/ingredient-name';
 import IngredientCardList from '../IngredientCardList';
 import DetailsLink from '../IngredientEntry/details-link';
 import { ListBodySkeleton } from '../ListFrame/skeleton';
@@ -17,6 +16,7 @@ import { emptyList } from '../../lib/text';
 import CompendiumCardMore from './card-more';
 import { HeldMark } from './held-mark';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
+import { compendiumEntryPath } from '@/lib/compendium-path';
 // The empty sentence (`emptyText`, `.compendium-list__empty`) and the filter are CompendiumList's
 // own, so its stylesheet comes with them; the cards have no stylesheet of their own.
 import '../CompendiumList/index.scss';
@@ -25,7 +25,7 @@ import '../CompendiumList/index.scss';
 // reads one page under the address's filter. A card's foot is the plus or the check, a curator's Edit
 // in Compendium, then the three dots (`card-more.tsx`); a visitor sees none (claude-docs/components/compendium-cards.md).
 
-const entryHref = ({ slug }: CompendiumCardEntry) => `/compendium/ingredients/${slug}` as Route;
+const entryHref = ({ slug }: CompendiumCardEntry) => compendiumEntryPath(slug);
 
 const nameOf = (entry: CompendiumCardEntry): string => cardName(entry.name, entry.canonicalName);
 

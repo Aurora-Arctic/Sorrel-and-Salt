@@ -1,9 +1,9 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
-import { applyAudit } from '../audit';
 import { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import { users } from '../../modules/identity/schema/users';
 import type { SiteAdmin } from '@/modules/identity';
 import { notSoftDeleted } from './predicates';
+import { openPause } from './pause-ledger';
 import { selectFrom, selectOne } from './select';
 import type { AuditWriter, SiteInvitationRow, WriterContext } from './types';
 
@@ -24,14 +24,10 @@ export function findOpenAdminRoleChangePause(
  * The admin role's writer methods, beside the pause's finder and not in `write.ts`: the pause ledger's two named writes and the lock a
  * revoke counts under. `writerFor` spreads them into the writer.
  */
-export function adminRoleWrites({
-  tx,
-  session,
-  update,
-}: WriterContext): Pick<
-  AuditWriter,
-  'pauseAdminRoleChanges' | 'resumeAdminRoleChanges' | 'lockLiveAdmins'
-> {
+export function adminRoleWrites(
+  context: WriterContext,
+): Pick<AuditWriter, 'pauseAdminRoleChanges' | 'resumeAdminRoleChanges' | 'lockLiveAdmins'> {
+  const { tx, session, update } = context;
   return {
     // Every live keeper, locked in id order, so two revokes at once queue on
     // the first row rather than each holding one the other wants.
@@ -42,12 +38,7 @@ export function adminRoleWrites({
       }),
     // No conflict target: the one-open index is an expression index, and the
     // generated primary key is the only other unique.
-    pauseAdminRoleChanges: () =>
-      tx
-        .insert(adminRoleChangePauses)
-        .values(applyAudit('insert', {}, session) as never)
-        .onConflictDoNothing()
-        .returning(),
+    pauseAdminRoleChanges: () => openPause(context, adminRoleChangePauses, {}),
     // `now()` beside the trigger's `updated_at`, so the two read alike.
     resumeAdminRoleChanges: () =>
       update(

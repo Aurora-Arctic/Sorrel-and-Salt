@@ -1,7 +1,15 @@
 import { InvalidCursor } from './errors';
 import { DEFAULT_PAGE_SIZE, resolveNumberedPage, resolvePage } from './pagination';
 import { readableCursor, single } from './search-params';
-import type { Cursor, Page, PageCount, PageEntry, PagePosition, PageRequest } from './types';
+import type {
+  Cursor,
+  Page,
+  PageCount,
+  PageEntry,
+  PagePosition,
+  PageRequest,
+  PagerCursor,
+} from './types';
 
 // Shared by the admin tabs and the members page's pending list: each
 // reads its cursors off its own query keys, since the members page already
@@ -9,7 +17,7 @@ import type { Cursor, Page, PageCount, PageEntry, PagePosition, PageRequest } fr
 
 export type PageKeys = { after: string; before: string };
 
-export const DEFAULT_PAGE_KEYS: PageKeys = { after: 'after', before: 'before' };
+const DEFAULT_PAGE_KEYS: PageKeys = { after: 'after', before: 'before' };
 
 /** A cursor the codec reads but this list's key will not cast (one copied from another list) gives the first page. Any other failure is thrown. */
 export async function readNumberedPage<T, Edge extends object = {}>(
@@ -59,4 +67,9 @@ export function readPageCursors(
     readableCursor(single((params as Record<string, string | string[] | undefined>)[key]));
   const after = read(keys.after);
   return { after, before: after ? undefined : read(keys.before) };
+}
+
+/** The cursor a page's own place holds, for a list read in two steps: the `after` one when both are set, none for the first page. */
+export function cursorOf(place: { after?: string; before?: string }): PagerCursor | undefined {
+  return place.after ? { after: place.after } : place.before ? { before: place.before } : undefined;
 }

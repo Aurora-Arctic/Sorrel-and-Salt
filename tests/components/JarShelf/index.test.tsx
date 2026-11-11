@@ -1,5 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import JarShelf from '@/components/JarShelf';
 import { fillOf } from '@/components/JarShelf/level';
 import { LIQUID, pick } from '@/components/JarShelf/pick';
@@ -7,8 +7,6 @@ import { BOTTLES, JARS } from '@/components/JarShelf/shapes';
 import type { ShelfForm } from '@/components/JarShelf/types';
 
 // The press that opens Edit Stock is proved with the entry, in tests/components/IngredientEntry.
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 describe('the vessel pick', () => {
   it('draws the same vessel for the same name and form, whatever the case or spacing', () => {

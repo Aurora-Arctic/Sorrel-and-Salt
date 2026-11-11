@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   choiceParam,
   defineSearchParams,
+  flagParam,
   type SearchFilter,
   listParam,
   searchParam,
@@ -204,5 +205,47 @@ describe('a text list entry', () => {
   it('becomes the variable as the list itself, and none when empty', () => {
     expect(texts.variables({ query: '', forms: ['Oil', 'Resin'] }).forms).toEqual(['Oil', 'Resin']);
     expect(texts.variables({ query: '', forms: [] }).forms).toBeUndefined();
+  });
+});
+
+describe('a flag entry', () => {
+  it.each([
+    ['1', true],
+    [['1'], true],
+    [undefined, false],
+    ['0', false],
+    ['true', false],
+    ['', false],
+  ] as const)('reads %j as %s', (raw, on) => {
+    expect(flagParam('lapsed').read(raw)).toBe(on);
+  });
+
+  it('writes an on flag as 1 and leaves an off one out of the address', () => {
+    const entry = flagParam('lapsed');
+    expect(entry.write(true)).toBe('1');
+    expect(entry.write(false)).toBeUndefined();
+  });
+
+  it('names its variable after the parameter unless told otherwise', () => {
+    expect(flagParam('lapsed').variable).toBe('lapsed');
+    expect(flagParam('hidden', 'listing').variable).toBe('listing');
+  });
+
+  it('asks for the filter only when on, so an off flag adds nothing to the query', () => {
+    const entry = flagParam('lapsed');
+    expect(entry.toVariable(true)).toBe(true);
+    expect(entry.toVariable(false)).toBeUndefined();
+  });
+
+  it('turns the flag into the value its query takes, when that is not a boolean', () => {
+    const entry = flagParam('hidden', 'listing', (on) => (on ? 'hidden' : undefined));
+    expect(entry.toVariable(true)).toBe('hidden');
+    expect(entry.toVariable(false)).toBeUndefined();
+  });
+
+  it('round-trips through the table, so an address it wrote reads back as the same filter', () => {
+    const table = defineSearchParams({ lapsed: flagParam('lapsed') });
+    expect(table.read({ lapsed: '1' })).toMatchObject({ lapsed: true });
+    expect(table.read({})).toMatchObject({ lapsed: false });
   });
 });

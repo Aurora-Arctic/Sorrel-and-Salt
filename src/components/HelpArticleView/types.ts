@@ -6,15 +6,13 @@ export interface HelpSubpageLink {
   href: string;
 }
 
-export type HelpGuideStep = Pick<HelpSubpageLink, 'title' | 'href'>;
+type HelpGuideStep = Pick<HelpSubpageLink, 'title' | 'href'>;
 
 export interface HelpArticleViewProps {
   /** The page's title, drawn as a level-two heading beneath the search box. */
   title: string;
   /** The level-one heading: Help, or Staff Help on a staff page. */
   heading?: string;
-  /** Drawn under the public help layout's header, which holds the heading and the search box, so the page draws neither. */
-  framed?: boolean;
   /** Markdown, rendered with raw HTML as text. */
   body: string;
   subpages: HelpSubpageLink[];

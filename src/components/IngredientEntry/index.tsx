@@ -1,3 +1,4 @@
+import { hasText } from '@/lib/text';
 import type { Route } from 'next';
 import { PendingLink } from '../../lib/navigation';
 import type { ReactElement, ReactNode } from 'react';
@@ -38,18 +39,11 @@ import EntryDialog from './entry-dialog';
 import OwnEntryActions from './own-actions';
 import StockSection from './stock-section';
 import { reviewedAtOf } from './review-date';
-import { cardName } from '../IngredientCard/card-name';
+import { cardName } from '../../lib/ingredient-name';
 import PausedNotice from '../AppShell/paused-notice';
 import SourcingScore from '../SourcingScore';
 import type { IngredientEntryProps } from './types';
-import {
-  blockOf,
-  categoryItems,
-  CorrespondenceBlock,
-  correspondences,
-  ListBlock,
-  said,
-} from './blocks';
+import { blockOf, categoryItems, CorrespondenceBlock, correspondences, ListBlock } from './blocks';
 import './index.scss';
 
 // An ingredient's page body, the same on the public compendium and a coven's: its fields, then a section
@@ -107,7 +101,10 @@ function FormSection({
   const rows = correspondences(variant).filter((row) => row.values.length > 0);
   const hasLists = rows.length > 0 || categories.length > 0 || substitutes.length > 0;
   const addsNothing =
-    !said(variant.description) && !said(variant.safetyNotes) && !hasLists && numbers.length === 0;
+    !hasText(variant.description) &&
+    !hasText(variant.safetyNotes) &&
+    !hasLists &&
+    numbers.length === 0;
 
   return (
     <section id={anchor} className="ingredient-entry__section" aria-labelledby={nameId}>
@@ -116,7 +113,7 @@ function FormSection({
         <ToxicMark toxic={variant.toxic} />
       </h3>
       <div className="ingredient-entry__text">
-        {said(variant.description) && (
+        {hasText(variant.description) && (
           <p className="ingredient-entry__description">{variant.description}</p>
         )}
         <SafetyNote safetyNotes={variant.safetyNotes} level={4} />
@@ -241,7 +238,7 @@ const IngredientEntry = ({
   const recency = local ? null : entryRecency(entry.createdAt, entry.updatedAt);
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
   const caution = [shown.safetyNotes, ...variants.map(({ variant }) => variant.safetyNotes)].some(
-    (notes) => said(notes),
+    hasText,
   );
   const anchors = formAnchors(variants);
   const notes = referenceNotes(
@@ -407,7 +404,7 @@ const IngredientEntry = ({
         >
           <h2 id="details-heading">Details</h2>
           <div className="ingredient-entry__text">
-            {said(shown.description) ? (
+            {hasText(shown.description) ? (
               <p className="ingredient-entry__description">{shown.description}</p>
             ) : (
               <p className="ingredient-entry__empty">No description recorded.</p>

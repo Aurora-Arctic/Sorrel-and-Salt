@@ -1,6 +1,6 @@
 import type { HelpArticleKind, HelpAudience } from '@/modules/help';
 
-export interface HelpSearchResult {
+interface HelpSearchResult {
   kind: HelpArticleKind;
   /** A row that is not public carries a chip naming its audience. */
   audience: HelpAudience;

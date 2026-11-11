@@ -25,6 +25,7 @@ import type {
   HelpOutlineSubPage,
 } from './types';
 import './index.scss';
+import { plural } from '@/lib/text';
 
 // The keepers' help list as an outline: the Guides bar on the left, the chosen guide's sub pages on the right
 // (claude-docs/components/help-outline.md). Render-only but for its islands: the filter, the bar, the sortable tables and the
@@ -113,7 +114,7 @@ const GuidePane = ({ guide }: { guide: HelpOutlineChosen }): ReactElement => (
       </span>
       {guide.order.length > 0 && (
         <span>
-          {guide.order.length} {guide.order.length === 1 ? 'Sub Page' : 'Sub Pages'}
+          {guide.order.length} {plural(guide.order.length, 'Sub Page', 'Sub Pages')}
         </span>
       )}
       {guide.shown ? (

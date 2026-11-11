@@ -9,7 +9,7 @@ export type ApplyResult = { text: string; added: number } | { issue: string };
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
 
 /** The marker a candidate's block opens with: `<!-- audit:<source>:<headedAs> -->`. */
-export function auditMarker(candidate: Pick<AuditCandidate, 'source' | 'headedAs'>): string {
+function auditMarker(candidate: Pick<AuditCandidate, 'source' | 'headedAs'>): string {
   return `<!-- audit:${candidate.source}:${candidate.headedAs ?? ''} -->`;
 }
 

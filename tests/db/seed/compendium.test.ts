@@ -21,7 +21,7 @@ import {
 import { loadCompendium } from '@/db/seed/compendium/load';
 import { entryFilePath } from '@/db/seed/compendium/parse-entry';
 import { emptyReport, hasRefusals } from '@/db/seed/compendium/report';
-import type { RenderableEntryFile } from '@/db/seed/compendium/render-entry';
+import type { RenderableEntryFile } from '../../support/seed/render-entry';
 import { REASONS } from '@/db/seed/compendium/update';
 import { beginSeedTransaction } from '@/db/seed/idempotent';
 import { seedDeities } from '@/db/seed/deities';

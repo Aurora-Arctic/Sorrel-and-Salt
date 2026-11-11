@@ -5,9 +5,7 @@ import ListFrame, { ListBody } from '@/components/ListFrame';
 import Pager from '@/components/Pager';
 import { Navigating } from '../../support/navigating';
 import { stubLocationAssign } from '../../support/location';
-
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/pager.md
 

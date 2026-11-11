@@ -1,11 +1,10 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
+import { TERMS_LEDE, TERMS_TITLE } from './head';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { formatAgreementVersion } from '../../lib/agreement-version';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
-import { graphqlRequest } from '../../lib/graphql-client';
+import { graphqlRequest, useRefusableMutation } from '../../lib/graphql-client';
 import type { AgreementDocumentKey } from '../../lib/types';
 import { dayInUtc } from '../../lib/utc';
 import BusyButton from '../BusyButton';
@@ -18,7 +17,7 @@ import { reportLeaving } from '../../lib/navigation';
 // The server refuses a version no longer in force (claude-docs/auth/admin-bootstrap.md, "The terms page").
 
 const DOCUMENT_TITLES: Record<AgreementDocumentKey, string> = {
-  terms: 'Terms of Use',
+  terms: TERMS_TITLE,
   disclaimer: 'Disclaimer',
   'code-of-ethics': 'Code of Ethics',
 };
@@ -42,25 +41,22 @@ const TermsAgreement = ({
 }: TermsAgreementProps): ReactElement => {
   const [alert, setAlert] = useState<string>();
 
-  const mutation = useMutation({
-    mutationFn: () => graphqlRequest(AgreeToTermsDocument, { version }),
+  const mutation = useRefusableMutation({
+    request: () => graphqlRequest(AgreeToTermsDocument, { version }),
     // A full navigation, not the router's: the router may hold the redirect to this page as the answer for the page asked for.
-    onSuccess: () => {
+    onDone: () => {
       reportLeaving();
       window.location.assign(destination);
     },
-    onError: (failure) => setAlert(readGraphqlFailure(failure, []).alert),
+    onRefused: setAlert,
   });
 
   // Busy through the navigation too: the page stays up until the next one loads, and a second press would ask again.
-  const recording = mutation.isPending || mutation.isSuccess;
+  const recording = mutation.pending;
 
   return (
     <div className="terms-agreement">
-      <PageHeader
-        title="Terms of Use"
-        lede="Read the terms of use, then agree to them to carry on. You agree again only when they change."
-      />
+      <PageHeader title={TERMS_TITLE} lede={TERMS_LEDE} />
       <p className="terms-agreement__version">
         Version {formatAgreementVersion(version)}, last updated{' '}
         <time dateTime={updatedOn}>{dayInUtc(new Date(updatedOn))}</time>
@@ -102,7 +98,7 @@ const TermsAgreement = ({
           disabled={recording}
           onClick={() => {
             setAlert(undefined);
-            mutation.mutate();
+            mutation.run();
           }}
         >
           Agree & Continue

@@ -6,6 +6,7 @@ import { chipTip } from './chip-tip';
 import { CATEGORY_CHIP_LIMIT } from './constants';
 import type { CategoryChipsProps } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // An entry's categories as a row of full chips, then a +N button holding the rest in a floating panel. Shared by the
 // ingredient card and the admin Compendium table. Chips are plain text, not links or toggles
@@ -23,13 +24,11 @@ const CategoryChips = ({
   const limit = showAll ? categories.length : chipLimit;
   return (
     <ul
-      className={[
+      className={cx(
         'specimen__chips category-chips',
         compact ? 'category-chips--compact' : '',
         absent ? 'category-chips--absent' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      )}
       aria-label="Categories"
     >
       {categories.slice(0, limit).map((chip) => {

@@ -34,13 +34,8 @@ import {
   expectAskingOver,
   renderInModal,
 } from '../../support/discard-guard';
-import {
-  box,
-  renderWithClient,
-  textbox,
-  waitFor,
-  duplicateHref,
-} from '../../support/ingredient-form';
+import { box, textbox, waitFor, duplicateHref } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { openSections } from '../../support/ingredient-sections';
 import { choose, press, type } from '../../support/interact';
 import {
@@ -58,9 +53,6 @@ import {
 
 // claude-docs/components/ingredient-form.md, "Stories and tests"
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
-
 const OTHER_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';
 const CATEGORY_ID = 'c4a8e2f1-7b3d-4c9e-a6f5-1d2e3f4a5b6c';
 
@@ -77,7 +69,7 @@ function renderForm(props: Partial<Extract<IngredientFormProps, { workspaceId: n
   const onSaved = vi.fn();
   const onDeleted = vi.fn();
   const asks = offerNothing();
-  renderWithClient(
+  renderWithQuery(
     <IngredientForm
       duplicateHref={duplicateHref}
       workspaceId={null}
@@ -120,7 +112,7 @@ function renderPickOnly() {
     );
   };
   offerNothing();
-  renderWithClient(<Harness />);
+  renderWithQuery(<Harness />);
   return onSubmit;
 }
 
