@@ -47,8 +47,20 @@ if (flaky > 0) summaryParts.push(`${flaky} flaky`);
 // The merged coverage of both suites is the Coverage section's alone.
 let summary = summaryParts.join(', ');
 
-const failures = formatFailures(collectFailures(data), { heading: 'Failing tests' });
+// A flaky test is named in the comment and annotated, and never fails the run.
+const allFailures = collectFailures(data, { includeFlaky: true });
+const failures = formatFailures(allFailures, { heading: 'Failing tests' });
 let details = failures;
+
+// One `::warning` workflow command per flaky test, which the step log turns into an annotation.
+const escapeData = (text) => text.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+const escapeProperty = (text) => escapeData(text).replace(/:/g, '%3A').replace(/,/g, '%2C');
+for (const { file, title, message, flaky: isFlaky } of allFailures) {
+  if (!isFlaky) continue;
+  console.log(
+    `::warning file=${escapeProperty(file)},title=${escapeProperty(`Flaky test: ${title}`)}::${escapeData(`Failed, then passed on retry${message ? `: ${message}` : ''}`)}`,
+  );
+}
 
 // Timing is added only when the report carries a duration, so a report without one reads as it always did.
 if (typeof duration === 'number') {
