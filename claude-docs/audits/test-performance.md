@@ -16,14 +16,14 @@ This audit measures where the CI test jobs spend their time, lists tests that ar
 - In Vitest, one PDF test file takes 59 s, and four whole-form component files take 17 to 34 s each.
 - About 25 gate accessibility scans and about 29 story scans (estimate) repeat a page state the sweep already scans.
 
-**The five follow-up tasks (proposed, 26 h in all).**
+**The five follow-up tasks (approved by the owner, 27 h in all).** MC.11 fixes the two flaky tests itself rather than filing bug tasks for them (+0.5 h), and MC.13 builds the Vitest half of R-7, a named wait helper and its guard (+0.5 h).
 
 | Id    | Title                                                      | Estimate |
 | ----- | ---------------------------------------------------------- | -------- |
 | MC.10 | Shard the CI Test Jobs                                     | 5 h      |
-| MC.11 | Wait on State in Playwright, Not on Time                   | 3.5 h    |
+| MC.11 | Wait on State in Playwright, Not on Time                   | 4 h      |
 | MC.12 | Trim the Playwright Suites to What a Browser Adds          | 6.5 h    |
-| MC.13 | Speed Up the Slow Vitest Dom Files                         | 6 h      |
+| MC.13 | Speed Up the Slow Vitest Dom Files                         | 6.5 h    |
 | MC.14 | Pay Database Setup Once and Prove Each Rule Once in Vitest | 5 h      |
 
 **How sure the findings are.** Every finding was checked against the code by a read-only pass, with file and line references. Line numbers are from the `/app` checkout on branch `feature/mc.9-clean-up-styles-unused-code` as of 2026-11-11. MC.8 and MC.9 were not yet merged, so each task re-checks its findings against their diffs first.
@@ -488,7 +488,7 @@ New pieces:
 
 ## Proposed Tasks
 
-**Proposed, pending the owner's approval.** None is minted. They belong in the Z. Cleanup milestone as MC.10 to MC.14: five tasks, 26 h, against a limit of 10 tasks. The estimates are calibrated on these existing tasks, and an existing MC task runs 6 to 16 h.
+**Approved by the owner; minted from `tasks/v1/mc.md`.** They belong in the Z. Cleanup milestone as MC.10 to MC.14: five tasks, 27 h, against a limit of 10 tasks. The estimates are calibrated on these existing tasks, and an existing MC task runs 6 to 16 h.
 
 | Task                           | Estimate |
 | ------------------------------ | -------- |
@@ -506,14 +506,14 @@ New pieces:
 | Id    | Title                                                      | Est.                                                                   | Findings                                | Effect on the 7-minute goal                                                                           |
 | ----- | ---------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | MC.10 | Shard the CI Test Jobs                                     | 5 h                                                                    | T-1 to T-5, T-7                         | Gate about 5-6 min per shard (3 shards), stories about 5 min (2), dom about 4 min (2). All estimates. |
-| MC.11 | Wait on State in Playwright, Not on Time                   | 3.5 h                                                                  | T-6, T-8 to T-12                        | Shrinks the slowest gate tests; flakes go to bug tasks.                                               |
+| MC.11 | Wait on State in Playwright, Not on Time                   | 4 h                                                                    | T-6, T-8 to T-12                        | Shrinks the slowest gate tests; fixes the two flakes seen.                                            |
 | MC.12 | Trim the Playwright Suites to What a Browser Adds          | 6.5 h (R-6 adds 1 h for the dark colour-only pass and the phone scans) | T-13 to T-20                            | About 30-40 gate tests, about 54 scans, and about 6 specs fewer (estimate).                           |
-| MC.13 | Speed Up the Slow Vitest Dom Files                         | 6 h                                                                    | T-21 to T-23                            | About 80-90 s summed (estimate); `IngredientForm/index` stays over budget by decision.                |
+| MC.13 | Speed Up the Slow Vitest Dom Files                         | 6.5 h                                                                  | T-21 to T-23                            | About 80-90 s summed (estimate); `IngredientForm/index` stays over budget by decision.                |
 | MC.14 | Pay Database Setup Once and Prove Each Rule Once in Vitest | 5 h                                                                    | T-24 to T-26 (T-27 recorded as cleared) | About 12-18 s summed (estimate); less duplication.                                                    |
 
-The nine-task draft was 28.5 h; consolidating to five saves one setup and one review per merged pair, so the total is 26 h by this table's sum.
+The nine-task draft was 28.5 h; consolidating to five saves one setup and one review per merged pair, so the total was 26 h; the owner's two additions above make it 27 h.
 
-Each entry will follow `tasks/v1/mc.md`'s format: `**MC.N — Title** · Xh`, a `_Story:_`, "Minted from T-...", and `_Acceptance criteria:_` ending "The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass". A code sweep lands its guard in the same commit, seen failing once, with an empty allowlist (CLAUDE.md, the sweep-task rule).
+Each entry follows `tasks/v1/mc.md`'s format: `**MC.N — Title** · Xh`, a `_Story:_`, "Minted from T-...", and `_Acceptance criteria:_` ending "The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass". A code sweep lands its guard in the same commit, seen failing once, with an empty allowlist (CLAUDE.md, the sweep-task rule).
 
 ### What Each Task Contains
 
