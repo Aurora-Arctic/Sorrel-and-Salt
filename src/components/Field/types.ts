@@ -170,6 +170,21 @@ export interface PlainSelectFieldProps {
   onChange: (value: string) => void;
 }
 
+/** The bare slide toggle: the label is its children, and `tip` and `footer` sit beside and beneath it. */
+export interface SwitchControlProps {
+  id: string;
+  name: string;
+  value: string;
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  busy?: boolean;
+  describedBy?: string;
+  tip?: ReactNode;
+  footer?: ReactNode;
+}
+
 /**
  * An on-or-off choice in a plain-state form, such as a list filter's No Refs. Held by the caller
  * through `checked`, or left to the native checkbox from `defaultChecked`. Not a react-hook-form
