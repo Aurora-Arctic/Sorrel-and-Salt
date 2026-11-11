@@ -132,7 +132,7 @@ export const MODAL_SCANS = [
   { id: 'sign-in', source: 'src/components/SignInDialog/index.tsx', as: 'signedOut' },
 
   // The account.
-  { id: 'unlink-provider', source: 'src/components/SignInMethods/provider-row.tsx', as: 'user' },
+  { id: 'unlink-provider', source: 'src/components/ConfirmedAction/index.tsx', as: 'user' },
   { id: 'passkey', source: 'src/components/Passkeys/passkey-row.tsx', as: 'user' },
   { id: 'two-factor-warning', source: 'src/components/PasswordSection/two-factor.tsx', as: 'user' },
   { id: 'my-request', source: 'src/components/SupportList/index.tsx', as: 'user' },
