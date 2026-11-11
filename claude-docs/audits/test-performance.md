@@ -153,6 +153,8 @@ This is a list of edits, not a new finding.
 - **Fix:** report the stories coverage figure as its own line in the comment.
 - **Keeper:** nothing is cut.
 
+**Coverage threshold probe.** A throwaway draft PR (#1677) added one generated, untested file under `src/` and was closed unmerged. The `vitest / vitest` job failed at its `Run vitest` step, with one error per metric against the 80% threshold: lines 67.65%, branches 70.63%, functions 70%, statements 69.28%. Every other job in the run passed or was still running at that point, including `checks / unused`. The branch was deleted from the remote and locally. A deliberate coverage drop therefore fails CI at that one job.
+
 #### T-6. Two Flaky Gate Tests in Two Runs
 
 - **Where:** `spell-quantity-input` (run A, 30 s fail), the `admin-help` keeper test (run B, 120 s fail).
