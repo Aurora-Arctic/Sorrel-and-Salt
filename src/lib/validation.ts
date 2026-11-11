@@ -1,6 +1,7 @@
 import { type ZodType, z } from 'zod';
 import { ValidationError } from './errors';
 import { type FieldFormat, limitMessage, parseQuantity, tidy, trimEnds } from './formats';
+import { CALENDAR_DAY_MESSAGE, isRealCalendarDay } from './utc';
 import { QUANTITY_FORMAT_MESSAGE, amountProblem } from './quantity-rule';
 import type { ValidationIssue } from './types';
 
@@ -12,7 +13,9 @@ export const RowId = z.guid();
 /** Missing and malformed are refused alike, with `message` saying what to choose, since neither is anything the user typed. */
 export const requiredRowId = (message: string) => z.guid({ error: message });
 
-export const CalendarDay = z.iso.date({ error: 'Give the day as YYYY-MM-DD' });
+export const CalendarDay = z
+  .string({ error: CALENDAR_DAY_MESSAGE })
+  .refine(isRealCalendarDay, { error: CALENDAR_DAY_MESSAGE });
 
 /** Tidied as the single-line field is on blur; a multiline field passes `trimEnds`, which keeps its line breaks. */
 export const requiredText = (message: string, format: FieldFormat = tidy) =>

@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import DateRangeField from '@/components/DateRangeField';
 import type { DayRange } from '@/components/DateRangeField/types';
 import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
+import { fill } from '../../support/interact';
 
 // claude-docs/components/date-field.md
 
@@ -204,10 +205,6 @@ describe('DateRangeField', () => {
 // (YYYY-MM-DD). A typed day counts once the person leaves the box, as every Field is checked.
 const box = (name: 'Start' | 'End') =>
   within(screen.getByRole('dialog')).getByRole('textbox', { name });
-const type = (name: 'Start' | 'End', text: string) => {
-  fireEvent.change(box(name), { target: { value: text } });
-  fireEvent.blur(box(name));
-};
 // What the box's description reads: its hint, if it has one, and its error once one shows.
 const described = (element: HTMLElement) =>
   (element.getAttribute('aria-describedby') ?? '')
@@ -267,7 +264,7 @@ describe('DateRangeField, Start and End', () => {
   it('sets the start from a typed Start, then awaits End', () => {
     render(<Harness initial={{ from: '2026-10-01', to: '' }} />);
     open();
-    type('Start', '2026-10-04');
+    fill('Start', '2026-10-04');
     expect(answer()).toBe('2026-10-04|');
     expect(box('Start')).not.toBeInvalid();
     expect(box('End')).toHaveAttribute('aria-current', 'true');
@@ -276,8 +273,8 @@ describe('DateRangeField, Start and End', () => {
   it('sets the range from a typed Start and a typed End, as two picks would', () => {
     render(<Harness initial={{ from: '2026-10-01', to: '' }} />);
     open();
-    type('Start', '2026-10-04');
-    type('End', '2026-10-09');
+    fill('Start', '2026-10-04');
+    fill('End', '2026-10-09');
     expect(answer()).toBe('2026-10-04|2026-10-09');
     expect(field()).toHaveAccessibleName(/4 Oct 2026.*9 Oct 2026/);
   });
@@ -285,15 +282,15 @@ describe('DateRangeField, Start and End', () => {
   it('makes a single day of a typed End the same as Start', () => {
     render(<Harness initial={{ from: '2026-10-01', to: '' }} />);
     open();
-    type('Start', '2026-10-06');
-    type('End', '2026-10-06');
+    fill('Start', '2026-10-06');
+    fill('End', '2026-10-06');
     expect(answer()).toBe('2026-10-06|2026-10-06');
   });
 
   it('changes only the end typed when the field already holds a range', () => {
     render(<Harness initial={{ from: '2026-10-01', to: '2026-10-30' }} />);
     open();
-    type('End', '2026-10-20');
+    fill('End', '2026-10-20');
     expect(answer()).toBe('2026-10-01|2026-10-20');
   });
 
@@ -314,7 +311,7 @@ describe('DateRangeField, Start and End', () => {
     render(<Harness initial={{ from: '2026-10-01', to: '2026-10-30' }} />);
     open();
     const before = described(box('Start'));
-    type('Start', text);
+    fill('Start', text);
     expectRefused('Start', before);
     expect(answer()).toBe('2026-10-01|2026-10-30');
     expect(field()).toHaveAccessibleName(/1 Oct 2026.*30 Oct 2026/);
@@ -323,9 +320,9 @@ describe('DateRangeField, Start and End', () => {
   it('clears the error and sets the start once a refused day is put right', () => {
     render(<Harness initial={{ from: '2026-10-01', to: '' }} />);
     open();
-    type('Start', '2026-02-30');
+    fill('Start', '2026-02-30');
     expect(box('Start')).toBeInvalid();
-    type('Start', '2026-10-07');
+    fill('Start', '2026-10-07');
     expect(box('Start')).not.toBeInvalid();
     expect(answer()).toBe('2026-10-07|');
   });
@@ -333,13 +330,13 @@ describe('DateRangeField, Start and End', () => {
   it('refuses a typed End before Start with the Field error, never swapping the ends, until it is put right', () => {
     render(<Harness initial={{ from: '2026-10-01', to: '' }} />);
     open();
-    type('Start', '2026-10-10');
+    fill('Start', '2026-10-10');
     const before = described(box('End'));
-    type('End', '2026-10-04');
+    fill('End', '2026-10-04');
     expectRefused('End', before);
     // Neither set as given nor swapped: the range holds the start alone.
     expect(answer()).toBe('2026-10-10|');
-    type('End', '2026-10-14');
+    fill('End', '2026-10-14');
     expect(answer()).toBe('2026-10-10|2026-10-14');
   });
 
@@ -347,7 +344,7 @@ describe('DateRangeField, Start and End', () => {
     render(<Harness initial={{ from: '2026-10-10', to: '2026-10-20' }} />);
     open();
     const before = described(box('End'));
-    type('End', '2026-10-09');
+    fill('End', '2026-10-09');
     expectRefused('End', before);
     expect(answer()).toBe('2026-10-10|2026-10-20');
   });
@@ -355,10 +352,10 @@ describe('DateRangeField, Start and End', () => {
   it('keeps End when a valid Start is typed while a range is held', () => {
     render(<Harness initial={{ from: '2026-10-10', to: '2026-10-20' }} />);
     open();
-    type('Start', '2026-10-12');
+    fill('Start', '2026-10-12');
     expect(box('Start')).not.toBeInvalid();
     expect(answer()).toBe('2026-10-12|2026-10-20');
-    type('Start', '2026-10-20');
+    fill('Start', '2026-10-20');
     expect(answer()).toBe('2026-10-20|2026-10-20');
   });
 
@@ -366,10 +363,10 @@ describe('DateRangeField, Start and End', () => {
     render(<Harness initial={{ from: '2026-10-10', to: '2026-10-20' }} />);
     open();
     const before = described(box('Start'));
-    type('Start', '2026-10-21');
+    fill('Start', '2026-10-21');
     expectRefused('Start', before);
     expect(answer()).toBe('2026-10-10|2026-10-20');
-    type('Start', '2026-10-15');
+    fill('Start', '2026-10-15');
     expect(box('Start')).not.toBeInvalid();
     expect(answer()).toBe('2026-10-15|2026-10-20');
   });
@@ -406,18 +403,18 @@ describe('DateRangeField, Start and End', () => {
     render(<Harness initial={{ from: '2026-10-10', to: '' }} min="2026-10-05" max="2026-10-20" />);
     open();
     const startBefore = described(box('Start'));
-    type('Start', '2026-10-04');
+    fill('Start', '2026-10-04');
     expectRefused('Start', startBefore);
     expect(answer()).toBe('2026-10-10|');
-    type('Start', '2026-10-05');
+    fill('Start', '2026-10-05');
     expect(box('Start')).not.toBeInvalid();
     expect(answer()).toBe('2026-10-05|');
 
     const endBefore = described(box('End'));
-    type('End', '2026-10-21');
+    fill('End', '2026-10-21');
     expectRefused('End', endBefore);
     expect(answer()).toBe('2026-10-05|');
-    type('End', '2026-10-20');
+    fill('End', '2026-10-20');
     expect(answer()).toBe('2026-10-05|2026-10-20');
   });
 });
@@ -499,7 +496,7 @@ describe('DateRangeField, a typed End', () => {
     render(<Harness initial={{ from: '2026-11-03', to: '' }} />);
     const dialog = open();
     expect(describedText()).not.toMatch(/\d/);
-    type('End', '2026-11-12');
+    fill('End', '2026-11-12');
     expect(answer()).toBe('2026-11-03|2026-11-12');
     expect(dialog).toBeVisible();
     expect(screen.getByRole('dialog', { name: 'Choose Minted Days' })).toBe(dialog);
