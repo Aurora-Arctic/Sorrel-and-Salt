@@ -9,11 +9,10 @@ import { SupportRequestInput } from '../validation/support';
 import { requireVerified } from './access';
 import { mailSender } from './mail-sender';
 import { redactPath } from './redact-path';
-import { SEND_WINDOW_SECONDS, refuseTimedOut, refuseTimedOutReply } from './time-out-refusals';
+import { SEND_WINDOW_SECONDS, refuseTimedOut } from './time-out-refusals';
 
 /** Requests one sender may make in a window; the next is refused until the oldest leaves it. */
 export const SEND_LIMIT = 10;
-export { SEND_WINDOW_SECONDS, refuseTimedOut, refuseTimedOutReply };
 
 export function refuseOverLimit(recent: number): void {
   if (recent >= SEND_LIMIT) {
