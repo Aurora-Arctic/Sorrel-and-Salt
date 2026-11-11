@@ -21,7 +21,7 @@ import './index.scss';
 // calendar is the day field's, in the same popover (claude-docs/components/date-field.md).
 
 // Below this width (or where the field leaves no room, see use-room-for-two-months.ts) the calendar shows one month: two months (about 546px with the panel's padding) plus the window's gutter
-// do not fit. Wider, the picks sit above them until 48rem, then beside them (index.scss).
+// do not fit. Where the picks sit, beside the months or in a row above, follows the panel's own width (index.scss).
 const NARROW = '(max-width: 35.9375rem)';
 
 const HINT = {
