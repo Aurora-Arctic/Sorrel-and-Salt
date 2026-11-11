@@ -20,7 +20,7 @@ export interface BaseEmailProps {
 
 export type MessageInput<Props extends BaseEmailProps> = Omit<Props, 'part'> & { to: string };
 
-export type VerifyEmailPurpose = 'sign-up' | 'change';
+type VerifyEmailPurpose = 'sign-up' | 'change';
 
 export interface VerifyEmailProps extends BaseEmailProps {
   purpose?: VerifyEmailPurpose;
@@ -80,7 +80,7 @@ export interface SupportReplyNoticeProps extends BaseEmailProps {
   requestSubject: string;
 }
 
-export interface SupportStatusProps extends BaseEmailProps {
+interface SupportStatusProps extends BaseEmailProps {
   requestSubject: string;
   /** True for a sender with no account: `url` is then the support page, which asks for no sign-in. */
   signedOut?: boolean;
@@ -129,7 +129,7 @@ export interface CovenAccessPausedProps extends BaseEmailProps {
   message: string | null;
 }
 
-export interface UpdatedDocument {
+interface UpdatedDocument {
   title: string;
   summary: string;
   url: string;

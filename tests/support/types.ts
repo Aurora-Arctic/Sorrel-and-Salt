@@ -88,7 +88,7 @@ export interface ProbeSet {
   files: string[];
 }
 
-export interface GroupedValue {
+interface GroupedValue {
   id: string;
   name: string;
   description: string;
@@ -137,7 +137,7 @@ export interface TemplateBuildRegistry {
   __sorrelTemplateBuilds?: WeakMap<object, Promise<void>>;
 }
 
-export interface FilterShown {
+interface FilterShown {
   list: ReactElement;
   sends: string;
 }

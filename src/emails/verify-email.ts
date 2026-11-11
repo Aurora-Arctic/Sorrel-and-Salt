@@ -19,7 +19,7 @@ const PREVIEW = {
 
 // No greeting by name, unlike the invitations: the address is not yet proved, and a
 // mistyped one would hand a stranger the account's name.
-export function VerifyEmail({
+function VerifyEmail({
   url,
   purpose = 'sign-up',
   providers,

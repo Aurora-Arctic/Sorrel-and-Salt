@@ -8,7 +8,7 @@ const SUBJECT = 'You Were Timed Out of Support';
 const PREVIEW = 'An admin timed your account out of sending support requests.';
 
 // Never the keeper's note.
-export function SupportTimedOut({
+function SupportTimedOut({
   url,
   until,
   message,

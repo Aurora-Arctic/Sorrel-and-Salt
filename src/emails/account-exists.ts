@@ -17,7 +17,7 @@ function howToSignIn(providers: AccountExistsProps['providers'], hasPassword: bo
 
 // Sent in place of a second account, so the sign-up's answer cannot tell anyone the address is taken.
 // No greeting by name: whoever made the sign-up need not be the holder.
-export function AccountExists({
+function AccountExists({
   url,
   providers,
   hasPassword,

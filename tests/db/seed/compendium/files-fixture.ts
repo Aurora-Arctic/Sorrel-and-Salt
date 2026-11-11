@@ -17,7 +17,7 @@ function stated<Field extends string>(citation: SeedCitation<Field>): SeedCitati
   return { ...citation, nameBasis: 'stated' };
 }
 
-export function fileEntry(entry: SeedCompendiumEntry): SeedCompendiumEntry {
+function fileEntry(entry: SeedCompendiumEntry): SeedCompendiumEntry {
   return {
     ...entry,
     references: entry.references.map(stated),
@@ -28,7 +28,7 @@ export function fileEntry(entry: SeedCompendiumEntry): SeedCompendiumEntry {
   };
 }
 
-export const FILE_ENTRIES: readonly SeedCompendiumEntry[] = FIXTURE_SHARD.entries.map(fileEntry);
+const FILE_ENTRIES: readonly SeedCompendiumEntry[] = FIXTURE_SHARD.entries.map(fileEntry);
 export const [TESTWORT, SAMPLEWORT] = FILE_ENTRIES;
 
 export const FILE_SOURCES: SeedCompendiumShard['sources'] = FIXTURE_SHARD.sources;

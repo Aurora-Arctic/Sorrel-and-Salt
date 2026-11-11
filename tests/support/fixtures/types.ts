@@ -18,7 +18,7 @@ export type Overrides<T> = T extends readonly unknown[]
     ? { [K in keyof T]?: Overrides<T[K]> }
     : T;
 
-export type WorkspaceMemberFixture = Pick<typeof workspaceMembers.$inferInsert, 'userId' | 'role'>;
+type WorkspaceMemberFixture = Pick<typeof workspaceMembers.$inferInsert, 'userId' | 'role'>;
 
 export interface WorkspaceFixture extends Required<
   Pick<typeof workspaces.$inferInsert, 'name' | 'slug'>
