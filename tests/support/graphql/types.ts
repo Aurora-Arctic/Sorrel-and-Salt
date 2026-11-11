@@ -1,6 +1,6 @@
 import type { Context } from '@/graphql/types';
 
-export interface WireError {
+interface WireError {
   message: string;
   path?: (string | number)[];
   extensions?: {

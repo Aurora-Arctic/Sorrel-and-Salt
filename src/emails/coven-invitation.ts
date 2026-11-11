@@ -20,7 +20,7 @@ const ROLE_PROSE: Record<CovenInvitationProps['role'], string> = {
 // The column's default, `now() + interval '7 days'`; nothing sets another.
 const LIFETIME = 'seven days';
 
-export function CovenInvitation({
+function CovenInvitation({
   url,
   inviterName,
   covenName,

@@ -16,7 +16,7 @@ import {
 } from '@/components/Field';
 import type { FormHistory, UseFormHistoryOptions } from '@/components/Field/types';
 
-export interface ProbeValues {
+interface ProbeValues {
   title: string;
   kind: string;
   items: { value: string }[];

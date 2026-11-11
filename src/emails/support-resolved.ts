@@ -15,7 +15,7 @@ import type { SupportResolvedProps } from './types';
 const titleOf = (requestSubject: string): string =>
   supportTitle('Your support request is resolved', requestSubject);
 
-export function SupportResolved({
+function SupportResolved({
   url,
   origin = new URL(url).origin,
   part,

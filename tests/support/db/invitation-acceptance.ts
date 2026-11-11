@@ -15,7 +15,7 @@ import type {
 // The setup the three entry points share (accepting by token, by id, and declining): the cast of invented
 // accounts, the invitation inserter, and the reads of what a call left. Each file keeps its own `sql`.
 
-export const DOMAIN = '@invitation-acceptance.test';
+const DOMAIN = '@invitation-acceptance.test';
 export const PRIMARY = '00000000-0000-0000-0000-0000000000c1';
 export const GRANTEE = '00000000-0000-0000-0000-0000000000c2';
 export const STRANGER = '00000000-0000-0000-0000-0000000000c3';

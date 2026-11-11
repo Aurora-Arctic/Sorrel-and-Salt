@@ -54,7 +54,7 @@ function renderVariant(variant: SeedCompendiumVariant): Record<string, unknown> 
 }
 
 /** The frontmatter as the file writes it: one fixed key order, `status` first, nothing blank. */
-export function renderFrontmatter(file: RenderableEntryFile): Record<string, unknown> {
+function renderFrontmatter(file: RenderableEntryFile): Record<string, unknown> {
   const { entry } = file;
   return compact({
     status: file.status,

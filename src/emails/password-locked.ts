@@ -22,7 +22,7 @@ function otherWays(providers: readonly ProviderId[], hasPasskey: boolean): strin
 }
 
 // Sent when a lock starts, so the holder learns of guessing they did not do; it offers a way in the lock does not hold back.
-export function PasswordLocked({
+function PasswordLocked({
   url,
   minutes,
   providers = [],
