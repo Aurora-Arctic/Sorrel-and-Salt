@@ -15,7 +15,14 @@ import {
 import { chipColors } from '../../lib/chip-colors';
 import { fold, plural } from '@/lib/text';
 import Spinner from '../Spinner';
-import { ChevronIcon, CrossIcon } from '../IconTip/icons';
+import { ChevronIcon } from '../IconTip/icons';
+import {
+  ClearButton,
+  IndicatorSeparator,
+  OptionGroup,
+  OptionLabel,
+  preventDownshiftDefault,
+} from './parts';
 import { EmptyMessage, noMatch, Popup } from './popup';
 import { useListPosition } from './position';
 import { chipsRoom } from './room';
@@ -300,9 +307,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         event.preventDefault();
         return;
       }
-      (
-        event as KeyboardEvent<HTMLInputElement> & { preventDownshiftDefault?: boolean }
-      ).preventDownshiftDefault = true;
+      preventDownshiftDefault(event);
       return;
     }
     if ((event.key === 'Backspace' || event.key === 'Delete') && value === '') {
@@ -366,22 +371,9 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         )}
         {!isAction(item) && !isTyped(item) && (
           <>
-            <span className="combobox__label">
-              {item.icon && (
-                <span className="combobox__icon" aria-hidden="true">
-                  {item.icon}
-                </span>
-              )}
+            <OptionLabel icon={item.icon} count={item.count} badge={item.badge}>
               {item.label ?? item.value}
-              {/* The space is a text node of the label's own, as a span's leading one is dropped from the name. */}
-              {item.count !== undefined && (
-                <>
-                  {' '}
-                  <span className="combobox__count">{item.count}</span>
-                </>
-              )}
-              {item.badge && <> {item.badge}</>}
-            </span>
+            </OptionLabel>
             {(item.note || item.meta) && (
               <div className={item.meta ? 'combobox__note combobox__note--meta' : 'combobox__note'}>
                 {item.note}
@@ -486,26 +478,11 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           <div className="combobox__indicators">
             {/* Always drawn once the caller has a clear, hidden when empty, so the control's width never changes. */}
             {clear && (
-              <button
-                type="button"
-                className={clear.empty ? 'combobox__indicator is-empty' : 'combobox__indicator'}
-                aria-label={clear.label}
-                aria-hidden={clear.empty || undefined}
-                tabIndex={clear.empty ? -1 : undefined}
-                disabled={clear.empty}
-                onClick={clear.onClear}
-              >
-                <CrossIcon />
-              </button>
+              <ClearButton empty={clear.empty} label={clear.label} onClear={clear.onClear} />
             )}
             {/* After the clear, as react-select draws it, so the spinner sits by the chevron. */}
             {busy && <Spinner />}
-            {clear && hasSource && toggle && (
-              <span
-                className={clear.empty ? 'combobox__separator is-empty' : 'combobox__separator'}
-                aria-hidden="true"
-              />
-            )}
+            {clear && hasSource && toggle && <IndicatorSeparator empty={clear.empty} />}
             {hasSource && toggle && (
               <button
                 type="button"
@@ -544,20 +521,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               bucket.heading === null ? (
                 bucket.rows.map(row)
               ) : (
-                // A div with ARIA's `group` inside a presentational li: ARIA allows no `group`
-                // role on an li.
-                // oxlint-disable jsx-a11y/prefer-tag-over-role
-                <li key={bucket.key} role="presentation" className="combobox__group">
-                  <div role="group" aria-labelledby={`${headingId}-${bucket.key}`}>
-                    <div id={`${headingId}-${bucket.key}`} className="combobox__heading">
-                      {bucket.heading}
-                    </div>
-                    <ul role="presentation" className="combobox__rows">
-                      {bucket.rows.map(row)}
-                    </ul>
-                  </div>
-                </li>
-                // oxlint-enable jsx-a11y/prefer-tag-over-role
+                <OptionGroup
+                  key={bucket.key}
+                  headingId={`${headingId}-${bucket.key}`}
+                  heading={bucket.heading}
+                >
+                  {bucket.rows.map(row)}
+                </OptionGroup>
               ),
             )}
           {isOpen && !actionFirst && lastRow && row(lastRow)}
