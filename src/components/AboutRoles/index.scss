@@ -2,18 +2,7 @@
 @use '../../scss/mixins' as *;
 
 // The cards, one beneath another at the body text's width: side by side they would be too narrow for their sentences.
-.about-roles {
-  @include list-reset;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: space(5);
-}
-
-// The document body's list rule would win over a margin set on the row alone, so the row's air is set here: space(7) above and
-// below, more than the body gives the end of a list, since the group is a block of its own.
-.document-page__body .about-roles {
-  margin-block: space(7);
-}
+@include about-cards('about-roles', $text-muted);
 
 // A quieter ground than the pillars' cards, so the two rows read as different kinds of thing. It has no edge, so it does not take
 // the quiet card primitive, which draws one.
@@ -32,21 +21,4 @@
   display: flex;
   align-items: center;
   gap: space(3);
-}
-
-.about-roles__icon {
-  display: flex;
-  flex: none;
-  inline-size: $icon-size-large;
-  block-size: $icon-size-large;
-  color: $text-muted;
-
-  svg {
-    inline-size: 100%;
-    block-size: 100%;
-  }
-}
-
-.document-page__body .about-roles__heading {
-  margin: 0;
 }

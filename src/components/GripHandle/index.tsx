@@ -12,6 +12,7 @@ export default function GripHandle({
   name,
   className,
   describedBy,
+  disabled,
   onFocus,
   onBlur,
   children,
@@ -26,6 +27,7 @@ export default function GripHandle({
       className={className}
       {...rest}
       {...listeners}
+      disabled={disabled}
       aria-label={`Move ${name}`}
       aria-describedby={[describedBy, instructions].filter(Boolean).join(' ') || undefined}
       onFocus={onFocus}
