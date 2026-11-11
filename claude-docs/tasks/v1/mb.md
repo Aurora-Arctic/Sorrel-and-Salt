@@ -803,3 +803,44 @@ _Acceptance criteria:_
 
 - A regression test that fails before the fix: assigning a request by direct id to a paused curator, and to a paused keeper, is refused; the same test asserts the same user can be assigned once the pause ends, so it fails with the guard removed
 - The assignee picker lists no paused keeper or curator
+
+**MB.298 — Deploys Stop on Vercel's Daily Upload Limit** · 0.5h
+
+_Story:_ As the site's owner, I want a deploy to upload the build as one file, so that a release with many changed files still ships.
+
+Found on 2026-11-11 by the owner, deploying release 0.15.0. The Deploy step of `.github/workflows/deploy.yml` ran `vercel deploy --prebuilt`, which uploads every file of the build output separately, and Vercel's free plan refuses more than 5,000 uploads a day. Steps to reproduce:
+
+1. Cut a release whose build changes about 1,600 files
+2. Let `deploy.yml` run on it
+
+Actual: the Deploy step fails with Vercel's "Too many requests" error, code `api-upload-free`.
+
+Expected: the deploy uploads the build as one tarball and succeeds.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: every `vercel deploy` in `.github/workflows/` passes `--archive=tgz`, and the test first asserts it found the deploy command in `deploy.yml`
+- `deploy.yml`'s Deploy step passes `--archive=tgz`
+- `claude-docs/ci/deploy.md` says why the flag is there
+
+**MB.299 — A Failed Migration Gives No Reason** · 3h
+
+_Story:_ As the person deploying the site, I want a failed migration to print the database's error, so that I can fix the migration without guessing.
+
+Found on 2026-11-11 on PR #1688 (`hotfix/mb.298-vercel-upload-archive` into `main`). The "Apply pending migrations" step of `.github/workflows/migrate.yml` runs `npm run db:migrate`, which is `drizzle-kit migrate`; drizzle-kit swallows the database's error and exits 1 with no message. On that PR the connection probe, `scripts/probe-database.ts`, passed first, then each of the three attempts failed in under a second against the hotfix preview's Neon branch (a throwaway database copy made for each preview), and the log said only "applying migrations..." and "Migrations failed on all 3 attempts." It happens on every failed migration and blocks whoever is deploying. Steps to reproduce:
+
+1. Add a migration whose SQL Postgres refuses (assumed: for example, creating a table that already exists)
+2. Push a branch whose `deploy.yml` run calls `migrate.yml` (for example, a `hotfix/*` PR into `main`)
+3. Open the migrate job's "Apply pending migrations" step log
+
+Actual: the log shows "applying migrations..." and then "Migrations failed on all 3 attempts.", with no database error, no statement, and no migration file named.
+
+Expected: the log shows the database's error code and message, and which migration file failed.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: it runs the migrate command against the local test Postgres with a migration Postgres refuses, and asserts the output carries Postgres's error code and message and the failing migration's file name; it first asserts the earlier migrations applied, so it cannot pass on a database it never reached
+- A successful run still records each migration in `drizzle.__drizzle_migrations`, so a rerun applies nothing and a database migrated by `drizzle-kit migrate` stays compatible
+- Migrations still give up a lock they cannot take within 5 seconds
+- The step still makes three attempts, and `tests/github/workflows/migrate.test.ts` still passes
+- `claude-docs/db/migrations-and-scripts.md` ("A failed migration names its cause") and `claude-docs/db/expand-contract.md` ("The retry") say what prints the cause
