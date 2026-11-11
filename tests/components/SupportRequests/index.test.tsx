@@ -27,6 +27,7 @@ import {
   mockGraphQLMutation,
   mockGraphQLPendingMutation,
 } from '../../support/msw/graphql';
+import { choose } from '../../support/interact';
 import { rowCells } from '../../support/table';
 import { router } from '../../support/next-navigation';
 
@@ -392,7 +393,7 @@ describe('Time-Out', () => {
     writeMessage();
     expect(timeOutSubmit()).toBeEnabled();
 
-    fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'date' } });
+    choose('For', 'Until a Date');
     expect(timeOutSubmit()).toBeDisabled();
   });
 
@@ -400,7 +401,7 @@ describe('Time-Out', () => {
     const sent = timeOutSent();
     open(ADMIN);
     openTimeOut();
-    fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'none' } });
+    choose('For', 'No End Date');
     writeNote();
     writeMessage();
     fireEvent.click(timeOutSubmit());
@@ -1030,11 +1031,18 @@ describe('Unsaved input in the dialog', () => {
 
   it.each([
     ['GitHub Issue', 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9'],
-    ['For', 'week'],
     [/^Note/, 'Warned twice'],
   ])('asks before closing with %s typed, though the reply is untouched', async (label, value) => {
     open(ADMIN);
     fireEvent.change(within(dialog()).getByLabelText(label), { target: { value } });
+    close();
+    expect(await screen.findByText('You have unsaved changes. Discard them?')).toBeInTheDocument();
+  });
+
+  it('asks before closing with For changed, though the reply is untouched', async () => {
+    open(ADMIN);
+    openTimeOut();
+    choose('For', '1 Week');
     close();
     expect(await screen.findByText('You have unsaved changes. Discard them?')).toBeInTheDocument();
   });

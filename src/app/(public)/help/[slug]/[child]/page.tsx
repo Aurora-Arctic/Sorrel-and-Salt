@@ -28,7 +28,5 @@ export default async function Page({ params }: Props) {
   const found = await subPage(slug, child);
   // The parent is read for its title and its sub pages; the sub page answered, so the parent is a public article.
   const parent = await orNotFound(() => readHelpArticle(slug));
-  return (
-    <HelpArticleView framed {...await helpArticleProps(found, parent)} parent={linkTo(parent)} />
-  );
+  return <HelpArticleView {...await helpArticleProps(found, parent)} parent={linkTo(parent)} />;
 }

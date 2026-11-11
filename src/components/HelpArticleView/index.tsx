@@ -15,14 +15,13 @@ import './index.scss';
 const MENU_FROM = 3;
 
 // One help article: its body as sanitised Markdown with its widgets drawn, the pages beneath it and the search box,
-// which the help layout's header holds when framed (claude-docs/components/help-pages.md).
+// which the public help header holds when a page stands under it (claude-docs/components/help-pages.md).
 const HelpArticleView = ({
   title,
   body,
   subpages,
   parent,
   heading = 'Help',
-  framed = false,
   terms = [],
   steps = {},
   editHref,
@@ -46,7 +45,7 @@ const HelpArticleView = ({
       className={withMenu ? 'help-page help-article page-with-nav' : 'help-page help-article'}
     >
       <div className="help-article__head">
-        <HelpPageHead heading={heading} framed={framed} />
+        <HelpPageHead heading={heading} />
         {parent && <HelpBackLink href={parent.href} title={parent.title} />}
         <HelpArticleTitle title={title} editHref={editHref} editName={editName} />
       </div>

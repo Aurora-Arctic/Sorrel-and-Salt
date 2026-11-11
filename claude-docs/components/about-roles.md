@@ -5,6 +5,7 @@
 ## Contracts
 
 - **Presentational.** It takes `roles` (`types.ts`) and works nothing out. The wording is in `src/app/(public)/about/placeholders.tsx`.
+- **The markup is `AboutCards`'s** (`src/components/AboutCards`), which this and the other About row both render through; this component passes its row's class and its cards.
 - **It is reached through a placeholder.** `documents/about.md` holds a paragraph that is exactly `{aboutRoles}` under "Who Runs It". A version published before the placeholder existed has bullets there and renders as prose ([`document-page.md`](document-page.md)).
 - **The card wording is not versioned.** A keeper edits the prose around the cards, not the cards.
 - **Headings are `h3`**; the cards add no jump menu entries.

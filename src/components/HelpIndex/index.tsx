@@ -18,14 +18,13 @@ import './index.scss';
 const GUIDES_ID = 'guides';
 const FAQ_ID = 'faq';
 
-// A help index: its heading and search box (left to the help layout's header when framed), the quick links, a jump menu, then the guides with the glossary among them, and the FAQ. Each FAQ
+// A help index: its heading and search box, left to the public help header when it holds them, the quick links, a jump menu, then the guides with the glossary among them, and the FAQ. Each FAQ
 // entry is an anchor from its slug; besides the two sections nothing else on the page takes an id, so a slug shared with an article
 // never doubles one (claude-docs/components/help-pages.md).
 const HelpIndex = ({
   faq,
   articles,
   heading = 'Help',
-  framed = false,
   quickLinks = [],
   terms = [],
   back,
@@ -51,7 +50,7 @@ const HelpIndex = ({
     <div
       className={menu.length > 0 ? 'help-page help-index page-with-nav' : 'help-page help-index'}
     >
-      <HelpPageHead heading={heading} framed={framed} />
+      <HelpPageHead heading={heading} />
       {quickLinks.length > 0 && (
         <ul className="help-index__quick" aria-label="Quick Links">
           {quickLinks.map((link) => (

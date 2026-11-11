@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { HELP_GLOSSARY_CARD } from '../../lib/help-pages';
 import { HELP_QUICK_LINKS } from '../../lib/help-quick-links';
-import { HelpArticleTitle, HelpPageHead } from '../HelpChrome';
+import { HelpArticleTitle, HelpPageHead, WhenHelpFramed } from '../HelpChrome';
 import { BackChevron } from '../BackLink/chevron';
 import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
 import PageNav from '../PageNav';
@@ -25,26 +25,23 @@ const QUESTIONS = [
   [5, 34],
 ] as const;
 
-// A help index with its guides still to come: the heading and the search box (left to the help header when framed),
+// A help index with its guides still to come: the heading and the search box, left to the public help header when it holds them,
 // the quick links' shipped titles on the public index, the jump menu, the guide cards with their kind and the glossary's own card,
 // then, with the menu, the questions and Back to Top. Words still to come are bars of about their length.
 export const HelpIndexSkeleton = ({
   heading = 'Help',
-  framed,
   menu,
   back,
 }: {
   heading?: string;
-  /** The public index under the help header, drawn without the heading and box and with the quick links. */
-  framed?: boolean;
   /** The jump menu and the questions it leads to: the page draws both when it has questions, which the public index always does. */
   menu?: boolean;
   /** The title of the index the page links back to, drawn as the page draws it. */
   back?: string;
 }): ReactElement => (
   <div className={menu ? 'help-page help-index page-with-nav' : 'help-page help-index'}>
-    <HelpPageHead heading={heading} framed={framed} />
-    {framed && (
+    <HelpPageHead heading={heading} />
+    <WhenHelpFramed>
       <ul className="help-index__quick" aria-label="Quick Links">
         {HELP_QUICK_LINKS.map((title) => (
           <li key={title}>
@@ -52,7 +49,7 @@ export const HelpIndexSkeleton = ({
           </li>
         ))}
       </ul>
-    )}
+    </WhenHelpFramed>
     {back && <HelpBackLinkSkeleton>Back to {back}</HelpBackLinkSkeleton>}
     {menu && (
       <PageNav

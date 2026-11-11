@@ -60,7 +60,8 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   const access = modal.getByRole('region', { name: 'Site Access' });
   await access.getByRole('button', { name: 'Site Access', expanded: false }).click();
 
-  await access.getByRole('combobox', { name: 'For' }).selectOption({ label: 'No End Date' });
+  await access.getByRole('combobox', { name: 'For' }).click();
+  await page.getByRole('option', { name: 'No End Date' }).click();
   await access.getByRole('textbox', { name: 'Note' }).fill('Shared password');
   await access
     .getByRole('textbox', { name: /^Message to User/ })
