@@ -1,13 +1,11 @@
 import type { ReactElement } from 'react';
 import { HELP_GLOSSARY_CARD } from '../../lib/help-pages';
 import { HELP_QUICK_LINKS } from '../../lib/help-quick-links';
-import HelpSearchForm from '../HelpSearchForm';
+import { HelpArticleTitle, HelpPageHead } from '../HelpChrome';
 import { BackChevron } from '../BackLink/chevron';
 import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
-import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import { SkeletonWords } from '../Skeleton/text';
-import '../HelpArticleView/title.scss';
 import './index.scss';
 
 /** Each stand-in guide's title and summary lengths, in words, so the cards vary as the real ones do. */
@@ -45,8 +43,7 @@ export const HelpIndexSkeleton = ({
   back?: string;
 }): ReactElement => (
   <div className={menu ? 'help-page help-index page-with-nav' : 'help-page help-index'}>
-    {!framed && <PageHeader title={heading} />}
-    {!framed && <HelpSearchForm />}
+    <HelpPageHead heading={heading} framed={framed} />
     {framed && (
       <ul className="help-index__quick" aria-label="Quick Links">
         {HELP_QUICK_LINKS.map((title) => (
@@ -92,9 +89,7 @@ export const HelpIndexSkeleton = ({
     </section>
     {menu && (
       <section className="help-index__section" aria-label="Frequently Asked Questions">
-        <div className="help-article__title">
-          <h2>Frequently Asked Questions</h2>
-        </div>
+        <HelpArticleTitle title="Frequently Asked Questions" />
         {QUESTIONS.map(([question, answer], n) => (
           <div key={n} className="help-index__faq">
             <h3>

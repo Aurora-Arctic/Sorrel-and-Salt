@@ -5,15 +5,12 @@ import { HELP_GLOSSARY_CARD as GLOSSARY } from '../../lib/help-pages';
 import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HashTarget from '../HashTarget';
-import HelpSearchForm from '../HelpSearchForm';
-import { EditLink } from '../IconTip';
+import { HelpArticleTitle, HelpPageHead } from '../HelpChrome';
 import { BackChevron } from '../BackLink/chevron';
 import { HelpBackLink } from '../HelpArticleView/back-link';
-import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
 import type { HelpIndexProps } from './types';
-import '../HelpArticleView/title.scss';
 import './index.scss';
 
 // The two sections the jump menu names. An answer's heading never takes these ids; a question's slug could only if it
@@ -54,8 +51,7 @@ const HelpIndex = ({
     <div
       className={menu.length > 0 ? 'help-page help-index page-with-nav' : 'help-page help-index'}
     >
-      {!framed && <PageHeader title={heading} />}
-      {!framed && <HelpSearchForm />}
+      <HelpPageHead heading={heading} framed={framed} />
       {quickLinks.length > 0 && (
         <ul className="help-index__quick" aria-label="Quick Links">
           {quickLinks.map((link) => (
@@ -89,10 +85,11 @@ const HelpIndex = ({
           className="help-index__section help-index__section--faq"
           aria-label="Frequently Asked Questions"
         >
-          <div className="help-article__title">
-            <h2>Frequently Asked Questions</h2>
-            {faqEditHref && <EditLink href={faqEditHref as Route} name="FAQ" />}
-          </div>
+          <HelpArticleTitle
+            title="Frequently Asked Questions"
+            editHref={faqEditHref}
+            editName="FAQ"
+          />
           {faq.map((entry, index) => (
             <div key={entry.slug} id={entry.slug} className="help-index__faq">
               <h3>

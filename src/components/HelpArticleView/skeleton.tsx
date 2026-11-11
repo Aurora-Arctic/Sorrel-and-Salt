@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
-import HelpSearchForm from '../HelpSearchForm';
+import { HelpPageHead } from '../HelpChrome';
 import { BackChevron } from '../BackLink/chevron';
-import PageHeader from '../PageHeader';
 import { SkeletonWords } from '../Skeleton/text';
 import { HelpBackLinkSkeleton } from './back-link';
 import './index.scss';
@@ -41,8 +40,7 @@ export const HelpArticleSkeleton = ({
 }): ReactElement => (
   <article className="help-page help-article">
     <div className="help-article__head">
-      {!framed && <PageHeader title={heading} />}
-      {!framed && <HelpSearchForm />}
+      <HelpPageHead heading={heading} framed={framed} />
       <HelpBackLinkSkeleton>
         {parent ? <SkeletonWords count={3} /> : `Back to ${heading}`}
       </HelpBackLinkSkeleton>
