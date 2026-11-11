@@ -6,7 +6,7 @@ import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
 import { HELP_WIDGET_ELEMENTS } from '../HelpWidget';
 import { EditLink } from '../IconTip';
-import { BackChevron } from '../IngredientEntry/back-chevron';
+import { BackChevron } from '../BackLink/chevron';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import { HelpBackLink } from './back-link';

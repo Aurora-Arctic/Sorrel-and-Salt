@@ -7,7 +7,7 @@ import { renderMarkdown } from '../DocumentPage/markdown';
 import HashTarget from '../HashTarget';
 import HelpSearchForm from '../HelpSearchForm';
 import { EditLink } from '../IconTip';
-import { BackChevron } from '../IngredientEntry/back-chevron';
+import { BackChevron } from '../BackLink/chevron';
 import { HelpBackLink } from '../HelpArticleView/back-link';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';

@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { HELP_GLOSSARY_CARD } from '../../lib/help-pages';
 import { HELP_QUICK_LINKS } from '../../lib/help-quick-links';
 import HelpSearchForm from '../HelpSearchForm';
-import { BackChevron } from '../IngredientEntry/back-chevron';
+import { BackChevron } from '../BackLink/chevron';
 import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';

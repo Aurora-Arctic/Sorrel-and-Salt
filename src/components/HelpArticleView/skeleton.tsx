@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import HelpSearchForm from '../HelpSearchForm';
-import { BackChevron } from '../IngredientEntry/back-chevron';
+import { BackChevron } from '../BackLink/chevron';
 import PageHeader from '../PageHeader';
 import { SkeletonWords } from '../Skeleton/text';
 import { HelpBackLinkSkeleton } from './back-link';
