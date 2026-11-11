@@ -65,19 +65,21 @@ jobs:
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      # One step and one folder per artifact, by name: a download that matched a
-      # single artifact by pattern extracted it straight into `path`, with no
-      # folder named for it, so the merge could not tell the suites apart. A
-      # suite that did not run, or died before uploading, has no artifact; its
-      # step fails under continue-on-error and the merge leaves it out.
+      # One step per suite, each downloading every shard's artifact by pattern
+      # into a folder named for the artifact under the suite's own: the merge
+      # tells the suites apart by that folder. A suite that did not run, or
+      # died before uploading, has no artifact; its step fails under
+      # continue-on-error and the merge leaves it out. A pattern that matches
+      # one shard alone extracts into the suite's folder with no folder of its
+      # own, which the merge reads as well.
       - name: Download the gate suite's coverage
         id: download-gate
         if: inputs.should-run
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
-          name: playwright-coverage
-          path: /app/.reports/coverage-downloads/playwright-coverage
+          pattern: playwright-coverage-gate-*
+          path: /app/.reports/coverage-downloads/gate
 
       - name: Download the story suite's coverage
         id: download-stories
@@ -85,8 +87,8 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
-          name: playwright-coverage-stories
-          path: /app/.reports/coverage-downloads/playwright-coverage-stories
+          pattern: playwright-coverage-stories-*
+          path: /app/.reports/coverage-downloads/stories
 
       # A failed download is either an artifact that was never uploaded, which
       # the merge leaves out, or one that exists and could not be fetched, which
@@ -98,8 +100,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ARTIFACTS: >-
-            [{"name":"playwright-coverage","outcome":"${{ steps.download-gate.outcome }}"},
-            {"name":"playwright-coverage-stories","outcome":"${{ steps.download-stories.outcome }}"}]
+            [{"name":"playwright-coverage-gate-*","outcome":"${{ steps.download-gate.outcome }}"},
+            {"name":"playwright-coverage-stories-*","outcome":"${{ steps.download-stories.outcome }}"}]
         run: node .github/scripts/check-coverage-downloads.mjs 2>&1 | tee /app/output.log
 
       - name: Merge coverage

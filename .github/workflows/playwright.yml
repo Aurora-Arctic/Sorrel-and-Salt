@@ -56,8 +56,9 @@ on:
     outputs:
       outcome:
         description: >-
-          The run step's outcome. The story suite's job reports success whatever
-          its stories did (continue-on-error), so a caller reads this instead.
+          The merged run's outcome, failure when a shard failed. The story suite's
+          job reports success whatever its stories did (continue-on-error), so a
+          caller reads this instead.
         value: ${{ jobs.playwright.outputs.outcome }}
 
 permissions:
@@ -67,11 +68,20 @@ permissions:
   pull-requests: write
 
 jobs:
-  playwright:
+  # One job per shard of the suite: Playwright's `--shard i/n` runs the i-th
+  # share of the tests, each shard on a runner and database of its own. The
+  # shards write blob reports, which the `playwright` job below merges
+  # (claude-docs/ci/runner-budget.md, "Playwright shards").
+  playwright-shard:
     if: inputs.should-run
     runs-on: ubuntu-26.04
-    outputs:
-      outcome: ${{ steps.run.outcome }}
+    strategy:
+      # A failed shard must not cancel the others: the merge needs every
+      # shard's results.
+      fail-fast: false
+      matrix:
+        # The build-only run builds once and runs no spec, so it takes one shard.
+        shard: ${{ fromJSON(inputs.build-only && '[1]' || inputs.suite == 'stories' && '[1,2]' || '[1,2,3]') }}
     container:
       image: ${{ inputs.image }}
       credentials:
@@ -119,8 +129,8 @@ jobs:
       # playwright.config.ts's webServer.reuseExistingServer reads this and
       # always starts a fresh server.
       CI: true
-      # Read by summarize-playwright.mjs and summarize-stories.mjs.
-      PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
+      # Where the blob reporter writes this shard's report.
+      PLAYWRIGHT_BLOB_OUTPUT_DIR: /app/.reports/blob-report
       # tests/e2e/database.ts derives each worker's sorrel_e2e_<slot> URL from it.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # The webServer's production build needs a Better Auth secret, and a
@@ -162,16 +172,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-e2e-${{ hashFiles('package-lock.json') }}-
 
-      # The webServer builds and serves; the browser is in the image. The
-      # reporters (list, json, html) come from playwright.config.ts under CI:
-      # a `--reporter` here would replace them and lose the html report's
-      # output folder. Under build-only every title matches `.`, so no spec
-      # runs, but Playwright starts the webServers, and so the build, before
-      # it loads a spec.
+      # The webServer builds and serves; the browser is in the image. `--reporter`
+      # replaces the config's list here on purpose: a shard writes the blob its
+      # merge job turns into the json, html and story reports, which come from
+      # the config's reporters there. Under build-only every title matches `.`,
+      # so no spec runs, but Playwright starts the webServers, and so the
+      # build, before it loads a spec.
       #
       # `suite: stories` runs the story suite instead. `continue-on-error`
       # there because red scaffolds land on purpose and a story must never
-      # fail the job; `steps.run.outcome` below still reads the real result.
+      # fail the job; the merge job's `outcome` still reads the real result.
       # It sits on the step because a job that calls a workflow cannot carry it.
       - name: Run Playwright tests
         id: run
@@ -179,13 +189,14 @@ jobs:
         env:
           E2E_ARGS: ${{ inputs.build-only && '--grep-invert . --pass-with-no-tests' || '' }}
           SUITE: ${{ inputs.suite }}
+          SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
         run: |
           set -o pipefail
           if [ "$SUITE" = stories ]; then
-            STORIES_JSON=/app/stories.json npm run test:stories 2>&1 | tee /app/output.log
+            npm run test:stories -- --shard "$SHARD" --reporter=list,blob 2>&1 | tee /app/output.log
           else
             # Unquoted on purpose: two flags, or nothing.
-            npm run e2e -- $E2E_ARGS 2>&1 | tee /app/output.log
+            npm run e2e -- --shard "$SHARD" --reporter=list,blob $E2E_ARGS 2>&1 | tee /app/output.log
           fi
 
       # Only e2e-cache.yml's run on staging saves, and only after a build that
@@ -193,21 +204,103 @@ jobs:
       # hand on. The key is the restore step's, so both name the same entry,
       # and an exact hit has nothing new to save.
       - name: Save Next.js e2e build cache
-        if: inputs.build-only && steps.e2e-cache.outputs.cache-hit != 'true'
+        if: inputs.build-only && matrix.shard == 1 && steps.e2e-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6
         with:
           path: /app/.next-e2e/cache
           key: ${{ steps.e2e-cache.outputs.cache-primary-key }}
 
-      # Not failure-only: a coverage report on every run that ran a spec. Named
-      # per suite for the same reason as the report above.
+      # Not failure-only: a coverage report on every run that ran a spec. One
+      # artifact per suite and shard, since a name may appear once in a run;
+      # playwright-coverage.yml merges them.
       - name: Upload coverage artifact
         if: always() && !inputs.build-only
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ inputs.suite == 'stories' && 'playwright-coverage-stories' || 'playwright-coverage' }}
+          name: playwright-coverage-${{ inputs.suite == 'stories' && 'stories' || 'gate' }}-${{ matrix.shard }}
           path: /app/.reports/coverage-e2e/
           retention-days: 7
+
+      # The shard's report, which the merge job downloads. Whatever the shard
+      # did, since a failed shard's blob holds its failures and their traces.
+      # The name carries the suite: the two run in one workflow.
+      - name: Upload blob report
+        if: always() && !inputs.build-only
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-blob-${{ inputs.suite }}-${{ matrix.shard }}
+          path: /app/.reports/blob-report/
+          retention-days: 1
+
+      # The slot servers' logs, which a blob does not hold.
+      - name: Upload server logs
+        if: failure() || steps.run.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-servers-${{ inputs.suite }}-${{ matrix.shard }}
+          path: /app/.reports/e2e-servers/
+          retention-days: 7
+
+  # The required check, "playwright / playwright": the caller's job name, a
+  # slash, this one. Keep this job named `playwright`; renaming it needs the
+  # ruleset changed. It joins the shards, so it runs after a failed shard too
+  # and fails when one failed.
+  playwright:
+    needs: [playwright-shard]
+    # A run the path filter rules out skips the shards, and this job with them;
+    # a build-only run has nothing to merge.
+    if: ${{ !cancelled() && inputs.should-run && !inputs.build-only }}
+    runs-on: ubuntu-26.04
+    outputs:
+      # Failure when a shard failed, whatever the merged run found, since a
+      # shard that died before its blob leaves the merge nothing to count.
+      outcome: ${{ needs.playwright-shard.result == 'success' && steps.run.outcome || 'failure' }}
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    defaults:
+      run:
+        working-directory: /app
+        shell: bash
+    env:
+      CI: true
+      # Read by summarize-playwright.mjs and summarize-stories.mjs, and written
+      # by the config's json reporter.
+      PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
+      # Read by the story reporter and summarize-stories.mjs.
+      STORIES_JSON: /app/stories.json
+      # The gate config derives the slot servers' URLs from it as it loads. No
+      # database runs here and nothing connects.
+      DATABASE_URL: postgres://sorrel:sorrel@localhost:5432/sorrel
+      BETTER_AUTH_SECRET: local-dev-not-a-real-secret
+      ADMIN_BOOTSTRAP_EMAIL: placeholder@admin-bootstrap.invalid
+    steps:
+      - name: Checkout into /app
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      # Every shard of this suite, the other suite's blobs left out by the
+      # name. `merge-multiple` puts each blob's file, named for its shard,
+      # into the one folder.
+      - name: Download the shards' reports
+        uses: actions/download-artifact@v8
+        with:
+          pattern: playwright-blob-${{ inputs.suite }}-*
+          merge-multiple: true
+          path: /app/.reports/blob-reports
+
+      # The config's own reporters, so the merge writes what a single run did:
+      # the list, the json report, the html report, and for the stories the
+      # checklist. The suite's config, for the story reporter and the folder.
+      - name: Merge the shards' reports
+        id: run
+        continue-on-error: ${{ inputs.suite == 'stories' }}
+        env:
+          CONFIG: ${{ inputs.suite == 'stories' && 'playwright.stories.config.ts' || 'playwright.config.ts' }}
+        run: |
+          set -o pipefail
+          npx playwright merge-reports --config "$CONFIG" /app/.reports/blob-reports 2>&1 | tee /app/output.log
 
       - name: Summarize output
         id: summarize
@@ -230,10 +323,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.suite == 'stories' && 'stories-report' || 'playwright-report' }}
-          path: |
-            /app/.reports/playwright-report/
-            /app/.reports/test-results/
-            /app/.reports/e2e-servers/
+          path: /app/.reports/playwright-report/
           retention-days: 7
 
       - name: Write job summary
@@ -241,10 +331,11 @@ jobs:
         uses: ./.github/actions/job-summary
         with:
           check-name: ${{ inputs.suite == 'stories' && 'Stories' || 'Playwright E2E' }}
-          outcome: ${{ steps.run.outcome }}
+          outcome: ${{ needs.playwright-shard.result == 'success' && steps.run.outcome || 'failure' }}
           log-file: /app/output.log
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
+          duration: ${{ steps.summarize.outputs.duration }}
 
       # This suite's section of the one Playwright comment (.github/actions/pr-comment).
       - name: Comment on PR
@@ -256,7 +347,20 @@ jobs:
           section: ${{ inputs.suite == 'stories' && 'stories' || 'gate' }}
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}
-          outcome: ${{ steps.run.outcome }}
+          outcome: ${{ needs.playwright-shard.result == 'success' && steps.run.outcome || 'failure' }}
           log-file: /app/output.log
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
+          duration: ${{ steps.summarize.outputs.duration }}
+
+      # The last step, so the summary and comment above are written first. The
+      # story suite never fails its job (continue-on-error), so it skips this.
+      - name: Fail when a shard failed
+        if: ${{ !cancelled() && inputs.suite != 'stories' }}
+        env:
+          SHARDS: ${{ needs.playwright-shard.result }}
+        run: |
+          if [ "$SHARDS" != success ]; then
+            echo "::error::A shard finished $SHARDS."
+            exit 1
+          fi
