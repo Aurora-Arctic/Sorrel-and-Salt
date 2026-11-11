@@ -15,7 +15,7 @@ import { CardAttemptsBodySkeleton } from './skeleton';
 import { userListHref } from '../UserList/href';
 import LoadingStatus from '../Skeleton/loading-status';
 import { OpenModalLink } from '../Modal';
-import { batchName } from './batches';
+import { batchName } from '../../lib/invitation-cards/batch-name';
 import type { CardAttemptEntry, CardAttemptReason } from './types';
 
 // The refused opens of one batch's cards: who tried, why it was refused, how often, and when last. The keeper opens it

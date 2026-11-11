@@ -4,6 +4,8 @@ import type { AdminInvitationsCursor, AdminInvitationsFilter } from './types';
 
 export const INVITATIONS_PATH: Route = '/keepers/invitations';
 
+export const NO_INVITATIONS_FILTER: AdminInvitationsFilter = { email: '', expiringSoon: false };
+
 export function invitationsHref(
   { email, expiringSoon }: Partial<AdminInvitationsFilter> = {},
   { after, before }: AdminInvitationsCursor = {},
