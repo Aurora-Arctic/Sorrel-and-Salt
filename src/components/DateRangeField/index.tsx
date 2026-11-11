@@ -18,8 +18,9 @@ import './index.scss';
 // A day-range field: a button showing the range in short words, opening a two-month calendar with quick picks. The
 // calendar is the day field's, in the same popover (claude-docs/components/date-field.md).
 
-// Below this width the calendar shows one month, as two side by side would not fit beside the picks.
-const NARROW = '(max-width: 47.9375rem)';
+// Below this width the calendar shows one month: two months (about 546px with the panel's padding) plus the window's gutter
+// do not fit. Wider, the picks sit above them until 48rem, then beside them (index.scss).
+const NARROW = '(max-width: 35.9375rem)';
 
 const HINT = {
   first: 'Pick the first day, then the last. Pick one day twice for a single day.',
