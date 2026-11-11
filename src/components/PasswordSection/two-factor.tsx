@@ -30,7 +30,7 @@ export const PASSWORD_SIGN_IN_PAUSED_MESSAGE =
   'Password sign-in is paused for this account after too many wrong passwords. Please wait a few minutes, then try again.';
 // Turning off wants a session younger than Better Auth's `freshAge`, a day, as removing a sign-in
 // method does.
-export const STALE_SESSION =
+export const STALE_SESSION_TURN_OFF =
   'Turning two-factor off needs a recent sign-in. Sign out and sign back in, then turn it off.';
 
 interface Enrolment {
@@ -48,7 +48,7 @@ function refusal(failure: AuthFailure): Refusal {
   if (failure.code === 'PASSWORD_SIGN_IN_PAUSED') return { alert: PASSWORD_SIGN_IN_PAUSED_MESSAGE };
   if (failure.code === 'INVALID_PASSWORD') return { password: WRONG_PASSWORD };
   if (failure.code === 'INVALID_CODE') return { code: WRONG_CODE };
-  if (failure.code === 'SESSION_NOT_FRESH') return { alert: STALE_SESSION };
+  if (failure.code === 'SESSION_NOT_FRESH') return { alert: STALE_SESSION_TURN_OFF };
   if (rateLimited(failure)) return { alert: TOO_MANY_ATTEMPTS };
   return { alert: GENERIC_TWO_FACTOR_ERROR };
 }

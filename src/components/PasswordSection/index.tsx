@@ -9,6 +9,7 @@ import { settled, type AuthFailure } from '../../lib/auth-call';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { TOO_MANY_ATTEMPTS, rateLimited } from '../../lib/auth-messages';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { isPlaceholderAddress } from '../../lib/email-address';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { newPasswordRefusal, PASSWORD_CHECK_UNAVAILABLE } from '../../lib/password-refusals';
 import BusyButton from '../BusyButton';
@@ -157,7 +158,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
         {/* A password manager saves a password against the username in the same form, so the account's
             address rides along, read-only and visually hidden (not `display: none`, which managers skip). A placeholder address is no username. */}
-        {email && !email.endsWith('.invalid') && (
+        {email && !isPlaceholderAddress(email) && (
           <input
             type="email"
             name="username"
@@ -200,7 +201,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
           >
             {held ? 'Change Password' : 'Set Password'}
           </BusyButton>
-          {held && email && !email.endsWith('.invalid') && (
+          {held && email && !isPlaceholderAddress(email) && (
             <BusyButton
               type="button"
               className="btn btn--quiet btn--small"
