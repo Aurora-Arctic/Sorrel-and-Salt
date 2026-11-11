@@ -29,15 +29,19 @@ export function readOutputs(path: string) {
   return { outputs, delimiters };
 }
 
-/** Runs `.github/scripts/<script>` with `env` alone, its GITHUB_OUTPUT a file in `dir`. */
+/**
+ * Runs `.github/scripts/<script>` with `env` alone, its GITHUB_OUTPUT a file in `dir`. A non-zero exit
+ * throws. `stdout` is the step's log, where a `::warning` line becomes an annotation.
+ */
 export function runScript(script: string, env: Record<string, string>, dir: string) {
   const output = join(dir, 'github-output');
   writeFileSync(output, '');
-  execFileSync(process.execPath, [fromRoot('.github/scripts', script)], {
+  const stdout = execFileSync(process.execPath, [fromRoot('.github/scripts', script)], {
     env: { NODE_ENV: 'test', PATH: process.env.PATH ?? '', GITHUB_OUTPUT: output, ...env },
     stdio: ['ignore', 'pipe', 'pipe'],
+    encoding: 'utf8',
   });
-  return readOutputs(output);
+  return { ...readOutputs(output), stdout };
 }
 
 // One merged report, as `playwright merge-reports` writes it from every shard's blob: each file once,
