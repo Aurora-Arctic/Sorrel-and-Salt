@@ -198,6 +198,12 @@
     },
     "@vercel/queue": {
       "zod": "4.6.7"
+    },
+    "@storybook/react-vite": {
+      "@joshwooding/vite-plugin-react-docgen-typescript": "0.9.1"
+    },
+    "graphql-config": {
+      "minimatch": "11.0.6"
     }
   }
 }
