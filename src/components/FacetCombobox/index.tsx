@@ -5,6 +5,7 @@ import { useHydrated } from '../../lib/hydrated';
 import { ComboboxMultiSelect } from '../Combobox/multi-select';
 import { fieldDescription } from '../Field/description';
 import { FieldShell } from '../Field/shell';
+import { NativeGroupedSelect } from './native-select';
 import { FacetTypeahead } from './typeahead';
 import type { FacetComboboxProps } from './types';
 import '../Combobox/index.scss';
@@ -81,46 +82,19 @@ export default function FacetCombobox({
     );
   }
 
-  const nativeOption = (choice: (typeof choices)[number]) => (
-    <option key={choice.value} value={choice.value} disabled={choice.disabled}>
-      {choice.label}
-      {choice.count !== undefined && ` ${choice.count}`}
-    </option>
-  );
-  // Values with nothing behind them are left out, unless chosen, as the box leaves them out.
-  const shown = choices.filter(
-    (choice) => !(hideZeros && choice.count === 0) || values.includes(choice.value),
-  );
-  const groups: { group: string | undefined; rows: (typeof choices)[number][] }[] = [];
-  for (const choice of shown) {
-    const at = groups.find((entry) => entry.group === choice.group);
-    if (at) at.rows.push(choice);
-    else groups.push({ group: choice.group, rows: [choice] });
-  }
-
   // Before hydration, and in the render that hydrates: a change applies
   // nothing, since no script runs; the search's magnifier sends it. A value
   // with nothing behind it is left out as the box leaves it out, unless chosen.
   return (
     <FieldShell label={label} hint={hint} className={shellClass} {...field}>
-      <select
+      <NativeGroupedSelect
         id={field.controlId}
-        className="select facet-combobox__native"
         name={name}
-        multiple
-        defaultValue={[...values]}
-        aria-describedby={field.aria['aria-describedby']}
-      >
-        {groups.map(({ group, rows }) =>
-          group === undefined ? (
-            rows.map(nativeOption)
-          ) : (
-            <optgroup key={group} label={group}>
-              {rows.map(nativeOption)}
-            </optgroup>
-          ),
-        )}
-      </select>
+        choices={choices}
+        values={values}
+        hideZeros={hideZeros}
+        describedBy={field.aria['aria-describedby']}
+      />
     </FieldShell>
   );
 }

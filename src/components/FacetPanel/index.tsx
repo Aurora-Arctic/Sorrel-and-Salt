@@ -7,6 +7,7 @@ import FormIcon from '../FormIcon';
 import { pauseNote } from '../../lib/pause-note';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
 import { ChoiceChip } from './choice-chip';
+import { stuckChoice } from './stuck-choice';
 import { FacetSwitch } from './facet-switch';
 import { CategoryLine } from './category-line';
 import { FacetShell } from './shell';
@@ -78,11 +79,15 @@ export default function FacetPanel({
     (filter.inStock ? 1 : 0) +
     (filter.lowStockOnly ? 1 : 0);
 
-  const toxicStuck = filter.toxic === '' && facets.toxic.some((choice) => choice.count === 0);
+  const toxicChip = stuckChoice(
+    facets.toxic,
+    'entry shares the same toxicity',
+    filter.toxic !== '',
+  );
   // The Source chip is stuck the same way: a source with nothing behind it means every matching
   // entry comes from the other, so the filter cannot narrow. Unread counts leave it free.
-  const sourceStuck = facets.source?.some((choice) => choice.count === 0) ?? false;
-  const reviewedStuck = facets.reviewed?.some((choice) => choice.count === 0) ?? false;
+  const sourceChip = stuckChoice(facets.source, 'entry comes from the same source');
+  const reviewedChip = stuckChoice(facets.reviewed, 'entry has the same review mark');
   // The public compendium's Forms line is halved when the viewer has covens: Forms and Toxic on
   // the left, In My Covens and its In / Not In choice on the right. With none, Forms and Toxic
   // take the line, as on the admin and coven panels, whose wider run of chips a half would wrap.
@@ -152,13 +157,9 @@ export default function FacetPanel({
                 // choices always show. With either side empty, every matching entry
                 // shares one toxicity, so the chip rests on Any and cannot narrow, unless a setting is held,
                 // which always shows and can be cleared.
-                value={toxicStuck ? '' : filter.toxic}
-                disabled={toxicStuck}
-                chipHint={
-                  toxicStuck
-                    ? 'Every matching entry shares the same toxicity, so this filter cannot narrow further.'
-                    : undefined
-                }
+                value={toxicChip.stuck ? '' : filter.toxic}
+                disabled={toxicChip.stuck}
+                chipHint={toxicChip.hint}
                 onChange={(toxic) => onChange({ toxic })}
               />
               {filter.source !== undefined && (
@@ -166,18 +167,14 @@ export default function FacetPanel({
                   legend="Source"
                   name="source"
                   hint={
-                    sourceStuck
+                    sourceChip.stuck
                       ? undefined
                       : 'Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium.'
                   }
-                  chipHint={
-                    sourceStuck
-                      ? 'Every matching entry comes from the same source, so this filter cannot narrow further.'
-                      : undefined
-                  }
+                  chipHint={sourceChip.hint}
                   options={sourceOptions(facets.source)}
-                  value={sourceStuck ? '' : filter.source}
-                  disabled={sourceStuck}
+                  value={sourceChip.stuck ? '' : filter.source}
+                  disabled={sourceChip.stuck}
                   onChange={(source) => onChange({ source })}
                 />
               )}
@@ -239,13 +236,11 @@ export default function FacetPanel({
                       count: choice.count,
                     })),
                   ]}
-                  value={reviewedStuck || !filter.reviewed ? '' : REVIEW_ADDRESS[filter.reviewed]}
-                  disabled={reviewedStuck}
-                  chipHint={
-                    reviewedStuck
-                      ? 'Every matching entry has the same review mark, so this filter cannot narrow further.'
-                      : undefined
+                  value={
+                    reviewedChip.stuck || !filter.reviewed ? '' : REVIEW_ADDRESS[filter.reviewed]
                   }
+                  disabled={reviewedChip.stuck}
+                  chipHint={reviewedChip.hint}
                   onChange={(value) =>
                     onChange({
                       reviewed: value === '1' ? 'reviewed' : value === '0' ? 'needs_review' : '',

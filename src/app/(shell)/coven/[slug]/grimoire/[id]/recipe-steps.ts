@@ -1,12 +1,11 @@
 import type { Route } from 'next';
+import { UNAVAILABLE_INGREDIENT } from '@/components/RecordWorking/warnings';
 import type { WorkingStep } from '@/components/RecordWorking/types';
 import type { StockDialogProps } from '@/components/StockDialog/types';
 import type { RecipeStep } from '@/components/SpellRecipe/types';
 import { withParam } from '@/lib/list-href';
 import { fold } from '@/lib/text';
 import type { SpellStepView } from '@/modules/grimoire';
-
-export const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
 
 export const entryHrefOf = (hereHref: Route, id: string): Route => withParam(hereHref, 'entry', id);
 

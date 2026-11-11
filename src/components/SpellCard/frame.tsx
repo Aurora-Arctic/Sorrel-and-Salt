@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import { BurnLayers, FaceLayers } from './layers';
 import './index.scss';
 import type { SpellCardSkeletonKind } from './types';
 
@@ -23,22 +24,9 @@ export const SpellCardFrame = ({
         First, so the content paints over them; decoration only, so hidden from assistive
         technology and named in nothing. */}
     <span className="spell-card__glow" aria-hidden="true" />
-    <span className="spell-card__face" aria-hidden="true">
-      <span className="spell-card__face-paper">
-        <span className="spell-card__face-corner">
-          <span className="spell-card__face-hole" />
-        </span>
-      </span>
-    </span>
+    <FaceLayers block="spell-card" />
     {skeleton ? <span className="card-skeleton__fill" aria-hidden="true" /> : children}
     {/* The smoulder's ember line and char rim, over the content (_smoulder.scss). */}
-    <span className="spell-card__burn" aria-hidden="true">
-      <span className="spell-card__burn-paper">
-        <span className="spell-card__burn-corner">
-          <span className="spell-card__burn-hole" />
-        </span>
-        <span className="spell-card__burn-curve" />
-      </span>
-    </span>
+    <BurnLayers block="spell-card" />
   </article>
 );
