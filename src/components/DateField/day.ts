@@ -25,3 +25,7 @@ const SHORT = new Intl.DateTimeFormat('en-GB', {
 
 /** A day in short words: "1 Oct 2026". Read at UTC midnight, so no zone shifts it. */
 export const shortDayWords = (day: string): string => SHORT.format(new Date(`${day}T00:00:00Z`));
+
+/** The calendar days from `from` to `to`, both counted: one for the same day. Read at UTC midnight, so a clock change shifts none. */
+export const dayCount = (from: string, to: string): number =>
+  Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000) + 1;

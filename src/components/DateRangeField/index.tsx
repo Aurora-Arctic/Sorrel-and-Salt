@@ -8,10 +8,11 @@ import {
   CalendarIcon,
   parseDay,
 } from '../DateField/calendar';
-import { isoDay, shortDayWords as shortWords } from '../DateField/day';
+import { dayCount, isoDay, shortDayWords as shortWords } from '../DateField/day';
 import { dayPickerModule } from '../DateField/lazy-day-picker';
 import { CalendarPanel, dayBounds, useDayPopover } from '../DateField/popover';
 import { preloadOnIntent } from '../../lib/use-lazy-module';
+import { RangeEnds } from './range-ends';
 import type { DateRangeFieldProps, DayRange } from './types';
 import './index.scss';
 
@@ -26,6 +27,8 @@ const HINT = {
   first: 'Pick the first day, then the last. Pick one day twice for a single day.',
   last: 'Now pick the last day, or the same day again for a single day.',
 };
+
+const daysSelected = (days: number) => `${days} ${days === 1 ? 'day' : 'days'} selected`;
 
 function RangeText({ from, to, placeholder }: DayRange & { placeholder: string }): ReactElement {
   if (from && to && from === to) return <>{shortWords(from)}</>;
@@ -74,7 +77,32 @@ export default function DateRangeField({
     closeAndFocus();
   };
 
+  // Bumped by a calendar pick, so the boxes drop any half-typed day for the one picked.
+  const [pickCount, setPickCount] = useState(0);
+  const heldFrom = pending ?? from;
+  const heldTo = pending === null ? to : '';
+  const awaitingEnd = pending !== null || (from !== '' && to === '');
+
+  // A typed Start keeps the End held; with none held, the next pick completes the range.
+  const typeStart = (day: string) => {
+    if (heldTo && day > heldTo) return 'Start must be on or before End';
+    if (heldTo) onChange({ from: day, to: heldTo });
+    else {
+      setPending(day);
+      onChange({ from: day, to: '' });
+    }
+    return undefined;
+  };
+  // A typed End completes the range and leaves the calendar open.
+  const typeEnd = (day: string) => {
+    if (heldFrom && day < heldFrom) return 'End must be on or after Start';
+    setPending(null);
+    onChange({ from: heldFrom, to: day });
+    return undefined;
+  };
+
   const pick = (day: Date) => {
+    setPickCount((count) => count + 1);
     const picked = isoDay(day);
     if (pending === null) {
       setPending(picked);
@@ -83,6 +111,10 @@ export default function DateRangeField({
     }
     finish(picked < pending ? { from: picked, to: pending } : { from: pending, to: picked });
   };
+
+  // The hint line gives way to the days a complete range covers.
+  const complete = pending === null && from !== '' && to !== '';
+  const days = complete ? dayCount(from, to) : 0;
 
   const anchor = (past ? (end ?? start) : (start ?? end)) ?? new Date();
   const defaultMonth = past
@@ -152,31 +184,43 @@ export default function DateRangeField({
                 })}
               </div>
             )}
-            {picker && (
-              <picker.DayPicker
-                mode="range"
-                // Focus moves into the calendar on open so the arrow keys work at once.
-                // oxlint-disable-next-line jsx-a11y/no-autofocus
-                autoFocus
-                locale={picker.enGB}
-                weekStartsOn={1}
-                numberOfMonths={months}
-                selected={start || end ? { from: start, to: end } : undefined}
-                defaultMonth={defaultMonth}
-                startMonth={first}
-                endMonth={last}
-                captionLayout="label"
-                components={{ Chevron: CalendarChevron }}
-                disabled={dayBounds(first, last)}
-                // The library's own range rule extends the range it holds; the field's is first
-                // then last.
-                onSelect={(_range, day) => pick(day)}
-                classNames={CALENDAR_CLASS_NAMES}
+            <div className="date-range-field__main">
+              <RangeEnds
+                key={pickCount}
+                from={heldFrom}
+                to={heldTo}
+                awaitingEnd={awaitingEnd}
+                min={min}
+                max={max}
+                onStart={typeStart}
+                onEnd={typeEnd}
               />
-            )}
+              {picker && (
+                <picker.DayPicker
+                  mode="range"
+                  // Focus moves into the calendar on open so the arrow keys work at once.
+                  // oxlint-disable-next-line jsx-a11y/no-autofocus
+                  autoFocus
+                  locale={picker.enGB}
+                  weekStartsOn={1}
+                  numberOfMonths={months}
+                  selected={start || end ? { from: start, to: end } : undefined}
+                  defaultMonth={defaultMonth}
+                  startMonth={first}
+                  endMonth={last}
+                  captionLayout="label"
+                  components={{ Chevron: CalendarChevron }}
+                  disabled={dayBounds(first, last)}
+                  // The library's own range rule extends the range it holds; the field's is first
+                  // then last.
+                  onSelect={(_range, day) => pick(day)}
+                  classNames={CALENDAR_CLASS_NAMES}
+                />
+              )}
+            </div>
           </div>
           <p id={hintId} className="date-range-field__hint" aria-live="polite">
-            {pending === null ? HINT.first : HINT.last}
+            {complete ? daysSelected(days) : pending === null ? HINT.first : HINT.last}
           </p>
         </CalendarPanel>
       )}

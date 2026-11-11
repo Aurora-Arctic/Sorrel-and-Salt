@@ -131,6 +131,10 @@ export interface PlainTextFieldProps extends TextControlProps {
    */
   check?: (value: string) => string | undefined;
   onBlur?: () => void;
+  /** Marks the box as the one the form is waiting on (`aria-current`), as the range picker’s End is while Start is set. */
+  current?: boolean;
+  /** Takes the Enter key: the key is claimed, so it never submits the form round the box. */
+  onEnter?: () => void;
 }
 
 export interface SelectOption {

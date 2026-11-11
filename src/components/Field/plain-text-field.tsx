@@ -1,6 +1,13 @@
 'use client';
 
-import { type ChangeEvent, type FocusEvent, type ReactElement, useId, useState } from 'react';
+import {
+  type ChangeEvent,
+  type FocusEvent,
+  type KeyboardEvent,
+  type ReactElement,
+  useId,
+  useState,
+} from 'react';
 import { CharacterCount } from './character-count';
 import { fieldDescription } from './description';
 import { useMask } from './mask';
@@ -51,6 +58,8 @@ export function PlainTextField({
   onBlur,
   error,
   check,
+  current,
+  onEnter,
 }: PlainTextFieldProps): ReactElement {
   const id = useId();
   const [problem, setProblem] = useState<string>();
@@ -96,6 +105,14 @@ export function PlainTextField({
     }),
     'aria-required': required || undefined,
     ...aria,
+    'aria-current': current ? ('true' as const) : undefined,
+    onKeyDown: onEnter
+      ? (event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+          if (event.key !== 'Enter') return;
+          event.preventDefault();
+          onEnter();
+        }
+      : undefined,
     onFocus: masked.onFocus,
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       masked.mask(event);
