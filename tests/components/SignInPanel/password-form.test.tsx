@@ -308,6 +308,21 @@ describe('SignInPanel, email and password', () => {
     expect(screen.queryByRole('button', { name: 'Sign In with a Passkey' })).toBeNull();
   });
 
+  // Back names the step it returns to, so creating an account's email step offers its own options, not signing in's.
+  it('names Back from the Create an Account with Email step for the Create Account Options it returns to', async () => {
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+    // Precondition: the email step is open in creating an account.
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Create an Account with Email' }),
+    ).toBeInTheDocument();
+
+    await press(screen.getByRole('button', { name: 'Back to Create Account Options' }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Create an Account' })).toHaveFocus();
+    expect(screen.queryByRole('button', { name: 'Sign In with a Passkey' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Continue with Email' })).toBeEnabled();
+  });
+
   // The page's address holds the mode beside the view, so a reload keeps both; sign-in, the default, is left out.
   const lastAddress = () =>
     new URLSearchParams(String(history.replace.mock.lastCall?.[2] ?? '').split('?')[1] ?? '');
