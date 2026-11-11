@@ -91,3 +91,22 @@ export const context = {
 };
 
 export const core = { info: () => {}, warning: () => {} };
+
+export type Section = { status: string; summary: string; block: string };
+
+/** A sectioned comment's sections, by key, as its hidden state and its blocks hold them. */
+export function sectionsOf(body: string): Record<string, Section> {
+  const state = /<!-- ci-state (.*?) -->/s.exec(body);
+  if (!state) throw new Error('The comment carries no ci-state');
+  const { sections } = JSON.parse(state[1]) as {
+    sections: Record<string, { status: string; summary: string }>;
+  };
+  return Object.fromEntries(
+    Object.entries(sections).map(([key, { status, summary }]) => {
+      const block = new RegExp(
+        `<!-- ci-section:${key} -->\\n\\n([\\s\\S]*?)\\n\\n<!-- /ci-section:${key} -->`,
+      ).exec(body);
+      return [key, { status, summary, block: block?.[1] ?? '' }];
+    }),
+  );
+}

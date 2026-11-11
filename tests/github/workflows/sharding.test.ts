@@ -17,10 +17,12 @@ import {
   type Context,
   type Job,
   type Step,
+  type UsesHandler,
   type Workflow,
   RECORDING_STUB,
   actionEnv,
   callWith,
+  calledOutputs,
   downloadsOf,
   evaluateMap,
   evaluateValue,
@@ -34,13 +36,20 @@ import {
   matrixRuns,
   needsOf,
   runStepScript,
+  runWorkflow,
   stringify,
   underRoot,
   uploadsOf,
 } from '../../support/github-workflow';
-import { mergedPlaywrightReport } from '../../support/github-scripts';
+import { type TimedTest, mergedPlaywrightReport } from '../../support/github-scripts';
 import { fromRoot } from '../../support/paths';
-import { context as commentContext, core, fakeGitHub, lib } from '../../support/pr-comment';
+import {
+  context as commentContext,
+  core,
+  fakeGitHub,
+  lib,
+  sectionsOf,
+} from '../../support/pr-comment';
 
 // The CI test jobs split into shards (claude-docs/ci/runner-budget.md): each shard's jobs and steps
 // evaluated as GitHub Actions evaluates them, and their `run:` scripts executed with stub commands, so
@@ -114,21 +123,6 @@ function shardJob(): [string, Job] {
   return found as [string, Job];
 }
 
-/** playwright.yml's job that needs the shards and runs `playwright merge-reports`. */
-function mergeJob(): [string, Job] {
-  const [shardName] = shardJob();
-  const found = Object.entries(PLAYWRIGHT.jobs).find(
-    ([, job]) =>
-      needsOf(job).includes(shardName) &&
-      (job.steps ?? []).some((step) => step.run?.includes('merge-reports')),
-  );
-  expect(
-    found,
-    'playwright.yml has a job that needs the shards and runs merge-reports',
-  ).toBeDefined();
-  return found as [string, Job];
-}
-
 /** Each job one called workflow runs, with its matrix and strategy contexts. */
 function jobRuns(workflow: Workflow, inputs: Context, needs: Record<string, Need> = {}) {
   return Object.entries(workflow.jobs).flatMap(([name, job]) => {
@@ -142,6 +136,20 @@ function jobRuns(workflow: Workflow, inputs: Context, needs: Record<string, Need
 }
 
 const usesComment = (step: Step) => step.uses === './.github/actions/pr-comment';
+
+const PASS = { success: true, failure: false };
+
+/** Where a shard's blob reporter writes, which tells its blob upload from its other uploads. */
+const BLOB = /blob-report/;
+
+/** A job's steps with every local composite action's own steps in its place, the pr-comment action kept. */
+function flatSteps(steps: Step[] | undefined): Step[] {
+  return (steps ?? []).flatMap((step) =>
+    step.uses?.startsWith('./.github/actions/') && !usesComment(step)
+      ? flatSteps(loadAction(step.uses).runs.steps)
+      : [step],
+  );
+}
 
 describe('the Playwright suites, sharded', () => {
   it.each([
@@ -207,117 +215,61 @@ describe('the Playwright suites, sharded', () => {
     expect(saves('playwright')).toEqual([]);
   });
 
-  it('joins the shards in the merge-reports job, which runs after a failed shard and not when the suite is off', () => {
-    const [shardName] = shardJob();
-    const [, merge] = mergeJob();
-    const runsAfter = (result: string, shouldRun: boolean) => {
-      const inputs = { ...playwrightInputs('playwright'), 'should-run': shouldRun };
-      const needs = { [shardName]: { result, outputs: {} } };
-      return holds(merge.if, { ...base, inputs, needs }, jobStatus(needs));
-    };
+  it('has one job, the shards, named playwright, so each check reads "playwright / playwright (n)"', () => {
+    const [name, job] = shardJob();
 
-    expect(runsAfter('success', true)).toBe(true);
-    expect(runsAfter('failure', true)).toBe(true);
-    expect(runsAfter('skipped', false)).toBe(false);
+    expect(Object.keys(PLAYWRIGHT.jobs)).toEqual([name]);
+    expect(
+      evaluateValue(job.name ?? name, { ...base, inputs: playwrightInputs('playwright') }),
+    ).toBe('playwright');
   });
 
-  it('fails the merge-reports job when a shard failed, and not for that reason when every shard passed', () => {
-    const [shardName] = shardJob();
-    const [, merge] = mergeJob();
-    const inputs = playwrightInputs('playwright');
-    const attempt = (step: Step, result: string) => {
-      const context = {
-        ...base,
-        inputs,
-        needs: { [shardName]: { result, outputs: {} } },
-        steps: {},
-      };
-      if (!holds(step.if, context, { success: true, failure: false })) return 'skipped';
-      const calls = join(root, 'calls');
-      writeFileSync(calls, '');
-      const run = runStepScript(step, {
-        context,
-        root,
-        stubs: { npm: RECORDING_STUB, npx: RECORDING_STUB },
-        env: { STUB_CALLS: calls },
-      });
-      return run.status === 0 ? 'passed' : 'failed';
-    };
-    const failsTheJob = (merge.steps ?? []).filter(
-      (step) =>
-        step.run && attempt(step, 'failure') === 'failed' && attempt(step, 'success') !== 'failed',
-    );
-
-    expect(failsTheJob.length).toBeGreaterThan(0);
-  });
-
-  it("gives the suite's outcome from the merge-reports job, so the last shard to finish cannot hide a failure", () => {
-    const [shardName] = shardJob();
-    const [mergeName] = mergeJob();
-    const value = PLAYWRIGHT.on.workflow_call?.outputs?.outcome?.value;
-    const jobs = {
-      [shardName]: { result: 'success', outputs: { outcome: 'success' } },
-      [mergeName]: { result: 'failure', outputs: { outcome: 'failure' } },
-    };
-
-    expect(evaluateValue(value, { jobs })).toBe('failure');
-  });
-
-  it.each([
-    ['playwright', 'gate'],
-    ['stories', 'stories'],
-  ] as const)(
-    "writes the %s suite's comment section once, from the merge-reports job",
-    (caller, section) => {
-      const [mergeName] = mergeJob();
-      const writes = jobRuns(PLAYWRIGHT, playwrightInputs(caller)).flatMap(
-        ({ name, job, context }) =>
-          (job.steps ?? [])
-            .filter(usesComment)
-            .filter((step) => holds(step.if, context, { success: true, failure: false }))
-            .map((step) => ({
-              name,
-              section: stringify(evaluateValue(step.with?.section, context)),
-            })),
-      );
-
-      expect(writes).toEqual([{ name: mergeName, section }]);
-    },
-  );
-
-  it("downloads every shard's blob of its own suite into the merge, and none of the other suite's", () => {
-    const [shardName, shard] = shardJob();
-    const [, merge] = mergeJob();
-    const uploads = (caller: 'playwright' | 'stories') =>
-      jobRuns(PLAYWRIGHT, playwrightInputs(caller))
-        .filter(({ name }) => name === shardName)
-        .flatMap(({ context }) => uploadsOf(shard.steps, context));
-    const everyName = [...uploads('playwright'), ...uploads('stories')].map(({ name }) => name);
-
+  it('writes no comment section from playwright.yml for either suite: playwright-coverage writes them', () => {
     for (const caller of ['playwright', 'stories'] as const) {
-      const inputs = playwrightInputs(caller);
-      const context = { ...base, inputs, needs: { [shardName]: { result: 'success' } }, steps: {} };
-      const fetched = downloadsOf(merge.steps, context).map((download) =>
-        fetchedBy(download, everyName).sort(),
+      const runs = jobRuns(PLAYWRIGHT, playwrightInputs(caller)).filter(({ job, context }) =>
+        holds(job.if, context, PASS),
       );
-      // The blobs are one upload step's artifacts: one per shard of this suite.
-      const own = uploads(caller);
-      const perStep = [...new Set(own.map(({ step }) => step))].map((step) =>
-        own
-          .filter((upload) => upload.step === step)
-          .map(({ name }) => name)
-          .sort(),
-      );
-      const shards = matrixRuns(shard, { ...base, inputs }).length;
-
-      expect(shards).toBeGreaterThan(1);
-      expect(
-        fetched.some(
-          (names) =>
-            names.length === shards && perStep.some((step) => step.join() === names.join()),
+      const writes = runs.flatMap(({ context, job }) =>
+        flatSteps(job.steps).filter(
+          (step) => usesComment(step) && holds(step.if, { ...context, steps: {} }, PASS),
         ),
-      ).toBe(true);
+      );
+
+      expect(runs.length).toBeGreaterThan(1);
+      expect(writes).toEqual([]);
     }
+  });
+
+  it('runs no shard of a suite the path filter rules out', () => {
+    const shards = (filters: Record<string, string>, caller: 'playwright' | 'stories') =>
+      jobRuns(
+        PLAYWRIGHT,
+        callWith(PR_GATE.jobs[caller], PLAYWRIGHT, { ...base, needs: gateNeeds(filters) }),
+      ).filter(({ job, context }) => holds(job.if, context, PASS));
+
+    expect(shards({}, 'playwright')).toHaveLength(3);
+    expect(shards({}, 'stories')).toHaveLength(2);
+    expect(shards({ playwright: 'false' }, 'playwright')).toEqual([]);
+    expect(shards({ stories: 'false' }, 'stories')).toEqual([]);
+  });
+
+  it('runs one shard under build-only and leaves no blob or coverage to merge', () => {
+    const left = (caller: 'playwright' | 'warm') => {
+      const runs = jobRuns(PLAYWRIGHT, playwrightInputs(caller)).filter(({ job, context }) =>
+        holds(job.if, context, PASS),
+      );
+      const uploads = runs.flatMap(({ job, context }) =>
+        uploadsOf(job.steps, context).filter(
+          ({ step, path }) =>
+            (BLOB.test(path) || path.includes('coverage-e2e')) &&
+            holds(step.if, { ...context, steps: {} }, PASS),
+        ),
+      );
+      return { runs: runs.length, uploads: uploads.length };
+    };
+
+    expect(left('playwright')).toEqual({ runs: 3, uploads: 6 });
+    expect(left('warm')).toEqual({ runs: 1, uploads: 0 });
   });
 });
 
@@ -455,8 +407,8 @@ function runParts(workflow: Workflow): { artifacts: Artifact[]; parts: string[] 
   return { artifacts, parts: partJobs(workflow).map(([name]) => name) };
 }
 
-/** The merge job's downloads, into its own /app, of the artifacts the run holds. */
-function downloadInto(job: Job, artifacts: Artifact[], context: Context) {
+/** A job's downloads, into its own /app (`into`, the test's root by default), of the artifacts the run holds. */
+function downloadInto(job: Job, artifacts: Artifact[], context: Context, into = root) {
   for (const download of downloadsOf(job.steps, context)) {
     const fetched = fetchedBy(
       download,
@@ -465,7 +417,7 @@ function downloadInto(job: Job, artifacts: Artifact[], context: Context) {
     for (const artifact of artifacts.filter(({ name }) => fetched.includes(name))) {
       const landed = landings([download], fetched).get(artifact.name) ?? [];
       for (const folder of landed) {
-        const at = underRoot(folder, root);
+        const at = underRoot(folder, into);
         mkdirSync(at, { recursive: true });
         for (const [file, body] of Object.entries(artifact.files))
           writeFileSync(join(at, file), body);
@@ -681,45 +633,448 @@ describe('the Vitest parts and their merge', () => {
 
 describe('the merged Playwright coverage job, as pr-gate calls it', () => {
   const job = PR_GATE.jobs['playwright-coverage'];
-  const scenario = (results: Record<string, Need>) => {
+  const runs = (results: Record<string, Need>) => {
     const needs = { ...gateNeeds(), ...results };
-    return {
-      runs: holds(
-        job.if,
-        { ...base, needs },
-        jobStatus(Object.fromEntries(needsOf(job).map((name) => [name, needs[name]]))),
-      ),
-      failed: callWith(job, COVERAGE, { ...base, needs })['suites-failed'],
-    };
+    return holds(
+      job.if,
+      { ...base, needs },
+      jobStatus(Object.fromEntries(needsOf(job).map((name) => [name, needs[name]]))),
+    );
   };
 
-  it('runs after a failed suite, and is told one failed', () => {
-    const passed = { result: 'success', outputs: { outcome: 'success' } };
-    const failed = { result: 'failure', outputs: { outcome: 'failure' } };
+  it('runs after a failed suite, and not on a stand-down', () => {
+    const passed = { result: 'success', outputs: {} };
+    const failed = { result: 'failure', outputs: {} };
 
-    expect(scenario({ playwright: passed, stories: passed })).toEqual({
-      runs: true,
-      failed: false,
-    });
-    expect(scenario({ playwright: failed, stories: passed })).toEqual({ runs: true, failed: true });
-    // The story suite's jobs pass whatever its stories did; its outcome says.
+    expect(runs({ playwright: passed, stories: passed })).toBe(true);
+    expect(runs({ playwright: failed, stories: passed })).toBe(true);
     expect(
-      scenario({
-        playwright: passed,
-        stories: { result: 'success', outputs: { outcome: 'failure' } },
+      runs({
+        changes: { result: 'success', outputs: { 'stand-down': 'true' } },
+        playwright: { result: 'skipped' },
+        stories: { result: 'skipped' },
       }),
-    ).toEqual({
-      runs: true,
-      failed: true,
+    ).toBe(false);
+  });
+});
+
+describe('what a workflow reads from the workflows it calls', () => {
+  it('is an output each called workflow declares, from an output one of its jobs declares', () => {
+    const refs = readdirSync(fromRoot('.github/workflows'))
+      .filter((file) => /\.ya?ml$/.test(file))
+      .flatMap((file) => {
+        const workflow = loadWorkflow(file);
+        const text = JSON.stringify(workflow);
+        return Object.entries(workflow.jobs)
+          .filter(([, job]) => job.uses?.startsWith('./.github/workflows/'))
+          .flatMap(([caller, job]) =>
+            [...text.matchAll(new RegExp(`needs\\.${caller}\\.outputs\\.([\\w-]+)`, 'g'))].map(
+              ([, output]) => ({
+                file,
+                caller,
+                called: (job.uses as string).replace('./.github/workflows/', ''),
+                output,
+              }),
+            ),
+          );
+      });
+    const unbacked = refs.filter(({ called, output }) => {
+      const workflow = loadWorkflow(called);
+      const value = workflow.on.workflow_call?.outputs?.[output]?.value ?? '';
+      const from = /jobs\.([\w-]+)\.outputs\.([\w-]+)/.exec(value);
+      return !from || workflow.jobs[from[1]]?.outputs?.[from[2]] === undefined;
     });
+
+    // Precondition: the scan found pr-gate's reads of its called workflows' outputs.
+    expect(refs.filter(({ file }) => file === 'pr-gate.yml').length).toBeGreaterThan(0);
+    expect(unbacked).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The Playwright shards, joined in playwright-coverage.yml, as pr-gate calls it after both suites: each
+// suite's blobs merged with its own config, its comment section written, and the job failed when the gate
+// suite failed and never for the stories.
+
+type Suite = 'playwright' | 'stories';
+type Story = { id: string; title: string; status: 'passed' | 'failed'; section: string };
+/** One shard's blob: its share of the report, and for the stories its share of the checklist. */
+type ShardReport = {
+  files: { file: string; tests: TimedTest[] }[];
+  duration: number;
+  stories?: Story[];
+};
+
+const FAILURE = 'expected Testwort to boil';
+
+/** Shard `n` of the gate suite: one spec file of its own, its one test failing when `failed`. */
+const gateShard = (n: number, failed = false): ShardReport => ({
+  files: [
+    {
+      file: `tests/e2e/testwort-${n}.spec.ts`,
+      tests: [
+        failed
+          ? { title: `Testwort ${n} fails`, ms: 1_000, failed: FAILURE }
+          : { title: `Testwort ${n} passes`, ms: 1_000 },
+      ],
+    },
+  ],
+  duration: 60_000,
+});
+
+/** Shard `n` of the story suite: one story of its own, failing when `failed`. */
+const storyShard = (n: number, failed = false): ShardReport => ({
+  files: [
+    {
+      file: `tests/e2e/stories/testwort-${n}.spec.ts`,
+      tests: [
+        {
+          title: `Testwort story ${n}`,
+          ms: 1_000,
+          tags: [`story-9${n}`],
+          ...(failed ? { failed: FAILURE } : {}),
+        },
+      ],
+    },
+  ],
+  duration: 60_000,
+  stories: [
+    {
+      id: `9${n}`,
+      title: `Testwort story ${n}`,
+      status: failed ? 'failed' : 'passed',
+      section: 'Testwort',
+    },
+  ],
+});
+
+/** What each shard (by its 0-based index) left as its blob; `null` when it left none. */
+type Shards = (index: number) => ShardReport | null;
+const passing: Record<Suite, Shards> = {
+  playwright: (index) => gateShard(index + 1),
+  stories: (index) => storyShard(index + 1),
+};
+
+// `playwright merge-reports` as the CLI behaves: it reads the report files at the top of the folder it is
+// given, fails when there are none, and writes the config's reporters — the json report under CI to
+// PLAYWRIGHT_JSON_OUTPUT_NAME, and for the story config the checklist to STORIES_JSON. It exits 0 whatever
+// the tests did. Each call is recorded in $MERGE_CALLS with the config, the files and the spec files merged.
+const STUB_MERGE_NPX = `#!${process.execPath}
+const fs = require('node:fs');
+const path = require('node:path');
+const args = process.argv.slice(2);
+const at = args.indexOf('merge-reports');
+if (args[0] !== 'playwright' || at === -1) process.exit(0);
+let config = 'playwright.config.ts';
+const positional = [];
+for (let i = at + 1; i < args.length; i++) {
+  const arg = args[i];
+  if (arg === '--config' || arg === '-c') config = args[++i];
+  else if (arg.startsWith('--config=')) config = arg.slice('--config='.length);
+  else if (arg === '--reporter') i++;
+  else if (!arg.startsWith('-')) positional.push(arg);
+}
+const dir = positional[positional.length - 1];
+const files = dir && fs.existsSync(dir)
+  ? fs.readdirSync(dir, { withFileTypes: true }).filter((entry) => entry.isFile()).map((entry) => entry.name).sort()
+  : [];
+const blobs = files.map((file) => JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')));
+fs.appendFileSync(process.env.MERGE_CALLS, JSON.stringify({
+  config: path.basename(config),
+  files,
+  specs: blobs.flatMap((blob) => blob.suites.map((suite) => suite.file)).sort(),
+}) + '\\n');
+if (files.length === 0) {
+  console.error('Error: no report files found in ' + dir);
+  process.exit(1);
+}
+const sum = (key) => blobs.reduce((total, blob) => total + blob.stats[key], 0);
+const report = {
+  stats: {
+    startTime: blobs[0].stats.startTime,
+    duration: Math.max(...blobs.map((blob) => blob.stats.duration)),
+    expected: sum('expected'),
+    unexpected: sum('unexpected'),
+    skipped: sum('skipped'),
+    flaky: sum('flaky'),
+  },
+  suites: blobs.flatMap((blob) => blob.suites),
+};
+const write = (to, value) => {
+  fs.mkdirSync(path.dirname(path.resolve(to)), { recursive: true });
+  fs.writeFileSync(path.resolve(to), JSON.stringify(value));
+};
+if (process.env.CI && process.env.PLAYWRIGHT_JSON_OUTPUT_NAME) write(process.env.PLAYWRIGHT_JSON_OUTPUT_NAME, report);
+if (/stories/.test(path.basename(config)) && process.env.STORIES_JSON) {
+  const stories = blobs.flatMap((blob) => blob.stories ?? []);
+  const count = (status) => stories.filter((story) => story.status === status).length;
+  write(process.env.STORIES_JSON, {
+    stories,
+    unknown: [],
+    untagged: [],
+    counts: { passed: count('passed'), failed: count('failed'), skipped: 0, untested: 0 },
+    total: stories.length,
+  });
+}
+console.log('Merged ' + files.length + ' reports');
+`;
+
+// Node itself, but for the coverage merge, which the last describe below runs for real: here it reports
+// that it merged.
+const STUB_NODE = `#!/usr/bin/env bash
+case "$1" in
+  *merge-playwright-coverage.mjs) printf 'ran=true\\nsummary=Testwort coverage\\ndetails=\\n' >> "$GITHUB_OUTPUT" ;;
+  *) exec "$REAL_NODE" "$@" ;;
+esac
+`;
+
+/** The blob and coverage artifacts one suite's shards leave in the run, each shard's from `shards`. */
+function shardArtifacts(suite: Suite, needs: Record<string, Need>, shards: Shards): Artifact[] {
+  const inputs = callWith(PR_GATE.jobs[suite], PLAYWRIGHT, { ...base, needs });
+  return jobRuns(PLAYWRIGHT, inputs)
+    .filter(({ job, context }) => job.strategy?.matrix && holds(job.if, context, PASS))
+    .flatMap(({ job, context }, index) => {
+      const report = shards(index);
+      if (report === null) return [];
+      const at = { ...context, steps: {} };
+      return uploadsOf(job.steps, at)
+        .filter(({ step }) => holds(step.if, at, PASS))
+        .flatMap(({ name, path }): Artifact[] => {
+          if (BLOB.test(path)) {
+            const blob = {
+              ...mergedPlaywrightReport(report.files, report.duration),
+              stories: report.stories,
+            };
+            return [{ name, files: { [`report-${index + 1}.zip`]: JSON.stringify(blob) } }];
+          }
+          if (path.includes('coverage-e2e')) return [{ name, files: { 'testwort.json': '{}' } }];
+          return [];
+        });
+    });
+}
+
+interface Join {
+  /** pr-gate's path filters, each on unless given. */
+  filters?: Record<string, string>;
+  /** The result of pr-gate's `playwright` and `stories` jobs, success unless given. */
+  results?: Partial<Record<Suite, string>>;
+  shards?: Partial<Record<Suite, Shards>>;
+}
+
+/**
+ * pr-gate's `playwright-coverage` job, run: its inputs from the suites' results and what their called
+ * workflow outputs, every job of playwright-coverage.yml run against the artifacts the shards left, and the
+ * Playwright comment its steps write.
+ */
+async function runJoin({ filters = {}, results = {}, shards = {} }: Join = {}) {
+  const gate = gateNeeds(filters);
+  const suiteNeed = (suite: Suite): Need => ({
+    result: results[suite] ?? 'success',
+    outputs: calledOutputs(
+      PLAYWRIGHT,
+      callWith(PR_GATE.jobs[suite], PLAYWRIGHT, { ...base, needs: gate }),
+      base,
+    ),
+  });
+  const needs: Record<string, Need> = {
+    ...gate,
+    playwright: suiteNeed('playwright'),
+    stories: suiteNeed('stories'),
+  };
+  const caller = PR_GATE.jobs['playwright-coverage'];
+  expect(
+    holds(
+      caller.if,
+      { ...base, needs },
+      jobStatus(Object.fromEntries(needsOf(caller).map((name) => [name, needs[name]]))),
+    ),
+    'pr-gate runs playwright-coverage',
+  ).toBe(true);
+
+  const artifacts = (['playwright', 'stories'] as const).flatMap((suite) =>
+    shardArtifacts(suite, gate, shards[suite] ?? passing[suite]),
+  );
+  const { github, comments } = fakeGitHub([]);
+  const written: string[] = [];
+  const merges = join(root, 'merge-calls');
+  writeFileSync(merges, '');
+  const uses: UsesHandler = async (step, context, jobRoot) => {
+    if (step.uses?.startsWith('actions/download-artifact')) {
+      downloadInto({ steps: [step] }, artifacts, context, jobRoot);
+      return { outcome: 'success' };
+    }
+    if (usesComment(step)) {
+      written.push(stringify(evaluateValue(step.with?.section, context)));
+      const result = await lib.postComment({
+        github,
+        context: commentContext,
+        core,
+        inputs: lib.inputsFromEnv(actionEnv(step, context)),
+        readFile: () => 'Testwort log line',
+        sleep: async () => {},
+        random: () => 0,
+      });
+      return { outcome: result === 'written' ? 'success' : 'failure' };
+    }
+    if (step.uses === './.github/actions/job-summary') return { outcome: 'success' };
+    return undefined;
+  };
+  const jobs = await runWorkflow(COVERAGE, {
+    context: { ...base, inputs: callWith(caller, COVERAGE, { ...base, needs }) },
+    root,
+    stubs: { npx: STUB_MERGE_NPX, node: STUB_NODE },
+    env: { MERGE_CALLS: merges, REAL_NODE: process.execPath },
+    uses,
+  });
+  const merged = readFileSync(merges, 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as { config: string; files: string[]; specs: string[] });
+
+  expect(comments.length, 'one Playwright comment at most').toBeLessThanOrEqual(1);
+  return {
+    failed: Object.values(jobs).some(({ result }) => result === 'failure'),
+    log: Object.values(jobs)
+      .map(({ log }) => log)
+      .join('\n'),
+    merges: Object.fromEntries(
+      (['playwright.config.ts', 'playwright.stories.config.ts'] as const).map((config) => [
+        config === 'playwright.config.ts' ? 'gate' : 'stories',
+        merged.filter((call) => call.config === config),
+      ]),
+    ) as Record<'gate' | 'stories', typeof merged>,
+    written,
+    sections: comments.length ? sectionsOf(comments[0].body) : {},
+  };
+}
+
+const specsOf = (suite: Suite, count: number) =>
+  Array.from({ length: count }, (_, index) => passing[suite](index)?.files[0].file).sort();
+
+describe('the Playwright shards, joined in playwright-coverage', () => {
+  it("merges each suite once, with its own config, from every shard's blob of that suite alone", async () => {
+    const run = await runJoin();
+
+    expect(run.merges.gate).toHaveLength(1);
+    expect(run.merges.stories).toHaveLength(1);
+    expect(run.merges.gate[0].specs).toEqual(specsOf('playwright', 3));
+    expect(run.merges.stories[0].specs).toEqual(specsOf('stories', 2));
+    expect(run.written.filter((section) => section === 'gate')).toHaveLength(1);
+    expect(run.written.filter((section) => section === 'stories')).toHaveLength(1);
+    // The story section is the checklist of every shard's stories, as summarize-stories writes it.
+    expect(run.sections.stories?.block).toContain('Testwort story 1');
+    expect(run.sections.stories?.block).toContain('Testwort story 2');
+  });
+
+  const failGate: Shards = (index) => gateShard(index + 1, index === 1);
+  const loseGate: Shards = (index) => (index === 1 ? null : gateShard(index + 1));
+  const failStory: Shards = (index) => storyShard(index + 1, index === 1);
+  const loseStory: Shards = (index) => (index === 1 ? null : storyShard(index + 1));
+  const none: Shards = () => null;
+
+  it.each([
+    [
+      'passes, every section passed, when both suites passed',
+      {},
+      { fails: false, gate: 'passed', stories: 'passed', coverage: 'passed' },
+    ],
+    [
+      'fails, the gate section failed, when a gate test failed',
+      { results: { playwright: 'failure' }, shards: { playwright: failGate } },
+      { fails: true, gate: 'failed', stories: 'passed', coverage: 'failed' },
+    ],
+    [
+      'fails, the gate section failed, when a gate shard left no blob',
+      { results: { playwright: 'failure' }, shards: { playwright: loseGate } },
+      { fails: true, gate: 'failed', stories: 'passed' },
+    ],
+    [
+      'fails, the gate section failed, when no gate shard left a blob',
+      { results: { playwright: 'failure' }, shards: { playwright: none } },
+      { fails: true, gate: 'failed', stories: 'passed' },
+    ],
+    [
+      'fails when a gate shard left no blob though every shard job passed',
+      { shards: { playwright: loseGate } },
+      { fails: true, gate: 'failed' },
+    ],
+    [
+      'fails when the merged gate report holds a failed test though every shard job passed',
+      { shards: { playwright: failGate } },
+      { fails: true, gate: 'failed' },
+    ],
+    [
+      'passes, the stories section failed, when a story failed',
+      { shards: { stories: failStory } },
+      { fails: false, gate: 'passed', stories: 'failed', coverage: 'failed' },
+    ],
+    [
+      'passes, the stories section failed, when a story shard left no blob',
+      { shards: { stories: loseStory } },
+      { fails: false, gate: 'passed', stories: 'failed' },
+    ],
+    [
+      'passes, the stories section failed, when no story shard left a blob',
+      { shards: { stories: none } },
+      { fails: false, gate: 'passed', stories: 'failed' },
+    ],
+  ] as [string, Join, { fails: boolean; gate?: string; stories?: string; coverage?: string }][])(
+    '%s',
+    async (_, scenario, expected) => {
+      const run = await runJoin(scenario);
+      const { fails, ...statuses } = expected;
+
+      expect(run.failed, run.log).toBe(fails);
+      for (const [section, status] of Object.entries(statuses)) {
+        expect(
+          run.written.filter((key) => key === section),
+          section,
+        ).toHaveLength(1);
+        expect(run.sections[section]?.status, section).toBe(status);
+      }
+    },
+  );
+
+  it('lists the failed gate test in the gate section, from the shard that ran it', async () => {
+    const run = await runJoin({
+      results: { playwright: 'failure' },
+      shards: { playwright: (index) => gateShard(index + 1, index === 1) },
+    });
+
+    expect(run.sections.gate?.block).toContain('Testwort 2 fails');
+    expect(run.sections.gate?.block).not.toContain('Testwort 1 passes');
+  });
+
+  it.each([
+    ['gate', { playwright: 'false' }, 'stories'],
+    ['story', { stories: 'false' }, 'gate'],
+  ] as const)(
+    'merges and writes only the other suite, and fails nothing, when the path filter rules the %s suite out',
+    async (_, filters, kept) => {
+      const run = await runJoin({ filters });
+      const dropped = kept === 'gate' ? 'stories' : 'gate';
+
+      expect(run.failed, run.log).toBe(false);
+      expect(run.merges[kept]).toHaveLength(1);
+      expect(run.merges[dropped]).toEqual([]);
+      expect(run.written).toContain(kept);
+      expect(run.written).not.toContain(dropped);
+      expect(run.sections[kept]?.status).toBe('passed');
+    },
+  );
+
+  it('merges nothing, writes nothing and fails nothing when the path filter rules both suites out', async () => {
+    const run = await runJoin({ filters: { playwright: 'false', stories: 'false' } });
+
+    expect(run.failed, run.log).toBe(false);
+    expect(run.merges).toEqual({ gate: [], stories: [] });
+    expect(run.written).toEqual([]);
   });
 });
 
 // ---------------------------------------------------------------------------
 // The Playwright comment, end to end: what the joining steps write, through the pr-comment action, into the
 // comment on the pull request.
-
-const PASS = { success: true, failure: false };
 
 /** Each of a job's steps with an id, as a passed step leaves it, with the outputs given for some. */
 function passedSteps(job: Job, outputs: Record<string, Record<string, string>> = {}) {
@@ -793,61 +1148,38 @@ async function writeRawCoverage(outputDir: string, called: readonly string[]) {
 describe('the Playwright comment, from the sharded suites', () => {
   it("shows the gate suite's duration, its slowest files and each test over 30 s, from every shard's report", async () => {
     const SLOW = 'tests/e2e/testwort-slow.spec.ts';
-    const inputs = playwrightInputs('playwright');
-    const writers = jobRuns(PLAYWRIGHT, inputs).filter(({ job }) =>
-      (job.steps ?? []).some((step) => step.run?.includes('summarize-playwright')),
-    );
-    const report = join(root, 'testwort-report.json');
-    writeFileSync(
-      report,
-      JSON.stringify(
-        mergedPlaywrightReport(
-          [
-            {
-              file: SLOW,
-              tests: [
-                { title: 'Testwort boils', ms: 25_000 },
-                { title: 'Testwort cools', ms: 20_000 },
-              ],
-            },
-            {
-              file: 'tests/e2e/testwort-over.spec.ts',
-              tests: [{ title: 'Testwort simmers', ms: 31_000 }],
-            },
-          ],
-          250_000,
-        ),
-      ),
-    );
+    const shards: ShardReport[] = [
+      {
+        files: [
+          {
+            file: SLOW,
+            tests: [
+              { title: 'Testwort boils', ms: 25_000 },
+              { title: 'Testwort cools', ms: 20_000 },
+            ],
+          },
+        ],
+        duration: 250_000,
+      },
+      {
+        files: [
+          {
+            file: 'tests/e2e/testwort-over.spec.ts',
+            tests: [{ title: 'Testwort simmers', ms: 31_000 }],
+          },
+        ],
+        duration: 120_000,
+      },
+      gateShard(3),
+    ];
 
-    const bodies: string[] = [];
-    for (const { job, context: jobContext } of writers) {
-      const context = {
-        ...jobContext,
-        needs: Object.fromEntries(
-          needsOf(job).map((need) => [need, { result: 'success', outputs: {} }]),
-        ),
-      };
-      const summarise = (job.steps ?? []).find((step) =>
-        step.run?.includes('summarize-playwright'),
-      ) as Step;
-      const summary = runStepScript(summarise, {
-        context: { ...context, steps: passedSteps(job) },
-        root,
-        env: { PLAYWRIGHT_JSON_OUTPUT_NAME: report },
-      });
-      expect(summary.status, summary.log).toBe(0);
-      const steps = passedSteps(job, { [summarise.id as string]: summary.outputs });
-      for (const step of (job.steps ?? []).filter(usesComment)) {
-        const at = { ...context, steps };
-        if (!holds(step.if, at, PASS) || evaluateValue(step.with?.section, at) !== 'gate') continue;
-        bodies.push(await commentFrom(step, at));
-      }
-    }
+    const run = await runJoin({ shards: { playwright: (index) => shards[index] } });
 
-    expect(bodies).toHaveLength(1);
-    const lines = bodies[0].split('\n');
-    expect(bodies[0]).toContain('4m 10s');
+    expect(run.written.filter((section) => section === 'gate')).toHaveLength(1);
+    const gate = run.sections.gate;
+    const text = `${gate?.summary ?? ''}\n${gate?.block ?? ''}`;
+    const lines = text.split('\n');
+    expect(text).toContain('4m 10s');
     expect(lines.some((line) => line.includes(`\`${SLOW}\``) && line.includes('45.0 s'))).toBe(
       true,
     );

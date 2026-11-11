@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Evaluator, Lexer, Parser, data } from '@actions/expressions';
@@ -32,10 +32,12 @@ export interface Step {
   run?: string;
   with?: Record<string, Value>;
   env?: Record<string, Value>;
+  shell?: string;
   'continue-on-error'?: Value;
 }
 
 export interface Job {
+  name?: string;
   if?: string | boolean;
   needs?: string | string[];
   uses?: string;
@@ -43,6 +45,8 @@ export interface Job {
   strategy?: { matrix?: Record<string, Value> | string; 'fail-fast'?: Value };
   outputs?: Record<string, string>;
   env?: Record<string, Value>;
+  defaults?: { run?: { shell?: string; 'working-directory'?: string } };
+  'continue-on-error'?: Value;
   steps?: Step[];
 }
 
@@ -64,6 +68,7 @@ export interface Workflow {
 
 export interface Action {
   inputs?: Record<string, Input>;
+  outputs?: Record<string, { value: string }>;
   runs: { steps: Step[] };
 }
 
@@ -311,9 +316,10 @@ export interface ScriptRun {
 
 /**
  * Runs a `run:` script as GitHub does, under `bash -e`, after its expressions are evaluated, with
- * /app moved under `root`. `stubs` are executables put first on PATH, by name. The step's own `env:`
- * is evaluated against `context` and joined to `env`. Scripts that call `node .github/scripts/...`
- * find them through a link from `root`.
+ * /app moved under `root`; `shell: 'bash'`, named in the workflow, adds `-o pipefail` as GitHub does.
+ * `stubs` are executables put first on PATH, by name. `baseEnv` is the job's environment, which the
+ * step's own `env:`, evaluated against `context`, overrides; `env` overrides both. Scripts that call
+ * `node .github/scripts/...` find them through a link from `root`.
  */
 export function runStepScript(
   step: Step,
@@ -322,12 +328,16 @@ export function runStepScript(
     root,
     stubs = {},
     env = {},
+    baseEnv = {},
+    shell,
     status = PASSING,
   }: {
     context: Context;
     root: string;
     stubs?: Record<string, string>;
     env?: Record<string, string>;
+    baseEnv?: Record<string, string>;
+    shell?: string;
     status?: Status;
   },
 ): ScriptRun {
@@ -348,11 +358,14 @@ export function runStepScript(
       underRoot(stringify(value), root),
     ]),
   );
-  const result = spawnSync('bash', ['-e', script], {
+  // GitHub's commands for each shell (docs.github.com, "Workflow syntax", `defaults.run.shell`).
+  const flags = shell === 'bash' ? ['--noprofile', '--norc', '-eo', 'pipefail'] : ['-e'];
+  const result = spawnSync('bash', [...flags, script], {
     cwd: root,
     encoding: 'utf8',
     env: {
       ...process.env,
+      ...baseEnv,
       ...stepEnv,
       ...env,
       PATH: `${bin}:${process.env.PATH ?? ''}`,
@@ -468,6 +481,205 @@ export function actionEnv(step: Step, context: Context): Record<string, string> 
     Object.entries(evaluateMap(first?.env, { ...context, inputs })).map(([key, value]) => [
       key,
       stringify(value),
+    ]),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Running a job, and a called workflow, step by step.
+
+export interface StepRecord {
+  outcome: string;
+  conclusion: string;
+  outputs: Record<string, string>;
+}
+
+/**
+ * What a `uses:` step does in a test: its outcome and outputs, or undefined to let the model run it,
+ * which runs a local composite action's own steps and passes any other action.
+ */
+export type UsesHandler = (
+  step: Step,
+  context: Context,
+  root: string,
+) =>
+  | Promise<{ outcome: 'success' | 'failure'; outputs?: Record<string, string> } | undefined>
+  | { outcome: 'success' | 'failure'; outputs?: Record<string, string> }
+  | undefined;
+
+interface RunOptions {
+  context: Context;
+  root: string;
+  stubs?: Record<string, string>;
+  /** The process environment every script sees, beneath its job's and its step's. */
+  env?: Record<string, string>;
+  uses?: UsesHandler;
+}
+
+async function runSteps(
+  steps: Step[],
+  { context, root, stubs, env = {}, uses, shell }: RunOptions & { shell?: string },
+) {
+  const records: Record<string, StepRecord> = {};
+  let failed = false;
+  let log = '';
+  for (const step of steps) {
+    const at: Context = { ...context, steps: records };
+    const status: Status = { success: !failed, failure: failed };
+    if (!holds(step.if, at, status)) {
+      if (step.id) records[step.id] = { outcome: 'skipped', conclusion: 'skipped', outputs: {} };
+      continue;
+    }
+    let outcome = 'success';
+    let outputs: Record<string, string> = {};
+    if (step.run) {
+      const run = runStepScript(step, {
+        context: at,
+        root,
+        stubs,
+        baseEnv: env,
+        shell: step.shell ?? shell,
+        status,
+      });
+      log += run.log;
+      outcome = run.status === 0 ? 'success' : 'failure';
+      outputs = run.outputs;
+    } else if (step.uses) {
+      const handled = await uses?.(step, at, root);
+      if (handled) {
+        outcome = handled.outcome;
+        outputs = handled.outputs ?? {};
+      } else if (step.uses.startsWith('./.github/actions/')) {
+        const action = loadAction(step.uses);
+        const inputs = inputsFor(action.inputs, evaluateMap(step.with, at));
+        const inner = await runSteps(action.runs.steps, {
+          context: { ...context, inputs },
+          root,
+          stubs,
+          env,
+          uses,
+        });
+        log += inner.log;
+        outcome = inner.failed ? 'failure' : 'success';
+        outputs = Object.fromEntries(
+          Object.entries(action.outputs ?? {}).map(([name, { value }]) => [
+            name,
+            stringify(evaluateValue(value, { ...context, inputs, steps: inner.records })),
+          ]),
+        );
+      }
+    }
+    const continues = truthy(evaluateValue(step['continue-on-error'] ?? false, at));
+    const conclusion = outcome === 'failure' && continues ? 'success' : outcome;
+    if (step.id) records[step.id] = { outcome, conclusion, outputs };
+    if (conclusion === 'failure') failed = true;
+  }
+  return { failed, records, log };
+}
+
+export interface JobResult {
+  result: 'success' | 'failure' | 'skipped';
+  outputs: Record<string, string>;
+  steps: Record<string, StepRecord>;
+  log: string;
+}
+
+/**
+ * Runs a job's steps in order, as a runner does: each `if:` against the job's status so far and the
+ * earlier steps' `steps` context, `continue-on-error` turning a failed step's conclusion to success,
+ * and the job's `env:` and `defaults.run.shell` under every script. Its result is a failure when a
+ * step concluded one; its `outputs:` are evaluated from its steps.
+ */
+export async function runJob(job: Job, options: RunOptions): Promise<JobResult> {
+  const { context, root, env = {} } = options;
+  const jobEnv = Object.fromEntries(
+    Object.entries(evaluateMap(job.env, context)).map(([key, value]) => [
+      key,
+      underRoot(stringify(value), root),
+    ]),
+  );
+  const run = await runSteps(job.steps ?? [], {
+    ...options,
+    context: { ...context, env: jobEnv },
+    env: { ...env, ...jobEnv },
+    shell: job.defaults?.run?.shell,
+  });
+  return {
+    result: run.failed ? 'failure' : 'success',
+    outputs: Object.fromEntries(
+      Object.entries(evaluateMap(job.outputs, { ...context, steps: run.records })).map(
+        ([key, value]) => [key, stringify(value)],
+      ),
+    ),
+    steps: run.records,
+    log: run.log,
+  };
+}
+
+/**
+ * Runs every job of a called workflow, each after the jobs it needs, each in a folder of its own under
+ * `root` (a job has a runner of its own) with the repository's .github linked in. A job whose `if:`
+ * is false is skipped. `context` holds `inputs` and the contexts every job shares.
+ */
+export async function runWorkflow(
+  workflow: Workflow,
+  options: RunOptions,
+): Promise<Record<string, JobResult>> {
+  const results: Record<string, JobResult> = {};
+  const pending = Object.keys(workflow.jobs);
+  while (pending.length) {
+    const index = pending.findIndex((name) =>
+      needsOf(workflow.jobs[name]).every((need) => need in results),
+    );
+    if (index === -1) throw new Error(`No job of ${pending.join(', ')} can start`);
+    const [name] = pending.splice(index, 1);
+    const job = workflow.jobs[name];
+    if (job.strategy?.matrix || job.uses)
+      throw new Error(`runWorkflow runs no matrix and no called workflow (${name})`);
+    const needs = Object.fromEntries(needsOf(job).map((need) => [need, results[need]]));
+    const context: Context = { ...options.context, needs, steps: {} };
+    if (!holds(job.if, context, jobStatus(needs))) {
+      results[name] = { result: 'skipped', outputs: {}, steps: {}, log: '' };
+      continue;
+    }
+    const root = join(options.root, `job-${name}`);
+    mkdirSync(root, { recursive: true });
+    symlinkSync(fromRoot('.github'), join(root, '.github'));
+    results[name] = await runJob(job, { ...options, context, root });
+  }
+  return results;
+}
+
+/**
+ * A called workflow's `outputs` as its caller's `needs.<job>.outputs` reads them, with no step run:
+ * each job's `outputs:` evaluated with its `inputs`, `matrix` and `strategy` contexts and an empty
+ * `steps`, a matrix job's from its last shard (GitHub keeps the last to finish), a skipped job's empty.
+ */
+export function calledOutputs(workflow: Workflow, inputs: Context, base: Context = {}) {
+  const jobs = Object.fromEntries(
+    Object.entries(workflow.jobs).map(([name, job]) => {
+      const context: Context = { ...base, inputs, needs: {}, steps: {} };
+      if (!holds(job.if, context, PASSING)) return [name, { outputs: {} }];
+      const runs = matrixRuns(job, context);
+      const last = runs[runs.length - 1];
+      const at = { ...context, matrix: last?.matrix ?? {}, strategy: last?.strategy ?? {} };
+      return [
+        name,
+        {
+          outputs: Object.fromEntries(
+            Object.entries(evaluateMap(job.outputs, at)).map(([key, value]) => [
+              key,
+              stringify(value),
+            ]),
+          ),
+        },
+      ];
+    }),
+  );
+  return Object.fromEntries(
+    Object.entries(workflow.on.workflow_call?.outputs ?? {}).map(([name, { value }]) => [
+      name,
+      stringify(evaluateValue(value, { jobs })),
     ]),
   );
 }

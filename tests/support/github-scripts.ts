@@ -41,53 +41,58 @@ export function runScript(script: string, env: Record<string, string>, dir: stri
 }
 
 // One merged report, as `playwright merge-reports` writes it from every shard's blob: each file once,
-// each test with its results and their durations in milliseconds.
-export type TimedTest = { title: string; ms: number };
+// each test with its results and their durations in milliseconds. A test with `failed` failed with that
+// message; `tags` are written as the report writes them, without their `@`.
+export type TimedTest = { title: string; ms: number; failed?: string; tags?: string[] };
 export const mergedPlaywrightReport = (
   files: { file: string; tests: TimedTest[] }[],
   duration: number,
-) => ({
-  stats: {
-    startTime: '2026-11-11T09:00:00.000Z',
-    duration,
-    expected: files.reduce((count, { tests }) => count + tests.length, 0),
-    unexpected: 0,
-    skipped: 0,
-    flaky: 0,
-  },
-  suites: files.map(({ file, tests }) => ({
-    title: file,
-    file,
-    line: 0,
-    column: 0,
-    specs: [],
-    suites: [
-      {
-        title: 'Testwort',
-        file,
-        specs: tests.map(({ title, ms }, index) => ({
-          title,
-          ok: true,
-          tags: [],
+) => {
+  const tests = files.flatMap(({ tests: held }) => held);
+  return {
+    stats: {
+      startTime: '2026-11-11T09:00:00.000Z',
+      duration,
+      expected: tests.filter((test) => !test.failed).length,
+      unexpected: tests.filter((test) => test.failed).length,
+      skipped: 0,
+      flaky: 0,
+    },
+    suites: files.map(({ file, tests: held }) => ({
+      title: file,
+      file,
+      line: 0,
+      column: 0,
+      specs: [],
+      suites: [
+        {
+          title: 'Testwort',
           file,
-          tests: [
-            {
-              projectName: 'chromium',
-              status: 'expected',
-              results: [
-                {
-                  workerIndex: index,
-                  status: 'passed',
-                  duration: ms,
-                  retry: 0,
-                  startTime: '2026-11-11T09:00:00.000Z',
-                  errors: [],
-                },
-              ],
-            },
-          ],
-        })),
-      },
-    ],
-  })),
-});
+          specs: held.map(({ title, ms, failed, tags = [] }, index) => ({
+            title,
+            ok: !failed,
+            tags,
+            file,
+            tests: [
+              {
+                projectName: 'chromium',
+                status: failed ? 'unexpected' : 'expected',
+                results: [
+                  {
+                    workerIndex: index,
+                    status: failed ? 'failed' : 'passed',
+                    duration: ms,
+                    retry: 0,
+                    startTime: '2026-11-11T09:00:00.000Z',
+                    errors: failed ? [{ message: failed }] : [],
+                    ...(failed ? { error: { message: failed } } : {}),
+                  },
+                ],
+              },
+            ],
+          })),
+        },
+      ],
+    })),
+  };
+};
