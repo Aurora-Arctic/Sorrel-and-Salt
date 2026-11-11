@@ -20,5 +20,6 @@
 // Placed by `useTip`: above the ⓘ by default so it does not cover typing, up to `$tip-width` wide;
 // `--tip-placement` picks another side (claude-docs/components/info-tip.md, "Placement").
 .info-tip__bubble {
+  box-sizing: content-box;
   @include tip-above;
 }

@@ -31,7 +31,7 @@ export interface TipControls {
   toggle: () => void;
 }
 
-export interface TipAnchorProps extends TipOptions {
+interface TipAnchorProps extends TipOptions {
   /** The anchor's class. */
   className: string;
   /** The bubble's class; the open state adds `is-open`. */

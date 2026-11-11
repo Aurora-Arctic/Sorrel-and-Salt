@@ -10,7 +10,7 @@ import type { DeleteWorkingProps } from './types';
 // Delete Working's write and its question, which the Edit dialog asks before `deleteWorking` runs.
 // The page is read again afterwards, so the row and the card's count both drop it.
 
-export const DeleteWorkingDocument = graphql(`
+const DeleteWorkingDocument = graphql(`
   mutation DeleteWorking($workspaceId: ID!, $id: ID!) {
     deleteWorking(workspaceId: $workspaceId, id: $id)
   }

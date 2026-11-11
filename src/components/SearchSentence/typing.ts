@@ -1,7 +1,7 @@
 // The editing the loading animation does. Nothing fades: the line is edited like text in a box, in three regions
 // (count, search term, clauses) so an edit to one leaves the others as they are.
 
-export type Region = 'lead' | 'term' | 'clauses';
+type Region = 'lead' | 'term' | 'clauses';
 
 export interface Goal {
   lead: string;

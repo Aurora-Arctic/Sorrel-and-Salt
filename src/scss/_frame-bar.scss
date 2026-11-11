@@ -14,9 +14,8 @@
     // At the window's top: on touch the banner above it scrolls away and the bar then holds here.
     top: 0;
     z-index: layer('shell');
-    box-sizing: border-box;
     height: $shell-bar-height;
-    border-bottom: 1px solid $hairline;
+    border-bottom: $hairline-border;
     background-color: $surface-card;
   }
 
@@ -28,7 +27,6 @@
   }
 
   .#{$block}__bar-inner {
-    box-sizing: border-box;
     display: flex;
     align-items: center;
     gap: space(3);
@@ -39,6 +37,7 @@
   }
 
   .#{$block}__brand {
+    box-sizing: content-box;
     display: inline-flex;
     flex: none;
     align-items: center;

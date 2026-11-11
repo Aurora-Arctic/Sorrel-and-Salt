@@ -22,6 +22,7 @@
 }
 
 .entry-mark__tip {
+  box-sizing: content-box;
   @include tip-above;
 }
 

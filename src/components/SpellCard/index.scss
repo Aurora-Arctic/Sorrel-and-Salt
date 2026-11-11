@@ -131,7 +131,6 @@
 // block filling it.
 .spell-card--skeleton {
   @include card-skeleton-fill;
-  box-sizing: border-box;
 }
 
 @each $kind in ('spell', 'spell-draft') {

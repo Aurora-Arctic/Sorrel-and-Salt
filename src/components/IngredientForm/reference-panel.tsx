@@ -62,7 +62,7 @@ import { placeServerIssues } from '../../lib/graphql-failure';
 // A fieldset running its own react-hook-form, as a <form> cannot nest in the ingredient's; opened
 // on a recorded source it edits that one (claude-docs/components/ingredient-form.md, "The new reference panel").
 
-export const CreateReferenceDocument = graphql(`
+const CreateReferenceDocument = graphql(`
   mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {
     createReference(workspaceId: $workspaceId, input: $input) {
       id
@@ -76,7 +76,7 @@ export const CreateReferenceDocument = graphql(`
   }
 `);
 
-export const UpdateReferenceDocument = graphql(`
+const UpdateReferenceDocument = graphql(`
   mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {
     updateReference(workspaceId: $workspaceId, id: $id, input: $input) {
       id
@@ -90,7 +90,7 @@ export const UpdateReferenceDocument = graphql(`
   }
 `);
 
-export const ReferenceDocument = graphql(`
+const ReferenceDocument = graphql(`
   query Reference($workspaceId: ID, $id: ID!) {
     reference(workspaceId: $workspaceId, id: $id) {
       id
@@ -117,7 +117,7 @@ export const ReferenceDocument = graphql(`
   }
 `);
 
-export const EMPTY_REFERENCE: ReferenceFormValues = {
+const EMPTY_REFERENCE: ReferenceFormValues = {
   kind: '',
   title: '',
   authors: '',
@@ -243,7 +243,7 @@ const ONLINE = [HOST, url(), MODIFIED, accessed(), NOTE];
  * `renderCitation` reads for it (`src/lib/citation.ts`), so the panel offers
  * nothing the citation would drop, and requires what the schema refuses.
  */
-export const FIELDS_OF: Record<ReferenceKind, readonly ReferenceFieldSpec[]> = {
+const FIELDS_OF: Record<ReferenceKind, readonly ReferenceFieldSpec[]> = {
   book: [
     title('Title'),
     AUTHORS,
@@ -315,7 +315,7 @@ const shownFor = (kind: ReferenceKind | ''): ReadonlySet<ReferenceFieldName> =>
  * The values as the mutation takes them: the chosen kind's fields as typed and every other field
  * null; a blank day goes as null, since `LocalDate` takes no empty text.
  */
-export function toReferenceInput(values: ReferenceFormValues): ReferenceSendInput {
+function toReferenceInput(values: ReferenceFormValues): ReferenceSendInput {
   const shown = shownFor(values.kind);
   const input: Record<string, string | null> = {};
   for (const name of FIELD_NAMES) {
@@ -330,7 +330,7 @@ export function toReferenceInput(values: ReferenceFormValues): ReferenceSendInpu
   };
 }
 
-export function referenceValuesOf(source: ReferenceQuery['reference']): ReferenceFormValues {
+function referenceValuesOf(source: ReferenceQuery['reference']): ReferenceFormValues {
   const values: ReferenceFormValues = {
     ...EMPTY_REFERENCE,
     kind: source.kind,

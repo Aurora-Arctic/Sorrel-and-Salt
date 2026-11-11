@@ -507,7 +507,7 @@ export function repeatedForm(
   return `"${text.trim()}" is already listed`;
 }
 
-export const PICK_ONLY_LISTS: readonly IngredientListName[] = [
+const PICK_ONLY_LISTS: readonly IngredientListName[] = [
   'celestialBodies',
   'zodiacSigns',
   'deities',

@@ -13,7 +13,7 @@ import type {
   FormFacetChoice,
 } from './types';
 
-export interface DeityVocabulary {
+interface DeityVocabulary {
   slug: string;
   name: string;
   tradition: string;

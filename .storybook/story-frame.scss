@@ -5,7 +5,6 @@
 @use '../src/scss/mixins' as *;
 
 .workshop-story-frame {
-  box-sizing: border-box;
   // At least the window's height, so the ground fills it under a short story.
   // The preview page's body has no height of its own, so a percentage cannot
   // fill the window; the ground shows through wherever the frame stops.

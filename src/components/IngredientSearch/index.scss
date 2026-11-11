@@ -119,7 +119,7 @@ $page-gutter: space(4);
 // On a phone the row is two lines: the search box, then the Filters button and Clear All sharing
 // the second, the Filters button growing to fill it. Scoped here, so other filter rows are
 // unchanged (claude-docs/components/ingredient-search.md, "The phone row").
-@container filter-row (max-width: #{$narrow-column}) {
+@include container-to(filter-row, #{$narrow-column}) {
   .ingredient-search .facet-panel__button {
     flex: 1 1 auto;
   }

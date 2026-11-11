@@ -14,8 +14,8 @@ import { fromRoot } from './paths';
  * Usage: `expectNamedOnlyIn(sourceFiles(), /\bfoo\b/, ALLOWED, { definition: DEFINITION })`.
  */
 
-export const SOURCE_EXTENSION = /\.[cm]?tsx?$/;
-export const RESTRICTED_IMPORTS = 'eslint(no-restricted-imports)';
+const SOURCE_EXTENSION = /\.[cm]?tsx?$/;
+const RESTRICTED_IMPORTS = 'eslint(no-restricted-imports)';
 
 const DIRECTIVE = /^[ \t]*\/\/[ \t]*oxlint-disable(-next-line)? no-restricted-imports\b/;
 

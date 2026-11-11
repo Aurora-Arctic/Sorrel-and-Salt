@@ -1,6 +1,16 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
+// The muted ink of a jar that is not a stocked one (an empty jar, a one-off line, the spell builder's jar): the glass, lid and
+// facets in the muted text colour. The caller adds whatever else its jar needs.
+@mixin jar-muted-stroke {
+  .jar-shelf__glass,
+  .jar-shelf__lid,
+  .jar-shelf__facet {
+    stroke: $text-muted;
+  }
+}
+
 // Hover where a device really hovers, and on keyboard focus (claude-docs/components/jar-shelf.md, "Jar line").
 @mixin jar-press-motion($scope, $press, $svg, $name, $origin: center) {
   // A transform has no effect on an inline box, hence the inline-block.

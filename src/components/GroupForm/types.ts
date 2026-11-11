@@ -24,7 +24,7 @@ export interface GroupColorField {
   hint: string;
 }
 
-export type GroupKindCopy = Omit<GroupFormKind, 'resolver' | 'save' | 'remove'>;
+type GroupKindCopy = Omit<GroupFormKind, 'resolver' | 'save' | 'remove'>;
 
 export interface GroupKindSpec<Input extends object> extends GroupKindCopy {
   schema: z.ZodType<object, FieldValues>;

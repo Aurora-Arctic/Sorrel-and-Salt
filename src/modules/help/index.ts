@@ -24,12 +24,8 @@ export { helpChildrenByParent } from './loaders/help-children';
 export * from './graphql/help';
 export type {
   HelpArticle,
-  HelpArticleInput,
-  HelpArticlePatch,
   HelpArticleWithChildren,
   HelpAudience,
   HelpArticleKind,
   HelpKeeperFilter,
-  HelpListing,
-  HelpRenameEffects,
 } from './types';

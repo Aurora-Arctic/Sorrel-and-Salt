@@ -65,7 +65,7 @@ export interface ModalButtonProps {
 
 export type ModalPhase = 'open' | 'fading' | 'closed' | 'asked';
 
-export interface RouteModalContent {
+interface RouteModalContent {
   heading: ModalHeading;
   /** What it holds, given `done`, the modal's own close, so it fades out before the page goes back. */
   body: (done: () => void) => ReactNode;

@@ -2,10 +2,10 @@ import 'server-only';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import superjson from 'superjson';
 
-export const HELP_TAG = 'help';
+const HELP_TAG = 'help';
 
 // An hour is the longest a changed help article can lag; every write expires the tag at once.
-export const HELP_REVALIDATE_SECONDS = 3600;
+const HELP_REVALIDATE_SECONDS = 3600;
 
 // A new deployment starts with a cold cache, so a changed read shape never meets old entries.
 function deploymentKeyPart(): string[] {

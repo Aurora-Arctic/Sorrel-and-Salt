@@ -100,7 +100,7 @@ const compendiumCacheServer = {
 export const allServers = [...slotServers, configuredProvidersServer, compendiumCacheServer];
 
 /** The env flag that tells scripts/e2e-servers.ts to leave the two special servers out (the story suite has none). */
-export const SLOTS_ONLY = 'E2E_SLOT_SERVERS_ONLY';
+const SLOTS_ONLY = 'E2E_SLOT_SERVERS_ONLY';
 
 /** What scripts/e2e-servers.ts prints when every server answers: the `webServer` entry waits for it. */
 export const SERVERS_READY = 'e2e servers ready';

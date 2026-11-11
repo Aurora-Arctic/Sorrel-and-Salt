@@ -55,6 +55,7 @@
 // Bars that stand for words, each as tall as the line of text it replaces, so a section keeps its place
 // when the words arrive; the bar is drawn inside the line, as the lede's is.
 .skeleton-text .skeleton__line {
+  box-sizing: content-box;
   block-size: 1lh;
   border-block: 0.15lh solid transparent;
   background-clip: padding-box;
@@ -62,6 +63,7 @@
 
 // A section heading's bar fills the heading's own line height, which is far taller than body text.
 .skeleton-text h2 .skeleton__line {
+  box-sizing: content-box;
   block-size: 0.5lh;
   border-block: 0.25lh solid transparent;
 }
@@ -74,6 +76,7 @@
   }
 
   .skeleton__line {
+    box-sizing: content-box;
     block-size: 1rem;
     border-block: 0.125rem solid transparent;
   }

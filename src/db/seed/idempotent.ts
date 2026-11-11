@@ -84,7 +84,7 @@ export async function insertMissing<TTable extends PgTable, W, K>(
 }
 
 /** Rows per INSERT: a statement binds at most 65,535 parameters, and a row binds one per column. */
-export const INSERT_CHUNK = 1000;
+const INSERT_CHUNK = 1000;
 
 /**
  * Inserts `rows`, stamped by the bootstrap user or `session`, `INSERT_CHUNK` to a statement to stay under Postgres's

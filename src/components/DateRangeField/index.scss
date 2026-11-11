@@ -137,27 +137,29 @@
 .date-range-field__body--single {
   container: range-body / inline-size;
 
-  @container range-body (min-width: 36rem) {
+  @include container-from(range-body, 36rem) {
     > .date-range-field__picks {
       @include picks-column;
     }
   }
 
-  @container range-body (min-width: 25.5rem) and (max-width: 35.99rem) {
-    > .date-range-field__main {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: start;
-      column-gap: space(3);
+  @include container-from(range-body, 25.5rem) {
+    @include container-to(range-body, 35.99rem) {
+      > .date-range-field__main {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+        column-gap: space(3);
 
-      > .date-range-field__ends {
-        grid-column: 2;
-        grid-row: 1;
-      }
+        > .date-range-field__ends {
+          grid-column: 2;
+          grid-row: 1;
+        }
 
-      > :not(.date-range-field__ends) {
-        grid-column: 1;
-        grid-row: 1;
+        > :not(.date-range-field__ends) {
+          grid-column: 1;
+          grid-row: 1;
+        }
       }
     }
   }
@@ -179,7 +181,7 @@
   grid-template-columns: minmax(0, 1fr);
   gap: space(2);
 
-  @container (min-width: 18rem) {
+  @include container-from(null, 18rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

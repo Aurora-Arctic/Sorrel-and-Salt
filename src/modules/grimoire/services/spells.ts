@@ -16,7 +16,7 @@ import { isRowId, parseInput } from '../../../lib/validation';
 import type { Session } from '../../../lib/session';
 import { assertMembership, type Membership } from '@/modules/coven';
 import { categories } from '@/modules/vocabulary/schema/categories';
-import type { SpellInput, SpellRow, SpellStepInput, SpellStepRow, SpellUpdate } from '../types';
+import type { SpellInput, SpellRow, SpellUpdate } from '../types';
 
 // The grimoire's service. Stewards and practitioners create and edit, observers read. A private spell is its author's alone, which the
 // finders enforce: a hidden spell is `NotFound`, never confirmed to exist (claude-docs/db/spell-visibility.md).
@@ -115,47 +115,6 @@ export async function updateSpell(
     if (categoryIds) await writeCategories(write, spellId, categoryIds, held);
     return spell;
   });
-}
-
-/**
- * Writable exactly when its spell is: the step has no scope of its own, so the spell is read first, as the caller.
- *
- * @throws {Forbidden} the caller may not write this coven's grimoire.
- * @throws {NotFound} no such spell here, or none this caller may read.
- */
-export async function addSpellStep(
-  session: Session,
-  workspaceId: string,
-  spellId: string,
-  input: SpellStepInput,
-): Promise<SpellStepRow> {
-  const membership = await assertMembership(session, workspaceId, { spell: ['update'] });
-  await readableSpell(membership, spellId);
-  const existing = await findManyInSpell(membership, spellSteps, spellId);
-  const next = Math.max(0, ...existing.map((step) => step.position)) + 1;
-  const [step] = await withAudit(session, (write) =>
-    write.insert(spellSteps, { ...input, spellId, position: next }),
-  );
-  return step;
-}
-
-/**
- * @throws {Forbidden} the caller may not write this coven's grimoire.
- * @throws {NotFound} no such spell here or none this caller may read, or no such step in it.
- */
-export async function updateSpellStep(
-  session: Session,
-  workspaceId: string,
-  spellId: string,
-  stepId: string,
-  input: SpellStepInput,
-): Promise<SpellStepRow> {
-  const membership = await assertMembership(session, workspaceId, { spell: ['update'] });
-  await readableSpell(membership, spellId);
-  const steps = await findManyInSpell(membership, spellSteps, spellId);
-  if (!steps.some((step) => step.id === stepId)) throw new NotFound('No such step in this spell');
-  const [step] = await withAudit(session, (write) => write.updateById(spellSteps, stepId, input));
-  return step;
 }
 
 /**

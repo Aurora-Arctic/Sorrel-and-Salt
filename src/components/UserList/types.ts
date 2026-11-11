@@ -68,7 +68,7 @@ export interface ImpersonateButtonProps {
 }
 
 /** What a row's creation control does: approve a user awaiting it, or revoke it. */
-export type CreationAction = 'approve' | 'revoke';
+type CreationAction = 'approve' | 'revoke';
 
 /** What a row's role control does: make a user a keeper, or stop one being one. */
 export interface RoleControlProps {

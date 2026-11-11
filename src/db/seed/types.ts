@@ -119,7 +119,7 @@ export type SeedLayerIngredient =
  * One step: an instruction (`body`), a layer (`ingredient`), or both. Its `position` is its place in `SeedSpell['steps']`. An
  * amount belongs to a layer, so an instruction-only step carries none, as the table's CHECK requires.
  */
-export type SeedStep =
+type SeedStep =
   | (Pick<typeof spellSteps.$inferInsert, 'quantity' | 'unit'> & {
       ingredient: SeedLayerIngredient;
       body?: string;
@@ -219,7 +219,7 @@ export type SeedAstrologyValue = Pick<
   'name' | 'description' | 'position'
 >;
 
-export interface SeedSourceDeity {
+interface SeedSourceDeity {
   name: string;
   locator?: string;
 }
@@ -354,7 +354,7 @@ export type SeedCompendiumEntry = Pick<
  * `needs-review` the curator's queue, `draft` unfinished and refused on the
  * release branches. Never stored or hashed.
  */
-export type CompendiumFileStatus = 'draft' | 'needs-review' | 'approved';
+type CompendiumFileStatus = 'draft' | 'needs-review' | 'approved';
 
 /** The two trailing sections an entry file may end with, neither hashed nor seeded. */
 export interface CompendiumFileSections {

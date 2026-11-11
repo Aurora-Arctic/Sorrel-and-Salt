@@ -1,6 +1,5 @@
 import { randomBytes } from 'node:crypto';
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
-import type { AuthContext } from '@better-auth/core';
 import {
   isAPIError,
   APIError,
@@ -36,7 +35,7 @@ import {
   passkeys,
   twoFactors,
 } from '../modules/identity/schema/auth';
-import { SOCIAL_PROVIDERS, isRosterProvider } from './social-providers';
+import { SOCIAL_PROVIDERS } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
 // oxlint-disable-next-line no-restricted-imports
 import { PROFILE, clientCredentials } from './social-providers-config';
@@ -219,15 +218,6 @@ function refuseSignedOut(ctx: HookContext): APIError {
 /** Better Auth's helper is typed for an endpoint's context, which a hook's holds everything of. */
 function sessionOf(ctx: HookContext) {
   return getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
-}
-
-/** One outside the roster has no label to name it by, so it is left out. */
-export async function linkedProviderIds(
-  context: Pick<AuthContext, 'internalAdapter'>,
-  userId: string,
-): Promise<ProviderId[]> {
-  const accounts = await context.internalAdapter.findAccounts(userId);
-  return accounts.map((account) => account.providerId).filter(isRosterProvider);
 }
 
 /**

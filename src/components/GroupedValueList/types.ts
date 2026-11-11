@@ -5,7 +5,7 @@ import type { ModalHeading } from '../Modal/types';
 import type { GroupColors, ListKind, PagePosition, PagerHrefs } from '../../lib/types';
 import type { GroupedValueKind } from '../GroupedValueForm/types';
 
-export interface GroupedValueListGroup {
+interface GroupedValueListGroup {
   label: string;
   plural: string;
   param: string;

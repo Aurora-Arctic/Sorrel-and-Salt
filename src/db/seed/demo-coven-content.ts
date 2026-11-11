@@ -77,7 +77,7 @@ const OWN_HOUSE_BLEND = {
 } as const satisfies NamedIngredient;
 
 /** The compendium entries the coven holds: seven, annotated with nothing. */
-export const DEMO_COVEN_CUPBOARD: SeedCupboardEntry[] = [
+const DEMO_COVEN_CUPBOARD: SeedCupboardEntry[] = [
   BAY_LAUREL,
   SALT,
   LAVENDER,
@@ -87,7 +87,7 @@ export const DEMO_COVEN_CUPBOARD: SeedCupboardEntry[] = [
   HYSSOP,
 ].map(({ entry }) => ({ entry }));
 
-export const DEMO_COVEN_OWN_ENTRIES: SeedWorkspaceIngredient[] = [HOUSE_BLEND];
+const DEMO_COVEN_OWN_ENTRIES: SeedWorkspaceIngredient[] = [HOUSE_BLEND];
 
 const jar = (n: number) => `00000000-0000-0000-0103-${String(n).padStart(12, '0')}`;
 const SALT_JAR = jar(1);
@@ -101,7 +101,7 @@ const BLEND_JAR = jar(6);
  * Six jars, on most of the entries: Cinnamon and German Chamomile have none. Each names the form a linked layer of that
  * entry lays (the first form alphabetically, as `variantIdByIngredient` picks it), so a step and its jar agree.
  */
-export const DEMO_COVEN_STOCK: SeedStock[] = [
+const DEMO_COVEN_STOCK: SeedStock[] = [
   { id: SALT_JAR, ingredient: SALT, form: 'Salt', quantity: '500.000', unit: 'g' },
   { id: LAUREL_JAR, ingredient: BAY_LAUREL, form: 'Leaf', quantity: '40.000', unit: 'g' },
   { id: HYSSOP_JAR, ingredient: HYSSOP, form: 'Herb', quantity: '30.000', unit: 'g' },
@@ -121,7 +121,7 @@ const PEACE_BOWL = spell(5);
  * Five spells. Every compendium ingredient carries a category the spell's assigned categories name, bar the exceptions
  * below; the test reads both. A step says what to do and claims nothing the compendium does not.
  */
-export const DEMO_COVEN_SPELLS: SeedSpell[] = [
+const DEMO_COVEN_SPELLS: SeedSpell[] = [
   {
     id: DOORWAY_JAR,
     title: 'Doorway Protection Jar',
@@ -221,7 +221,7 @@ const working = (n: number) => `00000000-0000-0000-0104-${String(n).padStart(12,
  * Two workings: a complete one on the Doorway Protection Jar that took its four layers from the jars, and a draft on the
  * Cleansing Salt Bowl that took nothing. Each deduction is the step's own amount, as the working service would plan it.
  */
-export const DEMO_COVEN_WORKINGS: SeedWorking[] = [
+const DEMO_COVEN_WORKINGS: SeedWorking[] = [
   {
     id: working(1),
     spellId: DOORWAY_JAR,
@@ -268,7 +268,7 @@ export const DEMO_COVEN_CONTENT: DemoCovenContent = {
 };
 
 /** One thing the run left out, and why: `what` is a formal name for an entry, or `spell "Title"`. */
-export interface SkippedContent {
+interface SkippedContent {
   what: string;
   reason: string;
 }

@@ -29,10 +29,10 @@ body .collapsible-section {
   gap: 0;
   min-width: 0;
   margin: 0;
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 
   &:last-child {
-    border-bottom: 1px solid $hairline;
+    border-bottom: $hairline-border;
   }
 
   &.is-invalid {

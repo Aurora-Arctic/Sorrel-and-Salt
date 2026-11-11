@@ -8,7 +8,7 @@ const SUBJECT = 'Your Access Was Paused';
 const PREVIEW = 'An admin paused your access to Sorrel & Salt.';
 
 // Never the keeper's note. Links to the support page, the one page a paused account can still reach.
-export function AccessPaused({
+function AccessPaused({
   url,
   until,
   message,

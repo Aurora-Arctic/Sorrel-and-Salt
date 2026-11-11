@@ -5,7 +5,7 @@ import LocalTime from '../LocalTime';
 // The facts at the head of an opened request: Sent, Page, Error and Error Details, with a fact before them and one beside Sent for the
 // facts only one screen shows (From and Resolved for staff). Page takes a row of its own, so a path never sits beside a date.
 
-export interface SupportFactsProps {
+interface SupportFactsProps {
   createdAt: Date;
   path: string | null;
   errorCode: number | null;

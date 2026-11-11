@@ -397,7 +397,7 @@ export function LinkOnlyNote() {
 }
 
 /** Renders a template once per part, so the text part is written for text, not stripped from the HTML. */
-export async function renderParts(
+async function renderParts(
   email: (part: Part) => ReactElement,
 ): Promise<{ html: string; text: string }> {
   return {

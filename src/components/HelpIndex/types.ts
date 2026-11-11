@@ -1,7 +1,7 @@
 import type { HelpTermSource } from '../../lib/help-marks';
 import type { HelpSubpageLink } from '../HelpArticleView/types';
 
-export interface HelpFaqEntry {
+interface HelpFaqEntry {
   slug: string;
   title: string;
   /** Markdown. */

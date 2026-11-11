@@ -7,7 +7,7 @@ import {
 } from '@/db/seed/compendium/guard';
 import { loadCompendium } from '@/db/seed/compendium/load';
 import { entryFilePath } from '@/db/seed/compendium/parse-entry';
-import type { RenderableEntryFile } from '@/db/seed/compendium/render-entry';
+import type { RenderableEntryFile } from '../../../support/seed/render-entry';
 import { wordsOf } from '../compendium-fixture';
 import {
   fileFor,

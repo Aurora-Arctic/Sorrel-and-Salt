@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { SupportAbout, SupportStatus } from '../SupportRequests/types';
 
-export interface SupportSenderReply {
+interface SupportSenderReply {
   id: string;
   body: string;
   createdAt: Date;

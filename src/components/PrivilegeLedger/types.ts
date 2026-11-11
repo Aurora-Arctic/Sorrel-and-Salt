@@ -3,7 +3,7 @@ import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 export type LedgerPrivilege = 'admin' | 'curator' | 'create_workspace';
 
-export type LedgerChange = 'grant' | 'revoke';
+type LedgerChange = 'grant' | 'revoke';
 
 export type LedgerRoute = 'bootstrap' | 'admin' | 'invitation' | 'card' | 'manual';
 

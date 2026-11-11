@@ -1,10 +1,9 @@
 import { and, eq, inArray, ne, notInArray } from 'drizzle-orm';
 import { workspaceSlugs } from '../../modules/coven/schema/workspace-slugs';
 import { workspaces } from '../../modules/coven/schema/workspaces';
-import type { Membership } from '@/modules/coven';
-import { notSoftDeleted, scopedTo } from './predicates';
+import { notSoftDeleted } from './predicates';
 import { selectFrom, selectOne } from './select';
-import type { AuditWriter, WorkspaceRow, WorkspaceSlugRow, WriterContext } from './types';
+import type { AuditWriter, WorkspaceRow, WriterContext } from './types';
 
 /** The live coven with this id, or `undefined`. */
 function findLiveWorkspace(id: string) {
@@ -26,14 +25,6 @@ export async function findWorkspaceHoldingSlug(
   if (!address) return undefined;
   const workspace = await findLiveWorkspace(address.workspaceId);
   return workspace ? { workspace, current: workspace.slug === slug } : undefined;
-}
-
-/** Every live address, current and old, of the proof's coven. */
-export function findWorkspaceSlugs(membership: Membership): Promise<WorkspaceSlugRow[]> {
-  return selectFrom(
-    workspaceSlugs,
-    and(notSoftDeleted(workspaceSlugs), scopedTo(membership, workspaceSlugs)),
-  );
 }
 
 /**

@@ -16,7 +16,7 @@ function providerLabel(id: string): string {
   return labelByKey(SOCIAL_PROVIDERS, 'id', id);
 }
 
-export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
+const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
   const label = providerLabel(id);
   if (!isRosterProvider(id)) return <span>{label}</span>;
   return (

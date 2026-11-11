@@ -13,7 +13,7 @@ import type { SeedCompendiumFile, SeedCompendiumShard, SeedWork } from '../types
 export const COMPENDIUM_ROOT = 'compendium';
 
 /** The template a new file is copied from, skipped by name: it is not an entry. */
-export const TEMPLATE_FILE = 'base.md';
+const TEMPLATE_FILE = 'base.md';
 
 /** The file naming the entry files whose citations still carry `nameBasis: unaudited`, one path per line. */
 export const UNAUDITED_LIST = 'unaudited.txt';
@@ -166,7 +166,7 @@ export function loadCompendium(root: string = COMPENDIUM_ROOT): LoadedCompendium
  * The conversion manifest: the content hash of each converted file by entry identity, stored as the baseline of a row seeded before the hash
  * existed ("Adoption"). Deleted once production has adopted.
  */
-export const CONVERSION_MANIFEST = '.converted-hashes.json';
+const CONVERSION_MANIFEST = '.converted-hashes.json';
 
 const manifestSchema = z.record(z.string().min(1), z.string().regex(/^[0-9a-f]{64}$/));
 

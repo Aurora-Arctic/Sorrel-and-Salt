@@ -143,7 +143,7 @@ export async function parseUnderLiveParent<
   return { fields, parent: row };
 }
 
-export async function moveTarget<TTable extends GroupTable>(
+async function moveTarget<TTable extends GroupTable>(
   group: CuratedGroup<TTable>,
   id: string,
   moveTo: string | undefined,

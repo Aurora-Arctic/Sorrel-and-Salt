@@ -7,7 +7,7 @@ import './icons.scss';
 // (claude-docs/components/sign-in-panel.md, "Contracts"). The fills are the artwork's, and
 // the grounds the marks sit on are the provider's colours from `$brand-palettes`, not our tokens.
 
-export function GoogleIcon(): ReactElement {
+function GoogleIcon(): ReactElement {
   return (
     <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
       <path
@@ -30,7 +30,7 @@ export function GoogleIcon(): ReactElement {
   );
 }
 
-export function DiscordIcon(): ReactElement {
+function DiscordIcon(): ReactElement {
   return (
     <svg viewBox="0 0 126.644 96" width="21" height="15.75" aria-hidden="true">
       <path
@@ -43,7 +43,7 @@ export function DiscordIcon(): ReactElement {
 
 // One path traces the circle and the "f" together, so filled white over the blue chip below
 // shows the blue through the "f".
-export function FacebookIcon(): ReactElement {
+function FacebookIcon(): ReactElement {
   return (
     <span className="sign-in-panel__icon-chip sign-in-panel__icon-chip--facebook">
       <svg viewBox="0 0 500 499" width="24" height="24" aria-hidden="true">
@@ -59,7 +59,7 @@ export function FacebookIcon(): ReactElement {
 
 // The Meta asset on Facebook's own blue for a list: the path's "f" is a hole, so a white disc sits
 // behind it, inset (r 245 against 250) so no white fringe antialiases around the blue edge.
-export function FacebookMark(): ReactElement {
+function FacebookMark(): ReactElement {
   return (
     <svg viewBox="0 0 500 499" width="24" height="24" aria-hidden="true">
       <circle cx="250" cy="250" r="245" fill="#ffffff" />
@@ -72,7 +72,7 @@ export function FacebookMark(): ReactElement {
   );
 }
 
-export function MicrosoftIcon(): ReactElement {
+function MicrosoftIcon(): ReactElement {
   return (
     <svg viewBox="0 0 21 21" width="18" height="18" aria-hidden="true">
       <rect x="1" y="1" width="9" height="9" fill="#F25022" />

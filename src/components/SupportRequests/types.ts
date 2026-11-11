@@ -40,7 +40,7 @@ export interface SupportRequestEntry {
   resolvedBySender: boolean;
 }
 
-export interface SupportReplyEntry {
+interface SupportReplyEntry {
   id: string;
   body: string;
   author: SupportPerson | null;
@@ -64,7 +64,7 @@ export interface SupportTimeoutEntry {
 }
 
 /** A request's assignee, as its detail gives it: `paused` while a site access pause stands on them, which leaves them out of the picker. */
-export interface SupportAssignee extends SupportPerson {
+interface SupportAssignee extends SupportPerson {
   paused?: boolean;
 }
 

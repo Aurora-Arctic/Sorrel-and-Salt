@@ -29,8 +29,6 @@ import { router } from '../../support/next-navigation';
 // claude-docs/components/admin-cards.md
 
 vi.mock('@/lib/invitation-cards', () => ({
-  cardQrSvg: (link: string) =>
-    `<svg xmlns="http://www.w3.org/2000/svg"><title>${link}</title></svg>`,
   buildCardSheetsPdf: vi.fn(async () => new Uint8Array([37, 80, 68, 70])),
 }));
 

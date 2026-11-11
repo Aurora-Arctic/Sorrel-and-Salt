@@ -26,6 +26,7 @@
     }
 
     .skeleton__line {
+      box-sizing: content-box;
       block-size: 1rem;
       border-block: 0.325rem solid transparent;
     }

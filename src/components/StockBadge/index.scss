@@ -6,7 +6,6 @@
 .stock-badge {
   @include button-reset(help);
 
-  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;

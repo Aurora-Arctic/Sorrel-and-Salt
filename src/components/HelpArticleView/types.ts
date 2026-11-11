@@ -6,7 +6,7 @@ export interface HelpSubpageLink {
   href: string;
 }
 
-export type HelpGuideStep = Pick<HelpSubpageLink, 'title' | 'href'>;
+type HelpGuideStep = Pick<HelpSubpageLink, 'title' | 'href'>;
 
 export interface HelpArticleViewProps {
   /** The page's title, drawn as a level-two heading beneath the search box. */

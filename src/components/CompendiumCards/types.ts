@@ -51,7 +51,7 @@ export interface CompendiumCardEntry {
   places?: readonly CompendiumCardPlace[];
 }
 
-export type CompendiumCardsAction = 'add' | 'none';
+type CompendiumCardsAction = 'add' | 'none';
 
 export interface CompendiumCardsProps extends Pick<
   CompendiumListProps,
@@ -76,5 +76,3 @@ export interface CompendiumCardsProps extends Pick<
   covens?: readonly CompendiumCoven[];
   myCovens?: readonly MyCoven[];
 }
-
-export type { CompendiumCoven };

@@ -13,10 +13,7 @@
 }
 
 .sign-in-methods__item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(2) space(3);
+  @include wrap-row(space(2) space(3));
   margin: 0;
 }
 

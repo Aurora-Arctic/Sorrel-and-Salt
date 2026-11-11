@@ -38,7 +38,7 @@ const ONE_OFF_TAKEN = 'This ingredient is already in the jar.';
 
 export const oneOffKey = (name: string): string => fold(name);
 
-export const ROW_CATEGORY_CAP = 1;
+const ROW_CATEGORY_CAP = 1;
 
 /**
  * A row's categories in three runs: the spell's assigned categories that Category Match counts

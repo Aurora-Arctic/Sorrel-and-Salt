@@ -26,7 +26,7 @@ export function askedCoven(value: string | null, onAdmin = false): 'default' | s
   return slugAfter(value, NEW_COVEN_INGREDIENT_PREFIX);
 }
 
-export function askedSpell(value: string | null): 'current' | string | null {
+function askedSpell(value: string | null): 'current' | string | null {
   if (value === null) return null;
   if (value === NEW_SPELL) return 'current';
   return slugAfter(value, NEW_SPELL_PREFIX);

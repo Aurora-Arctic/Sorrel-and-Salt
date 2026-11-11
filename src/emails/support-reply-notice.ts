@@ -8,7 +8,7 @@ import type { SupportReplyNoticeProps } from './types';
 const titleOf = (requestSubject: string): string =>
   supportTitle('Reply to your support request', requestSubject);
 
-export function SupportReplyNotice({
+function SupportReplyNotice({
   url,
   origin = new URL(url).origin,
   part,

@@ -1195,7 +1195,7 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
  * categories. Its own export so a database the scenario already seeded can
  * take spells added since, writing nothing else.
  */
-export async function seedDemoSpells(tx: SeedTransaction): Promise<void> {
+async function seedDemoSpells(tx: SeedTransaction): Promise<void> {
   await insertMissingSpells(tx, W_COVEN, DEMO_SPELLS);
   await insertMissingSteps(
     tx,

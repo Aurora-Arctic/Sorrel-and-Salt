@@ -12,8 +12,8 @@ import type {
 // or null for the compendium's. Apart from the component so the rule is read
 // in one place (claude-docs/components/cupboard-entry-form.md, "Contracts").
 
-export const TEXT_FIELDS: readonly TextField[] = ['label', 'description', 'safetyNotes'];
-export const LIST_FIELDS: readonly ListFieldName[] = [
+const TEXT_FIELDS: readonly TextField[] = ['label', 'description', 'safetyNotes'];
+const LIST_FIELDS: readonly ListFieldName[] = [
   'elements',
   'celestialBodies',
   'zodiacSigns',

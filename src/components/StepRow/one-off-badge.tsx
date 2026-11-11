@@ -7,7 +7,7 @@ import { cx } from '@/lib/class-names';
 // A one-off ingredient's badge with its tip: a button, so the tip is reached by focus as well as hover, and named
 // One-Off with the sentence as its description, since IconTip's bubble is never read.
 
-export const ONE_OFF_TIP = 'Used in this spell only; not kept in your cupboard.';
+const ONE_OFF_TIP = 'Used in this spell only; not kept in your cupboard.';
 
 export default function OneOffBadge({ className }: { className?: string }): ReactElement {
   const descriptionId = useId();

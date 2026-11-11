@@ -3,9 +3,9 @@ import postgres from 'postgres';
 import { getTableName } from 'drizzle-orm';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
-import { A, B, D, asUser } from '../../../support/as-user';
+import { A, D, asUser } from '../../../support/as-user';
 import { insertWorkspaceWithSlug } from '../../../support/db/insert-workspace';
-import { findWorkspaceHoldingSlug, findWorkspaceSlugs, withAudit } from '@/db/repository';
+import { findWorkspaceHoldingSlug, withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { violatedUniqueIndex } from '@/lib/unique-violation';
 import { assertMembership } from '@/modules/coven';
@@ -155,27 +155,6 @@ describe('findWorkspaceHoldingSlug', () => {
     await sql`update workspaces set deleted_at = now(), deleted_by = ${OWNER} where id = ${deleted.id}`;
 
     expect(await findWorkspaceHoldingSlug(slug)).toBeUndefined();
-  });
-});
-
-describe('findWorkspaceSlugs', () => {
-  it("lists only the proof's own coven's live addresses", async () => {
-    const coven = await insertWorkspaceWithSlug(sql, `Fixture Listed Coven ${token()}`, [
-      [OWNER, 'owner'],
-      [B.id, 'member'],
-    ]);
-    const other = await insertWorkspaceWithSlug(sql, `Fixture Unlisted Coven ${token()}`);
-    const kept = `fixture-kept-${token()}`;
-    const [dropped] = await address(coven.id, `fixture-dropped-${token()}`);
-    await address(coven.id, coven.slug);
-    await address(coven.id, kept);
-    await address(other.id, other.slug);
-    await sql`update workspace_slugs set deleted_at = now(), deleted_by = ${OWNER} where id = ${dropped.id}`;
-
-    const membership = await assertMembership(asUser(B), coven.id, { workspace: ['read'] });
-    const listed = (await findWorkspaceSlugs(membership)).map(({ slug }) => slug).sort();
-
-    expect(listed).toEqual([coven.slug, kept].sort());
   });
 });
 

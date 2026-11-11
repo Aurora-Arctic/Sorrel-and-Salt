@@ -16,7 +16,7 @@ const PREVIEW = {
   completed: 'Your account now uses another email address.',
 };
 
-export function EmailChangeNotice({
+function EmailChangeNotice({
   stage,
   newDomain,
   at,

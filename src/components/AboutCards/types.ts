@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 
 /** A row's class, which names the row's styles (`about-pillars`, `about-roles`). */
-export type AboutCardsBlock = 'about-pillars' | 'about-roles';
+type AboutCardsBlock = 'about-pillars' | 'about-roles';
 
-export interface AboutCard {
+interface AboutCard {
   heading: string;
   text: string;
   /** A drawing from `IconTip/icons.tsx`; decorative, so it is hidden from a screen reader. */

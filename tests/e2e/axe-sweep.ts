@@ -672,7 +672,7 @@ async function openTwoFactorWarning(page: Page): Promise<Locator> {
 }
 
 /** One place the sweep could not scan, with what the page held, so the opener can be corrected. */
-export interface Unreached {
+interface Unreached {
   scan: string;
   error: string;
   page: string;

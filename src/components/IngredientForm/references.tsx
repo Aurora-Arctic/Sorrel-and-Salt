@@ -50,7 +50,7 @@ import { cx } from '@/lib/class-names';
 
 // The search and the panel's two saves select the same fields, written out in each: a document is its
 // caller's own text, so a fragment defined elsewhere would not be sent with it.
-export const ReferenceSuggestionsDocument = graphql(`
+const ReferenceSuggestionsDocument = graphql(`
   query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {
     referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
