@@ -120,6 +120,37 @@
   gap: space(3);
 }
 
+// One month in a panel of set width, with the presets in a row above: when the body has room for the month and a column of
+// boxes of about 9rem beside it, the boxes stand beside the month, Start above End. DOM order stays Start, End, calendar; the
+// grid places them. With the presets beside the month (48rem and up) the boxes keep the stacked-above layout. A container
+// cannot restyle itself, so the body is the container and the main column the grid.
+.date-range-field__body--single {
+  container: range-body / inline-size;
+
+  @include width-from(48rem) {
+    container-type: normal;
+  }
+
+  @container range-body (min-width: 25.5rem) {
+    > .date-range-field__main {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: start;
+      column-gap: space(3);
+
+      > .date-range-field__ends {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      > :not(.date-range-field__ends) {
+        grid-column: 1;
+        grid-row: 1;
+      }
+    }
+  }
+}
+
 // The Start and End boxes above the months. Zero inline-size with a full-width minimum adds nothing to the panel's
 // fit-content width, as the picks and hint do; that also lets it be the container its own width is asked of.
 .date-range-field__ends {

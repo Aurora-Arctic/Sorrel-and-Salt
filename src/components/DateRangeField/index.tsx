@@ -175,7 +175,9 @@ export default function DateRangeField({
           label={`Choose ${label} Days`}
           describedBy={hintId}
         >
-          <div className="date-range-field__body">
+          <div
+            className={`date-range-field__body${months === 1 && floating ? ' date-range-field__body--single' : ''}`}
+          >
             {quickPicks.length > 0 && (
               <div className="date-range-field__picks">
                 {quickPicks.map((quick) => {
