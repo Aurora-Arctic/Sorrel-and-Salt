@@ -1,18 +1,17 @@
 'use client';
 
-import { type ReactElement, useCallback, useId, useRef, useState } from 'react';
+import { type ReactElement, useId, useState } from 'react';
 import { useMediaQuery } from '../../lib/use-media-query';
 import {
   CALENDAR_CLASS_NAMES,
   CalendarChevron,
   CalendarIcon,
-  hasPopover,
   parseDay,
-  useCalendarPopover,
 } from '../DateField/calendar';
-import { isoDay } from '../DateField/day';
+import { isoDay, shortDayWords as shortWords } from '../DateField/day';
 import { dayPickerModule } from '../DateField/lazy-day-picker';
-import { preloadOnIntent, useLazyModule, usePreloadWhenIdle } from '../../lib/use-lazy-module';
+import { CalendarPanel, dayBounds, useDayPopover } from '../DateField/popover';
+import { preloadOnIntent } from '../../lib/use-lazy-module';
 import type { DateRangeFieldProps, DayRange } from './types';
 import './index.scss';
 
@@ -21,16 +20,6 @@ import './index.scss';
 
 // Below this width the calendar shows one month, as two side by side would not fit beside the picks.
 const NARROW = '(max-width: 47.9375rem)';
-
-const SHORT = new Intl.DateTimeFormat('en-GB', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
-
-/** A day in short words: "1 Oct 2026". Read at UTC midnight, so no zone shifts it. */
-const shortWords = (day: string): string => SHORT.format(new Date(`${day}T00:00:00Z`));
 
 const HINT = {
   first: 'Pick the first day, then the last. Pick one day twice for a single day.',
@@ -68,18 +57,11 @@ export default function DateRangeField({
   past = false,
   ...aria
 }: DateRangeFieldProps): ReactElement {
-  const panelId = useId();
   const hintId = useId();
-  const panel = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
-  const [floating] = useState(hasPopover);
+  const { panelId, panel, open, setOpen, floating, picker, closeAndFocus } = useDayPopover(id);
   const months = useMediaQuery(NARROW) ? 1 : 2;
   // The first day of a range being picked, until the second is.
   const [pending, setPending] = useState<string | null>(null);
-  const close = useCallback(() => setOpen(false), []);
-  useCalendarPopover({ open, floating, fieldId: id, panel, close });
-  usePreloadWhenIdle(dayPickerModule);
-  const picker = useLazyModule(dayPickerModule, open);
   const first = min ? parseDay(min) : undefined;
   const last = max ? parseDay(max) : undefined;
   const start = parseDay(pending ?? from);
@@ -88,8 +70,7 @@ export default function DateRangeField({
   const finish = (range: DayRange) => {
     onChange(range);
     setPending(null);
-    setOpen(false);
-    document.getElementById(id)?.focus();
+    closeAndFocus();
   };
 
   const pick = (day: Date) => {
@@ -144,14 +125,12 @@ export default function DateRangeField({
         </button>
       )}
       {open && (
-        <div
-          ref={panel}
+        <CalendarPanel
           id={panelId}
-          role="dialog"
-          aria-label={`Choose ${label} Days`}
-          aria-describedby={hintId}
-          className={floating ? 'calendar-panel calendar-panel--floating' : 'calendar-panel'}
-          popover={floating ? 'manual' : undefined}
+          floating={floating}
+          panel={panel}
+          label={`Choose ${label} Days`}
+          describedBy={hintId}
         >
           <div className="date-range-field__body">
             {quickPicks.length > 0 && (
@@ -187,10 +166,7 @@ export default function DateRangeField({
                 endMonth={last}
                 captionLayout="label"
                 components={{ Chevron: CalendarChevron }}
-                disabled={[
-                  ...(last ? [{ after: last }] : []),
-                  ...(first ? [{ before: first }] : []),
-                ]}
+                disabled={dayBounds(first, last)}
                 // The library's own range rule extends the range it holds; the field's is first
                 // then last.
                 onSelect={(_range, day) => pick(day)}
@@ -201,7 +177,7 @@ export default function DateRangeField({
           <p id={hintId} className="date-range-field__hint" aria-live="polite">
             {pending === null ? HINT.first : HINT.last}
           </p>
-        </div>
+        </CalendarPanel>
       )}
     </div>
   );

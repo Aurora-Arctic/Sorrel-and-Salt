@@ -1,18 +1,17 @@
 'use client';
 
-import { type ReactElement, useCallback, useId, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import {
   CALENDAR_CLASS_NAMES,
   CalendarChevron,
   CalendarIcon,
   CaptionDropdown,
-  hasPopover,
   parseDay as parse,
-  useCalendarPopover,
 } from './calendar';
-import { dayPickerModule } from '../DateField/lazy-day-picker';
+import { dayPickerModule } from './lazy-day-picker';
+import { CalendarPanel, dayBounds, useDayPopover } from './popover';
 import { dayWords, isoDay, today } from './day';
-import { preloadOnIntent, useLazyModule, usePreloadWhenIdle } from '../../lib/use-lazy-module';
+import { preloadOnIntent } from '../../lib/use-lazy-module';
 import type { DateFieldProps } from './types';
 import './index.scss';
 
@@ -60,14 +59,7 @@ export default function DateField({
   labelledBy,
   ...aria
 }: DateFieldProps): ReactElement {
-  const panelId = useId();
-  const panel = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
-  const [floating] = useState(hasPopover);
-  const close = useCallback(() => setOpen(false), []);
-  useCalendarPopover({ open, floating, fieldId: id, panel, close });
-  usePreloadWhenIdle(dayPickerModule);
-  const picker = useLazyModule(dayPickerModule, open);
+  const { panelId, panel, open, setOpen, floating, picker, closeAndFocus } = useDayPopover(id);
   const selected = parse(value);
   const last = max ? parse(max) : undefined;
   const first = min ? parse(min) : undefined;
@@ -95,14 +87,7 @@ export default function DateField({
         <CalendarIcon />
       </button>
       {open && (
-        <div
-          ref={panel}
-          id={panelId}
-          role="dialog"
-          aria-label="Choose a Day"
-          className={floating ? 'calendar-panel calendar-panel--floating' : 'calendar-panel'}
-          popover={floating ? 'manual' : undefined}
-        >
+        <CalendarPanel id={panelId} floating={floating} panel={panel} label="Choose a Day">
           {picker && (
             <picker.DayPicker
               mode="single"
@@ -124,11 +109,10 @@ export default function DateField({
                   : new Date(Math.min(FIRST_YEAR, (selected ?? last ?? now).getFullYear()), 0)
               }
               endMonth={last ?? new Date(now.getFullYear() + YEARS_AHEAD, 11)}
-              disabled={[...(last ? [{ after: last }] : []), ...(first ? [{ before: first }] : [])]}
+              disabled={dayBounds(first, last)}
               onSelect={(day) => {
                 onChange(isoDay(day));
-                setOpen(false);
-                document.getElementById(id)?.focus();
+                closeAndFocus();
               }}
               classNames={CALENDAR_CLASS_NAMES}
             />
@@ -141,15 +125,14 @@ export default function DateField({
                 className="btn btn--quiet btn--small"
                 onClick={() => {
                   onChange(today());
-                  setOpen(false);
-                  document.getElementById(id)?.focus();
+                  closeAndFocus();
                 }}
               >
                 Today
               </button>
             </div>
           )}
-        </div>
+        </CalendarPanel>
       )}
     </div>
   );
