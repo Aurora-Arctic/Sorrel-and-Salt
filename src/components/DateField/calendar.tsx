@@ -68,22 +68,38 @@ export function useCalendarPopover({
       } else {
         el.style.removeProperty('--calendar-width');
       }
+      // Measured at its natural height; it goes below the field if it fits, else above if it fits there, else on the side with
+      // more room, capped to that room and scrolling.
+      el.style.removeProperty('--calendar-max-height');
+      el.style.overflowY = '';
       const below = window.innerHeight - at.bottom - GAP - MARGIN;
       const above = at.top - GAP - MARGIN;
-      const top =
-        el.offsetHeight > below && above > below
-          ? Math.max(MARGIN, at.top - GAP - el.offsetHeight)
-          : at.bottom + GAP;
+      const height = el.offsetHeight;
+      const onTop = height > below && above > below;
+      const room = onTop ? above : below;
+      if (height > room) {
+        el.style.setProperty('--calendar-max-height', `${room}px`);
+        el.style.overflowY = 'auto';
+      }
+      const top = onTop ? Math.max(MARGIN, at.top - GAP - Math.min(height, room)) : at.bottom + GAP;
       const left = Math.max(EDGE, Math.min(at.left, window.innerWidth - el.offsetWidth - EDGE));
       el.style.setProperty('--calendar-top', `${top}px`);
       el.style.setProperty('--calendar-left', `${left}px`);
     };
     place();
+    // The months load after the panel opens and the picked range changes its height, so it is placed again as it resizes.
+    const watch = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(place);
+    watch?.observe(el);
     window.addEventListener('resize', place);
-    document.addEventListener('scroll', place, true);
+    // The panel's own scrolling must not place it again, which would reset its scroll position.
+    const onScroll = (event: Event) => {
+      if (!(event.target instanceof Node && el.contains(event.target))) place();
+    };
+    document.addEventListener('scroll', onScroll, true);
     return () => {
+      watch?.disconnect();
       window.removeEventListener('resize', place);
-      document.removeEventListener('scroll', place, true);
+      document.removeEventListener('scroll', onScroll, true);
       if (el.matches(':popover-open')) el.hidePopover();
     };
   }, [open, floating, fieldId, panel, layoutKey, fieldWide]);

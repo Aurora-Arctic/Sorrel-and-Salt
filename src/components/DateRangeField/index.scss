@@ -61,6 +61,13 @@
   gap: space(4);
 }
 
+// The picks stand in a column beside the months.
+@mixin picks-column {
+  flex-flow: column nowrap;
+  inline-size: auto;
+  min-inline-size: 8rem;
+}
+
 .date-range-field__picks {
   display: flex;
   flex-wrap: wrap;
@@ -72,10 +79,12 @@
   inline-size: 0;
   min-inline-size: 100%;
 
+  // Two months set the panel's width, and from 48rem it is wide enough for the column. One month in a panel of set width asks
+  // the panel instead (`.date-range-field__body--single`).
   @include width-from(48rem) {
-    flex-flow: column nowrap;
-    inline-size: auto;
-    min-inline-size: 8rem;
+    .date-range-field__body:not(.date-range-field__body--single) > & {
+      @include picks-column;
+    }
   }
 }
 
@@ -120,18 +129,21 @@
   gap: space(3);
 }
 
-// One month in a panel of set width, with the presets in a row above: when the body has room for the month and a column of
-// boxes of about 9rem beside it, the boxes stand beside the month, Start above End. DOM order stays Start, End, calendar; the
-// grid places them. With the presets beside the month (48rem and up) the boxes keep the stacked-above layout. A container
-// cannot restyle itself, so the body is the container and the main column the grid.
+// One month in a panel of set width asks the panel's own width, not the window's. With room for the picks column (8rem and
+// its gap) beside the month and a box column's worth of months, the picks stand beside the month and the boxes above it.
+// Narrower, the picks are a row on top; and with room for a column of boxes (about 9rem) beside the month, those stand there,
+// Start above End. DOM order stays Start, End, calendar; the grid places them. A container cannot restyle itself, so the body
+// is the container and its children the styled parts.
 .date-range-field__body--single {
   container: range-body / inline-size;
 
-  @include width-from(48rem) {
-    container-type: normal;
+  @container range-body (min-width: 36rem) {
+    > .date-range-field__picks {
+      @include picks-column;
+    }
   }
 
-  @container range-body (min-width: 25.5rem) {
+  @container range-body (min-width: 25.5rem) and (max-width: 35.99rem) {
     > .date-range-field__main {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
