@@ -66,9 +66,15 @@
   flex-wrap: wrap;
   align-content: start;
   gap: space(1);
+  // Under the width where one month shows, the picks sit in a row above it. A zero inline-size with a full-width minimum
+  // adds nothing to the panel's fit-content width, so the panel is as wide as the month and the picks wrap within it, not
+  // the other way round.
+  inline-size: 0;
+  min-inline-size: 100%;
 
   @include width-from(48rem) {
     flex-flow: column nowrap;
+    inline-size: auto;
     min-inline-size: 8rem;
   }
 }
@@ -95,7 +101,11 @@
   }
 }
 
+// Adds nothing to the panel's fit-content width (zero inline-size, full-width minimum), so the sentence wraps to the months
+// above it rather than stretching the panel to its own length.
 .date-range-field__hint {
+  inline-size: 0;
+  min-inline-size: 100%;
   margin: space(3) 0 0;
   color: $text-muted;
   font-size: type-size('caption');
