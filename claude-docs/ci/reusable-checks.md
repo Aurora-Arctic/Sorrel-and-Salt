@@ -177,7 +177,7 @@
   `stories` job. It shares the gate's `build-e2e-image` and `build-db-image` jobs
   with `playwright` and runs beside it, under its own `stories` path filter. The
   input switches the run command (`npm run test:stories` with
-  `STORIES_JSON=/app/stories.json`, set on the merge job), the summariser
+  `STORIES_JSON=/app/stories.json`, set on the `playwright-coverage.yml` job), the summariser
   (`.github/scripts/summarize-stories.mjs`: "3 of 63 stories passing" and a
   markdown checklist, under the failing and flaky stories it reads from the
   JSON report through `lib/playwright-failures.mjs`, as
@@ -218,18 +218,15 @@
   finds no coverage at all writes a failure saying neither suite left any. The
   summary line names the suites included. Only this section carries the per-file
   table and the only coverage figure; the two suites' sections carry none. It reads as a failure when
-  either suite failed (`suites-failed`): `playwright`'s result, and `stories`'s
-  run step outcome, which `playwright.yml` exposes as its `outcome` output because
-  the stories job passes whatever its stories did.
-- **`playwright.yml`** — two jobs. `playwright-shard` runs `npm run e2e` (or
+  either suite failed: a shard job's result (`suites-failed`, from
+  `needs.<suite>.result`), or what the job finds itself in the joined reports.
+- **`playwright.yml`** — one job, `playwright`, which runs `npm run e2e` (or
   `test:stories`) on one shard of a matrix: three shards for the gate suite, two
-  for stories and one for `build-only`, passed as `--shard i/n`. The `playwright`
-  job `needs` all the shards, downloads their blob reports, runs
-  `playwright merge-reports` with the config, and then summarises, comments and
-  fails the run when any shard failed. It is the end-of-run merge job, so no
-  separate aggregator exists, and it keeps the key `playwright` so the required
-  check stays `playwright / playwright` ([Runner budget](runner-budget.md),
-  "Playwright shards"). Each shard runs the steps below against the servers `webServer` builds and
+  for stories and one for `build-only`, passed as `--shard i/n`. Each check reads
+  `playwright / playwright (n)`. The shards are joined in `playwright-coverage.yml`,
+  not here: it downloads the blob reports, runs `playwright merge-reports` with
+  the suite's config, summarises, writes the suite's comment section and fails
+  when the gate failed ([Runner budget](runner-budget.md), "Playwright shards"). Each shard runs the steps below against the servers `webServer` builds and
   starts: one per worker slot on 8001 and up — four on GitHub's 4-vCPU runner
   (`E2E_WORKERS: 4` over the half-the-CPUs default, since a test mostly waits on
   the browser) — then the configured-providers server on 8100 and the
@@ -238,7 +235,7 @@
   same `inputs.db-image`/`services: postgres:` shape as `vitest.yml`. Each shard uploads
   its blob report (`playwright-blob-<suite>-<shard>`), `.reports/coverage-e2e/`
   always (`playwright-coverage-<gate|stories>-<shard>`) and its server logs on a
-  failure. The merge job uploads `.reports/playwright-report/` (the html report)
+  failure. `playwright-coverage.yml` uploads `.reports/playwright-report/` (the html report)
   on a failure or a flaky pass. A shard's reporters are `list,blob`, set on the
   command line; the merge uses the config's own (`list`, `json`, `html`), so
   the html report's `outputFolder` is the config's. `should-run` path-filters the same way.

@@ -333,7 +333,6 @@ jobs:
     with:
       image: ${{ needs.build-e2e-image.outputs.image }}
       db-image: ${{ needs.build-db-image.outputs.image }}
-      pr-number: ${{ github.event.pull_request.number }}
       should-run: ${{ needs.changes.outputs.playwright == 'true' }}
 
   # The story suite (M9.1), on the same images as `playwright` and beside it,
@@ -350,14 +349,14 @@ jobs:
     with:
       image: ${{ needs.build-e2e-image.outputs.image }}
       db-image: ${{ needs.build-db-image.outputs.image }}
-      pr-number: ${{ github.event.pull_request.number }}
       suite: stories
       should-run: ${{ needs.changes.outputs.stories == 'true' }}
 
-  # The gate suite's and the story suite's JavaScript coverage, merged (M14.28):
-  # playwright-coverage.yml downloads whichever coverage artifacts the two
-  # uploaded and writes the Playwright comment's Coverage section. Never a required check
-  # (it carries `continue-on-error`, and nothing waits on it). Its `if:`
+  # Where the Playwright shards of both suites join: playwright-coverage.yml
+  # merges each suite's blob reports, writes the Playwright comment's Gate and
+  # Stories sections, and merges the JavaScript coverage into its Coverage
+  # section. Never a required check (it carries `continue-on-error`, and nothing
+  # waits on it), though a failed gate fails one of its steps. Its `if:`
   # keeps a failed suite from skipping the merge, and stays false on a stand-down.
   # It is a called workflow, not a job here, so that a run which stands down
   # leaves it skipped like the other called workflows.
@@ -379,8 +378,14 @@ jobs:
       image: ${{ needs.build-image.outputs.image }}
       pr-number: ${{ github.event.pull_request.number }}
       should-run: ${{ needs.changes.outputs.playwright == 'true' || needs.changes.outputs.stories == 'true' }}
-      # The stories job passes whatever its stories did, so its run step's outcome is read too.
-      suites-failed: ${{ needs.playwright.result == 'failure' || needs.stories.result == 'failure' || needs.stories.outputs.outcome == 'failure' }}
+      gate-should-run: ${{ needs.changes.outputs.playwright == 'true' }}
+      stories-should-run: ${{ needs.changes.outputs.stories == 'true' }}
+      # A shard job that failed. A failed test or story, or a lost blob, is
+      # found by the called workflow in the shards' reports: a story passes its
+      # shard job whatever it did.
+      gate-failed: ${{ needs.playwright.result == 'failure' }}
+      stories-failed: ${{ needs.stories.result == 'failure' }}
+      suites-failed: ${{ needs.playwright.result == 'failure' || needs.stories.result == 'failure' }}
 
   # The workshop specs (tests/e2e/workshop/, M12.31): a component measured in
   # its workshop story, `npm run e2e:workshop`. In the e2e image, as playwright.yml

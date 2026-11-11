@@ -8,7 +8,7 @@ import { E2E_SLOTS, wsEndpoint } from './slots';
 // Every output under .reports/ with the rest of the generated files. The
 // reporter list lives in each config because a CLI `--reporter` replaces it and
 // with it the html report's folder; CI's shards pass one anyway (list,blob) and
-// the merge job reads this one.
+// playwright-coverage.yml's merge reads this one.
 export const HTML_REPORT = { outputFolder: '.reports/playwright-report', open: 'never' } as const;
 
 export const baseConfig = {

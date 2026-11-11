@@ -5,7 +5,7 @@ public repo. No job runs on Blacksmith (see "Why Blacksmith was dropped").
 The sizing record is [`ci.md`, "The CI Vitest job: DOM only where needed, GitHub's runner"](../design-decisions/ci.md#the-ci-vitest-job-dom-only-where-needed-githubs-runner).
 
 - **A CI test step's budget is 7 minutes.** A job whose test step passes 7 minutes in two consecutive runs gets another shard (`--shard` with the blob reporter and `merge-reports`), never a longer timeout.
-- **R-2: no aggregator job.** A sharded workflow adds no job whose only work is to join its shards. The job that already runs at the end (`vitest`, `playwright`) `needs` the shards and merges them, so the required check names stay `vitest / vitest` and `playwright / playwright`.
+- **R-2: no aggregator job.** A sharded workflow adds no job whose only work is to join its shards. The job that already runs at the end joins the shards: `vitest` `needs` them and merges them, and `playwright-coverage.yml`, which already runs after both Playwright suites, downloads their blob reports and merges them.
 - **The Vitest jobs run on GitHub's 4-vCPU public-repo runner, with three
   workers.** The suite is mostly per-file overhead spread over `dbMaxWorkers`
   = cores − 1 (`tests/support/db-project.mts`), which reads the core count at
@@ -95,11 +95,11 @@ uninstalling first hangs every open PR's job.
 
 ## Playwright shards
 
-`playwright.yml` runs its tests as a matrix of shards: **three for the gate suite, two for stories, one for `build-only`**. Each shard is a job of its own with the `playwright-shard` id, runs `--shard i/n --reporter=list,blob`, and uploads its blob report. The `playwright` job `needs` every shard, runs `playwright merge-reports`, and writes the one summary, comment and html report a single run did (R-2 above).
+`playwright.yml` runs its tests as a matrix of shards: **three for the gate suite, two for stories, one for `build-only`**. Each shard is a job of its own, `playwright / playwright (n)`, runs `--shard i/n --reporter=list,blob`, and uploads its blob report. `playwright-coverage.yml` downloads every suite's blobs, runs `playwright merge-reports` with the suite's own config, and writes the one summary, comment section and html report a single run did (R-2 above). No `playwright` check is a join of the shards, and none is required.
 
 - **What a shard repeats.** About 94 s outside the test step (the container pull, the checkout, the cache restore and the uploads) and about 81 s inside it (`next build`, the eight servers and the template seed), about 3 minutes per extra shard in all. The gate suite's 563 tests, at the 30 s per test budget, take about 4 minutes more per shard that is left out, so a shard removes about 4 minutes of test time and costs about 3 minutes of repeated work, on runners that are free. These are figures from the single-job runs before the split, not from a sharded run: read the first sharded gate runs before trusting them.
 - **The shard count follows the suite's size, not the file count.** Playwright splits a `fullyParallel` file by test and keeps a `mode: 'serial'` describe whole in one shard, so only such a describe can set a shard's span. The axe sweep in `tests/e2e/axe.spec.ts` is listed as chunks of `SWEEP_CHUNK` (6) routes per test so that the sweep's cost spreads over the shards.
-- **The merged result.** A shard failing fails its own job; the `playwright` job's last step then fails the run, and its `outcome` output is `failure`. For stories the shard step has `continue-on-error`, and only the merge step's outcome decides the section's result.
+- **The merged result.** A shard failing fails its own job. The join in `playwright-coverage.yml` counts the blobs that landed against the matrix's shard count and reads the merged report's `stats.unexpected`, because `merge-reports` exits 0 when tests failed. A failed gate fails the coverage job's last step; a failed or lost story only marks the stories section failed. For stories the shard step has `continue-on-error`.
 - **`vitest-dom` is not sharded.** The 7 minute rule applies to its test step, and no run could be read for it: `pr-gate.yml` does not run on a push to `staging`, a recent pull request run skipped every job, and the merged PR #1684 has no gate run or check left. Read the step's time on the first real gate run before deciding.
 
 ## Splitting the Vitest job

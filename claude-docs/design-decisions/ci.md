@@ -674,8 +674,8 @@ Case B was read back as `[[{"context":"call-plain / leg (leg-off)"}]]`, case C a
 Part 1, in `vitest.yml` and `playwright.yml`:
 
 - `vitest-dom`, `vitest-node` and `vitest-db` carry `if: inputs.should-run`. The merge job `vitest` carries `if: ${{ !cancelled() && inputs.should-run }}`, so it still runs after a failed part but not on a filtered-off run.
-- The `playwright` job (now the `playwright-shard` jobs and the merge job `playwright`) carries `if: inputs.should-run`; the merge job's is `!cancelled() && inputs.should-run && !inputs.build-only`. The step-level `should-run` gating is gone from both files.
-- Check names are unchanged (`vitest / vitest`, `playwright / playwright`). The only other caller of `playwright.yml` is `e2e-cache.yml`'s `warm` job, which relies on the default `should-run: true`.
+- The `playwright` job (its shards read `playwright / playwright (n)`) carries `if: inputs.should-run`; the shards join in `playwright-coverage.yml`, which has no merge job of its own. The step-level `should-run` gating is gone from both files.
+- The `vitest / vitest` check name is unchanged. The only other caller of `playwright.yml` is `e2e-cache.yml`'s `warm` job, which relies on the default `should-run: true`.
 - `playwright-coverage` reads only the `playwright` and `stories` results and outputs and uses `!cancelled()`. A skipped inner job leaves the caller's result `success` with empty outputs, so nothing breaks. Nothing `needs:` the vitest job.
 
 Part 2, in `checks.yml`:

@@ -140,7 +140,7 @@
   done the gitflow workflow reports but **blocks nothing**. Whatever enables
   protection must name the current contexts: `checks / lint`, `checks / format`,
   `checks / typecheck`, `checks / build`, `checks / audit`,
-  `checks / destructive-ddl`, `vitest / vitest`, `playwright / playwright` and
+  `checks / destructive-ddl`, `vitest / vitest` and
   `gitflow / gitflow`. A required check that no workflow publishes is
   permanently pending, and blocks every PR after it.
 - **A job-level `if:` renames a check only on a job that calls a reusable

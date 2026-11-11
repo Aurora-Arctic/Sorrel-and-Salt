@@ -1,12 +1,18 @@
 name: Playwright Coverage
 
-# The gate suite's and the story suite's JavaScript coverage, merged (M14.28).
-# workflow_call only, from pr-gate's `playwright-coverage` job, which runs
-# after both suites. Each suite uploads its coverage report with monocart's raw
-# data inside it; this downloads whichever were uploaded, merges them and writes
-# the figure into the Coverage section of the one Playwright comment the two
-# suites write their sections of (claude-docs/ci/pr-comments.md). Never a required
-# check: `continue-on-error` below, and nothing waits on it.
+# Where the Playwright shards join. workflow_call only, from pr-gate's
+# `playwright-coverage` job, which runs after both suites. Each shard uploads a
+# blob report and a coverage report with monocart's raw data inside it. This
+# downloads whichever were uploaded and:
+#   - merges each suite's blobs with the suite's own config, and writes the
+#     suite's section of the one Playwright comment (`gate`, `stories`);
+#   - merges the coverage of both suites into the comment's Coverage section
+#     (claude-docs/ci/pr-comments.md).
+# The job fails, through a step, when the gate suite failed: a failed test, a
+# shard that left no blob, or a shard job that failed. A story never fails it;
+# a failed story or a lost story blob marks the stories section failed. Never a
+# required check: `continue-on-error` below keeps the job's own result green, and
+# nothing waits on it.
 #
 # A reusable workflow, not a job of pr-gate.yml, because a job with its own
 # runner is reported cancelled, a failing check, when an edit's run cancels
@@ -25,14 +31,40 @@ on:
         type: string
       should-run:
         description: >-
-          True when at least one of the two suites ran, so there may be coverage
-          to merge. False writes nothing: pr-gate's `pr-comments` job has already
-          marked the section Skipped.
+          True when at least one of the two suites ran, so there may be reports
+          to join. False writes nothing: pr-gate's `pr-comments` job has already
+          marked the sections Skipped.
         required: true
         type: boolean
+      gate-should-run:
+        description: True when the gate suite ran. False joins nothing and writes no gate section.
+        required: false
+        type: boolean
+        default: false
+      stories-should-run:
+        description: True when the story suite ran. False joins nothing and writes no stories section.
+        required: false
+        type: boolean
+        default: false
+      gate-failed:
+        description: >-
+          True when a gate shard job failed. A failure the shards' reports hold,
+          or a blob they lost, is found here, so this adds only a shard that died
+          before its tests.
+        required: false
+        type: boolean
+        default: false
+      stories-failed:
+        description: >-
+          True when a story shard job failed. Stories pass their shard job
+          whatever they did, so this is a shard that died, which marks the
+          stories section failed and fails nothing.
+        required: false
+        type: boolean
+        default: false
       suites-failed:
         description: >-
-          True when the gate suite or the story suite failed. The comment then
+          True when a shard job of either suite failed. The Coverage section then
           reads as a failure, so a passing merge never shows a red suite as green.
         required: false
         type: boolean
@@ -60,10 +92,164 @@ jobs:
       run:
         working-directory: /app
         shell: bash
+    env:
+      # The merged runs write the config's json reporter under CI.
+      CI: true
+      # Read by summarize-stories.mjs and written by the story config's reporter.
+      STORIES_JSON: /app/stories.json
+      # The configs derive the slot servers' URLs from it as they load. No
+      # database runs here and nothing connects.
+      DATABASE_URL: postgres://sorrel:sorrel@localhost:5432/sorrel
+      BETTER_AUTH_SECRET: local-dev-not-a-real-secret
+      ADMIN_BOOTSTRAP_EMAIL: placeholder@admin-bootstrap.invalid
     steps:
       - name: Checkout into /app
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      # Every shard of a suite into one flat folder: `merge-reports` reads the
+      # files at the top of its folder. A blob that could not be fetched is a
+      # blob the count below finds missing, so these never fail the job.
+      - name: Download the gate shards' reports
+        if: inputs.gate-should-run
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          pattern: playwright-blob-e2e-*
+          merge-multiple: true
+          path: /app/.reports/blob-reports/gate
+
+      - name: Join the gate shards
+        id: gate
+        if: inputs.gate-should-run
+        continue-on-error: true
+        env:
+          SUITE: gate
+          BLOBS_DIR: /app/.reports/blob-reports/gate
+          PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
+        run: node .github/scripts/join-playwright-shards.mjs 2>&1 | tee /app/gate.log
+
+      - name: Summarize the gate output
+        id: gate-summary
+        if: inputs.gate-should-run && steps.gate.outputs.failed != ''
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
+        run: node .github/scripts/summarize-playwright.mjs
+
+      # After the summary, which says whether a test failed and then passed on
+      # retry: that run is green, and its report holds the first attempt's trace.
+      - name: Upload the gate report
+        if: inputs.gate-should-run && (steps.gate.outputs.failed == 'true' || steps.gate-summary.outputs.flaky == 'true')
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: /app/.reports/playwright-report/
+          retention-days: 7
+
+      - name: Download the story shards' reports
+        if: inputs.stories-should-run
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          pattern: playwright-blob-stories-*
+          merge-multiple: true
+          path: /app/.reports/blob-reports/stories
+
+      - name: Join the story shards
+        id: stories
+        if: inputs.stories-should-run
+        continue-on-error: true
+        env:
+          SUITE: stories
+          BLOBS_DIR: /app/.reports/blob-reports/stories
+          PLAYWRIGHT_JSON_OUTPUT_NAME: /app/stories-playwright-results.json
+        run: node .github/scripts/join-playwright-shards.mjs 2>&1 | tee /app/stories.log
+
+      - name: Summarize the story output
+        id: stories-summary
+        if: inputs.stories-should-run && steps.stories.outputs.failed != ''
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: /app/stories-playwright-results.json
+        run: node .github/scripts/summarize-stories.mjs
+
+      - name: Upload the story report
+        if: inputs.stories-should-run && (steps.stories.outputs.failed == 'true' || steps.stories-summary.outputs.flaky == 'true')
+        uses: actions/upload-artifact@v7
+        with:
+          name: stories-report
+          path: /app/.reports/playwright-report/
+          retention-days: 7
+
+      # The verdicts, from the joined data and the shard jobs' results. A step
+      # that died before it set its output counts as failed.
+      - name: Decide the verdicts
+        id: verdict
+        if: ${{ !cancelled() && inputs.should-run }}
+        env:
+          GATE_FAILED: ${{ inputs.gate-should-run && (inputs.gate-failed || steps.gate.outputs.failed != 'false') }}
+          STORIES_FAILED: ${{ inputs.stories-should-run && (inputs.stories-failed || steps.stories.outputs.failed != 'false') }}
+          GATE_ON: ${{ inputs.gate-should-run }}
+          STORIES_ON: ${{ inputs.stories-should-run }}
+          SUITES_FAILED: ${{ inputs.suites-failed }}
+        run: |
+          verdict() { if [ "$1" != true ]; then echo none; elif [ "$2" = true ]; then echo failed; else echo passed; fi; }
+          gate=$(verdict "$GATE_ON" "$GATE_FAILED")
+          stories=$(verdict "$STORIES_ON" "$STORIES_FAILED")
+          coverage=passed
+          if [ "$SUITES_FAILED" = true ] || [ "$gate" = failed ] || [ "$stories" = failed ]; then coverage=failed; fi
+          printf 'gate=%s\nstories=%s\ncoverage=%s\n' "$gate" "$stories" "$coverage" >> "$GITHUB_OUTPUT"
+
+      - name: Write the gate job summary
+        if: ${{ !cancelled() && steps.verdict.outputs.gate != '' && steps.verdict.outputs.gate != 'none' }}
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Playwright E2E
+          outcome: ${{ steps.verdict.outputs.gate == 'failed' && 'failure' || 'success' }}
+          log-file: /app/gate.log
+          summary: ${{ steps.gate-summary.outputs.summary }}
+          details: ${{ steps.gate-summary.outputs.details }}
+          duration: ${{ steps.gate-summary.outputs.duration }}
+
+      - name: Comment the gate section on PR
+        if: ${{ !cancelled() && steps.verdict.outputs.gate != '' && steps.verdict.outputs.gate != 'none' }}
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Playwright
+          marker-slug: playwright
+          section: gate
+          pr-number: ${{ inputs.pr-number }}
+          outcome: ${{ steps.verdict.outputs.gate == 'failed' && 'failure' || 'success' }}
+          log-file: /app/gate.log
+          summary: ${{ steps.gate-summary.outputs.summary }}
+          details: ${{ steps.gate-summary.outputs.details }}
+          duration: ${{ steps.gate-summary.outputs.duration }}
+
+      - name: Write the stories job summary
+        if: ${{ !cancelled() && steps.verdict.outputs.stories != '' && steps.verdict.outputs.stories != 'none' }}
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Stories
+          outcome: ${{ steps.verdict.outputs.stories == 'failed' && 'failure' || 'success' }}
+          log-file: /app/stories.log
+          summary: ${{ steps.stories-summary.outputs.summary }}
+          details: ${{ steps.stories-summary.outputs.details }}
+          duration: ${{ steps.stories-summary.outputs.duration }}
+
+      - name: Comment the stories section on PR
+        if: ${{ !cancelled() && steps.verdict.outputs.stories != '' && steps.verdict.outputs.stories != 'none' }}
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Playwright
+          marker-slug: playwright
+          section: stories
+          pr-number: ${{ inputs.pr-number }}
+          outcome: ${{ steps.verdict.outputs.stories == 'failed' && 'failure' || 'success' }}
+          log-file: /app/stories.log
+          summary: ${{ steps.stories-summary.outputs.summary }}
+          details: ${{ steps.stories-summary.outputs.details }}
+          duration: ${{ steps.stories-summary.outputs.duration }}
 
       # One step per suite, each downloading every shard's artifact by pattern
       # into a folder named for the artifact under the suite's own: the merge
@@ -122,7 +308,7 @@ jobs:
         uses: ./.github/actions/job-summary
         with:
           check-name: Playwright Coverage
-          outcome: ${{ inputs.suites-failed && 'failure' || steps.merge.outcome }}
+          outcome: ${{ steps.verdict.outputs.coverage == 'failed' && 'failure' || steps.merge.outcome }}
           log-file: /app/output.log
           summary: ${{ steps.merge.outputs.summary }}
           details: ${{ steps.merge.outputs.details }}
@@ -137,7 +323,7 @@ jobs:
           marker-slug: playwright
           section: coverage
           pr-number: ${{ inputs.pr-number }}
-          outcome: ${{ inputs.suites-failed && 'failure' || steps.merge.outcome }}
+          outcome: ${{ steps.verdict.outputs.coverage == 'failed' && 'failure' || steps.merge.outcome }}
           log-file: /app/output.log
           summary: ${{ steps.merge.outputs.summary }}
           details: ${{ steps.merge.outputs.details }}
@@ -172,3 +358,11 @@ jobs:
       - name: Fail when a coverage artifact could not be downloaded
         if: inputs.should-run && steps.check.outputs.missing != ''
         run: exit 1
+
+      # The last step, so every section above is written first. Only the gate
+      # fails the job; a story never does.
+      - name: Fail when the gate failed
+        if: ${{ !cancelled() && steps.verdict.outputs.gate == 'failed' }}
+        run: |
+          echo "::error::The gate suite failed: see the gate section of the Playwright comment."
+          exit 1
