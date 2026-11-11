@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { ListBodySkeleton, ListFilterFrame } from '../ListFrame/skeleton';
 import ArrivalsFilterForm from './arrivals-filter';
 import CardsFilterForm from './filter';
+import { NO_ARRIVALS_FILTER, NO_CARDS_FILTER } from './href';
 import './index.scss';
 
 /** The list's rows with nothing in them yet: its table's headings over placeholder rows. */
@@ -40,20 +41,7 @@ export const CardArrivalsBodySkeleton = (): ReactElement => (
 /** The invitation cards list with nothing in it yet: its own filter row, unfiltered, over the placeholder rows. */
 export const AdminCardsSkeleton = (): ReactElement => (
   <section className="admin-cards" aria-label="Invitation Cards">
-    <ListFilterFrame
-      filter={
-        <CardsFilterForm
-          filter={{
-            batch: '',
-            status: '',
-            mintedFrom: '',
-            mintedTo: '',
-            expiresFrom: '',
-            expiresTo: '',
-          }}
-        />
-      }
-    >
+    <ListFilterFrame filter={<CardsFilterForm filter={NO_CARDS_FILTER} />}>
       <AdminCardsBodySkeleton />
     </ListFilterFrame>
   </section>
@@ -62,7 +50,7 @@ export const AdminCardsSkeleton = (): ReactElement => (
 /** The Card Sign-Ups list with nothing in it yet: its own filter row, unfiltered, over the placeholder rows. */
 export const CardArrivalsSkeleton = (): ReactElement => (
   <section className="admin-cards" aria-label="Card Sign-Ups">
-    <ListFilterFrame filter={<ArrivalsFilterForm filter={{ query: '' }} />}>
+    <ListFilterFrame filter={<ArrivalsFilterForm filter={NO_ARRIVALS_FILTER} />}>
       <CardArrivalsBodySkeleton />
     </ListFilterFrame>
   </section>

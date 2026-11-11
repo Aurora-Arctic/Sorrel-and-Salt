@@ -7,10 +7,9 @@ import { emailFailure } from '../../lib/email-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { useFormSend } from '../../lib/use-form-send';
 import { EmailField, FormActions, RadioGroupField } from '../Field';
-import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
+import { WORKSPACE_ROLE_ACCESS, workspaceRoleLabel } from '../MemberList/roles';
 import { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
-import { workspaceRoleLabel } from '../UserDetail/roles';
 import type { InviteFieldsProps, InviteDialogProps, InviteRole } from './types';
 
 // A steward's Invite: a dialog taking an address and a role, sent as `createInvitation`, which mails

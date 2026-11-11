@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import RoleTip from '.';
 import { SITE_ROLE_ACCESS } from '../UserList/roles';
-import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
+import { WORKSPACE_ROLE_ACCESS } from '../MemberList/roles';
 
 const meta = { title: 'Lists / Role Tip', component: RoleTip } satisfies Meta<typeof RoleTip>;
 export default meta;

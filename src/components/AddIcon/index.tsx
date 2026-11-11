@@ -7,10 +7,10 @@ import { failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { useClickFeedback } from '../ClickFeedback';
 import { useFade } from '../ClickFeedback/fade';
-import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
+import IconTip from '../IconTip';
 import { AddCupboardEntryDocument } from '../IngredientEntry/add-cupboard-entry';
 import MenuButton from '../MenuButton';
-import Spinner from '../Spinner';
+import AddGlyph from './glyph';
 import { HoldingCount, holdingText } from './holding';
 import type { NamedAddIconProps } from './types';
 import { ADD, HELD_MARK } from './wording';
@@ -27,37 +27,6 @@ interface Added {
   to: string;
   last: boolean;
 }
-
-/**
- * The glyph in the plus: the spinner while busy, the check once an add has worked, and the plus.
- * While the check fades back (`returning`) both are drawn, stacked, so the one fades into the
- * other; the stylesheet does the drawing and the fades from the button's `data-state`.
- */
-const Glyph = ({
-  state,
-  busy,
-  onFaded,
-}: {
-  state: 'added' | 'returning' | undefined;
-  busy: boolean;
-  onFaded: ReturnType<typeof useFade>['onAnimationEnd'];
-}): ReactElement =>
-  state ? (
-    <span className="add-icon__glyphs">
-      <span className="add-icon__check" onAnimationEnd={onFaded}>
-        <CheckIcon />
-      </span>
-      {state === 'returning' && (
-        <span className="add-icon__plus">
-          <PlusIcon />
-        </span>
-      )}
-    </span>
-  ) : busy ? (
-    <Spinner />
-  ) : (
-    <PlusIcon />
-  );
 
 /**
  * The plus: with one writable coven it adds there directly, with no quantity, and the page reads
@@ -122,7 +91,7 @@ const AddIcon = ({
     setHeld(false);
     add.mutate(to);
   };
-  const glyph = <Glyph state={state} busy={busy} onFaded={fade.onAnimationEnd} />;
+  const glyph = <AddGlyph state={state} busy={busy} onFaded={fade.onAnimationEnd} />;
 
   const control =
     covens.length > 1 ? (

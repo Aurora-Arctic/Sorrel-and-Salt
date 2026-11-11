@@ -8,7 +8,7 @@ import { Forbidden, NotFound } from '@/lib/errors';
 import { getSession } from '@/lib/request-session';
 import ShownToggle from '@/components/IngredientEntry/shown-toggle';
 import ReviewMark from '@/components/IngredientEntry/review-mark';
-import { cardName } from '@/components/IngredientCard/card-name';
+import { cardName } from '@/lib/ingredient-name';
 import { curates } from '@/lib/site-roles';
 import { entryJsonLd } from '@/lib/json-ld';
 import { entryDescription, publicPageMetadata } from '@/lib/page-metadata';

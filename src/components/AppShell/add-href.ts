@@ -3,7 +3,6 @@
 // control can open the same dialog (claude-docs/components/modal.md, "Add Ingredient").
 
 import {
-  NEW_COMPENDIUM_ENTRY,
   NEW_COVEN_INGREDIENT_PREFIX,
   NEW_INGREDIENT,
   NEW_SPELL,
@@ -14,14 +13,6 @@ import {
 export const NEW = 'new';
 export const ADD_INGREDIENT_TITLE = 'Add Ingredient';
 export const NEW_SPELL_TITLE = 'New Spell';
-
-export {
-  NEW_COMPENDIUM_ENTRY,
-  NEW_COVEN_INGREDIENT_PREFIX,
-  NEW_INGREDIENT,
-  NEW_SPELL,
-  NEW_SPELL_PREFIX,
-};
 
 function slugAfter(value: string, prefix: string): string | null {
   return value.startsWith(prefix) && value.length > prefix.length

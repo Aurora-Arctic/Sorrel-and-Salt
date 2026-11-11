@@ -6,8 +6,7 @@ import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { RadioGroupField } from '../Field';
 import ConfirmedAction from '../ConfirmedAction';
-import { workspaceRoleLabel } from '../UserDetail/roles';
-import { WORKSPACE_ROLE_ACCESS } from './role-access';
+import { WORKSPACE_ROLE_ACCESS, workspaceRoleLabel } from './roles';
 import type { RoleControlProps } from './types';
 
 // The members page's Change Role: a modal asking which role the member moves to, then

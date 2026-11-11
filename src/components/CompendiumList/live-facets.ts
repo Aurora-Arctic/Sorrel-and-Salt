@@ -144,16 +144,16 @@ const CovenFacetCountsDocument = graphql(`
   }
 `);
 
-/**
- * The counts for `held` while `enabled`, and whether they are on their way. `facets` is
- * undefined until the first answer, and after a failed ask: the caller keeps the counts the
- * page drew. Never throws, since a count that cannot be read is not worth an error page.
- */
 /** The keeper's variables with hidden entries counted in unless the Hidden switch narrows to them; anyone else's are left as they are. */
 function withListing<T extends { listing?: string }>(variables: T, admin: boolean): T {
   return admin ? { ...variables, listing: variables.listing ?? 'all' } : variables;
 }
 
+/**
+ * The counts for `held` while `enabled`, and whether they are on their way. `facets` is
+ * undefined until the first answer, and after a failed ask: the caller keeps the counts the
+ * page drew. Never throws, since a count that cannot be read is not worth an error page.
+ */
 export function useLiveFacets({
   held,
   enabled,

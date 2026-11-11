@@ -45,6 +45,8 @@ const CreateInvitationCardsDocument = graphql(`
   }
 `);
 
+const SHEETS_HINT = `A Letter sheet holds ${CARDS_PER_SHEET} cards.`;
+
 const NOTE_HINT =
   'Shown to keepers beside the batch on the Invitation Cards tab, and searchable there.';
 
@@ -55,11 +57,12 @@ export const SHEETS_REQUIRED = 'Enter how many sheets to mint, like 3';
 /** A day as an expiry: the end of that day in UTC-12, so the card lasts through its printed day everywhere. */
 const expiryOf = (day: string): string => expiryOfDay(day).toISOString();
 
-/** The day after today in UTC: the service refuses an expiry at or before now. */
-const earliestDay = (): string => isoDayInUtc(new Date(Date.now() + MS_PER_DAY));
+const dayFromNow = (days: number): string => isoDayInUtc(new Date(Date.now() + days * MS_PER_DAY));
 
-const defaultDay = (): string =>
-  isoDayInUtc(new Date(Date.now() + DEFAULT_EXPIRY_DAYS * MS_PER_DAY));
+/** The day after today in UTC: the service refuses an expiry at or before now. */
+const earliestDay = (): string => dayFromNow(1);
+
+const defaultDay = (): string => dayFromNow(DEFAULT_EXPIRY_DAYS);
 
 /** A decimal count is rounded to the nearest whole sheet, not refused. */
 const wholeSheets = (text: string): string => {
@@ -105,7 +108,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const [totalRow, setTotalRow] = useState<HTMLDivElement | null>(null);
   const sheetsField = fieldDescription({
     id: sheetsId,
-    hint: `A Letter sheet holds ${CARDS_PER_SHEET} cards.`,
+    hint: SHEETS_HINT,
     error: sheetsRefusal(sheets) ?? shown.sheets,
   });
   const { aria: sheetsAria, ...sheetsShell } = sheetsField;
@@ -158,7 +161,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         <FieldShell
           label="Number of Sheets"
           required
-          hint={`A Letter sheet holds ${CARDS_PER_SHEET} cards.`}
+          hint={SHEETS_HINT}
           {...sheetsShell}
           errorInto={totalRow}
           after={

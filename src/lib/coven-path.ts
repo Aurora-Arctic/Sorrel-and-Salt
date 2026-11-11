@@ -55,6 +55,11 @@ export function covenSlugOf(pathname: string): string | null {
   return first === COVEN && slug && !isReservedCovenSlug(slug) ? slug : null;
 }
 
+/** The coven a navigation under way ends in: its address without the query and hash, read as `covenSlugOf` does. */
+export function destinationCovenSlug(href: string): string | null {
+  return covenSlugOf(href.split(/[?#]/)[0] ?? href);
+}
+
 const PEOPLE_SECTIONS = new Set(['members', 'invitations']);
 
 export interface PathInCovenOptions {

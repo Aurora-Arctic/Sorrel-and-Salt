@@ -16,7 +16,7 @@ const RemoveMemberDocument = graphql(`
   }
 `);
 
-const RemoveControl = ({
+const RemoveMemberControl = ({
   workspaceId,
   userId,
   name,
@@ -43,4 +43,4 @@ const RemoveControl = ({
   />
 );
 
-export default RemoveControl;
+export default RemoveMemberControl;
