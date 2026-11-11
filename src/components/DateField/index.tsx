@@ -21,34 +21,6 @@ import './index.scss';
 const YEARS_AHEAD = 1;
 const FIRST_YEAR = 1900;
 
-// Every month name, every day number and every year from 1900 to 2999 the button can show. The button
-// holds them invisibly in the cell its text sits in, so it is as wide as the widest of each in the font
-// in use, whatever loads. A year's digits vary freely after its first one or two: 2000-2999 and 1900-1999.
-const PART = {
-  day: new Intl.DateTimeFormat('en-GB', { day: 'numeric' }),
-  month: new Intl.DateTimeFormat('en-GB', { month: 'long' }),
-};
-const SIZER = {
-  days: Array.from({ length: 31 }, (_, i) => PART.day.format(new Date(2024, 0, i + 1))),
-  months: Array.from({ length: 12 }, (_, i) => PART.month.format(new Date(2024, i, 1))),
-  years: Array.from({ length: 10 }, (_, d) => [`2${d}${d}${d}`, `19${d}${d}`]).flat(),
-};
-
-function Sizer(): ReactElement {
-  const stack = (items: string[]) => (
-    <span className="date-field__stack">
-      {items.map((item) => (
-        <span key={item}>{item}</span>
-      ))}
-    </span>
-  );
-  return (
-    <span className="date-field__sizer" aria-hidden="true">
-      {stack(SIZER.days)} {stack(SIZER.months)} {stack(SIZER.years)}
-    </span>
-  );
-}
-
 export default function DateField({
   id,
   value,
@@ -80,7 +52,6 @@ export default function DateField({
         {...preloadOnIntent(dayPickerModule)}
         onClick={() => setOpen(!open)}
       >
-        <Sizer />
         <span id={`${id}-text`} className="date-field__text">
           {selected ? dayWords(value) : 'Choose a day'}
         </span>

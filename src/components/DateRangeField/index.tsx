@@ -13,13 +13,14 @@ import { dayPickerModule } from '../DateField/lazy-day-picker';
 import { CalendarPanel, dayBounds, useDayPopover } from '../DateField/popover';
 import { preloadOnIntent } from '../../lib/use-lazy-module';
 import { RangeEnds } from './range-ends';
+import { useRoomForTwoMonths } from './use-room-for-two-months';
 import type { DateRangeFieldProps, DayRange } from './types';
 import './index.scss';
 
 // A day-range field: a button showing the range in short words, opening a two-month calendar with quick picks. The
 // calendar is the day field's, in the same popover (claude-docs/components/date-field.md).
 
-// Below this width the calendar shows one month: two months (about 546px with the panel's padding) plus the window's gutter
+// Below this width (or where the field leaves no room, see use-room-for-two-months.ts) the calendar shows one month: two months (about 546px with the panel's padding) plus the window's gutter
 // do not fit. Wider, the picks sit above them until 48rem, then beside them (index.scss).
 const NARROW = '(max-width: 35.9375rem)';
 
@@ -62,8 +63,16 @@ export default function DateRangeField({
   ...aria
 }: DateRangeFieldProps): ReactElement {
   const hintId = useId();
-  const { panelId, panel, open, setOpen, floating, picker, closeAndFocus } = useDayPopover(id);
-  const months = useMediaQuery(NARROW) ? 1 : 2;
+  const narrow = useMediaQuery(NARROW);
+  // The popover's own state is above its months, which depend on the room it measures, so it is placed again when they change.
+  const [months, setMonths] = useState<1 | 2>(2);
+  const { panelId, panel, open, setOpen, floating, picker, closeAndFocus } = useDayPopover(
+    id,
+    months,
+  );
+  const room = useRoomForTwoMonths({ open, floating, narrow, fieldId: id, panel });
+  const wanted = narrow || !room ? 1 : 2;
+  if (wanted !== months) setMonths(wanted);
   // The first day of a range being picked, until the second is.
   const [pending, setPending] = useState<string | null>(null);
   const first = min ? parseDay(min) : undefined;

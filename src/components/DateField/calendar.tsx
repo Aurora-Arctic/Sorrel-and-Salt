@@ -22,6 +22,8 @@ export function parseDay(day: string): Date | undefined {
 // The gap between the field and the calendar, and the margin the calendar keeps from the window.
 const GAP = 8;
 const MARGIN = 8;
+/** The margin the calendar keeps from the window's sides. */
+export const EDGE = 16;
 
 /** Whether the browser can put the calendar in the top layer; an older one leaves it in flow. */
 export const hasPopover = (): boolean =>
@@ -37,12 +39,15 @@ export function useCalendarPopover({
   fieldId,
   panel,
   close,
+  layoutKey,
 }: {
   open: boolean;
   floating: boolean;
   fieldId: string;
   panel: RefObject<HTMLDivElement | null>;
   close: () => void;
+  /** Placed again when this changes, for a calendar whose width does (the months it shows). */
+  layoutKey?: unknown;
 }): void {
   useLayoutEffect(() => {
     const el = panel.current;
@@ -58,7 +63,7 @@ export function useCalendarPopover({
         el.offsetHeight > below && above > below
           ? Math.max(MARGIN, at.top - GAP - el.offsetHeight)
           : at.bottom + GAP;
-      const left = Math.max(MARGIN, Math.min(at.left, window.innerWidth - el.offsetWidth - MARGIN));
+      const left = Math.max(EDGE, Math.min(at.left, window.innerWidth - el.offsetWidth - EDGE));
       el.style.setProperty('--calendar-top', `${top}px`);
       el.style.setProperty('--calendar-left', `${left}px`);
     };
@@ -70,7 +75,7 @@ export function useCalendarPopover({
       document.removeEventListener('scroll', place, true);
       if (el.matches(':popover-open')) el.hidePopover();
     };
-  }, [open, floating, fieldId, panel]);
+  }, [open, floating, fieldId, panel, layoutKey]);
   // A manual popover has no light dismiss, so a press outside the calendar and its field closes it.
   useDismiss({
     active: open && floating,

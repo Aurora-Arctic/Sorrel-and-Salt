@@ -28,7 +28,7 @@
   inset-block-start: var(--calendar-top, 0);
   inset-inline-start: var(--calendar-left, 0);
   margin: 0;
-  max-inline-size: calc(100vw - #{space(4)});
+  max-inline-size: calc(100vw - #{space(8)});
   overflow: visible;
   color: inherit;
 }
