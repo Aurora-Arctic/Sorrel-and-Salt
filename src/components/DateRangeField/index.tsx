@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useCallback, useId, useRef, useState } from 'react';
+import { useMediaQuery } from '../../lib/use-media-query';
 import {
   CALENDAR_CLASS_NAMES,
   CalendarChevron,
@@ -35,13 +36,6 @@ const HINT = {
   first: 'Pick the first day, then the last. Pick one day twice for a single day.',
   last: 'Now pick the last day, or the same day again for a single day.',
 };
-
-const monthsShown = (): number =>
-  typeof window !== 'undefined' &&
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia(NARROW).matches
-    ? 1
-    : 2;
 
 function RangeText({ from, to, placeholder }: DayRange & { placeholder: string }): ReactElement {
   if (from && to && from === to) return <>{shortWords(from)}</>;
@@ -79,7 +73,7 @@ export default function DateRangeField({
   const panel = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [floating] = useState(hasPopover);
-  const [months, setMonths] = useState(2);
+  const months = useMediaQuery(NARROW) ? 1 : 2;
   // The first day of a range being picked, until the second is.
   const [pending, setPending] = useState<string | null>(null);
   const close = useCallback(() => setOpen(false), []);
@@ -128,7 +122,6 @@ export default function DateRangeField({
         {...preloadOnIntent(dayPickerModule)}
         onClick={() => {
           if (!open) {
-            setMonths(monthsShown());
             setPending(null);
           }
           setOpen(!open);

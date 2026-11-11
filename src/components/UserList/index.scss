@@ -102,12 +102,6 @@
   }
 }
 
-// Above the icon, placed by `useTip`: the icon starts the row's first cell, and
-// the tip is shifted back onto the screen where it would run past its edge.
-.user-list__history-tip {
-  @include tip-above($tip-layer, false);
-}
-
 .user-list__email {
   display: inline-flex;
   align-items: center;

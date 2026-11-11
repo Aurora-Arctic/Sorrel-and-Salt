@@ -61,12 +61,6 @@ export interface HistoryLinkProps {
   name: string;
 }
 
-export interface UserLinkProps {
-  href: Route;
-  heading: ModalHeading;
-  name: string;
-}
-
 export interface ImpersonateButtonProps {
   userId: string;
   /** The user's name, completing the button's accessible name. */

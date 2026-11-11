@@ -16,6 +16,7 @@ import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import { reportLeaving } from '../../lib/navigation';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
+import { useRestoredFromCache } from '../../lib/use-restored-from-cache';
 import { EMAIL_VIEW, EMAIL_VIEW_PARAM, MODE_PARAM, SIGN_UP_MODE, modeFromParam } from './address';
 import ModeSwitch from './mode-switch';
 import PasswordForm from './password-form';
@@ -161,13 +162,7 @@ const SignInPanel = ({
   }, [inDialog, header, goBack, onHeaderChange]);
 
   const [signingIn, setSigningIn] = useState<SignInAttempt | null>(null);
-  useEffect(() => {
-    const restored = (event: PageTransitionEvent) => {
-      if (event.persisted) setSigningIn(null);
-    };
-    window.addEventListener('pageshow', restored);
-    return () => window.removeEventListener('pageshow', restored);
-  }, []);
+  useRestoredFromCache(() => setSigningIn(null));
 
   const signInWith = async (providerId: ProviderId): Promise<string | undefined> => {
     setMessage(undefined);

@@ -1,7 +1,7 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { type ReactElement, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { failureMessage } from '../../lib/graphql-failure';
 import { useClickFeedback } from '../ClickFeedback';
 import { ReasonField, useReasonNote } from '../Field';
@@ -46,16 +46,8 @@ const ConfirmedAction = ({
   const confirmRef = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
-  const feedback = useClickFeedback({ name: accessibleName });
+  const feedback = useClickFeedback({ name: accessibleName, ref: openRef });
   const { anchorRef } = feedback;
-  // One ref for both: the focus return holds it, and the callout hangs from it.
-  const openButton = useCallback(
-    (node: HTMLButtonElement | null) => {
-      openRef.current = node;
-      anchorRef(node);
-    },
-    [anchorRef],
-  );
 
   // The focus goes to the modal's action when asked; Modal returns it to the row's button on close,
   // so the callout is read with focus on what it is about. In a modal the overlay focuses Cancel,
@@ -132,7 +124,7 @@ const ConfirmedAction = ({
       {/* The visible label opens the accessible name, so a voice command
           saying what it sees still reaches it. */}
       <button
-        ref={openButton}
+        ref={anchorRef}
         className={openClass}
         type="button"
         disabled={disabled}

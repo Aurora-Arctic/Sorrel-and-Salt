@@ -51,10 +51,10 @@ export async function assertNoAccessibilityViolations(
 
 // A page holds at a phone's width when the document is no wider than the window. Measured in a real
 // browser, since happy-dom lays nothing out; 375px is the narrowest width a section signs off at
-// (claude-docs/styling.md, "Designing a section"). `restore` puts the window back to its width afterwards.
-export async function assertNoSidewaysScroll(page: Page, { restore = false } = {}) {
+// (claude-docs/styling.md, "Designing a section"), and `width` checks a wider one. `restore` puts the window back to its width afterwards.
+export async function assertNoSidewaysScroll(page: Page, { restore = false, width = 375 } = {}) {
   const size = restore ? page.viewportSize() : null;
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width, height: 812 });
   // Two frames for what follows the window by itself: a callout or badge placed by Floating UI moves
   // on the resize event and a frame, not in the same task, so a measurement at once read the old place.
   await page.evaluate(

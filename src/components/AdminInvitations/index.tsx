@@ -10,7 +10,7 @@ import ConfirmedAction from '../ConfirmedAction';
 import LockedControl from '../UserList/locked-control';
 import ListFrame, { ListBody } from '../ListFrame';
 import { AdminInvitationsBodySkeleton } from './skeleton';
-import { ModalLink, useOpenModalClick } from '../Modal';
+import { OpenModalLink } from '../Modal';
 import Notice from '../Notice';
 import Pager from '../Pager';
 import AdminInvitationsFilter from './filter';
@@ -93,13 +93,12 @@ export const InviteAdmin = ({
   cursor,
 }: InviteAdminProps): ReactElement => {
   const href = invitationsHref(filter, cursor, true);
-  const onClick = useOpenModalClick(href, { title: INVITE_TITLE });
   return locked ? (
     <LockedControl label={INVITE_TITLE} className="btn btn--solid" reason={locked} />
   ) : (
-    <ModalLink className="btn btn--solid" href={href} onClick={onClick}>
+    <OpenModalLink className="btn btn--solid" href={href} heading={{ title: INVITE_TITLE }}>
       {INVITE_TITLE}
-    </ModalLink>
+    </OpenModalLink>
   );
 };
 

@@ -1,4 +1,5 @@
 import { oneOf, trimmed } from '../../lib/search-params';
+import { isoDayInUtc } from '../../lib/utc';
 import { BATCH_STATUSES } from './batches';
 import type { ArrivalsFilter, CardsFilter } from './types';
 
@@ -9,9 +10,7 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const day = (raw: string | string[] | undefined): string => {
   const value = trimmed(raw);
   const parsed = new Date(value);
-  return DAY.test(value) &&
-    !Number.isNaN(parsed.getTime()) &&
-    parsed.toISOString().slice(0, 10) === value
+  return DAY.test(value) && !Number.isNaN(parsed.getTime()) && isoDayInUtc(parsed) === value
     ? value
     : '';
 };

@@ -11,7 +11,7 @@ import { CardArrivalsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import { batchName } from './batches';
 import { Mark } from '../UserList/marks';
-import UserLink from '../UserList/user-link';
+import { OpenModalLink } from '../Modal';
 import ArrivalsFilterForm from './arrivals-filter';
 import DownloadCsv from './download-csv';
 import { NO_ARRIVALS_FILTER } from './href';
@@ -53,11 +53,9 @@ const AdminArrivals = ({
               heading: 'Name',
               cell: (arrival) =>
                 arrival.account ? (
-                  <UserLink
-                    href={arrival.account.openHref}
-                    heading={arrival.account.heading}
-                    name={arrival.accountName}
-                  />
+                  <OpenModalLink href={arrival.account.openHref} heading={arrival.account.heading}>
+                    {arrival.accountName}
+                  </OpenModalLink>
                 ) : (
                   arrival.accountName
                 ),

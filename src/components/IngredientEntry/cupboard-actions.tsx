@@ -1,10 +1,16 @@
 'use client';
 
 import type { Route } from 'next';
-import { type ReactElement, useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { type ReactElement, useLayoutEffect, useRef, useState } from 'react';
 import { useClickFeedback } from '../ClickFeedback';
 import { editHeading } from '../CompendiumList/heading';
-import { AnnotateButton, AnnotateLink, CompendiumEditLink, MoreMenu } from '../IconTip';
+import {
+  AnnotateButton,
+  AnnotateLink,
+  CompendiumEditLink,
+  MoreMenu,
+  useAskingMenu,
+} from '../IconTip';
 import { choicesFor } from '../MenuButton/sections';
 import type { MenuButtonItem } from '../MenuButton/types';
 import { useOpenModalClick } from '../Modal';
@@ -100,7 +106,6 @@ export default function CupboardActions(
   const { places, defaultWorkspaceId, closeHref, opened, name, removedHref, plus } =
     normalise(props);
   const viewing = 'covens' in props ? 'compendium' : 'coven';
-  const [asking, setAsking] = useState<Asking>();
   const [target, setTarget] = useState(defaultWorkspaceId);
   const targetPlace = places.find(({ workspaceId }) => workspaceId === target) ?? places[0];
   const anyHeld = places.some(({ held }) => held);
@@ -108,15 +113,16 @@ export default function CupboardActions(
   // (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw").
   const annotateControl = useRef<HTMLAnchorElement & HTMLButtonElement>(null);
   const moreControl = useRef<HTMLButtonElement | null>(null);
-  const moreFeedback = useClickFeedback({ name: `More for ${name}` });
-  const moreAnchor = moreFeedback.anchorRef;
-  const moreRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      moreControl.current = node;
-      moreAnchor(node);
-    },
-    [moreAnchor],
-  );
+  const {
+    asking,
+    setAsking,
+    ask: openQuestion,
+    settle,
+  } = useAskingMenu<Asking>({
+    trigger: moreControl,
+    onAsk: () => moreFeedback.report(undefined),
+  });
+  const moreFeedback = useClickFeedback({ name: `More for ${name}`, ref: moreControl });
   const heldNow = useRef(anyHeld);
   useLayoutEffect(() => {
     heldNow.current = anyHeld;
@@ -148,7 +154,6 @@ export default function CupboardActions(
   const annotateHref = annotators.length === 1 ? annotators[0].annotateHref : ('' as Route);
   const openAnnotate = useOpenModalClick(annotateHref, ANNOTATE_HEADING);
 
-  const settle = (): void => setAsking(undefined);
   const writes = useCupboardWrites({
     workspaceId: targetPlace.workspaceId,
     covenSlug: targetPlace.covenSlug,
@@ -159,10 +164,9 @@ export default function CupboardActions(
   });
 
   const ask = (what: Asking, among: readonly CupboardPlace[], write?: CupboardWrite) => {
-    moreFeedback.report(undefined);
     write?.reset?.();
     setTarget(startOn(among, defaultWorkspaceId));
-    setAsking(what);
+    openQuestion(what);
   };
   const choiceOf = (among: readonly CupboardPlace[]) =>
     among.length > 1
@@ -187,10 +191,7 @@ export default function CupboardActions(
           ? 'edit'
           : undefined;
 
-  const askStock = (): void => {
-    moreFeedback.report(undefined);
-    setAsking('stock');
-  };
+  const askStock = (): void => openQuestion('stock');
   const stockItem: MenuButtonItem | undefined =
     stockers.length > 0 ? { key: 'stock', label: 'Edit Stock', onSelect: askStock } : undefined;
   const annotateItem: MenuButtonItem | undefined =
@@ -259,7 +260,7 @@ export default function CupboardActions(
             onClick={() => ask('annotate', annotators)}
           />
         ))}
-      {more && <MoreMenu ref={moreRef} name={name} {...moreChoices} />}
+      {more && <MoreMenu ref={moreFeedback.anchorRef} name={name} {...moreChoices} />}
       {moreFeedback.feedback}
       {/* Asked in a dialog over the page, as Leave Coven asks, rather than in the title's row. */}
       {asking === 'stock' && (

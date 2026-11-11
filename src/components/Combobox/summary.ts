@@ -1,7 +1,7 @@
 'use client';
 
 import { type FocusEvent, type KeyboardEvent, useCallback, useId, useRef, useState } from 'react';
-import { useDismiss } from '../../lib/use-dismiss';
+import { escapeKeyHandler, useDismiss } from '../../lib/use-dismiss';
 import { useListPosition } from './position';
 
 // A linked entry's summary panel: opened and shut by a press on the entry's text, placed beneath the chip, shut by Escape, a press elsewhere or the focus leaving
@@ -31,13 +31,14 @@ export function useEntrySummary() {
   // A press anywhere but the button or the panel shuts it, so a press the target stops still counts.
   useDismiss({ active: open, inside: holds, onOutsidePress: () => close(false) });
 
-  const onKeyDown = (event: KeyboardEvent) => {
-    if (!open || event.key !== 'Escape') return;
-    // Cancelled, so the modal around the form takes no cancel from it.
-    event.preventDefault();
-    event.stopPropagation();
-    close(true);
-  };
+  // Cancelled (by the helper), so the modal around the form takes no cancel from it.
+  const onKeyDown = escapeKeyHandler<KeyboardEvent>(
+    (event) => {
+      event.stopPropagation();
+      close(true);
+    },
+    { active: open },
+  );
   const onBlur = (event: FocusEvent) => {
     if (open && event.relatedTarget !== null && !holds(event.relatedTarget)) close(false);
   };

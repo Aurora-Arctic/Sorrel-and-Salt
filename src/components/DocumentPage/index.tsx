@@ -3,7 +3,7 @@ import type { Route } from 'next';
 import { EditLink } from '../IconTip';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
-import { dayInUtc } from '../../lib/utc';
+import { dayInUtc, isoDayInUtc } from '../../lib/utc';
 import { renderMarkdown } from './markdown';
 import type { DocumentPageProps } from './types';
 import './index.scss';
@@ -37,7 +37,7 @@ const DocumentPage = ({
           <p className="document-page__updated">
             {number !== undefined && <>Version {number}, </>}
             {number !== undefined ? 'last updated' : 'Last updated'}{' '}
-            <time dateTime={updatedOn.toISOString().slice(0, 10)}>{dayInUtc(updatedOn)}</time>
+            <time dateTime={isoDayInUtc(updatedOn)}>{dayInUtc(updatedOn)}</time>
           </p>
         )}
         <PageHeader

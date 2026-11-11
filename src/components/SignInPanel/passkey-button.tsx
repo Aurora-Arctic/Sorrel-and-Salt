@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import { signIn } from '../../lib/auth-client';
 import { settled } from '../../lib/auth-call';
 import BusyButton from '../BusyButton';
-import { useClickFeedback } from '../ClickFeedback';
+import { useGuardedAction } from '../ClickFeedback/use-guarded-action';
 import { PASSKEY_SIGN_IN_ERROR, leaveSignedIn } from './passkey-sign-in';
 import type { PasskeyButtonProps } from './types';
 
@@ -18,22 +18,17 @@ const PasskeyButton = ({
   signingIn,
   onSigningIn,
 }: PasskeyButtonProps): ReactElement => {
-  const { anchorRef, report, feedback } = useClickFeedback({ name: NAME });
   const busy = signingIn === 'passkey';
-
-  const press = async (): Promise<void> => {
-    if (busy) return;
-    report(undefined);
-    onSigningIn('passkey');
-    // A dropped connection throws rather than answering `error`; both say so.
-    const result = await settled(signIn.passkey());
-    if (result?.error) {
-      onSigningIn(null);
-      report(PASSKEY_SIGN_IN_ERROR);
-      return;
-    }
-    leaveSignedIn(next);
-  };
+  const { anchorRef, run, feedback } = useGuardedAction({
+    name: NAME,
+    state: { pending: busy, setPending: (pending) => onSigningIn(pending ? 'passkey' : null) },
+    action: async () => {
+      // A dropped connection throws rather than answering `error`; both say so.
+      const result = await settled(signIn.passkey());
+      if (result?.error) return PASSKEY_SIGN_IN_ERROR;
+      leaveSignedIn(next);
+    },
+  });
 
   return (
     <div className="sign-in-panel__provider">
@@ -45,7 +40,7 @@ const PasskeyButton = ({
         // Not `disabled` while busy, which would drop the focus a failure's callout is placed against.
         aria-disabled={busy || undefined}
         disabled={signingIn !== null && !busy}
-        onClick={() => void press()}
+        onClick={() => void run()}
       >
         {NAME}
         {lastUsed && (

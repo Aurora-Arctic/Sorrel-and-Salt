@@ -28,3 +28,39 @@ describe('outside-press dismissal', () => {
     expect(offending).toEqual([]);
   });
 });
+
+// Escape is compared in one place too: `useDismiss`'s `onEscape` for a listener on the document,
+// and `escapeKeyHandler` for an element's own `onKeyDown`, both in src/lib/use-dismiss.ts. The
+// files below read the key for a job that is not closing a popover of their own.
+
+const ESCAPE_KEY = /(['"`])Esc(ape)?\1/;
+const DISMISSAL_HOME = 'src/lib/use-dismiss.ts';
+const OTHER_ESCAPES: Record<string, string> = {
+  'src/components/ClickFeedback/index.tsx':
+    'listens in the anchor’s own document, beside its press and focus listeners',
+  'src/components/Combobox/escape.ts':
+    'marks an open list’s Escape handled for the dialog around it; Downshift closes the list',
+  'src/components/Combobox/index.tsx':
+    'decides whether Escape on a closed list is Downshift’s, the empty row’s or the dialog’s',
+};
+
+describe('Escape dismissal', () => {
+  it('has no hand-written Escape handler or listener in src/ outside src/lib/use-dismiss.ts and the exempt files', () => {
+    const files = inject('repoFiles').filter((file) => /^src\/.*\.tsx?$/.test(file));
+
+    // Precondition: the scan reached the home and the exempt files, and the pattern sees the home's
+    // own comparison, so an empty result means no other file compares the key.
+    expect(files).toContain(DISMISSAL_HOME);
+    for (const exempt of Object.keys(OTHER_ESCAPES)) expect(files).toContain(exempt);
+    expect(ESCAPE_KEY.test(readFileSync(DISMISSAL_HOME, 'utf8'))).toBe(true);
+
+    const offending = files
+      .filter((file) => file !== DISMISSAL_HOME && !(file in OTHER_ESCAPES))
+      .filter((file) => ESCAPE_KEY.test(readFileSync(file, 'utf8')));
+    expect(offending).toEqual([]);
+  });
+
+  it('offers an element-level Escape handler beside the document listener', () => {
+    expect(readFileSync(DISMISSAL_HOME, 'utf8')).toMatch(/export function escapeKeyHandler\b/);
+  });
+});

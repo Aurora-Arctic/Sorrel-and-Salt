@@ -1,10 +1,12 @@
 'use client';
 
-import { autoUpdate, flip, offset, shift, useFloating } from '@floating-ui/react-dom';
+import { flip, offset, shift, size, useFloating } from '@floating-ui/react-dom';
 import type { Placement } from '@floating-ui/react-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAutoPosition } from '../../lib/use-auto-position';
+import { useDismiss } from '../../lib/use-dismiss';
 import { TIP_OPEN_DELAY_MS } from './constants';
-import type { Tip, TipTiming } from './types';
+import type { Tip, TipOptions } from './types';
 
 // A tip's open state as WCAG 1.4.13 asks: shown on hover (after it rests), focus or tap, kept open while
 // the pointer is over it, closed on Escape, blur or leaving. Used by InfoTip, UserList, IconTip and
@@ -83,35 +85,60 @@ const edges = ({ elements }: { elements: { reference: unknown } }) => {
 export function useTip(
   canOpen: () => boolean = ALWAYS,
   placement: Placement = 'top',
-  { openDelayMs = TIP_OPEN_DELAY_MS, closeDelayMs = CLOSE_DELAY_MS }: TipTiming = {},
+  {
+    openDelayMs = TIP_OPEN_DELAY_MS,
+    closeDelayMs = CLOSE_DELAY_MS,
+    reference: referenceOverride,
+    gapPx = GAP_PX,
+    minWidthPx,
+    pinnable = false,
+    onEscape,
+  }: TipOptions = {},
 ): Tip {
   const [open, setOpen] = useState(false);
   const [side, setSide] = useState<Placement>(placement);
   const opening = useRef<ReturnType<typeof setTimeout>>(undefined);
   const closing = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // A pinned tip stays open while the pointer leaves, until a second press, a blur or Escape.
+  const pinned = useRef(false);
+  const anchorNode = useRef<HTMLElement | null>(null);
 
   const { refs, elements, floatingStyles, update } = useFloating({
     open,
     placement: side,
     strategy: 'fixed',
+    ...(referenceOverride ? { elements: { reference: referenceOverride } } : {}),
     // Left and top rather than a transform, which the bubble's fade owns.
     transform: false,
-    middleware: [offset(GAP_PX), flip(edges), shift(edges)],
+    middleware: [
+      offset(gapPx),
+      flip(edges),
+      shift(edges),
+      ...(minWidthPx === undefined
+        ? []
+        : [
+            size({
+              padding: EDGE_PX,
+              // As wide as the reference, or the least width.
+              apply({ rects, elements: { floating } }) {
+                floating.style.width = `${Math.max(rects.reference.width, minWidthPx)}px`;
+              },
+            }),
+          ]),
+    ],
   });
 
-  const { reference, floating } = elements;
-  useEffect(() => {
-    if (!open || !reference || !floating) return;
-    return autoUpdate(reference, floating, update);
-  }, [open, reference, floating, update]);
+  useAutoPosition(open, elements.reference as Element | null, elements.floating, update);
 
   const show = useCallback(() => {
     clearTimeout(opening.current);
     clearTimeout(closing.current);
     if (!canOpen()) return;
-    setSide(sideFor(refs.reference.current as Element | null, placement));
+    setSide(
+      referenceOverride ? placement : sideFor(refs.reference.current as Element | null, placement),
+    );
     setOpen(true);
-  }, [canOpen, placement, refs]);
+  }, [canOpen, placement, refs, referenceOverride]);
   const showSoon = useCallback(() => {
     clearTimeout(closing.current);
     clearTimeout(opening.current);
@@ -120,28 +147,51 @@ export function useTip(
   const hide = useCallback(() => {
     clearTimeout(opening.current);
     clearTimeout(closing.current);
+    pinned.current = false;
     setOpen(false);
   }, []);
   const hideSoon = useCallback(() => {
     clearTimeout(opening.current);
     clearTimeout(closing.current);
-    if (closeDelayMs <= 0) setOpen(false);
-    else closing.current = setTimeout(() => setOpen(false), closeDelayMs);
-  }, [closeDelayMs]);
+    if (pinned.current) return;
+    const close = () => {
+      // A pinnable tip stays while focus is inside it.
+      if (pinnable && anchorNode.current?.matches(':focus-within')) return;
+      setOpen(false);
+    };
+    if (closeDelayMs <= 0) close();
+    else closing.current = setTimeout(close, closeDelayMs);
+  }, [closeDelayMs, pinnable]);
+  const toggle = useCallback(() => {
+    if (pinned.current) hide();
+    else {
+      pinned.current = true;
+      show();
+    }
+  }, [hide, show]);
+  const { setReference } = refs;
+  const anchor = useCallback(
+    (node: HTMLElement | null) => {
+      anchorNode.current = node;
+      setReference(node);
+    },
+    [setReference],
+  );
+  const unpin = useCallback(() => {
+    pinned.current = false;
+  }, []);
 
-  useEffect(() => {
-    if (!open) return;
-    // On the document, as a tip opened by hover has no focus to listen from. Marked handled, so the Escape
-    // that closes a tip closes nothing else, such as a modal's `<dialog>` or a changed form's discard
-    // (as Combobox/escape.ts does); with the tip shut, Escape is left alone.
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
+  // On the document, as a tip opened by hover has no focus to listen from. Marked handled, so the Escape
+  // that closes a tip closes nothing else, such as a modal's `<dialog>` or a changed form's discard
+  // (as Combobox/escape.ts does); with the tip shut, Escape is left alone.
+  useDismiss({
+    active: open,
+    onEscape: (event) => {
       event.preventDefault();
       hide();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open, hide]);
+      onEscape?.();
+    },
+  });
 
   useEffect(
     () => () => {
@@ -157,7 +207,9 @@ export function useTip(
     showSoon,
     hide,
     hideSoon,
-    anchor: refs.setReference,
+    toggle,
+    unpin,
+    anchor,
     bubble: refs.setFloating,
     // The bubble's own `right` and `bottom` are cleared so a stylesheet that
     // still sets them cannot stretch it between top and bottom.

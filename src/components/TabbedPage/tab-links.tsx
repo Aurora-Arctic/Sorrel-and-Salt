@@ -6,11 +6,10 @@ import { type MouseEvent, type ReactElement, useLayoutEffect, useRef } from 'rea
 import { isAtPath } from '../../lib/at-path';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { pressFeedback } from '../../lib/press-feedback';
+import { cappedCount, cappedWords } from '../FacetPanel/capped-count';
 import { FacetCount } from '../FacetPanel/facet-count';
 import { useTabSwitch } from './tab-switch';
 import type { TabLinksProps } from './types';
-
-const COUNT_CAP = 99;
 
 // The tabs' links: a client part because only `usePathname()` knows which tab is open. Pressing another tab navigates through the
 // tab switch, and the sliding pill and scrolling are described in claude-docs/components/tabbed-page.md, "The sliding pill".
@@ -90,11 +89,9 @@ const TabLinks = ({ tabs, open: openTab }: TabLinksProps): ReactElement => {
               {count !== undefined && (
                 <>
                   <span aria-hidden="true">
-                    <FacetCount count={count > COUNT_CAP ? `${COUNT_CAP}+` : count} />
+                    <FacetCount count={cappedCount(count)} />
                   </span>
-                  <span className="visually-hidden">
-                    , {count > COUNT_CAP ? `more than ${COUNT_CAP}` : count}
-                  </span>
+                  <span className="visually-hidden">, {cappedWords(count)}</span>
                 </>
               )}
             </Link>

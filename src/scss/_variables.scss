@@ -805,8 +805,9 @@ $shell-phone-width: $table-stack-width;
 // Under it the admin section nav tucks pages behind More (Priority+). Also where the site links leave the bar for the account
 // panel: with the Compendium link a keeper's bar outran an 882px window.
 $shell-tablet-width: 56rem;
-// Under it the brand is its initials; wider, the bar has room for the full name once the site links have gone.
-$shell-brand-width: 26rem;
+// Under it the brand is its initials; wider, the bar has room for the full name once the site links have gone. 28rem: the
+// widest bar (split Add Ingredient button, account menu, theme toggle) needs 442px beside the full name.
+$shell-brand-width: 28rem;
 // Under 680px of its own width a tabbed page's Add is a plus.
 $tabbed-plus-width: 42.5rem;
 // Under 568px of its own width the pills drop beneath the heading and the plus.
