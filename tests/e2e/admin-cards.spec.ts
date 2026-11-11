@@ -101,6 +101,38 @@ test('on a phone, Escape shuts the range calendar and the status list and leaves
   await expect(drawer).toBeVisible();
 });
 
+// Typed with the keyboard alone, and Tab to leave each box, as a Field is checked when it is left.
+test('an admin types a Minted range into Start and End, and an End before Start is refused until put right', async ({
+  page,
+}) => {
+  await signInAs(page, 'cards-admin-typed@admin-cards.test', ['discord'], 'admin');
+  await page.goto('/keepers/invitation-cards');
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  const drawer = page.getByRole('dialog', { name: 'Filters' });
+  await drawer.getByRole('button', { name: /^Minted/ }).click();
+  const minted = page.getByRole('dialog', { name: 'Choose Minted Days' });
+  const start = minted.getByRole('textbox', { name: 'Start', exact: true });
+  const end = minted.getByRole('textbox', { name: 'End', exact: true });
+  await expect(start).toHaveAttribute('aria-current', 'true');
+
+  await start.fill('2026-01-10');
+  await start.press('Tab');
+  await expect(end).toHaveAttribute('aria-current', 'true');
+  await end.fill('2026-01-04');
+  await end.press('Tab');
+  await expect(end).toHaveAttribute('aria-invalid', 'true');
+  await expect(drawer.getByRole('button', { name: /^Minted.*From 10 Jan 2026/ })).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+
+  await end.fill('2026-01-31');
+  await end.press('Tab');
+  await expect(
+    drawer.getByRole('button', { name: /^Minted.*10 Jan 2026.*31 Jan 2026/ }),
+  ).toBeVisible();
+  await drawer.getByRole('button', { name: 'Apply Filters' }).click();
+  await expect(page).toHaveURL(/mintedFrom=2026-01-10&mintedTo=2026-01-31/);
+});
+
 test('an admin revokes a whole batch and its links are refused as withdrawn', async ({
   page,
 }, testInfo) => {
