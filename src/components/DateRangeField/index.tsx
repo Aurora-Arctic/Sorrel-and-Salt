@@ -13,7 +13,7 @@ import { dayPickerModule } from '../DateField/lazy-day-picker';
 import { CalendarPanel, dayBounds, useDayPopover } from '../DateField/popover';
 import { preloadOnIntent } from '../../lib/use-lazy-module';
 import { RangeEnds } from './range-ends';
-import { useRoomForTwoMonths } from './use-room-for-two-months';
+import { type TwoMonthAlign, useRoomForTwoMonths } from './use-room-for-two-months';
 import type { DateRangeFieldProps, DayRange } from './types';
 import './index.scss';
 
@@ -66,13 +66,15 @@ export default function DateRangeField({
   const narrow = useMediaQuery(NARROW);
   // The popover's own state is above its months, which depend on the room it measures, so it is placed again when they change.
   const [months, setMonths] = useState<1 | 2>(2);
+  const [align, setAlign] = useState<TwoMonthAlign>('start');
   const { panelId, panel, open, setOpen, floating, picker, closeAndFocus } = useDayPopover(
     id,
-    months,
+    `${months}${align}`,
     months === 1,
+    align === 'end',
   );
-  const room = useRoomForTwoMonths({ open, floating, narrow, fieldId: id, panel });
-  const wanted = narrow || !room ? 1 : 2;
+  useRoomForTwoMonths({ open, floating, narrow, fieldId: id, panel, align, setAlign });
+  const wanted = narrow || !align ? 1 : 2;
   if (wanted !== months) setMonths(wanted);
   // The first day of a range being picked, until the second is.
   const [pending, setPending] = useState<string | null>(null);

@@ -15,13 +15,18 @@ import { dayPickerModule } from './lazy-day-picker';
  * What a day field's calendar popover needs: its open state, the panel's id and ref, whether it
  * floats in the top layer, the lazily loaded day picker, and a close that returns focus to the field.
  */
-export function useDayPopover(fieldId: string, layoutKey?: unknown, fieldWide?: boolean) {
+export function useDayPopover(
+  fieldId: string,
+  layoutKey?: unknown,
+  fieldWide?: boolean,
+  alignEnd?: boolean,
+) {
   const panelId = useId();
   const panel = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [floating] = useState(hasPopover);
   const close = useCallback(() => setOpen(false), []);
-  useCalendarPopover({ open, floating, fieldId, panel, close, layoutKey, fieldWide });
+  useCalendarPopover({ open, floating, fieldId, panel, close, layoutKey, fieldWide, alignEnd });
   usePreloadWhenIdle(dayPickerModule);
   const picker = useLazyModule(dayPickerModule, open);
   const closeAndFocus = () => {
