@@ -9,10 +9,9 @@ import BusyButton from '../BusyButton';
 import { ComboboxTypeahead } from '../Combobox/typeahead';
 import DeleteWorkspaceButton from '../DeleteWorkspaceButton';
 import { FieldShell, fieldDescription, RadioGroupField } from '../Field';
-import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
+import { WORKSPACE_ROLE_ACCESS, workspaceRoleLabel } from '../MemberList/roles';
 import { ModalButton } from '../Modal';
 import Notice from '../Notice';
-import { workspaceRoleLabel } from '../UserDetail/roles';
 import { LeaveWorkspaceDocument } from './documents';
 import type { OwnerExitProps, WayOut } from './types';
 

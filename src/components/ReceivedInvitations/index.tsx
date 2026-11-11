@@ -3,7 +3,7 @@ import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import { ReceivedInvitationsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
-import { workspaceRoleLabel } from '../UserDetail/roles';
+import { workspaceRoleLabel } from '../MemberList/roles';
 import { emptyList } from '../../lib/text';
 import LocalTime from '../LocalTime';
 import AcceptControl from './accept-control';

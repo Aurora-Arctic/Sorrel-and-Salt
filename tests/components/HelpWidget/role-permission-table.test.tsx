@@ -4,7 +4,7 @@ import RolePermissionTable, {
   HIDDEN_STATEMENTS,
   STATEMENT_LABELS,
 } from '@/components/HelpWidget/role-permission-table';
-import { WORKSPACE_ROLE_LABELS } from '@/components/UserDetail/roles';
+import { WORKSPACE_ROLE_LABELS } from '@/components/MemberList/roles';
 import { WORKSPACE_STATEMENTS, rolePermits } from '@/modules/coven';
 
 // Each cell is the access check's own answer: the table asks `rolePermits` for every statement and every role.

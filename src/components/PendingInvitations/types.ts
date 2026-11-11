@@ -19,7 +19,9 @@ export interface PendingInvitationsProps {
   position?: PagePosition;
 }
 
-export interface RevokeControlProps {
+export interface InvitationActionProps {
+  /** A declined row is removed from the list rather than revoked. */
+  declined?: boolean;
   workspaceId: string;
   invitation: Pick<PendingInvitationEntry, 'id' | 'email'>;
 }

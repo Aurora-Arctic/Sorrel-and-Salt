@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { WORKSPACE_STATEMENTS, rolePermits } from '@/modules/coven';
-import { WORKSPACE_ROLE_LABELS } from '../UserDetail/roles';
+import { WORKSPACE_ROLE_LABELS } from '../MemberList/roles';
 import { Mark } from '../UserList/marks';
 
 // Who may do what in a coven, each cell asked of the access check itself (claude-docs/components/help-pages.md,

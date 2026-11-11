@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
-import RemoveControl from '@/components/MemberList/remove-control';
+import RemoveMemberControl from '@/components/MemberList/remove-control';
 import { GraphQLClientError } from '@/lib/graphql-client-error';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { router } from '../../support/next-navigation';
@@ -14,7 +14,7 @@ const USER = '00000000-0000-0000-0000-000000000002';
 const NAME = 'Remove Fixture Member';
 
 async function openAndConfirm() {
-  render(<RemoveControl workspaceId={WORKSPACE} userId={USER} name="Fixture Member" />, {
+  render(<RemoveMemberControl workspaceId={WORKSPACE} userId={USER} name="Fixture Member" />, {
     wrapper: StatusRegionProvider,
   });
   fireEvent.click(screen.getByRole('button', { name: NAME }));
@@ -26,7 +26,7 @@ async function openAndConfirm() {
   });
 }
 
-describe('RemoveControl', () => {
+describe('RemoveMemberControl', () => {
   beforeEach(() => {
     router.refresh.mockReset();
     graphqlRequest.mockReset();
@@ -66,7 +66,7 @@ describe('RemoveControl', () => {
 
 // The row's own Remove takes its row with it. The members page, the invitations' Revoke and Remove, the account page's Decline and the admin invitations' Revoke all ask through ConfirmedAction's modal,
 // so one row proves the landing for them all.
-describe('RemoveControl, where the focus lands', () => {
+describe('RemoveMemberControl, where the focus lands', () => {
   beforeEach(() => {
     router.refresh.mockReset();
     graphqlRequest.mockReset();
@@ -76,7 +76,9 @@ describe('RemoveControl, where the focus lands', () => {
     return (
       <main>
         <h1>Members</h1>
-        {present && <RemoveControl workspaceId={WORKSPACE} userId={USER} name="Fixture Member" />}
+        {present && (
+          <RemoveMemberControl workspaceId={WORKSPACE} userId={USER} name="Fixture Member" />
+        )}
       </main>
     );
   }
