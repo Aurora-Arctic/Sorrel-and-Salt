@@ -4,6 +4,7 @@ Every job runs on GitHub's `ubuntu-26.04`, which is free and unlimited on a
 public repo. No job runs on Blacksmith (see "Why Blacksmith was dropped").
 The sizing record is [`ci.md`, "The CI Vitest job: DOM only where needed, GitHub's runner"](../design-decisions/ci.md#the-ci-vitest-job-dom-only-where-needed-githubs-runner).
 
+- **A CI test step's budget is 7 minutes.** A job whose test step passes 7 minutes in two consecutive runs gets another shard (`--shard` with the blob reporter and `merge-reports`), never a longer timeout.
 - **The Vitest jobs run on GitHub's 4-vCPU public-repo runner, with three
   workers.** The suite is mostly per-file overhead spread over `dbMaxWorkers`
   = cores − 1 (`tests/support/db-project.mts`), which reads the core count at
