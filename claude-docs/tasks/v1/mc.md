@@ -265,7 +265,7 @@ _Acceptance criteria:_
 - `seed/index.test.ts` runs one `describe.each(SEED_ENTRIES)` with one `beforeAll`, in the order dry run, seed and fill, idempotent, no-resurrect, and `:221` is cut (T-25)
 - `stock.test.ts` creates its three ingredients in `beforeAll`, resets only `inventory_items` and `workspace_compendium_entries` per test, and keeps the fixture-mutating tests in their own describe (T-25); a writing test still gets its own setup (R-9)
 - The repeats in T-26 are cut, merged or trimmed in `tests/db/repository/invitations.test.ts`, `invitation-acceptance-by-token`, `identity/graphql/admin-invitations`, `sourcing-score.test.ts`, `HelpWidget/unit-converter`, `grimoire/services/workings`, `password-lockout:173`, `user-list.test.ts` and `add-ingredient-button`, and the style and class checks are cut from `LinkHint`, `IconTip` and `comparison-panel`
-- The four `tests/scss` files stay, and the checks T-27 records as cleared (the soft-delete pairs, the membership-proof tests, the spell-visibility matrix, the GraphQL refusal codes, `plan-deductions:103`, `password-lockout:234`, `Modal:704`) are not cut
+- The four `tests/scss` files stay, and the checks T-27 records as cleared (the soft-delete pairs, the membership-proof tests, the narrowing refusal in `workings.test.ts:441` and `working.test.ts:329`, the GraphQL refusal codes, `plan-deductions:103`, `password-lockout:234`, `Modal:704`) are not cut
 - `help-reads.test.ts` has positive staff reads (glossary, index, sitemap) beside its absence checks (R-12)
 - Every cut names, in the PR table, the test that keeps its rule proved, and no authorization test that asserts a direct-id refusal is removed
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass

@@ -6,7 +6,7 @@ This audit measures where the CI test jobs spend their time, lists tests that ar
 
 ## Summary
 
-**What was measured.** Two CI runs of the PR gate (run A = 42934452944, run B = 42931606693) on `ubuntu-26.04` runners with 4 vCPU. Every figure marked **(CI)** is read from those runs. Every figure not so marked is an **estimate**. Playwright and story timings come from CI only, by decision; no local Playwright run was made. One local `npm run test:coverage` is owed after MC.8 and MC.9 merge, and its four metrics are not yet recorded here.
+**What was measured.** Two CI runs of the PR gate (run A = 42934452944, run B = 42931606693) on `ubuntu-26.04` runners with 4 vCPU. Every figure marked **(CI)** is read from those runs. Every figure not so marked is an **estimate**. Playwright and story timings come from CI only, by decision; no local Playwright run was made. No local `npm run test:coverage` figures are recorded: the owner did not approve a full-suite run for this audit.
 
 **The headline.**
 
@@ -298,7 +298,7 @@ About 7 of the 25 are uncertain.
   - `shell:213-235` (keep the 375 `assertNoSidewaysScroll`);
   - `account:48`;
   - `admin:38, 59, 215`;
-  - `access-pause:84`;
+  - `access-pause:85`;
   - `error-pages:21`;
   - `admin-support-views:29`;
   - `admin-cards:64`;
@@ -313,7 +313,7 @@ About 7 of the 25 are uncertain.
   - `terms-gate:24`;
   - `compendium-entry`;
   - `help-pages:504, 522`.
-- **Distinct states, which stay:** `access-pause:71, 107, 139`; `error-pages:44`; `account:66`; `admin-cards:39, 50, 53, 60, 74, 91`; `admin-support-views:38`; `admin-business-cards:46, 111`; `admin:233, 283`; `support-sender-statuses:14` (one scan per status).
+- **Distinct states, which stay:** `access-pause:72, 108, 140`; `error-pages:44`; `account:66`; `admin-cards:39, 50, 53, 60, 74, 91`; `admin-support-views:38`; `admin-business-cards:46, 111`; `admin:233, 283`; `support-sender-statuses:14` (one scan per status).
 - **Found:** a scan of the plain page, as the same persona, in the same state the sweep scans. Rule 9 of `layer-ownership.md` already allows only one scan per page state.
 - **Keeper:** the sweep scan of the same route and persona.
 
@@ -338,7 +338,7 @@ Rule 9 of `layer-ownership.md`: a gate spec that a story flow proves is deleted.
 - **Cut, or move to Vitest:**
   - `security-headers:30`, if `tests/lib/security-headers.test.ts:18, 28` covers the same values;
   - `error-pages:86` (a title is copy).
-- **Keep, because only a real server can prove them:** `coven-rename:51, 83, 116`; `workspace-invitation` (all four); `admin-cards:78, 104`; `admin-business-cards`; `admin-support-curator`; `help-pages` status codes; `public-compendium` cache and server HTML; `seo` (rendered output); `security-headers:39, 53`; `graphql:15-42`; the access-pause flows; `form-error-summary:29`.
+- **Keep, because only a real server can prove them:** `coven-rename:51, 83, 116`; `workspace-invitation` (all four); `admin-cards:78, 143`; `admin-business-cards`; `admin-support-curator`; `help-pages` status codes; `public-compendium` cache and server HTML; `seo` (rendered output); `security-headers:39, 53`; `graphql:15-42`; the access-pause flows; `form-error-summary:29`.
 - **Found:** medium to high confidence; the two "check first" items are the uncertain ones.
 
 ### Vitest
@@ -365,7 +365,7 @@ An **estimate** of about 33 s summed.
   - Assert role and kind, not the sentence, at `:1099`.
   - About 45 tests genuinely need the whole tree, so the file stays at about 29 s, over budget by decision.
 - **`variants`:**
-  - Move `:86`, `:111`, `:145`, `:250`, and `:270` to `renderVariants()` (`tests/support/variants-harness.tsx:255`).
+  - Move `:86`, `:111`, `:145`, `:250`, and `:270` to `renderVariants()` (`tests/components/IngredientForm/variants-harness.tsx:255`).
   - Cut `:303` (kept by `copy.test.tsx:58, 71`).
 - **`SpellBuilder/steps`:**
   - About 38 tests move to a new `SpellSteps` harness on the `list-field.test.tsx:128` model.
@@ -398,7 +398,7 @@ An **estimate** of about 13.4 s summed.
 
 - **`password-lockout`:** 23 sign-ups and 45 sign-ins. Sign up once in `beforeAll` and reset the failure counts per test (an estimate of about 3-5 s).
 - **`two-factor`:** share one enrolled account and merge the rotation pair.
-- **Do not add a test hasher.** `src/lib/auth.ts:461-483` sets no `password.hash`, and the real hash is what is under test.
+- **Do not add a test hasher.** `src/lib/auth.ts:451-473` sets no `password.hash`, and the real hash is what is under test.
 - **Keeper:** every lockout and enrolment path is still exercised.
 
 #### T-25. Seed Tests Re-Truncate and Re-Seed per Test
@@ -444,7 +444,7 @@ Recorded so nobody re-audits them.
 
 - **Soft-delete pairs** (`stock:344` and `:399`, `retired-entry-writes`, `references`): each calls a different reader.
 - **Membership-proof tests in `tests/db/repository/`:** one per finder family.
-- **The spell-visibility matrix** (`spell-visibility.test.ts:91-150`): one refusal per other entry point, which is never deleted.
+- **The narrowing refusal** (`workings.test.ts:441`, `working.test.ts:329`): one refusal per other entry point, which is never deleted. The earlier `spell-visibility.test.ts` matrix was removed with `setSpellVisibility`.
 - **The GraphQL refusal codes:** the transport layer owns them.
 - **`plan-deductions:103`**, **`password-lockout:234`**, and **`Modal:704`.**
 - **The `tests/scss` files.**
