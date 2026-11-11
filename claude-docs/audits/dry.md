@@ -252,7 +252,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-238 | The `framed` flag gives three help components and their skeletons two header layouts each                                                                    | medium   | Components    |      4 |  0.75 | Moved to MC.8                                   |
 | D-239 | HelpFrontSkeleton repeats HelpFront's wrapper markup                                                                                                         | low      | Components    |      2 |  0.25 | Moved to MC.2                                   |
 | D-240 | AddIngredientAction and NewSpellAction are near twins                                                                                                        | low      | Components    |      2 |  0.25 | Moved to MC.6                                   |
-| D-241 | `autoCapitalize`, `enterKeyHint` and `format` are typed by hand a second time in Combobox                                                                    | low      | Components    |      2 |   0.1 | Not fixed: deferred                             |
+| D-241 | `autoCapitalize`, `enterKeyHint` and `format` are typed by hand a second time in Combobox                                                                    | low      | Components    |      2 |   0.1 | Fixed                                           |
 | D-242 | The set of openable link schemes is written in a list and again in a regex                                                                                   | low      | Components    |      3 |  0.25 | Fixed                                           |
 | D-243 | Duplicate, unused and test-only exports remain among the form and support files                                                                              | low      | Components    |      6 |  0.25 | Moved to MC.9                                   |
 | D-244 | Four container queries add `0.01rem` by hand, and the breakpoint guard checks only `@media`                                                                  | low      | Styles        |      4 |   0.5 | Moved to MC.9                                   |
@@ -5150,7 +5150,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** Type check only.
 
 - **Estimate:** 0.1 hours
-- **Status:** Not fixed. Deferred until MC.5 merges; `Field/types.ts` and the Combobox types are left alone until then.
+- **Status:** Fixed. `AutoCapitalize` and `EnterKeyHint` are exported from `src/components/Field/types.ts`, and the Field set and Combobox both use them. Combobox has no `format` prop, so there was no `FieldFormat` copy to replace.
 
 ### D-242: The set of openable link schemes is written in a list and again in a regex
 
