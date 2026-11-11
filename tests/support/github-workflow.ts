@@ -2,6 +2,8 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { Evaluator, Lexer, Parser, data } from '@actions/expressions';
+import type { FunctionDefinition } from '@actions/expressions/funcs/info';
 import picomatch from 'picomatch';
 import { parse } from 'yaml';
 
@@ -83,139 +85,10 @@ export function needsOf(job: Job): string[] {
 // ---------------------------------------------------------------------------
 // The expression language (docs.github.com, "Evaluate expressions in workflows and actions").
 
-type Token =
-  | { kind: 'number'; value: number }
-  | { kind: 'string'; value: string }
-  | { kind: 'name'; value: string }
-  | { kind: 'op'; value: string };
-
-function tokenize(source: string): Token[] {
-  const tokens: Token[] = [];
-  let at = 0;
-  while (at < source.length) {
-    const rest = source.slice(at);
-    const space = /^\s+/.exec(rest);
-    if (space) {
-      at += space[0].length;
-      continue;
-    }
-    if (rest[0] === "'") {
-      let value = '';
-      let end = 1;
-      for (;;) {
-        if (end >= rest.length) throw new Error(`Unclosed string in: ${source}`);
-        if (rest[end] === "'") {
-          if (rest[end + 1] === "'") {
-            value += "'";
-            end += 2;
-            continue;
-          }
-          break;
-        }
-        value += rest[end];
-        end++;
-      }
-      tokens.push({ kind: 'string', value });
-      at += end + 1;
-      continue;
-    }
-    const number = /^(?:0x[0-9a-f]+|-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)/i.exec(rest);
-    const previous = tokens[tokens.length - 1];
-    const afterDot = previous?.kind === 'op' && previous.value === '.';
-    if (number && !afterDot) {
-      tokens.push({ kind: 'number', value: Number(number[0]) });
-      at += number[0].length;
-      continue;
-    }
-    const name = /^[A-Za-z_][A-Za-z0-9_-]*/.exec(rest);
-    if (name) {
-      tokens.push({ kind: 'name', value: name[0] });
-      at += name[0].length;
-      continue;
-    }
-    const op = /^(?:==|!=|<=|>=|&&|\|\||[!<>()[\].,*])/.exec(rest);
-    if (!op) throw new Error(`Cannot read "${rest.slice(0, 20)}" in: ${source}`);
-    tokens.push({ kind: 'op', value: op[0] });
-    at += op[0].length;
-  }
-  return tokens;
-}
-
-/** The result of a `*` filter: property access on it maps over its items. */
-class Filtered extends Array<Value> {}
-
-function isObject(value: Value): value is Record<string, Value> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function property(target: Value, key: string): Value {
-  if (target instanceof Filtered) {
-    const mapped = new Filtered();
-    for (const item of target) {
-      const value = property(item, key);
-      if (value !== null) mapped.push(value);
-    }
-    return mapped;
-  }
-  if (Array.isArray(target)) {
-    const index = Number(key);
-    return Number.isInteger(index) ? (target[index] ?? null) : null;
-  }
-  if (!isObject(target)) return null;
-  if (key in target) return target[key] ?? null;
-  const match = Object.keys(target).find(
-    (candidate) => candidate.toLowerCase() === key.toLowerCase(),
-  );
-  return match === undefined ? null : (target[match] ?? null);
-}
-
-function star(target: Value): Value {
-  const items = new Filtered();
-  if (target instanceof Filtered) {
-    for (const item of target) {
-      if (Array.isArray(item)) items.push(...item);
-      else if (isObject(item)) items.push(...Object.values(item));
-    }
-  } else if (Array.isArray(target)) items.push(...target);
-  else if (isObject(target)) items.push(...Object.values(target));
-  return items;
-}
-
 export function truthy(value: Value): boolean {
   if (value === null || value === undefined || value === false || value === '') return false;
   if (typeof value === 'number') return value !== 0 && !Number.isNaN(value);
   return true;
-}
-
-function toNumber(value: Value): number {
-  if (value === null || value === undefined) return 0;
-  if (typeof value === 'boolean') return value ? 1 : 0;
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string') return value.trim() === '' ? 0 : Number(value);
-  return Number.NaN;
-}
-
-function looseEquals(left: Value, right: Value): boolean {
-  if (typeof left === 'string' && typeof right === 'string') {
-    return left.toLowerCase() === right.toLowerCase();
-  }
-  const objectish = (value: Value) => value !== null && typeof value === 'object';
-  if (objectish(left) || objectish(right)) return left === right;
-  if (typeof left === typeof right && left !== null) return left === right;
-  if ((left ?? null) === null && (right ?? null) === null) return true;
-  return toNumber(left) === toNumber(right);
-}
-
-function compare(left: Value, right: Value): number {
-  if (typeof left === 'string' && typeof right === 'string') {
-    const a = left.toLowerCase();
-    const b = right.toLowerCase();
-    return a < b ? -1 : a > b ? 1 : 0;
-  }
-  const a = toNumber(left);
-  const b = toNumber(right);
-  if (Number.isNaN(a) || Number.isNaN(b)) return Number.NaN;
-  return a - b;
 }
 
 /** A value as GitHub writes it into a string: an env var, a `with:` input or a script. */
@@ -228,190 +101,45 @@ export function stringify(value: Value): string {
 
 const STATUS_FUNCTIONS = /\b(?:always|success|failure|cancelled)\s*\(/;
 
-class Parser {
-  private at = 0;
-
-  constructor(
-    private readonly tokens: Token[],
-    private readonly context: Context,
-    private readonly status: Status,
-    private readonly source: string,
-  ) {}
-
-  parse(): Value {
-    const value = this.or();
-    if (this.at !== this.tokens.length) throw new Error(`Unexpected token in: ${this.source}`);
-    return value;
-  }
-
-  private peek(value: string): boolean {
-    const token = this.tokens[this.at];
-    return token?.kind === 'op' && token.value === value;
-  }
-
-  private expect(value: string) {
-    if (!this.peek(value)) throw new Error(`Expected "${value}" in: ${this.source}`);
-    this.at++;
-  }
-
-  private or(): Value {
-    let left = this.and();
-    while (this.peek('||')) {
-      this.at++;
-      const right = this.and();
-      left = truthy(left) ? left : right;
-    }
-    return left;
-  }
-
-  private and(): Value {
-    let left = this.equality();
-    while (this.peek('&&')) {
-      this.at++;
-      const right = this.equality();
-      left = truthy(left) ? right : left;
-    }
-    return left;
-  }
-
-  private equality(): Value {
-    let left = this.comparison();
-    for (;;) {
-      if (this.peek('==') || this.peek('!=')) {
-        const negate = this.peek('!=');
-        this.at++;
-        const equal = looseEquals(left, this.comparison());
-        left = negate ? !equal : equal;
-      } else return left;
-    }
-  }
-
-  private comparison(): Value {
-    let left = this.unary();
-    for (;;) {
-      const op = ['<=', '>=', '<', '>'].find((candidate) => this.peek(candidate));
-      if (!op) return left;
-      this.at++;
-      const order = compare(left, this.unary());
-      if (Number.isNaN(order)) left = false;
-      else if (op === '<') left = order < 0;
-      else if (op === '>') left = order > 0;
-      else if (op === '<=') left = order <= 0;
-      else left = order >= 0;
-    }
-  }
-
-  private unary(): Value {
-    if (this.peek('!')) {
-      this.at++;
-      return !truthy(this.unary());
-    }
-    return this.postfix(this.primary());
-  }
-
-  private postfix(start: Value): Value {
-    let value = start;
-    for (;;) {
-      if (this.peek('.')) {
-        this.at++;
-        if (this.peek('*')) {
-          this.at++;
-          value = star(value);
-          continue;
-        }
-        const token = this.tokens[this.at++];
-        if (token?.kind !== 'name' && token?.kind !== 'number') {
-          throw new Error(`Expected a property name in: ${this.source}`);
-        }
-        value = property(value, String(token.value));
-      } else if (this.peek('[')) {
-        this.at++;
-        if (this.peek('*')) {
-          this.at++;
-          this.expect(']');
-          value = star(value);
-          continue;
-        }
-        const key = this.or();
-        this.expect(']');
-        value = property(value, stringify(key));
-      } else return value;
-    }
-  }
-
-  private primary(): Value {
-    const token = this.tokens[this.at++];
-    if (!token) throw new Error(`Unexpected end of: ${this.source}`);
-    if (token.kind === 'number' || token.kind === 'string') return token.value;
-    if (token.kind === 'op') {
-      if (token.value !== '(') throw new Error(`Unexpected "${token.value}" in: ${this.source}`);
-      const value = this.or();
-      this.expect(')');
-      return value;
-    }
-    const name = token.value;
-    if (name === 'true') return true;
-    if (name === 'false') return false;
-    if (name === 'null') return null;
-    if (this.peek('(')) {
-      this.at++;
-      const args: Value[] = [];
-      while (!this.peek(')')) {
-        args.push(this.or());
-        if (this.peek(',')) this.at++;
-        else break;
-      }
-      this.expect(')');
-      return this.call(name, args);
-    }
-    return property(this.context, name);
-  }
-
-  private call(name: string, args: Value[]): Value {
-    const text = (index: number) => stringify(args[index]).toLowerCase();
-    switch (name.toLowerCase()) {
-      case 'always':
-        return true;
-      case 'success':
-        return this.status.success && !this.status.cancelled;
-      case 'failure':
-        return this.status.failure;
-      case 'cancelled':
-        return Boolean(this.status.cancelled);
-      case 'contains':
-        return Array.isArray(args[0])
-          ? args[0].some((item) => looseEquals(item, args[1]))
-          : text(0).includes(text(1));
-      case 'startswith':
-        return text(0).startsWith(text(1));
-      case 'endswith':
-        return text(0).endsWith(text(1));
-      case 'format':
-        return stringify(args[0])
-          .replace(/\{(\d+)\}/g, (_, index: string) => stringify(args[Number(index) + 1]))
-          .replace(/\{\{/g, '{')
-          .replace(/\}\}/g, '}');
-      case 'join':
-        return Array.isArray(args[0])
-          ? args[0].map(stringify).join(args.length > 1 ? stringify(args[1]) : ',')
-          : stringify(args[0]);
-      case 'tojson':
-        return JSON.stringify(args[0] ?? null, null, 2);
-      case 'fromjson':
-        return JSON.parse(stringify(args[0])) as Value;
-      case 'hashfiles':
-        return 'testwort-hash';
-      default:
-        throw new Error(`Unknown function ${name}() in: ${this.source}`);
-    }
-  }
-}
-
 const PASSING: Status = { success: true, failure: false };
+
+// The package evaluates the language; the status functions and hashFiles() are the model's, since they
+// depend on the job being tested and on files a test does not have.
+function extraFunctions(status: Status): Map<string, FunctionDefinition> {
+  const flag = (name: string, value: boolean): [string, FunctionDefinition] => [
+    name,
+    { name, minArgs: 0, maxArgs: 0, call: () => new data.BooleanData(value) },
+  ];
+  return new Map([
+    flag('success', status.success && !status.cancelled),
+    flag('failure', status.failure),
+    flag('always', true),
+    flag('cancelled', Boolean(status.cancelled)),
+    [
+      'hashfiles',
+      {
+        name: 'hashFiles',
+        minArgs: 1,
+        maxArgs: 255,
+        call: () => new data.StringData('testwort-hash'),
+      },
+    ],
+  ]);
+}
 
 /** One expression, without its `${{ }}`. */
 export function evaluate(expression: string, context: Context, status: Status = PASSING): Value {
-  return new Parser(tokenize(expression), context, status, expression).parse();
+  const functions = extraFunctions(status);
+  const lexed = new Lexer(expression).lex();
+  const parsed = new Parser(lexed.tokens, Object.keys(context), [...functions.values()]).parse();
+  const scope = JSON.parse(JSON.stringify(context), data.reviver) as data.Dictionary;
+  const result = new Evaluator(parsed, scope, functions).evaluate();
+  return JSON.parse(JSON.stringify(result, data.replacer)) as Value;
+}
+
+/** Whether GitHub's `==` finds two values equal. */
+function looseEquals(left: Value, right: Value): boolean {
+  return evaluate('left == right', { left, right }) === true;
 }
 
 const TEMPLATE = /\$\{\{([\s\S]*?)\}\}/g;
