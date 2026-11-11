@@ -16,7 +16,8 @@
   config, the e2e image) as a step-level `if:`; it carries `continue-on-error`
   and is never a required check. `playwright-coverage` merges the coverage
   artifacts of `playwright` and `stories` after both, whether they passed or
-  failed; it carries `continue-on-error` and is never a required check.
+  failed, and is where their shards join (`merge-reports` per suite). It fails
+  when the gate failed; a story never fails it.
   `pr-comments` starts this run's Vitest and Playwright comments once
   `gitflow` finishes, whatever its result; nothing needs it
   ([`pr-comments.md`](pr-comments.md)). These two are the jobs with a
@@ -140,7 +141,7 @@
   done the gitflow workflow reports but **blocks nothing**. Whatever enables
   protection must name the current contexts: `checks / lint`, `checks / format`,
   `checks / typecheck`, `checks / build`, `checks / audit`,
-  `checks / destructive-ddl`, `vitest / vitest`, `playwright / playwright` and
+  `checks / destructive-ddl`, `vitest / vitest` and
   `gitflow / gitflow`. A required check that no workflow publishes is
   permanently pending, and blocks every PR after it.
 - **A job-level `if:` renames a check only on a job that calls a reusable
@@ -156,7 +157,7 @@
   - **An inner job with a false `if:`** (a plain job inside the reusable
     workflow, such as `vitest.yml`'s `vitest`) keeps its qualified name
     (`caller / inner`) and reports `skipped`; it is not renamed. `vitest.yml`'s
-    four jobs and `playwright.yml`'s job carry `if: inputs.should-run`, and
+    four jobs and `playwright.yml`'s shard job carry `if: inputs.should-run`, and
     `checks.yml`'s path-filtered jobs carry `if: inputs.run-<leg>`.
   - **A matrix job cannot use one on its own matrix values.** `if: matrix.x` on
     the job is rejected when the file loads: `Unrecognized named-value:

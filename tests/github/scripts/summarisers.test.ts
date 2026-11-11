@@ -1,11 +1,10 @@
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { fromRoot } from '../../support/paths';
+import { mergedPlaywrightReport, runScript } from '../../support/github-scripts';
 
 // The summarisers are scripts, so each runs as its own process against fixture
 // files, and what it hands GitHub Actions is read back out of GITHUB_OUTPUT.
@@ -26,37 +25,7 @@ const write = (name: string, data: unknown) => {
   return path;
 };
 
-/**
- * Parses `name<<DELIM\nvalue\nDELIM\n` blocks strictly: anything outside a
- * block, an unterminated block or a reused delimiter fails the test.
- */
-function readOutputs(path: string) {
-  const text = readFileSync(path, 'utf8');
-  const outputs: Record<string, string> = {};
-  const delimiters: string[] = [];
-  let rest = text;
-  while (rest.length) {
-    const head = /^([a-z_]+)<<(\S+)\n/.exec(rest);
-    if (!head) throw new Error(`not an output block: ${JSON.stringify(rest.slice(0, 80))}`);
-    const [whole, name, delim] = head;
-    const end = rest.indexOf(`\n${delim}\n`, whole.length - 1);
-    if (end === -1) throw new Error(`output ${name} is never closed by ${delim}`);
-    outputs[name] = rest.slice(whole.length, Math.max(end, whole.length));
-    delimiters.push(delim);
-    rest = rest.slice(end + delim.length + 2);
-  }
-  return { outputs, delimiters };
-}
-
-function run(script: string, env: Record<string, string>) {
-  const output = join(dir, 'github-output');
-  writeFileSync(output, '');
-  execFileSync(process.execPath, [fromRoot('.github/scripts', script)], {
-    env: { NODE_ENV: 'test', PATH: process.env.PATH ?? '', GITHUB_OUTPUT: output, ...env },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  return readOutputs(output);
-}
+const run = (script: string, env: Record<string, string>) => runScript(script, env, dir);
 
 // Vitest's JSON reporter: the summariser reads paths relative to /app.
 const vitestResult = (file: string, failed: string[], extra: Record<string, unknown> = {}) => ({
@@ -289,5 +258,58 @@ describe('the flaky note', () => {
     );
     expect(lines).toContain(`- [ ] Story 7: Testwort walk${NOTE}`);
     expect(outputs.flaky).toBe('true');
+  });
+});
+
+describe('the Playwright summary, from the merged report of every shard', () => {
+  const SLOW = 'tests/e2e/testwort-slow.spec.ts';
+  const OVER = 'tests/e2e/testwort-over.spec.ts';
+  const UNDER = 'tests/e2e/testwort-under.spec.ts';
+  // The slow file's two tests ran on different shards; neither is over 30 s, the file is.
+  const report = mergedPlaywrightReport(
+    [
+      { file: UNDER, tests: [{ title: 'Testwort steeps', ms: 29_000 }] },
+      {
+        file: SLOW,
+        tests: [
+          { title: 'Testwort boils', ms: 25_000 },
+          { title: 'Testwort cools', ms: 20_000 },
+        ],
+      },
+      { file: OVER, tests: [{ title: 'Testwort simmers', ms: 31_000 }] },
+    ],
+    250_000,
+  );
+  const summarise = () =>
+    run('summarize-playwright.mjs', {
+      PLAYWRIGHT_JSON_OUTPUT_NAME: write('playwright.json', report),
+    }).outputs;
+  const linesOf = (outputs: Record<string, string>) =>
+    Object.values(outputs).join('\n').split('\n');
+
+  it("gives the run's duration in its summary, as a Vitest part's row does", () => {
+    const { summary } = summarise();
+
+    expect(summary).toMatch(/^4 passed, 0 failed/);
+    expect(summary).toContain(' in 4m 10s');
+  });
+
+  it("lists the slowest files, slowest first, each with its tests' time added up", () => {
+    const lines = linesOf(summarise());
+    // A file's row names it and gives its time in the Vitest list's format.
+    const row = (file: string, time: string) =>
+      lines.findIndex((line) => line.includes(`\`${file}\``) && line.includes(time));
+
+    expect(row(SLOW, '45.0 s')).toBeGreaterThan(-1);
+    expect(row(OVER, '31.0 s')).toBeGreaterThan(row(SLOW, '45.0 s'));
+    expect(row(UNDER, '29.0 s')).toBeGreaterThan(row(OVER, '31.0 s'));
+  });
+
+  it('warns of each test over 30 s by name, and of no test under it', () => {
+    const warnings = linesOf(summarise()).filter((line) => line.includes('⚠'));
+
+    expect(warnings.filter((line) => line.includes('Testwort simmers')).length).toBeGreaterThan(0);
+    expect(warnings.filter((line) => line.includes('Testwort steeps'))).toEqual([]);
+    expect(warnings.filter((line) => /Testwort (boils|cools)/.test(line))).toEqual([]);
   });
 });

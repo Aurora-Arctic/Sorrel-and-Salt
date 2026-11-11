@@ -145,6 +145,8 @@ Why 10 s: the suite's summed time divided by its workers is the floor for the wa
 
 A file over the budget is split along the owning layer above, not argued for: render the smaller component, seed once per file instead of per test, move the rule to the layer that owns it. Expensive setup (a PDF render, a password hash, a whole-form render, a real seed) runs once per file, and boundary values are tested on the pure function, not on the expensive output. Setup a file's tests only read runs once; a test that writes gets its own. The budget is not raised.
 
+R-3: a Playwright test has a budget of 30 s (`TEST_BUDGET_MS` in `.github/scripts/summarize-playwright.mjs`). The PR comment and job summary list the slowest tests of the merged run and mark each over the budget with ⚠. It warns and never fails, for the reason above. Sharding splits the suite by test, so a test over 30 s is the one thing that sets a shard's span: split it along the owning layer, as a Vitest file is.
+
 Two files stand over it by decision, and the ⚠ on them is expected:
 
 - `tests/components/IngredientForm/index.test.tsx` holds only the tests that render the whole 25-field form: the save payload, kind↔name coupling, error routing, the save flow, one wiring test per lookup. Splitting it into two whole-form files would shorten the wall clock and not the summed time, which is not worth a second file to keep in step.

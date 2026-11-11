@@ -29,10 +29,10 @@ A **sectioned** comment is shared by several jobs. There are two, each with a ta
 
 Any section's write may also carry two things outside its own status, through the `pr-comment` action. A **heading note** (`heading-note`) is added to the comment's heading after the status, as `### ✅ Vitest · Passed · 2,800 tests`; a reset clears it, so the heading shows no note until a section writes one again. An **alert** (`alert`) is one plain line at the top of the section's block, shown with the log; it counts as Failed in the heading's status, whatever the section's own status. It is for a failure of the job writing the section that no section's status reports.
 
-| Comment    | Marker                   | Sections and the job that writes each                                                                                                            |
-| ---------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Vitest     | `<!-- ci-vitest -->`     | `dom`, `node`, `db`: the three part jobs in `vitest.yml`. The final `coverage` (Coverage and Slowest Files): the merge job.                      |
-| Playwright | `<!-- ci-playwright -->` | `gate`: `playwright.yml` for the gate suite. `stories`: `playwright.yml` with `suite: stories`. The final `coverage`: `playwright-coverage.yml`. |
+| Comment    | Marker                   | Sections and the job that writes each                                                                                       |
+| ---------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Vitest     | `<!-- ci-vitest -->`     | `dom`, `node`, `db`: the three part jobs in `vitest.yml`. The final `coverage` (Coverage and Slowest Files): the merge job. |
+| Playwright | `<!-- ci-playwright -->` | `gate`, `stories` and the final `coverage`: all `playwright-coverage.yml`, which joins the shards.                          |
 
 A Vitest part's Result is its own counts and duration (`summarize-vitest.mjs` with `VITEST_PART=true`), and its section lists its failing tests, collapsed above the log, and a file that failed outside its tests (an import error or a failing hook) is listed too. Vitest's JSON reporter drops errors thrown outside any test file, so a part that failed with no failed test says so in its Result and points to the log.
 
