@@ -1,9 +1,8 @@
 'use client';
 
-import { usePendingNavigation } from '../../lib/navigation';
+import { useLeaveCoven } from '../../lib/navigation';
 import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
-import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../ConfirmedAction';
 import type { DeleteWorkspaceButtonProps } from './types';
@@ -22,7 +21,7 @@ const DeleteWorkspaceButton = ({
   inModal,
   onlyOwner = false,
 }: DeleteWorkspaceButtonProps): ReactElement => {
-  const { navigate, refresh } = usePendingNavigation();
+  const leaveCoven = useLeaveCoven();
   return (
     <ConfirmedAction
       label="Delete Coven"
@@ -40,13 +39,8 @@ const DeleteWorkspaceButton = ({
       confirmClass="btn btn--destructive"
       inModal={inModal}
       send={() => graphqlRequest(DeleteWorkspaceDocument, { workspaceId })}
-      // The coven is gone for this user too, so replace the page with the landing and
-      // refresh so the shell's switcher stops listing it (a client-side replace does
-      // not re-run the layout).
-      onSent={() => {
-        navigate(COVEN_LANDING_PATH, { replace: true });
-        refresh();
-      }}
+      // The coven is gone for this user too.
+      onSent={leaveCoven}
     />
   );
 };

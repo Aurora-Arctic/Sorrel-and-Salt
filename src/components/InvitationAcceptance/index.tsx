@@ -1,12 +1,11 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { failureMessage } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { useClickFeedback } from '../ClickFeedback';
+import { useGuardedAction } from '../ClickFeedback/use-guarded-action';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import SignInDialog from '../SignInDialog';
@@ -79,23 +78,14 @@ const Accept = ({
   landing,
 }: Extract<InvitationAcceptanceProps, { status: 'acceptable' }>): ReactElement => {
   const { navigate } = usePendingNavigation();
-  const [sending, setSending] = useState(false);
-  const { anchorRef, report, feedback } = useClickFeedback({ name: 'Accept Invitation' });
-
-  async function accept() {
-    if (sending) return;
-    setSending(true);
-    report(undefined);
-    try {
+  const { anchorRef, run, pending, feedback } = useGuardedAction({
+    name: 'Accept Invitation',
+    action: async () => {
       await graphqlRequest(AcceptInvitationDocument, { token });
       // A success is the landing itself, so nothing is announced.
       navigate(landing);
-    } catch (error) {
-      setSending(false);
-      // The fallback only satisfies the type: the reader always answers with an alert.
-      report(failureMessage(error));
-    }
-  }
+    },
+  });
 
   // A `div`, not the other states' `p`: the callout is a `div`, and a `div` in a `p` is
   // invalid HTML.
@@ -106,10 +96,10 @@ const Accept = ({
       <BusyButton
         ref={anchorRef}
         className="btn btn--solid"
-        aria-disabled={sending || undefined}
-        busy={sending}
+        aria-disabled={pending || undefined}
+        busy={pending}
         busyLabel="Accepting Invitation"
-        onClick={() => void accept()}
+        onClick={() => void run()}
       >
         Accept Invitation
       </BusyButton>

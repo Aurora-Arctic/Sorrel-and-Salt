@@ -52,3 +52,12 @@ export interface AdminAreaLayoutProps extends AdminLayoutProps {
   href: Route;
   nav: ReactNode;
 }
+
+export interface DialogAddActionProps {
+  /** The `?new=` value that opens the dialog, from the page's path. */
+  value: (path: string) => string;
+  label: string;
+  heading?: ModalHeading;
+  /** Other parameters the press drops from the address. */
+  dropping?: readonly string[];
+}

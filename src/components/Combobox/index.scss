@@ -256,7 +256,6 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 
   box-sizing: border-box;
   max-width: min($tip-width, calc(100vw - #{space(6)}));
-  white-space: normal;
   overflow-wrap: anywhere;
 }
 

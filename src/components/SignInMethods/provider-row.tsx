@@ -1,4 +1,4 @@
-import { type ReactElement, useCallback, useRef, useState } from 'react';
+import { type ReactElement, useRef, useState } from 'react';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import Modal from '../Modal';
@@ -23,20 +23,14 @@ export function ProviderRow({
   const noteId = `sign-in-methods__note-${provider.id}`;
   const reasonId = `sign-in-methods__reason-${provider.id}`;
   const unavailable = state === 'unavailable';
-  // Named as the control is, so the badge reads "Show the error for Remove Discord".
-  const { anchorRef, report, feedback } = useClickFeedback({
-    name: `${state === 'linked' ? 'Remove' : 'Add'} ${provider.label}`,
-  });
   // The row's one control, Remove or Add: the focus comes back to it as the question closes,
   // to the Add that replaced a Remove once one is removed.
   const control = useRef<HTMLButtonElement | null>(null);
-  const controlRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      control.current = node;
-      anchorRef(node);
-    },
-    [anchorRef],
-  );
+  // Named as the control is, so the badge reads "Show the error for Remove Discord".
+  const { anchorRef, report, feedback } = useClickFeedback({
+    name: `${state === 'linked' ? 'Remove' : 'Add'} ${provider.label}`,
+    ref: control,
+  });
   const [asking, setAsking] = useState(false);
   const run = async (action: () => Promise<string | undefined>): Promise<void> => {
     report(undefined);
@@ -68,7 +62,7 @@ export function ProviderRow({
           // The pressed one is `aria-disabled` and keeps the focus, refusing a
           // second press itself; the others are disabled until it answers.
           <BusyButton
-            ref={controlRef}
+            ref={anchorRef}
             className="btn btn--quiet btn--small"
             aria-label={`Remove ${provider.label}`}
             busy={busy}
@@ -102,7 +96,7 @@ export function ProviderRow({
         ) : null
       ) : (
         <BusyButton
-          ref={controlRef}
+          ref={anchorRef}
           // Small and quiet, as Remove is: a row's action, not a page's.
           className="btn btn--quiet btn--small"
           aria-label={`Add ${provider.label}`}

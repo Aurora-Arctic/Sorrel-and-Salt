@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { usePendingNavigation, reportLeaving } from '../../lib/navigation';
+import { useRestoredFromCache } from '../../lib/use-restored-from-cache';
 import SwapPanel from '../Skeleton/swap-panel';
 import type { ListBodyProps, ListFrameProps, ListNavigation, ListNavigationKind } from './types';
 
@@ -63,14 +64,7 @@ const ListFrame = ({ className, disabled = false, children }: ListFrameProps): R
     if (body.getBoundingClientRect().top < line) body.scrollIntoView({ block: 'start' });
   }, [moving]);
 
-  useEffect(() => {
-    if (!leaving) return;
-    const restored = (event: PageTransitionEvent) => {
-      if (event.persisted) setLeaving(false);
-    };
-    window.addEventListener('pageshow', restored);
-    return () => window.removeEventListener('pageshow', restored);
-  }, [leaving]);
+  useRestoredFromCache(() => setLeaving(false), leaving);
 
   const value: ListNavigation = outer ?? {
     pending,

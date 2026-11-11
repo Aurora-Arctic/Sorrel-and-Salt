@@ -719,6 +719,7 @@
 }
 
 // `useTip` places it, not CSS (claude-docs/components/info-tip.md, "Placement"); `position: fixed` at the origin is the rest state.
+// `white-space: normal` so a bubble inside a `nowrap` table wraps its prose rather than inheriting the table's setting.
 // `$align` is deprecated; use `useTip`.
 @mixin tip-above($layer: 1, $capped: true, $align: null) {
   position: fixed;
@@ -726,6 +727,7 @@
   left: 0;
   z-index: $layer;
   width: max-content;
+  white-space: normal;
 
   @if $capped {
     max-width: min($tip-width, calc(100vw - #{space(6)}));

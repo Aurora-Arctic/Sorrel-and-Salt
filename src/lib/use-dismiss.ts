@@ -53,3 +53,26 @@ export function useDismiss({
     return () => target.removeEventListener('keydown', onKey as EventListener, escapeCapture);
   }, [active, hearsEscape, escapeOn, escapeCapture]);
 }
+
+interface EscapeEvent {
+  key: string;
+  defaultPrevented: boolean;
+  preventDefault: () => void;
+}
+
+/**
+ * An element's own `onKeyDown` for a popover that closes on Escape: marks the key handled, so what
+ * is around it stays, then calls `onEscape`. Does nothing for another key, while not `active`, and
+ * with `skipHandled` when something nested has already taken the Escape.
+ */
+export function escapeKeyHandler<E extends EscapeEvent>(
+  onEscape: (event: E) => void,
+  { active = true, skipHandled = false }: { active?: boolean; skipHandled?: boolean } = {},
+): (event: E) => void {
+  return (event) => {
+    if (event.key !== 'Escape' || !active) return;
+    if (skipHandled && event.defaultPrevented) return;
+    event.preventDefault();
+    onEscape(event);
+  };
+}

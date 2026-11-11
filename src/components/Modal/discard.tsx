@@ -3,6 +3,7 @@
 import { type ReactElement, useContext, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLeaveGuard } from '@/lib/navigation';
+import { repeatable } from '@/lib/repeat-announcement';
 import { CloseGuardContext } from './close-guard';
 import ConfirmAnswersRow from '../ConfirmDialog/answers';
 import { ConfirmOverlay } from './confirm-overlay';
@@ -123,7 +124,7 @@ function InModal({ guard }: DiscardQuestionProps): ReactElement {
           be on Keep Editing, and moving it there again says nothing. A live
           region speaks only a change, so a trailing no-break space alternates. */}
       <output className="visually-hidden">
-        {flashes > 0 && `You have unsaved changes.${flashes % 2 ? '' : '\u00a0'}`}
+        {flashes > 0 && repeatable('You have unsaved changes.', flashes)}
       </output>
       <ConfirmAnswersRow
         label="Discard Changes"

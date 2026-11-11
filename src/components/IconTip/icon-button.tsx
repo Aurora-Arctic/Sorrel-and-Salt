@@ -3,6 +3,7 @@
 import type { ReactElement, Ref } from 'react';
 import type { PreloadHandlers } from '../../lib/types';
 import MenuButton from '../MenuButton';
+import type { IconButtonProps } from './types';
 import type { MenuButtonChoices, MenuButtonProps } from '../MenuButton/types';
 import IconTip from './icon-tip';
 import {
@@ -18,6 +19,25 @@ import {
 
 // The icon controls that are a button rather than a link, shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ
 // (claude-docs/components/icon-tip.md).
+
+/** A bare icon button with a visually hidden name, for a caller that wraps it in its own tip or needs none. */
+export const IconButton = ({
+  label,
+  icon,
+  onClick,
+  className,
+  pressed,
+}: IconButtonProps): ReactElement => (
+  <button
+    type="button"
+    className={className ? `icon-tip__edit ${className}` : 'icon-tip__edit'}
+    aria-pressed={pressed}
+    onClick={onClick}
+  >
+    {icon}
+    <span className="visually-hidden">{label}</span>
+  </button>
+);
 
 export const BinButton = ({
   verb,

@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useCallback, useRef, useState } from 'react';
+import { type ReactElement, useRef, useState } from 'react';
 import { useClickFeedback } from '../ClickFeedback';
 import { editHeading } from '../CompendiumList/heading';
 import { EditLink, MoreMenu } from '../IconTip';
@@ -20,15 +20,11 @@ export default function OwnEntryActions({ edit, entry }: OwnEntryActionsProps): 
   // The dots, where the focus goes back to once a dialog closes; once the delete has
   // led away they are gone, and Modal gives the focus to the heading.
   const trigger = useRef<HTMLButtonElement | null>(null);
-  const feedback = useClickFeedback({ name: `More for ${entry.name}` });
+  const feedback = useClickFeedback({
+    name: `More for ${entry.name}`,
+    ref: trigger,
+  });
   const { anchorRef } = feedback;
-  const triggerRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      trigger.current = node;
-      anchorRef(node);
-    },
-    [anchorRef],
-  );
   const back = () => (trigger.current?.isConnected ? trigger.current : null);
   const remove = useDeleteEntry({
     workspaceId: edit.coven?.workspaceId ?? '',
@@ -71,7 +67,7 @@ export default function OwnEntryActions({ edit, entry }: OwnEntryActionsProps): 
         heading={editHeading(entry, editEyebrow(edit))}
       />
       <MoreMenu
-        ref={triggerRef}
+        ref={anchorRef}
         name={entry.name}
         {...choicesFor({ compendium: [], coven: items }, 'coven')}
       />
