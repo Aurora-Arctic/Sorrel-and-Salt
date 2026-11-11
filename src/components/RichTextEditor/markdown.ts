@@ -13,7 +13,7 @@ import {
 import { createSlateEditor, type Value } from 'platejs';
 import remarkGfm from 'remark-gfm';
 
-export const markdownPlugins = [
+const markdownPlugins = [
   BaseBasicBlocksPlugin,
   BaseBasicMarksPlugin,
   BaseLinkPlugin.configure({ options: { allowedSchemes: LINK_SCHEMES } }),

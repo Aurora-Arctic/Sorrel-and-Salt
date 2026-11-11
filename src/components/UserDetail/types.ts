@@ -51,7 +51,7 @@ export interface UserDetailProps {
   changesPaused?: boolean;
 }
 
-export interface AccessPausePerson {
+interface AccessPausePerson {
   id: string;
   name: string;
 }

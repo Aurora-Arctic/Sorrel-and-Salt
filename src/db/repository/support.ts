@@ -609,7 +609,7 @@ export function findStandingSupportTimeoutsFor(_admin: SiteAdmin, userIds: reado
  * The first number of the two-number advisory lock a sender's support sends take (the second hashes the sender's id). A fixed
  * namespace keeps it from meeting any other advisory lock.
  */
-export const SUPPORT_SEND_LOCK_NAMESPACE = 0x53555031;
+const SUPPORT_SEND_LOCK_NAMESPACE = 0x53555031;
 
 export function supportWrites({
   tx,

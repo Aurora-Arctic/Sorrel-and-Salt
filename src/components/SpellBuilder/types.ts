@@ -65,7 +65,7 @@ export interface SpellBuilderProps {
 
 export type SpellDialogSpell = Omit<SpellBuilderSpell, 'steps'>;
 
-export interface SpellDialogOpened {
+interface SpellDialogOpened {
   spell?: SpellDialogSpell;
 }
 

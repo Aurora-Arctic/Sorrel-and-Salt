@@ -13,7 +13,7 @@ import type { CovenAccessPanelProps } from './types';
 // The member modal's Coven Access: a steward's pause on one member's access to this coven, until an end or with no end
 // date, and its lifting, on the user modal's pause panel (claude-docs/components/member-detail.md, "Coven Access").
 
-export const PauseMemberDocument = graphql(`
+const PauseMemberDocument = graphql(`
   mutation PauseMemberAccess(
     $workspaceId: ID!
     $userId: ID!
@@ -33,7 +33,7 @@ export const PauseMemberDocument = graphql(`
   }
 `);
 
-export const LiftMemberDocument = graphql(`
+const LiftMemberDocument = graphql(`
   mutation LiftMemberAccessPause($workspaceId: ID!, $userId: ID!) {
     liftMemberAccessPause(workspaceId: $workspaceId, userId: $userId) {
       id

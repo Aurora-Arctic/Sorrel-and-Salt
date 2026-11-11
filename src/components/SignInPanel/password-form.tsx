@@ -23,7 +23,7 @@ import type { PasswordFormProps, SignInMode } from './types';
 
 export const SIGN_UP_UNAVAILABLE =
   "We couldn't create your account just now. Please try again later.";
-export const GENERIC_PASSWORD_SIGN_IN_ERROR = "We couldn't sign you in. Please try again.";
+const GENERIC_PASSWORD_SIGN_IN_ERROR = "We couldn't sign you in. Please try again.";
 export const GENERIC_SIGN_UP_ERROR = "We couldn't create your account. Please try again.";
 
 const FIELD_ERRORS: Record<string, { field: 'email' | 'password'; message: string }> = {

@@ -25,7 +25,7 @@ import type { TwoFactorSettingsProps } from './types';
 // confirmed; turning off takes the password (claude-docs/components/password-section.md, "Two-factor").
 
 export const WRONG_PASSWORD = "That isn't your password.";
-export const GENERIC_TWO_FACTOR_ERROR = "We couldn't change two-factor. Please try again.";
+const GENERIC_TWO_FACTOR_ERROR = "We couldn't change two-factor. Please try again.";
 // A lock on password sign-in holds the right password here too; the owner is told the lock is why.
 export const PASSWORD_SIGN_IN_PAUSED_MESSAGE =
   'Password sign-in is paused for this account after too many wrong passwords. Please wait a few minutes, then try again.';

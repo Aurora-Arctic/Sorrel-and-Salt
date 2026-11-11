@@ -1106,7 +1106,7 @@ export interface UserAccessPauseInput {
 
 export type WorkspaceRow = typeof workspaces.$inferSelect;
 
-export type WorkspaceSlugRow = typeof workspaceSlugs.$inferSelect;
+type WorkspaceSlugRow = typeof workspaceSlugs.$inferSelect;
 
 export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
 

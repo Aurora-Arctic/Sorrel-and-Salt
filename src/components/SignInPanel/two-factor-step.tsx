@@ -20,7 +20,7 @@ export const CODE_LOCKED =
   'Too many wrong codes. Your account is locked for 15 minutes; please try again after that.';
 export const CHALLENGE_EXPIRED =
   'Your sign-in timed out or had too many wrong codes. Please enter your password again.';
-export const GENERIC_CODE_ERROR = "We couldn't check that code. Please try again.";
+const GENERIC_CODE_ERROR = "We couldn't check that code. Please try again.";
 
 type Method = 'app' | 'backup';
 

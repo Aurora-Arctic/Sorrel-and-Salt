@@ -40,7 +40,7 @@ export interface SupportRequestEntry {
   resolvedBySender: boolean;
 }
 
-export interface SupportReplyEntry {
+interface SupportReplyEntry {
   id: string;
   body: string;
   author: SupportPerson | null;

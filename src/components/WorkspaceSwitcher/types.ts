@@ -1,4 +1,4 @@
-export interface SwitcherWorkspace {
+interface SwitcherWorkspace {
   slug: string;
   name: string;
   /** The viewer's role there may read its members; false sends a switch from a people page to
