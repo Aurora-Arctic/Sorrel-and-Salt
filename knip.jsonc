@@ -27,7 +27,6 @@
     // Resolved from .design-sync/.ds-sync/package.json on purpose, not from this package.json.
     ".design-sync/remote-chromium.mjs": ["unlisted"],
   },
-  "ignoreExportsUsedInFile": true,
   "next": true,
   "vitest": true,
   "playwright": true,
