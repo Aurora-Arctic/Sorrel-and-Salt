@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
-import './back-link.scss';
+import './index.scss';
 
-// Outside back-link.tsx, which is a client file, so a server-drawn "Back to …" link takes the chevron and its look
+// Beside the link and outside IngredientEntry's client one, so a server-drawn "Back to …" link takes the chevron and its look
 // without shipping the history-reading link.
 // `up` points it up, for a link back to the top of the page, and `forward` the other way, for a next page; drawn, not
 // rotated, so the hover's transform stays its own.

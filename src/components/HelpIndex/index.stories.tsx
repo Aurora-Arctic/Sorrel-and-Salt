@@ -22,7 +22,6 @@ export default meta;
 export const Default: StoryObj<typeof HelpIndex> = {};
 export const FrontPage: StoryObj<typeof HelpIndex> = {
   args: {
-    framed: true,
     quickLinks: [
       { title: 'Signing In', summary: null, href: '/help/getting-started/signing-in' },
       { title: 'Track Stock', summary: null, href: '/help/ingredients/track-stock' },

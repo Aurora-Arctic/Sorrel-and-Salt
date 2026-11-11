@@ -3,11 +3,10 @@ import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import { PendingInvitationsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
-import { workspaceRoleLabel } from '../UserDetail/roles';
+import { workspaceRoleLabel } from '../MemberList/roles';
 import { emptyList } from '../../lib/text';
 import LocalTime from '../LocalTime';
-import RemoveControl from './remove-control';
-import RevokeControl from './revoke-control';
+import InvitationAction from './invitation-action';
 import type { PendingInvitationsProps } from './types';
 import './index.scss';
 
@@ -44,12 +43,13 @@ const PendingInvitations = ({
           {
             heading: 'Action',
             action: 'foot',
-            cell: (invitation) =>
-              invitation.declinedAt ? (
-                <RemoveControl workspaceId={workspaceId} invitation={invitation} />
-              ) : (
-                <RevokeControl workspaceId={workspaceId} invitation={invitation} />
-              ),
+            cell: (invitation) => (
+              <InvitationAction
+                workspaceId={workspaceId}
+                invitation={invitation}
+                declined={Boolean(invitation.declinedAt)}
+              />
+            ),
           },
         ]}
         rows={invitations}

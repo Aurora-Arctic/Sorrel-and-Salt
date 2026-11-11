@@ -36,8 +36,6 @@ export interface SignInPanelProps {
   mode?: SignInMode;
   /** The sentence under the title in each mode; none when absent. */
   ledes?: SignInLedes;
-  /** Told of each switch between the modes, so a dialog can retitle itself. */
-  onModeChange?: (mode: SignInMode) => void;
   /** Inside a dialog: the panel draws no head, reporting it through `onHeaderChange` for the dialog to draw, and the email view is held here rather than in the address of the page beneath. */
   inDialog?: boolean;
   /** `next` itself tells a new, unverified account to check its inbox, so an email sign-up loads it directly rather than through the sign-in page, which would send the account to the email page. */

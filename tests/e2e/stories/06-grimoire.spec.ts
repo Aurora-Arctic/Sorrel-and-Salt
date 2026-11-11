@@ -348,7 +348,7 @@ test(
     await expect(look.getByRole('button', { name: 'Out' })).toHaveCount(1);
     const emptyStep = look.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
     await expect(emptyStep.getByRole('button', { name: 'Out' })).toBeVisible();
-    await look.getByRole('link', { name: 'See Full Recipe' }).click();
+    await look.getByRole('link', { name: 'See Full Spell' }).click();
     await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire/${spellId}$`));
     const inventory = page.getByRole('region', { name: 'In the Cupboard' });
     await expect(inventory.getByRole('button', { name: 'Out' })).toHaveCount(1);

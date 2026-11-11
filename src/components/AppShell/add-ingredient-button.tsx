@@ -13,15 +13,9 @@ import type { ShellWorkspace } from '../../lib/types';
 import type { SavedIngredient } from '../IngredientForm/types';
 import Modal from '../Modal';
 import ModalLoading from '../Modal/loading';
+import { NEW_COMPENDIUM_ENTRY } from '../../lib/coven-path';
 import { useLazyModule } from '@/lib/use-lazy-module';
-import {
-  ADD_INGREDIENT_TITLE,
-  NEW,
-  NEW_COMPENDIUM_ENTRY,
-  askedCoven,
-  closedHref,
-  openHref,
-} from './add-href';
+import { ADD_INGREDIENT_TITLE, NEW, askedCoven, closedHref, openHref } from './add-href';
 import AddIngredientMenu from './add-ingredient-menu';
 import type { AddDestination, AddIngredientButtonProps } from './types';
 import { compendiumEntryPath } from '@/lib/compendium-path';
@@ -36,15 +30,15 @@ const loadForm = () => import('../IngredientForm');
 const CLASSES = 'btn btn--solid btn--medium app-shell__add';
 const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
 
-/**
- * A sentence for what a save left behind. The form's own Saved notice goes
- * with the form when the modal closes, so the button announces the save.
- */
 /** True on the curator and keepers pages, where the add button files into the compendium. */
 function onCuratedPage(pathname: string): boolean {
   return ['/curator', '/keepers'].some((base) => isAtPath(pathname, base));
 }
 
+/**
+ * A sentence for what a save left behind. The form's own Saved notice goes
+ * with the form when the modal closes, so the button announces the save.
+ */
 function savedMessage(saved: SavedIngredient): string {
   const jars = (saved.stock ?? []).map(
     ({ variant, quantityOnHand, unit }) =>

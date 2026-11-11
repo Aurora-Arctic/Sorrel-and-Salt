@@ -58,7 +58,6 @@ const SignInPanel = ({
   error,
   configured,
   mode: initialMode = 'sign-in',
-  onModeChange,
   inDialog = false,
   signUpLandsOnNext,
   onSignedUp,
@@ -67,10 +66,6 @@ const SignInPanel = ({
 }: SignInPanelProps): ReactElement => {
   // Held here, not in the form, so a switch made in either view holds in the other.
   const [mode, setMode] = useState<SignInMode>(initialMode);
-  const switchMode = (to: SignInMode): void => {
-    setMode(to);
-    onModeChange?.(to);
-  };
   const signingUp = mode === 'sign-up';
   // The server-rendered callback error, the page's own, until a press starts
   // a new attempt. A failure of that press is said under its own button
@@ -212,7 +207,7 @@ const SignInPanel = ({
         <PasswordForm
           next={next}
           mode={mode}
-          onModeChange={switchMode}
+          onModeChange={setMode}
           signUpLandsOnNext={signUpLandsOnNext}
           onSignedUp={onSignedUp}
           email={email}
@@ -252,7 +247,7 @@ const SignInPanel = ({
               Continue with Email
             </button>
           </div>
-          <ModeSwitch mode={mode} onSwitch={switchMode} />
+          <ModeSwitch mode={mode} onSwitch={setMode} />
         </>
       )}
     </div>

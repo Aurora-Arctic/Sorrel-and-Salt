@@ -752,7 +752,7 @@ describe('Quick Look over a Grimoire tab', () => {
       expect(within(dialog).getByText('Calm')).toBeInTheDocument();
       expect(within(dialog).getByText('Light the candle')).toBeInTheDocument();
       expect(within(dialog).getByText('Testwarding')).toBeInTheDocument();
-      expect(within(dialog).getByRole('link', { name: 'See Full Recipe' })).toHaveAttribute(
+      expect(within(dialog).getByRole('link', { name: 'See Full Spell' })).toHaveAttribute(
         'href',
         `/coven/fixture-coven/grimoire/${SPELL_ID}`,
       );

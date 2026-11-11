@@ -16,7 +16,7 @@ vi.mock('@/modules/identity', () => ({
   getMe,
   isPlaceholderEmail: (email: string) => email.endsWith('@placeholder.test'),
 }));
-vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => ['google'] }));
+vi.mock('@/lib/configured-providers', () => ({ providersToPass: () => ['google'] }));
 
 const recorded: string[] = [];
 const landings: string[] = [];

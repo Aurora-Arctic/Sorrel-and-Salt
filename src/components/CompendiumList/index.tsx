@@ -3,7 +3,7 @@ import { PendingLink } from '../../lib/navigation';
 import DetailsLink from '../IngredientEntry/details-link';
 import { EditLink } from '../IconTip';
 import ShownToggle from '../IngredientEntry/shown-toggle';
-import { cardName } from '../IngredientCard/card-name';
+import { cardName } from '../../lib/ingredient-name';
 import { LinkIconHint } from '../LinkHint';
 import { Fragment, type ReactElement, type ReactNode } from 'react';
 import CategoryChips from '../CategoryChips';

@@ -5,6 +5,7 @@ import { keepEscapeInList } from './escape';
 import type { KeyboardEvent, ReactElement } from 'react';
 import Spinner from '../Spinner';
 import { ChevronIcon, PlusIcon } from '../IconTip/icons';
+import { OptionGroup, OptionLabel, preventDownshiftDefault } from './parts';
 import { useListPosition } from './position';
 import type { ComboboxChoice, ComboboxSelectProps } from './types';
 import { cx } from '@/lib/class-names';
@@ -79,14 +80,7 @@ export function ComboboxSelect({
       {...getItemProps({ item: choice, index })}
     >
       {choice.create && <PlusIcon />}
-      <span className="combobox__label">
-        {choice.icon && (
-          <span className="combobox__icon" aria-hidden="true">
-            {choice.icon}
-          </span>
-        )}
-        {choice.label}
-      </span>
+      <OptionLabel icon={choice.icon}>{choice.label}</OptionLabel>
       {choice.note && <div className="combobox__note">{choice.note}</div>}
     </li>
   );
@@ -108,9 +102,7 @@ export function ComboboxSelect({
             keepEscapeInList(isOpen)(event);
             // Ctrl+Z is the form's undo, not a letter to search the list for.
             if (event.ctrlKey || event.metaKey) {
-              (
-                event as KeyboardEvent<HTMLElement> & { preventDownshiftDefault?: boolean }
-              ).preventDownshiftDefault = true;
+              preventDownshiftDefault(event);
             }
           },
           'aria-label': labelId ? undefined : label,
@@ -166,19 +158,13 @@ export function ComboboxSelect({
             run.group === undefined ? (
               run.rows.map(option)
             ) : (
-              // A div with ARIA's `group` inside a presentational li: ARIA allows no `group` role on an li.
-              // oxlint-disable jsx-a11y/prefer-tag-over-role
-              <li key={`group-${run.at}`} role="presentation" className="combobox__group">
-                <div role="group" aria-labelledby={`${id}-group-${run.at}`}>
-                  <div id={`${id}-group-${run.at}`} className="combobox__heading">
-                    {run.group}
-                  </div>
-                  <ul role="presentation" className="combobox__rows">
-                    {run.rows.map(option)}
-                  </ul>
-                </div>
-              </li>
-              // oxlint-enable jsx-a11y/prefer-tag-over-role
+              <OptionGroup
+                key={`group-${run.at}`}
+                headingId={`${id}-group-${run.at}`}
+                heading={run.group}
+              >
+                {run.rows.map(option)}
+              </OptionGroup>
             ),
           )}
       </ul>

@@ -2,7 +2,7 @@ import type { Route } from 'next';
 import type { ReactElement, ReactNode } from 'react';
 import { STAFF_HELP } from '../../lib/help-paths';
 import { PendingLink } from '../../lib/navigation';
-import { BackChevron } from '../IngredientEntry/back-chevron';
+import { BackChevron } from '../BackLink/chevron';
 import SectionBody from '../SectionBody';
 import { HelpFrontHead } from './head';
 import { HelpFrontShell } from './shell';

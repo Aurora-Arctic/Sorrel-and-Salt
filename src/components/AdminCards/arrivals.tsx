@@ -9,7 +9,7 @@ import LocalTime from '../LocalTime';
 import ListFrame, { ListBody } from '../ListFrame';
 import { CardArrivalsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
-import { batchName } from './batches';
+import { batchName } from '../../lib/invitation-cards/batch-name';
 import { Mark } from '../UserList/marks';
 import { OpenModalLink } from '../Modal';
 import ArrivalsFilterForm from './arrivals-filter';

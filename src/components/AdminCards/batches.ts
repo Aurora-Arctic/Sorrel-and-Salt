@@ -1,7 +1,4 @@
-import { batchName } from '../../lib/invitation-cards/batch-name';
 import type { BatchStatus } from './types';
-
-export { batchName };
 
 /**
  * Where a batch stands, from its counts: a card still pending makes it live. With none pending, every card accepted is

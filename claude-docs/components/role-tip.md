@@ -7,7 +7,7 @@ beside it that opens a tip (a small note) saying what the role may do.
   component only pairs the word with the tip.
 - **The wording is the Change Role control's.** The admin list passes
   `SITE_ROLE_ACCESS[role]` (`UserList/roles.ts`), the member list
-  `WORKSPACE_ROLE_ACCESS[role]` (`MemberList/role-access.ts`). Neither constant is
+  `WORKSPACE_ROLE_ACCESS[role]` (`MemberList/roles.ts`). Neither constant is
   copied, so a role's description cannot say one thing in the tip and another in
   the dialog.
 - **The word stays the cue.** `emphasis` sets the word in `<strong>`; the tip's

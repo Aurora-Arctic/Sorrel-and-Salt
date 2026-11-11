@@ -30,6 +30,7 @@ import {
   MAX_SHEETS_PER_BATCH,
 } from '../../../lib/invitation-cards/limits';
 import { newCardToken } from '../../../lib/invitation-token';
+import { isNotFuture } from '../../../lib/pause-message';
 import { isCalendarDay } from '../../../lib/utc';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
@@ -89,7 +90,7 @@ export async function mintInvitationCards(
       message: `A batch is from 1 to ${MAX_SHEETS_PER_BATCH} sheets`,
     });
   }
-  if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
+  if (isNotFuture(expiresAt)) {
     issues.push({ path: ['expiresAt'], message: 'Choose an expiry date in the future' });
   }
   const trimmedNote = trimmedOrNull(note);

@@ -10,7 +10,7 @@ import { editHeading } from '@/components/CompendiumList/heading';
 import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '@/components/CompendiumList/href';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import type { CompendiumListFilter } from '@/components/CompendiumList/types';
-import { cardName } from '@/components/IngredientCard/card-name';
+import { cardName } from '@/lib/ingredient-name';
 import { detailsHeading, detailsMarks } from '@/components/IngredientEntry/details';
 import DetailsDialog from '@/components/IngredientEntry/details-dialog';
 import { EDIT_ENTRY_EYEBROW } from '@/components/IngredientEntry/edit-heading';

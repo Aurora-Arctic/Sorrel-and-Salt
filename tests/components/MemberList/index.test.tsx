@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import MemberList from '@/components/MemberList';
 import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../support/printed-text';
-import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/role-access';
+import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/roles';
 import type { MemberListEntry } from '@/components/MemberList/types';
 import { rowCells } from '../../support/table';
 

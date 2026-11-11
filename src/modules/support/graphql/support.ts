@@ -563,7 +563,7 @@ builder.mutationField('timeOutSignedOutSender', (t) =>
     },
     authScopes: { admin: true },
     resolve: (_root, { requestId, until, note, message }, context) =>
-      timeOutSignedOutSender(sessionOf(context), requestId, until, note, context.pauses, message),
+      timeOutSignedOutSender(sessionOf(context), requestId, until, note, message),
   }),
 );
 

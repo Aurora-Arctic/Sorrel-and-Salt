@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, type ReactElement, type ReactNode } from 'react';
-import { covenSlugOf } from '../../lib/coven-path';
+import { destinationCovenSlug } from '../../lib/coven-path';
 import { useNavigationState } from '../../lib/navigation';
 import type { CovenFacts } from './types';
 
@@ -24,5 +24,5 @@ export function useCovenFactsOfDestination(): CovenFacts | null {
   const facts = useContext(Facts);
   const { href } = useNavigationState();
   if (!facts || href === undefined) return null;
-  return covenSlugOf(href.split(/[?#]/)[0] ?? href) === facts.slug ? facts : null;
+  return destinationCovenSlug(href) === facts.slug ? facts : null;
 }

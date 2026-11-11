@@ -1,4 +1,4 @@
-import { BackChevron } from '../IngredientEntry/back-chevron';
+import { BackChevron } from '../BackLink/chevron';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import Skeleton from '../Skeleton';

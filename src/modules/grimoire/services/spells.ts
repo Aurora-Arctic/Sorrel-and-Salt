@@ -16,14 +16,7 @@ import { isRowId, parseInput } from '../../../lib/validation';
 import type { Session } from '../../../lib/session';
 import { assertMembership, type Membership } from '@/modules/coven';
 import { categories } from '@/modules/vocabulary/schema/categories';
-import type {
-  SpellInput,
-  SpellRow,
-  SpellStepInput,
-  SpellStepRow,
-  SpellStepUpdate,
-  SpellUpdate,
-} from '../types';
+import type { SpellInput, SpellRow, SpellStepInput, SpellStepRow, SpellUpdate } from '../types';
 
 // The grimoire's service. Stewards and practitioners create and edit, observers read. A private spell is its author's alone, which the
 // finders enforce: a hidden spell is `NotFound`, never confirmed to exist (claude-docs/db/spell-visibility.md).
@@ -155,7 +148,7 @@ export async function updateSpellStep(
   workspaceId: string,
   spellId: string,
   stepId: string,
-  input: SpellStepUpdate,
+  input: SpellStepInput,
 ): Promise<SpellStepRow> {
   const membership = await assertMembership(session, workspaceId, { spell: ['update'] });
   await readableSpell(membership, spellId);

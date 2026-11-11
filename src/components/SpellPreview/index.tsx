@@ -12,6 +12,7 @@ import {
 import Notice from '../Notice';
 import IconTip, { CloseIcon, IconButton, LiddedEyeIcon, PreviewButton } from '../IconTip';
 import { SpellCardFilters } from '../SpellCard';
+import { BurnLayers, FaceLayers } from '../SpellCard/layers';
 import SpellRecipeBody from '../SpellRecipe/body';
 import SpellRecipeSummary from '../SpellRecipe/summary';
 import { holdPage } from '../Modal/page-hold';
@@ -67,23 +68,10 @@ const Scene = (): ReactElement => (
     <SpellCardFilters />
     <div className="spell-preview__scene" aria-hidden="true">
       <span className="spell-preview__glow" />
-      <span className="spell-preview__face">
-        <span className="spell-preview__face-paper">
-          <span className="spell-preview__face-corner">
-            <span className="spell-preview__face-hole" />
-          </span>
-        </span>
-      </span>
+      <FaceLayers block="spell-preview" />
       <span className="spell-preview__hearth" />
       <span className="spell-preview__embers">{embers(HEARTH_EMBERS, false)}</span>
-      <span className="spell-preview__burn">
-        <span className="spell-preview__burn-paper">
-          <span className="spell-preview__burn-corner">
-            <span className="spell-preview__burn-hole" />
-          </span>
-          <span className="spell-preview__burn-curve" />
-        </span>
-      </span>
+      <BurnLayers block="spell-preview" />
       <span className="spell-preview__embers">{embers(EDGE_EMBERS, true)}</span>
     </div>
   </>

@@ -6,7 +6,7 @@ import { useTestDatabase } from '../../support/db/database';
 import { fromRoot } from '../../support/paths';
 import { beginSeedTransaction } from '@/db/seed/idempotent';
 import { seedInvitationCards } from '@/db/seed/invitation-cards';
-import { batchName } from '@/components/AdminCards/batches';
+import { batchName } from '@/lib/invitation-cards/batch-name';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 
 let sql: ReturnType<typeof postgres>;

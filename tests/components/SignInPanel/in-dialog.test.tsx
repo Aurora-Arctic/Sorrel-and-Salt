@@ -79,17 +79,8 @@ describe('SignInPanel in a dialog', () => {
     expect(field('Email Address')).toHaveValue('someone@in-dialog.test');
   });
 
-  it('opens the email form in the mode the dialog is in, and reports a switch made in the form', async () => {
-    const onModeChange = vi.fn();
-    render(
-      <SignInPanel
-        next="/invite/abc"
-        configured={['google']}
-        inDialog
-        mode="sign-up"
-        onModeChange={onModeChange}
-      />,
-    );
+  it('opens the email form in the mode the dialog is in, and switches it in the form', async () => {
+    render(<SignInPanel next="/invite/abc" configured={['google']} inDialog mode="sign-up" />);
 
     await press(screen.getByRole('button', { name: 'Continue with Email' }));
 
@@ -97,7 +88,6 @@ describe('SignInPanel in a dialog', () => {
 
     await press(screen.getByRole('button', { name: 'Sign In Instead' }));
 
-    expect(onModeChange).toHaveBeenLastCalledWith('sign-in');
     expect(screen.queryByLabelText(/^Name/)).toBeNull();
   });
 

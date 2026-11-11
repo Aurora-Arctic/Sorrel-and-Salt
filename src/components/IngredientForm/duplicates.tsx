@@ -20,13 +20,14 @@ import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { TextField } from '../Field';
 import { ADDED_HOLD_MS } from '../AddIcon';
+import AddGlyph from '../AddIcon/glyph';
+import { ADD } from '../AddIcon/wording';
 import { useFade } from '../ClickFeedback/fade';
 import { useAnnounce } from '../ClickFeedback/status-region';
-import IconTip, { CheckIcon, MysticEyeIcon, PlusIcon, QuickLookButton } from '../IconTip';
-import { cardName } from '../IngredientCard/card-name';
+import IconTip, { MysticEyeIcon, PlusIcon, QuickLookButton } from '../IconTip';
+import { bracketedName, cardName } from '../../lib/ingredient-name';
 import DetailsLink from '../IngredientEntry/details-link';
 import Notice from '../Notice';
-import Spinner from '../Spinner';
 import { LazyDuplicateQuickLook as DuplicateQuickLook } from './lazy-quick-look';
 import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps } from './types';
 // The +'s look is the card's plus's, so its stylesheet; not AddIcon itself, which sends its own
@@ -432,8 +433,7 @@ function useSlidingRows(
   };
 }
 
-const titleOf = ({ name, canonicalName }: Duplicate) =>
-  canonicalName ? `${name} (${canonicalName})` : name;
+const titleOf = ({ name, canonicalName }: Duplicate) => bracketedName(name, canonicalName);
 
 /**
  * What the notice says. Colour alone must not mark a held save, so the words
@@ -577,7 +577,7 @@ function PlusChoice({
   buttonRef: (node: HTMLButtonElement | null) => void;
 }): ReactElement {
   const name = cardName(match.name, match.canonicalName);
-  const label = `Add to My Ingredients: ${name}`;
+  const label = `${ADD}: ${name}`;
   const fade = useFade(phase === 'added');
   const eye = phase === 'eye';
   const state = phase === 'added' ? 'added' : fade.closing ? 'returning' : undefined;
@@ -587,23 +587,13 @@ function PlusChoice({
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- once per eye: onShown is a fresh closure each render.
   }, [shown]);
   const busy = phase === 'busy';
-  const glyph = state ? (
-    <span className="add-icon__glyphs">
-      <span className="add-icon__check" onAnimationEnd={fade.onAnimationEnd}>
-        <CheckIcon />
-      </span>
-      {state === 'returning' && (
-        <span className="add-icon__eye">
-          <MysticEyeIcon />
-        </span>
-      )}
-    </span>
-  ) : busy ? (
-    <Spinner />
-  ) : eye ? (
-    <MysticEyeIcon />
-  ) : (
-    <PlusIcon />
+  const glyph = (
+    <AddGlyph
+      state={state}
+      busy={busy}
+      onFaded={fade.onAnimationEnd}
+      rest={eye || state ? 'eye' : 'plus'}
+    />
   );
   return (
     <IconTip tip={eye ? 'Quick Look' : label}>

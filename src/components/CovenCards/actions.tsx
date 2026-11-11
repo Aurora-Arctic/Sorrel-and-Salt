@@ -1,6 +1,6 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
-import { cardName } from '../IngredientCard/card-name';
+import { cardName } from '../../lib/ingredient-name';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
 import StockDialog from '../StockDialog';
 import CardMore from './card-more';
@@ -25,19 +25,16 @@ export type CovenCardActionsEntry = Pick<
   | 'stock'
 >;
 
-export const covenCardName = (entry: Pick<CovenCardEntry, 'label' | 'canonicalName'>): string =>
-  cardName(entry.label, entry.canonicalName);
-
 /** Edit and Annotate in the text colour rather than the accent green, here and not in admin. */
 const PLAIN = 'icon-tip__edit icon-tip__edit--plain';
 
-const opensOf = (entry: CovenCardActionsEntry): ReactElement | null => {
+const opensOf = (entry: CovenCardActionsEntry, name: string): ReactElement | null => {
   if (entry.editHref && entry.editHeading)
     return (
       <CardEditLink
         href={entry.editHref}
         heading={entry.editHeading}
-        name={covenCardName(entry)}
+        name={name}
         className={PLAIN}
       />
     );
@@ -46,7 +43,7 @@ const opensOf = (entry: CovenCardActionsEntry): ReactElement | null => {
       <CardAnnotateLink
         href={entry.annotateHref}
         heading={ANNOTATE_HEADING}
-        name={covenCardName(entry)}
+        name={name}
         className={PLAIN}
       />
     );
@@ -64,7 +61,8 @@ export function covenCardActions(
   covenSlug: string,
   leaveHref?: Route,
 ): ReactElement | undefined {
-  const opens = opensOf(entry);
+  const name = cardName(entry.label, entry.canonicalName);
+  const opens = opensOf(entry, name);
   const more = entry.mayMakeOurs;
   if (!opens && !entry.stock && !more) return undefined;
   return (
@@ -73,7 +71,7 @@ export function covenCardActions(
         <StockDialog
           workspaceId={workspaceId}
           ingredientId={entry.id}
-          ingredientName={covenCardName(entry)}
+          ingredientName={name}
           forms={entry.stock.forms}
           jars={entry.stock.jars}
         />
@@ -83,7 +81,7 @@ export function covenCardActions(
         <CardMore
           id={entry.id}
           label={entry.label}
-          name={covenCardName(entry)}
+          name={name}
           workspaceId={workspaceId}
           covenSlug={covenSlug}
           mayMakeOurs={entry.mayMakeOurs}
