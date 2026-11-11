@@ -11,7 +11,7 @@ export interface MembersPageProps {
   }>;
 }
 
-export interface OpenedMember {
+interface OpenedMember {
   heading: ModalHeading;
   member: MemberListEntry;
 }

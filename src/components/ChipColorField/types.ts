@@ -6,8 +6,7 @@ export type PickerFormat = NonNullable<ColorPickerRootProps['format']>;
 
 export type PickerColor = Color;
 
-export type PickerChannel =
-  'hue' | 'saturation' | 'brightness' | 'lightness' | 'red' | 'green' | 'blue';
+type PickerChannel = 'hue' | 'saturation' | 'brightness' | 'lightness' | 'red' | 'green' | 'blue';
 
 export interface FormatOption {
   format: PickerFormat;
@@ -15,7 +14,7 @@ export interface FormatOption {
   channels: { channel: PickerChannel; name: string }[];
 }
 
-export interface NearbyColor {
+interface NearbyColor {
   name: string;
   hex: string;
 }

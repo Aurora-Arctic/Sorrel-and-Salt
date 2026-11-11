@@ -38,7 +38,7 @@ export interface ValueRow extends CuratedRow {
   otherNames?: readonly string[];
 }
 
-export interface ValueFilter {
+interface ValueFilter {
   query?: string;
   groupId?: string;
 }
@@ -50,7 +50,7 @@ export interface ValueKindSource {
   readGroups?: () => Promise<ValueGroupRow[]>;
 }
 
-export interface OpenedValue {
+interface OpenedValue {
   heading: ModalHeading;
   value?: EditedGroupedValue;
 }
@@ -79,7 +79,7 @@ export interface GroupPageProps {
   searchParams: Promise<GroupSearchParams>;
 }
 
-export interface GroupRow extends CuratedRow {
+interface GroupRow extends CuratedRow {
   colorDark?: string;
   colorLight?: string;
   icon?: FormGroupIcon | null;
@@ -99,7 +99,7 @@ export interface GroupKindPage {
   countMembers: (groupId: string) => Promise<number>;
 }
 
-export interface OpenedGroup {
+interface OpenedGroup {
   heading: ModalHeading;
   group?: EditedGroup;
   memberCount?: number;

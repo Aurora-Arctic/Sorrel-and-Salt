@@ -183,7 +183,7 @@ const CompendiumSubstitutesDocument = graphql(`
 `);
 
 /** Rows a lookup asks for: enough to choose from, few enough to read. */
-export const SUGGESTION_ROWS = 10;
+const SUGGESTION_ROWS = 10;
 
 function usedBy(claimants: Claimant[]): string | undefined {
   if (claimants.length === 0) return undefined;

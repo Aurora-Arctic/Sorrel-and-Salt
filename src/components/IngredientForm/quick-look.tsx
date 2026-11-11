@@ -105,7 +105,7 @@ type Looked = DuplicateQuickLookQuery['ingredient'];
  * The answer as the entry page's own shape, so the modal's head and body are the details modal's
  * own components. The rows are cast: the parts drawn read only the fields asked for above.
  */
-export function detailOf(looked: Looked, workspaceId: string): IngredientDetail {
+function detailOf(looked: Looked, workspaceId: string): IngredientDetail {
   const tier = looked.isGlobal ? null : workspaceId;
   return {
     entry: {
@@ -142,7 +142,7 @@ export function detailOf(looked: Looked, workspaceId: string): IngredientDetail 
   };
 }
 
-export const jarsOf = (looked: Looked): SummaryJar[] =>
+const jarsOf = (looked: Looked): SummaryJar[] =>
   looked.stock.map((jar) => ({
     variantId: jar.variant.id,
     quantity: amountOf(jar.quantityOnHand),

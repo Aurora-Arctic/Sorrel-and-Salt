@@ -46,7 +46,7 @@ export function usePromoteFolkName(workspaceId: string | null, ingredientId: str
   });
 }
 
-export type Promotion = ReturnType<typeof usePromoteFolkName>;
+type Promotion = ReturnType<typeof usePromoteFolkName>;
 
 export interface PromoteFolkNameQuestionProps {
   promotion: Promotion;

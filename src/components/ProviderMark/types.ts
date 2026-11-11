@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import type { ProviderId } from '../../lib/types';
 
-export interface ProviderArtProps {
+interface ProviderArtProps {
   /** Facebook only: true draws the white "f" on a blue chip, false its own blue circle. */
   chip?: boolean;
 }

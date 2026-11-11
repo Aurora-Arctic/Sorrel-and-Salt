@@ -7,7 +7,7 @@ export interface InfoTipProps {
   children: ReactNode;
 }
 
-export interface TipTiming {
+interface TipTiming {
   openDelayMs?: number;
   closeDelayMs?: number;
 }

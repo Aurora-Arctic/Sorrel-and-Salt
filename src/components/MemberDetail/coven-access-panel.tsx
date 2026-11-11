@@ -41,7 +41,7 @@ const LiftMemberDocument = graphql(`
   }
 `);
 
-export const MemberPausesDocument = graphql(`
+const MemberPausesDocument = graphql(`
   query MemberPauses($workspaceId: ID!, $userId: ID!) {
     workspace(id: $workspaceId) {
       id

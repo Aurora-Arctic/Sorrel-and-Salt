@@ -2,7 +2,7 @@ export interface CardsPageProps {
   searchParams: Promise<CardsSearchParams>;
 }
 
-export interface CardsSearchParams {
+interface CardsSearchParams {
   after?: string | string[];
   before?: string | string[];
   mint?: string | string[];
@@ -18,7 +18,7 @@ export interface ArrivalsPageProps {
   searchParams: Promise<ArrivalsSearchParams>;
 }
 
-export interface ArrivalsSearchParams {
+interface ArrivalsSearchParams {
   after?: string | string[];
   before?: string | string[];
   query?: string | string[];

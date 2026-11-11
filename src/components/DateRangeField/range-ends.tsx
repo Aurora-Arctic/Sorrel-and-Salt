@@ -9,7 +9,7 @@ import { shortDayWords } from '../DateField/day';
 // the day fields' shared rule writes it, and settles when it is left or Enter is pressed (claude-docs/components/date-field.md).
 
 /** What is wrong with a typed day: its format, or the bound it lies outside; undefined when it is fine. */
-export function dayProblem(text: string, min?: string, max?: string): string | undefined {
+function dayProblem(text: string, min?: string, max?: string): string | undefined {
   if (!isRealCalendarDay(text)) return CALENDAR_DAY_MESSAGE;
   if (min && text < min) return `Choose a day on or after ${shortDayWords(min)}`;
   if (max && text > max) return `Choose a day on or before ${shortDayWords(max)}`;

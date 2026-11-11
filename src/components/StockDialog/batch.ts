@@ -75,7 +75,7 @@ export function rowFieldOf(
  * The amount errors of the rows to be saved, by row and field, so a bad amount is said at its field before
  * anything is sent. A row marked removed is not read.
  */
-export function amountErrors(rows: readonly StockRow[]): Record<number, Record<string, string>> {
+function amountErrors(rows: readonly StockRow[]): Record<number, Record<string, string>> {
   const found: Record<number, Record<string, string>> = {};
   rows.forEach((row, index) => {
     if (row.removed) return;

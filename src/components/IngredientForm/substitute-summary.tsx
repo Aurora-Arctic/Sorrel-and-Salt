@@ -60,11 +60,7 @@ const joined = (own: readonly string[] | null, form: readonly string[] | null | 
   ...new Set([...(own ?? []), ...(form ?? [])]),
 ];
 
-export function SubstituteSummary({
-  link,
-  variantId,
-  workspaceId,
-}: SubstituteSummaryProps): ReactElement {
+function SubstituteSummary({ link, variantId, workspaceId }: SubstituteSummaryProps): ReactElement {
   const hrefOf = useContext(EntryHrefContext);
   const { data, error, isPending, refetch, isRefetching } = useQuery({
     ...graphqlQuery(IngredientSummaryDocument, { id: link.id, workspaceId }),

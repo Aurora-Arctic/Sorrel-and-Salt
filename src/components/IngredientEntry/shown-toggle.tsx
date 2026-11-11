@@ -6,7 +6,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import ShownSwitch from '../ShownSwitch';
 import type { ShownToggleProps } from './types';
 
-export const SetCompendiumEntryShownDocument = graphql(`
+const SetCompendiumEntryShownDocument = graphql(`
   mutation SetCompendiumEntryShown($id: ID!, $shown: Boolean!) {
     setCompendiumEntryShown(id: $id, shown: $shown) {
       id
