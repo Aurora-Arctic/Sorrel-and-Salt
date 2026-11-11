@@ -101,7 +101,7 @@ test('on a phone, Escape shuts the range calendar and the status list and leaves
   await expect(drawer).toBeVisible();
 });
 
-// Typed with the keyboard alone, and Tab to leave each box, as a Field is checked when it is left.
+// Typed with the keyboard alone. Enter commits a box as leaving it does, and must not submit the Filters form round it.
 test('an admin types a Minted range into Start and End, and an End before Start is refused until put right', async ({
   page,
 }) => {
@@ -115,8 +115,11 @@ test('an admin types a Minted range into Start and End, and an End before Start 
   const end = minted.getByRole('textbox', { name: 'End', exact: true });
   await expect(start).toHaveAttribute('aria-current', 'true');
 
+  const unfiltered = page.url();
   await start.fill('2026-01-10');
-  await start.press('Tab');
+  await start.press('Enter');
+  await expect(minted).toBeVisible();
+  await expect(drawer).toBeVisible();
   await expect(end).toHaveAttribute('aria-current', 'true');
   await end.fill('2026-01-04');
   await end.press('Tab');
@@ -125,10 +128,14 @@ test('an admin types a Minted range into Start and End, and an End before Start 
   await assertNoAccessibilityViolations(page);
 
   await end.fill('2026-01-31');
-  await end.press('Tab');
+  await end.press('Enter');
   await expect(
     drawer.getByRole('button', { name: /^Minted.*10 Jan 2026.*31 Jan 2026/ }),
   ).toBeVisible();
+  // A typed End completes the range and leaves the calendar open; neither Enter applied the filters.
+  await expect(minted).toBeVisible();
+  await expect(drawer).toBeVisible();
+  expect(page.url()).toBe(unfiltered);
   await drawer.getByRole('button', { name: 'Apply Filters' }).click();
   await expect(page).toHaveURL(/mintedFrom=2026-01-10&mintedTo=2026-01-31/);
 });

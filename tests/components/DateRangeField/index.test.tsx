@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import DateRangeField from '@/components/DateRangeField';
 import type { DayRange } from '@/components/DateRangeField/types';
 import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
@@ -352,6 +352,56 @@ describe('DateRangeField, Start and End', () => {
     expect(answer()).toBe('2026-10-10|2026-10-20');
   });
 
+  it('keeps End when a valid Start is typed while a range is held', () => {
+    render(<Harness initial={{ from: '2026-10-10', to: '2026-10-20' }} />);
+    open();
+    type('Start', '2026-10-12');
+    expect(box('Start')).not.toBeInvalid();
+    expect(answer()).toBe('2026-10-12|2026-10-20');
+    type('Start', '2026-10-20');
+    expect(answer()).toBe('2026-10-20|2026-10-20');
+  });
+
+  it('refuses a typed Start after the end the field holds with the Field error, never swapping the ends, until it is put right', () => {
+    render(<Harness initial={{ from: '2026-10-10', to: '2026-10-20' }} />);
+    open();
+    const before = described(box('Start'));
+    type('Start', '2026-10-21');
+    expectRefused('Start', before);
+    expect(answer()).toBe('2026-10-10|2026-10-20');
+    type('Start', '2026-10-15');
+    expect(box('Start')).not.toBeInvalid();
+    expect(answer()).toBe('2026-10-15|2026-10-20');
+  });
+
+  // An Enter left unclaimed in a text box submits the form round it, which in the Filters drawer would apply the filters.
+  it('commits a typed day on Enter, as leaving the box does, and claims the key', () => {
+    render(
+      <form aria-label="Filters" onSubmit={(event) => event.preventDefault()}>
+        <Harness initial={{ from: '2026-10-01', to: '' }} />
+      </form>,
+    );
+    open();
+    fireEvent.change(box('Start'), { target: { value: '2026-10-04' } });
+    const unclaimed = fireEvent.keyDown(box('Start'), { key: 'Enter' });
+    expect(unclaimed).toBe(false);
+    expect(answer()).toBe('2026-10-04|');
+    expect(box('End')).toHaveAttribute('aria-current', 'true');
+    fireEvent.change(box('End'), { target: { value: '2026-10-09' } });
+    expect(fireEvent.keyDown(box('End'), { key: 'Enter' })).toBe(false);
+    expect(answer()).toBe('2026-10-04|2026-10-09');
+  });
+
+  it('refuses a day not yet valid on Enter with the Field error, and changes nothing', () => {
+    render(<Harness initial={{ from: '2026-10-01', to: '2026-10-30' }} />);
+    open();
+    const before = described(box('Start'));
+    fireEvent.change(box('Start'), { target: { value: '2026-10' } });
+    fireEvent.keyDown(box('Start'), { key: 'Enter' });
+    expectRefused('Start', before);
+    expect(answer()).toBe('2026-10-01|2026-10-30');
+  });
+
   it('refuses a typed day before min or after max, and takes the bound days themselves', () => {
     render(<Harness initial={{ from: '2026-10-10', to: '' }} min="2026-10-05" max="2026-10-20" />);
     open();
@@ -441,5 +491,46 @@ describe('DateRangeField, days selected', () => {
     expect(describedText()).toMatch(/\d/);
     fireEvent.click(day('5 November 2026'));
     expect(describedText()).not.toMatch(/\d/);
+  });
+});
+
+describe('DateRangeField, a typed End', () => {
+  it('completes the range and keeps the calendar open, showing the days it covers', () => {
+    render(<Harness initial={{ from: '2026-11-03', to: '' }} />);
+    const dialog = open();
+    expect(describedText()).not.toMatch(/\d/);
+    type('End', '2026-11-12');
+    expect(answer()).toBe('2026-11-03|2026-11-12');
+    expect(dialog).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Choose Minted Days' })).toBe(dialog);
+    expect(describedText()).toMatch(number(10));
+  });
+});
+
+// Days are counted in the calendar, not by dividing the time between two local midnights: a day the
+// clocks go forward is 23 hours long. Node reads TZ afresh when it changes, so the test sets a zone with a
+// clock change and puts the old one back.
+describe('DateRangeField, days selected across a clock change', () => {
+  const zone = process.env.TZ;
+  beforeAll(() => {
+    process.env.TZ = 'Europe/London';
+  });
+  afterAll(() => {
+    if (zone === undefined) delete process.env.TZ;
+    else process.env.TZ = zone;
+  });
+
+  it('runs in a zone whose clocks go forward inside the range', () => {
+    expect(new Date(2026, 2, 31).getTime() - new Date(2026, 2, 28).getTime()).toBeLessThan(
+      3 * 24 * 60 * 60 * 1000,
+    );
+  });
+
+  it('counts every calendar day of a range the clocks go forward in', () => {
+    // 29 March 2026 is the day British clocks go forward.
+    render(<Harness initial={{ from: '2026-03-28', to: '2026-03-31' }} />);
+    open();
+    expect(describedText()).toMatch(number(4));
+    expect(describedText()).not.toMatch(number(3));
   });
 });
