@@ -46,7 +46,7 @@ test('the eye opens a spell in a modal over the list, keeps the filter, stacks i
   await expect(page).toHaveURL(`${grimoire}?query=fixture&spell=${shared}`);
   const look = page.getByRole('dialog', { name: 'Fixture Working' });
   await expect(look).toBeVisible();
-  await expect(look.getByRole('link', { name: 'See Full Recipe' })).toHaveAttribute(
+  await expect(look.getByRole('link', { name: 'See Full Spell' })).toHaveAttribute(
     'href',
     `${grimoire}/${shared}`,
   );
@@ -77,7 +77,7 @@ test('the eye opens a spell in a modal over the list, keeps the filter, stacks i
   await page.setViewportSize({ width: 375, height: 800 });
   await eye.click();
   const phone = page.getByRole('dialog', { name: 'Fixture Working' });
-  await expect(phone.getByRole('link', { name: 'See Full Recipe' })).toBeVisible();
+  await expect(phone.getByRole('link', { name: 'See Full Spell' })).toBeVisible();
   await phone.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.setViewportSize({ width: 1280, height: 800 });
