@@ -28,14 +28,14 @@ export interface CompendiumSearchParams extends ListSearchParams {
   entry?: string | string[];
 }
 
-export interface EditedEntry {
+interface EditedEntry {
   id: string;
   revision?: number | null;
   updatedAt?: string | null;
   values: IngredientFormValues;
 }
 
-export interface OpenedEntry {
+interface OpenedEntry {
   heading: ModalHeading;
   entry?: EditedEntry;
   review?: ReviewOffer;

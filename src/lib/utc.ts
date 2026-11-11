@@ -69,16 +69,6 @@ export function longMinuteInZone(at: Date, timeZone?: string): string {
   return `${part('day')} ${part('month')} ${part('year')}, ${part('hour')}:${part('minute')}${TIME_PERIOD_SPACE}${period}`;
 }
 
-/** What the server and hydration print. */
-export function longMinuteInUtc(at: Date): string {
-  return longMinuteInZone(at, 'UTC');
-}
-
-/** What the server and hydration print. */
-export function minuteInUtc(at: Date): string {
-  return minuteInZone(at, 'UTC');
-}
-
 /** The instant a card chosen to last through `day` (`2027-01-29`) stops working: the end of that day in UTC-12, the last zone on Earth, so it never stops before its printed day is over anywhere. */
 export function expiryOfDay(day: string): Date {
   const end = new Date(`${day}T12:00:00.000Z`);

@@ -22,7 +22,7 @@ const ROLE: Record<AdminInvitationProps['siteRole'], { subject: string; offer: s
 // The column's default, `now() + interval '7 days'`; nothing sets another.
 const LIFETIME = 'seven days';
 
-export function AdminInvitation({
+function AdminInvitation({
   url,
   siteRole,
   inviterName,

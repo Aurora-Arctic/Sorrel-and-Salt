@@ -138,7 +138,6 @@
     font-size: type-size('small');
     font-weight: 500;
     // Level with a field ($control-height): the padding leaves the label short of it and the minimum makes up the rest.
-    box-sizing: border-box;
     min-height: $control-height;
     padding: space(2) space(5);
     border-radius: radius('control');
@@ -302,7 +301,7 @@
     white-space: nowrap;
   }
 
-  @container pager (max-width: #{$pager-tight-width}) {
+  @include container-to(pager, #{$pager-tight-width}) {
     .pager > ul {
       gap: space(2);
     }
@@ -318,11 +317,8 @@
 
   // The action sits 0.25rem low because a centred button reads high.
   .page-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    @include wrap-row(space(3) space(5));
     justify-content: space-between;
-    gap: space(3) space(5);
     margin-bottom: space(5);
     container: page-header / inline-size;
 
@@ -380,22 +376,26 @@
     height: $glyph-size-large;
   }
 
-  @container page-header (max-width: #{$narrow-column}) {
+  @include container-to(page-header, #{$narrow-column}) {
     .page-header > h1,
     .page-header > .page-header__title {
       flex-basis: 100%;
     }
   }
 
-  @container page-header (min-width: calc(#{$add-below-width} + 0.01rem)) and (max-width: #{$narrow-column}) {
-    @include add-action-as-plus('.page-header');
+  @include container-from(page-header, #{$add-below-width}) {
+    @include container-to(page-header, #{$narrow-column}) {
+      @include add-action-as-plus('.page-header');
+    }
   }
 
-  @container page-header (min-width: calc(#{$add-below-width} + 0.01rem)) and (max-width: #{$tabbed-plus-width}) {
-    @include add-action-as-plus('.tabbed-page > .page-header', false);
+  @include container-from(page-header, #{$add-below-width}) {
+    @include container-to(page-header, #{$tabbed-plus-width}) {
+      @include add-action-as-plus('.tabbed-page > .page-header', false);
+    }
   }
 
-  @container page-header (max-width: #{$add-below-width}) {
+  @include container-to(page-header, #{$add-below-width}) {
     .page-header > :has(.add-action),
     .page-header > .add-action {
       top: 0;
@@ -439,7 +439,7 @@
   }
 
   // One `:is()` at the choice rule's weight, so it overrides by coming later.
-  @container filter-row (max-width: #{$narrow-column}) {
+  @include container-to(filter-row, #{$narrow-column}) {
     .filter-row > :is(:first-child, .field:has(> .select), .filter-row__choice) {
       flex-basis: 100%;
     }
@@ -553,7 +553,6 @@
   // The centred, full-height frame of a page: one column held below the top inset and, inside the shell, below its
   // bars (claude-docs/styling.md, "The page frame").
   .page-frame {
-    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -570,7 +569,7 @@
   // A frame drawn inside a layout's `.page-column` (the public 404) takes back the column's top and
   // side padding, so it fills the window exactly as a frame of its own does and adds no scroll.
   .page-column > .page-frame--in-column {
-    margin: calc(-1 * #{space(6)}) calc(-1 * #{space(4)}) 0;
+    margin: calc(-1 * #{$page-column-pad-block}) calc(-1 * #{$page-column-pad-inline}) 0;
   }
 
   // The front door fills the whole window, so the footer always follows below the fold; the other frames
@@ -622,10 +621,9 @@
     }
   }
 
-  // The gap alone spaces the column: this outranks `section`'s and `.page-header`'s margins. `border-box` keeps a
-  // padded child inside the column at 375px.
+  // The gap alone spaces the column: this outranks `section`'s and `.page-header`'s margins. Every box is sized by its
+  // border edge, which keeps a padded child inside the column at 375px.
   .page-frame > * {
-    box-sizing: border-box;
     margin-block: 0;
   }
 
@@ -657,23 +655,21 @@
 
   .page-frame__rule {
     border: 0;
-    border-top: 1px solid $text-muted;
+    border-top: $muted-border;
   }
 
   // A primitive because layouts and stories use the class as their frame.
   .page-column,
   .coven-layout {
-    box-sizing: border-box;
     @include stack(5);
     margin-inline: auto;
-    padding: space(6) space(4);
+    padding: $page-column-pad-block $page-column-pad-inline;
   }
 
   // The demo coven's notice stands in the content column's own edges (same width, centring and
   // gutter as `.coven-layout`), so its box spans the content while the sentence stops at the reading
   // measure; the measure is on the text because a box capped at it would end short of the content.
   .coven-layout__demo-notice {
-    box-sizing: border-box;
     width: 100%;
     max-width: $wide-column;
     margin-inline: auto;
@@ -703,7 +699,6 @@
   }
 
   .admin-index {
-    box-sizing: border-box;
     width: 100%;
     max-width: $narrow-column;
     margin-inline: auto;
@@ -760,7 +755,6 @@
   }
 
   .page-with-nav > * {
-    box-sizing: border-box;
     margin-block: 0;
   }
 
@@ -787,9 +781,7 @@
   // A card holding a whole-card link positions itself, which `card-link` needs.
   .card--quiet {
     padding: space(4);
-    border: 1px solid $hairline;
-    border-radius: radius('surface');
-    background-color: $surface-card;
+    @include surface-box;
 
     &:hover,
     &:focus-within {
@@ -828,12 +820,11 @@
 
   // One frame for a screenshot or a widget in running text, with its caption beneath (claude-docs/styling.md).
   .figure {
+    box-sizing: content-box;
     max-width: $measure;
     margin: space(5) 0;
     padding: space(3);
-    border: 1px solid $hairline;
-    border-radius: radius('surface');
-    background-color: $surface-card;
+    @include surface-box;
 
     > img {
       display: block;
@@ -853,7 +844,6 @@
   // page shares the text's edges. A primitive, as a route loads a component's stylesheet only when it draws the
   // component, and the public layout's `.page-column` is the wide box (claude-docs/components/help-pages.md, "Layout").
   .help-page {
-    box-sizing: border-box;
     width: 100%;
     max-width: $measure;
     margin-inline: auto;
@@ -888,7 +878,6 @@
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
     // The mark's own geometry, a circle sized to sit on a line of text.
     width: 1.5rem;
     height: 1.5rem;
@@ -912,7 +901,7 @@
 
   // A way in with no brand (email & password, a passkey): the quiet wash with a hairline edge, its outline glyph in the body ink.
   .provider-mark--own {
-    border: 1px solid $hairline;
+    border: $hairline-border;
     color: $text-primary;
     background-color: $fill-quiet;
   }
@@ -945,7 +934,7 @@
     // heads. On the cell's bottom, so a heading that wraps keeps its last line on the hairline.
     thead th {
       vertical-align: bottom;
-      border-bottom: 1px solid $text-muted;
+      border-bottom: $muted-border;
     }
 
     // A row header names its row but is not a heading in weight: it reads as the cell it replaces.
@@ -1069,7 +1058,7 @@
   // A table whose rows turn into cards when its frame is narrower than `$table-stack-width`. Every stacking table
   // carries explicit `role` attributes, since WebKit drops a table's semantics once `display` changes on its parts.
   // A component's `position: sticky` cell must reset to `static` under this rule (claude-docs/styling.md, "Tables at phone width").
-  @container data-table (max-width: #{$table-stack-width}) {
+  @include container-to(data-table, #{$table-stack-width}) {
     .data-table-frame > .data-table__sort {
       display: flex;
       margin-block-end: space(3);
@@ -1174,10 +1163,9 @@
     box-shadow: none;
   }
 
-  @container data-table (max-width: #{$table-stack-width}) {
+  @include container-to(data-table, #{$table-stack-width}) {
     .data-table--pending > tbody > tr {
       position: relative;
-      box-sizing: border-box;
       padding: 0;
       @include card-skeleton-fill;
 
@@ -1209,9 +1197,12 @@
   .notice {
     --notice-bar: #{$accent};
     --notice-icon: currentColor;
+    // The inline padding and bar the measure sits inside, since the cap is on the border box; a kind or
+    // context that changes either sets this to match.
+    --notice-inline-extra: calc(#{space(3) * 2} + #{$rule-heavy});
 
     display: block;
-    max-width: $measure;
+    max-width: calc(#{$measure} + var(--notice-inline-extra));
     margin: 0;
     padding: space(2) space(3);
     border-inline-start: $rule-heavy solid var(--notice-bar);
@@ -1303,6 +1294,10 @@
   .notice--error,
   .notice--warn,
   .notice--caution {
+    --notice-inline-extra: calc(
+      #{space(3) * 2} + #{$notice-mark-size} + #{space(2)} + #{$rule-heavy}
+    );
+
     position: relative;
     padding-inline-start: calc(#{space(3)} + #{$notice-mark-size} + #{space(2)});
 
@@ -1449,7 +1444,7 @@
 
   // A phone-width form stacks its buttons, full width and in order, rather than wrapping them unevenly
   // with a Delete pushed to one side; every form's row of three fits on one line above 28rem.
-  @container (max-width: #{$narrow-column}) {
+  @include container-to(null, #{$narrow-column}) {
     .form .form__actions,
     .form .modal__actions {
       flex-direction: column;
@@ -1502,7 +1497,7 @@
     }
 
     .icon-tip + .icon-tip {
-      border-inline-start: 1px solid $hairline;
+      border-inline-start: $hairline-border;
     }
 
     .icon-tip:not(:last-child) .btn {
@@ -1789,11 +1784,9 @@
       inset-block-start: 50%;
       inset-inline-start: calc(#{$inset} + 1px);
       translate: 0 -50%;
-      // The ring's outer edge is the thumb's: border-box, so Spinner's 2px border sits inside the
-      // size instead of adding 4px to its `1em`.
-      box-sizing: border-box;
-      inline-size: $glyph-size;
-      block-size: $glyph-size;
+      // The ring's outer edge is the thumb's: its border comes off the size.
+      inline-size: calc(#{$glyph-size} - #{$spinner-border * 2});
+      block-size: calc(#{$glyph-size} - #{$spinner-border * 2});
       margin: 0;
       padding: 0;
       color: $text-muted;
@@ -1808,11 +1801,10 @@
     input {
       position: relative;
       flex: none;
-      box-sizing: border-box;
       inline-size: $switch-width;
       block-size: $icon-size;
       margin: 0;
-      border: 1px solid $text-muted;
+      border: $muted-border;
       border-radius: radius('pill');
       background-color: $surface-card;
       appearance: none;
@@ -2014,12 +2006,11 @@
 
     input {
       flex: none;
-      box-sizing: border-box;
       inline-size: $radio-size;
       block-size: $radio-size;
       margin-block-start: 0.125rem;
       margin-inline: 0;
-      border: 1px solid $text-muted;
+      border: $muted-border;
       border-radius: radius('pill');
       background-color: $surface-card;
       appearance: none;
@@ -2116,13 +2107,10 @@
   }
 
   .radio.radio--card {
-    box-sizing: border-box;
     min-block-size: $control-height;
     align-items: center;
     padding: space(2) space(3);
-    border: 1px solid $hairline;
-    border-radius: radius('surface');
-    background-color: $surface-page;
+    @include surface-box($surface-page);
     @include state-fade(border-color, background-color);
 
     &:hover:not(:has(input:disabled)) {
@@ -2180,12 +2168,12 @@
   // segment's name tip above the bar: the end segments round their own.
   .radio-strip {
     display: inline-flex;
-    border: 1px solid $text-muted;
+    border: $muted-border;
     border-radius: radius('control');
     background-color: $surface-card;
 
     > :not(:first-child) .radio--segment {
-      border-inline-start: 1px solid $text-muted;
+      border-inline-start: $muted-border;
     }
 
     > :first-child .radio--segment {
@@ -2203,7 +2191,6 @@
     position: relative;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
     inline-size: 3rem;
     block-size: 3rem;
     @include state-fade(background-color);
@@ -2263,7 +2250,7 @@
 
   .radio-strip--text {
     > .radio--segment:not(:first-child) {
-      border-inline-start: 1px solid $text-muted;
+      border-inline-start: $muted-border;
     }
 
     > .radio--segment:first-child {
@@ -2396,7 +2383,7 @@
     display: block;
     margin: 0;
     padding-block: space(3) space(2);
-    border-top: 1px solid $text-muted;
+    border-top: $muted-border;
     font-size: type-size('small');
     color: $text-muted;
   }
@@ -2430,11 +2417,8 @@
   }
 
   .specimen__actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    @include wrap-row(space(2));
     justify-content: flex-end;
-    gap: space(2);
     margin-top: space(3);
   }
 
@@ -2465,7 +2449,7 @@
     display: flex;
     justify-content: center;
     padding: space(3) 0;
-    border-top: 1px solid $hairline;
+    border-top: $hairline-border;
     background: $surface-card;
 
     > .btn {

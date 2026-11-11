@@ -3,7 +3,6 @@ import type postgres from 'postgres';
 import { Forbidden } from '@/lib/errors';
 import type { PageRequest } from '@/lib/types';
 import {
-  countCardAttempts,
   listCardAttempts,
   recordCardAttempt,
   revokeInvitationCardBatch,
@@ -161,7 +160,6 @@ describe('the attempts reads', () => {
 
     for (const who of [asUser(F), asUser(A), asUser(B)]) {
       await expect(listCardAttempts(who, CARD_BATCH, PAGE)).rejects.toBeInstanceOf(Forbidden);
-      await expect(countCardAttempts(who, CARD_BATCH, undefined)).rejects.toBeInstanceOf(Forbidden);
       await expect(cardBatchTotals(who, [CARD_BATCH])).rejects.toBeInstanceOf(Forbidden);
     }
     expect(await cardBatchTotals(asUser(E), [CARD_BATCH])).toEqual([
@@ -182,9 +180,6 @@ describe('the attempts reads', () => {
       ]),
     );
     expect(list).toHaveLength(2);
-    expect(await countCardAttempts(asUser(E), CARD_BATCH, undefined)).toMatchObject({
-      totalCount: 2,
-    });
     expect(await cardBatchTotals(asUser(E), [CARD_BATCH, OTHER_BATCH])).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ batchId: CARD_BATCH, attempts: 3 }),

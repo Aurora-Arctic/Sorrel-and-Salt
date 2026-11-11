@@ -206,7 +206,7 @@ describe('SignInDialog', () => {
     expect(headings()[0]).toHaveAccessibleName('Create an Account with Email');
     expect(dialog()).toHaveAccessibleName('Create an Account with Email');
 
-    await press(within(dialog()).getByRole('button', { name: 'Back to Sign-In Options' }));
+    await press(within(dialog()).getByRole('button', { name: 'Back to Create Account Options' }));
 
     expect(dialog()).toHaveAccessibleName('Create an Account');
     expect(within(dialog()).getByRole('button', { name: 'Continue with Email' })).toHaveFocus();

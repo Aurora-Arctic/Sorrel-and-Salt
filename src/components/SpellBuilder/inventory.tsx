@@ -21,7 +21,7 @@ export interface LineDoors {
   edit?: StockDialogProps;
 }
 
-export function holdWords(
+function holdWords(
   step: SpellStepValue,
   steps: readonly SpellStepValue[] = [step],
 ): { parts: string[]; verdict: VerdictKind | null } {

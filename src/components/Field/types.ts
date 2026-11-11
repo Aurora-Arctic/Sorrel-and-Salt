@@ -10,7 +10,7 @@ export type AutoCapitalize = 'none' | 'sentences' | 'words' | 'characters';
 export type EnterKeyHint = 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
 
 /** A specific autofill token, or `off`. Never `on` or empty, which would let a password manager fill any field. */
-export type AutofillToken = Exclude<AutoFill, 'on' | ''>;
+type AutofillToken = Exclude<AutoFill, 'on' | ''>;
 
 export interface FieldProps {
   label: string;

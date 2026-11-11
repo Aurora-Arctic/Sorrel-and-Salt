@@ -77,7 +77,7 @@ export function assertCompendiumValid(input: LoadedCompendium): void {
  * `approved` files only, each with its mark. A `draft` or `needs-review`
  * file is not seeded, wherever it runs.
  */
-export function seedItems(input: LoadedCompendium): SeedItem[] {
+function seedItems(input: LoadedCompendium): SeedItem[] {
   const sources = { ...WORKS, ...input.sources };
   return input.files
     .filter((file) => file.status === 'approved')

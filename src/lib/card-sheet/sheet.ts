@@ -45,7 +45,7 @@ import type { Embedded, Rect, SheetCard } from './types';
 // Every length below is in points (72 to the inch), y running down from the page's top left.
 
 const PT = 72;
-export const PAGE = { width: 8.5 * PT, height: 11 * PT };
+const PAGE = { width: 8.5 * PT, height: 11 * PT };
 const TRIM = { width: 3.5 * PT, height: 2 * PT };
 const BLEED = 0.125 * PT;
 const COLUMNS = 2;
@@ -55,7 +55,7 @@ const BLOCK_SIZE = {
   height: ROWS * TRIM.height + 2 * BLEED,
 };
 /** Centred, 5/8 in from each side and 3/8 in from the top and bottom, so a printer's unprintable edge clips neither the bleed nor the crop marks. */
-export const BLOCK = {
+const BLOCK = {
   x: (PAGE.width - BLOCK_SIZE.width) / 2,
   y: (PAGE.height - BLOCK_SIZE.height) / 2,
   ...BLOCK_SIZE,

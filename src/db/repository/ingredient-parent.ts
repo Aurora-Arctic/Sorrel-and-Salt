@@ -15,7 +15,7 @@ import { existsByKey, existsInIncludingSoftDeleted } from './select';
  * `workspace_id` takes its parent's tier, so another coven's ingredient gets no rows, not a filter after the fetch (rule 7). A correlated
  * `EXISTS` that ANDs the parent's tombstone filter; `where` reads the parent as `ingredients`.
  */
-export function readableIngredientParent(
+function readableIngredientParent(
   memberships: readonly Membership[],
   childColumn: AnyPgColumn,
   where?: SQL,

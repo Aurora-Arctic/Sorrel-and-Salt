@@ -167,14 +167,13 @@
   @include button-reset;
 
   display: flex;
-  box-sizing: border-box;
   align-items: center;
   justify-content: center;
   gap: space(2);
   width: 100%;
   margin-top: space(1);
   padding: space(2) 0;
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
   background-color: $surface-card;
   color: $text-primary;
   font-family: $font-body;

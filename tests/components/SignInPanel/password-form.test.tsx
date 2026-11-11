@@ -302,7 +302,7 @@ describe('SignInPanel, email and password', () => {
   it('keeps a switch to creating an account made in the form when Back returns to the buttons', async () => {
     await press(screen.getByRole('button', { name: 'Create an Account' }));
 
-    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
+    await press(screen.getByRole('button', { name: 'Back to Create Account Options' }));
 
     expect(screen.getByRole('heading', { level: 1, name: 'Create an Account' })).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'Sign In with a Passkey' })).toBeNull();
@@ -331,7 +331,7 @@ describe('SignInPanel, email and password', () => {
   it('keeps the email entry Back undoes when the mode is written, and carries the mode to the buttons', async () => {
     await press(screen.getByRole('button', { name: 'Create an Account' }));
 
-    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
+    await press(screen.getByRole('button', { name: 'Back to Create Account Options' }));
 
     // Back still goes back through history, so the entry kept its mark through the rewrite.
     expect(history.back).toHaveBeenCalledTimes(1);
@@ -362,7 +362,7 @@ describe('SignInPanel, email and password', () => {
       screen.getByRole('heading', { level: 1, name: 'Create an Account with Email' }),
     ).toBeInTheDocument();
 
-    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
+    await press(screen.getByRole('button', { name: 'Back to Create Account Options' }));
 
     expect(history.back).not.toHaveBeenCalled();
     expect(lastAddress().get('mode')).toBe('sign-up');
@@ -373,7 +373,7 @@ describe('SignInPanel, email and password', () => {
   it('after a reload, goes back through history when the entry beneath was in the same mode', async () => {
     reloadEmailEntry('sign-up', 'sign-up');
 
-    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
+    await press(screen.getByRole('button', { name: 'Back to Create Account Options' }));
 
     expect(history.back).toHaveBeenCalledTimes(1);
   });

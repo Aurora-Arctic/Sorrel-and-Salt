@@ -5,7 +5,7 @@ import type { DocumentUpdatedProps } from './types';
 const subjectOf = (documents: DocumentUpdatedProps['documents']): string =>
   documents.length === 1 ? `We Updated Our ${documents[0]!.title}` : 'We Updated Our Documents';
 
-export function DocumentUpdated({
+function DocumentUpdated({
   url,
   origin = new URL(url).origin,
   part,

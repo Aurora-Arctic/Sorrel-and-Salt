@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { stringify } from 'yaml';
 import type { LoadedCompendium } from '@/db/seed/compendium/load';
 import { entryFilePath, parseEntryFile } from '@/db/seed/compendium/parse-entry';
-import { renderEntryFile, type RenderableEntryFile } from '@/db/seed/compendium/render-entry';
+import { renderEntryFile, type RenderableEntryFile } from '../../../support/seed/render-entry';
 import { FIXTURE_SHARD } from '../compendium-fixture';
 import type {
   SeedCitation,
@@ -17,7 +17,7 @@ function stated<Field extends string>(citation: SeedCitation<Field>): SeedCitati
   return { ...citation, nameBasis: 'stated' };
 }
 
-export function fileEntry(entry: SeedCompendiumEntry): SeedCompendiumEntry {
+function fileEntry(entry: SeedCompendiumEntry): SeedCompendiumEntry {
   return {
     ...entry,
     references: entry.references.map(stated),
@@ -28,7 +28,7 @@ export function fileEntry(entry: SeedCompendiumEntry): SeedCompendiumEntry {
   };
 }
 
-export const FILE_ENTRIES: readonly SeedCompendiumEntry[] = FIXTURE_SHARD.entries.map(fileEntry);
+const FILE_ENTRIES: readonly SeedCompendiumEntry[] = FIXTURE_SHARD.entries.map(fileEntry);
 export const [TESTWORT, SAMPLEWORT] = FILE_ENTRIES;
 
 export const FILE_SOURCES: SeedCompendiumShard['sources'] = FIXTURE_SHARD.sources;

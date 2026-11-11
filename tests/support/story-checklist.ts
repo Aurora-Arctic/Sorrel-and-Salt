@@ -12,7 +12,7 @@ import type {
 
 // One entry per v1 story whether or not anything tested it: a story with no test yet is a line on the report, not an omission.
 
-export function statusOf(states: StoryState[]): StoryStatus {
+function statusOf(states: StoryState[]): StoryStatus {
   if (states.length === 0) return 'untested';
   if (states.some((state) => state === 'failed')) return 'failed';
   if (states.some((state) => state === 'skipped')) return 'skipped';

@@ -19,7 +19,6 @@ $track-inset: calc(1px + 0.125rem);
   display: flex;
   flex: 0 1 auto;
   align-items: center;
-  box-sizing: border-box;
   // Shrinks below its pills' width rather than overflow the line; the row inside then scrolls.
   min-width: 0;
   max-width: 100%;
@@ -28,15 +27,12 @@ $track-inset: calc(1px + 0.125rem);
   // Cancels the page header's nudge of its non-heading items and sets the track 0.125rem lower.
   top: 0;
   translate: 0 0.125rem;
-  border: 1px solid $hairline;
-  border-radius: radius('pill');
-  background-color: $segment-track;
+  @include surface-box($segment-track, radius('pill'));
 }
 
 // A framed page (the account) is its own frame, as no `.page-column` wraps it (the keeper's and a coven's tabbed pages sit in one): it keeps the
 // frames' side gutter, so its head and sections never touch the window's edge on a phone.
 .tabbed-page--framed {
-  box-sizing: border-box;
   padding-inline: space(4);
 }
 
@@ -87,7 +83,7 @@ $track-inset: calc(1px + 0.125rem);
 // Reflow of the action and the pills under the forms' column (claude-docs/components/tabbed-page.md, "The header at narrow widths"):
 // a flex box cannot put an item on a line of its own at its own width, so a line break is forced by a zero-height pseudo-element
 // the width of the line, ordered between the action and the pills, and the pills give back the row gap it takes.
-@container page-header (max-width: #{$tabbed-reflow-width-labelled}) {
+@include container-to(page-header, #{$tabbed-reflow-width-labelled}) {
   .tabbed-page > .page-header:not(:has(.add-action)) {
     &::after {
       content: '';
@@ -103,13 +99,13 @@ $track-inset: calc(1px + 0.125rem);
   }
 }
 
-@container page-header (max-width: #{$narrow-column}) {
+@include container-to(page-header, #{$narrow-column}) {
   .tabbed-page > .page-header:not(:has(.add-action)) > h1 {
     flex: 1 1 auto;
   }
 }
 
-@container page-header (max-width: #{$tabbed-action-below-width}) {
+@include container-to(page-header, #{$tabbed-action-below-width}) {
   .tabbed-page > .page-header:not(:has(.add-action)) > h1 {
     flex-basis: 100%;
   }
@@ -120,19 +116,21 @@ $track-inset: calc(1px + 0.125rem);
   }
 }
 
-@container page-header (min-width: calc(#{$tabbed-reflow-width} + 0.01rem)) and (max-width: #{$tabbed-plus-width}) {
-  // The heading takes only its own width and the pills keep theirs, so they stand beside it rather than at the line's end.
-  .tabbed-page > .page-header:has(.add-action) > h1 {
-    flex: 0 1 auto;
-    min-width: 0;
-  }
+@include container-from(page-header, #{$tabbed-reflow-width}) {
+  @include container-to(page-header, #{$tabbed-plus-width}) {
+    // The heading takes only its own width and the pills keep theirs, so they stand beside it rather than at the line's end.
+    .tabbed-page > .page-header:has(.add-action) > h1 {
+      flex: 0 1 auto;
+      min-width: 0;
+    }
 
-  .tabbed-page > .page-header:has(.add-action) > .tabbed-page__tabs.tabbed-page__tabs {
-    flex-shrink: 0;
+    .tabbed-page > .page-header:has(.add-action) > .tabbed-page__tabs.tabbed-page__tabs {
+      flex-shrink: 0;
+    }
   }
 }
 
-@container page-header (max-width: #{$tabbed-reflow-width}) {
+@include container-to(page-header, #{$tabbed-reflow-width}) {
   .tabbed-page > .page-header:has(.add-action) > h1 {
     flex: 1 1 calc(100% - #{$control-height} - #{space(5)});
     min-width: 0;
@@ -143,7 +141,7 @@ $track-inset: calc(1px + 0.125rem);
   }
 }
 
-@container page-header (max-width: #{$add-below-width}) {
+@include container-to(page-header, #{$add-below-width}) {
   .tabbed-page > .page-header:has(.add-action) {
     > h1 {
       flex-basis: 100%;
@@ -211,7 +209,6 @@ $track-inset: calc(1px + 0.125rem);
   // The count's own leading space is dropped in a flex row, so this gap alone parts the label
   // from the count.
   gap: space(2);
-  box-sizing: border-box;
   height: calc(#{$pill-height} - 2 * #{$track-inset});
   padding-inline: space(3);
   border: 1px solid transparent;
@@ -270,7 +267,6 @@ $track-inset: calc(1px + 0.125rem);
   position: absolute;
   top: 0;
   left: 0;
-  box-sizing: border-box;
   visibility: hidden;
 }
 

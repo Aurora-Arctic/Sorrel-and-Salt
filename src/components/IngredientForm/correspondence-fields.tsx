@@ -5,7 +5,7 @@ import { ELEMENT_OPTIONS } from './options';
 import type { ListFieldName, MultiSelectFieldName, VariantPath } from './types';
 import { FIELD_NOUNS } from './values';
 
-export type CorrespondenceField = 'elements' | 'celestialBodies' | 'zodiacSigns' | 'colors';
+type CorrespondenceField = 'elements' | 'celestialBodies' | 'zodiacSigns' | 'colors';
 
 type CorrespondenceFieldsProps = {
   workspaceId: string | null;

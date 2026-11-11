@@ -20,7 +20,7 @@ export interface HelpTermSource {
 }
 
 /** What a tooltip shows for a term. */
-export interface HelpTermEntry {
+interface HelpTermEntry {
   slug: string;
   title: string;
   /** The term's body as plain text. */
@@ -88,7 +88,7 @@ function plain(node: Root | RootContent): string {
 }
 
 /** A Markdown body as one line of plain text, each mark shown as its text. */
-export function plainText(body: string): string {
+function plainText(body: string): string {
   return plain(parser.parse(body)).replace(/\s+/g, ' ').trim();
 }
 

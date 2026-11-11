@@ -152,7 +152,7 @@ export function foldedWordMatch(query: string): WordMatch {
  * The natural-language collation facet lists and the category picker sort names under: case set aside, accents beside
  * plain letters. Named rather than the database default so the order is the same everywhere; needs Postgres built with ICU.
  */
-export const NATURAL_COLLATION = sql.raw('"en-US-x-icu"');
+const NATURAL_COLLATION = sql.raw('"en-US-x-icu"');
 
 /** `value` sorted under `NATURAL_COLLATION`: the one place the COLLATE clause is written. */
 export function naturally(value: SQL | AnyPgColumn): SQL {

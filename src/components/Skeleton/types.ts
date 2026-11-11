@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 /** What a skeleton stands in for: `line` (a line of text) or `block` (a control-sized box). */
-export type SkeletonShape = 'line' | 'block';
+type SkeletonShape = 'line' | 'block';
 
 export interface SkeletonProps {
   /** `line` (a line of text each, for a sentence or a short list that loads in place) or `block` (a control-sized box each, for a field). */

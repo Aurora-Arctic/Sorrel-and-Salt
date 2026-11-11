@@ -7,9 +7,7 @@
 .calendar-panel {
   margin-block-start: space(2);
   padding: space(3);
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
-  background-color: $surface-card;
+  @include surface-box;
   inline-size: fit-content;
   max-inline-size: 100%;
 }
@@ -28,8 +26,7 @@
   inset-block-start: var(--calendar-top, 0);
   inset-inline-start: var(--calendar-left, 0);
   margin: 0;
-  // Border-box so a field-wide panel is exactly the field's width; the months never shrink below their own.
-  box-sizing: border-box;
+  // A field-wide panel is exactly the field's width; the months never shrink below their own.
   inline-size: var(--calendar-width, fit-content);
   min-inline-size: min-content;
   max-inline-size: calc(100vw - #{space(6)});

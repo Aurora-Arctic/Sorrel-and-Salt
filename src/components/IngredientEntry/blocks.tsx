@@ -5,7 +5,7 @@ import type { CategoryDetail, DeityDetail, IngredientRow } from '@/modules/ingre
 import './index.scss';
 import { cx } from '@/lib/class-names';
 
-export const listed = (values: readonly string[] | null | undefined): string[] =>
+const listed = (values: readonly string[] | null | undefined): string[] =>
   (values ?? []).filter(hasText);
 
 export interface Row {

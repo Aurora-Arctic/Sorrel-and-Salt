@@ -3,7 +3,7 @@
 import { type ReactElement, useEffect, useState } from 'react';
 import type { PasswordStrength } from './types';
 
-export const STRENGTH_WORDS = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'] as const;
+const STRENGTH_WORDS = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'] as const;
 
 // zxcvbn's estimate of what is typed, loaded on the first keystroke rather than with the page. It
 // advises and never refuses: the server's length and breached-list checks are the only gate.

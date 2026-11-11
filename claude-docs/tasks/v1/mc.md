@@ -149,7 +149,7 @@ _Acceptance criteria:_
 - `TextField` and `PlainTextField` wrap one control (D-234), the authenticator-code field and digit stripper are written once (D-235), a plain-state select field serves `UserDetail` and `SupportRequests` (D-236), `StockDialog` exports its jar label and values (D-237), and the help header is drawn by one component with no `framed` branch left in `HelpIndex`, `HelpArticleView` and their skeletons (D-238, D-73)
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
-**MC.9 — Clean Up Styles and Unused Code** · 7.75h
+**MC.9 — Clean Up Styles and Unused Code** · 11.75h
 
 _Story:_ As a developer, I want repeated styles gone and unused code removed or exposed, so that a style change is made once and unused code stops accumulating.
 
@@ -158,13 +158,13 @@ Minted from the duplicated-code audit (M17.8) as one of its grouped clean-up tas
 _Acceptance criteria:_
 
 - A mixin or token replaces the wrapping flex row, hairline box and muted-stroke overrides (D-48, D-57, D-99), and one global `box-sizing` reset replaces the 68 declarations (D-98)
-- Dead CSS and the hard-coded values, restated paddings and nth-child rules are removed or use tokens (D-165, D-177, D-178, D-194, D-221, D-224, D-225, D-226), and `npm run lint:css` passes
+- Dead CSS and the hard-coded values, restated paddings and nth-child rules are removed or use tokens (D-165, D-177, D-178, D-194, D-221, D-224, D-225, D-226), and `npm run lint:css` passes; `$hairline-border` and `$muted-border` tokens replace every hand-written `1px solid $hairline` and `1px solid $text-muted`, guarded by `tests/guards/border-tokens.test.ts` (D-221)
 - The production code named in D-129 with no production caller is removed together with its tests, and exports used by nothing outside their own file are un-exported or removed (D-145)
 - The knip config entries and the false positive are corrected (D-157, D-195)
 - `ignoreExportsUsedInFile` is off in the knip config (D-86), and each newly reported export is un-exported or listed with a reason, with the codegen consts, email functions and Pothos Refs handled per class
 - `npm run lint:unused` is no worse than before and reports less than before for D-129 and D-145; it stays non-blocking, with no CI gate and no pre-commit step
 - `postSingle` reuses `upsertComment` and the four unused `pr-comment.cjs` exports are gone (S-5); `DEFAULT_PROJECT` is removed and one `defaultOf` helper serves the three lookups (S-6)
-- The duplicate, unused and test-only exports in D-243 are deleted or un-exported, and `container-from` and `container-to` mixins own the `0.01rem` step in the four container queries, with `tests/guards/breakpoints.test.ts` refusing a raw `@container` width (D-244)
+- The duplicate, unused and test-only exports in D-243 are deleted or un-exported, and `container-from` and `container-to` mixins write every container width query, `container-from` using `(width > X)` so no `0.01rem` step is needed, with `tests/guards/breakpoints.test.ts` refusing a raw `@container` width (D-244)
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
 **MC.10 — Shard the CI Test Jobs** · 5h

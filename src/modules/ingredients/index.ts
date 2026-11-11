@@ -50,7 +50,6 @@ export type {
   CovenPick,
   CupboardEntryRow,
   DeityDetail,
-  FacetCount,
   HoldingCoven,
   IngredientDetail,
   IngredientFacets,

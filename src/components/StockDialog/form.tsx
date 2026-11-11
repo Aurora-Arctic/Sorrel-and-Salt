@@ -182,7 +182,7 @@ const unheld = (forms: readonly StockForm[], rows: readonly StockRow[]): StockFo
 const rowOf = (field: string): number => Number(field.split('.')[1]);
 
 /** The form inside the modal, so its unsaved-changes guard reaches the modal's Close, Escape and backdrop (claude-docs/components/modal.md, "Unsaved changes"). */
-export const StockDialogForm = ({
+const StockDialogForm = ({
   workspaceId,
   ingredientId,
   forms,

@@ -3,7 +3,6 @@ import { randomUUID } from 'node:crypto';
 import {
   findCardArrivalCount,
   findCardArrivalPage,
-  findCardAttemptCount,
   findCardAttemptPage,
   findCardBatchCount,
   findCardBatchPage,
@@ -287,16 +286,4 @@ export async function listCardAttempts(
 ): Promise<PageEntry<CardAttemptRow>[]> {
   const admin = assertSiteAdmin(session, REFUSAL);
   return findCardAttemptPage(admin, parseInput(RowId, batchId), page);
-}
-
-/**
- * @throws {Forbidden} the session's role is not `admin`.
- */
-export async function countCardAttempts(
-  session: Session,
-  batchId: string,
-  start: Cursor | undefined,
-): Promise<PageCount> {
-  const admin = assertSiteAdmin(session, REFUSAL);
-  return findCardAttemptCount(admin, parseInput(RowId, batchId), start);
 }

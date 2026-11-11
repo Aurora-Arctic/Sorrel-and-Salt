@@ -1,11 +1,11 @@
 import { stringify as stringifyYaml } from 'yaml';
-import { SECTION_HEADINGS } from './parse-entry';
+import { SECTION_HEADINGS } from '@/db/seed/compendium/parse-entry';
 import type {
   SeedCitation,
   SeedCompendiumFile,
   SeedCompendiumVariant,
   SeedSubstitute,
-} from '../types';
+} from '@/db/seed/types';
 
 // An entry as a file: the inverse of `parseEntryFile`, so a test can prove a file reads back as the entry it was written from. Keys go in one
 // fixed order with `status` first; a hand-edited file's order is free.
@@ -54,7 +54,7 @@ function renderVariant(variant: SeedCompendiumVariant): Record<string, unknown> 
 }
 
 /** The frontmatter as the file writes it: one fixed key order, `status` first, nothing blank. */
-export function renderFrontmatter(file: RenderableEntryFile): Record<string, unknown> {
+function renderFrontmatter(file: RenderableEntryFile): Record<string, unknown> {
   const { entry } = file;
   return compact({
     status: file.status,

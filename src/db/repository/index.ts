@@ -112,7 +112,7 @@ export {
   findWorkspaceSeat,
 } from './memberships';
 export { findDemoWorkspace } from './workspaces';
-export { findWorkspaceHoldingSlug, findWorkspaceSlugs } from './workspace-slugs';
+export { findWorkspaceHoldingSlug } from './workspace-slugs';
 export {
   findCoMemberNamesIncludingSoftDeleted,
   findHoldsPasskey,
@@ -132,7 +132,6 @@ export {
   findCardArrivalPage,
   findCardBatchCount,
   findCardBatchPage,
-  findCardAttemptCount,
   findCardAttemptPage,
   findCardBatchTotals,
   findCardCount,
@@ -272,7 +271,6 @@ export type {
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientRow,
-  InvitableRole,
   InvitableSiteRole,
   InvitationRow,
   InvitedCoven,
@@ -305,9 +303,4 @@ export type {
   VocabularySuggestion,
   WorkspaceInvitationValues,
 } from './types';
-export type {
-  DocumentMailingItem,
-  DocumentMailingRow,
-  PendingDocumentVersion,
-  WorkspaceSlugRow,
-} from './types';
+export type { DocumentMailingItem, DocumentMailingRow, PendingDocumentVersion } from './types';

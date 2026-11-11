@@ -17,7 +17,7 @@ import type {
 
 export type PageKeys = { after: string; before: string };
 
-export const DEFAULT_PAGE_KEYS: PageKeys = { after: 'after', before: 'before' };
+const DEFAULT_PAGE_KEYS: PageKeys = { after: 'after', before: 'before' };
 
 /** A cursor the codec reads but this list's key will not cast (one copied from another list) gives the first page. Any other failure is thrown. */
 export async function readNumberedPage<T, Edge extends object = {}>(

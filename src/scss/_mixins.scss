@@ -50,6 +50,36 @@
   }
 }
 
+// The container width queries, written once like the breakpoints above. `container-to` holds the edge itself
+// (`max-width`); `container-from` starts strictly above it (`width > `), so no 0.01rem step is written by hand and
+// a width is on exactly one side. Nest the two to bound a container on both edges. A `null` name queries the
+// nearest container.
+@mixin container-from($name, $width) {
+  @if $name {
+    // stylelint-disable-next-line container-name-pattern -- the name is the caller's argument
+    @container #{$name} (width > #{$width}) {
+      @content;
+    }
+  } @else {
+    @container (width > #{$width}) {
+      @content;
+    }
+  }
+}
+
+@mixin container-to($name, $width) {
+  @if $name {
+    // stylelint-disable-next-line container-name-pattern -- the name is the caller's argument
+    @container #{$name} (max-width: #{$width}) {
+      @content;
+    }
+  } @else {
+    @container (max-width: #{$width}) {
+      @content;
+    }
+  }
+}
+
 // One transition list for a state change (a hover, a flip, a fade): each property at the long duration
 // and one easing. A theme change has no transition of its own; ThemeToggle cross-fades the page.
 @mixin motion($props...) {
@@ -297,7 +327,6 @@
 
 // A border, not a box-shadow, as forced colours drops a shadow; the padding above takes its height back. Told by shape, not colour alone.
 @mixin nav-current {
-  box-sizing: border-box;
   padding-top: $rule-heavy;
   border-bottom: $rule-heavy solid $accent;
   font-weight: 500;
@@ -444,7 +473,6 @@
 
   @if map.get($size, min-block-size) {
     min-block-size: map.get($size, min-block-size);
-    box-sizing: border-box;
   }
 }
 
@@ -496,6 +524,25 @@
 @mixin tip-anchor {
   position: relative;
   display: inline-flex;
+}
+
+// A bordered box on a surface: a hairline edge, rounded, on the card ground unless another is given.
+@mixin surface-box($background: $surface-card, $radius: radius('surface')) {
+  border: $hairline-border;
+  border-radius: $radius;
+  background-color: $background;
+}
+
+// A row that wraps onto further lines when it runs out of room, its items centred across. The gap is
+// one step or a row-and-column pair; leave it out to set it by hand.
+@mixin wrap-row($gap: null) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  @if $gap != null {
+    gap: $gap;
+  }
 }
 
 @mixin stack($step: 5) {
@@ -599,7 +646,6 @@
 
   // The stack's gap alone spaces the sections, not `section`'s own margins.
   > * {
-    box-sizing: border-box;
     margin-block: 0;
   }
 
@@ -645,12 +691,11 @@
 
 // `fit-content` wide so it ends past the text, `max-width: 100%` so a wrapped heading stays in its column.
 @mixin entry-heading-rule {
-  box-sizing: border-box;
   width: fit-content;
   max-width: 100%;
   padding-block-end: space(1);
   padding-inline-end: space(4);
-  border-block-end: 1px solid $hairline;
+  border-block-end: $hairline-border;
 }
 
 @mixin entry-column-section {
@@ -698,7 +743,7 @@
 }
 
 @mixin floating-panel {
-  border: 1px solid $text-muted;
+  border: $muted-border;
 
   @include modal-surface($shadow-floating);
 }
@@ -717,10 +762,9 @@
 
 // Shared with the admin menu's closed summary so the menu reads as a select does. Width, margin and font are the caller's.
 @mixin field-box {
-  box-sizing: border-box;
   min-height: $control-height;
   padding: space(2) space(3);
-  border: 1px solid $text-muted;
+  border: $muted-border;
   border-radius: radius('control');
   background-color: $surface-card;
   color: $text-primary;
@@ -1279,15 +1323,16 @@
   content: '';
   position: absolute;
   inline-size: space(5);
-  border-block-start: 1px solid $hairline;
+  border-block-start: $hairline-border;
 }
 
 // Doubled selectors outrank the notice's own margin; its triangle moves with the room so it stays clear of the text.
 @mixin notice-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(3);
+  @include wrap-row(space(3));
+  --notice-inline-extra: calc(
+    #{space(4) * 2} + #{$notice-mark-size} + #{space(2)} + #{$rule-heavy}
+  );
+
   margin: 0;
   padding-block: space(3);
   padding-inline: calc(#{space(4)} + #{$notice-mark-size} + #{space(2)}) space(4);
@@ -1296,6 +1341,13 @@
     inset-block-start: calc(#{space(3)} + #{$notice-mark-drop});
     inset-inline-start: space(4);
   }
+}
+
+// A curator list's description cell: running text that is not a `<p>`, so it takes the measure itself,
+// set in the small size because the name beside it is the cell the eye reads first.
+@mixin list-description {
+  max-width: $measure;
+  font-size: type-size('small');
 }
 
 // The About Us page's card rows (AboutPillars, AboutRoles) share one grid, one icon box and one heading rule; `$block` is the

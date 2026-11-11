@@ -2,14 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
-import {
-  addSpellStep,
-  createSpell,
-  readSpell,
-  stepsOfSpells,
-  updateSpell,
-  updateSpellStep,
-} from '@/modules/grimoire';
+import { createSpell, readSpell, stepsOfSpells, updateSpell } from '@/modules/grimoire';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -256,60 +249,6 @@ describe('a custom, one-off ingredient row', () => {
     await expect(readWithSteps(asUser(D), WORKSPACE_W_ID, shared)).rejects.toBeInstanceOf(
       Forbidden,
     );
-  });
-
-  it('is written exactly when its spell is', async () => {
-    const shared = await seed(B, 'workspace', custom);
-    const hidden = await seed(B, 'private', custom);
-    const stepOf = async (spellId: string) =>
-      (await readWithSteps(asUser(B), WORKSPACE_W_ID, spellId)).steps[0];
-
-    // Why the refusals are the rule's: the author and the owner both write the shared one.
-    await updateSpellStep(asUser(A), WORKSPACE_W_ID, shared, (await stepOf(shared)).id, {
-      body: 'Owner note',
-    });
-    const added = await addSpellStep(asUser(B), WORKSPACE_W_ID, hidden, {
-      name: 'Fixture Salt',
-      form: 'coarse',
-    });
-    expect(added).toMatchObject({ position: 2, spellId: hidden });
-
-    const hiddenStep = await stepOf(hidden);
-    await expect(
-      updateSpellStep(asUser(A), WORKSPACE_W_ID, hidden, hiddenStep.id, { body: 'Sneaky' }),
-    ).rejects.toBeInstanceOf(NotFound);
-    await expect(
-      addSpellStep(asUser(A), WORKSPACE_W_ID, hidden, { name: 'Sneaky Salt' }),
-    ).rejects.toBeInstanceOf(NotFound);
-    await expect(
-      updateSpellStep(asUser(C), WORKSPACE_W_ID, shared, (await stepOf(shared)).id, {
-        body: 'Viewer note',
-      }),
-    ).rejects.toBeInstanceOf(Forbidden);
-    await expect(
-      addSpellStep(asUser(C), WORKSPACE_W_ID, shared, { name: 'Viewer Salt' }),
-    ).rejects.toBeInstanceOf(Forbidden);
-    await expect(
-      updateSpellStep(asUser(D), WORKSPACE_W_ID, hidden, hiddenStep.id, { body: 'Foreign' }),
-    ).rejects.toBeInstanceOf(Forbidden);
-
-    expect((await stepOf(hidden)).body).toBeNull();
-    expect((await stepOf(shared)).body).toBe('Owner note');
-    expect(
-      (
-        await sql`select count(*) from spell_steps where name like 'Viewer%' or name like 'Sneaky%'`
-      )[0].count,
-    ).toBe('0');
-  });
-
-  it('cannot be reached through another spell’s id', async () => {
-    const mine = await seed(B, 'workspace', custom);
-    const other = await seed(B, 'workspace', { title: 'Other Working', ...custom });
-    const stepOfOther = (await readWithSteps(asUser(B), WORKSPACE_W_ID, other)).steps[0];
-
-    await expect(
-      updateSpellStep(asUser(B), WORKSPACE_W_ID, mine, stepOfOther.id, { body: 'Crossed' }),
-    ).rejects.toBeInstanceOf(NotFound);
   });
 });
 
@@ -768,9 +707,100 @@ describe('updateSpell, with its recipe', () => {
         visibility: 'private',
       }),
     ).rejects.toThrow(/cannot be made private again/);
+    await expect(
+      updateSpell(asUser(B), WORKSPACE_W_ID, hidden.id, {
+        expectedRevision: null,
+        visibility: 'private',
+      }),
+    ).rejects.toBeInstanceOf(Forbidden);
     expect((await sql`select visibility from spells where id = ${hidden.id}`)[0].visibility).toBe(
       'workspace',
     );
+  });
+
+  it('hands a widened spell to the rest of the coven', async () => {
+    const id = await seed(B, 'private', { status: 'complete' });
+    // Why the read after could pass for the wrong reason: it fails before the widening.
+    await expect(readSpell(asUser(A), WORKSPACE_W_ID, id)).rejects.toBeInstanceOf(NotFound);
+
+    await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: null,
+      visibility: 'workspace',
+    });
+
+    await expect(readSpell(asUser(A), WORKSPACE_W_ID, id)).resolves.toMatchObject({
+      id,
+      visibility: 'workspace',
+    });
+  });
+
+  it('stamps the widening on the row with the caller', async () => {
+    const id = await seed(B, 'private', { status: 'complete' });
+    // Precondition: the row's last writer is someone else, so the stamp below is this save's.
+    // A stamp alone is a no-op the updated_at trigger reverts, so the note changes with it.
+    await sql`update spells set updated_by = ${A.id}, note = 'Touched' where id = ${id}`;
+    expect((await sql`select updated_by from spells where id = ${id}`)[0].updated_by).toBe(A.id);
+
+    await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: null,
+      visibility: 'workspace',
+    });
+
+    const [row] = await sql`select created_by, updated_by from spells where id = ${id}`;
+    expect(row).toMatchObject({ created_by: B.id, updated_by: B.id });
+  });
+
+  it('refuses the steward too, who cannot narrow another member’s shared complete spell', async () => {
+    const id = await seed(B, 'workspace', { status: 'complete' });
+    // Why this could have succeeded: the steward may edit this very spell.
+    await expect(
+      updateSpell(asUser(A), WORKSPACE_W_ID, id, {
+        expectedRevision: null,
+        intent: 'Steward Edit',
+      }),
+    ).resolves.toMatchObject({ intent: 'Steward Edit' });
+
+    const refused = updateSpell(asUser(A), WORKSPACE_W_ID, id, {
+      expectedRevision: null,
+      visibility: 'private',
+    });
+    await expect(refused).rejects.toBeInstanceOf(Forbidden);
+    await expect(refused).rejects.toThrow(/cannot be made private again/);
+    expect((await sql`select visibility::text from spells where id = ${id}`)[0].visibility).toBe(
+      'workspace',
+    );
+  });
+
+  it('lets a shared complete spell restate its workspace visibility', async () => {
+    const id = await seed(B, 'workspace', { status: 'complete' });
+
+    await expect(
+      updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+        expectedRevision: null,
+        visibility: 'workspace',
+      }),
+    ).resolves.toMatchObject({ visibility: 'workspace' });
+    expect(
+      (await sql`select status::text, visibility::text from spells where id = ${id}`)[0],
+    ).toMatchObject({ status: 'complete', visibility: 'workspace' });
+  });
+
+  it('tells a member a visibility change to a spell that is not there is not there', async () => {
+    // Why this could have succeeded: B widens a spell of their own in the same coven.
+    const own = await seed(B, 'private');
+    await expect(
+      updateSpell(asUser(B), WORKSPACE_W_ID, own, {
+        expectedRevision: null,
+        visibility: 'workspace',
+      }),
+    ).resolves.toBeDefined();
+
+    await expect(
+      updateSpell(asUser(B), WORKSPACE_W_ID, '99999999-9999-4999-8999-999999999999', {
+        expectedRevision: null,
+        visibility: 'workspace',
+      }),
+    ).rejects.toBeInstanceOf(NotFound);
   });
 
   it('lets a draft narrow and widen freely', async () => {

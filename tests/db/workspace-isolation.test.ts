@@ -7,7 +7,7 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { assertMembership, membershipsOf } from '@/modules/coven';
-import { setSpellVisibility } from '@/modules/grimoire';
+import { updateSpell } from '@/modules/grimoire';
 import {
   getStock,
   getWorkspaceIngredient,
@@ -236,12 +236,15 @@ describe('Grimoire — the spell and what it is made of', () => {
 
   // One grimoire write stands for the rest here; each grimoire service's own
   // cross-coven refusals are in tests/modules/grimoire/services/.
-  describe('writes, through a grimoire service (setSpellVisibility)', () => {
+  describe('writes, through a grimoire service (updateSpell)', () => {
     it('throws Forbidden for D rather than widening the spell', async () => {
       const spellId = await seedSpell();
 
       await expect(
-        setSpellVisibility(asUser(D), WORKSPACE_W_ID, spellId, 'workspace'),
+        updateSpell(asUser(D), WORKSPACE_W_ID, spellId, {
+          visibility: 'workspace',
+          expectedRevision: null,
+        }),
       ).rejects.toBeInstanceOf(Forbidden);
 
       expect(await visibilityOf(spellId)).toBe('workspace');
@@ -251,10 +254,16 @@ describe('Grimoire — the spell and what it is made of', () => {
       const spellId = await seedSpell();
 
       const real = await refusalOf(
-        setSpellVisibility(asUser(D), WORKSPACE_W_ID, spellId, 'workspace'),
+        updateSpell(asUser(D), WORKSPACE_W_ID, spellId, {
+          visibility: 'workspace',
+          expectedRevision: null,
+        }),
       );
       const bogus = await refusalOf(
-        setSpellVisibility(asUser(D), WORKSPACE_W_ID, FABRICATED_ID, 'workspace'),
+        updateSpell(asUser(D), WORKSPACE_W_ID, FABRICATED_ID, {
+          visibility: 'workspace',
+          expectedRevision: null,
+        }),
       );
 
       expect(real).toBeInstanceOf(Forbidden);
@@ -294,7 +303,11 @@ describe('E’s and F’s site roles carry no bypass and no penalty from the mem
     ],
     [
       'W’s spell, narrowed',
-      (session, { spellId }) => setSpellVisibility(session, WORKSPACE_W_ID, spellId, 'private'),
+      (session, { spellId }) =>
+        updateSpell(session, WORKSPACE_W_ID, spellId, {
+          visibility: 'private',
+          expectedRevision: null,
+        }),
     ],
   ];
 

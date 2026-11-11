@@ -37,7 +37,10 @@ export const SIGNED_OUT_REPLY_REQUEST_LIMIT = 5;
 
 const VIEW_TOKEN_DAYS = 30;
 
-/** Reads of the mailed-link query one client may make in the signed-out window, a wrong token too. */
+/**
+ * Reads of the mailed-link query one client may make in the signed-out window, a wrong token too.
+ * @public Read by name off the support barrel in support-view-query.test.ts, which knip cannot see.
+ */
 export const SIGNED_OUT_VIEW_LIMIT = 60;
 
 /**

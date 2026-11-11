@@ -88,7 +88,7 @@ export const tierKey = (tier: 'compendium' | 'workspace', identity: string) =>
  * silent `undefined` would make a null `ingredient_id` — a *custom* row under
  * the CHECK — so the failure would be a blank-named row rather than an error.
  */
-export function namedIngredientId(
+function namedIngredientId(
   ingredient: NamedIngredient,
   ingredientIds: Map<string, string>,
 ): string {

@@ -13,7 +13,7 @@ export const GROUP_NAMES: Record<GroupKind, readonly string[]> = {
 };
 
 /** Fixed ids, the nth for the nth name of any kind, so a story renders the same every time. */
-export const FIXTURE_IDS = [
+const FIXTURE_IDS = [
   '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21',
   '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10',
   '2d7d2d4c-4f6a-4b59-9c30-1e9a3b6c4f0f',

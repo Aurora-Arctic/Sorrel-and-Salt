@@ -27,7 +27,7 @@ export interface ComparisonPanelProps {
 
 // Carried and Missing draw every chip; Extra has no bound, so it draws its first `EXTRA_CHIP_LIMIT`
 // and folds the rest behind CategoryChips' own +N.
-export const EXTRA_CHIP_LIMIT = 8;
+const EXTRA_CHIP_LIMIT = 8;
 
 function Row({
   label,

@@ -26,9 +26,7 @@ const ArrivalsCsvDocument = graphql(`
   }
 `);
 
-export const readArrivalsCsv = async (
-  filter: ArrivalsFilter = NO_ARRIVALS_FILTER,
-): Promise<string> =>
+const readArrivalsCsv = async (filter: ArrivalsFilter = NO_ARRIVALS_FILTER): Promise<string> =>
   (await graphqlRequest(ArrivalsCsvDocument, { query: filter.query || undefined })).cardArrivalsCsv;
 
 function emptyText({ query }: ArrivalsFilter): string {

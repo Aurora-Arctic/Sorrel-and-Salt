@@ -36,7 +36,7 @@ const clipRight = (from: HTMLElement): number => {
 
 type Phase = 'closed' | 'opening' | 'open' | 'closing';
 
-export interface ChoiceChipOption<T extends string> {
+interface ChoiceChipOption<T extends string> {
   value: T;
   label: string;
   display?: ReactNode;

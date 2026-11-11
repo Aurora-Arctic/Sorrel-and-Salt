@@ -70,7 +70,7 @@ $inventory-eye-box: math.div($icon-size + $icon-size-large, 2);
   flex: none;
 }
 
-@container spell-column (max-width: #{$narrow-column}) {
+@include container-to(spell-column, #{$narrow-column}) {
   .spell-inventory .jar-line__name {
     overflow: visible;
     white-space: normal;

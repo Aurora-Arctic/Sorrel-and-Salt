@@ -3,6 +3,7 @@
 
 // Hidden for `$loading-delay` first; under reduced motion the turn becomes the shared slow pulse (`loading-motion`).
 .spinner {
+  box-sizing: content-box;
   @include loading-motion(spinner-turn $spin-duration linear infinite, $loading-delay);
 
   // A span: inline, it would take no width or height outside a flex parent, and a table cell would draw a bracket.
@@ -10,7 +11,7 @@
   width: 1em;
   height: 1em;
   flex-shrink: 0;
-  border: 2px solid currentcolor;
+  border: $spinner-border solid currentcolor;
   border-right-color: transparent;
   border-radius: radius('pill');
 }

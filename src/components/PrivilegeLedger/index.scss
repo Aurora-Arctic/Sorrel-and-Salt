@@ -1,4 +1,5 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 .privilege-ledger .data-table time {
   white-space: nowrap;
@@ -6,7 +7,7 @@
 
 // The table above the stacking width: the time muted at caption size, as the user list's Signed Up is.
 // Scoped here because a card already labels each fact.
-@container data-table (width > #{$table-stack-width}) {
+@include container-from(data-table, #{$table-stack-width}) {
   .privilege-ledger .privilege-ledger__fact {
     color: $text-muted;
     font-size: type-size('caption');

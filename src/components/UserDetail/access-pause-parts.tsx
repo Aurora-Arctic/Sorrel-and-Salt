@@ -26,7 +26,7 @@ export const PAUSE_WORDS = {
   earlierTitle: 'Earlier Pauses',
 } as const;
 
-export const SPANS: readonly { value: PauseSpan; label: string }[] = [
+const SPANS: readonly { value: PauseSpan; label: string }[] = [
   { value: 'day', label: '1 Day' },
   { value: 'week', label: '1 Week' },
   { value: 'month', label: '1 Month' },
@@ -51,7 +51,7 @@ export function endOf(span: PauseSpan, day: string, now: Date): Date | null | un
   return Number.isNaN(end.getTime()) ? undefined : end;
 }
 
-export const endReady = (end: Date | null | undefined): boolean =>
+const endReady = (end: Date | null | undefined): boolean =>
   end === null || (end?.getTime() ?? 0) > Date.now();
 
 export const pauseReady = (span: PauseSpan, day: string): boolean =>

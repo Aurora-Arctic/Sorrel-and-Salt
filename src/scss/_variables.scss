@@ -483,6 +483,12 @@ $fill-highlight-field: color-mix(in srgb, $accent 12%, $surface-card);
 // So one line reads on the page and on a card alike.
 $hairline: color-mix(in srgb, $text-muted 45%, transparent);
 
+// The one hairline border: every 1px line in the hairline colour is written as this.
+$hairline-border: 1px solid $hairline;
+
+// The same line in the muted text colour, for an edge that must read stronger than the hairline.
+$muted-border: 1px solid $text-muted;
+
 $edge-highlight: color-mix(in srgb, $accent 45%, $hairline);
 
 // One number for both themes, shared by the `focus-ring` mixin and the rings that set their own colour; each clears 3:1 where it
@@ -544,6 +550,15 @@ $type-sizes: (
   // role below overline, since Lexend's "Compendium" is wider than a fifth of that at 0.75rem.
   'tab': 0.6875rem,
 );
+
+// The tracking of running text (paragraphs, links, definitions) and of the pull-quote beside it.
+$body-tracking: 0.02em;
+
+// The line height of a document's pull-quote and lede: looser than a heading, tighter than a paragraph.
+$document-line-height: 1.5;
+
+// The pull-quote's opening mark, a decorative size off the type scale: this many times the quote.
+$quote-mark-size: 3.25em;
 
 @function type-size($role) {
   @if not map.has-key($type-sizes, $role) {
@@ -763,6 +778,8 @@ $motion-medium: 300ms;
 // shows, so a quick answer never flashes one; skeletons are not held back.
 $loading-delay: 100ms;
 $spin-duration: 0.8s;
+// The Spinner ring's border. Its size is the ring's inside edge (content-box), so a spinner fitted to a given outer size takes this off twice.
+$spinner-border: 2px;
 $shimmer-duration: 1.4s;
 $pulse-duration: 2s;
 $arrive-duration: 200ms;
@@ -853,6 +870,13 @@ $space-steps: (
 
   @return map.get($space-steps, $step);
 }
+
+// The air above a document section's heading, under its hairline: two thirds of the air above the rule.
+$document-section-rule-air: calc(#{space(8)} * 0.666);
+
+// The padding of a layout's `.page-column` and `.coven-layout`, which a frame inside the column takes back with a negative margin.
+$page-column-pad-block: space(6);
+$page-column-pad-inline: space(4);
 
 // The sign-in card's padding, on the page (SignInPanel) and in the dialog (SignInDialog).
 $sign-in-card-padding: space(5) space(6) space(6);

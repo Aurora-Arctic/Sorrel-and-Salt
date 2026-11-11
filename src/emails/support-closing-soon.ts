@@ -26,7 +26,7 @@ export function timeLeft(ms: number): string {
 const titleOf = (requestSubject: string): string =>
   supportTitle('Your support request closes soon', requestSubject);
 
-export function SupportClosingSoon({
+function SupportClosingSoon({
   url,
   origin = new URL(url).origin,
   part,

@@ -4,10 +4,8 @@ import {
   inUtc,
   isCalendarDay,
   isoDayInUtc,
-  longMinuteInUtc,
   longMinuteInZone,
   untilPhrase,
-  minuteInUtc,
   minuteInZone,
   printedDayOf,
   shortMinuteInZone,
@@ -34,10 +32,10 @@ describe('longMinuteInZone', () => {
     expect(longMinuteInZone(at, 'America/Los_Angeles')).toBe('30 October 2026, 4:05\u00a0pm');
   });
   it('writes midnight as 12:00 am and noon as 12:00 pm', () => {
-    expect(longMinuteInUtc(new Date('2026-08-28T00:00:00.000Z'))).toBe(
+    expect(longMinuteInZone(new Date('2026-08-28T00:00:00.000Z'), 'UTC')).toBe(
       '28 August 2026, 12:00\u00a0am',
     );
-    expect(longMinuteInUtc(new Date('2026-08-28T12:00:00.000Z'))).toBe(
+    expect(longMinuteInZone(new Date('2026-08-28T12:00:00.000Z'), 'UTC')).toBe(
       '28 August 2026, 12:00\u00a0pm',
     );
   });
@@ -59,8 +57,12 @@ describe('minuteInZone', () => {
     expect(minuteInZone(at, 'America/Los_Angeles')).toBe('2026-10-30 4:05\u00a0pm');
   });
   it('writes midnight as 12:00 am and noon as 12:00 pm', () => {
-    expect(minuteInUtc(new Date('2026-10-30T00:00:00.000Z'))).toBe('2026-10-30 12:00\u00a0am');
-    expect(minuteInUtc(new Date('2026-10-30T12:00:00.000Z'))).toBe('2026-10-30 12:00\u00a0pm');
+    expect(minuteInZone(new Date('2026-10-30T00:00:00.000Z'), 'UTC')).toBe(
+      '2026-10-30 12:00\u00a0am',
+    );
+    expect(minuteInZone(new Date('2026-10-30T12:00:00.000Z'), 'UTC')).toBe(
+      '2026-10-30 12:00\u00a0pm',
+    );
   });
 });
 

@@ -59,7 +59,7 @@ export const WARDS = {
   colorDark: '#4e8bc2',
   colorLight: '#0c5393',
 };
-export const ENTRIES: CompendiumListEntry[] = [
+const ENTRIES: CompendiumListEntry[] = [
   {
     id: 'i1',
     updatedBy: 'Fixture Editor',

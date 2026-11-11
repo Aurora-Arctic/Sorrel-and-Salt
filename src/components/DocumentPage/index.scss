@@ -141,17 +141,18 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   // A `>` paragraph is a pull-quote: larger type with a hanging opening mark in the accent, and a short accent rule
   // closing it. The mark is drawn by CSS, so the file holds only the quoted words.
   blockquote {
+    box-sizing: content-box;
     position: relative;
     max-width: $measure;
     margin-block: space(5) space(6);
     margin-inline: 0;
     padding: space(5) 0 space(5) space(7);
     font-size: type-size('quote');
-    line-height: 1.5;
-    letter-spacing: 0.02em;
+    line-height: $document-line-height;
+    letter-spacing: $body-tracking;
     color: $text-primary;
 
-    // A decorative mark, 3.25 times the quote, off the type scale.
+    // A decorative mark, off the type scale.
     &::before {
       content: '\201C';
       position: absolute;
@@ -159,7 +160,7 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
       inset-inline-start: 0;
       font-family: $font-heading;
       font-weight: 700;
-      font-size: 3.25em;
+      font-size: $quote-mark-size;
       line-height: 1;
       color: $accent;
     }
@@ -269,13 +270,13 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   // A larger lede, since it says what the page is and a visitor may read nothing else.
   .document-page__head .lede {
     font-size: type-size('title');
-    line-height: 1.5;
+    line-height: $document-line-height;
   }
 
   // Each section opens under a hairline, with more air above it, so the page reads as parts rather than a run of text.
   .document-page__body h2 {
     margin-block-start: space(8);
-    padding-block-start: calc(#{space(8)} * 0.666);
-    border-block-start: 1px solid $hairline;
+    padding-block-start: $document-section-rule-air;
+    border-block-start: $hairline-border;
   }
 }

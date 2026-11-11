@@ -537,19 +537,6 @@ export function findCardAttemptPage(
   ) as Promise<PageEntry<CardAttemptRow>[]>;
 }
 
-export function findCardAttemptCount(
-  _admin: SiteAdmin,
-  batchId: string,
-  start: Cursor | undefined,
-): Promise<PageCount> {
-  return findPageCountInScope(
-    cardInvitationAttempts,
-    attemptsOnBatch(batchId),
-    CARD_ATTEMPT_ORDER,
-    start,
-  );
-}
-
 /** The table's only writes (`namedWrites`); each decides the tier from the proof, never
  * from `values`. */
 export function invitationWrites({

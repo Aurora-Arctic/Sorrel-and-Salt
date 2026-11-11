@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use '../../scss/jar-motion' as *;
 @use './panels';
 
 // The Shared switch on its own line above the footer row, as one left-aligned column: the label,
@@ -47,7 +48,7 @@
 }
 
 // Stacked on a phone-width form, it is as wide as the row, as Duplicate is.
-@container (max-width: #{$narrow-column}) {
+@include container-to(null, #{$narrow-column}) {
   .spell-builder__pending-action {
     inline-size: auto;
   }
@@ -178,7 +179,7 @@
 // of the search. The box inside gives up its own edge; the frame draws it, and takes the focus
 // ring the box would have drawn.
 .spell-steps__frame {
-  border: 1px solid $text-muted;
+  border: $muted-border;
   border-radius: radius('control');
   background-color: $surface-card;
 
@@ -204,7 +205,7 @@
 .spell-steps__filter {
   @include stack(1);
   padding: space(2);
-  border-block-start: 1px solid $hairline;
+  border-block-start: $hairline-border;
 }
 
 .spell-steps__filter-head {
@@ -313,7 +314,7 @@
   font-style: italic;
 }
 
-@container spell-column (max-width: #{$narrow-column}) {
+@include container-to(spell-column, #{$narrow-column}) {
   .spell-steps__body {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -406,9 +407,5 @@
     overflow: visible;
   }
 
-  .jar-shelf__glass,
-  .jar-shelf__lid,
-  .jar-shelf__facet {
-    stroke: $text-muted;
-  }
+  @include jar-muted-stroke;
 }

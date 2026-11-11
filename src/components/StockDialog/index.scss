@@ -19,7 +19,7 @@
   @include stack(3);
   min-width: 0;
   padding-inline-end: space(4);
-  border-inline-end: 1px solid $hairline;
+  border-inline-end: $hairline-border;
 }
 
 .stock-dialog__picks {
@@ -182,7 +182,7 @@
 
 // A narrow dialog (a phone): the list stacks above the fields.
 
-@container stock-dialog (max-width: 30rem) {
+@include container-to(stock-dialog, 30rem) {
   .stock-dialog__columns {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -191,6 +191,6 @@
     padding-inline-end: 0;
     padding-block-end: space(4);
     border-inline-end: 0;
-    border-block-end: 1px solid $hairline;
+    border-block-end: $hairline-border;
   }
 }

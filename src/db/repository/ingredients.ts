@@ -986,7 +986,7 @@ export function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
   return toxic === 'toxic' ? flagged : not(flagged);
 }
 
-export function listingArm(listing: IngredientFilter['listing']): SQL | undefined {
+function listingArm(listing: IngredientFilter['listing']): SQL | undefined {
   if (listing === 'all') return undefined;
   return eq(ingredients.shown, listing !== 'hidden');
 }

@@ -5,7 +5,7 @@ import { SITE_NAME, SITE_TITLE_NAME, TITLE_SEPARATOR, siteUrl } from './site';
 // tag: each segment's `opengraph-image` names its share card.
 
 /** The Twitter card that shows the share card full width above the title. */
-export const TWITTER_CARD = 'summary_large_image';
+const TWITTER_CARD = 'summary_large_image';
 
 /** The longest description a search result shows in full, near enough. */
 export const DESCRIPTION_LENGTH = 160;

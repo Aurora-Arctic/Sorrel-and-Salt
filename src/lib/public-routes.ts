@@ -2,7 +2,7 @@
  * The pages a signed-out visitor may reach. An entry is an exact path, or a path ending `/*` for everything beneath it, so
  * `/sign-in` does not admit `/sign-in-help`.
  */
-export const PUBLIC_ROUTES = [
+const PUBLIC_ROUTES = [
   '/',
   '/sign-in',
   '/forgot-password',

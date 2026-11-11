@@ -5,7 +5,7 @@ import type { CupboardEntryRow, IngredientRow } from '../../../db/repository';
 // component, and the GraphQL `annotated` field asks the same question.
 
 /** The seven overrides; any one set makes the entry annotated. */
-export const OVERRIDES = [
+const OVERRIDES = [
   'label',
   'description',
   'safetyNotes',

@@ -23,7 +23,7 @@ import { plural } from '@/lib/text';
 // lists those the filter admits; in Reorder Mode every live guide, each moved by its grip among its own audience's
 // alone, the whole order saved at every move (claude-docs/components/help-outline.md, "The Guides bar").
 
-export const OrderHelpGuidesDocument = graphql(`
+const OrderHelpGuidesDocument = graphql(`
   mutation OrderHelpGuides($ids: [ID!]!) {
     orderHelpGuides(ids: $ids) {
       id

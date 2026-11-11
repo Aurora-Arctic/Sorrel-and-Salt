@@ -19,7 +19,7 @@ import { cx } from '@/lib/class-names';
 // order, the rows the filter leaves out among it. The markup is StackTable's, which takes server cell functions and
 // so cannot hold the grips (claude-docs/components/help-outline.md, "Ordering").
 
-export const OrderHelpSubPagesDocument = graphql(`
+const OrderHelpSubPagesDocument = graphql(`
   mutation OrderHelpSubPages($id: ID!, $input: HelpArticlePatch!) {
     updateHelpArticle(id: $id, input: $input) {
       id
@@ -27,7 +27,7 @@ export const OrderHelpSubPagesDocument = graphql(`
   }
 `);
 
-export const OrderHelpFaqDocument = graphql(`
+const OrderHelpFaqDocument = graphql(`
   mutation OrderHelpFaq($ids: [ID!]!) {
     orderHelpFaq(ids: $ids) {
       id

@@ -42,7 +42,7 @@ export interface SpellStepValue {
  * ingredient's flag and notes, and the form laid's own. A step with none of this to read
  * (a one-off, an instruction) holds `null`, never a "safe" value.
  */
-export interface StepSafety {
+interface StepSafety {
   toxic: boolean;
   safetyNotes: string | null;
   formToxic: boolean;
