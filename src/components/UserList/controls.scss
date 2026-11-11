@@ -14,6 +14,4 @@
 // Not `.user-list__tip`, which takes no pointer: these tips stay open while hovered. The history icon's tip is shifted back onto the screen where it would run past its edge.
 .user-list__control-tip {
   @include tip-above($tip-layer);
-
-  white-space: normal;
 }
