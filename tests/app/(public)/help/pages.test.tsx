@@ -123,6 +123,9 @@ beforeEach(() => {
   sessionIsVerified.mockResolvedValue(true);
 });
 
+// The help layout's frame, which holds the heading and search box the page leaves out.
+const helpHeader = async () => (await import('@/components/HelpChrome')).HelpFrame;
+
 describe('/help', () => {
   const load = async () => (await import('@/app/(public)/help/page')) as unknown as Mod;
 
@@ -138,7 +141,7 @@ describe('/help', () => {
     readHelpGlossary.mockResolvedValue(entries([]));
     const { default: Page } = await load();
 
-    render((await Page()) as React.ReactElement);
+    render((await Page()) as React.ReactElement, { wrapper: await helpHeader() });
 
     expect(readHelpFaq).toHaveBeenCalledWith(
       expect.objectContaining({ limit: expect.any(Number) }),
@@ -169,7 +172,7 @@ describe('/help', () => {
     readHelpGlossary.mockResolvedValue(entries([]));
     const { default: Page } = await load();
 
-    render((await Page()) as React.ReactElement);
+    render((await Page()) as React.ReactElement, { wrapper: await helpHeader() });
 
     // Precondition: the page drew the FAQ, so a missing pencil is the viewer's, not an empty FAQ's.
     expect(
@@ -200,7 +203,7 @@ describe('/help/glossary', () => {
     readHelpGlossary.mockResolvedValue(entries(terms));
     const { default: Page } = await load();
 
-    render((await Page()) as React.ReactElement);
+    render((await Page()) as React.ReactElement, { wrapper: await helpHeader() });
 
     expect(readHelpGlossary).toHaveBeenCalled();
     expect(screen.getAllByRole('term').map((term) => term.textContent)).toEqual([
@@ -222,7 +225,7 @@ describe('/help/glossary', () => {
     readHelpGlossary.mockResolvedValue(entries([row('steward', { kind: 'term' })]));
     const { default: Page } = await load();
 
-    render((await Page()) as React.ReactElement);
+    render((await Page()) as React.ReactElement, { wrapper: await helpHeader() });
 
     // Precondition: the page drew its title, so a missing pencil is the viewer's, not an empty page's.
     expect(screen.getByRole('heading', { level: 2, name: 'Glossary' })).toBeInTheDocument();
@@ -252,7 +255,9 @@ describe('/help/[slug]', () => {
     });
     const { default: Page } = await load();
 
-    render((await Page(article('testwort-guide'))) as React.ReactElement);
+    render((await Page(article('testwort-guide'))) as React.ReactElement, {
+      wrapper: await helpHeader(),
+    });
 
     expect(readHelpArticle).toHaveBeenCalledWith('testwort-guide');
     expect(screen.getByRole('heading', { level: 2, name: 'Testwort Guide' })).toBeInTheDocument();
@@ -301,7 +306,9 @@ describe('/help/[slug]', () => {
     });
     const { default: Page } = await load();
 
-    render((await Page(article('testwort-grove'))) as React.ReactElement);
+    render((await Page(article('testwort-grove'))) as React.ReactElement, {
+      wrapper: await helpHeader(),
+    });
 
     expect(notFound).not.toHaveBeenCalled();
     const words = screen.getByText('The guide’s own words.');
@@ -354,7 +361,9 @@ describe('/help/[slug]/[child]', () => {
     });
     const { default: Page } = await load();
 
-    render((await Page(child('testwort-guide', 'testwort-signing-in'))) as React.ReactElement);
+    render((await Page(child('testwort-guide', 'testwort-signing-in'))) as React.ReactElement, {
+      wrapper: await helpHeader(),
+    });
 
     expect(readHelpArticle).toHaveBeenCalledWith('testwort-signing-in');
     expect(

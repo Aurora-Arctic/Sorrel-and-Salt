@@ -45,7 +45,7 @@ Every public help page (the front page, the glossary, the search page and every 
 
 ## The front page
 
-`HelpIndex` draws, beneath the help header, the quick links, then the guides and the FAQ. Framed (`framed`, as `/help` passes it) it draws no heading or box of its own; the staff index, unframed, draws its own `PageHeader` and standard search box.
+`HelpIndex` draws, beneath the help header, the quick links, then the guides and the FAQ. Inside the help header's `HelpFrame` (as `/help` is) it draws no heading or box of its own; the staff index, unframed, draws its own `PageHeader` and standard search box.
 
 - **Staff Help, for staff only.** A curator or keeper sees a forward link, "Staff Help" with the chevron turned onward (`.back-link--forward`), to `/help/staff`, as the help header's action on every public help page: at the end of the Help title row, aligned right. It stays on that row at every width (`HelpFront/index.scss`), where the site's header rule would drop an action under a narrow title. No one else sees it, signed out included. The help layout reads `helpViewerOffers()` (`src/lib/help-viewer.ts`) per request beside the cached reads, never inside them, so nothing keyed by the viewer enters the `help` cache (rule 6); that read of the session also makes every public help page render per request.
 

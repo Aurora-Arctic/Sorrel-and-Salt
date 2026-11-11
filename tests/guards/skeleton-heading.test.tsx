@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 // A skeleton draws the page's own heading, because the hosts no longer add a hidden one while a
 // page is on its way: a wait must leave exactly one level-one heading on screen. A public help page's
-// heading is the help header's, which stays up over its skeleton, so that skeleton draws it only framed.
+// heading is the help header's, which stays up over its skeleton, so that skeleton draws none of its own.
 vi.mock('next/navigation', async () => ({
   ...(await import('../support/next-navigation')),
   usePathname: () => '/',
@@ -22,10 +22,9 @@ describe('the registered skeletons', () => {
     const wrong = patterns
       .map((pattern) => {
         const { host, Skeleton } = skeletons[pattern as keyof typeof skeletons];
-        if (host !== 'help') return { pattern, count: h1s(Skeleton) };
-        // Under the standing header the skeleton adds none; framed, it has the header's one.
-        const own = h1s(Skeleton);
-        return { pattern, count: own === 0 ? h1s(framed(host, Skeleton)) : own + 1 };
+        // A help skeleton leaves the heading to the help header, so it is counted standing inside that header.
+        const Drawn = host === 'help' ? framed(host, Skeleton) : Skeleton;
+        return { pattern, count: h1s(Drawn) };
       })
       .filter(({ count }) => count !== 1)
       .map(({ pattern, count }) => `${pattern}: ${count}`);

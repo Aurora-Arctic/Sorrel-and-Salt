@@ -8,6 +8,4 @@ export interface HelpArticleTitleProps {
 
 export interface HelpPageHeadProps {
   heading?: string;
-  /** The help layout's header already holds the heading and search box, so the page draws neither. */
-  framed?: boolean;
 }

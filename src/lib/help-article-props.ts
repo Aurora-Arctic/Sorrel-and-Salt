@@ -11,7 +11,7 @@ import { SITE_NAME } from './site';
 /**
  * What `HelpArticleView` draws of a help article, the same on a public and a staff page: the glossary terms, the keeper's
  * edit link and the guide's steps. A sub page passes its parent, whose guide the steps run through. The page adds the
- * `parent` link, the `heading` and `framed`, which differ between the public and the staff pages.
+ * `parent` link and the `heading`, which differ between the public and the staff pages.
  */
 export async function helpArticleProps(
   found: HelpArticleWithChildren,
@@ -22,7 +22,10 @@ export async function helpArticleProps(
     terms: await readGlossaryTerms(),
     title: found.title,
     body: found.body,
-    editName: found.kind === 'guide' ? ('Guide' as const) : ('Article' as const),
+    // A sub page keeps the component's default name, 'Article'.
+    ...(parent
+      ? {}
+      : { editName: found.kind === 'guide' ? ('Guide' as const) : ('Article' as const) }),
     subpages: found.children.map(linkTo),
     editHref: (await helpViewerOffers()).edit ? keeperHelpEditPath(found.id) : undefined,
     steps: guideSteps(linkTo(guide), guide.children.map(linkTo), helpPath(found)),

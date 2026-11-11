@@ -28,10 +28,6 @@ export default async function Page({ params }: Props) {
   const { slug } = await params;
   const found = await topLevel(slug);
   return (
-    <HelpArticleView
-      framed
-      {...await helpArticleProps(found)}
-      parent={{ title: 'Help', href: '/help' }}
-    />
+    <HelpArticleView {...await helpArticleProps(found)} parent={{ title: 'Help', href: '/help' }} />
   );
 }
