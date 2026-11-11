@@ -37,8 +37,6 @@ export type SpellStepInput = {
   body?: string | null;
 };
 
-export type SpellStepUpdate = SpellStepInput;
-
 export type SpellStepIngredient = IngredientRow & { deleted: boolean };
 
 export type SpellStepVariant = IngredientVariantRow & { deleted: boolean };

@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { plural } from '../../lib/text';
 import type { CharacterCountProps } from './types';
 
 // How many characters a field has left, said once it is past three quarters of its limit, in a polite live
@@ -7,14 +8,15 @@ import type { CharacterCountProps } from './types';
 
 const SHOWN_AFTER = 0.75;
 
-const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
+const characters = (count: number): string =>
+  `${count} ${plural(count, 'character', 'characters')}`;
 
 /** What the count says for a field of `length` characters under `limit`; empty until it is worth saying. */
 export function characterCountText(length: number, limit: number): string {
   if (length <= limit * SHOWN_AFTER) return '';
   return length > limit
-    ? `${plural(length - limit, 'character')} over`
-    : `${plural(limit - length, 'character')} left`;
+    ? `${characters(length - limit)} over`
+    : `${characters(limit - length)} left`;
 }
 
 export function CharacterCount({ id, length, limit }: CharacterCountProps): ReactElement {

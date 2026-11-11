@@ -81,7 +81,6 @@ export async function timeOutSignedOutSender(
   requestId: string,
   until: Date | null | undefined,
   note: string,
-  _notifier: TimeoutNotifier,
   message: string | null,
 ): Promise<SupportTimeoutRow> {
   assertSiteAdmin(session, REFUSAL);

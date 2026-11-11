@@ -127,6 +127,16 @@ export function utcMinute(at: Date): string {
 /** Whether `text` is written `YYYY-MM-DD`. The shape only: the range of the month and day is its caller's to check. */
 export const isCalendarDay = (text: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(text);
 
+/** What a refused day says, wherever the rule is applied. */
+export const CALENDAR_DAY_MESSAGE = 'Give the day as YYYY-MM-DD';
+
+/** Whether `text` is a day that exists, written `YYYY-MM-DD`: the one rule behind `CalendarDay` and the typed day boxes. It uses no schema library, so a client component can import it. */
+export function isRealCalendarDay(text: string): boolean {
+  if (!isCalendarDay(text)) return false;
+  const at = new Date(`${text}T00:00:00Z`);
+  return !Number.isNaN(at.getTime()) && at.toISOString().slice(0, 10) === text;
+}
+
 /** How a pause or time-out ends, as a phrase after its subject: "until <date>", or `noEnd` where it has no end. */
 export function untilPhrase(
   until: Date | null,

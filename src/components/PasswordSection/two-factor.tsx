@@ -6,10 +6,11 @@ import { twoFactor, useSession } from '../../lib/auth-client';
 import { settled, type AuthFailure } from '../../lib/auth-call';
 import { TOO_MANY_ATTEMPTS, WRONG_CODE, rateLimited } from '../../lib/auth-messages';
 import { useLeaveGuard } from '../../lib/navigation';
+import { codeDigits } from '../../lib/formats';
 import { saveFile } from '../../lib/save-file';
 import { SITE_NAME, SITE_TITLE_NAME } from '../../lib/site';
 import BusyButton from '../BusyButton';
-import { PlainTextField } from '../Field';
+import { CodeField } from '../Field';
 import { CopyIcon, DownloadIcon, PrintIcon } from '../IconTip';
 import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
@@ -30,7 +31,7 @@ export const PASSWORD_SIGN_IN_PAUSED_MESSAGE =
   'Password sign-in is paused for this account after too many wrong passwords. Please wait a few minutes, then try again.';
 // Turning off wants a session younger than Better Auth's `freshAge`, a day, as removing a sign-in
 // method does.
-export const STALE_SESSION =
+export const STALE_SESSION_TURN_OFF =
   'Turning two-factor off needs a recent sign-in. Sign out and sign back in, then turn it off.';
 
 interface Enrolment {
@@ -48,7 +49,7 @@ function refusal(failure: AuthFailure): Refusal {
   if (failure.code === 'PASSWORD_SIGN_IN_PAUSED') return { alert: PASSWORD_SIGN_IN_PAUSED_MESSAGE };
   if (failure.code === 'INVALID_PASSWORD') return { password: WRONG_PASSWORD };
   if (failure.code === 'INVALID_CODE') return { code: WRONG_CODE };
-  if (failure.code === 'SESSION_NOT_FRESH') return { alert: STALE_SESSION };
+  if (failure.code === 'SESSION_NOT_FRESH') return { alert: STALE_SESSION_TURN_OFF };
   if (rateLimited(failure)) return { alert: TOO_MANY_ATTEMPTS };
   return { alert: GENERIC_TWO_FACTOR_ERROR };
 }
@@ -174,7 +175,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
     target?.scrollIntoView({ block: 'start' });
   }, [warning]);
 
-  const entered = code.replace(/\s/g, '');
+  const entered = codeDigits(code);
 
   // Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both
   // arrive here.
@@ -343,17 +344,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
           </ol>
           {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
           <form className="form" onSubmit={confirm} noValidate>
-            <PlainTextField
-              label="Code From Your App"
-              required
-              placeholder="123456"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              spellCheck={false}
-              value={code}
-              onChange={setCode}
-              error={problem.code}
-            />
+            <CodeField value={code} onChange={setCode} error={problem.code} />
             <div className="form__actions">
               <BusyButton
                 type="submit"

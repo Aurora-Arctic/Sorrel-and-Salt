@@ -2,10 +2,8 @@ import type { Metadata, Route } from 'next';
 import { noIndexMetadata } from '@/lib/page-metadata';
 import { notFound, permanentRedirect } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
-import { helpPath, keeperHelpEditPath } from '@/lib/help-paths';
-import { helpViewerOffers } from '@/lib/help-viewer';
-import { readGlossaryTerms } from '@/lib/help-glossary';
-import { guideSteps, linkTo } from '@/lib/help-pages';
+import { helpArticleProps } from '@/lib/help-article-props';
+import { helpPath } from '@/lib/help-paths';
 import { orNotFound } from '@/lib/or-not-found';
 import { requireCuratorSession } from '@/lib/request-session';
 import { readStaffHelpArticle } from '@/modules/help';
@@ -23,15 +21,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   if (found.parentSlug) permanentRedirect(helpPath(found) as Route);
   return (
     <HelpArticleView
-      terms={await readGlossaryTerms()}
       heading="Staff Help"
-      title={found.title}
-      body={found.body}
-      editName={found.kind === 'guide' ? 'Guide' : 'Article'}
+      {...await helpArticleProps(found)}
       parent={{ title: 'Staff Help', href: '/help/staff' }}
-      subpages={found.children.map(linkTo)}
-      editHref={(await helpViewerOffers()).edit ? keeperHelpEditPath(found.id) : undefined}
-      steps={guideSteps(linkTo(found), found.children.map(linkTo), helpPath(found))}
     />
   );
 }

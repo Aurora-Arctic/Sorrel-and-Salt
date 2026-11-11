@@ -4,7 +4,7 @@ import { recreateE2eDatabase } from './database';
 import { seedCoven } from './stories/coven-ingredients';
 import { signInAgainAs, signInAs } from './session';
 import { SITE_ROLE_ACCESS } from '@/components/UserList/roles';
-import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/role-access';
+import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/roles';
 
 // Each Role column carries a tip per row saying what the role may do, in the words Change Role shows:
 // the site roles on the keeper's People page, the coven roles on a coven's members page.

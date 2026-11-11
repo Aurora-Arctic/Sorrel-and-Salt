@@ -131,6 +131,10 @@ export interface PlainTextFieldProps extends TextControlProps {
    */
   check?: (value: string) => string | undefined;
   onBlur?: () => void;
+  /** Marks the box as the one the form is waiting on (`aria-current`), as the range picker’s End is while Start is set. */
+  current?: boolean;
+  /** Takes the Enter key: the key is claimed, so it never submits the form round the box. */
+  onEnter?: () => void;
 }
 
 export interface SelectOption {
@@ -151,6 +155,38 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
   deps?: FieldPath<V>[];
   errorInto?: HTMLElement | null;
   onChange?: (value: string) => void;
+}
+
+/** A closed set in a form that holds its values in state: the caller holds `value` and the `error` text. */
+export interface PlainSelectFieldProps {
+  /** The ids' base, where the caller must name the label outside the field; one is made when it is left out. */
+  id?: string;
+  label: string;
+  hint?: string;
+  required?: boolean;
+  /** A short action shown until a choice is made, and not itself a choice: "Choose a group". */
+  placeholder?: string;
+  options: readonly SelectOption[];
+  disabled?: boolean;
+  busy?: boolean;
+  error?: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+/** The bare slide toggle: the label is its children, and `tip` and `footer` sit beside and beneath it. */
+export interface SwitchControlProps {
+  id: string;
+  name: string;
+  value: string;
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  busy?: boolean;
+  describedBy?: string;
+  tip?: ReactNode;
+  footer?: ReactNode;
 }
 
 /**

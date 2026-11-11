@@ -5,10 +5,8 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
 import type { MouseEvent, ReactElement, ReactNode } from 'react';
-import { PendingLink } from '../../lib/navigation';
-import { BackChevron } from './back-chevron';
+import { BackTo } from '../BackLink';
 import { listReturnHref } from './back-href';
-import { cx } from '@/lib/class-names';
 
 interface BackLinkProps {
   href: Route;
@@ -73,14 +71,8 @@ export default function BackLink({
   };
 
   return (
-    <PendingLink
-      className={cx('back-link', className)}
-      href={(historyHref ?? href) as Route}
-      onClick={goBack}
-    >
-      <BackChevron />
-      Back to {shownLabel}
-      {children && <> {children}</>}
-    </PendingLink>
+    <BackTo className={className} href={historyHref ?? href} label={shownLabel} onClick={goBack}>
+      {children}
+    </BackTo>
   );
 }

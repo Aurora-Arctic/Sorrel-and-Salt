@@ -1,10 +1,10 @@
 'use client';
 
-import { type ReactElement, useId } from 'react';
+import type { ReactElement } from 'react';
 import { today } from '../DateField/day';
 import { MS_PER_DAY } from '../../lib/duration';
 import { PAUSE_TEXT_MAX_LENGTH } from '../../lib/pause-message';
-import { FieldShell, PlainDateField, PlainTextField, fieldDescription } from '../Field';
+import { PlainDateField, PlainSelectField, PlainTextField } from '../Field';
 import { LocalDay } from '../SupportRequests/day-range';
 import type { AccessPauseEntry, PauseFieldsProps, PauseSpan } from './types';
 import '../SupportRequests/timeout-panel.scss';
@@ -75,25 +75,14 @@ export const PauseFields = ({
   messageLabel,
   messagePlaceholder,
 }: PauseFieldsProps): ReactElement => {
-  const spanId = useId();
-  const { aria: spanAria, ...spanField } = fieldDescription({ id: spanId });
   return (
     <>
-      <FieldShell label="For" {...spanField}>
-        <select
-          id={spanField.controlId}
-          className="select"
-          {...spanAria}
-          value={span}
-          onChange={(event) => onSpan(event.target.value as PauseSpan)}
-        >
-          {SPANS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </FieldShell>
+      <PlainSelectField
+        label="For"
+        options={SPANS}
+        value={span}
+        onChange={(value) => onSpan(value as PauseSpan)}
+      />
       {span === 'date' && (
         <PlainDateField label="Until" value={day} min={today()} onChange={onDay} />
       )}

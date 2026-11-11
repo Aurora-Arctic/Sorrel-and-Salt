@@ -18,6 +18,12 @@ import { SupportListSkeleton } from '../SupportRequests/skeleton';
 import PageHeader from '../PageHeader';
 import TabbedPage from '../TabbedPage';
 import type { PageTab } from '../TabbedPage/types';
+import { ARRIVALS_PATH, CARDS_PATH } from '../AdminCards/href';
+import { INVITATIONS_PATH } from '../AdminInvitations/href';
+import { COMPENDIUM_PATH } from '../CompendiumList/href';
+import { PRIVILEGE_CHANGES_PATH } from '../PrivilegeLedger/href';
+import { SUPPORT_PATH } from '../SupportRequests/href';
+import { USERS_PATH } from '../UserList/href';
 import { ADMIN_PAGES } from './sections';
 import type { AdminPage } from './types';
 import { ADD_INGREDIENT_TITLE } from '../AppShell/add-href';
@@ -28,7 +34,7 @@ const documentPanel: ReactNode = <DocumentEditorSkeleton />;
 // filter row and table headings, so the list keeps its place when the rows arrive. A function, since the
 // Users table's columns follow the environment.
 const panels = (): Record<string, ReactNode> => ({
-  '/curator/compendium': <CompendiumListSkeleton />,
+  [COMPENDIUM_PATH]: <CompendiumListSkeleton />,
   [VALUE_KINDS.category.path]: <GroupedValueListSkeleton kind="category" />,
   [GROUP_KINDS.category.path]: <GroupListSkeleton kind="category" />,
   [VALUE_KINDS.form.path]: <GroupedValueListSkeleton kind="form" />,
@@ -37,12 +43,12 @@ const panels = (): Record<string, ReactNode> => ({
   [GROUP_KINDS.tradition.path]: <GroupListSkeleton kind="tradition" />,
   [VALUE_KINDS.celestialBody.path]: <GroupedValueListSkeleton kind="celestialBody" />,
   [VALUE_KINDS.zodiacSign.path]: <GroupedValueListSkeleton kind="zodiacSign" />,
-  '/keepers/users': <UserListSkeleton canImpersonate={impersonationEnabled()} />,
-  '/keepers/privilege-changes': <PrivilegeLedgerSkeleton />,
-  '/keepers/invitations': <AdminInvitationsSkeleton />,
-  '/keepers/invitation-cards': <AdminCardsSkeleton />,
-  '/keepers/card-sign-ups': <CardArrivalsSkeleton />,
-  '/keepers/support': <SupportListSkeleton />,
+  [USERS_PATH]: <UserListSkeleton canImpersonate={impersonationEnabled()} />,
+  [PRIVILEGE_CHANGES_PATH]: <PrivilegeLedgerSkeleton />,
+  [INVITATIONS_PATH]: <AdminInvitationsSkeleton />,
+  [CARDS_PATH]: <AdminCardsSkeleton />,
+  [ARRIVALS_PATH]: <CardArrivalsSkeleton />,
+  [SUPPORT_PATH]: <SupportListSkeleton />,
   '/keepers/business-cards': <BusinessCardsBodySkeleton />,
   '/keepers/documents/terms': documentPanel,
   '/keepers/documents/disclaimer': documentPanel,

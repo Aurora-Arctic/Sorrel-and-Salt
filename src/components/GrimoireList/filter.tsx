@@ -7,6 +7,7 @@ import CardDensitySwitch from '../CardDensitySwitch';
 import { type ReactElement, useMemo, useState } from 'react';
 import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
+import { stuckChoice } from '../FacetPanel/stuck-choice';
 import { CategoryLine } from '../FacetPanel/category-line';
 import { FacetShell } from '../FacetPanel/shell';
 import { useApplyFilter } from '../FilterForm';
@@ -89,7 +90,7 @@ const PanelCategories = ({
   const apply = useApplyFilter();
   const { pending } = useListNavigation();
   const changed = JSON.stringify(held) !== JSON.stringify(heldOf(filter));
-  const visibilityStuck = facets.visibilities.some((choice) => choice.count === 0);
+  const visibilityChip = stuckChoice(facets.visibilities, 'spell shares the same visibility');
   const choices = useMemo(
     () =>
       categories.map(({ slug, name, group, count }) => ({
@@ -185,13 +186,9 @@ const PanelCategories = ({
             ]}
             // Drawn and placed as the compendium's Toxic is: both values always show, and with
             // either at zero every spell shares one visibility, so the chip rests on Any.
-            value={visibilityStuck ? '' : held.visibility}
-            disabled={visibilityStuck}
-            chipHint={
-              visibilityStuck
-                ? 'Every matching spell shares the same visibility, so this filter cannot narrow further.'
-                : undefined
-            }
+            value={visibilityChip.stuck ? '' : held.visibility}
+            disabled={visibilityChip.stuck}
+            chipHint={visibilityChip.hint}
             onChange={(visibility) => onHeld({ ...held, visibility })}
           />
         </div>

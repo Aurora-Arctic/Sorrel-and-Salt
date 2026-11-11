@@ -5,6 +5,7 @@ import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums
 import { useHydrated } from '../../lib/hydrated';
 import CategoryPicker from '../CategoryPicker';
 import { fieldDescription } from '../Field/description';
+import { NativeGroupedSelect } from '../FacetCombobox/native-select';
 import { FieldShell } from '../Field/shell';
 import { ChoiceChip } from './choice-chip';
 import type { CategoryLineChoice, CategoryLineProps } from './types';
@@ -27,35 +28,20 @@ function NativeCategories({
   values: readonly string[];
 }): ReactElement {
   const field = fieldDescription({ id: useId() });
-  const groups = new Map<string, CategoryLineChoice[]>();
-  for (const category of categories) {
-    const name = category.group.name;
-    groups.set(name, [...(groups.get(name) ?? []), category]);
-  }
   return (
     <FieldShell label="Categories" className="facet-combobox" {...field}>
-      <select
+      <NativeGroupedSelect
         id={field.controlId}
-        className="select facet-combobox__native"
         name="categories"
-        multiple
-        defaultValue={[...values]}
-        aria-describedby={field.aria['aria-describedby']}
-      >
-        {[...groups].map(([group, rows]) => (
-          <optgroup key={group} label={group}>
-            {rows
-              .filter((category) => category.count !== 0 || values.includes(category.value))
-              .map((category) => (
-                <option key={category.value} value={category.value}>
-                  {category.count === undefined
-                    ? category.label
-                    : `${category.label} ${category.count}`}
-                </option>
-              ))}
-          </optgroup>
-        ))}
-      </select>
+        choices={categories.map((category) => ({
+          value: category.value,
+          label: category.label,
+          count: category.count,
+          group: category.group.name,
+        }))}
+        values={values}
+        describedBy={field.aria['aria-describedby']}
+      />
     </FieldShell>
   );
 }

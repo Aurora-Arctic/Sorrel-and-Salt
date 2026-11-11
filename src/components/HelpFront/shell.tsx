@@ -1,3 +1,4 @@
+import { HelpFrame } from '../HelpChrome';
 import type { ComponentType, ReactElement, ReactNode } from 'react';
 
 // The help header's frame, shared by the help layout and its skeleton so they cannot differ. The body is a plain box
@@ -12,8 +13,10 @@ export const HelpFrontShell = ({
   body?: ComponentType<{ className: string; children: ReactNode }> | 'div';
   children: ReactNode;
 }): ReactElement => (
-  <div className="help-front">
-    {head}
-    <Body className="help-front__body">{children}</Body>
-  </div>
+  <HelpFrame>
+    <div className="help-front">
+      {head}
+      <Body className="help-front__body">{children}</Body>
+    </div>
+  </HelpFrame>
 );

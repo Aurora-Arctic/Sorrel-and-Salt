@@ -6,7 +6,7 @@ import EmptyState from '../EmptyState';
 import { CompendiumEditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
 import { CardCategoryVocabulary } from '../IngredientCard/category-vocabulary';
-import { cardName } from '../IngredientCard/card-name';
+import { cardName } from '../../lib/ingredient-name';
 import IngredientCardList from '../IngredientCardList';
 import DetailsLink from '../IngredientEntry/details-link';
 import { ListBodySkeleton } from '../ListFrame/skeleton';

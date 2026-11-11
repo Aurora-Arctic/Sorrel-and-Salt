@@ -9,11 +9,16 @@ import {
   useWatch,
 } from 'react-hook-form';
 import { limitMessage } from '../../lib/formats';
-import Spinner from '../Spinner';
 import { CharacterCount } from './character-count';
 import { useMask } from './mask';
 import { FieldShell } from './shell';
-import { blurFormat, browserAttributes } from './text-control';
+import {
+  afterCount,
+  blurFormat,
+  browserAttributes,
+  describedByWithCount,
+  TextControl,
+} from './text-control';
 import type { TextFieldProps } from './types';
 import { useField } from './use-field';
 
@@ -68,7 +73,7 @@ export function TextField<V extends FieldValues = FieldValues>({
     name,
     hint,
     note,
-    [describedBy, limit && countId].filter(Boolean).join(' ') || undefined,
+    describedByWithCount(describedBy, limit, countId),
     invalid,
   );
   const blurFormatter = blurFormat({ format, multiline });
@@ -125,29 +130,14 @@ export function TextField<V extends FieldValues = FieldValues>({
       hint={hint}
       note={note}
       required={required}
-      after={
-        limit || after ? (
-          <>
-            {limit ? <WatchedCount<V> id={countId} name={name} limit={limit} /> : null}
-            {after}
-          </>
-        ) : undefined
-      }
+      after={afterCount(
+        limit ? <WatchedCount<V> id={countId} name={name} limit={limit} /> : null,
+        after,
+      )}
       action={action}
       {...field}
     >
-      {multiline ? (
-        <textarea className="textarea" rows={rows} {...control} />
-      ) : busy === undefined ? (
-        <input className="input" type={type} {...control} />
-      ) : (
-        // A field that looks its text up (the name's duplicate check) shows a spinner at the input's right end
-        // and marks the input busy; wrapped only when the caller says, so other fields keep a bare input.
-        <span className="field__control">
-          <input className="input" type={type} aria-busy={busy || undefined} {...control} />
-          {busy && <Spinner className="field__busy" />}
-        </span>
-      )}
+      <TextControl multiline={multiline} rows={rows} type={type} busy={busy} control={control} />
     </FieldShell>
   );
 }

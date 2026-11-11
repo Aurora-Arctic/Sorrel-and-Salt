@@ -1,4 +1,4 @@
-import type { ReactNode, RefObject } from 'react';
+import type { ReactNode } from 'react';
 
 /** Where a confirmed action is: offering itself, asking to confirm, or waiting on the answer. */
 export type ConfirmStep = 'idle' | 'confirming' | 'sending';
@@ -60,20 +60,6 @@ export interface ConfirmedActionProps {
    * (claude-docs/components/user-list.md, "Table").
    */
   refusalInModal?: 'notice' | 'callout';
-}
-
-/** `ConfirmedAction`'s confirm and Cancel, under its question. */
-export interface ConfirmAnswersProps {
-  label: string;
-  busy: string;
-  confirmClass: string;
-  /** The warning's id, which the confirm is described by; none without one. */
-  describedBy?: string;
-  sending: boolean;
-  /** The confirm is off though nothing is being sent. */
-  disabled?: boolean;
-  confirmRef: RefObject<HTMLButtonElement | null>;
-  cancelRef: RefObject<HTMLButtonElement | null>;
-  onConfirm: () => void;
-  onCancel: () => void;
+  /** Where the focus goes as the modal closes when the row's button is gone, a success having replaced it; absent, the page heading. */
+  returnTo?: () => HTMLElement | null;
 }

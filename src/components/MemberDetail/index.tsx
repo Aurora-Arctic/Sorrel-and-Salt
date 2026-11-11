@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import Day from '../Day';
-import RemoveControl from '../MemberList/remove-control';
+import RemoveMemberControl from '../MemberList/remove-control';
 import RoleControl from '../MemberList/role-control';
-import { workspaceRoleLabel } from '../UserDetail/roles';
+import { workspaceRoleLabel } from '../MemberList/roles';
 import CovenAccessPanel from './coven-access-panel';
 import type { MemberDetailProps } from './types';
 import '../UserDetail/index.scss';
@@ -88,7 +88,7 @@ const MemberDetail = ({
     {/* Not on your own: leaving is the coven page's, for every role. */}
     {canRemove && member.userId !== currentUserId && (
       <div className="user-detail__actions">
-        <RemoveControl
+        <RemoveMemberControl
           workspaceId={workspaceId}
           userId={member.userId}
           name={member.name}

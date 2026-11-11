@@ -70,7 +70,7 @@ export default function SpellLookDialog({
           foot: (
             <div className="ingredient-details-foot">
               <PendingLink className="btn" href={opened.recipeHref}>
-                See Full Recipe
+                See Full Spell
               </PendingLink>
             </div>
           ),

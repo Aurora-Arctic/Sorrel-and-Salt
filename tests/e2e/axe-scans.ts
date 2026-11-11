@@ -132,7 +132,7 @@ export const MODAL_SCANS = [
   { id: 'sign-in', source: 'src/components/SignInDialog/index.tsx', as: 'signedOut' },
 
   // The account.
-  { id: 'unlink-provider', source: 'src/components/SignInMethods/provider-row.tsx', as: 'user' },
+  { id: 'unlink-provider', source: 'src/components/ConfirmedAction/index.tsx', as: 'user' },
   { id: 'passkey', source: 'src/components/Passkeys/passkey-row.tsx', as: 'user' },
   { id: 'two-factor-warning', source: 'src/components/PasswordSection/two-factor.tsx', as: 'user' },
   { id: 'my-request', source: 'src/components/SupportList/index.tsx', as: 'user' },
@@ -166,7 +166,7 @@ export const MODAL_SCANS = [
   },
   {
     id: 'annotate-picker',
-    source: 'src/components/IngredientEntry/annotate-picker.tsx',
+    source: 'src/components/IngredientEntry/coven-pick-modal.tsx',
     as: 'steward',
   },
   {
@@ -179,7 +179,11 @@ export const MODAL_SCANS = [
     source: 'src/components/IngredientEntry/cupboard-writes.tsx',
     as: 'steward',
   },
-  { id: 'edit-stock', source: 'src/components/IngredientEntry/edit-stock.tsx', as: 'steward' },
+  {
+    id: 'edit-stock',
+    source: 'src/components/IngredientEntry/coven-pick-modal.tsx',
+    as: 'steward',
+  },
   { id: 'delete-entry', source: 'src/components/IngredientEntry/delete-entry.tsx', as: 'steward' },
   { id: 'entry-summary', source: 'src/components/Combobox/entry.tsx', as: 'steward' },
 
@@ -199,7 +203,7 @@ export const MODAL_SCANS = [
     source: 'src/components/RecordWorking/complete-action.tsx',
     as: 'steward',
   },
-  { id: 'date-field', source: 'src/components/DateField/index.tsx', as: 'steward' },
+  { id: 'date-field', source: 'src/components/DateField/popover.tsx', as: 'steward' },
 
   // Curation.
   {
@@ -217,7 +221,7 @@ export const MODAL_SCANS = [
   { id: 'keeper-invite', source: 'src/components/AdminInvitations/invite-form.tsx', as: 'keeper' },
   { id: 'mint-cards', source: 'src/components/AdminCards/mint-form.tsx', as: 'keeper' },
   { id: 'card-attempts', source: 'src/components/AdminCards/attempts.tsx', as: 'keeper' },
-  { id: 'date-range-field', source: 'src/components/DateRangeField/index.tsx', as: 'keeper' },
+  { id: 'date-range-field', source: 'src/components/DateField/popover.tsx', as: 'keeper' },
   { id: 'document-link', source: 'src/components/RichTextEditor/link-dialog.tsx', as: 'keeper' },
 ] as const satisfies readonly ModalScan[];
 

@@ -1364,14 +1364,6 @@ export type SetPasswordMutationVariables = Exact<{
 
 export type SetPasswordMutation = { setPassword: boolean };
 
-export type RemoveDeclinedInvitationMutationVariables = Exact<{
-  workspaceId: string | number;
-  id: string | number;
-}>;
-
-
-export type RemoveDeclinedInvitationMutation = { revokeInvitation: { id: string } };
-
 export type RevokeInvitationMutationVariables = Exact<{
   workspaceId: string | number;
   id: string | number;
@@ -2919,13 +2911,6 @@ export const SetPasswordDocument = new TypedDocumentString(`
   setPassword(newPassword: $newPassword)
 }
     `) as unknown as TypedDocumentString<SetPasswordMutation, SetPasswordMutationVariables>;
-export const RemoveDeclinedInvitationDocument = new TypedDocumentString(`
-    mutation RemoveDeclinedInvitation($workspaceId: ID!, $id: ID!) {
-  revokeInvitation(workspaceId: $workspaceId, id: $id) {
-    id
-  }
-}
-    `) as unknown as TypedDocumentString<RemoveDeclinedInvitationMutation, RemoveDeclinedInvitationMutationVariables>;
 export const RevokeInvitationDocument = new TypedDocumentString(`
     mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {
   revokeInvitation(workspaceId: $workspaceId, id: $id) {

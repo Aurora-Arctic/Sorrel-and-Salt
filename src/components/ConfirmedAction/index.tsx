@@ -8,7 +8,7 @@ import { ReasonField, useReasonNote } from '../Field';
 import Modal, { ConfirmOverlay } from '../Modal';
 import Notice from '../Notice';
 import ConfirmAnswersRow from '../ConfirmDialog/answers';
-import type { ConfirmAnswersProps, ConfirmedActionProps, ConfirmStep } from './types';
+import type { ConfirmedActionProps, ConfirmStep } from './types';
 import './index.scss';
 
 // An action that asks first, in a modal: the confirm sends the write and stays busy until the
@@ -36,6 +36,7 @@ const ConfirmedAction = ({
   closeOnSent = false,
   inModal = false,
   refusalInModal = 'notice',
+  returnTo,
 }: ConfirmedActionProps): ReactElement => {
   const { refresh } = usePendingNavigation();
   const warningId = useId();
@@ -110,13 +111,14 @@ const ConfirmedAction = ({
   );
   const answerProps = {
     label: confirmLabel ?? label,
-    busy,
-    confirmClass,
+    className: confirmClass,
+    busyLabel: busy,
+    busy: sending,
+    disabled: sending || confirmDisabled,
     describedBy: warning ? warningId : undefined,
-    sending,
-    disabled: confirmDisabled,
     confirmRef,
-    cancelRef,
+    safeRef: cancelRef,
+    safeDisabled: sending,
     onConfirm: () => void confirm(),
   };
   return (
@@ -129,6 +131,7 @@ const ConfirmedAction = ({
         type="button"
         disabled={disabled}
         aria-label={accessibleName}
+        aria-busy={sending || undefined}
         onClick={() => {
           report(undefined);
           reason.reset();
@@ -146,15 +149,15 @@ const ConfirmedAction = ({
         (inModal ? (
           <ConfirmOverlay question={question} safe={cancelRef}>
             {details}
-            <Answers {...answerProps} onCancel={cancel} />
+            <ConfirmAnswersRow {...answerProps} onSafe={cancel} />
           </ConfirmOverlay>
         ) : (
-          <Modal title={title} onClose={cancel} returnTo={() => openRef.current}>
+          <Modal title={title} onClose={cancel} returnTo={() => returnTo?.() ?? openRef.current}>
             {(close) => (
               <>
                 <p>{question}</p>
                 {details}
-                <Answers {...answerProps} onCancel={close} />
+                <ConfirmAnswersRow {...answerProps} onSafe={close} />
               </>
             )}
           </Modal>
@@ -162,39 +165,5 @@ const ConfirmedAction = ({
     </>
   );
 };
-
-/**
- * The confirm and Cancel under the question, in the modal or over one. A
- * component rather than a render helper, so its refs are passed, never read,
- * while rendering.
- */
-function Answers({
-  label,
-  busy,
-  confirmClass,
-  describedBy,
-  sending,
-  disabled = false,
-  confirmRef,
-  cancelRef,
-  onConfirm,
-  onCancel,
-}: ConfirmAnswersProps): ReactElement {
-  return (
-    <ConfirmAnswersRow
-      label={label}
-      className={confirmClass}
-      busyLabel={busy}
-      busy={sending}
-      disabled={sending || disabled}
-      describedBy={describedBy}
-      confirmRef={confirmRef}
-      onConfirm={onConfirm}
-      safeRef={cancelRef}
-      safeDisabled={sending}
-      onSafe={onCancel}
-    />
-  );
-}
 
 export default ConfirmedAction;

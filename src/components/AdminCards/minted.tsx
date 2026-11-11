@@ -6,7 +6,8 @@ import type { DiscardGuard } from '../Modal/types';
 import { ConfirmQuestion } from '../Modal';
 import { dayInUtc, printedDateOf } from '../../lib/utc';
 import Notice from '../Notice';
-import { batchName } from './batches';
+import BusyButton from '../BusyButton';
+import { batchName } from '../../lib/invitation-cards/batch-name';
 import { saveFile } from '../../lib/save-file';
 import { CARDS_PER_SHEET } from '../../lib/invitation-cards/limits';
 import { plural } from '@/lib/text';
@@ -89,15 +90,15 @@ const MintedCards = ({
       </div>
       {failed ? <Notice kind="error">The PDF could not be built. Try again.</Notice> : null}
       <div className="modal__actions">
-        <button
-          type="button"
+        <BusyButton
           className="btn btn--solid"
+          busy={building}
+          busyLabel="Building PDF"
           disabled={building}
-          aria-busy={building}
           onClick={() => void downloadPdf()}
         >
-          {building ? 'Building PDF' : saved ? 'Download Again' : 'Download PDF'}
-        </button>
+          {saved ? 'Download Again' : 'Download PDF'}
+        </BusyButton>
         <button type="button" className="btn btn--quiet" onClick={() => guard.request(onDone)}>
           Done
         </button>

@@ -10,6 +10,7 @@ import type {
   PauseUserAccessMutationVariables,
 } from '@/gql/graphql';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { choose } from '../../support/interact';
 import { router } from '../../support/next-navigation';
 
 // claude-docs/components/user-detail.md, "Contracts"
@@ -98,9 +99,7 @@ describe('UserDetail, Site Access', () => {
     const sent = pausesSent();
     renderDetail({ pauses: [] });
     unfold();
-    fireEvent.change(within(section()).getByRole('combobox', { name: 'For' }), {
-      target: { value: 'week' },
-    });
+    choose('For', '1 Week');
     fireEvent.change(within(section()).getByRole('textbox', { name: 'Note' }), {
       target: { value: '  Shared password  ' },
     });
@@ -121,9 +120,7 @@ describe('UserDetail, Site Access', () => {
     const sent = pausesSent();
     renderDetail({ pauses: [] });
     unfold();
-    fireEvent.change(within(section()).getByRole('combobox', { name: 'For' }), {
-      target: { value: 'none' },
-    });
+    choose('For', 'No End Date');
     writeNote();
     writeMessage();
     fireEvent.click(within(section()).getByRole('button', { name: 'Pause Access' }));
@@ -198,14 +195,12 @@ describe('UserDetail, Site Access', () => {
     });
   });
 
-  it.each([['day'], ['none']])(
+  it.each([['1 Day'], ['No End Date']])(
     'marks the note required and holds Pause Access until it has text, for a %s pause',
     (span) => {
       renderDetail({ pauses: [] });
       unfold();
-      fireEvent.change(within(section()).getByRole('combobox', { name: 'For' }), {
-        target: { value: span },
-      });
+      choose('For', span);
       writeMessage();
       const note = within(section()).getByRole('textbox', { name: 'Note' });
       const pauseButton = within(section()).getByRole('button', { name: 'Pause Access' });
@@ -225,9 +220,7 @@ describe('UserDetail, Site Access', () => {
     writeMessage();
     const pauseButton = within(section()).getByRole('button', { name: 'Pause Access' });
     expect(pauseButton).toBeEnabled();
-    fireEvent.change(within(section()).getByRole('combobox', { name: 'For' }), {
-      target: { value: 'date' },
-    });
+    choose('For', 'Until a Date');
     expect(pauseButton).toBeDisabled();
   });
 

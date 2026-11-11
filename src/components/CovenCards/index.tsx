@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { cardName } from '../../lib/ingredient-name';
 import CompendiumListFilter from '../CompendiumList/filter';
 import DetailsLink from '../IngredientEntry/details-link';
 import IngredientCard from '../IngredientCard';
@@ -7,7 +8,7 @@ import IngredientCardList from '../IngredientCardList';
 import { ListBodySkeleton } from '../ListFrame/skeleton';
 import IngredientSearch from '../IngredientSearch';
 import JarLines from '../JarLines';
-import { covenCardActions, covenCardName } from './actions';
+import { covenCardActions } from './actions';
 import EmptyCupboard from './empty';
 import type { CovenCardsProps } from './types';
 import '../CompendiumList/index.scss';
@@ -73,7 +74,12 @@ const CovenCards = ({
                 retired={entry.retired}
                 lastEdit={entry.lastEdit}
                 actions={covenCardActions(entry, workspaceId, covenSlug)}
-                startActions={<DetailsLink opens={entry.details} name={covenCardName(entry)} />}
+                startActions={
+                  <DetailsLink
+                    opens={entry.details}
+                    name={cardName(entry.label, entry.canonicalName)}
+                  />
+                }
               >
                 {entry.jars.length > 0 && <JarLines jars={entry.jars} />}
               </IngredientCard>
