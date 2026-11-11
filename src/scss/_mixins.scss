@@ -24,6 +24,14 @@
   }
 }
 
+// A flex row whose items stack, full width, on a phone.
+@mixin phone-column {
+  @include phone-down {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 @mixin above-phone {
   @include width-from(calc(#{$shell-phone-width} + 0.01rem)) {
     @content;

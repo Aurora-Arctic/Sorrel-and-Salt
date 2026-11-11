@@ -6,6 +6,7 @@ import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { CHECK_INBOX } from '../../lib/sign-in';
 import BusyButton from '../BusyButton';
+import ConfirmEmailLink from '../ConfirmEmailLink';
 import { useGuardedAction } from '../ClickFeedback/use-guarded-action';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
@@ -161,9 +162,7 @@ const InvitationAcceptance = ({
       )}
       {props.status === 'unverified' && (
         <p className="invitation-acceptance__actions invitation-acceptance__row">
-          <a className="btn btn--quiet" href={props.emailHref}>
-            Confirm Your Email
-          </a>
+          <ConfirmEmailLink href={props.emailHref} />
           <a className="btn btn--quiet" href="/">
             Back to Home
           </a>
@@ -187,9 +186,7 @@ const InvitationAcceptance = ({
           </p>
           {props.emailHref && (
             <p className="invitation-acceptance__actions">
-              <a className="btn btn--solid" href={props.emailHref}>
-                Confirm Your Email
-              </a>
+              <ConfirmEmailLink href={props.emailHref} tone="solid" />
             </p>
           )}
         </>
