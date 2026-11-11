@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { CalendarDay } from '../../lib/validation';
+import { CALENDAR_DAY_MESSAGE, isRealCalendarDay } from '../../lib/utc';
 import { PlainTextField } from '../Field/plain-text-field';
 import { shortDayWords } from '../DateField/day';
 
@@ -10,8 +10,7 @@ import { shortDayWords } from '../DateField/day';
 
 /** What is wrong with a typed day: its format, or the bound it lies outside; undefined when it is fine. */
 export function dayProblem(text: string, min?: string, max?: string): string | undefined {
-  const parsed = CalendarDay.safeParse(text);
-  if (!parsed.success) return parsed.error.issues[0]?.message;
+  if (!isRealCalendarDay(text)) return CALENDAR_DAY_MESSAGE;
   if (min && text < min) return `Choose a day on or after ${shortDayWords(min)}`;
   if (max && text > max) return `Choose a day on or before ${shortDayWords(max)}`;
   return undefined;
