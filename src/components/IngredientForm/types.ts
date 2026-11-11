@@ -254,13 +254,6 @@ export type IngredientFormInput = z.input<typeof LocalIngredientInput> & {
   variants: NonNullable<z.input<typeof LocalIngredientInput>['variants']>;
 };
 
-export type TextFieldName =
-  | 'name'
-  | 'canonicalName'
-  | 'description'
-  | 'safetyNotes'
-  | `${VariantPath}.${'form' | 'description' | 'safetyNotes'}`;
-
 export type ToggleFieldName = 'toxic' | `${VariantPath}.toxic`;
 
 export interface ToggleFieldProps {

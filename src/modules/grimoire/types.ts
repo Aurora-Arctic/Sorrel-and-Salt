@@ -28,15 +28,6 @@ export type SpellInput = z.input<typeof SpellInputSchema>;
 /** Each field left out is unchanged; a null revision overwrites. */
 export type SpellUpdate = z.input<typeof UpdateSpellInputSchema>;
 
-/** A linked ingredient is written by a save. */
-export type SpellStepInput = {
-  name?: string | null;
-  form?: string | null;
-  quantity?: SpellStepRow['quantity'];
-  unit?: SpellStepRow['unit'];
-  body?: string | null;
-};
-
 export type SpellStepIngredient = IngredientRow & { deleted: boolean };
 
 export type SpellStepVariant = IngredientVariantRow & { deleted: boolean };

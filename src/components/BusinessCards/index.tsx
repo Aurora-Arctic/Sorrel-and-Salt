@@ -3,7 +3,7 @@
 import { typedResolver } from '../../lib/typed-resolver';
 import { type ReactElement, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { emailFormat } from '../../lib/email-address';
+import { normaliseEmail } from '../../lib/email-address';
 import { renderBusinessCards } from '../../lib/business-cards/pdf';
 import { phoneMask } from '../../lib/phone-number';
 import { fetchCardAssets } from '../../lib/invitation-cards/assets';
@@ -91,7 +91,7 @@ const BusinessCards = (): ReactElement => {
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
-          format={emailFormat}
+          format={normaliseEmail}
         />
         <TextField<BusinessCardValues>
           name="phone"

@@ -271,7 +271,6 @@ export type {
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientRow,
-  InvitableRole,
   InvitableSiteRole,
   InvitationRow,
   InvitedCoven,
@@ -304,9 +303,4 @@ export type {
   VocabularySuggestion,
   WorkspaceInvitationValues,
 } from './types';
-export type {
-  DocumentMailingItem,
-  DocumentMailingRow,
-  PendingDocumentVersion,
-  WorkspaceSlugRow,
-} from './types';
+export type { DocumentMailingItem, DocumentMailingRow, PendingDocumentVersion } from './types';

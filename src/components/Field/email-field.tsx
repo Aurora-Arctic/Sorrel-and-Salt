@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { emailAddressProblem, emailFormat } from '../../lib/email-address';
+import { emailAddressProblem, normaliseEmail } from '../../lib/email-address';
 import { PlainTextField } from './plain-text-field';
 import type { PlainTextFieldProps } from './types';
 
@@ -25,7 +25,7 @@ export function EmailField({
       type="email"
       autoCapitalize="none"
       spellCheck={false}
-      format={emailFormat}
+      format={normaliseEmail}
       check={emailAddressProblem}
     />
   );
