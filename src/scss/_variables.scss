@@ -788,6 +788,10 @@ $shell-phone-width: $table-stack-width;
 // Under it the admin section nav tucks pages behind More (Priority+). Also where the site links leave the bar for the account
 // panel: with the Compendium link a keeper's bar outran an 882px window.
 $shell-tablet-width: 56rem;
+// The About Us pillar cards sit two across above this width and one across at it and under, then two across again at the phone
+// width and under, and one across at the narrow width and under.
+$about-pillars-stack-width: 46.875rem;
+$about-pillars-narrow-width: 31.25rem;
 // Under it the brand is its initials; wider, the bar has room for the full name once the site links have gone. 28rem: the
 // widest bar (split Add Ingredient button, account menu, theme toggle) needs 442px beside the full name.
 $shell-brand-width: 28rem;

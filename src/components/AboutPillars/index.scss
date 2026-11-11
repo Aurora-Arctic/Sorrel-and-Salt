@@ -1,13 +1,21 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Four cards in a grid two across where the document page has its menu beside the text (the same width test as its grid), and one
-// beneath another below that, where two across would be too narrow for their sentences.
-@include about-cards('about-pillars', var(--pillar));
+// Four cards: two across above $about-pillars-stack-width, one beneath another at it and under, two across again at the phone
+// width and under, and one across at $about-pillars-narrow-width and under.
+@include about-cards(about-pillars, var(--pillar));
 
 .about-pillars {
-  @include above-phone {
+  @include width-from(calc(#{$about-pillars-stack-width} + 0.01rem)) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include phone-down {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include width-to($about-pillars-narrow-width) {
+    grid-template-columns: 1fr;
   }
 }
 
