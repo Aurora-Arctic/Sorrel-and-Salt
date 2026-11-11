@@ -21,7 +21,7 @@ export function useFoldIds({ block, open, invalid, flagged }: FoldIdsOptions): F
     flagId,
     fieldsId: `${id}-fields`,
     className: cx(block, open && 'is-open', invalid && 'is-invalid'),
-    describedBy: [!open && summaryId, flagged && flagId].filter(Boolean).join(' ') || undefined,
+    describedBy: cx(!open && summaryId, flagged && flagId) || undefined,
   };
 }
 

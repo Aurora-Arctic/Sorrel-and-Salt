@@ -10,7 +10,7 @@ import {
   useRef,
 } from 'react';
 import Notice from '../Notice';
-import IconTip, { CloseIcon, LiddedEyeIcon, PreviewButton } from '../IconTip';
+import IconTip, { CloseIcon, IconButton, LiddedEyeIcon, PreviewButton } from '../IconTip';
 import { SpellCardFilters } from '../SpellCard';
 import SpellRecipeBody from '../SpellRecipe/body';
 import SpellRecipeSummary from '../SpellRecipe/summary';
@@ -173,21 +173,21 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
               tip={wake.held ? 'Let the Screen Sleep' : 'Keep the Screen from Sleeping'}
               placement="below"
             >
-              <button
-                type="button"
-                className="icon-tip__edit icon-tip__edit--plain spell-preview__awake"
-                aria-pressed={wake.held}
+              <IconButton
+                label="Screen Awake"
+                icon={<LiddedEyeIcon open={wake.held} />}
+                className="icon-tip__edit--plain spell-preview__awake"
+                pressed={wake.held}
                 onClick={wake.toggle}
-              >
-                <LiddedEyeIcon open={wake.held} />
-                <span className="visually-hidden">Screen Awake</span>
-              </button>
+              />
             </IconTip>
           )}
-          <button type="button" className="icon-tip__edit icon-tip__edit--plain" onClick={close}>
-            <CloseIcon />
-            <span className="visually-hidden">Close</span>
-          </button>
+          <IconButton
+            label="Close"
+            icon={<CloseIcon />}
+            className="icon-tip__edit--plain"
+            onClick={close}
+          />
         </div>
         {/* Drawn only while open, so the page holds no second copy of the spell. */}
         {open && (

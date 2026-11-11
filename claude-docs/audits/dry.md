@@ -780,7 +780,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/components/FacetPanel/`, `MenuButton`, `AccountMenu`, `HelpTerm`, `Combobox`.
 
 - **Estimate:** 8 hours
-- **Status:** Fixed in part. Outside-press dismissal goes through `useDismiss` in `src/lib/use-dismiss.ts`, used by AccountMenu, SectionNav, CategoryChips, HelpTerm, MenuButton, Combobox, FacetPanel and DateField, and `tests/guards/dismissal.test.ts` refuses a new hand-written `pointerdown` or `mousedown` listener in `src/components/`. The press listener now runs in the capture phase everywhere. Three sites stay as they are because they are not plain dismissals: SpellBuilder steps (a press paired with its release), ClickFeedback (it also closes on focus moving out) and Field pointer-held. Not yet shared: Escape handled in `onKeyDown` in MenuButton, FacetPanel and Combobox, and the Escape listeners in HelpOutline guides-bar and InfoTip `use-tip`. They move to MC.6.
+- **Status:** Fixed (MC.6). Outside-press dismissal goes through `useDismiss` in `src/lib/use-dismiss.ts`, and Escape through `useDismiss({ onEscape })` for a document listener or `escapeKeyHandler` for an element's `onKeyDown`. `tests/guards/dismissal.test.ts` refuses a hand-written `pointerdown`, `mousedown` or Escape comparison in `src/` outside the named files.
 
 ### D-21: "assertMembership, swallow Forbidden" written at least six times
 
@@ -2081,7 +2081,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** `tests/components/UserList/*`, `tests/components/InfoTip/*`, `tests/e2e/` specs for keeper users.
 
 - **Estimate:** 4 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-69: AdminCards and AdminInvitations small duplicates and hard-coded constants
 
@@ -2169,7 +2169,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** IngredientEntry component tests, e2e specs for Delete Ingredient and Remove from Cupboard.
 
 - **Estimate:** 3.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6). `IngredientForm/index.tsx` keeps its own delete mutation: its confirm dialog awaits the delete and needs a refusal to throw, and `useRefusableMutation` reports a refusal through a callback and stays pending after success.
 
 ### D-72: A callback-ref merge written twice
 
@@ -2201,7 +2201,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** `tests/components/ClickFeedback/`, IngredientEntry, SpellRecipe and AddIcon component tests.
 
 - **Estimate:** 2 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-73: Help article title row and page head repeated across four Help pages and their skeletons
 
@@ -2283,7 +2283,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - **Tests covering the callers:** `tests/components/` for each folder named.
 
 - **Estimate:** 4 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6). `IngredientEntry/review-mark.tsx` keeps its own busy guard: it shows a refusal as an inline notice and must accept the next flip as soon as a request ends, and `useGuardedAction` reports through the click-feedback callout and stays pending after success.
 
 ### D-77: "Unwrap a loader slot or throw" written three times
 
@@ -2392,7 +2392,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - **Tests covering the callers:** `tests/components/MemberList/`, `UserList/`, `SupportList/`, `SupportRequests/`, `tests/components/Modal/`.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-81: Two near-identical `Day` components, plus three inline copies of the ISO-day cell
 
@@ -2408,7 +2408,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - **Tests covering the callers:** `tests/components/MemberDetail/`, `UserDetail/`, `MemberList/`, `UserList/`, `DataTable/`.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-82: CupboardEntryForm lists its field names in four places that can drift apart
 
@@ -2510,7 +2510,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/index.tsx` each carry `data-1p-ignore` and its comment. HelpSearchForm renders `SearchField`, or both spread one `SEARCH_INPUT_ATTRIBUTES` object. Adds 0.1 hours.
 
 - **Estimate:** 1.6 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-86: `ignoreExportsUsedInFile: true` hides about 313 exports that only their own file uses
 
@@ -2561,7 +2561,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** `tests/lib/use-lazy-module.test.ts*`, tests for StockDialog and IngredientEntry dialogs.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-89: Quantity column declared five times without the shared constants' helper
 
@@ -3102,7 +3102,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - `CovenCards/card-more.tsx` is the third copy: Asking state, trigger ref and alert; its `close` duplicates `settle`.
 
 - **Estimate:** 4 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-119: Navigate-to-landing-and-refresh after leaving or deleting a coven is written three times with the same comment
 
@@ -3116,7 +3116,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/components/LeaveWorkspaceButton/`, `tests/components/DeleteWorkspaceButton/`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-120: Three "native control before hydration" fallbacks build the same grouped `<select>`
 
@@ -3215,7 +3215,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/components/CategoryChips/`, `tests/components/InfoTip/`.
 
 - **Estimate:** 3 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-126: Two `workingStepsOf` and two `UNAVAILABLE_INGREDIENT` constants
 
@@ -3464,7 +3464,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** tests/components/Combobox, InfoTip, CategoryChips, ClickFeedback.
 
 - **Estimate:** 3 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-141: Unverified-email sentence exists in five places
 
@@ -3957,7 +3957,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - `src/components/SectionNav/section-links.tsx` holds `TABLET_BAND` (already named in D-161 as a candidate; confirmed as a copy).
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-162: "Deleted account" and "Signed-out sender" literals repeated across the support screens
 
@@ -3989,7 +3989,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 - **Tests covering the callers:** `tests/components/SignInPanel/*`, `tests/components/SignInMethods/*`, `tests/components/ListFrame/*`.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-164: Calendar-day regex `/^\d{4}-\d{2}-\d{2}$/` written three times
 
@@ -4159,7 +4159,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 src/components/IconTip/icons.tsx, five new icons (see D-222).
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-175: document-order assertions via compareDocumentPosition repeated in new tests
 
@@ -4372,7 +4372,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/components/TabbedPage`, `AccountMenu`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-189: Spell card face and burn markup repeated in SpellCard and SpellPreview
 
@@ -4736,7 +4736,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** tests/components/AppShell.
 
 - **Estimate:** 0.25 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-214: Repeat-announcement NBSP trick written three times
 
@@ -4750,7 +4750,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** tests/components/ClickFeedback, Modal, SupportRequests, Field.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-215: `Field/radio-group-field.tsx` writes the radio `<input>` three times
 
@@ -4862,7 +4862,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** IconTip stories.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-223: Modal `wasTitled` effect repeats the `wasLoading` effect shape
 
@@ -4876,7 +4876,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** Modal tests.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-224: QR ink colour duplicates SCSS `$chalk`
 
@@ -5135,7 +5135,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** The coven Ingredients and Grimoire e2e stories.
 
 - **Estimate:** 0.25 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-241: `autoCapitalize`, `enterKeyHint` and `format` are typed by hand a second time in Combobox
 

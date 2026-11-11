@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { CrossIcon } from '../IconTip/icons';
+import { setRef } from '../../lib/set-ref';
 import { useFade } from './fade';
 import { useBadgePlace, useCalloutPlace } from './position';
 import { useAnnounce } from './status-region';
@@ -58,7 +59,7 @@ function retoken(node: Element, attribute: string, token: string, present: boole
  * `feedback` is rendered directly after it: the badge is then the next tab
  * stop, and the callout the one after.
  */
-export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback {
+export function useClickFeedback({ name, ref }: ClickFeedbackOptions): ClickFeedback {
   const announce = useAnnounce();
   const id = useId();
   const calloutId = `${id}callout`;
@@ -86,10 +87,14 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
   // control's first render is over (a press on mount) would read the state as
   // null, and take the corner and no opener.
   const anchorNode = useRef<HTMLElement | null>(null);
-  const anchorRef = useCallback((node: HTMLElement | null) => {
-    anchorNode.current = node;
-    setAnchor(node);
-  }, []);
+  const anchorRef = useCallback(
+    (node: HTMLElement | null) => {
+      anchorNode.current = node;
+      setRef(ref, node);
+      setAnchor(node);
+    },
+    [ref],
+  );
 
   const ours = useCallback(
     // Asked of the target rather than `instanceof Node`, false across an iframe.

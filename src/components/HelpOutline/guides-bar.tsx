@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { useDismiss } from '../../lib/use-dismiss';
 import { byAudience, HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { useAnnounce } from '../ClickFeedback/status-region';
@@ -142,16 +143,14 @@ const HelpGuidesBar = ({
   useEffect(() => {
     closeRef.current = close;
   });
-  useEffect(() => {
-    if (!reordering || saving) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || event.defaultPrevented) return;
+  useDismiss({
+    active: reordering && !saving,
+    onEscape: (event) => {
+      if (event.defaultPrevented) return;
       if (modeRef.current?.querySelector('.is-dragging')) return;
       closeRef.current();
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [reordering, saving]);
+    },
+  });
 
   const onMove = (audience: HelpOutlineAudience, from: number, to: number) => {
     const run = rows.filter((row) => row.audience === audience);

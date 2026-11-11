@@ -1,12 +1,11 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { failureMessage } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { useClickFeedback } from '../ClickFeedback';
+import { useGuardedAction } from '../ClickFeedback/use-guarded-action';
 import Notice from '../Notice';
 import ConfirmedAction from '../ConfirmedAction';
 import type { PauseControlProps } from './types';
@@ -58,23 +57,15 @@ const PAUSE_QUESTION =
 const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement => {
   const { refresh } = usePendingNavigation();
   const copy = STATES[paused ? 'paused' : 'open'];
-  const [sending, setSending] = useState(false);
-  const feedback = useClickFeedback({ name: copy.label });
-
-  async function toggle() {
-    if (sending) return;
-    setSending(true);
-    feedback.report(undefined);
-    try {
+  const { anchorRef, run, pending, announce, feedback } = useGuardedAction({
+    name: copy.label,
+    action: async () => {
       await copy.send();
-      feedback.announce(copy.done);
+      announce(copy.done);
       // Busy until the re-read page states the other state.
       refresh();
-    } catch (error) {
-      setSending(false);
-      feedback.report(failureMessage(error));
-    }
-  }
+    },
+  });
 
   return (
     <div className="user-list__pause">
@@ -95,17 +86,16 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
               out, so the focus stays on it and a refusal is read with the
               focus where it was, as Stop Impersonating's is. */}
           <BusyButton
-            ref={feedback.anchorRef}
+            ref={anchorRef}
             className={copy.buttonClass}
-            aria-disabled={sending || undefined}
-            busy={sending}
+            aria-disabled={pending || undefined}
+            busy={pending}
             busyLabel={copy.busy}
-            onClick={() => void toggle()}
+            onClick={() => void run()}
           >
             {copy.label}
           </BusyButton>
-          {/* oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering */}
-          {feedback.feedback}
+          {feedback}
         </>
       ) : (
         <ConfirmedAction

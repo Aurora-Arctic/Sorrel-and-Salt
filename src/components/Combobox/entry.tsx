@@ -6,7 +6,7 @@ import { LinkIcon } from './icons';
 import { useEntrySummary } from './summary';
 import GripHandle from '../GripHandle';
 import IconTip from '../IconTip';
-import { useTip } from '../InfoTip/use-tip';
+import TipAnchor, { type TipControls } from '../InfoTip/tip-anchor';
 import type { ComboboxEntryProps } from './types';
 import { cx } from '@/lib/class-names';
 
@@ -37,12 +37,13 @@ export function ComboboxEntry({
   sortable,
 }: ComboboxEntryProps): ReactElement {
   const text = useRef<HTMLSpanElement | null>(null);
+  const tip = useRef<TipControls>(null);
   const detailId = useId();
   const qualifierId = useId();
   // A sortable entry's text is its handle, so it opens nothing.
   const summary = sortable ? undefined : summarised;
   const opens = useEntrySummary();
-  const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip(() => {
+  const canOpen = () => {
     const element = text.current;
     return (
       !opens.open &&
@@ -50,7 +51,7 @@ export function ComboboxEntry({
         Boolean(qualifier) ||
         (element !== null && element.scrollWidth > element.clientWidth))
     );
-  }, 'top-start');
+  };
 
   // The tooltip runs as wide as its words, past chip and control; `useTip` keeps it on screen.
   const textSpan = (
@@ -72,8 +73,7 @@ export function ComboboxEntry({
       {icon}
     </span>
   ) : null;
-  const describedBy =
-    [errorId, qualifier && qualifierId, detail && detailId].filter(Boolean).join(' ') || undefined;
+  const describedBy = cx(errorId, qualifier && qualifierId, detail && detailId) || undefined;
 
   return (
     <li
@@ -95,72 +95,72 @@ export function ComboboxEntry({
       }}
     >
       {/* Hover on a wrapper holding the tooltip, so the pointer can move onto it without closing it. */}
-      <span
-        ref={anchor}
+      <TipAnchor
+        handle={tip}
         className="combobox__entry-label"
-        onMouseEnter={showSoon}
-        onMouseLeave={hideSoon}
+        bubbleClass="combobox__entry-tip"
+        canOpen={canOpen}
+        placement="top-start"
+        bubble={
+          <>
+            {value}
+            {/* After the text, in brackets outside the span, so the x's description reads the name alone. */}
+            {qualifier && (
+              <>
+                {' ('}
+                <span id={qualifierId}>{qualifier}</span>
+                {')'}
+              </>
+            )}
+            {/* Referenced by the x below, so read although the tooltip is aria-hidden while closed. */}
+            {detail && (
+              <span id={detailId} className="combobox__entry-detail">
+                {detail}
+              </span>
+            )}
+          </>
+        }
       >
-        {iconMark}
-        {summary ? (
-          <button
-            type="button"
-            className="combobox__entry-open"
-            {...opens.opener}
-            aria-describedby={describedBy}
-            onClick={() => {
-              hide();
-              opens.opener.onClick();
-            }}
-            onFocus={show}
-            onBlur={(event) => {
-              hide();
-              opens.opener.onBlur(event);
-            }}
-          >
-            <LinkIcon />
-            {textSpan}
-          </button>
-        ) : sortable ? (
-          <GripHandle
-            sortable={sortable}
-            name={value}
-            className="combobox__entry-handle"
-            describedBy={describedBy}
-            onFocus={show}
-            onBlur={hide}
-          >
-            {textSpan}
-          </GripHandle>
-        ) : (
-          textSpan
+        {({ show, hide }) => (
+          <>
+            {iconMark}
+            {summary ? (
+              <button
+                type="button"
+                className="combobox__entry-open"
+                {...opens.opener}
+                aria-describedby={describedBy}
+                onClick={() => {
+                  hide();
+                  opens.opener.onClick();
+                }}
+                onFocus={show}
+                onBlur={(event) => {
+                  hide();
+                  opens.opener.onBlur(event);
+                }}
+              >
+                <LinkIcon />
+                {textSpan}
+              </button>
+            ) : sortable ? (
+              <GripHandle
+                sortable={sortable}
+                name={value}
+                className="combobox__entry-handle"
+                describedBy={describedBy}
+                onFocus={show}
+                onBlur={hide}
+              >
+                {textSpan}
+              </GripHandle>
+            ) : (
+              textSpan
+            )}
+            {countMark}
+          </>
         )}
-        {countMark}
-        {/* In the page while closed, faded out and aria-hidden, so it fades both ways as InfoTip's does. */}
-        <span
-          ref={bubble}
-          role="tooltip"
-          style={bubbleStyle}
-          className={open ? 'combobox__entry-tip is-open' : 'combobox__entry-tip'}
-          aria-hidden={!open}
-        >
-          {value}
-          {/* After the text, in brackets outside the span, so the x's description reads the name alone. */}
-          {qualifier && (
-            <>
-              {' ('}
-              <span id={qualifierId}>{qualifier}</span>
-              {')'}
-            </>
-          )}
-          {/* Referenced by the x below, so read although the tooltip is aria-hidden while closed. */}
-          {detail && (
-            <span id={detailId} className="combobox__entry-detail">
-              {detail}
-            </span>
-          )}
-        </span>
-      </span>
+      </TipAnchor>
       {note && <span className="visually-hidden"> ({note})</span>}
       {/* In the chip, after its button, so the Tab order runs from the text into the panel and on to the x. */}
       {summary && opens.open && (
@@ -200,8 +200,8 @@ export function ComboboxEntry({
         className="combobox__entry-remove"
         aria-label={removeNoun ? `Remove ${removeNoun}: ${value}` : `Remove ${value}`}
         aria-describedby={describedBy}
-        onFocus={show}
-        onBlur={hide}
+        onFocus={() => tip.current?.show()}
+        onBlur={() => tip.current?.hide()}
         onClick={onRemove}
       >
         <span aria-hidden="true">×</span>

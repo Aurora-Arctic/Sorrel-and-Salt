@@ -1,5 +1,5 @@
 import { oneOf, trimmed } from '../../lib/search-params';
-import { isCalendarDay } from '../../lib/utc';
+import { isCalendarDay, isoDayInUtc } from '../../lib/utc';
 import { BATCH_STATUSES } from './batches';
 import type { ArrivalsFilter, CardsFilter } from './types';
 
@@ -9,9 +9,7 @@ import type { ArrivalsFilter, CardsFilter } from './types';
 const day = (raw: string | string[] | undefined): string => {
   const value = trimmed(raw);
   const parsed = new Date(value);
-  return isCalendarDay(value) &&
-    !Number.isNaN(parsed.getTime()) &&
-    parsed.toISOString().slice(0, 10) === value
+  return isCalendarDay(value) && !Number.isNaN(parsed.getTime()) && isoDayInUtc(parsed) === value
     ? value
     : '';
 };

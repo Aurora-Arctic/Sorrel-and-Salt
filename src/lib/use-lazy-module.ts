@@ -1,4 +1,12 @@
-import { useEffect, useState } from 'react';
+import {
+  type ComponentType,
+  createElement,
+  Fragment,
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useState,
+} from 'react';
 import type { LazyModule, PreloadHandlers } from './types';
 
 /** One import shared by every caller, started by the first `load()`. */
@@ -87,4 +95,20 @@ export function useLazyModule<M>(
     };
   }, [load, wanted, module]);
   return module;
+}
+
+/**
+ * A component that draws `module`'s default export once it arrives and `fallback` (nothing, by default)
+ * until then. It starts the load on first render; the module stays exported by its caller so openers can
+ * preload it.
+ */
+export function lazyComponent<P extends object>(
+  module: LazyModule<{ default: ComponentType<P> }>,
+  { fallback }: { fallback?: (props: P) => ReactNode } = {},
+): (props: P) => ReactElement | null {
+  return function LazyComponent(props: P) {
+    const arrived = useLazyModule(module, true);
+    if (arrived) return createElement(arrived.default, props);
+    return fallback ? createElement(Fragment, null, fallback(props)) : null;
+  };
 }

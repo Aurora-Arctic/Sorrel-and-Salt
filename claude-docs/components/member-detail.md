@@ -4,7 +4,7 @@
 
 ## How it opens
 
-The members page reads `?member=<id>` and finds that member among the rows it has already read, so opening reads nothing more. Each row's name is a link to its own address with the cursor kept (`MemberLink`, [`member-list.md`](member-list.md), "Contracts"), and the page is a `RouteModalProvider`, so a press opens the modal at once with its heading (`member-heading.tsx`: eyebrow Member, the name, and for a steward the address) and the body follows. `member-dialog.tsx` is the client edge, a `RouteModal` closing back to the list at the same cursor.
+The members page reads `?member=<id>` and finds that member among the rows it has already read, so opening reads nothing more. Each row's name is a link to its own address with the cursor kept (`OpenModalLink`, [`member-list.md`](member-list.md), "Contracts"), and the page is a `RouteModalProvider`, so a press opens the modal at once with its heading (`member-heading.tsx`: eyebrow Member, the name, and for a steward the address) and the body follows. `member-dialog.tsx` is the client edge, a `RouteModal` closing back to the list at the same cursor.
 
 An id not among this page's rows opens nothing: an error notice above the list says no member on this page has that address.
 

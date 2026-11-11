@@ -43,9 +43,3 @@ export interface RemoveControlProps {
   /** Called once removed, in place of re-reading the page; the member modal closes through it. */
   onSent?: () => void;
 }
-
-export interface MemberLinkProps {
-  href: Route;
-  heading: ModalHeading;
-  name: string;
-}

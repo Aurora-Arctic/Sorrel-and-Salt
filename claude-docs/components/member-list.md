@@ -5,7 +5,7 @@
 ## Contracts
 
 - **No permission check lives here.** The page decides which columns to draw and what the modal offers (CLAUDE.md rule 1).
-- **No row holds an action**, as on the admin users table. The name is a link, `MemberLink` (`member-link.tsx`), to `?member=<id>` with the cursor kept; a press opens the modal at once with its heading, through the page's `RouteModalProvider`. It is still a link, so a new tab opens the address.
+- **No row holds an action**, as on the admin users table. The name is an `OpenModalLink` (`Modal/open-modal-link.tsx`) to `?member=<id>` with the cursor kept; a press opens the modal at once with its heading, through the page's `RouteModalProvider`. It is still a link, so a new tab opens the address.
 - **Columns:** Name, Email (stewards only), Role, Joined, Invited By, Updated, Access (stewards only). Joined, Invited By and Updated are muted facts no control changes.
 - **Roles are told apart by their word**, from `workspaceRoleLabel` (`UserDetail/roles.ts`). A steward is also bold, but weight is never the only cue.
 - **Every role carries a tip saying what it may do**: a [`RoleTip`](role-tip.md), its text `WORKSPACE_ROLE_ACCESS[role]`, the same sentence Change Role shows beside that role, on every row, so a member reads it too.

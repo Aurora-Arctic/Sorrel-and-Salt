@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
+import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import { TABLET_BAND, useMediaQuery } from '../../lib/use-media-query';
 import { useHydrated } from '../../lib/hydrated';
 import { useSlide } from '../../lib/use-slide';
 import Skeleton from '../Skeleton';
@@ -25,19 +26,6 @@ function itemsOf(entries: readonly PageNavEntry[]): PageNavItem[] {
   return items;
 }
 
-// Wider than the phone (`$shell-phone-width`, 40rem; _variables.scss), where the menu stands open
-// with no toggle; the server's snapshot is the phone's, closed, so the page lands with the text in view.
-const TABLET_BAND = '(min-width: 40.01rem)';
-const subscribeToBand = (notify: () => void): (() => void) => {
-  if (typeof window.matchMedia !== 'function') return () => undefined;
-  const query = window.matchMedia(TABLET_BAND);
-  query.addEventListener('change', notify);
-  return () => query.removeEventListener('change', notify);
-};
-const inTabletBand = (): boolean =>
-  typeof window.matchMedia === 'function' && window.matchMedia(TABLET_BAND).matches;
-const inTabletBandNever = (): boolean => false;
-
 export default function PageNav({
   label,
   entries,
@@ -45,7 +33,7 @@ export default function PageNav({
   pending,
 }: PageNavProps): ReactElement {
   const [current, setCurrent] = useState(entries[0]?.href);
-  const wide = useSyncExternalStore(subscribeToBand, inTabletBand, inTabletBandNever);
+  const wide = useMediaQuery(TABLET_BAND);
   const hydrated = useHydrated();
   const slide = useSlide('page-nav__slide');
   const groupId = useId();

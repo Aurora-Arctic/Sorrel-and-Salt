@@ -1,11 +1,12 @@
 'use client';
 
+import { hasText } from '@/lib/text';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { MS_PER_DAY } from '../../lib/duration';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { useFormSend } from '../../lib/use-form-send';
-import { expiryOfDay } from '../../lib/utc';
+import { expiryOfDay, isoDayInUtc } from '../../lib/utc';
 import {
   FieldShell,
   FormActions,
@@ -56,15 +57,15 @@ export const SHEETS_REQUIRED = 'Enter how many sheets to mint, like 3';
 const expiryOf = (day: string): string => expiryOfDay(day).toISOString();
 
 /** The day after today in UTC: the service refuses an expiry at or before now. */
-const earliestDay = (): string => new Date(Date.now() + MS_PER_DAY).toISOString().slice(0, 10);
+const earliestDay = (): string => isoDayInUtc(new Date(Date.now() + MS_PER_DAY));
 
 const defaultDay = (): string =>
-  new Date(Date.now() + DEFAULT_EXPIRY_DAYS * MS_PER_DAY).toISOString().slice(0, 10);
+  isoDayInUtc(new Date(Date.now() + DEFAULT_EXPIRY_DAYS * MS_PER_DAY));
 
 /** A decimal count is rounded to the nearest whole sheet, not refused. */
 const wholeSheets = (text: string): string => {
   const sheets = Number(text);
-  return text.trim() !== '' && Number.isFinite(sheets) && !Number.isInteger(sheets)
+  return hasText(text) && Number.isFinite(sheets) && !Number.isInteger(sheets)
     ? String(Math.round(sheets))
     : text;
 };
@@ -72,11 +73,11 @@ const wholeSheets = (text: string): string => {
 const sheetsOf = (typed: string): number | undefined => {
   const text = wholeSheets(typed);
   const sheets = Number(text);
-  return text.trim() !== '' && Number.isInteger(sheets) ? sheets : undefined;
+  return hasText(text) && Number.isInteger(sheets) ? sheets : undefined;
 };
 
 const sheetsRefusal = (text: string): string | undefined => {
-  if (text.trim() === '') return undefined;
+  if (!hasText(text)) return undefined;
   const sheets = sheetsOf(text);
   const inRange = sheets !== undefined && sheets >= 1 && sheets <= MAX_SHEETS_PER_BATCH;
   return inRange ? undefined : `A batch is from 1 to ${MAX_SHEETS_PER_BATCH} sheets`;

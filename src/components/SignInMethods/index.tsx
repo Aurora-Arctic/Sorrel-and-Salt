@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useEffect, useId, useState } from 'react';
+import { type ReactElement, useId, useState } from 'react';
 import { linkSocial, signOut, unlinkAccount } from '../../lib/auth-client';
 import { settled } from '../../lib/auth-call';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
@@ -19,6 +19,7 @@ import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import Notice from '../Notice';
+import { useRestoredFromCache } from '../../lib/use-restored-from-cache';
 import { ProviderRow } from './provider-row';
 import { SectionRow } from './section-row';
 import type { ProviderRemoval, SignInMethodError, SignInMethodsProps } from './types';
@@ -52,13 +53,7 @@ const SignInMethods = ({
   // The page is left for the provider's own, so on success `linking` stays set
   // until the browser goes; a return from the back-forward cache (the page
   // restored as it was left) clears it, as on /sign-in.
-  useEffect(() => {
-    const restored = (event: PageTransitionEvent) => {
-      if (event.persisted) setLinking(undefined);
-    };
-    window.addEventListener('pageshow', restored);
-    return () => window.removeEventListener('pageshow', restored);
-  }, []);
+  useRestoredFromCache(() => setLinking(undefined));
 
   const handleAdd = async (providerId: ProviderId): Promise<string | undefined> => {
     if (!configured.includes(providerId)) return undefined;
