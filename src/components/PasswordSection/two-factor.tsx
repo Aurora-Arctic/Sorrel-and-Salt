@@ -6,10 +6,11 @@ import { twoFactor, useSession } from '../../lib/auth-client';
 import { settled, type AuthFailure } from '../../lib/auth-call';
 import { TOO_MANY_ATTEMPTS, WRONG_CODE, rateLimited } from '../../lib/auth-messages';
 import { useLeaveGuard } from '../../lib/navigation';
+import { codeDigits } from '../../lib/formats';
 import { saveFile } from '../../lib/save-file';
 import { SITE_NAME, SITE_TITLE_NAME } from '../../lib/site';
 import BusyButton from '../BusyButton';
-import { PlainTextField } from '../Field';
+import { CodeField } from '../Field';
 import { CopyIcon, DownloadIcon, PrintIcon } from '../IconTip';
 import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
@@ -174,7 +175,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
     target?.scrollIntoView({ block: 'start' });
   }, [warning]);
 
-  const entered = code.replace(/\s/g, '');
+  const entered = codeDigits(code);
 
   // Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both
   // arrive here.
@@ -343,17 +344,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
           </ol>
           {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
           <form className="form" onSubmit={confirm} noValidate>
-            <PlainTextField
-              label="Code From Your App"
-              required
-              placeholder="123456"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              spellCheck={false}
-              value={code}
-              onChange={setCode}
-              error={problem.code}
-            />
+            <CodeField value={code} onChange={setCode} error={problem.code} />
             <div className="form__actions">
               <BusyButton
                 type="submit"

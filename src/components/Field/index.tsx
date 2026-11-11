@@ -8,6 +8,7 @@ export { fieldDescription } from './description';
 export { TextField } from './text-field';
 export { PlainTextField } from './plain-text-field';
 export { EmailField } from './email-field';
+export { CodeField } from './code-field';
 export { DateFieldShell, PlainDateField } from './plain-date-field';
 export { SelectField } from './select-field';
 export { RadioGroupField } from './radio-group-field';
