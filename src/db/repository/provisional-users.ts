@@ -18,6 +18,14 @@ function provisional(userId?: string) {
   );
 }
 
+/** Idle past the lifetime, or older than the cap whatever its activity. */
+function lapsed(lifetimeSeconds: number, capSeconds: number) {
+  return or(
+    lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
+    lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
+  );
+}
+
 /**
  * Hard-deletes a lapsed provisional account outside `withAudit`; a tombstone would block Better Auth's
  * sign-in (claude-docs/db/write-path.md, "Removing a lapsed provisional account").
@@ -29,15 +37,7 @@ export async function deleteLapsedProvisionalUser(
 ): Promise<boolean> {
   const rows = await db
     .delete(users)
-    .where(
-      and(
-        provisional(userId),
-        or(
-          lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
-          lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
-        ),
-      ),
-    )
+    .where(and(provisional(userId), lapsed(lifetimeSeconds, capSeconds)))
     .returning({ id: users.id });
   return rows.length > 0;
 }
@@ -82,10 +82,7 @@ export async function findLapsedProvisionalUserIds(
         notSoftDeleted(users),
         provisional(),
         after === null ? undefined : gt(users.id, after),
-        or(
-          lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
-          lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
-        ),
+        lapsed(lifetimeSeconds, capSeconds),
       ),
     )
     .orderBy(users.id)

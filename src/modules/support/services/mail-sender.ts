@@ -1,6 +1,5 @@
 import 'server-only';
-import { send } from '../../../lib/mail';
-import { startMailJob } from '../../../lib/mail-job';
+import { startMessageMail } from '../../../lib/mail-job';
 import { supportStatusMail } from '../jobs/support-status-mail';
 import { supportStatusMessageFor } from './status-mail';
 import type { SupportNotifier, SupportRequestRow, SupportStatusMail } from '../types';
@@ -18,8 +17,5 @@ export async function mailSender(
   kind: SupportStatusMail['kind'],
 ): Promise<void> {
   const mail: SupportStatusMail = { kind, requestId: request.id, origin: await notifier.origin() };
-  await startMailJob(supportStatusMail, [mail], `support ${kind}`, async () => {
-    const message = await supportStatusMessageFor(mail);
-    if (message) await send(message);
-  });
+  await startMessageMail(supportStatusMail, mail, `support ${kind}`, supportStatusMessageFor);
 }

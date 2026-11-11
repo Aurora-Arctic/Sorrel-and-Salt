@@ -63,7 +63,7 @@ describe('refuseSlugCollision', () => {
 
     expect(refused).toBeInstanceOf(ValidationError);
     expect((refused as ValidationError).issues.map((issue) => issue.path)).toEqual([['name']]);
-    expect((refused as ValidationError).issues[0].message).toContain('"testcraft-nobody"');
+    expect((refused as ValidationError).issues[0].message).toContain('"Testcraft Nobody"');
   });
 });
 

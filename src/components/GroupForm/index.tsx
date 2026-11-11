@@ -266,7 +266,7 @@ const GroupForm = ({
   };
   const [step, setStep] = useState<DeleteStep>({ at: 'idle' });
   const discard = useDiscardGuard(isDirty);
-  const { root, history, setAlert, rootError, send } = useEntityForm({
+  const { root, history, setAlert, rootError, settle, send } = useEntityForm({
     methods,
     discard,
     save: (input) => spec.save(input, group?.id),
@@ -304,6 +304,8 @@ const GroupForm = ({
       } else {
         setStep({ at: 'idle' });
         setAlert(issues.map(({ message }) => message).join(' '));
+        // After the question hands the focus back to the delete button as it goes.
+        settle('result');
       }
     }
   };
@@ -439,7 +441,11 @@ const GroupForm = ({
           noValidate
         >
           <FormHistoryButtons />
-          {rootError && <Notice kind="error">{rootError}</Notice>}
+          {rootError && (
+            <Notice kind="error" result>
+              {rootError}
+            </Notice>
+          )}
           <FormErrorSummary />
           <TextField<GroupValues>
             name="name"

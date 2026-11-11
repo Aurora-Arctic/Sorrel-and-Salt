@@ -38,6 +38,7 @@ import type { GRIMOIRE_ORDERS, spells } from '../../modules/grimoire/schema/spel
 import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { Curator, SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
+import type { InvitableRole } from '../../lib/invitable-roles';
 import type { Cursor, PageRequest } from '../../lib/types';
 import type { AuditFields, AuditSession, Generic, WithoutAuditFields } from '../types';
 import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
@@ -1186,7 +1187,7 @@ export type SiteInvitationRow = AddressInvitationRow & {
   siteRole: InvitableSiteRole;
 };
 
-export type InvitableRole = Exclude<NonNullable<InvitationRow['role']>, 'owner'>;
+export type { InvitableRole } from '../../lib/invitable-roles';
 
 /** What an invitation on either tier starts with; the expiry defaults to seven days out. */
 type InvitationValues = Pick<typeof invitations.$inferInsert, 'email' | 'expiresAt' | 'note'> & {

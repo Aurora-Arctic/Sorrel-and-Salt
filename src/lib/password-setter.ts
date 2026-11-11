@@ -1,6 +1,6 @@
 import { scheduleAccountNotice, type PasswordSetter } from '@/modules/identity';
 import { withBreachedCheck } from './breached-password';
-import { ValidationError } from './errors';
+import { fieldRefusal } from './errors';
 import { PASSWORD_CHECK_UNAVAILABLE, newPasswordRefusal } from './password-refusals';
 import { requestOrigin } from './request-origin';
 import { isFreshSession } from './session-fresh';
@@ -39,7 +39,7 @@ export function passwordSetter(request: Request): PasswordSetter {
           (failure.code === 'PASSWORD_ALREADY_SET' ? ALREADY_SET : undefined) ??
           (error.statusCode === 500 ? PASSWORD_CHECK_UNAVAILABLE : undefined);
         if (!message) throw error;
-        throw new ValidationError([{ path: ['newPassword'], message }], message);
+        throw fieldRefusal('newPassword', message);
       }
       const session = await auth.api.getSession({ headers: request.headers });
       if (session) {

@@ -1,8 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
-import { type RefObject, useRef, useState } from 'react';
+import { type RefObject, useState } from 'react';
 import type { FieldValues, Path, UseFormReturn } from 'react-hook-form';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import type { ValidationIssue } from '../../lib/types';
+import { useResultFocus } from '../../lib/use-result-focus';
 import type { DiscardGuard } from '../Modal/types';
 import type { FormHistory } from './types';
 import { useFormHistory } from './use-form-history';
@@ -37,13 +38,15 @@ export function useEntityForm<Values extends FieldValues>({
   alert: string | undefined;
   setAlert: (alert: string | undefined) => void;
   rootError: string | undefined;
+  /** Moves the focus to the alert marked `result` once it is drawn; a refused delete calls `settle('result')`. */
+  settle: (prefer?: 'result') => void;
   send: (values: Values) => Promise<void>;
 } {
   const {
     setError,
     formState: { errors },
   } = methods;
-  const root = useRef<HTMLFormElement>(null);
+  const { ref: root, settle } = useResultFocus<HTMLFormElement>();
   const history = useFormHistory(methods, { root, enabled: !discard.asking && !asking });
   const [alert, setAlert] = useState<string>();
   const saving = useMutation({ mutationFn: save });
@@ -54,7 +57,14 @@ export function useEntityForm<Values extends FieldValues>({
       await saving.mutateAsync(values);
       onDone();
     } catch (error) {
-      placeServerIssues(error, setError, toField);
+      let fielded = false;
+      placeServerIssues(error, setError, (issue) => {
+        const field = toField(issue);
+        fielded ||= field !== undefined;
+        return field;
+      });
+      // A field marked takes the error summary, which holds the focus itself.
+      if (!fielded) settle();
     }
   };
 
@@ -64,6 +74,7 @@ export function useEntityForm<Values extends FieldValues>({
     alert,
     setAlert,
     rootError: errors.root?.message ?? alert,
+    settle,
     send,
   };
 }

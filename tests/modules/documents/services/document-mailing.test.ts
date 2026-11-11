@@ -484,6 +484,33 @@ describe('emailDocumentsToEveryAccount', () => {
     expect(startJob).not.toHaveBeenCalled();
   });
 
+  it('refuses a version id that is not a uuid on that document’s version field', async () => {
+    const termsV2 = await publishTermsV2();
+
+    const refusal = await refusalOf(
+      emailDocumentsToEveryAccount(
+        asUser(E),
+        {
+          summaries: [
+            { versionId: privacyV2, summary: SUMMARY },
+            { versionId: `${termsV2}-not-a-uuid`, summary: SUMMARY },
+          ],
+        },
+        notifier,
+      ),
+    );
+
+    expect(refusal).toBeInstanceOf(ValidationError);
+    expect((refusal as ValidationError).issues).toEqual([
+      expect.objectContaining({
+        path: ['summaries', 1, 'versionId'],
+        message: 'Choose a document version from the list',
+      }),
+    ]);
+    expect(await mailingRows()).toEqual([]);
+    expect(startJob).not.toHaveBeenCalled();
+  });
+
   it('starts one mailing when two keepers send at once, and refuses the other', async () => {
     await accounts(3);
     const send = () =>

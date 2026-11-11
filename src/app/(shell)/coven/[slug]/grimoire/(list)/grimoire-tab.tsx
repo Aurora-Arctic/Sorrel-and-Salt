@@ -17,7 +17,7 @@ import { single } from '@/lib/search-params';
 import { pagerHrefs, withParam } from '@/lib/list-href';
 import { readPageCursors } from '@/lib/numbered-page';
 import { requireCovenMembership } from '@/lib/request-session';
-import { RowId } from '@/lib/validation';
+import { isRowId } from '@/lib/validation';
 import { viewerOf } from '@/lib/viewer';
 import { covenAccessOf } from '@/lib/coven-access';
 import {
@@ -96,7 +96,7 @@ export async function grimoireTab({
   const role = membership.role;
   const adding = query[NEW];
   const edit = adding === undefined ? query.edit : undefined;
-  const spellId = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;
+  const spellId = typeof edit === 'string' && isRowId(edit) ? edit : undefined;
   const access = covenAccessOf(role);
   const {
     canCreateSpell: canCreate,
@@ -114,22 +114,18 @@ export async function grimoireTab({
   const opened =
     opensNewSpell(single(adding) ?? null, workspace.slug) && canCreate
       ? {}
-      : spellId?.success && canUpdate
-        ? await readEditedSpell(workspace.id, spellId.data).then(
-            (saved) => saved && { spell: saved },
-          )
+      : spellId && canUpdate
+        ? await readEditedSpell(workspace.id, spellId).then((saved) => saved && { spell: saved })
         : undefined;
 
   const look = query.spell;
   const lookId =
-    adding === undefined && opened === undefined && typeof look === 'string'
-      ? RowId.safeParse(look)
+    adding === undefined && opened === undefined && typeof look === 'string' && isRowId(look)
+      ? look
       : undefined;
-  const lookHref = lookId?.success ? lookHrefOf(closeHref, lookId.data) : undefined;
+  const lookHref = lookId ? lookHrefOf(closeHref, lookId) : undefined;
   const looked =
-    lookHref && lookId?.success
-      ? await readLookedSpell(workspace.id, lookHref, lookId.data)
-      : undefined;
+    lookHref && lookId ? await readLookedSpell(workspace.id, lookHref, lookId) : undefined;
   const entryId = single(query.entry) || undefined;
   const viewed =
     entryId && looked && !('failed' in looked)

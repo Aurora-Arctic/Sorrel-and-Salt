@@ -1,5 +1,5 @@
 import { COMPENDIUM_PARAMS } from '../CompendiumList/params';
-import { RowId } from '../../lib/validation';
+import { isRowId } from '../../lib/validation';
 import { list } from '../../lib/search-params';
 import {
   defineSearchParams,
@@ -35,7 +35,7 @@ export const GRIMOIRE_PARAMS = defineSearchParams({
   makers: searchParam<string[]>({
     name: 'maker',
     variable: 'makerIds',
-    read: (raw) => [...new Set(list(raw).filter((id) => RowId.safeParse(id).success))],
+    read: (raw) => [...new Set(list(raw).filter(isRowId))],
     write: (value) => value,
     toVariable: (value) => (value.length > 0 ? value : undefined),
   }),

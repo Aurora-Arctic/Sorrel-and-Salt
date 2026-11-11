@@ -11,13 +11,15 @@ import type {
   SiteInvitationRow,
   SiteInvitationFilter,
 } from '../../../db/repository';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
 import { newToken } from '../../../lib/invitation-token';
-import type { Session, UserRole } from '../../../lib/session';
+import { trimmedOrUndefined } from '../../../lib/text';
+import type { Session } from '../../../lib/session';
 import { outranks } from '../../../lib/site-roles';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { normaliseEmail, validateEmailAddress } from './email';
 import { assertSiteAdmin } from './site-admin';
+import { ROLE_NOUNS } from './user-role';
 import { adminDeclaration } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
 import type { AdminInvitationFilter, InvitationSender } from '../types';
@@ -45,14 +47,10 @@ export async function createAdminInvitation(
   if (issue) throw new ValidationError([issue]);
   const holder = await findUserByEmail(email);
   if (holder && siteRole === 'user' && holder.canCreateWorkspace) {
-    throw new ValidationError([
-      { path: ['email'], message: 'That address can already create a coven' },
-    ]);
+    throw fieldRefusal('email', 'That address can already create a coven');
   }
   if (holder && siteRole !== 'user' && !outranks(siteRole, holder.role)) {
-    throw new ValidationError([
-      { path: ['email'], message: `That address belongs to ${withArticle(holder.role)} already` },
-    ]);
+    throw fieldRefusal('email', `That address belongs to ${ROLE_NOUNS[holder.role]} already`);
   }
 
   // The waiting site-tier invitation to this address is withdrawn in the same write. The token stored here is never told
@@ -70,8 +68,6 @@ export async function createAdminInvitation(
   await sender.invitation(row.id);
   return row;
 }
-
-const withArticle = (role: UserRole): string => (role === 'admin' ? 'an admin' : `a ${role}`);
 
 /**
  * @throws {Forbidden} as `createAdminInvitation` does.
@@ -116,7 +112,7 @@ export async function countPendingAdminInvitations(
 
 function siteFilter({ email, expiringSoon }: AdminInvitationFilter): SiteInvitationFilter {
   return {
-    email: email?.trim() || undefined,
+    email: trimmedOrUndefined(email),
     expiresWithinHours: expiringSoon ? EXPIRING_SOON_HOURS : undefined,
   };
 }

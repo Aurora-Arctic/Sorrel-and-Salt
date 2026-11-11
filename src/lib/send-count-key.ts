@@ -2,6 +2,7 @@ import 'server-only';
 import { createHmac } from 'node:crypto';
 import { normaliseEmail } from './email-address';
 import { requiredInProduction } from './env';
+import { fold } from './text';
 
 // The keys the signed-out send limits count under: an HMAC of the address under BETTER_AUTH_SECRET, so the
 // table holds no address (claude-docs/design-decisions/support.md, "Time-outs bind the address").
@@ -20,5 +21,5 @@ export function addressCountKey(email: string): string {
 }
 
 export function clientCountKey(client: string): string {
-  return keyed('client', client.trim().toLowerCase());
+  return keyed('client', fold(client));
 }

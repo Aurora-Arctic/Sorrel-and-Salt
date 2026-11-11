@@ -17,6 +17,16 @@ export function claimantList(name: SQLWrapper, canonicalName: SQLWrapper, id: SQ
     order by ${canonicalName} nulls last, ${name}, ${id})`;
 }
 
+/**
+ * The columns of a tier-2 row, a spelling no curated row holds: the spelling most rows use stands for the group (`mode()` breaks a tie by the order
+ * it is given, so the choice is stable). A caller puts its `from` after, and may add columns of its own such as `claimants`.
+ */
+export function uncuratedSuggestionColumns(spelling: SQLWrapper, fold: SQLWrapper): SQL {
+  return sql`2 as tier, null as id, mode() within group (order by ${spelling}) as value,
+    null as description, null as group_name, null as group_icon, null as matched_name,
+    ${fold} as fold, ${fold} as tiebreak`;
+}
+
 /** The tiers a suggestion row can sit in, as a cursor prints them. */
 const TIERS = ['0', '1', '2'];
 

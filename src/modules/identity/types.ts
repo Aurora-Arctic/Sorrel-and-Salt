@@ -1,3 +1,4 @@
+import type { OriginNotifier } from '../../lib/types';
 import type { userAccessPauses } from './schema/user-access-pauses';
 import type { userPrivilegeChanges } from './schema/user-privilege-changes';
 import type { users } from './schema/users';
@@ -27,10 +28,7 @@ export interface AdminInvitationFilter {
 
 export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 
-export interface AccessPauseNotifier {
-  /** The origin a mailed link is built on. @throws {Error} where none resolves. */
-  origin(): Promise<string>;
-}
+export type AccessPauseNotifier = OriginNotifier;
 
 export type AccessPauseMail = {
   kind: 'access-pause';

@@ -1,5 +1,7 @@
+import type { InputFieldBuilder } from '@pothos/core';
 import { amountOf } from '../../../lib/quantity';
 import { builder } from '../../../graphql/builder';
+import type { BuilderTypes } from '../../../graphql/types';
 import { sessionOf } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { compareSpellCategories } from '../validation/categories/compare';
@@ -196,20 +198,25 @@ const SpellStepInputRef = builder.inputType('SpellStepInput', {
   }),
 });
 
+/** The fields both saves share, in the order the schema shows them. */
+const spellFields = (t: InputFieldBuilder<BuilderTypes, 'InputObject'>) => ({
+  title: t.string({ description: 'Required once the status is complete.' }),
+  intent: t.string(),
+  jarDescription: t.string(),
+  sealWaxColor: t.string(),
+  moonPhase: t.string(),
+  dayOfWeek: t.string(),
+  note: t.string(),
+  status: t.field({ type: SpellStatusEnum }),
+  visibility: t.field({ type: SpellVisibilityEnum }),
+});
+
 // Both saves take every spell field, each nullable: only a complete spell
 // must carry a title, which the service checks.
 const SpellInputRef = builder.inputType('SpellInput', {
   description: 'A new spell: a draft needs nothing but its status.',
   fields: (t) => ({
-    title: t.string({ description: 'Required once the status is complete.' }),
-    intent: t.string(),
-    jarDescription: t.string(),
-    sealWaxColor: t.string(),
-    moonPhase: t.string(),
-    dayOfWeek: t.string(),
-    note: t.string(),
-    status: t.field({ type: SpellStatusEnum }),
-    visibility: t.field({ type: SpellVisibilityEnum }),
+    ...spellFields(t),
     steps: t.field({ type: [SpellStepInputRef], description: 'The recipe, in order.' }),
     categoryIds: t.idList({
       description:
@@ -222,15 +229,7 @@ const UpdateSpellInputRef = builder.inputType('UpdateSpellInput', {
   description:
     'Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens once the spell is complete.',
   fields: (t) => ({
-    title: t.string({ description: 'Required once the status is complete.' }),
-    intent: t.string(),
-    jarDescription: t.string(),
-    sealWaxColor: t.string(),
-    moonPhase: t.string(),
-    dayOfWeek: t.string(),
-    note: t.string(),
-    status: t.field({ type: SpellStatusEnum }),
-    visibility: t.field({ type: SpellVisibilityEnum }),
+    ...spellFields(t),
     steps: t.field({
       type: [SpellStepInputRef],
       description:

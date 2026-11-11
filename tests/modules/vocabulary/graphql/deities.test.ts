@@ -215,7 +215,7 @@ describe('updateDeity', () => {
 });
 
 describe('deleteDeity', () => {
-  it('deletes one no entry picked, and refuses one a compendium entry picks as FORBIDDEN', async () => {
+  it('deletes one no entry picked, and refuses one a compendium entry picks as IN_USE, with the list filter for those entries', async () => {
     const free = await seedDeity('Fixture Free');
     const held = await seedDeity('Fixture Held');
     await picking(held);
@@ -225,7 +225,9 @@ describe('deleteDeity', () => {
 
     expect(deleted.data?.deleteDeity).toBe(free);
     expect(refused.data).toBeNull();
-    expect(refused.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+    expect(refused.errors?.[0]).toMatchObject({
+      extensions: { code: 'IN_USE', heldBy: { deities: ['fixture-held-greek'] } },
+    });
     expect((await deityOf(held)).deleted_at).toBeNull();
   });
 

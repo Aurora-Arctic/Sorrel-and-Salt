@@ -1,4 +1,5 @@
 import 'server-only';
+import { NO_SUCH_SPELL } from './spell-not-found';
 import { findOneSpell, withAudit } from '../../../db/repository';
 import { spells } from '../schema/spells';
 import { NotFound } from '../../../lib/errors';
@@ -25,7 +26,7 @@ export async function setSpellVisibility(
   const membership = await assertMembership(session, workspaceId, { spell: ['update'] });
 
   const spell = await findOneSpell(membership, spellId);
-  if (!spell) throw new NotFound('No such spell in this coven');
+  if (!spell) throw new NotFound(NO_SUCH_SPELL);
 
   assertWidens(spell, visibility);
 

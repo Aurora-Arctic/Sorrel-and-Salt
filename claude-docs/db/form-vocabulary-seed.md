@@ -81,7 +81,7 @@ edits.
 - A coven's ingredient never holds a form and is never rewritten: what it picked stays, and a keeper writes nothing of a coven's. Deleting a form moves its text into that coven's in-use values.
 - The entries are read before the delete's transaction, so an entry picking the form in the instant between is left holding a deleted one, which reads as no pick.
 - A blank list query is no query, and a group id that is not a uuid names no group, so lists nothing. The finder decides what counts as curated: a live form under a live group. The input's group is checked live, since a foreign key admits a retired one.
-- A rename is refused, on `name`, when it would give a live compendium entry two forms of one name (`ingredient_variants_form_unique` would refuse it), naming each such entry. A change of case finds nothing, since the variant renamed is excepted. The check reads before the write and again after one the index refused, since two keepers can race; then anything but the variant index passes through untouched, and a collision the second read cannot place is refused in general terms.
+- A rename is refused, on `name`, when it would give a live compendium entry two forms of one name (`ingredient_variants_form_unique` would refuse it), counting those entries and naming the first three. A change of case finds nothing, since the variant renamed is excepted. The check reads before the write and again after one the index refused, since two keepers can race; then anything but the variant index passes through untouched, and a collision the second read cannot place is refused in general terms.
 
 ## Form group service details
 

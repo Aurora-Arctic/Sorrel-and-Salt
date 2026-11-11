@@ -1,6 +1,7 @@
 import 'server-only';
 import { findCuratedRowsByIds, findCuratedRowsByName } from '../../../db/repository';
 import { inIdOrder } from '../../../lib/in-id-order';
+import { fold } from '../../../lib/text';
 import { celestialBodies, zodiacSigns } from '../schema/astrology';
 import { deities } from '../schema/deities';
 import { ingredientForms } from '../schema/ingredient-forms';
@@ -10,10 +11,6 @@ const VOCABULARY_OF = { celestialBodies, zodiacSigns } satisfies Record<CuratedF
 
 const PICKED_FROM = { form: ingredientForms, deities } satisfies Record<PickedField, unknown>;
 
-export function foldVocabularyValue(value: string): string {
-  return value.trim().toLowerCase();
-}
-
 /**
  * The live curated spelling each of `values` folds to, keyed by the fold, for the ingredient field `field`; a value no live row curates is absent.
  * A public read. Two live rows sharing a name give the first by id, so the choice is stable.
@@ -22,14 +19,14 @@ export async function curatedSpellings(
   field: CuratedField,
   values: readonly string[],
 ): Promise<Map<string, string>> {
-  const folds = [...new Set(values.map(foldVocabularyValue))];
+  const folds = [...new Set(values.map(fold))];
   if (folds.length === 0) return new Map();
 
   const rows = await findCuratedRowsByName(VOCABULARY_OF[field], folds);
   const spellings = new Map<string, string>();
   for (const row of rows.sort((a, b) => a.id.localeCompare(b.id))) {
-    const fold = foldVocabularyValue(row.name);
-    if (!spellings.has(fold)) spellings.set(fold, row.name);
+    const folded = fold(row.name);
+    if (!spellings.has(folded)) spellings.set(folded, row.name);
   }
   return spellings;
 }

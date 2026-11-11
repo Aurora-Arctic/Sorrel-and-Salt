@@ -268,7 +268,7 @@ describe('createDeity', () => {
       {
         path: ['name'],
         message:
-          '"Fixture Testra" already has the address "fixture-testra-greek" — choose another name or tradition',
+          '"Fixture-Testra" is too close to "Fixture Testra", which already exists — choose another name or tradition',
       },
     ]);
     expect(await countNamed('Fixture-Testra')).toBe(0);
@@ -341,8 +341,7 @@ describe('updateDeity', () => {
     expect(issues).toEqual([
       {
         path: ['name'],
-        message:
-          '"Fixture Theirs" already has the address "fixture-theirs-greek" — choose another name or tradition',
+        message: '"Fixture Theirs" already exists — choose another name or tradition',
       },
     ]);
     expect(await deityOf(id)).toEqual(before);
@@ -360,8 +359,7 @@ describe('updateDeity', () => {
     expect(issues).toEqual([
       {
         path: ['name'],
-        message:
-          '"Fixture Hekate" already has the address "fixture-hekate-roman" — choose another name or tradition',
+        message: '"Fixture Hekate" already exists — choose another name or tradition',
       },
     ]);
     expect(await deityOf(id)).toEqual(before);
@@ -519,6 +517,7 @@ describe('deleteDeity', () => {
       await expect(attempt).rejects.toThrow(Forbidden);
       await expect(attempt).rejects.toThrow('Testcap');
       await expect(attempt).rejects.toThrow('Testwort');
+      await expect(attempt).rejects.toMatchObject({ heldBy: { deities: ['fixture-held-greek'] } });
       expect((await deityOf(id)).deleted_at).toBeNull();
     });
 

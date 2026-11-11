@@ -73,3 +73,6 @@ export function parseInput<Schema extends ZodType>(
   if (!result.success) throw new ValidationError(toValidationIssues(result.error));
   return result.data;
 }
+
+/** Narrows rather than parses, for a lookup whose malformed id answers as a missing row would. */
+export const isRowId = (value: unknown): value is string => RowId.safeParse(value).success;

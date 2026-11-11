@@ -161,7 +161,8 @@ export interface ConfirmQuestionProps {
     onClick: () => Promise<void>;
   };
   onKeep: () => void;
-  onRefused?: (message: string) => void;
+  /** The refusal's first sentence, and the error for anything more it carries. */
+  onRefused?: (message: string, error: unknown) => void;
 }
 
 export interface RouteModalLink {

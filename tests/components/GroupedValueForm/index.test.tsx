@@ -89,7 +89,8 @@ const SUBJECT: GroupedValueFormSubject = {
   },
   slugClash: {
     name: 'Testcraft-Ward',
-    message: '"Testcraft Ward" already has the address "testcraft-ward" — choose another name',
+    message:
+      '"Testcraft-Ward" is too close to "Testcraft Ward", which already exists — choose another name',
   },
 };
 
@@ -203,6 +204,81 @@ describe('GroupedValueForm, its delete question in a modal', () => {
     escape();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  // The refusal is drawn at the top of a dialog scrolled down to its buttons: the focus going to it
+  // is what brings it into view. The question going away hands the focus back to the delete button
+  // first, so the refusal has to take it after that.
+  it("moves the focus to a refused delete's refusal, not back to the delete button", async () => {
+    mockGraphQLError('DeleteCategory', {
+      code: 'IN_USE',
+      heldBy: { categories: ['testcraft'] },
+      message: '"Testcraft" is filed on 1 compendium entry — Testwort. Take it off it first.',
+    });
+    renderEdit();
+
+    press('Delete Category');
+    // Precondition: the question has the focus, so it is the question going away that hands it back.
+    expect(answer('Cancel')).toHaveFocus();
+    press('Delete');
+
+    const alert = await screen.findByRole('alert');
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    await waitFor(() => expect(alert).toHaveFocus());
+  });
+
+  it("moves the focus to a refused delete's refusal past a field an earlier save marked", async () => {
+    mockGraphQLError('UpdateCategory', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['name'], message: 'Too close to another' }],
+    });
+    mockGraphQLError('DeleteCategory', { code: 'FORBIDDEN', message: 'Not allowed today' });
+    renderEdit();
+    typeIn(description(), 'A change');
+    press('Save Category');
+    // Precondition: a field is still marked invalid when the delete is refused.
+    await waitFor(() => expect(name()).toHaveAttribute('aria-invalid', 'true'));
+
+    press('Delete Category');
+    press('Delete');
+
+    const alert = await screen.findByRole('alert');
+    expect(name()).toHaveAttribute('aria-invalid', 'true');
+    await waitFor(() => expect(alert).toHaveFocus());
+  });
+
+  it("moves the focus to a refused save's refusal said above the fields", async () => {
+    mockGraphQLError('UpdateCategory', { code: 'FORBIDDEN', message: 'Not allowed today' });
+    renderEdit();
+
+    typeIn(description(), 'A change');
+    press('Save Category');
+
+    const alert = await screen.findByRole('alert');
+    // Precondition: Save is still live, so nothing but this form moves the focus off it.
+    expect(screen.getByRole('button', { name: 'Save Category' })).toBeEnabled();
+    await waitFor(() => expect(alert).toHaveFocus());
+  });
+
+  it('leaves the focus on the error summary when a refused save marks a field', async () => {
+    mockGraphQLError('UpdateCategory', {
+      code: 'VALIDATION',
+      fieldErrors: [
+        { path: ['name'], message: 'Too close to another' },
+        { path: [], message: 'Something about the whole form' },
+      ],
+    });
+    renderEdit();
+
+    typeIn(description(), 'A change');
+    press('Save Category');
+
+    const summary = await screen.findByRole('group', { name: 'There Is a Problem' });
+    expect(name()).toHaveAttribute('aria-invalid', 'true');
+    await waitFor(() => expect(summary).toHaveFocus());
+    // Lets any later effect that would move the focus run, then asks again.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(summary).toHaveFocus();
+  });
 });
 
 describe('GroupedValueForm, a category', () => {
@@ -283,6 +359,49 @@ describe('GroupedValueForm, a category', () => {
       expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Category' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
+      // A refusal that names no entries' filter has nothing to link to.
+      expect(within(screen.getByRole('alert')).queryByRole('link')).not.toBeInTheDocument();
+    });
+
+    it('links an in-use refusal to the compendium list of exactly the entries holding the category', async () => {
+      mockGraphQLError('DeleteCategory', {
+        code: 'IN_USE',
+        heldBy: { categories: ['testcraft'] },
+        message:
+          '"Testcraft" is filed on 4 compendium entries — Testwort, Testcap, Testroot and 1 more. Take it off them first.',
+      });
+      renderCategory({ value: CATEGORY });
+
+      press('Delete Category');
+      press('Delete');
+
+      const alert = await screen.findByRole('alert');
+      expect(within(alert).getByRole('link', { name: 'See All' })).toHaveAttribute(
+        'href',
+        '/curator/compendium?categories=testcraft',
+      );
+    });
+
+    it('drops the link once a later refusal replaces the in-use one', async () => {
+      mockGraphQLError('DeleteCategory', {
+        code: 'IN_USE',
+        heldBy: { categories: ['testcraft'] },
+        message: '"Testcraft" is filed on 1 compendium entry — Testwort. Take it off it first.',
+      });
+      renderCategory({ value: CATEGORY });
+      press('Delete Category');
+      press('Delete');
+      // Precondition: the first refusal carries the link.
+      expect(within(await screen.findByRole('alert')).getByRole('link')).toBeVisible();
+
+      mockGraphQLError('DeleteCategory', { code: 'FORBIDDEN', message: 'Not allowed today' });
+      press('Delete Category');
+      press('Delete');
+
+      const alert = await screen.findByText('Not allowed today');
+      expect(
+        within(alert.closest('[role="alert"]') as HTMLElement).queryByRole('link'),
+      ).not.toBeInTheDocument();
     });
   });
 });

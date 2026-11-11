@@ -1,7 +1,7 @@
-import { foreignKey, index, numeric, pgTable, uuid } from 'drizzle-orm/pg-core';
+import { foreignKey, index, pgTable, uuid } from 'drizzle-orm/pg-core';
 import { auditStampColumns } from '../../identity/schema/users';
 import { inventoryItems, inventoryUnit } from '../../ingredients/schema/inventory-items';
-import { QUANTITY_PRECISION, QUANTITY_SCALE } from '../../ingredients/schema/quantities';
+import { quantityColumn } from '../../ingredients/schema/quantity-column';
 import { idColumn } from '../../../db/schema-parts';
 import { spellSteps } from './spell-steps';
 import { spellWorkings } from './spell-workings';
@@ -19,14 +19,9 @@ export const spellWorkingDeductions = pgTable(
       .references(() => spellSteps.id),
     inventoryItemId: uuid('inventory_item_id').notNull(),
     // In the stock row's own unit, so the amount reads back without a conversion.
-    quantity: numeric('quantity', {
-      precision: QUANTITY_PRECISION,
-      scale: QUANTITY_SCALE,
-    }).notNull(),
+    quantity: quantityColumn('quantity').notNull(),
     unit: inventoryUnit('unit').notNull(),
-    shortfall: numeric('shortfall', { precision: QUANTITY_PRECISION, scale: QUANTITY_SCALE })
-      .notNull()
-      .default('0'),
+    shortfall: quantityColumn('shortfall').notNull().default('0'),
     ...auditStampColumns,
   },
   (table) => [
