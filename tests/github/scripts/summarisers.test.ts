@@ -208,6 +208,7 @@ describe('the failing-test list', () => {
         '<details><summary>Failing tests</summary>',
         '',
         '- `tests/e2e/a.spec.ts` › Testwort › breaks — boom',
+        `- \`tests/e2e/a.spec.ts\` › Testwort › wobbles${FLAKY_NOTE} — once`,
         '',
         '</details>',
       ].join('\n'),
