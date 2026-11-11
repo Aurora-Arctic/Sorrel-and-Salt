@@ -192,6 +192,12 @@
     },
     "@esbuild-kit/core-utils": {
       "esbuild": "0.25.12"
+    },
+    "@vercel/cli-auth": {
+      "zod": "4.6.7"
+    },
+    "@vercel/queue": {
+      "zod": "4.6.7"
     }
   }
 }
