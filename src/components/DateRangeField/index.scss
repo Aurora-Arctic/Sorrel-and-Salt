@@ -111,18 +111,32 @@
   font-size: type-size('caption');
 }
 
+// Grows into a field-wide panel's spare width, so the Start and End boxes use it; the month keeps its own size at the start.
 .date-range-field__main {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
+  align-items: flex-start;
   gap: space(3);
 }
 
-// The Start and End boxes, side by side above the months and each half their width. Zero inline-size with a full-width minimum
-// adds nothing to the panel's fit-content width, as the picks and hint do.
+// The Start and End boxes above the months. Zero inline-size with a full-width minimum adds nothing to the panel's
+// fit-content width, as the picks and hint do; that also lets it be the container its own width is asked of.
 .date-range-field__ends {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: space(2);
+  container-type: inline-size;
+  align-self: stretch;
   inline-size: 0;
   min-inline-size: 100%;
+}
+
+// Side by side, each half the width, while a box is wide enough to show "YYYY-MM-DD" whole (about 8.5rem); stacked, each
+// full width, below that.
+.date-range-field__ends-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(2);
+
+  @container (min-width: 18rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

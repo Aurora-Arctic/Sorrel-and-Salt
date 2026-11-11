@@ -79,18 +79,20 @@ export function RangeEnds({
 }: RangeEndsProps): ReactElement {
   return (
     <div className="date-range-field__ends">
-      <RangeBox
-        label="Start"
-        held={from}
-        current={!awaitingEnd}
-        commit={(day) => dayProblem(day, min, max) ?? onStart(day)}
-      />
-      <RangeBox
-        label="End"
-        held={to}
-        current={awaitingEnd}
-        commit={(day) => dayProblem(day, min, max) ?? onEnd(day)}
-      />
+      <div className="date-range-field__ends-grid">
+        <RangeBox
+          label="Start"
+          held={from}
+          current={!awaitingEnd}
+          commit={(day) => dayProblem(day, min, max) ?? onStart(day)}
+        />
+        <RangeBox
+          label="End"
+          held={to}
+          current={awaitingEnd}
+          commit={(day) => dayProblem(day, min, max) ?? onEnd(day)}
+        />
+      </div>
     </div>
   );
 }

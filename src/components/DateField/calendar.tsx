@@ -40,6 +40,7 @@ export function useCalendarPopover({
   panel,
   close,
   layoutKey,
+  fieldWide,
 }: {
   open: boolean;
   floating: boolean;
@@ -48,6 +49,8 @@ export function useCalendarPopover({
   close: () => void;
   /** Placed again when this changes, for a calendar whose width does (the months it shows). */
   layoutKey?: unknown;
+  /** The panel is as wide as its field (within the window margin) instead of as wide as its content. */
+  fieldWide?: boolean;
 }): void {
   useLayoutEffect(() => {
     const el = panel.current;
@@ -57,6 +60,14 @@ export function useCalendarPopover({
       const button = document.getElementById(fieldId);
       if (!button) return;
       const at = button.getBoundingClientRect();
+      if (fieldWide) {
+        el.style.setProperty(
+          '--calendar-width',
+          `${Math.min(at.width, window.innerWidth - 2 * EDGE)}px`,
+        );
+      } else {
+        el.style.removeProperty('--calendar-width');
+      }
       const below = window.innerHeight - at.bottom - GAP - MARGIN;
       const above = at.top - GAP - MARGIN;
       const top =
@@ -75,7 +86,7 @@ export function useCalendarPopover({
       document.removeEventListener('scroll', place, true);
       if (el.matches(':popover-open')) el.hidePopover();
     };
-  }, [open, floating, fieldId, panel, layoutKey]);
+  }, [open, floating, fieldId, panel, layoutKey, fieldWide]);
   // A manual popover has no light dismiss, so a press outside the calendar and its field closes it.
   useDismiss({
     active: open && floating,

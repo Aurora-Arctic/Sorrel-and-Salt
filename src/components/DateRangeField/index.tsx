@@ -69,6 +69,7 @@ export default function DateRangeField({
   const { panelId, panel, open, setOpen, floating, picker, closeAndFocus } = useDayPopover(
     id,
     months,
+    months === 1,
   );
   const room = useRoomForTwoMonths({ open, floating, narrow, fieldId: id, panel });
   const wanted = narrow || !room ? 1 : 2;
