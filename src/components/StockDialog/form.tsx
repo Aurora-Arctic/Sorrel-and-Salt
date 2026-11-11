@@ -1,6 +1,5 @@
 'use client';
 
-import { labelByKey } from '@/lib/options';
 import { type ReactElement, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   type FieldErrors,
@@ -22,13 +21,16 @@ import EmptyState from '../EmptyState';
 import Notice from '../Notice';
 import { StockBadge } from '../StockBadge';
 import { amountText } from '../StockBadge/stock-words';
-import StockFields, {
-  EMPTY_STOCK,
-  type StockFormValues,
-  stockAmountsOf,
-  stockFormValues,
-} from '../StockFields';
-import { amountResolver, changed, openingRows, rowFieldOf, stockBatch } from './batch';
+import StockFields, { EMPTY_STOCK, type StockFormValues, stockAmountsOf } from '../StockFields';
+import {
+  amountResolver,
+  changed,
+  jarValues,
+  openingRows,
+  rowFieldOf,
+  stockBatch,
+  variantLabel,
+} from './batch';
 import type { StockDialogFormProps, StockDialogValues, StockForm, StockRow } from './types';
 import './index.scss';
 
@@ -231,8 +233,8 @@ export const StockDialogForm = ({
   const [adding, setAdding] = useState('');
   // A form just added, whose Quantity takes the focus once its fields are drawn.
   const [focusAdded, setFocusAdded] = useState<string | null>(opened.seeded);
-  const opening = useMemo(() => new Map(jars.map((jar) => [jar.id, stockFormValues(jar)])), [jars]);
-  const labelOf = (variantId: string) => labelByKey(forms, 'variantId', variantId, '');
+  const opening = useMemo(() => jarValues(jars), [jars]);
+  const labelOf = (variantId: string) => variantLabel(forms, variantId);
   const addable = unheld(forms, rows);
   const found = rows.findIndex((row) => row.variantId === chosenVariant);
   const chosen = found >= 0 ? found : rows.length > 0 ? 0 : -1;
