@@ -13,7 +13,7 @@ import {
   useState,
 } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { fold, plural } from '@/lib/text';
+import { fold, hasText, plural } from '@/lib/text';
 import Spinner from '../Spinner';
 import { ChevronIcon } from '../IconTip/icons';
 import {
@@ -246,7 +246,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     message !== undefined &&
     wantsOpen &&
     suggestions?.pending === false &&
-    value.trim() !== '' &&
+    hasText(value) &&
     items.length === 0;
   const popupOpen = listOpen || showEmpty;
   const wrapped = message !== undefined;

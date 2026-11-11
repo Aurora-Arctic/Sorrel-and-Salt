@@ -73,8 +73,7 @@ export function ComboboxEntry({
       {icon}
     </span>
   ) : null;
-  const describedBy =
-    [errorId, qualifier && qualifierId, detail && detailId].filter(Boolean).join(' ') || undefined;
+  const describedBy = cx(errorId, qualifier && qualifierId, detail && detailId) || undefined;
 
   return (
     <li

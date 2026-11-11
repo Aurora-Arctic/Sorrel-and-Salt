@@ -2,11 +2,11 @@
 
 import { type ReactElement, useCallback, useId, useRef, useState } from 'react';
 import { chipColors } from '../../lib/chip-colors';
+import { plural } from '@/lib/text';
 import TipAnchor from '../InfoTip/tip-anchor';
 import CategoryTipChip from './category-tip-chip';
 import { chipTip } from './chip-tip';
 import type { CardCategory, CategoryChipsProps } from './types';
-import { plural } from '@/lib/text';
 
 const PANEL_MIN_PX = 192;
 const PANEL_GAP_PX = 8;

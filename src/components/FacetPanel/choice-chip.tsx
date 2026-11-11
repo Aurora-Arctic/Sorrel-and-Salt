@@ -1,5 +1,6 @@
 'use client';
 
+import { cx } from '@/lib/class-names';
 import { FADE_LIMIT_MS, prefersReducedMotion } from '@/lib/motion';
 import {
   type FocusEvent,
@@ -21,7 +22,6 @@ import InfoTip from '../InfoTip';
 import TipAnchor from '../InfoTip/tip-anchor';
 import { FacetCount } from './facet-count';
 import './choice-chip.scss';
-import { cx } from '@/lib/class-names';
 
 // One choice from a few, drawn as a chip reading "Match: All" that opens a menu of radios. A
 // `<details>` so it opens before the script runs, with native radios so the GET form sends the
@@ -159,9 +159,11 @@ export function ChoiceChip<T extends string>({
   };
 
   const describedBy =
-    [chipHint ? chipHintId : hint && hintId, note && noteId, error && errorId]
-      .filter(Boolean)
-      .join(' ') || undefined;
+    cx(
+      chipHint ? chipHintId : hint ? hintId : false,
+      note ? noteId : false,
+      error ? errorId : false,
+    ) || undefined;
 
   const face = (
     <>

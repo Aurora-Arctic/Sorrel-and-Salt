@@ -1,5 +1,6 @@
-import { cappedCount, cappedWords } from '../FacetPanel/capped-count';
 import { plural } from '@/lib/text';
+import { cappedCount, cappedWords } from '../FacetPanel/capped-count';
+
 // What the account menu says about a count of support requests, in the button's name and in the panel.
 
 export function countText(count: number, what: string): string {

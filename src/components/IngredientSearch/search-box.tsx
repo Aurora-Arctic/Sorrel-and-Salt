@@ -1,5 +1,6 @@
 'use client';
 
+import { hasText } from '@/lib/text';
 import { usePendingNavigation } from '../../lib/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useDeferredValue, useId, useMemo, useRef, useState } from 'react';
@@ -141,7 +142,7 @@ const IngredientSearchBox = ({
   const query = useDebouncedValue(text.trim());
   const searchesNow = searchable(query);
   // Text under the floor is never asked about, so the dropdown says to keep typing at once.
-  const belowFloor = text.trim() !== '' && !searchable(text.trim());
+  const belowFloor = hasText(text) && !searchable(text.trim());
   const compendium = useQuery({
     ...graphqlQuery(IngredientSearchMatchesDocument, { query, first: MATCH_ROWS }),
     enabled: active && searchesNow && source.kind === 'compendium',

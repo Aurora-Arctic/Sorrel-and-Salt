@@ -1,5 +1,6 @@
 'use client';
 
+import { hasText } from '@/lib/text';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { MS_PER_DAY } from '../../lib/duration';
@@ -67,7 +68,7 @@ const defaultDay = (): string => dayFromNow(DEFAULT_EXPIRY_DAYS);
 /** A decimal count is rounded to the nearest whole sheet, not refused. */
 const wholeSheets = (text: string): string => {
   const sheets = Number(text);
-  return text.trim() !== '' && Number.isFinite(sheets) && !Number.isInteger(sheets)
+  return hasText(text) && Number.isFinite(sheets) && !Number.isInteger(sheets)
     ? String(Math.round(sheets))
     : text;
 };
@@ -75,11 +76,11 @@ const wholeSheets = (text: string): string => {
 const sheetsOf = (typed: string): number | undefined => {
   const text = wholeSheets(typed);
   const sheets = Number(text);
-  return text.trim() !== '' && Number.isInteger(sheets) ? sheets : undefined;
+  return hasText(text) && Number.isInteger(sheets) ? sheets : undefined;
 };
 
 const sheetsRefusal = (text: string): string | undefined => {
-  if (text.trim() === '') return undefined;
+  if (!hasText(text)) return undefined;
   const sheets = sheetsOf(text);
   const inRange = sheets !== undefined && sheets >= 1 && sheets <= MAX_SHEETS_PER_BATCH;
   return inRange ? undefined : `A batch is from 1 to ${MAX_SHEETS_PER_BATCH} sheets`;
