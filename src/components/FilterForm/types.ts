@@ -14,3 +14,16 @@ export interface FilterFormProps {
   className?: string;
   children: ReactNode;
 }
+
+export interface NameFilterProps {
+  label: string;
+  action: Route;
+  /** The search shown, which the draft starts from. */
+  query: string;
+  /** The first page for a name search, held until the magnifier or Enter sends it. */
+  searchHref: (draftQuery: string) => Route;
+  /** Further filter values on show, beside the search. */
+  shown?: readonly FilterValue[];
+  /** Controls after the search, given the draft so one that applies at once carries it. */
+  children?: (draftQuery: string) => ReactNode;
+}

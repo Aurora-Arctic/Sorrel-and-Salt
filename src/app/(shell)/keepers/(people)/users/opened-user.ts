@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
-import { RowId } from '@/lib/validation';
+import { answerOf } from '@/lib/errors';
+import { isRowId } from '@/lib/validation';
 import type { Session } from '@/lib/session';
 import { membershipsOf } from '@/modules/coven';
 import {
@@ -60,9 +61,8 @@ async function readPausesOf(
  * claude-docs/design-decisions/auth.md, "A site keeper sees which covens a user belongs to"). Cached, so a second render in the request reads once.
  */
 export const readOpenedUser = cache(async (session: Session, raw: string) => {
-  const parsed = RowId.safeParse(raw);
-  if (!parsed.success || !listedOnUserList(parsed.data)) return undefined;
-  const id = parsed.data;
+  if (!isRowId(raw) || !listedOnUserList(raw)) return undefined;
+  const id = raw;
   const [[found], [memberships], [providers], [passkey], timeouts] = await Promise.all([
     usersForAdmin(session, [id]),
     membershipsOf(session, [id]),
@@ -73,11 +73,9 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
   // A keeper's batch answers every slot; a refusal here is the guard's bug.
   if (found instanceof Error) throw found;
   if (!found) return undefined;
-  if (!memberships || memberships instanceof Error)
-    throw memberships ?? new Error('No memberships read');
-  if (!providers || providers instanceof Error) throw providers ?? new Error('No providers read');
-  if (passkey === undefined || passkey instanceof Error)
-    throw passkey ?? new Error('No passkey read');
+  const heldMemberships = answerOf(memberships);
+  const linkedProviders = answerOf(providers);
+  const hasPasskey = answerOf(passkey);
   const pauses = await readPausesOf(session, id, isPrimaryAdmin(found));
   return {
     heading: userHeading(found),
@@ -89,14 +87,14 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
       role: found.role,
       primaryAdmin: isPrimaryAdmin(found),
       canCreateWorkspace: found.canCreateWorkspace,
-      providers,
-      hasPasskey: passkey,
+      providers: linkedProviders,
+      hasPasskey,
       createdAt: found.createdAt,
       agreedTermsVersion: found.agreedTermsVersion,
       agreedDisclaimerVersion: found.agreedDisclaimerVersion,
       agreedEthicsVersion: found.agreedEthicsVersion,
     },
-    memberships: memberships.map((row) => ({
+    memberships: heldMemberships.map((row) => ({
       workspaceId: row.workspaceId,
       name: row.workspace.name,
       slug: row.workspace.slug,

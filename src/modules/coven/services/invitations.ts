@@ -8,21 +8,20 @@ import {
   findRecentCovenInvitationTimes,
   withAudit,
 } from '../../../db/repository';
-import type { AddressInvitationRow, InvitableRole, InvitationRow } from '../../../db/repository';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import type { AddressInvitationRow, InvitationRow } from '../../../db/repository';
+import { NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { newToken } from '../../../lib/invitation-token';
 import type { Session } from '../../../lib/session';
-import { RowId } from '../../../lib/validation';
+import { isRowId } from '../../../lib/validation';
 import { normaliseEmail, validateEmailAddress } from '../../identity';
 import type { InvitationSender } from '../../identity';
 import { workspaces } from '../schema/workspaces';
 import type { WorkspaceRole } from '../types';
+import { isInvitableRole } from '../../../lib/invitable-roles';
 import { assertMembership } from './membership';
 
 // Who may invite is this service's; the token, expiry and workspace are the repository's (claude-docs/db/invitations.md, "Inviting into a coven").
-
-const INVITABLE: readonly WorkspaceRole[] = ['viewer', 'member'];
 
 /** Each invitation and each resend sends one mail from the site's address. */
 export const INVITATION_MAIL_LIMIT = 20;
@@ -42,10 +41,6 @@ async function assertUnderMailLimit(session: Session): Promise<void> {
   ]);
 }
 
-function isInvitable(role: WorkspaceRole): role is InvitableRole {
-  return INVITABLE.includes(role);
-}
-
 /**
  * A second invitation to the address replaces the pending one (claude-docs/db/invitations.md, "Inviting into a coven").
  *
@@ -61,28 +56,23 @@ export async function createInvitation(
   const membership = await assertMembership(session, workspaceId, { member: ['invite'] });
 
   const { role } = input;
-  if (!isInvitable(role)) {
-    throw new ValidationError([
-      {
-        path: ['role'],
-        message:
-          'Invite someone as an observer or a practitioner; a steward makes them a steward afterwards',
-      },
-    ]);
+  if (!isInvitableRole(role)) {
+    throw fieldRefusal(
+      'role',
+      'Invite someone as an observer or a practitioner; a steward makes them a steward afterwards',
+    );
   }
   const email = normaliseEmail(input.email);
   const issue = validateEmailAddress(email);
   if (issue) throw new ValidationError([issue]);
   if (await findMemberByEmail(membership, email)) {
-    throw new ValidationError([
-      { path: ['email'], message: 'That address belongs to a member of this coven already' },
-    ]);
+    throw fieldRefusal('email', 'That address belongs to a member of this coven already');
   }
 
   await assertUnderMailLimit(session);
 
   const workspace = await findOneById(workspaces, workspaceId);
-  if (!workspace) throw new ValidationError([{ path: ['workspaceId'], message: 'No such coven' }]);
+  if (!workspace) throw fieldRefusal('workspaceId', 'No such coven');
 
   // The token stored here is never told to anyone; the mail's step replaces it with the one it mails.
   const [row] = await withAudit(session, async (write) => {
@@ -132,18 +122,15 @@ export async function revokeWorkspaceInvitation(
 ): Promise<InvitationRow> {
   const membership = await assertMembership(session, workspaceId, { member: ['invite'] });
   const missing = () => new NotFound('No pending invitation in this coven has this id');
-  if (!RowId.safeParse(id).success) throw missing();
+  if (!isRowId(id)) throw missing();
 
   const invitation = await findInvitationInWorkspace(membership, id);
   if (!invitation) throw missing();
   if (invitation.acceptedAt) {
-    throw new ValidationError([
-      {
-        path: ['id'],
-        message:
-          'That invitation was accepted, so the person is a member of this coven. Remove them from the members list instead.',
-      },
-    ]);
+    throw fieldRefusal(
+      'id',
+      'That invitation was accepted, so the person is a member of this coven. Remove them from the members list instead.',
+    );
   }
 
   // Two tabs revoking at once, or the link lapsing in between: nothing pending is left to stamp.

@@ -5,7 +5,7 @@ import { labelOf } from '@/lib/options';
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { failureMessage } from '../../lib/graphql-failure';
+import { failureMessage, readGraphqlFailureCode } from '../../lib/graphql-failure';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
@@ -40,6 +40,9 @@ const SupportRequestByViewTokenDocument = graphql(`
 `);
 
 const NOT_FOUND = 'NOT_FOUND';
+
+/** The token in the address's fragment, or an empty string when there is none. */
+const readToken = (): string => decodeURIComponent(window.location.hash.replace(/^#/, ''));
 const STORAGE_KEY = 'support-view-token';
 
 function readStored(): string | null {
@@ -95,7 +98,7 @@ const SupportRequestByLink = (): ReactElement => {
 
   useEffect(() => {
     if (token.current === null) {
-      const fragment = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+      const fragment = readToken();
       if (fragment !== '') {
         token.current = fragment;
         writeStored(fragment);
@@ -117,7 +120,7 @@ const SupportRequestByLink = (): ReactElement => {
   useEffect(() => {
     let current = true;
     const onHashChange = () => {
-      const fragment = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+      const fragment = readToken();
       if (fragment === '') return;
       token.current = fragment;
       writeStored(fragment);
@@ -181,10 +184,5 @@ const SupportRequestByLink = (): ReactElement => {
     </div>
   );
 };
-
-function readGraphqlFailureCode(error: unknown): string | undefined {
-  const errors = (error as { errors?: readonly { extensions?: { code?: string } }[] }).errors;
-  return errors?.[0]?.extensions?.code;
-}
 
 export default SupportRequestByLink;

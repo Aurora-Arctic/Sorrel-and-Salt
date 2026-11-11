@@ -1,6 +1,7 @@
 import 'server-only';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
-import { RowId } from '../../../lib/validation';
+import { trimmedOrUndefined } from '../../../lib/text';
+import { isRowId } from '../../../lib/validation';
 
 // How a curated vocabulary's list and its count read their filter, written
 // once for the three filtered by a group (categories, forms, deities). Each
@@ -21,8 +22,8 @@ export function readableFilter<Filter extends { query?: string }>(
   idKey?: Exclude<keyof Filter, 'query'>,
 ): Filter | undefined {
   const id = idKey === undefined ? undefined : filter[idKey];
-  if (id !== undefined && !RowId.safeParse(id).success) return undefined;
-  return { ...filter, query: filter.query?.trim() || undefined };
+  if (id !== undefined && !isRowId(id)) return undefined;
+  return { ...filter, query: trimmedOrUndefined(filter.query) };
 }
 
 /** A filtered list and its count over the two cached reads given: a filter naming no group lists and counts nothing, without a read. */

@@ -3,16 +3,14 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
-import { EmailAddress } from '../../lib/email-address-schema';
+import { emailFailure } from '../../lib/email-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
-import type { Failure } from '../../lib/types';
-import { FormActions, RadioGroupField } from '../Field';
+import { useFormSend } from '../../lib/use-form-send';
+import { EmailField, FormActions, RadioGroupField } from '../Field';
 import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
 import { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { workspaceRoleLabel } from '../UserDetail/roles';
-import InviteEmailField from './email-field';
 import type { InviteFieldsProps, InviteDialogProps, InviteRole } from './types';
 
 // A steward's Invite: a dialog taking an address and a role, sent as `createInvitation`, which mails
@@ -45,34 +43,24 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
 
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<InviteRole>('viewer');
-  const [sending, setSending] = useState(false);
-  const [failure, setFailure] = useState<Failure>({});
+  const { sending, failure, setFailure, send } = useFormSend(['email']);
   const [sentTo, setSentTo] = useState<string>();
 
   const discard = useDiscardGuard(sentTo === undefined && email !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const parsed = EmailAddress.safeParse(email);
-    if (!parsed.success) {
-      return setFailure({
-        field: { name: 'email', message: parsed.error.issues[0]?.message ?? '' },
-      });
-    }
+    const refused = emailFailure(email);
+    if (refused) return setFailure(refused);
     const address = email.trim();
 
-    setSending(true);
-    setFailure({});
-    try {
-      await graphqlRequest(CreateInvitationDocument, { workspaceId, email: address, role });
-      setSending(false);
-      setSentTo(address);
-      // The pending list behind the dialog reads again, so the new invitation is on it.
-      refresh();
-    } catch (error) {
-      setSending(false);
-      setFailure(readGraphqlFailure(error, ['email']));
-    }
+    const sent = await send(() =>
+      graphqlRequest(CreateInvitationDocument, { workspaceId, email: address, role }),
+    );
+    if (!sent) return;
+    setSentTo(address);
+    // The pending list behind the dialog reads again, so the new invitation is on it.
+    refresh();
   }
 
   if (sentTo !== undefined) {
@@ -94,10 +82,14 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
   return (
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <InviteEmailField
+      <EmailField
+        name="email"
         value={email}
         error={failure.field?.message}
         disabled={sending}
+        // The address is someone else's, so the browser must not offer the signed-in person's own.
+        autoComplete="off"
+        ignorePasswordManagers
         onChange={(next) => {
           setEmail(next);
           if (failure.field) setFailure({});

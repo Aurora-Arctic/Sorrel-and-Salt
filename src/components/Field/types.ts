@@ -1,6 +1,7 @@
 import type { AutoFill, HTMLInputTypeAttribute, ReactNode, RefObject } from 'react';
 import type { FieldMask } from '../../lib/formats';
 import type { FieldPath, FieldValues } from 'react-hook-form';
+import type { ComboboxOption, ComboboxQualifier, Suggestions } from '../Combobox/types';
 
 /** A specific autofill token, or `off`. Never `on` or empty, which would let a password manager fill any field. */
 export type AutofillToken = Exclude<AutoFill, 'on' | ''>;
@@ -324,4 +325,21 @@ export interface CharacterCountProps {
   id: string;
   length: number;
   limit: number;
+}
+
+export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> extends FieldProps {
+  name: string;
+  placeholder?: string;
+  suggestions: Suggestions<O>;
+  onActivate?: () => void;
+  onPick?: (option: O | null) => void;
+  onEdit?: (text: string) => void;
+  qualifier?: ComboboxQualifier;
+  icon?: ReactNode;
+  /** Whether the typed row is offered: false for a box whose text must be a pick. */
+  offerTyped?: boolean;
+  typedIcon?: ReactNode;
+  after?: ReactNode;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  enterKeyHint?: 'next' | 'done' | 'go' | 'search' | 'send' | 'enter' | 'previous';
 }

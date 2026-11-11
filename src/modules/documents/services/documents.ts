@@ -8,22 +8,31 @@ import {
 import { NotFound } from '@/lib/errors';
 import { cachedDocumentRead } from '@/lib/documents-cache';
 import type { PageEntry, PageRequest } from '@/lib/types';
+import { NO_DOCUMENT } from './not-found';
 import type { DocumentVersionSummary, PublishedDocument } from '../types';
 
 // These reads take no session: a signed-out reader sees what a member sees, and a draft or a deleted row is never answered.
 
-async function currentDocument(key: string): Promise<PublishedDocument> {
-  const document = await findDocumentByKey(key);
-  const version = document && (await findCurrentDocumentVersion(document.id));
-  if (!document || !version?.publishedAt) throw new NotFound('Document not found');
+function toPublishedDocument(
+  document: { key: string; title: string; lede: string },
+  version: { number: number; body: string },
+  publishedAt: Date,
+): PublishedDocument {
   return {
     key: document.key,
     title: document.title,
     lede: document.lede,
     number: version.number,
     body: version.body,
-    publishedAt: version.publishedAt,
+    publishedAt,
   };
+}
+
+async function currentDocument(key: string): Promise<PublishedDocument> {
+  const document = await findDocumentByKey(key);
+  const version = document && (await findCurrentDocumentVersion(document.id));
+  if (!document || !version?.publishedAt) throw new NotFound(NO_DOCUMENT);
+  return toPublishedDocument(document, version, version.publishedAt);
 }
 
 const MAX_VERSION_NUMBER = 2_147_483_647;
@@ -34,14 +43,7 @@ async function numberedDocument(key: string, number: number): Promise<PublishedD
   const document = await findDocumentByKey(key);
   const version = document && (await findPublishedDocumentVersion(document.id, number));
   if (!document || !version?.publishedAt) throw new NotFound('Version not found');
-  return {
-    key: document.key,
-    title: document.title,
-    lede: document.lede,
-    number: version.number,
-    body: version.body,
-    publishedAt: version.publishedAt,
-  };
+  return toPublishedDocument(document, version, version.publishedAt);
 }
 
 async function versionList(

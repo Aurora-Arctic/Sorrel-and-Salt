@@ -178,6 +178,15 @@ export type ListDialogParams = { new: boolean; edit: string | undefined };
 
 export type PagerCursor = { after: string } | { before: string };
 
+/** What tells one curated vocabulary's list from another: its address, title and the nouns it uses for its rows. */
+export interface ListKind<Href extends string = string> {
+  path: Href;
+  title: string;
+  label: string;
+  noun: string;
+  plural: string;
+}
+
 /** Generic over the href's type, so a page's builder keeps Next's typed `Route` while this file imports nothing. */
 export interface PagerHrefs<Href extends string = string> {
   previousHref: Href | undefined;
@@ -276,3 +285,13 @@ export interface CovenAccess {
   canUpdateWorking: boolean;
   canDeleteWorking: boolean;
 }
+
+/** What a mail-sending service needs from the request: the site origin its links point at. */
+export interface OriginNotifier {
+  origin(): Promise<string>;
+}
+
+/** The compendium list's filter for the entries holding a curated value, keyed as the list's address parameters: slugs for categories and deities, names for the rest. */
+export type HeldBy = Partial<
+  Record<'categories' | 'deities' | 'forms' | 'zodiac' | 'celestialBodies', string[]>
+>;

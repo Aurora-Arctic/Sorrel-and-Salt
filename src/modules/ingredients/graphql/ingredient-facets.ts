@@ -6,7 +6,8 @@ import type {
   ReviewFacetValue,
   WorkspaceIngredientFacets,
 } from '../types';
-import { IngredientElementEnum, IngredientSourceEnum, ToxicFilterEnum } from './ingredient';
+import { IngredientElementEnum } from './correspondences';
+import { IngredientSourceEnum, ToxicFilterEnum } from './ingredient';
 
 // How many entries each search filter value would list, for the compendium (`compendiumFacets`) and a coven's list (`workspaceIngredientFacets`).
 // One small object type per value type, so each `value` is typed as the argument it is sent back as (claude-docs/graphql/schema.md, "compendiumFacets and workspaceIngredientFacets").

@@ -1,9 +1,8 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { createContext, useContext } from 'react';
 import { usePendingNavigation } from '../../lib/navigation';
-import type { Failure } from '../../lib/types';
+import { useFormSend } from '../../lib/use-form-send';
 
 export const AnnounceContext = createContext<(message: string) => void>(() => undefined);
 
@@ -15,24 +14,16 @@ export const AnnounceContext = createContext<(message: string) => void>(() => un
 export function useSupportAction(field?: string) {
   const announce = useContext(AnnounceContext);
   const { refresh } = usePendingNavigation();
-  const [busy, setBusy] = useState(false);
-  const [failure, setFailure] = useState<Failure>({});
+  const { sending, failure, send } = useFormSend(field ? [field] : []);
 
-  async function run(send: () => Promise<unknown>, done: string): Promise<boolean> {
-    setBusy(true);
-    setFailure({});
-    try {
-      await send();
-      setBusy(false);
+  async function run(call: () => Promise<unknown>, done: string): Promise<boolean> {
+    const sent = await send(call);
+    if (sent) {
       announce(done);
       refresh();
-      return true;
-    } catch (error) {
-      setBusy(false);
-      setFailure(readGraphqlFailure(error, field ? [field] : []));
-      return false;
     }
+    return sent;
   }
 
-  return { busy, failure, run };
+  return { busy: sending, failure, run };
 }

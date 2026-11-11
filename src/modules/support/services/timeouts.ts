@@ -1,6 +1,7 @@
 import 'server-only';
 import { findOneById, findSupportTimeoutById, withAudit } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
+import { notifyAfterSave } from '../../../lib/mail-job';
 import type { Session } from '../../../lib/session';
 import {
   parsePauseEnd,
@@ -16,6 +17,7 @@ import { supportRequests } from '../schema/support-requests';
 import { supportTimeouts } from '../schema/support-timeouts';
 import type { SupportTimeoutRow, TimeoutNotifier } from '../types';
 import { mailTimedOutSender } from './timeout-start';
+import { NO_SUCH_USER } from './refusals';
 
 const REFUSAL = 'Only a site keeper may time out or restore a support sender';
 const STAND_IN_REFUSAL = 'This account is not a person, so it cannot be timed out of support';
@@ -46,7 +48,7 @@ export async function timeOutSupportSender(
   const trimmed = parsePauseNote(note, { required: true });
   const toUser = parseRequiredPauseMessage(message);
   const user = await findOneById(users, id);
-  if (!user) throw new NotFound('No such user');
+  if (!user) throw new NotFound(NO_SUCH_USER);
   if (isStandInAccount(id)) throw new Forbidden(STAND_IN_REFUSAL);
   const row = await withAudit(session, async (write) => {
     const [inserted] = await write.insert(supportTimeouts, {
@@ -58,12 +60,10 @@ export async function timeOutSupportSender(
     return inserted as SupportTimeoutRow;
   });
   // The time-out is saved, so a mail that cannot start or send is logged by the start and never thrown.
-  try {
-    await mailTimedOutSender(row.id, await notifier.origin());
-  } catch (error) {
-    // oxlint-disable-next-line no-console -- the log is how a failed send is seen
-    console.error('Could not start a support time-out notice', error);
-  }
+  await notifyAfterSave(
+    async () => mailTimedOutSender(row.id, await notifier.origin()),
+    'a support time-out notice',
+  );
   return row;
 }
 

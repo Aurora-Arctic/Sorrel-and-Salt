@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { check, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { idColumn } from '../../../db/schema-parts';
+import { idColumn, notBlank } from '../../../db/schema-parts';
 import { auditColumns, users } from '../../identity/schema/users';
 
 // A keeper's sanction on a sender, kept as history and never deleted by the app. It stands while `lifted_at IS NULL` and `until`
@@ -22,7 +22,7 @@ export const supportTimeouts = pgTable(
     ...auditColumns,
   },
   (table) => [
-    check('support_timeouts_note_not_blank', sql`btrim(${table.note}) <> ''`),
+    check('support_timeouts_note_not_blank', notBlank(table.note)),
     // A time-out binds an account, an address, or both.
     check(
       'support_timeouts_binds_someone',

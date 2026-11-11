@@ -1,3 +1,4 @@
+import { FIELDS } from './changes';
 import type { CompendiumValues, CupboardOverrides } from './types';
 import type { CupboardEntryRow, IngredientRow } from '@/modules/ingredients';
 
@@ -22,14 +23,8 @@ export function cupboardFormValues(
       zodiacSigns: entry.zodiacSigns ?? [],
       colors: entry.colors ?? [],
     },
-    overrides: {
-      label: cupboardEntry?.label ?? null,
-      description: cupboardEntry?.description ?? null,
-      safetyNotes: cupboardEntry?.safetyNotes ?? null,
-      elements: cupboardEntry?.elements ?? null,
-      celestialBodies: cupboardEntry?.celestialBodies ?? null,
-      zodiacSigns: cupboardEntry?.zodiacSigns ?? null,
-      colors: cupboardEntry?.colors ?? null,
-    },
+    overrides: Object.fromEntries(
+      FIELDS.map((field) => [field, cupboardEntry?.[field] ?? null]),
+    ) as CupboardOverrides,
   };
 }

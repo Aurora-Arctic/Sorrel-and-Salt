@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { check, index, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import type { SQL } from 'drizzle-orm';
+import type { AnyColumn, SQL } from 'drizzle-orm';
 import type { ExtraConfigColumn } from 'drizzle-orm/pg-core';
 import type { LiveTable, SeedKeyedTable, VocabularyTable } from './types';
 
@@ -71,7 +71,7 @@ export function vocabularyIndexes(
   return [
     seedKeyUnique(`${prefix}_seed_key_unique`, table),
     liveUnique(`${prefix}_slug_unique`, table, table.slug),
-    check(`${prefix}_description_not_blank`, sql`btrim(description) <> ''`),
+    check(`${prefix}_description_not_blank`, notBlank('description')),
     ...(trigram
       ? [
           index(`${prefix}_trgm`).using(
@@ -82,4 +82,20 @@ export function vocabularyIndexes(
         ]
       : []),
   ];
+}
+
+/**
+ * The text of a CHECK refusing a blank value, for the column's name (`'name'`)
+ * or the column itself. A name is written bare, the column qualified, as each
+ * table's migration already holds it.
+ */
+export function notBlank(column: string | AnyColumn) {
+  const ref = typeof column === 'string' ? sql.raw(column) : column;
+  return sql`btrim(${ref}) <> ''`;
+}
+
+/** `notBlank` for a nullable column: null passes, a blank value does not. */
+export function notBlankIfSet(column: string | AnyColumn) {
+  const ref = typeof column === 'string' ? sql.raw(column) : column;
+  return sql`${ref} is null or btrim(${ref}) <> ''`;
 }

@@ -1,4 +1,5 @@
 import type { CitationFields } from '../../../lib/types';
+import { fold } from '../../../lib/text';
 import type {
   AuditCandidate,
   AuditHeuristic,
@@ -25,7 +26,7 @@ const WEIGHT = { collision: 3, hatnote: 2, noBinomial: 1 } as const;
 
 /** A Wikipedia page's title as the audit looks it up: case and underscores ignored. */
 export function wikiKey(title: string): string {
-  return title.replace(/_/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  return fold(title.replace(/_/g, ' ').replace(/\s+/g, ' '));
 }
 
 /**
@@ -96,7 +97,7 @@ function templatesIn(text: string): Template[] {
         const inner = text.slice(start, at);
         const bar = inner.indexOf('|');
         found.push({
-          name: (bar === -1 ? inner : inner.slice(0, bar)).trim().toLowerCase(),
+          name: fold(bar === -1 ? inner : inner.slice(0, bar)),
           body: bar === -1 ? '' : inner.slice(bar + 1),
         });
       }

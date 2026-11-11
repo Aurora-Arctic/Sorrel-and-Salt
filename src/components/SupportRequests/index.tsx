@@ -9,7 +9,7 @@ import ListFrame, { ListBody } from '../ListFrame';
 import { SupportDetailSkeleton, SupportListBodySkeleton } from './skeleton';
 import { ModalLink, RouteModal, useOpenModalClick } from '../Modal';
 import LocalTime from '../LocalTime';
-import IconTip, {
+import {
   BubbleLinesIcon,
   CircleCheckIcon,
   ArchiveBoxIcon,
@@ -24,6 +24,8 @@ import SupportDetail from './detail';
 import SupportRequestsFilter, { ABOUT_OPTIONS, STATUS_LABELS } from './filter';
 import { DEFAULT_SUPPORT_VIEW } from '../../lib/support-path';
 import { supportHref } from './href';
+import { senderLabel } from './labels';
+import StatusMark from './status-mark';
 import SenderName from './sender-name';
 import { statusBadgeClass } from './status-badge';
 import type {
@@ -71,10 +73,7 @@ const SubjectLink = ({
       {!request.anonymised && (
         <>
           {' '}
-          <span className="visually-hidden">
-            from{' '}
-            {request.signedOut ? 'Signed-out sender' : (request.sender?.name ?? 'Deleted account')}
-          </span>
+          <span className="visually-hidden">from {senderLabel(request)}</span>
         </>
       )}
     </ModalLink>
@@ -122,79 +121,43 @@ const SupportRequests = ({
                   // One line: the status, then the marks. Each mark is a button only so the keyboard reaches its tip.
                   <span className="support-requests__status">
                     {request.status === 'resolved' ? (
-                      <IconTip tip="Resolved" opensOnPress>
-                        <button
-                          type="button"
-                          className="support-requests__mark support-requests__mark--resolved"
-                          aria-label="Resolved"
-                        >
-                          <CircleCheckIcon />
-                        </button>
-                      </IconTip>
+                      <StatusMark
+                        name="Resolved"
+                        icon={<CircleCheckIcon />}
+                        className="support-requests__mark support-requests__mark--resolved"
+                      />
                     ) : request.status === 'waiting_on_sender' ? (
-                      <IconTip tip="Waiting on Sender" opensOnPress>
-                        <button
-                          type="button"
-                          className="support-requests__mark support-requests__mark--waiting"
-                          aria-label="Waiting on Sender"
-                        >
-                          <PersonClockIcon />
-                        </button>
-                      </IconTip>
+                      <StatusMark
+                        name="Waiting on Sender"
+                        icon={<PersonClockIcon />}
+                        className="support-requests__mark support-requests__mark--waiting"
+                      />
                     ) : request.status === 'open' ? (
-                      <IconTip tip="Open" opensOnPress>
-                        <button
-                          type="button"
-                          className="support-requests__mark support-requests__mark--open"
-                          aria-label="Open"
-                        >
-                          <FlagIcon />
-                        </button>
-                      </IconTip>
+                      <StatusMark
+                        name="Open"
+                        icon={<FlagIcon />}
+                        className="support-requests__mark support-requests__mark--open"
+                      />
                     ) : request.anonymised ? (
-                      <IconTip tip="Anonymised" opensOnPress>
-                        <button
-                          type="button"
-                          className="support-requests__mark support-requests__mark--anonymised"
-                          aria-label="Anonymised"
-                        >
-                          <ArchiveBoxIcon />
-                        </button>
-                      </IconTip>
+                      <StatusMark
+                        name="Anonymised"
+                        icon={<ArchiveBoxIcon />}
+                        className="support-requests__mark support-requests__mark--anonymised"
+                      />
                     ) : request.status === 'closed' ? (
-                      <IconTip tip="Closed" opensOnPress>
-                        <button
-                          type="button"
-                          className="support-requests__mark support-requests__mark--closed"
-                          aria-label="Closed"
-                        >
-                          <ArchiveBoxIcon />
-                        </button>
-                      </IconTip>
+                      <StatusMark
+                        name="Closed"
+                        icon={<ArchiveBoxIcon />}
+                        className="support-requests__mark support-requests__mark--closed"
+                      />
                     ) : (
                       STATUS_LABELS[request.status]
                     )}
                     {request.senderReplied && (
-                      <IconTip tip="Sender Replied" opensOnPress>
-                        <button
-                          type="button"
-                          className="support-requests__mark"
-                          aria-label="Sender Replied"
-                        >
-                          <BubbleLinesIcon />
-                        </button>
-                      </IconTip>
+                      <StatusMark name="Sender Replied" icon={<BubbleLinesIcon />} />
                     )}
                     {request.resolvedBySender && (
-                      <IconTip tip="Resolved by Sender" opensOnPress>
-                        <button
-                          type="button"
-                          className="support-requests__mark"
-                          aria-label="Resolved by Sender"
-                        >
-                          <PersonCheckIcon />
-                        </button>
-                      </IconTip>
+                      <StatusMark name="Resolved by Sender" icon={<PersonCheckIcon />} />
                     )}
                   </span>
                 ),
@@ -212,16 +175,11 @@ const SupportRequests = ({
                         userHref={userHref}
                       />
                       {request.betaTester && (
-                        // A status mark: a button only so the keyboard reaches its tip, which a press also opens.
-                        <IconTip tip="Beta Tester" opensOnPress>
-                          <button
-                            type="button"
-                            className="support-requests__beta"
-                            aria-label="Beta Tester"
-                          >
-                            <SproutIcon />
-                          </button>
-                        </IconTip>
+                        <StatusMark
+                          name="Beta Tester"
+                          icon={<SproutIcon />}
+                          className="support-requests__beta"
+                        />
                       )}
                     </span>
                   ),

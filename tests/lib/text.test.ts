@@ -4,6 +4,7 @@ import {
   capitalise,
   hasText,
   joinAnd,
+  joinAndMore,
   noMatchText,
   plural,
   titleCase,
@@ -29,12 +30,23 @@ describe('joinAnd', () => {
 });
 
 describe('addressTaken', () => {
-  it('names the holder, the address and the remedy', () => {
-    const sentence = addressTaken('HOLDER', 'the-slug', 'REMEDY');
+  it('names only the holder when it is the same name, and both names when another name made the address', () => {
+    const same = addressTaken('TYPED', { label: 'HOLDER', same: true }, 'REMEDY');
+    const close = addressTaken('TYPED', { label: 'HOLDER', same: false }, 'REMEDY');
+    const unread = addressTaken('TYPED', 'FALLBACK', 'REMEDY');
 
-    expect(sentence).toContain('HOLDER');
-    expect(sentence).toContain('the-slug');
-    expect(sentence).toContain('REMEDY');
+    expect(same).not.toContain('TYPED');
+    expect([same, close, unread].every((sentence) => sentence.includes('REMEDY'))).toBe(true);
+    expect(close).toContain('TYPED');
+    expect(close).toContain('HOLDER');
+    expect(unread).toContain('FALLBACK');
+  });
+});
+
+describe('joinAndMore', () => {
+  it('counts the names it leaves out, and adds nothing when it names them all', () => {
+    expect(joinAndMore(['A', 'B'], 5)).toBe('A, B and 3 more');
+    expect(joinAndMore(['A', 'B'], 2)).toBe('A and B');
   });
 });
 

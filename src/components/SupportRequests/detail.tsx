@@ -14,6 +14,7 @@ import TimeoutPanel from './timeout-panel';
 import { stands } from '../UserDetail/access-pause-parts';
 import type { SupportDetailProps, SupportTimeoutEntry } from './types';
 import { AnnounceContext, useSupportAction } from './use-support-action';
+import { DELETED_ACCOUNT, senderLabel } from './labels';
 import SenderName from './sender-name';
 import SupportFacts from './facts';
 import SupportThread from './thread';
@@ -91,7 +92,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
                       )}
                     </>
                   ) : (
-                    'Deleted account'
+                    DELETED_ACCOUNT
                   )}
                 </dd>
               </div>
@@ -127,9 +128,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               : [
                   {
                     id: request.id,
-                    name: request.signedOut
-                      ? 'Signed-out sender'
-                      : (request.sender?.name ?? 'Deleted account'),
+                    name: senderLabel(request),
                     tag: 'Sender',
                     at: request.createdAt,
                     body: request.message,
@@ -139,7 +138,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               .filter((reply) => !(request.anonymised && reply.fromSender))
               .map((reply) => ({
                 id: reply.id,
-                name: reply.author?.name ?? 'Deleted account',
+                name: reply.author?.name ?? DELETED_ACCOUNT,
                 tag: reply.fromSender ? 'Sender' : 'Staff',
                 internal: !reply.fromSender && reply.internal,
                 at: reply.createdAt,

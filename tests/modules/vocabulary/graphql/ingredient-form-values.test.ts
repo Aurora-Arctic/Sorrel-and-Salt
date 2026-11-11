@@ -288,7 +288,7 @@ describe('the admin writes', () => {
       expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
     });
 
-    it('answers a form an entry picks as FORBIDDEN, the row left live', async () => {
+    it('answers a form an entry picks as IN_USE, with the list filter for those entries, the row left live', async () => {
       const id = await seed('Fixture Held');
       await insertIngredient(
         sql,
@@ -302,7 +302,9 @@ describe('the admin writes', () => {
 
       const result = await send(asUser(E), DELETE, { id });
 
-      expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+      expect(result.errors?.[0]).toMatchObject({
+        extensions: { code: 'IN_USE', heldBy: { forms: ['Fixture Held'] } },
+      });
       expect((await formOf(id)).deleted_at).toBeNull();
     });
   });

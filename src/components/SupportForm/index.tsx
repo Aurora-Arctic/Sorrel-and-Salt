@@ -1,35 +1,24 @@
 'use client';
 
-import { type FormEvent, type ReactElement, type ReactNode, useId, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import { type FormEvent, type ReactElement, type ReactNode, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { limitMessage } from '../../lib/formats';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
-import {
-  MESSAGE_MAX_LENGTH,
-  PATH_MAX_LENGTH,
-  SUBJECT_MAX_LENGTH,
-} from '../../modules/support/validation/limits';
+import { useFormSend } from '../../lib/use-form-send';
+import { PATH_MAX_LENGTH } from '../../modules/support/validation/limits';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
-import {
-  ABOUT_REQUIRED,
-  MESSAGE_REQUIRED,
-  PATH_TOO_LONG,
-  SUBJECT_REQUIRED,
-} from '../../lib/support-messages';
-import type { Failure } from '../../lib/types';
+import { ABOUT_REQUIRED, PATH_TOO_LONG } from '../../lib/support-messages';
 import { PlainTextField } from '../Field/plain-text-field';
 import { FormActions } from '../Field/form-actions';
 import { RadioGroupField } from '../Field/radio-group-field';
+import { usePlainProblems, type PlainProblems } from '../Field/use-plain-problems';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { ErrorDetails } from './error-details';
+import { SupportMessageFields } from './message-fields';
+import { subjectAndMessageProblems } from './problems';
 import { PAGE_NOT_ON_SITE, SUPPORT_ABOUTS, isSitePage } from '../../lib/support-path';
 import type { SupportAbout, SupportFormProps } from './types';
 import { PendingLink } from '../../lib/navigation';
-
-type Problems = Partial<Record<'about' | 'subject' | 'message' | 'path', string>>;
 
 // The limits are the service's, said here so they are met before sending (claude-docs/components/support-form.md).
 
@@ -40,6 +29,8 @@ const SendSupportRequestDocument = graphql(`
     }
   }
 `);
+
+const FIELDS = ['about', 'path', 'subject', 'message'] as const;
 
 const ABOUT_LABEL = 'What Is This About?';
 
@@ -53,21 +44,18 @@ const SupportForm = ({
 }: SupportFormProps): ReactElement => {
   const aboutId = useId();
   const aboutBoxId = `${aboutId}-choices`;
-  const formRef = useRef<HTMLFormElement>(null);
   const [about, setAbout] = useState<SupportAbout | null>(initialAbout ?? null);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [page, setPage] = useState(path);
-  const [sending, setSending] = useState(false);
-  const [problems, setProblems] = useState<Problems>({});
-  const [failure, setFailure] = useState<Failure>({});
+  const { sending, failure, setFailure, send } = useFormSend(FIELDS);
+  // The topic group's first radio stands for the group.
+  const { formRef, shown, edited, refuse } = usePlainProblems(FIELDS, failure, {
+    about: aboutBoxId,
+  });
   const [sent, setSent] = useState(false);
   const [sentSubject, setSentSubject] = useState('');
 
-  const shown: Problems = {
-    ...(failure.field && { [failure.field.name]: failure.field.message }),
-    ...problems,
-  };
   const pageNote: ReactNode =
     errorCode === undefined ? undefined : (
       <>
@@ -81,52 +69,26 @@ const SupportForm = ({
       </>
     );
 
-  // The topic group's first radio stands for the group.
-  function focusFirst(wrong: Problems) {
-    const target = wrong.about
-      ? document.getElementById(aboutBoxId)?.querySelector<HTMLElement>('input')
-      : formRef.current?.querySelector<HTMLElement>(
-          `[name="${wrong.path ? 'path' : wrong.subject ? 'subject' : 'message'}"]`,
-        );
-    target?.focus();
-  }
-
   const discard = useDiscardGuard(!sent && (subject !== '' || message !== '' || page !== path));
 
   // By the service's own rules: the server stays the authority.
-  function problemsOf(): Problems {
-    const found: Problems = {};
+  function problemsOf() {
+    const found: PlainProblems<(typeof FIELDS)[number]> = subjectAndMessageProblems(
+      subject,
+      message,
+    );
     if (about === null) found.about = ABOUT_REQUIRED;
     if (page.trim().length > PATH_MAX_LENGTH) found.path = PATH_TOO_LONG;
     else if (!isSitePage(page)) found.path = PAGE_NOT_ON_SITE;
-    if (subject.trim() === '') found.subject = SUBJECT_REQUIRED;
-    else if (subject.trim().length > SUBJECT_MAX_LENGTH)
-      found.subject = limitMessage(SUBJECT_MAX_LENGTH);
-    if (message.trim() === '') found.message = MESSAGE_REQUIRED;
-    else if (message.trim().length > MESSAGE_MAX_LENGTH)
-      found.message = limitMessage(MESSAGE_MAX_LENGTH);
     return found;
-  }
-
-  function edited(name: keyof Problems) {
-    setProblems((now) => ({ ...now, [name]: undefined }));
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const found = problemsOf();
-    if (Object.keys(found).length > 0) {
-      flushSync(() => setProblems(found));
-      setFailure({});
-      focusFirst(found);
-      return;
-    }
-    setProblems({});
+    if (refuse(problemsOf())) return setFailure({});
     if (about === null) return;
-    setSending(true);
-    setFailure({});
-    try {
-      await graphqlRequest(SendSupportRequestDocument, {
+    const done = await send(() =>
+      graphqlRequest(SendSupportRequestDocument, {
         input: {
           about,
           subject: subject.trim(),
@@ -136,16 +98,11 @@ const SupportForm = ({
           ...(errorReference && { errorReference }),
           ...(errorDetail && { errorDetail }),
         },
-      });
-      setSending(false);
-      setSentSubject(subject.trim());
-      setSent(true);
-    } catch (error) {
-      setSending(false);
-      const failed = readGraphqlFailure(error, ['about', 'subject', 'message', 'path']);
-      flushSync(() => setFailure(failed));
-      if (failed.field) focusFirst({ [failed.field.name]: failed.field.message });
-    }
+      }),
+    );
+    if (!done) return;
+    setSentSubject(subject.trim());
+    setSent(true);
   }
 
   if (sent) {
@@ -201,41 +158,20 @@ const SupportForm = ({
         }}
       />
       {errorDetail && <ErrorDetails detail={errorDetail} />}
-      <PlainTextField
-        name="subject"
-        label="Subject"
-        required
-        placeholder="Add a subject"
-        autoComplete="off"
-        limit={SUBJECT_MAX_LENGTH}
-        disabled={sending}
-        value={subject}
-        error={shown.subject}
-        onChange={(next) => {
+      <SupportMessageFields
+        subject={subject}
+        message={message}
+        onSubject={(next) => {
           setSubject(next);
           edited('subject');
         }}
-      />
-      <PlainTextField
-        name="message"
-        label="Message"
-        required
-        multiline
-        rows={6}
-        placeholder="Write a message"
-        note={
-          <span className="field__warning">
-            Don’t include passwords, payment details or other private information.
-          </span>
-        }
-        limit={MESSAGE_MAX_LENGTH}
-        disabled={sending}
-        value={message}
-        error={shown.message}
-        onChange={(next) => {
+        onMessage={(next) => {
           setMessage(next);
           edited('message');
         }}
+        subjectError={shown.subject}
+        messageError={shown.message}
+        disabled={sending}
       />
       <FormActions
         noun="Request"

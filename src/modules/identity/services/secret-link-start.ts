@@ -1,6 +1,5 @@
 import 'server-only';
-import { send } from '../../../lib/mail';
-import { startMailJob } from '../../../lib/mail-job';
+import { startMessageMail } from '../../../lib/mail-job';
 import { secretLinkMail } from '../jobs/secret-link-mail';
 import { secretLinkMessage } from './secret-link-mail';
 import type { SecretLink } from '../types';
@@ -11,8 +10,5 @@ import type { SecretLink } from '../types';
  * Tried once here while MAIL_TRANSPORT is unset, or when the run cannot be started. Never throws: a send that fails is logged.
  */
 export async function scheduleSecretLinkMail(link: SecretLink): Promise<void> {
-  await startMailJob(secretLinkMail, [link], link.kind, async () => {
-    const message = await secretLinkMessage(link);
-    if (message) await send(message);
-  });
+  await startMessageMail(secretLinkMail, link, link.kind, secretLinkMessage);
 }

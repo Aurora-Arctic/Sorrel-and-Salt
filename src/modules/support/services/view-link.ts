@@ -1,28 +1,30 @@
 import 'server-only';
 import { MS_PER_DAY } from '../../../lib/duration';
-import { createHash, randomBytes } from 'node:crypto';
 import {
   findOneById,
   countSenderRepliesSince,
   findPublicSupportReplies,
   findStandingSupportTimeoutByAddress,
   findSupportRequestByViewTokenHash,
+  hashToken,
   withAudit,
 } from '../../../db/repository';
 import { NotFound, RateLimited } from '../../../lib/errors';
+import { newToken } from '../../../lib/invitation-token';
 import { SIGNED_OUT_SENDER_ID } from '../../../lib/support-sender';
 import { addressCountKey, clientCountKey } from '../../../lib/send-count-key';
 import { parseInput } from '../../../lib/validation';
 import { supportRequests } from '../schema/support-requests';
-import { supportReplies } from '../schema/support-replies';
 import type { SupportRequestRow, SupportRequestView } from '../types';
 import { SupportMessage } from '../validation/support';
+import { reopenWithSenderReply } from './sender-reply';
 import { SEND_WINDOW_SECONDS, refuseTimedOutReply } from './time-out-refusals';
 import {
   SIGNED_OUT_ADDRESS_LIMIT,
   SIGNED_OUT_IP_LIMIT,
   SIGNED_OUT_WINDOW_SECONDS,
 } from './signed-out-limits';
+import { NO_SUCH_REQUEST } from './refusals';
 
 // The link in each mail about a signed-out request. Its token is minted afresh by the step that sends the mail and only its
 // SHA-256 hash is stored, so the newest mailed link alone opens the request. A request a real account holds, or one
@@ -38,31 +40,27 @@ const VIEW_TOKEN_DAYS = 30;
 /** Reads of the mailed-link query one client may make in the signed-out window, a wrong token too. */
 export const SIGNED_OUT_VIEW_LIMIT = 60;
 
-const hashOf = (token: string) => createHash('sha256').update(token).digest('hex');
-
 /**
  * Mints a new view token for signed-out request `requestId`, stores its hash in place of the last one and returns the token,
  * for the mail to carry. It appears nowhere else.
  */
 export async function mintSupportViewToken(requestId: string): Promise<string> {
-  const token = randomBytes(32).toString('base64url');
+  const token = newToken();
   const request = await findOneById(supportRequests, requestId);
   if (!request) throw new NotFound(NO_SUCH_REQUEST);
   // Stamped as the request's own sender, so the row's last editor stays the account that sent it.
   await withAudit({ userId: request.createdBy }, (write) =>
     write.setSupportViewToken(
       requestId,
-      hashOf(token),
+      hashToken(token),
       new Date(Date.now() + VIEW_TOKEN_DAYS * MS_PER_DAY),
     ),
   );
   return token;
 }
 
-const NO_SUCH_REQUEST = 'No such support request';
-
 async function requestByToken(token: string): Promise<SupportRequestRow> {
-  const request = token ? await findSupportRequestByViewTokenHash(hashOf(token)) : undefined;
+  const request = token ? await findSupportRequestByViewTokenHash(hashToken(token)) : undefined;
   if (!request) throw new NotFound(NO_SUCH_REQUEST);
   return request;
 }
@@ -165,24 +163,8 @@ export async function replyToSupportRequestByViewToken(
     // The token proves which request; a keeper’s time-out on its sender still holds, as for a signed-in reply.
     const { timedOut } = await write.lockSupportSender(senderId, SEND_WINDOW_SECONDS);
     refuseTimedOutReply(timedOut);
-    const [moved] = await write.moveSupportRequest(
-      request.id,
-      senderId,
-      ['open', 'waiting_on_sender', 'resolved'],
-      {
-        status: 'open',
-        resolvedAt: null,
-        resolvedBy: null,
-        closingNoticeSentAt: null,
-        lastSenderActivityAt: now,
-      },
-    );
-    if (!moved) throw new NotFound(NO_SUCH_REQUEST);
-    await write.insert(supportReplies, {
-      requestId: request.id,
-      body: text,
-      authorRole: 'sender',
-      visibility: 'public',
-    });
+    if (!(await reopenWithSenderReply(write, request.id, senderId, text, now))) {
+      throw new NotFound(NO_SUCH_REQUEST);
+    }
   });
 }

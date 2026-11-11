@@ -1,6 +1,7 @@
 import 'server-only';
 import { NotFound } from '../../../lib/errors';
 import { readCompendiumEntry } from './compendium';
+import { NO_COMPENDIUM_ENTRY } from './messages';
 import type { CompendiumShareCard } from '../types';
 
 /**
@@ -11,7 +12,7 @@ import type { CompendiumShareCard } from '../types';
  */
 export async function readCompendiumShareCard(slug: string): Promise<CompendiumShareCard> {
   const page = await readCompendiumEntry(slug);
-  if (page.kind === 'moved') throw new NotFound('No such compendium entry');
+  if (page.kind === 'moved') throw new NotFound(NO_COMPENDIUM_ENTRY);
   const { entry, categories: own, variants } = page.detail;
   // The entry's own categories, else those of its live forms, each once and by name: the card marks none apart.
   const categories =

@@ -1,13 +1,6 @@
 import 'server-only';
-import {
-  findGroupCount,
-  findGroupPage,
-  findIngredientFormValues,
-  findOneBySlug,
-  withAudit,
-} from '../../../db/repository';
+import { findGroupCount, findGroupPage, findIngredientFormValues } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound } from '../../../lib/errors';
 import { allPages } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { formSlug, slugify } from '../../../lib/slugify';
@@ -16,7 +9,7 @@ import { parseInput } from '../../../lib/validation';
 import { assertCurator } from '@/modules/identity';
 import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
 import { IngredientFormGroupInput } from '../validation/ingredient-form-group';
-import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
+import { bySlug, createCurated, deleteGroup, updateGroup } from './curated-writes';
 import type { CuratedGroup, IngredientFormGroupRow } from '../types';
 
 // A rename or delete re-slugs the forms (claude-docs/db/form-vocabulary-seed.md, "Form group service details").
@@ -51,9 +44,7 @@ export function countIngredientFormGroups(start: Cursor | undefined): Promise<Pa
  * @throws {NotFound} no live group holds the slug.
  */
 export async function getIngredientFormGroupBySlug(slug: string): Promise<IngredientFormGroupRow> {
-  const row = await findOneBySlug(ingredientFormGroups, slug);
-  if (!row) throw new NotFound('No such group');
-  return row;
+  return bySlug(GROUPS, slug);
 }
 
 /**
@@ -66,18 +57,12 @@ export async function createIngredientFormGroup(
 ): Promise<IngredientFormGroupRow> {
   assertCurator(session);
   const fields = parseInput(IngredientFormGroupInput, input);
-  const slug = slugify(fields.name);
-
-  const written = await withAudit(session, async (write) => {
-    const [row] = await write.insert(ingredientFormGroups, {
-      ...fields,
-      icon: fields.icon ?? null,
-      slug,
-    });
-    return row;
-  }).catch((error: unknown) => refuseSlugCollision(GROUPS, error, slug));
-  expireCompendium();
-  return written;
+  return createCurated(
+    session,
+    GROUPS,
+    { ...fields, icon: fields.icon ?? null },
+    slugify(fields.name),
+  );
 }
 
 /**

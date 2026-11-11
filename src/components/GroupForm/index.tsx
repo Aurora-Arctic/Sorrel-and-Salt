@@ -1,9 +1,9 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { typedResolver } from '../../lib/typed-resolver';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useId, useRef, useState } from 'react';
-import { Controller, FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
+import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '@/lib/graphql-document';
 import { HEX_COLOR } from '../../lib/contrast';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
@@ -144,7 +144,7 @@ function defineKind<Input extends object>({
   const send = saveRequest(create, update);
   return {
     ...copy,
-    resolver: zodResolver(schema) as unknown as Resolver<GroupValues>,
+    resolver: typedResolver<GroupValues>(schema),
     save: (values, id) => send(values as unknown as Input, id),
     remove: async (variables) => {
       await graphqlRequest(remove, variables);
@@ -266,7 +266,7 @@ const GroupForm = ({
   };
   const [step, setStep] = useState<DeleteStep>({ at: 'idle' });
   const discard = useDiscardGuard(isDirty);
-  const { root, history, setAlert, rootError, send } = useEntityForm({
+  const { root, history, setAlert, rootError, settle, send } = useEntityForm({
     methods,
     discard,
     save: (input) => spec.save(input, group?.id),
@@ -304,6 +304,8 @@ const GroupForm = ({
       } else {
         setStep({ at: 'idle' });
         setAlert(issues.map(({ message }) => message).join(' '));
+        // After the question hands the focus back to the delete button as it goes.
+        settle('result');
       }
     }
   };
@@ -439,7 +441,11 @@ const GroupForm = ({
           noValidate
         >
           <FormHistoryButtons />
-          {rootError && <Notice kind="error">{rootError}</Notice>}
+          {rootError && (
+            <Notice kind="error" result>
+              {rootError}
+            </Notice>
+          )}
           <FormErrorSummary />
           <TextField<GroupValues>
             name="name"

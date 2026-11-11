@@ -3,6 +3,7 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { slugify } from './slugify';
+import { fold } from './text';
 
 // The marks a help body carries: `[[Term]]` and `[[Term|shown text]]`, matched against the glossary by title or slug
 // (claude-docs/components/help-pages.md, "Glossary marks").
@@ -92,11 +93,11 @@ export function plainText(body: string): string {
 }
 
 export function helpTerms(sources: readonly HelpTermSource[], { tooltips = true } = {}): HelpTerms {
-  const byTitle = new Map(sources.map((source) => [source.title.trim().toLowerCase(), source]));
+  const byTitle = new Map(sources.map((source) => [fold(source.title), source]));
   const bySlug = new Map(sources.map((source) => [source.slug, source]));
   const entries = new Map<string, HelpTermEntry>();
   const find = (name: string): HelpTermEntry | undefined => {
-    const source = byTitle.get(name.trim().toLowerCase()) ?? bySlug.get(slugify(name));
+    const source = byTitle.get(fold(name)) ?? bySlug.get(slugify(name));
     if (!source) return undefined;
     let entry = entries.get(source.slug);
     if (!entry) {

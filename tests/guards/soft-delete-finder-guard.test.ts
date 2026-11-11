@@ -34,6 +34,11 @@ const FILTERING_PREDICATES: Record<string, string> = {
   standingOnUser: `${REPOSITORY}/support.ts`,
 };
 
+/** The folder's function predicates that hold a child table's rows to a readable, live parent, each with the visibility rule its body must call. */
+const READABLE_PARENT_PREDICATES: Record<string, RegExp> = {
+  inReadableWorking: /\breadableWorkings\(/,
+};
+
 function predicateBody(name: string): string {
   const text = source(FILTERING_PREDICATES[name]);
   const start = text.search(new RegExp(`^const ${name}\\s*=`, 'm'));
@@ -124,10 +129,12 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
         continue;
       // Either it filters itself or it delegates to something that does: a sibling finder (`findPage` and its kin, or another the
       // index exports and this guard holds, never a hatch), `readableSpells` or `readableWorkings` (with the visibility rule),
-      // `readableInTiers` (with the tier) or `curated` (with the group's).
-      const delegates = [...finders, ...Object.keys(FILTERING_PREDICATES)].some(
-        (sibling) => sibling !== finder && new RegExp(`\\b${sibling}\\(`).test(body),
-      );
+      // `readableInTiers` (with the tier), `curated` (with the group's) or a shared predicate the next two tests hold.
+      const delegates = [
+        ...finders,
+        ...Object.keys(FILTERING_PREDICATES),
+        ...Object.keys(READABLE_PARENT_PREDICATES),
+      ].some((sibling) => sibling !== finder && new RegExp(`\\b${sibling}\\(`).test(body));
       expect(
         delegates ||
           /notSoftDeleted\(|find(?:Many|One|Page)\w*(?<!IncludingSoftDeleted)\(|readableSpells\(|readableWorkings\(|readableInTiers\(|\bcurated\(/.test(
@@ -143,6 +150,12 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
       expect(predicateBody(name), `${name} applies notSoftDeleted(...)`).toMatch(
         /notSoftDeleted\(/,
       );
+    }
+  });
+
+  it('admits a readable-parent predicate only while it applies its visibility rule itself', () => {
+    for (const [name, rule] of Object.entries(READABLE_PARENT_PREDICATES)) {
+      expect(functionBody(name), `${name} applies ${rule.source}`).toMatch(rule);
     }
   });
 

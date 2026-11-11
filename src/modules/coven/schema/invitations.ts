@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { boolean, check, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { INVITABLE_ROLES } from '../../../lib/invitable-roles';
 import { MAX_NOTE_LENGTH } from '../../../lib/invitation-cards/limits';
 import { namedWrites } from '../../../db/table-marks';
 import { auditColumns, userRole, users } from '../../identity/schema/users';
@@ -70,7 +71,7 @@ export const invitations = namedWrites(
       // The allowed set, not `<> 'owner'`: a fourth value would be silently invitable.
       check(
         'invitations_role_invitable',
-        sql`${table.role} is null or ${table.role} in ('viewer', 'member')`,
+        sql`${table.role} is null or ${table.role} in (${sql.raw(INVITABLE_ROLES.map((role) => `'${role}'`).join(', '))})`,
       ),
       check(
         'invitations_site_role_tier',

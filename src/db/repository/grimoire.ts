@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNotNull, type SQL, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
+import { fold as foldText } from '../../lib/text';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { categories } from '../../modules/vocabulary/schema/categories';
@@ -11,7 +12,7 @@ import {
   categoryFacetJoins,
   withoutChosenIfAny,
 } from './category-arms';
-import { newestFirst, notSoftDeleted, scopedTo } from './predicates';
+import { newestFirst, scopedTo } from './predicates';
 import { selectFrom } from './select';
 import { readableSpells, visibilityIn, visibilityText } from './spells';
 import type {
@@ -113,12 +114,7 @@ const folded = (column: TextColumn) => sql<string>`lower(btrim(${column}))`;
 
 function textArm(column: TextColumn, values: readonly string[] | undefined): SQL[] {
   if (!values || values.length === 0) return [];
-  return [
-    inArray(
-      folded(column),
-      values.map((value) => value.trim().toLowerCase()),
-    ),
-  ];
+  return [inArray(folded(column), values.map(foldText))];
 }
 
 /**
@@ -179,24 +175,20 @@ export function findGrimoireCategoryCounts(
   const rest = withoutChosenIfAny(query);
   const match = searchMatch(membership, rest.query);
   const pair = alias(spellCategories, 'facet_pair');
-  return selectFrom(
-    spells,
-    and(readableSpells(membership), notSoftDeleted(spells), whereOf(rest)),
-    {
-      aggregate: {
-        value: sql<string>`${categories.id}`,
-        count: sql<number>`count(distinct ${spells.id})::int`,
-      },
-      over: { join: match?.join, wordMatch: match !== undefined },
-      joins: categoryFacetJoins({
-        table: pair,
-        owner: pair.spellId,
-        category: pair.categoryId,
-        outer: spells.id,
-      }),
-      groupBy: [categories.id],
+  return selectFrom(spells, and(readableSpells(membership), whereOf(rest)), {
+    aggregate: {
+      value: sql<string>`${categories.id}`,
+      count: sql<number>`count(distinct ${spells.id})::int`,
     },
-  );
+    over: { join: match?.join, wordMatch: match !== undefined },
+    joins: categoryFacetJoins({
+      table: pair,
+      owner: pair.spellId,
+      category: pair.categoryId,
+      outer: spells.id,
+    }),
+    groupBy: [categories.id],
+  });
 }
 
 /**
@@ -216,15 +208,11 @@ export async function findGrimoireFacetCounts(
   ): Promise<FacetCount[]> => {
     const rest: GrimoireQuery = { ...query, [drop]: undefined };
     const match = searchMatch(membership, rest.query);
-    return selectFrom(
-      spells,
-      and(readableSpells(membership), notSoftDeleted(spells), whereOf(rest), present),
-      {
-        aggregate: { value, count: sql<number>`count(distinct ${spells.id})::int` },
-        over: { join: match?.join, wordMatch: match !== undefined },
-        groupBy: [groupBy],
-      },
-    );
+    return selectFrom(spells, and(readableSpells(membership), whereOf(rest), present), {
+      aggregate: { value, count: sql<number>`count(distinct ${spells.id})::int` },
+      over: { join: match?.join, wordMatch: match !== undefined },
+      groupBy: [groupBy],
+    });
   };
   const text = (column: TextColumn) =>
     [

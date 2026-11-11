@@ -9,7 +9,6 @@ import {
   citing,
   deityRows,
   entryColumns,
-  foldForm,
   folkNameRows,
   linkColumns,
   pick,
@@ -22,6 +21,7 @@ import {
   type SubstituteTarget,
 } from './rows';
 import { citationText } from '../../../lib/citation';
+import { fold } from '../../../lib/text';
 import { ingredients } from '../../../modules/ingredients/schema/ingredients';
 import { ingredientVariants } from '../../../modules/ingredients/schema/ingredient-variants';
 import { ingredientFolkNames } from '../../../modules/ingredients/schema/ingredient-folk-names';
@@ -227,8 +227,8 @@ function matchVariant(
   const form = pick(picks, 'forms', variant.form);
   return (
     (form && live.find((row) => row.formId === form.id)) ??
-    (form && live.find((row) => foldForm(row.form) === foldForm(form.name))) ??
-    live.find((row) => foldForm(row.form) === foldForm(variant.form))
+    (form && live.find((row) => fold(row.form) === fold(form.name))) ??
+    live.find((row) => fold(row.form) === fold(variant.form))
   );
 }
 
@@ -644,9 +644,9 @@ export async function applyUpdate(
         ...variantColumns(candidate, picks),
       })),
     );
-    const byForm = new Map(inserted.map((row) => [foldForm(row.form), row.id]));
+    const byForm = new Map(inserted.map((row) => [fold(row.form), row.id]));
     for (const candidate of plan.variants.insert) {
-      const id = byForm.get(foldForm(candidate.form.name));
+      const id = byForm.get(fold(candidate.form.name));
       if (id !== undefined) variantIdOf.set(candidate.variant, id);
     }
   }

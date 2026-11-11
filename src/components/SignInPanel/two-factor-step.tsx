@@ -2,6 +2,7 @@
 
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { twoFactor } from '../../lib/auth-client';
+import { settled, type AuthFailure } from '../../lib/auth-call';
 import { reportLeaving } from '../../lib/navigation';
 import { WRONG_CODE } from '../../lib/auth-messages';
 import { signInPath } from '../../lib/sign-in';
@@ -22,17 +23,12 @@ export const GENERIC_CODE_ERROR = "We couldn't check that code. Please try again
 
 type Method = 'app' | 'backup';
 
-interface Failure {
-  status?: number;
-  code?: string;
-}
-
 interface Refusal {
   alert?: string;
   code?: string;
 }
 
-function refusal(failure: Failure): Refusal | 'restart' {
+function refusal(failure: AuthFailure): Refusal | 'restart' {
   if (failure.code === 'INVALID_TWO_FACTOR_COOKIE') return 'restart';
   if (failure.code === 'TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE') return 'restart';
   if (failure.code === 'ACCOUNT_TEMPORARILY_LOCKED') return { alert: CODE_LOCKED };
@@ -65,9 +61,7 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
     setPending(true);
     setProblem({});
     const verify = method === 'app' ? twoFactor.verifyTotp : twoFactor.verifyBackupCode;
-    const { error } = await verify({ code: entered, trustDevice }).catch(() => ({
-      error: {} as Failure,
-    }));
+    const { error } = await settled(verify({ code: entered, trustDevice }));
     if (error) {
       setPending(false);
       const answer = refusal(error);

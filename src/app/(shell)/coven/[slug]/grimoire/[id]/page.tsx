@@ -19,7 +19,7 @@ import { deletedHrefOf } from '@/components/SpellRecipe/deleted-href';
 import { spellNameOf } from '@/components/SpellCard/untitled';
 import { demoNoticeOf } from '@/lib/demo-notice';
 import { Forbidden } from '@/lib/errors';
-import { RowId } from '@/lib/validation';
+import { isRowId } from '@/lib/validation';
 import { viewerOf } from '@/lib/viewer';
 import { covenAccessOf } from '@/lib/coven-access';
 import { requireCovenMembership, requireSession } from '@/lib/request-session';
@@ -41,7 +41,7 @@ import { covenPath } from '@/lib/coven-path';
 
 const spellOf = cache(async (slug: string, id: string) => {
   // A malformed id names no spell, so it is a 404 before any read.
-  if (!RowId.safeParse(id).success) notFound();
+  if (!isRowId(id)) notFound();
   const { workspace, membership } = await requireCovenMembership(slug);
   const session = await requireSession();
   const spell = await orNotFound(() => readSpell(session, workspace.id, id), Forbidden);
@@ -106,11 +106,9 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   const edit = query.edit;
   const entryId = single(query.entry) || undefined;
   const viewed = entryId ? await readViewedEntry(membership, entryId) : undefined;
-  const wanted = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;
+  const wanted = typeof edit === 'string' && isRowId(edit) ? edit : undefined;
   const saved =
-    canUpdate && wanted?.success && wanted.data === spell.id
-      ? await readEditedSpell(workspace.id, spell.id)
-      : undefined;
+    canUpdate && wanted === spell.id ? await readEditedSpell(workspace.id, spell.id) : undefined;
   return (
     <main>
       <RouteModalProvider>

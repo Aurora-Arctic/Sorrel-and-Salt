@@ -27,8 +27,8 @@ import {
   useEditedFieldsContext,
   useSettledWhilePressed,
 } from '../Field';
-import { ListField, MultiSelectField, ToggleField } from './fields';
-import { ELEMENT_OPTIONS } from './options';
+import CorrespondenceFields from './correspondence-fields';
+import { ToggleField } from './fields';
 import { ReferencesField } from './references';
 import { RemoveQuestion } from './remove-question';
 import { CollapsibleSection, FoldFlag, useFoldIds } from '../CollapsibleSection';
@@ -40,9 +40,7 @@ import {
   curatedOnly,
   useCompendiumSubstitutes,
   useFormSuggestions,
-  useCelestialBodySuggestions,
   useSubstituteSuggestions,
-  useZodiacSuggestions,
 } from './suggestions';
 import type {
   FormLink,
@@ -489,47 +487,12 @@ function VariantFieldset({
             fold={fold('correspondences')}
             summary={summary('correspondences')}
           >
-            <MultiSelectField
-              name={`${at}.elements`}
-              label="Elements"
-              placeholder="Add an element"
-              options={ELEMENT_OPTIONS}
-              action={<CopyFromIngredient at={at} field="elements" />}
-            />
-            <LookupListField
+            <CorrespondenceFields
               workspaceId={workspaceId}
-              useSuggestions={useCelestialBodySuggestions}
-              name={`${at}.celestialBodies`}
-              ordered
+              prefix={at}
               pickOnly={compendium}
-              legend="Celestial Bodies"
-              entry="Celestial Body"
-              placeholder="Add a body"
-              action={(announce) => (
-                <CopyFromIngredient at={at} field="celestialBodies" announce={announce} />
-              )}
-            />
-            <LookupListField
-              workspaceId={workspaceId}
-              useSuggestions={useZodiacSuggestions}
-              name={`${at}.zodiacSigns`}
-              ordered
-              pickOnly={compendium}
-              legend="Zodiac Signs"
-              entry="Zodiac Sign"
-              placeholder="Add a sign"
-              action={(announce) => (
-                <CopyFromIngredient at={at} field="zodiacSigns" announce={announce} />
-              )}
-            />
-            <ListField
-              name={`${at}.colors`}
-              ordered
-              legend="Colours"
-              entry="Colour"
-              placeholder="Add a colour"
-              action={(announce) => (
-                <CopyFromIngredient at={at} field="colors" announce={announce} />
+              action={(field, announce) => (
+                <CopyFromIngredient at={at} field={field} announce={announce} />
               )}
             />
           </CollapsibleSection>

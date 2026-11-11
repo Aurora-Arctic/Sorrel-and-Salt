@@ -184,3 +184,11 @@ export const DEFAULT_SUPPORT_VIEW: SupportView = 'needs_staff';
 /** A sender may be in several, so each is a narrowing of its own rather than a rank. */
 export const SUPPORT_SENDER_GROUPS = [{ value: 'beta_tester', label: 'Beta Testers' }] as const;
 export type SupportSenderGroup = (typeof SUPPORT_SENDER_GROUPS)[number]['value'];
+
+/** Derived from the invitation the sender accepted and never stored. */
+export const SUPPORT_SENDER_TIERS = ['beta_tester', 'standard'] as const;
+export type SupportSenderTier = (typeof SUPPORT_SENDER_TIERS)[number];
+
+/** What the Support dialog offers a visitor. */
+export const SUPPORT_DIALOG_KINDS = ['signedOut', 'unverified', 'timedOut', 'form'] as const;
+export type SupportDialogKind = (typeof SUPPORT_DIALOG_KINDS)[number];

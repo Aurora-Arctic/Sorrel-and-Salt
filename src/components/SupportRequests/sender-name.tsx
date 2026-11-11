@@ -3,6 +3,7 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { ModalLink, useOpenModalClick } from '../Modal';
+import { DELETED_ACCOUNT, SIGNED_OUT_SENDER } from './labels';
 import { USER_MODAL_PLACE } from './href';
 import type { SupportSender } from './types';
 
@@ -25,8 +26,8 @@ const SenderName = ({
     { title: sender?.name ?? '' },
     USER_MODAL_PLACE,
   );
-  if (signedOut) return <>Signed-out sender</>;
-  if (!sender) return <>Deleted account</>;
+  if (signedOut) return <>{SIGNED_OUT_SENDER}</>;
+  if (!sender) return <>{DELETED_ACCOUNT}</>;
   if (!href) return <>{sender.name}</>;
   return (
     <ModalLink href={href} onClick={onClick}>

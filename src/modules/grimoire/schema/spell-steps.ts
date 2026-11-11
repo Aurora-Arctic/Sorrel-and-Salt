@@ -1,21 +1,12 @@
 import { sql } from 'drizzle-orm';
-import {
-  check,
-  foreignKey,
-  integer,
-  numeric,
-  pgTable,
-  text,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { check, foreignKey, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from '../../ingredients/schema/ingredients';
 import { ingredientVariants } from '../../ingredients/schema/ingredient-variants';
 import { inventoryUnit } from '../../ingredients/schema/inventory-items';
-import { QUANTITY_PRECISION, QUANTITY_SCALE } from '../../ingredients/schema/quantities';
+import { quantityColumn } from '../../ingredients/schema/quantity-column';
 import { spells } from './spells';
-import { idColumn, liveUnique } from '../../../db/schema-parts';
+import { idColumn, liveUnique, notBlankIfSet } from '../../../db/schema-parts';
 
 // A spell's recipe, one ordered list: a step is an instruction, an ingredient laid in the jar, or both. It references the
 // ingredient, never the inventory item, and is soft-deleted as a tombstone (claude-docs/db/grimoire.md, "The join names the ingredient, never the stock row").
@@ -35,7 +26,7 @@ export const spellSteps = pgTable(
     name: text('name'),
     form: text('form'),
     // Nullable, with `unit`: "a pinch" names no measurement, and zero is a quantity where absence is not.
-    quantity: numeric('quantity', { precision: QUANTITY_PRECISION, scale: QUANTITY_SCALE }),
+    quantity: quantityColumn('quantity'),
     // No `unitDimension` here: nothing groups a spell's layers by dimension.
     unit: inventoryUnit('unit'),
     // Stored, never inferred from insertion order.
@@ -75,8 +66,8 @@ export const spellSteps = pgTable(
       foreignColumns: [ingredientVariants.id, ingredientVariants.ingredientId],
     }),
     // A blank name or body would satisfy `num_nonnulls` and say nothing.
-    check('spell_steps_name_not_blank', sql`name is null or btrim(name) <> ''`),
-    check('spell_steps_form_not_blank', sql`form is null or btrim(form) <> ''`),
-    check('spell_steps_body_not_blank', sql`body is null or btrim(body) <> ''`),
+    check('spell_steps_name_not_blank', notBlankIfSet('name')),
+    check('spell_steps_form_not_blank', notBlankIfSet('form')),
+    check('spell_steps_body_not_blank', notBlankIfSet('body')),
   ],
 );

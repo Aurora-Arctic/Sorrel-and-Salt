@@ -6,6 +6,7 @@ import {
   isoDayInUtc,
   longMinuteInUtc,
   longMinuteInZone,
+  untilPhrase,
   minuteInUtc,
   minuteInZone,
   printedDayOf,
@@ -97,4 +98,18 @@ describe('isCalendarDay', () => {
     '2026-11-10T00:00',
     '',
   ])('refuses %j', (text) => expect(isCalendarDay(text)).toBe(false));
+});
+
+describe('untilPhrase', () => {
+  it('words an end as until its date in the zone', () => {
+    const end = new Date('2999-01-01T12:00:00Z');
+    expect(untilPhrase(end, 'UTC')).toBe(`until ${longMinuteInZone(end, 'UTC')}`);
+  });
+
+  it('words no end as no end date, or as the wording given', () => {
+    expect(untilPhrase(null)).toBe('with no end date');
+    expect(untilPhrase(null, 'UTC', 'while timed out with no end date')).toBe(
+      'while timed out with no end date',
+    );
+  });
 });

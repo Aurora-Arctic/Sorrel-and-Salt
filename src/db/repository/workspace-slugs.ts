@@ -6,6 +6,11 @@ import { notSoftDeleted, scopedTo } from './predicates';
 import { selectFrom, selectOne } from './select';
 import type { AuditWriter, WorkspaceRow, WorkspaceSlugRow, WriterContext } from './types';
 
+/** The live coven with this id, or `undefined`. */
+function findLiveWorkspace(id: string) {
+  return selectOne(workspaces, and(notSoftDeleted(workspaces), eq(workspaces.id, id)));
+}
+
 /**
  * The live coven holding `slug`, as its current address or as an old one, with which of the two it is. Takes no proof, so no
  * caller may reach for it casually: a request for an address names a coven before any membership exists to prove
@@ -19,10 +24,7 @@ export async function findWorkspaceHoldingSlug(
     and(notSoftDeleted(workspaceSlugs), eq(workspaceSlugs.slug, slug)),
   );
   if (!address) return undefined;
-  const workspace = await selectOne(
-    workspaces,
-    and(notSoftDeleted(workspaces), eq(workspaces.id, address.workspaceId)),
-  );
+  const workspace = await findLiveWorkspace(address.workspaceId);
   return workspace ? { workspace, current: workspace.slug === slug } : undefined;
 }
 
@@ -66,10 +68,7 @@ export function workspaceSlugWrites({
     );
     const stale: string[] = [];
     for (const row of others) {
-      const owner = await selectOne(
-        workspaces,
-        and(notSoftDeleted(workspaces), eq(workspaces.id, row.workspaceId)),
-      );
+      const owner = await findLiveWorkspace(row.workspaceId);
       if (!owner || owner.slug !== slug) stale.push(row.id);
     }
     if (stale.length > 0) await softDelete(workspaceSlugs, inArray(workspaceSlugs.id, stale));
@@ -87,10 +86,7 @@ export function workspaceSlugWrites({
     // The previous address is recorded too, since a coven made before the table may hold no row for it. Every other row of the
     // coven is retired, and returning to its previous address reuses that row.
     updateWorkspaceName: async (membership, { name, slug }) => {
-      const before = await selectOne(
-        workspaces,
-        and(notSoftDeleted(workspaces), eq(workspaces.id, membership.workspaceId)),
-      );
+      const before = await findLiveWorkspace(membership.workspaceId);
       if (!before) return [];
       await claim(before.id, before.slug);
       if (slug === before.slug) return update(workspaces, { name }, eq(workspaces.id, before.id));
