@@ -18,7 +18,7 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/auth-client')>()),
   useSession: () => ({ data: null }),
 }));
-vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => [] }));
+vi.mock('@/lib/configured-providers', () => ({ providersToPass: () => [] }));
 
 const getMe = vi.fn();
 vi.mock('@/modules/identity', () => ({ getMe }));

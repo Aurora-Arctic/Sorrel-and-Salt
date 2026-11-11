@@ -21,7 +21,7 @@ vi.mock('@/lib/auth-client', () => ({
   signIn: { social: vi.fn() },
   getLastUsedLoginMethod: () => null,
 }));
-vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => ['google'] }));
+vi.mock('@/lib/configured-providers', () => ({ providersToPass: () => ['google'] }));
 
 const { default: PublicLayout } = await import('@/app/(public)/layout');
 
