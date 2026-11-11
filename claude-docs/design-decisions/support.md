@@ -999,12 +999,12 @@ On 2026-11-11 every vendor the site uses or plans to use was checked against `do
 3. The wave includes a task to ask Neon and Resend in writing about their data use.
 4. No error tracker: Vercel's logs and the existing error reference cover launch.
 
-**Outcome of the check.** Vercel Hobby was opted in to AI training by default, and the owner has since turned that off. The privacy policy's sentence "none is given it for any other purpose" promises more than Vercel's, Neon's, Resend's and, later, Stripe's terms commit to. The M17.1 pricing work recommended an operations stack and minted no task to set it up. [N · Wave 06](../waves/v1-next/wave-06.md) holds the tasks.
+**Outcome of the check.** Vercel Hobby was opted in to AI training by default, and the owner has since turned that off. The privacy policy's sentence "none is given it for any other purpose" promises more than Vercel's, Neon's, Resend's, and, later, Stripe's terms commit to. The M17.1 pricing work recommended an operations stack and minted no task to set it up. [N · Wave 06](../waves/v1-next/wave-06.md) holds the tasks.
 
 #### Vercel
 
-- AI training is covered by the March 2026 terms change. The covered data is code, Vercel agent chats, build and deployment telemetry, build errors and aggregate traffic statistics, anonymised and redacted. Hobby, including a trial of Pro, is opted in by default; paid Pro is opted out; Enterprise is opted out with no opt-in. The switch is Team Settings, Data Preferences, with a per-project override, and it applies going forward only. Account information is not used for training. Pro and Hobby cannot opt out of non-training product improvement. Source: https://vercel.com/changelog/updates-to-terms-of-service-march-2026
-- The privacy notice has no blanket "no sale" statement. It says identifiers, commercial information and internet activity may have been shared with ad networks, for Vercel's own website and marketing, and that de-identified data may go to AI business partners for Hobby and Pro depending on team preferences. Vercel is a controller for account-holder data and a processor for Customer Data. Source: https://vercel.com/legal/privacy-policy
+- AI training is covered by the March 2026 terms change. The covered data is code, Vercel agent chats, build and deployment telemetry, build errors, and aggregate traffic statistics, anonymised and redacted. Hobby, including a trial of Pro, is opted in by default; paid Pro is opted out; Enterprise is opted out with no opt-in. The switch is Team Settings, Data Preferences, with a per-project override, and it applies going forward only. Account information is not used for training. Pro and Hobby cannot opt out of non-training product improvement. Source: https://vercel.com/changelog/updates-to-terms-of-service-march-2026
+- The privacy notice has no blanket "no sale" statement. It says identifiers, commercial information, and internet activity may have been shared with ad networks, for Vercel's own website and marketing, and that de-identified data may go to AI business partners for Hobby and Pro depending on team preferences. Vercel is a controller for account-holder data and a processor for Customer Data. Source: https://vercel.com/legal/privacy-policy
 - The data processing agreement applies to Enterprise and Pro, with primary processing in the US and retention for the "minimum necessary period" without figures. Source: https://vercel.com/legal/dpa
 - Web Analytics needs a dashboard "Enable" click and the `@vercel/analytics` component; Speed Insights needs the `@vercel/speed-insights` package. Neither page says it is on by default. Keep both unused. Sources: https://vercel.com/docs/analytics/quickstart, https://vercel.com/docs/speed-insights/quickstart
 - Bot Protection is inactive by default, with Log or Challenge selectable; Challenge serves a JavaScript challenge. Source: https://vercel.com/docs/vercel-firewall/vercel-waf/managed-rulesets
@@ -1014,7 +1014,7 @@ On 2026-11-11 every vendor the site uses or plans to use was checked against `do
 
 #### GitHub
 
-- From 24 April 2026, Copilot interaction data from Free, Pro and Pro+ users trains GitHub models unless the user opts out. Business and Enterprise are not affected. Content from issues, discussions and private repositories at rest is excluded; code from private repositories processed while Copilot is in use can be used unless the user opts out. The opt-out is a per-user setting at https://github.com/settings/copilot/features. Sources: https://github.blog/news-insights/company-news/updates-to-github-copilot-interaction-data-usage-policy/, https://www.theregister.com/2026/03/26/github_ai_training_policy_changes/
+- From 24 April 2026, Copilot interaction data from Free, Pro, and Pro+ users trains GitHub models unless the user opts out. Business and Enterprise are not affected. Content from issues, discussions, and private repositories at rest is excluded; code from private repositories processed while Copilot is in use can be used unless the user opts out. The opt-out is a per-user setting at https://github.com/settings/copilot/features. Sources: https://github.blog/news-insights/company-news/updates-to-github-copilot-interaction-data-usage-policy/, https://www.theregister.com/2026/03/26/github_ai_training_policy_changes/
 - Not found from GitHub's own pages: a data processing agreement or sub-processor list for the Team plan.
 
 #### Stripe
@@ -1029,7 +1029,7 @@ On 2026-11-11 every vendor the site uses or plans to use was checked against `do
 
 - The privacy policy redirects to Databricks's notice, which says it does not "sell" personal information in the traditional sense, offers opt-outs because some disclosures may count as a sale or targeted advertising, and does not address AI training on customer data. Sources: https://neon.com/privacy-policy, https://www.databricks.com/legal/privacynotice
 - Neon's AI page says the SQL Editor assistant shares the database schema and "no actual data", and does not say whether customer data trains models or how to turn the features off. Source: https://neon.com/docs/security/ai-use-in-neon
-- The data processing agreement states no region, retention period or deletion procedure. Source: https://neon.com/dpa
+- The data processing agreement states no region, retention period, or deletion procedure. Source: https://neon.com/dpa
 - Databricks announced the acquisition of Neon on 14 May 2025 for about $1 billion. Source: https://www.techtarget.com/data-technologies/news/366623864/Databricks-adds-Postgres-database-with-1B-Neon-acquisition
 - Not found: any statement on training on database contents. N6.2 asks Neon in writing.
 
@@ -1049,8 +1049,6 @@ On 2026-11-11 every vendor the site uses or plans to use was checked against `do
 - The owner chose no tracker (choice 4).
 
 #### The approved plan
-
-#### Plan: N · Wave 06 — Operations and Privacy, Free First
 
 ##### Context
 
@@ -1161,7 +1159,7 @@ The ids are `N6.1`–`N6.17`, in execution order. Every heading is `**N6.n — T
 
 ###### Paid (after the free tasks)
 
-15. **N6.15 — Move to Vercel Pro, Keep Logs 30 Days and Set Spend Alerts** · 2h
+15. **N6.15 — Move to Vercel Pro, Keep Logs 30 Days, and Set Spend Alerts** · 2h
     - The owner upgrades. Taking payment counts as commercial use, which Hobby does not allow, so this must happen before N4 billing opens.
     - Check that Data Preferences stays opted out.
     - Keep Observability Plus, which is on by default for new Pro teams, at $1.20 per million events.
@@ -1172,7 +1170,7 @@ The ids are `N6.1`–`N6.17`, in execution order. Every heading is `**N6.n — T
     - Add `instrumentation.ts` with `@vercel/otel` at 10% sampling, following the instrumentation guide in `node_modules/next/dist/docs/`.
     - Add a test, using an in-memory span exporter, that span attributes carry no email address and no request body.
     - Vercel's tracing is $0.50 per million span units on Pro.
-17. **N6.17 — Watch Uptime, Cron Heartbeats and Expiry With UptimeRobot Solo** · 4h
+17. **N6.17 — Watch Uptime, Cron Heartbeats, and Expiry With UptimeRobot Solo** · 4h
     - The service costs $12 a month.
     - The owner sets up monitors for the site, certificate expiry, and domain expiry.
     - Each cron in `vercel.json` pings its heartbeat URL, held in an env var, when its job finishes. A test covers the ping.
@@ -1186,9 +1184,9 @@ The ids are `N6.1`–`N6.17`, in execution order. Every heading is `**N6.n — T
 One Sonnet agent does the hands-on work in a new worktree off `origin/staging`, at `/home/node/worktrees/n6-ops`, on branch `feature/n6-mint-operations-and-privacy-wave`. The main session reviews the diff.
 
 1. Recheck the board and the git log for a parallel session that has taken `N6` or `N · Wave 06` first (`grep -rho '^\*\*N6\.[0-9]* — ' claude-docs/tasks/` and `node scripts/task-board.mjs find N6.1`).
-2. Write `claude-docs/tasks/v1-next/n6.md`: the `## N6 — Operations and privacy` heading, `_17 tasks · 50.5 hours_`, sequencing, the record link, the testing rules, and the 17 entries.
+2. Write `claude-docs/tasks/v1-next/n6.md`: the `## N6 — Operations and vendor ethics` heading, `_17 tasks · 50.5 hours_`, sequencing, the record link, the testing rules, and the 17 entries.
 3. Write `claude-docs/waves/v1-next/wave-06.md`: the row `N6.1 → N6.17`, why the wave exists, the dependency order, the note on N4.19 and ND.1, and the testing paragraph.
-4. In `claude-docs/TASKS.md`, add the execution-order row after line 77, `| **N · 06 — Operations and privacy** | N6.1 → N6.17 | [wave-06.md](...) |`, and the file-table row near lines 120–131.
+4. In `claude-docs/TASKS.md`, add the execution-order row after line 77, `| **N · 06 — Operations and vendor ethics** | N6.1 → N6.17 | [wave-06.md](...) |`, and the file-table row near lines 120–131.
 5. Add a decision record to `claude-docs/design-decisions/support.md`, beside "### Analytics" (line 987). It holds the vendor-by-vendor findings, each with its source URL and the access date 2026-11-11, the owner's choices above, and this plan. Add an `INDEX.md` line.
 6. Create the milestone `N · Wave 06` with `gh api` POST to `repos/Aurora-Arctic/Sorrel-and-Salt/milestones`, because `task-board.mjs` has no create command. Line 1 of its description is the id list, and line 3 is the wave-file link.
 7. For each task, write the body to the scratchpad, then run `gh issue create --type Task --label tracked --label v1-next --milestone "N · Wave 06"`, `task-board.mjs place --apply`, and `task-board.mjs estimate`.
