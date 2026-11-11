@@ -727,3 +727,22 @@ _Acceptance criteria:_
 - Each fix starts with a regression test that fails before it: a component test, or a Playwright test where the fault depends on layout or navigation; item 6 adds a `tokens.test.ts` row
 - The Delete placement in item 1 is agreed with the owner before it is built
 - Docs corrected: `claude-docs/components/section-nav.md` (item 4), `claude-docs/components/account-menu.md` (item 5), `claude-docs/styling.md` and `claude-docs/components/entry-marks.md` (item 6), `.claude/rules/writing.md` (item 7)
+
+**MB.298 — Deploys Stop on Vercel's Daily Upload Limit** · 0.5h
+
+_Story:_ As the site's owner, I want a deploy to upload the build as one file, so that a release with many changed files still ships.
+
+Found on 2026-11-11 by the owner, deploying release 0.15.0. The Deploy step of `.github/workflows/deploy.yml` ran `vercel deploy --prebuilt`, which uploads every file of the build output separately, and Vercel's free plan refuses more than 5,000 uploads a day. Steps to reproduce:
+
+1. Cut a release whose build changes about 1,600 files
+2. Let `deploy.yml` run on it
+
+Actual: the Deploy step fails with Vercel's "Too many requests" error, code `api-upload-free`.
+
+Expected: the deploy uploads the build as one tarball and succeeds.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: every `vercel deploy` in `.github/workflows/` passes `--archive=tgz`, and the test first asserts it found the deploy command in `deploy.yml`
+- `deploy.yml`'s Deploy step passes `--archive=tgz`
+- `claude-docs/ci/deploy.md` says why the flag is there
