@@ -10,6 +10,7 @@ import type { HeldBy } from '../../../lib/types';
 import { joinAnd, joinAndMore, plural } from '../../../lib/text';
 import { inUtc } from '../../../lib/utc';
 import type { HeldWording } from '../types';
+import { bracketedName } from '../../../lib/ingredient-name';
 
 // The index exports `describeEntry` and `redirectRefusal` for the ingredient services, and nothing else.
 
@@ -40,7 +41,7 @@ export async function refuseWhileHeld(
 
 /** An entry as a person tells it apart in a refusal: its label, then its formal name, which is its identity, e.g. `Rose (Rosa gallica)`. No form: an entry may have several. */
 export function describeEntry(entry: { name: string; canonicalName: string | null }): string {
-  return entry.canonicalName ? `${entry.name} (${entry.canonicalName})` : entry.name;
+  return bracketedName(entry.name, entry.canonicalName);
 }
 
 /**

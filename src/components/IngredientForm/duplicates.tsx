@@ -23,7 +23,7 @@ import { ADDED_HOLD_MS } from '../AddIcon';
 import { useFade } from '../ClickFeedback/fade';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import IconTip, { CheckIcon, MysticEyeIcon, PlusIcon, QuickLookButton } from '../IconTip';
-import { cardName } from '../IngredientCard/card-name';
+import { bracketedName, cardName } from '../../lib/ingredient-name';
 import DetailsLink from '../IngredientEntry/details-link';
 import Notice from '../Notice';
 import Spinner from '../Spinner';
@@ -432,8 +432,7 @@ function useSlidingRows(
   };
 }
 
-const titleOf = ({ name, canonicalName }: Duplicate) =>
-  canonicalName ? `${name} (${canonicalName})` : name;
+const titleOf = ({ name, canonicalName }: Duplicate) => bracketedName(name, canonicalName);
 
 /**
  * What the notice says. Colour alone must not mark a held save, so the words

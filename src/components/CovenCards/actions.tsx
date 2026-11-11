@@ -1,6 +1,6 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
-import { cardName } from '../IngredientCard/card-name';
+import { cardName } from '../../lib/ingredient-name';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
 import StockDialog from '../StockDialog';
 import CardMore from './card-more';

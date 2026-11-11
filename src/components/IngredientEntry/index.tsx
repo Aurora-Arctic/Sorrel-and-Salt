@@ -39,7 +39,7 @@ import EntryDialog from './entry-dialog';
 import OwnEntryActions from './own-actions';
 import StockSection from './stock-section';
 import { reviewedAtOf } from './review-date';
-import { cardName } from '../IngredientCard/card-name';
+import { cardName } from '../../lib/ingredient-name';
 import PausedNotice from '../AppShell/paused-notice';
 import SourcingScore from '../SourcingScore';
 import type { IngredientEntryProps } from './types';

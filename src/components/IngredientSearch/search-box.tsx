@@ -18,6 +18,7 @@ import type {
   IngredientSearchOption,
 } from './types';
 import './index.scss';
+import { bracketedName } from '../../lib/ingredient-name';
 
 // The search row's first control: a type-ahead over the compendium's ranked search, with the magnifier as the form's one
 // submit. The list changes only on Enter, the clear, a pick or the last row.
@@ -114,7 +115,7 @@ const ingredientRow = ({
 }: IngredientSearchMatch): IngredientSearchOption => ({
   key: id,
   value: name,
-  label: canonicalName ? `${name} (${canonicalName})` : name,
+  label: bracketedName(name, canonicalName),
   match: { id, slug, name, canonicalName, nomenclature },
 });
 
