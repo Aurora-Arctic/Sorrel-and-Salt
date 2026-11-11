@@ -62,7 +62,7 @@ export const IngredientVariantRef = builder.objectRef<IngredientVariantRow>('Ing
 /**
  * No `audit`, as `folkNames` carries none.
  */
-export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').implement({
+const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').implement({
   description:
     'Another ingredient to use in its place: a link to one, or the name of one not entered.',
   fields: (t) => ({
@@ -98,7 +98,7 @@ export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').impl
 /**
  * Its id is what promoting it names. No `audit`.
  */
-export const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement({
+const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement({
   description: 'An alternative name for an ingredient.',
   fields: (t) => ({
     id: t.exposeID('id'),
@@ -109,24 +109,21 @@ export const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement(
 /**
  * No `audit`, as `folkNames` carries none.
  */
-export const IngredientDeityRef = builder
-  .objectRef<IngredientDeityRow>('IngredientDeity')
-  .implement({
-    description:
-      'A deity the ingredient corresponds to: one picked from the curated list, or typed.',
-    fields: (t) => ({
-      name: t.exposeString('name', {
-        description: "The name as saved: a picked deity's curated spelling, or the typed text.",
-      }),
-      deity: t.field({
-        type: DeityRef,
-        nullable: true,
-        description:
-          'The curated deity picked: null on a typed name, and once that deity or its tradition is retired.',
-        resolve: (deity) => deity.deity,
-      }),
+const IngredientDeityRef = builder.objectRef<IngredientDeityRow>('IngredientDeity').implement({
+  description: 'A deity the ingredient corresponds to: one picked from the curated list, or typed.',
+  fields: (t) => ({
+    name: t.exposeString('name', {
+      description: "The name as saved: a picked deity's curated spelling, or the typed text.",
     }),
-  });
+    deity: t.field({
+      type: DeityRef,
+      nullable: true,
+      description:
+        'The curated deity picked: null on a typed name, and once that deity or its tradition is retired.',
+      resolve: (deity) => deity.deity,
+    }),
+  }),
+});
 
 /**
  * One form of an ingredient (DESIGN.md §7): what it adds to its ingredient, never what it overrides.

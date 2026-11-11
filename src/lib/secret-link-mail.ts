@@ -11,7 +11,7 @@ import type { Message, ProviderId } from './types';
 // the step bundle takes in everything this file reaches.
 
 /** Where a reset link always lands, so a request cannot point it anywhere else. */
-export const RESET_PASSWORD_PAGE = '/reset-password';
+const RESET_PASSWORD_PAGE = '/reset-password';
 
 export async function verificationLinkMessage(
   authBase: string,

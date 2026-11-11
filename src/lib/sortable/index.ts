@@ -28,7 +28,7 @@ const DRAG_DISTANCE_PX = 4;
 
 // Provisional: how long a finger rests on a handle before a touch drag starts.
 export const TOUCH_DRAG_DELAY_MS = 250;
-export const TOUCH_DRAG_TOLERANCE_PX = 5;
+const TOUCH_DRAG_TOLERANCE_PX = 5;
 
 /** A finger also sends pointer events; the touch sensor, with its delay, answers those instead. */
 class MouseAndPenSensor extends PointerSensor {

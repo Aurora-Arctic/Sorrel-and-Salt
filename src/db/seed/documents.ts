@@ -14,7 +14,7 @@ import type { SeedDatabase, SeedDocument, SeedRunOptions, SeedTransaction } from
 // admin's published text, their draft and their deletions are never written over. Reference data: it inserts the bootstrap user itself.
 
 /** The repo's documents folder, where `loadDocuments()` reads by default. */
-export const DOCUMENTS_ROOT = 'documents';
+const DOCUMENTS_ROOT = 'documents';
 
 const FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
 

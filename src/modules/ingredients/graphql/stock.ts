@@ -23,7 +23,7 @@ const UnitDimensionEnum = builder.enumType('UnitDimension', {
   values: UNIT_DIMENSIONS,
 });
 
-export const InventoryItemRef = builder.objectRef<StockRow>('InventoryItem').implement({
+const InventoryItemRef = builder.objectRef<StockRow>('InventoryItem').implement({
   description: "A coven's jar of one form of an ingredient.",
   fields: (t) => ({
     id: t.exposeID('id'),

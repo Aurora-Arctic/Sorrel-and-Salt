@@ -1,8 +1,8 @@
 import 'server-only';
 /** What stands where a coven's slug was, in what a curator reads: a curator is told the screen, never whose coven. */
-export const COVEN_PLACEHOLDER = '[coven]';
+const COVEN_PLACEHOLDER = '[coven]';
 /** What stands where an invitation's token was: a token is a credential. */
-export const TOKEN_PLACEHOLDER = '[token]';
+const TOKEN_PLACEHOLDER = '[token]';
 
 /**
  * The page address as a request stores it: no query string or fragment, and the segment after `/invite/` replaced by a

@@ -5,7 +5,7 @@ import { type CSSProperties, type TransitionEvent, useEffect, useState } from 'r
 // unmounted early. The state stays "closing" until the transition's own end event, so a `<details>` or `<dialog>` keeps its `open`; a longer timer is the net for one that never ran.
 
 /** Also the CSS transition's length, set through `--slide-ms`. */
-export const SLIDE_MS = 350;
+const SLIDE_MS = 350;
 
 export type SlideState = 'closed' | 'opening' | 'open' | 'closing';
 

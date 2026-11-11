@@ -70,7 +70,7 @@ function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementC
   });
 }
 
-export const COMPLETE_NEEDS_TITLE = 'Give the spell a title before marking it complete';
+const COMPLETE_NEEDS_TITLE = 'Give the spell a title before marking it complete';
 
 // Mirrors the database CHECK `status <> 'complete' OR title IS NOT NULL`, so the
 // database never refuses what validation passed. A draft saved as the member

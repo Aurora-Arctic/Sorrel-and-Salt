@@ -313,7 +313,7 @@ export type CompendiumEntryPage =
   | { kind: 'moved'; slug: string };
 
 /** A compendium entry an own entry is or may be, as its page links it. */
-export interface ReplacedCompendiumEntry {
+interface ReplacedCompendiumEntry {
   id: string;
   slug: string;
   name: string;

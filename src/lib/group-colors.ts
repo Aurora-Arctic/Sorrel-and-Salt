@@ -8,7 +8,7 @@ import type { AreaSpace, GroupColorColumn } from './types';
 export const MAX_HUE_DISTANCE = 10;
 
 /** A tenth over the 4.5:1 floor, so nudging it a shade toward the ground does not trip the check. */
-export const PAIRED_CONTRAST = 4.6;
+const PAIRED_CONTRAST = 4.6;
 
 const SEED_SATURATION: Record<GroupColorColumn, number> = { colorDark: 0.4, colorLight: 0.55 };
 
@@ -33,7 +33,7 @@ export function toHsl(hex: string): [number, number, number] {
   return [(sector * 60 + 360) % 360, saturation, lightness];
 }
 
-export function fromHsl(hue: number, saturation: number, lightness: number): string {
+function fromHsl(hue: number, saturation: number, lightness: number): string {
   const a = saturation * Math.min(lightness, 1 - lightness);
   const channel = (n: number) => {
     const k = (n + hue / 30) % 12;

@@ -240,7 +240,7 @@ export async function closeSupportRequest(
 }
 
 /** One guarded status move by staff; an explaining refusal when the status is not one the move starts from. */
-export async function moveOrRefuse(
+async function moveOrRefuse(
   session: Session,
   row: SupportRequestRow,
   from: readonly SupportRequestStatus[],
