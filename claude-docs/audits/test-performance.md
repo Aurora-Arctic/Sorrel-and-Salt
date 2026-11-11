@@ -313,7 +313,8 @@ About 7 of the 25 are uncertain.
   - `terms-gate:24`;
   - `compendium-entry`;
   - `help-pages:504, 522`.
-- **Distinct states, which stay:** `access-pause:72, 108, 140`; `error-pages:44`; `account:66`; `admin-cards:39, 50, 53, 60, 74, 91`; `admin-support-views:38`; `admin-business-cards:46, 111`; `admin:233, 283`; `support-sender-statuses:14` (one scan per status).
+- **Distinct states, which stay:** `access-pause:72, 108, 140`; `error-pages:44`; `account:66`; `admin-cards:39, 50, 53, 60, 74, 91, 128` (128 is the filter drawer holding an invalid range) and `admin-cards:199` (the beta landing page, reached only by a minted token); `admin-support-views:38`; `admin-business-cards:46, 111`; `admin:233, 283`; `support-sender-statuses:14` (one scan per status).
+- **Decided in MC.12:** `admin-cards:201` scans the same beta landing page again at 375 px, after `assertNoSidewaysScroll` narrows the window. Under R-6 it stays only if that page's markup differs at phone width.
 - **Found:** a scan of the plain page, as the same persona, in the same state the sweep scans. Rule 9 of `layer-ownership.md` already allows only one scan per page state.
 - **Keeper:** the sweep scan of the same route and persona.
 
