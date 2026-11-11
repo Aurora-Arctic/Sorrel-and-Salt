@@ -6,7 +6,7 @@ This audit measures where the CI test jobs spend their time, lists tests that ar
 
 ## Summary
 
-**What was measured.** Two CI runs of the PR gate (run A = 42934452944, run B = 42931606693) on `ubuntu-26.04` runners with 4 vCPU. Every figure marked **(CI)** is read from those runs. Every figure not so marked is an **estimate**. Playwright and story timings come from CI only, by decision; no local Playwright run was made. No local `npm run test:coverage` figures are recorded: the owner did not approve a full-suite run for this audit.
+**What was measured.** Two CI runs of the PR gate (run A = 42934452944, run B = 42931606693) on `ubuntu-26.04` runners with 4 vCPU. Every figure marked **(CI)** is read from those runs. Every figure not so marked is an **estimate**. Playwright and story timings come from CI only, by decision; no local Playwright run was made. Coverage figures come from CI too: this audit changes only docs, so no local `npm run test:coverage` run is needed, and the PR's own `vitest / vitest` check is the record.
 
 **The headline.**
 
@@ -444,7 +444,7 @@ Recorded so nobody re-audits them.
 
 - **Soft-delete pairs** (`stock:344` and `:399`, `retired-entry-writes`, `references`): each calls a different reader.
 - **Membership-proof tests in `tests/db/repository/`:** one per finder family.
-- **The narrowing refusal** (`workings.test.ts:441`, `working.test.ts:329`): one refusal per other entry point, which is never deleted. The earlier `spell-visibility.test.ts` matrix was removed with `setSpellVisibility`.
+- **The narrowing refusal** (`workings.test.ts:441`, `graphql/working.test.ts:329`): one refusal per other entry point, which is never deleted. The earlier `spell-visibility.test.ts` matrix was removed with `setSpellVisibility`.
 - **The GraphQL refusal codes:** the transport layer owns them.
 - **`plan-deductions:103`**, **`password-lockout:234`**, and **`Modal:704`.**
 - **The `tests/scss` files.**
