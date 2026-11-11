@@ -1,4 +1,4 @@
-# N · Wave 06 — Operations and privacy
+# N · Wave 06 — Operations and vendor ethics
 
 **The row is** `N6.1 → N6.17`.
 
