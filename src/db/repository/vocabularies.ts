@@ -36,7 +36,7 @@ import {
   trigramMatch,
 } from './predicates';
 import { existsByKey, existsIn, selectFrom, whenIds } from './select';
-import { claimantList, readSuggestionPage } from './suggestion-page';
+import { claimantList, readSuggestionPage, uncuratedSuggestionColumns } from './suggestion-page';
 import type {
   AstrologyValueFilter,
   AstrologyVocabulary,
@@ -422,11 +422,8 @@ export async function findVocabularySuggestions(
     from ${curatedRows}
     where ${and(live, query ? or(byNameOrOther, sql`${query} <% ${vocabulary.description}`, byGroup) : undefined)}`;
 
-  // The spelling most entries use stands for the group; `mode()` breaks a tie
-  // by the order it is given, so the choice is stable.
   const uncurated = sql`
-    select 2 as tier, null as id, mode() within group (order by btrim(${inUse})) as value,
-      null as description, null as group_name, null as group_icon, null as matched_name, ${inUseFold} as fold, ${inUseFold} as tiebreak
+    select ${uncuratedSuggestionColumns(sql`btrim(${inUse})`, inUseFold)}
     from ${inUseFrom}
     where ${and(
       inScope,

@@ -14,7 +14,7 @@ import { expireHelp } from '@/lib/help-cache';
 import { NotFound, ValidationError, fieldRefusal } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
-import { RowId, parseInput } from '@/lib/validation';
+import { isRowId, parseInput } from '@/lib/validation';
 import type { z } from 'zod';
 import { assertSiteAdmin } from '@/modules/identity';
 import { helpArticles } from '../schema/help-articles';
@@ -31,7 +31,7 @@ import {
 } from '../validation/help';
 import { requireHelpArticle } from './help-reads';
 import { assertMarksExist, assertWidgetsKnown } from './marks';
-import { toHelpArticles } from './rows';
+import { NO_HELP_ARTICLE, toHelpArticles } from './rows';
 
 // The keeper's writing of the help centre. Every call is a keeper's alone: a curator reads staff help and writes none of it.
 
@@ -228,10 +228,6 @@ async function releasedBy(
   return (await findAllHelpArticleChildren(parentId)).filter((child) => !kept.has(child.id));
 }
 
-/**
- * @throws {Forbidden} the session is not a site keeper.
- * @throws {ValidationError} refused at `title` (it makes no address, a reserved one or a taken one), `parentId`, `position`, `audience`, `childIds` or `body` (a mark naming a term the glossary lacks), or invalid input.
- */
 /** parseInput, with the first issue's sentence as the message, since the help form shows a refusal's message as well as its field. */
 function parseSaying<Schema extends z.ZodType>(schema: Schema, input: unknown): z.output<Schema> {
   try {
@@ -242,6 +238,10 @@ function parseSaying<Schema extends z.ZodType>(schema: Schema, input: unknown): 
   }
 }
 
+/**
+ * @throws {Forbidden} the session is not a site keeper.
+ * @throws {ValidationError} refused at `title` (it makes no address, a reserved one or a taken one), `parentId`, `position`, `audience`, `childIds` or `body` (a mark naming a term the glossary lacks), or invalid input.
+ */
 export async function createHelpArticle(
   session: Session,
   input: HelpArticleInput,
@@ -349,7 +349,7 @@ export async function updateHelpArticle(
     if (updated && merged.childIds) await placeChildren(write, id, merged.childIds, released);
     return updated;
   });
-  if (!row) throw new NotFound('Help article not found');
+  if (!row) throw new NotFound(NO_HELP_ARTICLE);
   expireHelp();
   return (await toHelpArticles([row], 'keeper'))[0];
 }
@@ -363,12 +363,9 @@ export async function deleteHelpArticle(session: Session, id: string): Promise<s
   assertSiteAdmin(session);
   await requireHelpArticle(id);
   if ((await findAllHelpArticleChildren(id)).length > 0)
-    throw new ValidationError(
-      [{ path: ['id'], message: 'Delete or move this article’s children first' }],
-      'Delete or move this article’s children first',
-    );
+    throw fieldRefusal('id', 'Delete or move this article’s children first');
   const [row] = await withAudit(session, (write) => write.softDeleteByIds(helpArticles, [id]));
-  if (!row) throw new NotFound('Help article not found');
+  if (!row) throw new NotFound(NO_HELP_ARTICLE);
   expireHelp();
   return row.id;
 }
@@ -385,9 +382,9 @@ export async function setHelpArticleShown(
   shown: boolean,
 ): Promise<HelpArticle> {
   assertSiteAdmin(session);
-  if (!RowId.safeParse(id).success) throw new NotFound('Help article not found');
+  if (!isRowId(id)) throw new NotFound(NO_HELP_ARTICLE);
   const [row] = await withAudit(session, (write) => write.updateById(helpArticles, id, { shown }));
-  if (!row) throw new NotFound('Help article not found');
+  if (!row) throw new NotFound(NO_HELP_ARTICLE);
   expireHelp();
   return (await toHelpArticles([row], 'keeper'))[0];
 }
@@ -409,7 +406,7 @@ async function placeAll(
     ids.every((id) => liveIds.has(id));
   if (!exact) {
     const message = `List every ${name} once, and nothing else; the list has changed since it was read`;
-    throw new ValidationError([{ path: ['ids'], message }], message);
+    throw fieldRefusal('ids', message);
   }
   if (list === 'guides') {
     const rankOf = new Map(live.map((row) => [row.id, HELP_AUDIENCE_RANK[row.audience]]));
@@ -417,7 +414,7 @@ async function placeAll(
     if (!grouped) {
       const message =
         'List the guides by audience, Public, then Staff, then Keeper; a guide moves only among guides of its own audience';
-      throw new ValidationError([{ path: ['ids'], message }], message);
+      throw fieldRefusal('ids', message);
     }
   }
   const rows = await withAudit(session, async (write) => {

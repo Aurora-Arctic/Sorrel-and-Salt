@@ -4,7 +4,7 @@ import { newCardToken } from '../../lib/invitation-token';
 import { cardInvitationAttempts } from '../../modules/coven/schema/card-invitation-attempts';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { users } from '../../modules/identity/schema/users';
-import { createHash } from 'node:crypto';
+import { hashToken } from '../repository';
 import { insertMissingBy } from './idempotent';
 import { FIXTURE_USERS } from './standard';
 import type { SeedTransaction } from './types';
@@ -164,7 +164,7 @@ export async function seedInvitationCards(tx: SeedTransaction): Promise<void> {
         kind: 'card',
         batchId,
         position,
-        tokenHash: sha256Hex(newCardToken()),
+        tokenHash: hashToken(newCardToken()),
         expiresAt,
         revokedAt: state === 'revoked' ? ago(3) : null,
         acceptedBy: signUp?.userId ?? null,
@@ -220,6 +220,3 @@ export async function seedInvitationCards(tx: SeedTransaction): Promise<void> {
     }),
   });
 }
-
-// The repository's `hashToken` (hex SHA-256) is not exported from its index, and the seed may not import past the index.
-const sha256Hex = (token: string) => createHash('sha256').update(token).digest('hex');

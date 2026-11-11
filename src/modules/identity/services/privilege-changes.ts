@@ -13,6 +13,7 @@ import { inIdOrder } from '../../../lib/in-id-order';
 import { users } from '../schema/users';
 import { isSiteAdmin, refuseBatch } from './admin-changes';
 import { assertSiteAdmin } from './site-admin';
+import { trimmedOrUndefined } from '../../../lib/text';
 import type { PrivilegeChangeFilter, PrivilegeChangeRow, UserRow } from '../types';
 
 // Only a site keeper reads the ledger, checked here by direct call (claude-docs/auth/admin-users.md, "The privilege ledger").
@@ -49,11 +50,10 @@ export async function countPrivilegeChanges(
 }
 
 function parsedFilter({ userId, privilege, query }: PrivilegeChangeFilter): PrivilegeChangeFilter {
-  const trimmed = query?.trim();
   return {
     userId: userId === undefined ? undefined : parseInput(RowId, userId),
     privilege,
-    query: trimmed || undefined,
+    query: trimmedOrUndefined(query),
   };
 }
 

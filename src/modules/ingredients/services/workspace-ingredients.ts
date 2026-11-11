@@ -2,9 +2,10 @@ import 'server-only';
 import { findOneByIdInWorkspace, withAudit } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { RowId, parseInput } from '../../../lib/validation';
+import { parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { ingredientSlug } from '../../../lib/slugify';
+import { NO_COVEN_INGREDIENT, assertRowId } from './messages';
 import { refuseCupboardLabelAsName } from './cupboard-entries';
 import { LocalIngredientInput } from '../validation/ingredient';
 import {
@@ -73,7 +74,7 @@ export async function updateWorkspaceIngredient(
   });
   const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, input));
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
-  if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
+  assertRowId(id, NO_COVEN_INGREDIENT);
   const held = await heldDeities([membership], id);
   const picks = await resolvePicks('coven', parsed, picked, held);
   if (picks.issues.length > 0) throw new ValidationError(picks.issues);
@@ -90,7 +91,7 @@ export async function updateWorkspaceIngredient(
       expectedRevision,
       columns,
     );
-    if (!row) throw new NotFound('No such ingredient in this coven');
+    if (!row) throw new NotFound(NO_COVEN_INGREDIENT);
     const touched = await writeChildren(
       write,
       [membership],
@@ -118,9 +119,9 @@ export async function promoteWorkspaceFolkName(
   const membership = await assertMembership(session, workspaceId, {
     ingredient: ['update'],
   });
-  if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
+  assertRowId(id, NO_COVEN_INGREDIENT);
   const current = await findOneByIdInWorkspace(membership, ingredients, id);
-  if (!current) throw new NotFound('No such ingredient in this coven');
+  if (!current) throw new NotFound(NO_COVEN_INGREDIENT);
   const { promoted, others } = await readPromotedFolkName([membership], id, folkNameId);
 
   const fields = { name: promoted.name, canonicalName: current.canonicalName };
@@ -133,7 +134,7 @@ export async function promoteWorkspaceFolkName(
       name: fields.name,
       slug,
     });
-    if (!row) throw new NotFound('No such ingredient in this coven');
+    if (!row) throw new NotFound(NO_COVEN_INGREDIENT);
     return row;
   }).catch((error: unknown) => refuseCollision(error, membership, fields, slug, id));
 }
@@ -150,7 +151,7 @@ export async function deleteWorkspaceIngredient(
   id: string,
 ): Promise<void> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['delete'] });
-  await softDeleteIngredient(session, id, 'No such ingredient in this coven', (write) =>
+  await softDeleteIngredient(session, id, NO_COVEN_INGREDIENT, (write) =>
     write.softDeleteByIdInWorkspace(membership, ingredients, id),
   );
 }
@@ -167,8 +168,8 @@ export async function getWorkspaceIngredient(
   id: string,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
-
+  assertRowId(id, NO_COVEN_INGREDIENT);
   const row = await findOneByIdInWorkspace(membership, ingredients, id);
-  if (!row) throw new NotFound('No such ingredient in this coven');
+  if (!row) throw new NotFound(NO_COVEN_INGREDIENT);
   return row;
 }

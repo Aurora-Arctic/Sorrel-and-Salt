@@ -22,16 +22,18 @@ const VOCABULARIES = [
     type: 'CelestialBody',
     table: 'celestial_bodies',
     field: 'celestialBodies',
+    heldKey: 'celestialBodies',
   },
   {
     query: 'zodiacSigns',
     type: 'ZodiacSign',
     table: 'zodiac_signs',
     field: 'zodiacSigns',
+    heldKey: 'zodiac',
   },
 ] as const;
 
-describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
+describe.each(VOCABULARIES)('$query', ({ query, type, table, field, heldKey }) => {
   // Both go through one builder loop, so celestial bodies run every test and zodiac
   // Two signs run the read and the create, which prove the loop's per-vocabulary names; the refusals and other writes need no second copy.
   const full = query === 'celestialBodies';
@@ -196,7 +198,7 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
         expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
       });
 
-      it('answers a held value as FORBIDDEN, the row left live', async () => {
+      it('answers a held value as IN_USE, with the list filter for those entries, the row left live', async () => {
         const id = await seed('Fixture Body');
         await insertIngredient(
           sql,
@@ -211,7 +213,9 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
 
         const result = await send(asUser(E), DELETE, { id });
 
-        expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+        expect(result.errors?.[0]).toMatchObject({
+          extensions: { code: 'IN_USE', heldBy: { [heldKey]: ['Fixture Body'] } },
+        });
         expect((await rowOf(id)).deleted_at).toBeNull();
       });
     });

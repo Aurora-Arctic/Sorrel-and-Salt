@@ -1,4 +1,5 @@
 import type { FieldFormat } from './formats';
+import { fold } from './text';
 import type { ValidationIssue } from './types';
 
 // The one rule for what an email address looks like, with no server-only import so the client and the
@@ -6,7 +7,7 @@ import type { ValidationIssue } from './types';
 // client file drawn at first load can import this one without the schema library.
 
 export function normaliseEmail(input: string): string {
-  return input.trim().toLowerCase();
+  return fold(input);
 }
 
 // Deliberately loose: the mail is the real check, and a rule stricter than

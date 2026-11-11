@@ -11,13 +11,14 @@ import {
   findWorkspaceIngredientByIdentity,
   withAudit,
 } from '../../../db/repository';
-import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { fieldRefusal, Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
-import { addressTaken } from '../../../lib/text';
+import { addressTaken, fold } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId } from '../../../lib/validation';
-import { ingredients } from '../schema/ingredients';
+import { isRowId } from '../../../lib/validation';
+import { assertRowId } from './messages';
+import { ingredients, mapCorrespondences, type CorrespondenceKey } from '../schema/ingredients';
 import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientDeities } from '../schema/ingredient-deities';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
@@ -27,7 +28,7 @@ import { INGREDIENT_VARIANTS_FORM_UNIQUE } from '@/modules/vocabulary/schema/ing
 import { referenceLinks } from '../schema/reference-links';
 import { type Membership, tryMembership } from '@/modules/coven';
 import type { Curator } from '@/modules/identity';
-import { curatedNames, describeEntry, foldVocabularyValue } from '@/modules/vocabulary';
+import { curatedNames, describeEntry } from '@/modules/vocabulary';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import type { ValidationIssue } from '../../../lib/types';
 import type {
@@ -65,10 +66,10 @@ export function ingredientColumns(fields: IngredientFields) {
     canonicalName: fields.canonicalName ?? null,
     nomenclature: fields.nomenclature,
     description: fields.description ?? null,
-    elements: fields.elements ?? null,
-    celestialBodies: fields.celestialBodies ?? null,
-    zodiacSigns: fields.zodiacSigns ?? null,
-    colors: fields.colors ?? null,
+    ...mapCorrespondences<
+      IngredientFields,
+      { [K in CorrespondenceKey]: NonNullable<IngredientFields[K]> | null }
+    >(fields, (list) => list ?? null),
     safetyNotes: fields.safetyNotes ?? null,
     toxic: fields.toxic ?? false,
     slug: ingredientSlug(fields.name, fields.canonicalName),
@@ -178,7 +179,7 @@ export async function softDeleteIngredient(
   missing: string,
   remove: (write: AuditWriter) => Promise<readonly unknown[]>,
 ): Promise<void> {
-  if (!RowId.safeParse(id).success) throw new NotFound(missing);
+  assertRowId(id, missing);
   await withAudit(session, async (write) => {
     const [row] = await remove(write);
     if (!row) throw new NotFound(missing);
@@ -292,17 +293,16 @@ export async function resolvePicks(
 
 /** One form as sent, with each `""` and `[]` the whole-row input sends for none read as none. */
 function asPicked(variant: VariantEntry, at: IssuePath): PickedVariant {
-  const listOrNone = <T>(list: T[]) => (list.length > 0 ? list : null);
+  const listOrNone = (list: readonly unknown[]) => (list.length > 0 ? list : null);
   return {
     ...variant,
     id: variant.id ?? null,
     formId: variant.formId || null,
     description: variant.description || null,
     safetyNotes: variant.safetyNotes || null,
-    elements: listOrNone(variant.elements),
-    celestialBodies: listOrNone(variant.celestialBodies),
-    zodiacSigns: listOrNone(variant.zodiacSigns),
-    colors: listOrNone(variant.colors),
+    ...mapCorrespondences<VariantEntry, Pick<PickedVariant, CorrespondenceKey>>(variant, (list) =>
+      listOrNone(list),
+    ),
     at,
   };
 }
@@ -331,7 +331,7 @@ function pickedForm(
     });
     return form;
   }
-  if (foldVocabularyValue(form) !== foldVocabularyValue(name)) {
+  if (fold(form) !== fold(name)) {
     issues.push({
       path: [...at, 'form'],
       message: `The form picked is "${name}" — pick another, or clear the pick to type one`,
@@ -756,15 +756,11 @@ function matchVariants(variants: readonly PickedVariant[], current: readonly Var
   });
   return byIds.map((row, index) => {
     if (row) return row;
-    const fold = foldForm(variants[index].form);
-    const match = current.find((other) => !claimed.has(other.id) && foldForm(other.form) === fold);
+    const folded = fold(variants[index].form);
+    const match = current.find((other) => !claimed.has(other.id) && fold(other.form) === folded);
     if (match) claimed.add(match.id);
     return match;
   });
-}
-
-export function foldForm(form: string): string {
-  return form.trim().toLowerCase();
 }
 
 /**
@@ -776,27 +772,14 @@ async function writeVariant(
   variant: PickedVariant,
   row?: VariantRecord,
 ): Promise<string> {
-  const {
-    form,
-    formId,
-    description,
-    safetyNotes,
-    toxic,
-    elements,
-    celestialBodies,
-    zodiacSigns,
-    colors,
-  } = variant;
+  const { form, formId, description, safetyNotes, toxic } = variant;
   const columns = {
     form,
     formId,
     description,
     safetyNotes,
     toxic,
-    elements,
-    celestialBodies,
-    zodiacSigns,
-    colors,
+    ...mapCorrespondences(variant, (list) => list),
   };
   const refuse = (error: unknown): never => {
     if (violatedUniqueIndex(error) !== INGREDIENT_VARIANTS_FORM_UNIQUE) throw error;
@@ -830,7 +813,7 @@ export async function readPromotedFolkName(
   folkNameId: string,
 ): Promise<{ promoted: { id: string; name: string }; others: string[] }> {
   const notFound = () => new NotFound('No such common name on this ingredient');
-  if (!RowId.safeParse(folkNameId).success) throw notFound();
+  if (!isRowId(folkNameId)) throw notFound();
   const live = await findManyOfIngredients(memberships, ingredientFolkNames, [ingredientId]);
   const promoted = live.find((row) => row.id === folkNameId);
   if (!promoted) throw notFound();
@@ -865,7 +848,7 @@ export async function refuseCollision(
   id: string | undefined,
 ): Promise<never> {
   const refuse = (path: string, message: string) => {
-    throw new ValidationError([{ path: [path], message }]);
+    throw fieldRefusal(path, message);
   };
   const { name, canonicalName } = fields;
   const index = violatedUniqueIndex(error);
@@ -894,7 +877,11 @@ export async function refuseCollision(
     case 'ingredients_workspace_slug_unique':
       return refuse(
         'name',
-        addressTaken('Another ingredient in this coven', slug, 'change the name or formal name'),
+        addressTaken(
+          name,
+          'the name of another ingredient in this coven',
+          'change the name or formal name',
+        ),
       );
   }
   throw error;

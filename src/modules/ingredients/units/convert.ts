@@ -1,5 +1,6 @@
 import { QUANTITY_SCALE } from '../schema/quantities';
 import {
+  canConvert,
   dimensionOf,
   type Unit,
   type UnitDimension,
@@ -62,9 +63,10 @@ function divideRounded(numerator: bigint, denominator: bigint): bigint {
 export function unitConvert(value: number, from: Unit, to: Unit): UnitConversion {
   if (!Number.isFinite(value) || value < 0) throw new RangeError(`Cannot convert ${value}`);
 
-  const dimension = dimensionOf(from);
-  if (dimension === 'count' || dimensionOf(to) === 'count') return { ok: false, reason: 'count' };
-  if (dimensionOf(to) !== dimension) return { ok: false, reason: 'dimension' };
+  if (!canConvert(from, to)) {
+    const isCount = dimensionOf(from) === 'count' || dimensionOf(to) === 'count';
+    return { ok: false, reason: isCount ? 'count' : 'dimension' };
+  }
 
   // value × source ÷ target, as one fraction of whole numbers in thousandths
   // of `to`: exact through the base unit, with nothing rounded on the way.

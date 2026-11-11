@@ -3,6 +3,7 @@ import { maskError as yogaMaskError, type YogaServerOptions } from 'graphql-yoga
 import {
   AccessPaused,
   Forbidden,
+  InUse,
   NotFound,
   RateLimited,
   StaleWrite,
@@ -26,10 +27,11 @@ function extensionsFor(error: unknown): ErrorExtensions | null {
       http: { status: 429, headers: { 'Retry-After': String(error.retryAfterSeconds) } },
     };
   }
-  // Before `Forbidden`, which it extends.
+  // These two before `Forbidden`, which each extends.
   if (error instanceof AccessPaused) {
     return { code: 'ACCESS_PAUSED', pausedUntil: error.until?.toISOString() ?? null };
   }
+  if (error instanceof InUse) return { code: 'IN_USE', heldBy: error.heldBy };
   if (error instanceof Forbidden) return { code: 'FORBIDDEN' };
   if (error instanceof NotFound) return { code: 'NOT_FOUND' };
   if (error instanceof StaleWrite) {

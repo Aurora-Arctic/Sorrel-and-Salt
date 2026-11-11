@@ -3,7 +3,7 @@ import { cache } from 'react';
 import { findWorkspaceSeat } from '../../../db/repository';
 import { AccessPaused, Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { RowId } from '../../../lib/validation';
+import { isRowId } from '../../../lib/validation';
 import { type WorkspacePermission, rolePermits } from './access-control';
 import type { WorkspaceRole } from '../types';
 
@@ -85,7 +85,7 @@ async function admit(
   }
 
   // An id is whatever string the client sent: one that cannot name a workspace is refused as a stranger, not sent to the driver.
-  if (!RowId.safeParse(workspaceId).success) throw new Forbidden();
+  if (!isRowId(workspaceId)) throw new Forbidden();
 
   const seat = await workspaceSeat(session.userId, workspaceId);
 

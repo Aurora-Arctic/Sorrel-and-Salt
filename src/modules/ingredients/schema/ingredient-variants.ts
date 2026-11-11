@@ -3,8 +3,8 @@ import { INGREDIENT_VARIANTS_FORM_UNIQUE } from '../../vocabulary/schema/ingredi
 import { boolean, check, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredientForms } from '../../vocabulary/schema/ingredient-forms';
-import { ingredientElement, ingredients } from './ingredients';
-import { idColumn, liveUnique } from '../../../db/schema-parts';
+import { correspondenceColumns, ingredients } from './ingredients';
+import { idColumn, liveUnique, notBlank } from '../../../db/schema-parts';
 
 // One form of an ingredient: the ingredient holds what its forms share, a variant what is particular to one. A union, never an override
 // (claude-docs/design-decisions/ingredients.md, "An ingredient and its forms"). Its own table, as a `parent_id` on `ingredients` would make a form row listed as an ingredient only absent, never impossible.
@@ -28,15 +28,12 @@ export const ingredientVariants = pgTable(
     // (DESIGN.md §5, "The toxic flag is the one exception").
     toxic: boolean('toxic').notNull().default(false),
     // The four lists the ingredient carries, added to it for this form alone.
-    elements: ingredientElement('elements').array(),
-    celestialBodies: text('celestial_bodies').array(),
-    zodiacSigns: text('zodiac_signs').array(),
-    colors: text('colors').array(),
+    ...correspondenceColumns(),
     ...auditColumns,
   },
   (table) => [
     // NOT NULL alone accepts '': a blank form would key nothing.
-    check('ingredient_variants_form_not_blank', sql`btrim(form) <> ''`),
+    check('ingredient_variants_form_not_blank', notBlank('form')),
     // A variant's identity: one live row per ingredient and folded form, the
     // fold the form took when it was part of the ingredient's identity.
     liveUnique(

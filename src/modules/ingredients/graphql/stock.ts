@@ -7,6 +7,7 @@ import { NotFound } from '../../../lib/errors';
 import type { ingredientsById } from '../loaders/ingredients-by-id';
 import { clearStock } from '../loaders/stock';
 import { UNITS, UNIT_DIMENSIONS } from '../schema/units';
+import { NO_INGREDIENT } from '../services/messages';
 import { createStock, deleteStock, saveStock, updateStock } from '../services/stock';
 import type { StockRow } from '../types';
 import { IngredientRef, IngredientVariantRef } from './ingredient';
@@ -70,7 +71,7 @@ async function ingredientOf(
     id: row.ingredientId,
     workspaceId: row.workspaceId,
   });
-  if (!ingredient) throw new NotFound('No such ingredient');
+  if (!ingredient) throw new NotFound(NO_INGREDIENT);
   return ingredient;
 }
 

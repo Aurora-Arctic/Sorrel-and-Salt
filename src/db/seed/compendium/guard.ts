@@ -7,6 +7,7 @@ import { CELESTIAL_BODIES, ZODIAC_SIGNS } from '../astrology';
 import { identityOf } from '../coven-content';
 import { citationText } from '../../../lib/citation';
 import { ingredientSlug, slugify } from '../../../lib/slugify';
+import { fold } from '../../../lib/text';
 import { entryFilePath } from './parse-entry';
 import { UNAUDITED_LIST, type LoadedCompendium } from './load';
 import type { CitationFields } from '../../../lib/types';
@@ -111,9 +112,9 @@ function repeats(values: readonly string[]): string[] {
   const seen = new Set<string>();
   const repeated = new Set<string>();
   for (const value of values) {
-    const fold = value.trim().toLowerCase();
-    if (seen.has(fold)) repeated.add(value);
-    seen.add(fold);
+    const folded = fold(value);
+    if (seen.has(folded)) repeated.add(value);
+    seen.add(folded);
   }
   return [...repeated];
 }

@@ -1,5 +1,5 @@
-import { unitConvert } from '@/modules/ingredients';
-import { dimensionOf, type Unit } from '../ingredients/schema/units';
+import { canConvert, canMeasureAs, unitConvert } from '@/modules/ingredients';
+import type { Unit } from '../ingredients/schema/units';
 
 // The one function behind the completion and its preview, so the two cannot disagree. Amounts are held in thousandths,
 // the stock columns' scale, so adding and subtracting stay exact.
@@ -67,14 +67,14 @@ export function planDeductions(steps: readonly PlanStep[], jars: readonly PlanJa
       if (jar.quantityOnHand == null || jar.unit == null) return skip('jar-not-measured');
 
       let need: number;
-      if (dimensionOf(step.unit) === 'count' || dimensionOf(jar.unit) === 'count') {
-        // `unitConvert` refuses every count, so a count is the same unit or it is refused here.
-        if (step.unit !== jar.unit) return skip('units-differ');
-        need = thousandths(step.quantity);
-      } else {
+      if (!canMeasureAs(step.unit, jar.unit)) return skip('units-differ');
+      if (canConvert(step.unit, jar.unit)) {
         const converted = unitConvert(Number(step.quantity), step.unit, jar.unit);
         if (!converted.ok) return skip('units-differ');
         need = thousandths(converted.value);
+      } else {
+        // The same count unit: `unitConvert` refuses every count, so there is nothing to convert.
+        need = thousandths(step.quantity);
       }
 
       const held = remaining.get(jar.id) ?? thousandths(jar.quantityOnHand);

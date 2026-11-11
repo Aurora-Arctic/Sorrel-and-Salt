@@ -33,6 +33,11 @@ export function readableSpells(membership: Membership): SQL | undefined {
   );
 }
 
+/** The row whose `spell_id` column (or the spell-step's) names a spell the reader may read: the parent check for a table with no coven of its own. */
+export function inReadableSpell(membership: Membership, spellIdColumn: unknown): SQL {
+  return existsByKey(spells, spells.id, spellIdColumn, readableSpells(membership));
+}
+
 /**
  * The reader rule for a working: its spell is readable, and the working is the coven's if shared, else its
  * recorder's or a participant's. Live only: the participant and deduction rows have no `deleted_at`.
@@ -40,7 +45,7 @@ export function readableSpells(membership: Membership): SQL | undefined {
 export function readableWorkings(membership: Membership): SQL | undefined {
   return and(
     notSoftDeleted(spellWorkings),
-    existsByKey(spells, spells.id, spellWorkings.spellId, readableSpells(membership)),
+    inReadableSpell(membership, spellWorkings.spellId),
     or(
       eq(spellWorkings.visibility, 'workspace'),
       eq(spellWorkings.createdBy, membership.userId),
@@ -103,7 +108,7 @@ export function findManyInSpells<
       and(
         notSoftDeleted(table),
         inArray(table.spellId, [...spellIds]),
-        existsByKey(spells, spells.id, table.spellId, readableSpells(membership)),
+        inReadableSpell(membership, table.spellId),
       ),
     ),
   );
@@ -128,7 +133,7 @@ export function findIngredientsInSpellsIncludingSoftDeleted(
           spellSteps,
           spellSteps.ingredientId,
           ingredients.id,
-          existsByKey(spells, spells.id, spellSteps.spellId, readableSpells(membership)),
+          inReadableSpell(membership, spellSteps.spellId),
         ),
       ),
     ),

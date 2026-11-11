@@ -43,6 +43,7 @@ import type {
   SupportRequestView,
   SupportTimeoutRow,
 } from '../types';
+import { SUPPORT_DIALOG_KINDS, SUPPORT_SENDER_TIERS } from '../../../lib/support-path';
 import {
   ERROR_DETAIL_MAX_LENGTH,
   MESSAGE_MAX_LENGTH,
@@ -71,7 +72,7 @@ const SupportReplyVisibilityEnum = builder.enumType('SupportReplyVisibility', {
 
 const SupportSenderTierEnum = builder.enumType('SupportSenderTier', {
   description: 'Derived from the invitation the sender accepted; never stored.',
-  values: ['beta_tester', 'standard'] as const,
+  values: SUPPORT_SENDER_TIERS,
 });
 
 const SupportReplyRef = builder.objectRef<SupportReplyRow>('SupportReply').implement({
@@ -254,7 +255,7 @@ const SignedOutSupportRequestInputRef = builder.inputType('SignedOutSupportReque
 
 const SupportDialogKindEnum = builder.enumType('SupportDialogKind', {
   description: 'What the Support dialog offers a visitor.',
-  values: ['signedOut', 'unverified', 'timedOut', 'form'] as const,
+  values: SUPPORT_DIALOG_KINDS,
 });
 
 const SupportDialogStateRef = builder
