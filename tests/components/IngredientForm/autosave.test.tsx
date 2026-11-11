@@ -8,7 +8,8 @@ import { mirrorKey, readMirror, writeMirror } from '@/lib/autosave';
 import { ViewerIdProvider } from '@/lib/viewer-id';
 import { server } from '../../support/msw/server';
 import { graphqlLink, mockGraphQLError } from '../../support/msw/graphql';
-import { duplicateHref, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
+import { duplicateHref, textbox, waitFor } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { renderInModal } from '../../support/discard-guard';
 import { press, type } from '../../support/interact';
 import { leavingAtEachLoad, stubLocationReload } from '../../support/location';
@@ -35,7 +36,7 @@ function renderForm(props: Partial<IngredientFormProps> = {}) {
   offerNothing();
   const onSaved = vi.fn();
   const onCreated = vi.fn();
-  renderWithClient(
+  renderWithQuery(
     <ViewerIdProvider id={USER}>
       <IngredientForm
         duplicateHref={duplicateHref}

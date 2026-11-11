@@ -3,6 +3,7 @@ import { type ReactElement, StrictMode, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Modal, { DiscardQuestion, useDiscardGuard, useModalHeaderSlot } from '@/components/Modal';
+import { expectBefore } from '../../support/interact';
 
 // claude-docs/components/modal.md
 // happy-dom's `showModal` and `close` only set and clear `open`, with no focus trap, so both are replaced by spies that do the same and can be asserted on.
@@ -195,7 +196,7 @@ describe('Modal', () => {
     );
     const mark = screen.getByText('Marked');
     const close = screen.getByRole('button', { name: 'Close' });
-    expect(mark.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(mark, close);
     expect(screen.getByRole('dialog', { name: 'Edit Category' })).toBeInTheDocument();
   });
 

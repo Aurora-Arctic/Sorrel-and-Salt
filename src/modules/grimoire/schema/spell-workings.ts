@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { check, date, index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
-import { idColumn } from '../../../db/schema-parts';
+import { idColumn, notBlankIfSet } from '../../../db/schema-parts';
 import { spells, spellVisibility } from './spells';
 
 // An enum, as `spell_status` is, so a later value expands with `ALTER TYPE … ADD VALUE`; separate from it because the two
@@ -31,10 +31,7 @@ export const spellWorkings = pgTable(
     index('spell_workings_spell_id_worked_on_idx')
       .on(table.spellId, sql`${table.workedOn} desc`)
       .where(sql`${table.deletedAt} is null`),
-    check(
-      'spell_workings_note_not_blank',
-      sql`${table.note} is null or btrim(${table.note}) <> ''`,
-    ),
+    check('spell_workings_note_not_blank', notBlankIfSet(table.note)),
     // A draft has no completion moment and a complete working has one.
     check(
       'spell_workings_completed_at_with_status',

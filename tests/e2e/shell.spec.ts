@@ -236,6 +236,35 @@ for (const [name, who, path, nav] of PAGES) {
   }
 }
 
+// The bar's end group, the add button with its menu through the theme toggle, ran past the window at
+// 420px while 375px and 700px held, so a width between a phone and a tablet is checked too. The menu
+// shows for a viewer with two places to add to: a keeper with a coven seat, as every keeper holds in
+// the demo coven, and the owner of two covens on a coven page, since the bar is every signed-in page's.
+for (const [name, path] of [
+  ['the curator compendium', '/curator/compendium'],
+  ['a coven page', `/coven/${ALPHA.slug}`],
+] as const) {
+  test(`${name} does not scroll sideways at 420px`, async ({ page }) => {
+    if (path === '/curator/compendium') {
+      const { userId } = await signInAs(page, 'steward-keeper@shell.test', ['discord'], 'admin');
+      await withE2eSql((sql) =>
+        insertWorkspace(sql, 'Shell Gamma', [[userId, 'owner']], { author: userId }),
+      );
+    } else {
+      await signInAgainAs(page, users.multi.id);
+    }
+    await page.setViewportSize({ width: 420, height: 812 });
+    await page.goto(path);
+
+    // Why it could overflow: every control of the end group is in the bar.
+    const bar = page.getByRole('banner');
+    await expect(bar.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeVisible();
+    await expect(bar.getByRole('button', { name: 'Choose Where to Add' })).toBeVisible();
+    await expect(bar.getByRole('button', { name: 'Toggle light and dark mode' })).toBeVisible();
+    await assertNoSidewaysScroll(page, { width: 420 });
+  });
+}
+
 // The row wider than the phone fits the window: four labelled tabs and More outran it from 642px up, so
 // tabs that do not fit sit behind More. 768px is the tablet tests' below and a desktop width the last two tests'.
 test('the curator row fits the window at 642px, without overflowing', async ({ page }) => {

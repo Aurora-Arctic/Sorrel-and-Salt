@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
 import { beginSeedTransaction, insertStamped } from './idempotent';
+import { isCalendarDay } from '../../lib/utc';
 import { documents } from '../../modules/documents/schema/documents';
 import { documentVersions } from '../../modules/documents/schema/document-versions';
 import type { SeedDatabase, SeedDocument, SeedRunOptions, SeedTransaction } from './types';
@@ -13,7 +14,7 @@ import type { SeedDatabase, SeedDocument, SeedRunOptions, SeedTransaction } from
 // admin's published text, their draft and their deletions are never written over. Reference data: it inserts the bootstrap user itself.
 
 /** The repo's documents folder, where `loadDocuments()` reads by default. */
-export const DOCUMENTS_ROOT = 'documents';
+const DOCUMENTS_ROOT = 'documents';
 
 const FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
 
@@ -21,7 +22,7 @@ const frontMatterSchema = z.strictObject({
   key: z.string().min(1),
   title: z.string().min(1),
   lede: z.string().min(1),
-  published: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'a day written YYYY-MM-DD'),
+  published: z.string().refine(isCalendarDay, 'a day written YYYY-MM-DD'),
 });
 
 /** Reads every `.md` file under `root`, in name order. Throws an error naming the file whose front matter or day does not read. */

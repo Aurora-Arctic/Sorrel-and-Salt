@@ -1,12 +1,13 @@
 import 'server-only';
 import { findOneById, findStandingWorkspaceMemberPause, withAudit } from '../../../db/repository';
-import { Forbidden, ValidationError } from '../../../lib/errors';
+import { Forbidden, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { RowId } from '../../../lib/validation';
+import { isRowId } from '../../../lib/validation';
 import { workspaces } from '../schema/workspaces';
 import type { MembershipWithWorkspace, WorkspaceRole } from '../types';
 import { assertNotLastOwner } from './last-owner';
 import { assertMembership } from './membership';
+import { notAMember } from './not-a-member';
 import { assertNotSystemSeat } from './system-seat';
 
 // It changes an existing member's row and nothing else; ownership never comes through an invitation (DESIGN.md §5).
@@ -28,17 +29,17 @@ export async function updateMemberRole(
   role: WorkspaceRole,
 ): Promise<MembershipWithWorkspace> {
   const membership = await assertMembership(session, workspaceId, { member: ['update'] });
-  if (!RowId.safeParse(userId).success) throw new Forbidden();
+  if (!isRowId(userId)) throw new Forbidden();
   assertNotSystemSeat(userId);
   // A steward's access is never paused, so a paused member is lifted before being made one.
   if (role === 'owner' && (await findStandingWorkspaceMemberPause(membership, userId))) {
-    throw new ValidationError([{ path: ['role'], message: PAUSED_PROMOTION }], PAUSED_PROMOTION);
+    throw fieldRefusal('role', PAUSED_PROMOTION);
   }
 
   const updated = await withAudit(session, async (write) => {
     await assertNotLastOwner(write, membership, userId, role);
     const [row] = await write.updateMembershipRole(membership, userId, role);
-    if (!row) throw new Forbidden('That person is not a member of this coven');
+    if (!row) throw notAMember();
     return row;
   });
   const workspace = await findOneById(workspaces, workspaceId);

@@ -4,7 +4,7 @@ import { NO_FILTER } from '../../../.storybook/compendium-fixtures';
 import { FIXTURE_EDIT } from '../../../.storybook/fixtures';
 import { useSteps } from '../../../.storybook/press';
 import { AdminFrame } from '../../../.storybook/admin-frame';
-import AddAction from '../../app/(shell)/curator/add-action';
+import AddAction from '@/app/(shell)/_admin/add-action';
 import CompendiumList from '.';
 import PageHeader from '../PageHeader';
 import { slugify } from '../../lib/slugify';

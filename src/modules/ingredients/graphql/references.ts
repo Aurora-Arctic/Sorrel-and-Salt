@@ -15,6 +15,7 @@ import {
 import type { CitedReference, ReferenceRow } from '../types';
 import { REFERENCE_TEXT_FIELDS } from '../validation/reference-format';
 import type { ReferenceTextField } from '../validation/types';
+import { tierScope } from './tier-scope';
 
 // A reference as DESIGN.md §7 sketches it: its fields, the tier as `isGlobal`, and the citation rendered on the server by the one
 // renderer. `Ingredient.references` reads through the request's loader; `workspaceId` stays off the wire, as it does on `Ingredient`.
@@ -31,15 +32,15 @@ const DESCRIPTION_OF: Partial<Record<ReferenceTextField, string>> = {
   host: 'The repository a print work was read through.',
 };
 
-export const ReferenceKindEnum = builder.enumType('ReferenceKind', { values: REFERENCE_KINDS });
+const ReferenceKindEnum = builder.enumType('ReferenceKind', { values: REFERENCE_KINDS });
 
-export const NameBasisEnum = builder.enumType('NameBasis', {
+const NameBasisEnum = builder.enumType('NameBasis', {
   values: NAME_BASES,
   description:
     'How a citation names the ingredient: prints the formal name (stated), heads a common name a cited authority maps to it (resolved), leaves doubt (unresolved), or was not checked (unaudited).',
 });
 
-export const ReferenceRef = builder.objectRef<ReferenceRow>('Reference').implement({
+const ReferenceRef = builder.objectRef<ReferenceRow>('Reference').implement({
   description: 'A source, kept once and linked from every row it supports.',
   fields: (t) => ({
     id: t.exposeID('id'),
@@ -129,10 +130,6 @@ const ReferenceInput = builder.inputType('ReferenceInput', {
     }),
   }),
 });
-
-/** The tier the `workspaceId` argument names, as a scope: null writes the compendium's (site admin only), a coven's admits anyone signed in. */
-const tierScope = (_root: unknown, { workspaceId }: { workspaceId?: string | null }) =>
-  workspaceId == null ? { curator: true } : { signedIn: true };
 
 builder.mutationField('createReference', (t) =>
   t.field({

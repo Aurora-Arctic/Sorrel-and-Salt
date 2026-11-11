@@ -1,11 +1,13 @@
 import type { Route } from 'next';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 import { Navigating } from '../../support/navigating';
 
-// The App Router as a component test sees it (tests/support/navigating.tsx).
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
+  usePathname: () => '/here',
+}));
 
 const { SortSelect } = await import('@/components/DataTable/sort-select');
 

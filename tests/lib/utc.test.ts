@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   expiryOfDay,
   inUtc,
+  isCalendarDay,
   isoDayInUtc,
-  longMinuteInUtc,
   longMinuteInZone,
-  minuteInUtc,
+  untilPhrase,
   minuteInZone,
   printedDayOf,
   shortMinuteInZone,
@@ -32,10 +32,10 @@ describe('longMinuteInZone', () => {
     expect(longMinuteInZone(at, 'America/Los_Angeles')).toBe('30 October 2026, 4:05\u00a0pm');
   });
   it('writes midnight as 12:00 am and noon as 12:00 pm', () => {
-    expect(longMinuteInUtc(new Date('2026-08-28T00:00:00.000Z'))).toBe(
+    expect(longMinuteInZone(new Date('2026-08-28T00:00:00.000Z'), 'UTC')).toBe(
       '28 August 2026, 12:00\u00a0am',
     );
-    expect(longMinuteInUtc(new Date('2026-08-28T12:00:00.000Z'))).toBe(
+    expect(longMinuteInZone(new Date('2026-08-28T12:00:00.000Z'), 'UTC')).toBe(
       '28 August 2026, 12:00\u00a0pm',
     );
   });
@@ -57,8 +57,12 @@ describe('minuteInZone', () => {
     expect(minuteInZone(at, 'America/Los_Angeles')).toBe('2026-10-30 4:05\u00a0pm');
   });
   it('writes midnight as 12:00 am and noon as 12:00 pm', () => {
-    expect(minuteInUtc(new Date('2026-10-30T00:00:00.000Z'))).toBe('2026-10-30 12:00\u00a0am');
-    expect(minuteInUtc(new Date('2026-10-30T12:00:00.000Z'))).toBe('2026-10-30 12:00\u00a0pm');
+    expect(minuteInZone(new Date('2026-10-30T00:00:00.000Z'), 'UTC')).toBe(
+      '2026-10-30 12:00\u00a0am',
+    );
+    expect(minuteInZone(new Date('2026-10-30T12:00:00.000Z'), 'UTC')).toBe(
+      '2026-10-30 12:00\u00a0pm',
+    );
   });
 });
 
@@ -74,5 +78,40 @@ describe('printedDayOf', () => {
   it('reads back the day the expiry was chosen as, and round-trips', () => {
     expect(printedDayOf(new Date('2027-01-30T12:00:00.000Z'))).toBe('2027-01-29');
     expect(printedDayOf(expiryOfDay('2028-03-01'))).toBe('2028-03-01');
+  });
+});
+
+describe('isCalendarDay', () => {
+  it('accepts a day written YYYY-MM-DD', () => {
+    expect(isCalendarDay('2026-11-10')).toBe(true);
+  });
+
+  it('checks the shape only, leaving the range to its caller', () => {
+    expect(isCalendarDay('2026-13-45')).toBe(true);
+  });
+
+  it.each([
+    '2026-1-10',
+    '2026-11-1',
+    '20261110',
+    '2026/11/10',
+    ' 2026-11-10',
+    '2026-11-10 ',
+    '2026-11-10T00:00',
+    '',
+  ])('refuses %j', (text) => expect(isCalendarDay(text)).toBe(false));
+});
+
+describe('untilPhrase', () => {
+  it('words an end as until its date in the zone', () => {
+    const end = new Date('2999-01-01T12:00:00Z');
+    expect(untilPhrase(end, 'UTC')).toBe(`until ${longMinuteInZone(end, 'UTC')}`);
+  });
+
+  it('words no end as no end date, or as the wording given', () => {
+    expect(untilPhrase(null)).toBe('with no end date');
+    expect(untilPhrase(null, 'UTC', 'while timed out with no end date')).toBe(
+      'while timed out with no end date',
+    );
   });
 });

@@ -2,17 +2,14 @@
 // JSON (STORIES_JSON), into the same two outputs summarize-playwright.mjs
 // produces.
 import fs from 'node:fs';
-import { collectFailures, formatFailures } from './lib/playwright-failures.mjs';
+import { FLAKY_NOTE, formatFailures } from './lib/failure-list.mjs';
+import { setOutput } from './lib/github-output.mjs';
+import { collectFailures } from './lib/playwright-failures.mjs';
 
 const RESULTS_PATH = process.env.STORIES_JSON || '/app/stories.json';
 // Playwright's own report of the same run, for each failure's spec file and error.
 const PLAYWRIGHT_RESULTS_PATH =
   process.env.PLAYWRIGHT_JSON_OUTPUT_NAME || '/app/playwright-results.json';
-
-function setOutput(name, value) {
-  const delim = `ghadelim_${Math.random().toString(36).slice(2)}`;
-  fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}<<${delim}\n${value}\n${delim}\n`);
-}
 
 const failures = fs.existsSync(PLAYWRIGHT_RESULTS_PATH)
   ? collectFailures(JSON.parse(fs.readFileSync(PLAYWRIGHT_RESULTS_PATH, 'utf8')), {
@@ -66,8 +63,7 @@ for (const [section, entries] of sections) {
   lines.push(`**${section}**`, '');
   for (const { id, title, status, flaky } of entries) {
     const box = status === 'passed' ? 'x' : ' ';
-    const suffix =
-      status === 'failed' && flaky ? ' — **flaky** (failed, then passed on retry)' : SUFFIX[status];
+    const suffix = status === 'failed' && flaky ? FLAKY_NOTE : SUFFIX[status];
     lines.push(`- [${box}] Story ${id}: ${title}${suffix}`);
   }
   lines.push('');

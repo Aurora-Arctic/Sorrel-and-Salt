@@ -1,18 +1,15 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { screen, waitFor, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
 import SpellWorkings from '@/components/SpellWorkings';
 import EditWorkingAction from '@/components/SpellWorkings/edit-working';
 import type { SpellWorkingsProps, WorkingView } from '@/components/SpellWorkings/types';
 import type { DeleteWorkingMutation, DeleteWorkingMutationVariables } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { answer } from '../../support/discard-guard';
 import { press } from '../../support/interact';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 import { WORKSPACE_ID } from '../../support/constants';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 const working = (over: Partial<WorkingView> & Pick<WorkingView, 'id'>): WorkingView => ({
   status: 'complete',
@@ -32,15 +29,13 @@ function renderSection(
   edit?: SpellWorkingsProps['editAction'],
   headingAction?: React.ReactNode,
 ) {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SpellWorkings
-        workings={workings}
-        completeAction={complete}
-        editAction={edit}
-        headingAction={headingAction}
-      />
-    </QueryClientProvider>,
+  return renderWithQuery(
+    <SpellWorkings
+      workings={workings}
+      completeAction={complete}
+      editAction={edit}
+      headingAction={headingAction}
+    />,
   );
 }
 

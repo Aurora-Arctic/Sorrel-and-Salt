@@ -46,6 +46,11 @@ export const UserRef = builder.objectRef<UserRow>('User').implement({
       authScopes: { admin: true },
       resolve: (user, _args, { loaders }) => loaders.providersByUser.load(user.id),
     }),
+    hasPasskey: t.boolean({
+      description: 'Whether the account holds at least one passkey.',
+      authScopes: { admin: true },
+      resolve: (user, _args, { loaders }) => loaders.passkeyHeldByUser.load(user.id),
+    }),
     audit: t.field({ type: AuditInfo, resolve: (user) => user }),
   }),
 });

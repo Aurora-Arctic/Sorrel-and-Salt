@@ -1,8 +1,4 @@
-import type {
-  CompendiumFacets,
-  FacetCount,
-  WorkspaceIngredientFacets,
-} from '@/modules/ingredients';
+import type { CompendiumFacets, WorkspaceIngredientFacets } from '@/modules/ingredients';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import { capitalise, fold } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -17,7 +13,7 @@ import type {
   FormFacetChoice,
 } from './types';
 
-export interface DeityVocabulary {
+interface DeityVocabulary {
   slug: string;
   name: string;
   tradition: string;
@@ -35,7 +31,17 @@ const TOXIC_LABELS = { toxic: 'Toxic', not_toxic: 'Not Toxic' } as const;
 
 const REVIEW_LABELS = { reviewed: 'Reviewed', needs_review: 'Needs Review' } as const;
 
-const named = ({ value, count }: FacetCount): FacetChoice => ({ value, label: value, count });
+/** A count as a choice: `labels` names each value, by a map or by a function of it. */
+function toFacetOptions<V extends string>(
+  counts: readonly { value: V; count: number }[],
+  labels: Readonly<Record<V, string>> | ((value: V) => string),
+): FacetChoice<V>[] {
+  return counts.map(({ value, count }) => ({
+    value,
+    label: typeof labels === 'function' ? labels(value) : labels[value],
+    count,
+  }));
+}
 
 export function covenFacetCounts(
   facets: WorkspaceIngredientFacets,
@@ -46,11 +52,7 @@ export function covenFacetCounts(
       { ...facets, withoutReferences: 0, withoutForms: 0, reviewed: null },
       vocabularies,
     ),
-    source: facets.source.map(({ value, count }) => ({
-      value,
-      label: SOURCE_LABELS[value],
-      count,
-    })),
+    source: toFacetOptions(facets.source, SOURCE_LABELS),
     inStock: facets.inStock,
     lowStockOnly: facets.lowStockOnly,
   };
@@ -83,26 +85,14 @@ export function compendiumFacetCounts(
         ? [{ value: category.slug, label: category.name, count, group: category.group }]
         : [];
     }),
-    zodiac: facets.zodiacSigns.map(named),
-    celestialBodies: facets.celestialBodies.map(named),
-    elements: facets.elements.map(({ value, count }) => ({
-      value,
-      label: capitalise(value),
-      count,
-    })),
-    toxic: facets.toxic.map(({ value, count }) => ({
-      value,
-      label: TOXIC_LABELS[value],
-      count,
-    })),
+    zodiac: toFacetOptions(facets.zodiacSigns, (value) => value),
+    celestialBodies: toFacetOptions(facets.celestialBodies, (value) => value),
+    elements: toFacetOptions(facets.elements, capitalise),
+    toxic: toFacetOptions(facets.toxic, TOXIC_LABELS),
     withoutReferences: facets.withoutReferences,
     withoutForms: facets.withoutForms,
     ...(facets.reviewed && {
-      reviewed: facets.reviewed.map(({ value, count }) => ({
-        value,
-        label: REVIEW_LABELS[value],
-        count,
-      })),
+      reviewed: toFacetOptions(facets.reviewed, REVIEW_LABELS),
     }),
   };
 }

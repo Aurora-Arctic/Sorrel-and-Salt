@@ -1,6 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { makeQueryClient } from '@/lib/graphql-client';
 import type { ReactElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import type { Route } from 'next';
@@ -24,9 +22,9 @@ import {
   compendiumEntryFormModule,
   ingredientFormModule,
 } from '@/components/IngredientEntry/lazy-forms';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
+import { expectBefore, isBefore } from '../../support/interact';
 
 vi.mock('@/components/IngredientForm', () => ({
   default: ({
@@ -252,9 +250,6 @@ function sharedColumn(elements: HTMLElement[]): HTMLElement {
   return column;
 }
 
-const precedes = (a: Node, b: Node): boolean =>
-  (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
-
 // The dialogs' forms load apart from their openers; they have arrived by the time a person opens one.
 beforeAll(async () => {
   await stockFormModule.load();
@@ -280,7 +275,7 @@ describe('IngredientEntry', () => {
     const { unmount } = renderEntry({ accessPause: { until: null } });
     const notice = screen.getByRole('complementary', { name: 'Site Access' });
     expect(screen.getByRole('article')).toContainElement(notice);
-    expect(precedes(notice, screen.getByRole('heading', { level: 1 }))).toBe(true);
+    expect(isBefore(notice, screen.getByRole('heading', { level: 1 }))).toBe(true);
     expect(within(notice).getByRole('link', { name: 'What This Means' })).toHaveAttribute(
       'href',
       '/access-paused',
@@ -504,7 +499,7 @@ describe('IngredientEntry', () => {
     expect(within(oil as HTMLElement).getByRole('region', { name: 'Caution' })).toBeInTheDocument();
 
     const details = screen.getByRole('region', { name: 'Details' });
-    expect(details.compareDocumentPosition(root) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(details, root);
     expect(document.getElementById('forms')).toContainElement(oil as HTMLElement);
   });
 
@@ -597,7 +592,7 @@ describe('IngredientEntry', () => {
       ]);
       expect(links()[0]).toHaveAccessibleName(/Fixture Replaced 1/);
       expect(
-        precedes(block()!, screen.getAllByRole('heading', { name: 'Correspondences' })[0]!),
+        isBefore(block()!, screen.getAllByRole('heading', { name: 'Correspondences' })[0]!),
       ).toBe(true);
       expect(screen.queryByRole('link', { name: 'In the Compendium' })).not.toBeInTheDocument();
     });
@@ -1163,8 +1158,7 @@ describe('IngredientEntry edit', () => {
       });
     const covenDialog = () => screen.getByRole('dialog', { name: /^Edit Ingredient, Testwort/ });
     const shows = (label: string) => within(covenDialog()).getByRole('status', { name: label });
-    const renderOwn = (ui: ReactElement) =>
-      render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
+    const renderOwn = (ui: ReactElement) => renderWithQuery(ui);
 
     it("draws the page's Edit as the pencil beside the name, named for the entry, then the three dots and no bin", () => {
       renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);

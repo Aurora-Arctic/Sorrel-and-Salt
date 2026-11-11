@@ -2,13 +2,12 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { encodeCursor } from '@/lib/pagination';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { requireAdminSession } from '../../../../../support/request-session';
+import { router } from '../../../../../support/next-navigation';
 
 // The `/keepers/card-sign-ups` page: one row per accepted card, kept when the account behind it can no longer be read.
 
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
-const replace = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh: vi.fn() }) }));
+vi.mock('@/lib/request-session', () => import('../../../../../support/request-session'));
 
 const listCardArrivals = vi.fn();
 const countCardArrivals = vi.fn();
@@ -19,6 +18,7 @@ const providersOf = vi.fn();
 vi.mock('@/modules/identity', () => ({
   adminRoleChangePauseState,
   countCardArrivals,
+  holdsPasskey: vi.fn(async () => [false]),
   isPrimaryAdmin: () => false,
   listCardArrivals,
   listedOnUserList,
@@ -49,7 +49,6 @@ beforeEach(() => {
   requireAdminSession.mockReset();
   requireAdminSession.mockResolvedValue(ADMIN);
   countCardArrivals.mockResolvedValue({ total: 2, before: 0 });
-  replace.mockReset();
   adminRoleChangePauseState.mockResolvedValue({ paused: false, canToggle: false });
   listedOnUserList.mockReturnValue(true);
   providersOf.mockResolvedValue([[]]);
@@ -134,7 +133,7 @@ describe('/keepers/card-sign-ups', () => {
       expect(within(dialog).getByText(/Wort Tester/)).toBeInTheDocument();
       await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
 
-      expect(replace).toHaveBeenCalledWith(
+      expect(router.replace).toHaveBeenCalledWith(
         `/keepers/card-sign-ups?after=${encodeURIComponent(AFTER)}`,
         { scroll: false },
       );

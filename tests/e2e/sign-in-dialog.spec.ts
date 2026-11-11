@@ -103,7 +103,7 @@ test.describe('the sign-in dialog', () => {
     await field(creating, 'Name').fill('Testwort Barholder');
     await field(creating, 'Email Address').fill(address);
     await field(creating, 'Password').fill(PASSWORD);
-    await creating.getByRole('button', { name: 'Create Account' }).click();
+    await creating.getByRole('button', { name: 'Create Account', exact: true }).click();
 
     const inbox = page.getByRole('dialog', { name: 'Check Your Inbox' });
     await expect(inbox.getByRole('link', { name: 'Confirm Your Email' })).toHaveAttribute(
@@ -165,7 +165,7 @@ test.describe('the sign-in dialog', () => {
     await field(signUp, 'Name').fill('Testwort Holder');
     await field(signUp, 'Email Address').fill(INVITED);
     await field(signUp, 'Password').fill(PASSWORD);
-    await signUp.getByRole('button', { name: 'Create Account' }).click();
+    await signUp.getByRole('button', { name: 'Create Account', exact: true }).click();
 
     // Back on the invitation, unverified: told to check the inbox, with nothing to accept yet.
     await expect(page).toHaveURL(INVITATION);

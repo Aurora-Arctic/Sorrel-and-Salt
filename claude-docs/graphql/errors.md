@@ -11,12 +11,13 @@ revisioned write named a revision the row has since moved past
 `Forbidden` with its own code: the member holds a seat in the coven, but an
 owner has paused their access to it, until `pausedUntil` or with no end when it
 is `null`. It also answers a session whose site access is paused, on any call
-outside the signed-in support form. A client tells it from a stranger's bare `FORBIDDEN` by the code:
+outside the signed-in support form. `InUse` is a `Forbidden` with its own code too: a curated value's delete refused while live compendium entries hold it, carrying those entries as the compendium list's address parameters (`categories` or `deities` by slug, `forms`, `zodiac` or `celestialBodies` by name), so a client can link to them. A client tells each from a stranger's bare `FORBIDDEN` by the code:
 
 | Thrown            | `extensions.code` | Also carries                                         |
 | ----------------- | ----------------- | ---------------------------------------------------- |
 | `ValidationError` | `VALIDATION`      | `extensions.fieldErrors`, one per issue, in order    |
 | `AccessPaused`    | `ACCESS_PAUSED`   | `extensions.pausedUntil`, an ISO time or `null`      |
+| `InUse`           | `IN_USE`          | `extensions.heldBy`, the compendium list's filter    |
 | `Forbidden`       | `FORBIDDEN`       | —                                                    |
 | `NotFound`        | `NOT_FOUND`       | —                                                    |
 | `StaleWrite`      | `STALE_WRITE`     | `extensions.currentRevision`, the row's revision now |

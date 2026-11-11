@@ -1,11 +1,10 @@
 'use client';
 
-import { type ReactElement, useId } from 'react';
-import DateField from '../DateField';
+import type { ReactElement } from 'react';
 import { today } from '../DateField/day';
+import { MS_PER_DAY } from '../../lib/duration';
 import { PAUSE_TEXT_MAX_LENGTH } from '../../lib/pause-message';
-import { FieldShell, PlainTextField, fieldDescription } from '../Field';
-import LocalTime from '../LocalTime';
+import { PlainDateField, PlainSelectField, PlainTextField } from '../Field';
 import { LocalDay } from '../SupportRequests/day-range';
 import type { AccessPauseEntry, PauseFieldsProps, PauseSpan } from './types';
 import '../SupportRequests/timeout-panel.scss';
@@ -27,7 +26,7 @@ export const PAUSE_WORDS = {
   earlierTitle: 'Earlier Pauses',
 } as const;
 
-export const SPANS: readonly { value: PauseSpan; label: string }[] = [
+const SPANS: readonly { value: PauseSpan; label: string }[] = [
   { value: 'day', label: '1 Day' },
   { value: 'week', label: '1 Week' },
   { value: 'month', label: '1 Month' },
@@ -37,13 +36,11 @@ export const SPANS: readonly { value: PauseSpan; label: string }[] = [
 
 const MESSAGE_HINT = 'Emailed to them.';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 /** Null for no end date; undefined while no valid end can be read from the picked day. */
 export function endOf(span: PauseSpan, day: string, now: Date): Date | null | undefined {
   if (span === 'none') return null;
-  if (span === 'day') return new Date(now.getTime() + DAY_MS);
-  if (span === 'week') return new Date(now.getTime() + 7 * DAY_MS);
+  if (span === 'day') return new Date(now.getTime() + MS_PER_DAY);
+  if (span === 'week') return new Date(now.getTime() + 7 * MS_PER_DAY);
   if (span === 'month') {
     const end = new Date(now);
     end.setMonth(end.getMonth() + 1);
@@ -54,7 +51,7 @@ export function endOf(span: PauseSpan, day: string, now: Date): Date | null | un
   return Number.isNaN(end.getTime()) ? undefined : end;
 }
 
-export const endReady = (end: Date | null | undefined): boolean =>
+const endReady = (end: Date | null | undefined): boolean =>
   end === null || (end?.getTime() ?? 0) > Date.now();
 
 export const pauseReady = (span: PauseSpan, day: string): boolean =>
@@ -62,15 +59,6 @@ export const pauseReady = (span: PauseSpan, day: string): boolean =>
 
 export const stands = (pause: AccessPauseEntry, now: number): boolean =>
   pause.liftedAt === null && (pause.until === null || pause.until.getTime() > now);
-
-export const Until = ({ until }: { until: Date | null }): ReactElement =>
-  until ? (
-    <>
-      until <LocalTime at={until} long />
-    </>
-  ) : (
-    <>with no end date</>
-  );
 
 export const PauseFields = ({
   span,
@@ -87,38 +75,16 @@ export const PauseFields = ({
   messageLabel,
   messagePlaceholder,
 }: PauseFieldsProps): ReactElement => {
-  const spanId = useId();
-  const dayId = useId();
-  const { aria: spanAria, ...spanField } = fieldDescription({ id: spanId });
-  const { aria: dayAria, ...dayField } = fieldDescription({ id: dayId });
   return (
     <>
-      <FieldShell label="For" {...spanField}>
-        <select
-          id={spanField.controlId}
-          className="select"
-          {...spanAria}
-          value={span}
-          onChange={(event) => onSpan(event.target.value as PauseSpan)}
-        >
-          {SPANS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </FieldShell>
+      <PlainSelectField
+        label="For"
+        options={SPANS}
+        value={span}
+        onChange={(value) => onSpan(value as PauseSpan)}
+      />
       {span === 'date' && (
-        <FieldShell label="Until" {...dayField}>
-          <DateField
-            id={dayField.controlId}
-            labelledBy={dayField.labelId}
-            value={day}
-            min={today()}
-            onChange={onDay}
-            {...dayAria}
-          />
-        </FieldShell>
+        <PlainDateField label="Until" value={day} min={today()} onChange={onDay} />
       )}
       <PlainTextField
         name="note"

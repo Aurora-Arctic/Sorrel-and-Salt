@@ -31,7 +31,7 @@ export type AutosaveOptions<TValue> = {
   root?: { readonly current: HTMLElement | null };
 };
 
-export type AutosaveConflict = { currentRevision: number };
+type AutosaveConflict = { currentRevision: number };
 
 export type AutosaveView = {
   status: AutosaveStatus;

@@ -10,7 +10,7 @@ import {
   signIn as signInThrough,
   PROVIDER_CREDENTIALS,
 } from '../../../support/oauth';
-import type { Message, ProviderId } from '@/lib/types';
+import type { ProviderId } from '@/lib/types';
 import { importAuth } from '../../../support/auth-module';
 import { asManualFix } from '../../../support/db/privileges';
 import { asTouch } from '../../../support/db/touch-row';
@@ -18,14 +18,14 @@ import type { AuthInstance, Profile } from '../../../support/types';
 import type { ProvisionalUserRow } from './types';
 import { useTestDatabase } from '../../../support/db/database';
 import { ORIGIN } from '../../../support/constants';
+import { send } from '../../../support/mail';
 
 // Through Better Auth's real endpoints: an unverified account lapses
 // one verification lifetime after its last mail, and the job started at its
 // sign-up removes it (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
 // The job's step is called directly, as the run's sleeps are the SDK's to keep.
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../../../support/mail'));
 
 const startJob = vi.hoisted(() => vi.fn<(job: unknown, args: unknown[]) => Promise<string>>());
 vi.mock('@/lib/jobs', () => ({ startJob }));

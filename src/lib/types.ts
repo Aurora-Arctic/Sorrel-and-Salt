@@ -58,7 +58,7 @@ export interface SocialProvider {
   hidden?: true;
 }
 
-export interface ProviderProfile {
+interface ProviderProfile {
   /** The profile field naming the provider account; the first one present, where profiles come in more than one shape. */
   accountId: readonly [string, ...string[]];
   vouches: boolean;
@@ -178,6 +178,15 @@ export type ListDialogParams = { new: boolean; edit: string | undefined };
 
 export type PagerCursor = { after: string } | { before: string };
 
+/** What tells one curated vocabulary's list from another: its address, title and the nouns it uses for its rows. */
+export interface ListKind<Href extends string = string> {
+  path: Href;
+  title: string;
+  label: string;
+  noun: string;
+  plural: string;
+}
+
 /** Generic over the href's type, so a page's builder keeps Next's typed `Route` while this file imports nothing. */
 export interface PagerHrefs<Href extends string = string> {
   previousHref: Href | undefined;
@@ -252,3 +261,37 @@ export interface PreloadHandlers {
   onFocus: () => void;
   onPointerDown: () => void;
 }
+
+/** What a coven role may do on a page: each flag is the statement its service asserts, never a rank. */
+export interface CovenAccess {
+  canUpdateCoven: boolean;
+  canDeleteCoven: boolean;
+  canReadMembers: boolean;
+  canReadMemberEmails: boolean;
+  canInvite: boolean;
+  canChangeRoles: boolean;
+  canRemoveMembers: boolean;
+  canPauseMembers: boolean;
+  canCreateIngredient: boolean;
+  canUpdateIngredient: boolean;
+  canDeleteIngredient: boolean;
+  canMakeOurs: boolean;
+  canUpdateStock: boolean;
+  canAddToCupboard: boolean;
+  canCreateSpell: boolean;
+  canUpdateSpell: boolean;
+  canDeleteSpell: boolean;
+  canCreateWorking: boolean;
+  canUpdateWorking: boolean;
+  canDeleteWorking: boolean;
+}
+
+/** What a mail-sending service needs from the request: the site origin its links point at. */
+export interface OriginNotifier {
+  origin(): Promise<string>;
+}
+
+/** The compendium list's filter for the entries holding a curated value, keyed as the list's address parameters: slugs for categories and deities, names for the rest. */
+export type HeldBy = Partial<
+  Record<'categories' | 'deities' | 'forms' | 'zodiac' | 'celestialBodies', string[]>
+>;

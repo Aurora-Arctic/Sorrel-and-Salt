@@ -1,11 +1,9 @@
 'use client';
 
 import { type ReactElement, useMemo } from 'react';
-import { useController, useFormContext } from 'react-hook-form';
-import { tidy } from '@/lib/formats';
-import Combobox from '../Combobox';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { matchesLabelOrGroup } from '../Combobox/match';
-import { FieldShell, useField } from '../Field';
+import { SuggestField } from '../Field';
 import type { SpellBuilderValues, SpellSuggestFieldProps } from './types';
 
 /**
@@ -21,9 +19,7 @@ export function SpellSuggestField({
   icon,
 }: SpellSuggestFieldProps): ReactElement {
   const { control } = useFormContext<SpellBuilderValues>();
-  const { field } = useController({ control, name });
-  const { aria, ...shell } = useField<SpellBuilderValues>(name, hint);
-  const text = field.value;
+  const text = useWatch({ control, name });
   const suggestions = useMemo(
     () => ({
       options: options
@@ -34,30 +30,16 @@ export function SpellSuggestField({
     [options, text, icon],
   );
   return (
-    <FieldShell label={label} hint={hint} {...shell}>
-      <Combobox
-        id={shell.controlId}
-        label={label}
-        labelId={shell.labelId}
-        value={text}
-        onChange={field.onChange}
-        onBlur={() => {
-          // Typed text is kept as typed, apart from its spacing.
-          if (tidy(text) !== text) field.onChange(tidy(text));
-          field.onBlur();
-        }}
-        onPick={(value) => field.onChange(value)}
-        suggestions={suggestions}
-        offerTyped
-        icon={icon?.(text)}
-        placeholder={placeholder}
-        spellCheck={false}
-        autoCapitalize="none"
-        enterKeyHint="next"
-        inputRef={field.ref}
-        name={field.name}
-        {...aria}
-      />
-    </FieldShell>
+    <SuggestField
+      name={name}
+      label={label}
+      hint={hint}
+      placeholder={placeholder}
+      suggestions={suggestions}
+      offerTyped
+      icon={icon?.(text)}
+      autoCapitalize="none"
+      enterKeyHint="next"
+    />
   );
 }

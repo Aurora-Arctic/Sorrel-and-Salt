@@ -1,6 +1,6 @@
 import type { Route } from 'next';
 import { withParam } from '../../lib/list-href';
-import { UNTITLED_SPELL } from '../SpellCard';
+import { spellNameOf } from '../SpellCard/untitled';
 
 export const deletedHrefOf = (closeHref: Route, title: string | null): Route =>
-  withParam(closeHref, 'deleted', title?.trim() || UNTITLED_SPELL);
+  withParam(closeHref, 'deleted', spellNameOf(title));

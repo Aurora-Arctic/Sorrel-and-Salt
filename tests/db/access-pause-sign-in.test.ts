@@ -1,7 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
-import type { Message } from '@/lib/types';
 import { liftUserAccessPause, pauseUserAccess } from '@/modules/identity';
 import { timeOutSupportSender } from '@/modules/support';
 import { PROVIDER_CREDENTIALS, cookieHeader, signIn as signInThrough } from '../support/oauth';
@@ -16,14 +15,14 @@ import type { AuthInstance } from '../support/types';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../support/email-verification';
 import { useTestDatabase } from '../support/db/database';
 import { ORIGIN, PASSWORD } from '../support/constants';
+import { send } from '../support/mail';
 
 // A paused account signs in by every method, through Better Auth's real endpoints, into a view of the site with support in it
 // and nothing else: the support form sends, and every other signed-in API call answers ACCESS_PAUSED, through the real
 // GraphQL route (claude-docs/design-decisions/auth.md, "A paused user may sign in to reach support"). Pages
 // are request-session.test.ts's. The two-factor step's session is made by the same call as a password's.
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
 
 const DOMAIN = '@access-pause-sign-in.test';
 const PROVIDER_USER = `provider${DOMAIN}`;

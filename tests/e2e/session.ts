@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import type { Locator, Page } from '@playwright/test';
+import type { Browser, Locator, Page } from '@playwright/test';
 import type { UserRole } from '@/lib/session';
 import { agreedInForceSql } from '../support/db/agreement-in-force';
 import { withE2eSql } from './database';
@@ -82,6 +82,20 @@ export async function signInAs(
 
   await holdSession(page, signed(token, secret));
   return { userId };
+}
+
+/** Signs a keeper in on a throwaway page and returns the id, so a spec can own rows as them without holding their session. */
+export async function signInKeeperOnSidePage(
+  browser: Browser,
+  baseURL: string | undefined,
+  email: string,
+): Promise<string> {
+  const page = await browser.newPage({ baseURL });
+  try {
+    return (await signInAs(page, email, ['discord'], 'admin')).userId;
+  } finally {
+    await page.close();
+  }
 }
 
 export async function signInAgainAs(

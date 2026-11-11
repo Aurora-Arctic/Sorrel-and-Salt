@@ -1,15 +1,14 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadCompendiumEntryForm } from '@/components/CompendiumEntryForm/lazy';
 import { editHeading } from '@/components/CompendiumList/heading';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { ViewerIdProvider } from '@/lib/viewer-id';
 import { textbox, waitFor } from '../../../../support/ingredient-form';
 import { press, type } from '../../../../support/interact';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../../../support/msw/ingredient-lookups';
+import { renderWithQuery } from '../../../../support/render-with-query';
 
 // The form loads on first use; loading it once up front keeps each test off a cold import.
 beforeAll(async () => {
@@ -20,9 +19,6 @@ const navigation = vi.hoisted(() => ({ navigate: vi.fn(), refresh: vi.fn() }));
 vi.mock('@/lib/navigation', async (original) => ({
   ...(await original<typeof import('@/lib/navigation')>()),
   usePendingNavigation: () => navigation,
-}));
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 
 const { RouteModalProvider } = await import('@/components/Modal');
@@ -44,13 +40,11 @@ const opened = (name: string, revision: number) => ({
 
 function dialog(name: string, revision: number): ReactElement {
   return (
-    <QueryClientProvider client={makeQueryClient()}>
-      <ViewerIdProvider id="u1">
-        <RouteModalProvider>
-          <CompendiumDialog place={{}} opened={opened(name, revision)} />
-        </RouteModalProvider>
-      </ViewerIdProvider>
-    </QueryClientProvider>
+    <ViewerIdProvider id="u1">
+      <RouteModalProvider>
+        <CompendiumDialog place={{}} opened={opened(name, revision)} />
+      </RouteModalProvider>
+    </ViewerIdProvider>
   );
 }
 
@@ -73,7 +67,7 @@ describe('CompendiumDialog after an autosave', () => {
   it('moves its address to the saved name and fetches the page again, as Save does', async () => {
     offerNothing();
     const saves = acceptUpdate();
-    render(dialog('Testwort', 3));
+    renderWithQuery(dialog('Testwort', 3));
 
     type('Name', 'Mockwort');
     await wait(3100);
@@ -89,7 +83,7 @@ describe('CompendiumDialog after an autosave', () => {
   it('keeps what was typed after the autosave when the page arrives with the saved name', async () => {
     offerNothing();
     const saves = acceptUpdate();
-    const { rerender } = render(dialog('Testwort', 3));
+    const { rerender } = renderWithQuery(dialog('Testwort', 3));
 
     type('Name', 'Mockwort');
     await wait(3100);
@@ -108,23 +102,21 @@ describe('CompendiumDialog after an autosave', () => {
 describe('CompendiumDialog on an edit', () => {
   it("shows the entry's sourcing score at the start of the Sources section", async () => {
     offerNothing();
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <ViewerIdProvider id="u1">
-          <RouteModalProvider>
-            <CompendiumDialog
-              place={{}}
-              opened={{
-                ...opened('Mockwort', 1),
-                sourcing: {
-                  score: 10,
-                  facts: [{ fact: 'sources', label: '1 Source', points: 10 }],
-                },
-              }}
-            />
-          </RouteModalProvider>
-        </ViewerIdProvider>
-      </QueryClientProvider>,
+    renderWithQuery(
+      <ViewerIdProvider id="u1">
+        <RouteModalProvider>
+          <CompendiumDialog
+            place={{}}
+            opened={{
+              ...opened('Mockwort', 1),
+              sourcing: {
+                score: 10,
+                facts: [{ fact: 'sources', label: '1 Source', points: 10 }],
+              },
+            }}
+          />
+        </RouteModalProvider>
+      </ViewerIdProvider>,
     );
 
     const modal = await screen.findByRole('dialog', { name: 'Edit Ingredient, Mockwort' });

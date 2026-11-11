@@ -22,6 +22,7 @@
 }
 
 .skeleton-lede .skeleton__line {
+  box-sizing: content-box;
   block-size: 1lh;
   border-block: 0.15lh solid transparent;
   background-clip: padding-box;

@@ -12,10 +12,12 @@ import {
   isParticipantOfWorking,
   withAudit,
 } from '../../../db/repository';
+import { NO_SUCH_SPELL } from './spell-not-found';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import type { Session } from '../../../lib/session';
-import { parseInput, RowId } from '../../../lib/validation';
+import { QUANTITY_SCALE } from '../../ingredients/schema/quantities';
+import { isRowId, parseInput } from '../../../lib/validation';
 import { assertMembership, type Membership } from '@/modules/coven';
 import { displayNamesOf } from '@/modules/identity';
 import { planDeductions, type PlanStep, type StepPlan } from '../plan-deductions';
@@ -43,7 +45,7 @@ import type {
 const NO_SUCH_WORKING = 'No such working in this coven';
 
 async function readableWorking(membership: Membership, workingId: string): Promise<WorkingRow> {
-  if (!RowId.safeParse(workingId).success) throw new NotFound(NO_SUCH_WORKING);
+  if (!isRowId(workingId)) throw new NotFound(NO_SUCH_WORKING);
   const working = await findOneWorking(membership, workingId);
   if (!working) throw new NotFound(NO_SUCH_WORKING);
   return working;
@@ -199,11 +201,11 @@ export async function recordWorking(
   input: unknown,
 ): Promise<WorkingReport> {
   const membership = await assertMembership(session, workspaceId, { working: ['create'] });
-  if (!RowId.safeParse(spellId).success) throw new NotFound('No such spell in this coven');
+  if (!isRowId(spellId)) throw new NotFound(NO_SUCH_SPELL);
   const values = parseInput(WorkingInput, input);
 
   const spell = await findOneSpell(membership, spellId);
-  if (!spell) throw new NotFound('No such spell in this coven');
+  if (!spell) throw new NotFound(NO_SUCH_SPELL);
   assertSpellComplete(spell, 'it takes no new working');
   const visibility = values.visibility ?? spell.visibility;
   assertWithinSpell(spell, visibility);
@@ -254,17 +256,12 @@ export async function getWorking(
   return readReport(session, membership, await readableWorking(membership, workingId));
 }
 
-/**
- * @throws {Forbidden} the caller may not read workings here.
- */
-export async function listWorkings(
+/** Reports for a set of workings, reading their participants and deductions in one query each. */
+async function reportsOf(
   session: Session,
-  workspaceId: string,
-  spellId: string,
+  membership: Membership,
+  workings: readonly WorkingRow[],
 ): Promise<WorkingReport[]> {
-  const membership = await assertMembership(session, workspaceId, { working: ['read'] });
-  if (!RowId.safeParse(spellId).success) return [];
-  const workings = await findWorkingsInSpell(membership, spellId);
   const ids = workings.map((working) => working.id);
   const [participants, deductions] = await Promise.all([
     viewParticipants(session, membership, ids),
@@ -279,6 +276,19 @@ export async function listWorkings(
 }
 
 /**
+ * @throws {Forbidden} the caller may not read workings here.
+ */
+export async function listWorkings(
+  session: Session,
+  workspaceId: string,
+  spellId: string,
+): Promise<WorkingReport[]> {
+  const membership = await assertMembership(session, workspaceId, { working: ['read'] });
+  if (!isRowId(spellId)) return [];
+  return reportsOf(session, membership, await findWorkingsInSpell(membership, spellId));
+}
+
+/**
  * The participants of the whole page are read in one query, and so are the deductions.
  *
  * @throws {Forbidden} the caller may not read workings here.
@@ -290,22 +300,14 @@ export async function listWorkingsPage(
   page: PageRequest,
 ): Promise<PageEntry<WorkingReport>[]> {
   const membership = await assertMembership(session, workspaceId, { working: ['read'] });
-  if (!RowId.safeParse(spellId).success) return [];
+  if (!isRowId(spellId)) return [];
   const entries = await findWorkingsPage(membership, spellId, page);
-  const ids = entries.map((entry) => entry.node.id);
-  const [participants, deductions] = await Promise.all([
-    viewParticipants(session, membership, ids),
-    findDeductionsOfWorkings(membership, ids),
-  ]);
-  return entries.map((entry) => ({
-    ...entry,
-    node: {
-      working: entry.node,
-      participants: participants.get(entry.node.id) ?? [],
-      deductions: deductions.filter((row) => row.workingId === entry.node.id),
-      warnings: [],
-    },
-  }));
+  const reports = await reportsOf(
+    session,
+    membership,
+    entries.map((entry) => entry.node),
+  );
+  return entries.map((entry, index) => ({ ...entry, node: reports[index] }));
 }
 
 /** One query per coven. */
@@ -334,8 +336,8 @@ export async function previewWorkingDeductions(
   spellId: string,
 ): Promise<WorkingDeductionPreview> {
   const membership = await assertMembership(session, workspaceId, { working: ['read'] });
-  if (!RowId.safeParse(spellId).success) throw new NotFound('No such spell in this coven');
-  if (!(await findOneSpell(membership, spellId))) throw new NotFound('No such spell in this coven');
+  if (!isRowId(spellId)) throw new NotFound(NO_SUCH_SPELL);
+  if (!(await findOneSpell(membership, spellId))) throw new NotFound(NO_SUCH_SPELL);
   const { steps, plan } = await planFor(membership, spellId);
   const deductions: PlannedDeduction[] = plan.flatMap((entry) =>
     entry.kind === 'take'
@@ -387,10 +389,10 @@ export async function completeWorking(
         workingId,
         spellStepId: entry.stepId,
         inventoryItemId: entry.inventoryItemId,
-        quantity: taken.toFixed(3),
+        quantity: taken.toFixed(QUANTITY_SCALE),
         unit: entry.unit,
         // What the plan wanted, less what was there to take: the plan's own shortfall plus any the jar lost since it was read.
-        shortfall: (entry.amount + entry.shortfall - taken).toFixed(3),
+        shortfall: (entry.amount + entry.shortfall - taken).toFixed(QUANTITY_SCALE),
       });
     }
     return warningsOf(steps, plan);

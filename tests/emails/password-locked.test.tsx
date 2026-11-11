@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { ProviderId } from '@/lib/types';
 import { lockLength, passwordLockedMessage } from '@/emails/password-locked';
+import { ORIGIN } from '../support/constants';
 
-const LINK = 'http://localhost:8000/api/auth/reset-password/token123?callbackURL=%2Freset-password';
+const LINK = `${ORIGIN}/api/auth/reset-password/token123?callbackURL=%2Freset-password`;
 
 describe('passwordLockedMessage', () => {
   it('addresses the account and carries the reset link and the length of the lock', async () => {

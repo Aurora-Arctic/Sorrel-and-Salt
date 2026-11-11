@@ -1,22 +1,8 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor as waitForDom,
-  within,
-} from '@testing-library/react';
-import type { ReactElement } from 'react';
-import { makeQueryClient } from '@/lib/graphql-client';
+import { act, fireEvent, screen, waitFor as waitForDom, within } from '@testing-library/react';
 import { byLabel } from './interact';
 
 /** Where a near match links in these tests: the form requires one, and none of them follows it. */
 export const duplicateHref = ({ id }: { id: string }): string => `/fixture/ingredients/${id}`;
-
-export function renderWithClient(ui: ReactElement) {
-  return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
-}
 
 // Polled every 5 ms rather than 50: most waits are for a mock to have been called, which no DOM mutation announces. It first lets the last step settle inside `act`, as an open list's position is worked out a microtask later and an update outside `act` draws a React warning.
 export const waitFor: typeof waitForDom = async (callback, options) => {

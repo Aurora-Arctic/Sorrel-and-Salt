@@ -1,7 +1,7 @@
 import type { HelpTermSource } from '../../lib/help-marks';
 import type { HelpSubpageLink } from '../HelpArticleView/types';
 
-export interface HelpFaqEntry {
+interface HelpFaqEntry {
   slug: string;
   title: string;
   /** Markdown. */
@@ -13,8 +13,6 @@ export interface HelpIndexProps {
   articles: HelpSubpageLink[];
   /** Shown above the FAQ when the page is the staff index. */
   heading?: string;
-  /** Drawn under the public help layout's header, which holds the heading and the search box, so the page draws neither. */
-  framed?: boolean;
   /** Links drawn beneath the search box; the public front page reads them through `quickLinks` (src/lib/help-quick-links.ts). */
   quickLinks?: HelpSubpageLink[];
   /** The glossary, which the answers' `[[Term]]` marks are matched against; a mark it lacks is drawn as its text. */

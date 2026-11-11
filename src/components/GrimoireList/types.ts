@@ -11,7 +11,7 @@ export type GrimoireListFilter = SearchFilter<typeof GRIMOIRE_PARAMS.entries>;
 export type GrimoireSpell = Omit<SpellCardProps, 'level'>;
 
 /** One value a grimoire facet offers, with how many spells of the tab it would leave. */
-export interface GrimoireFacetChoice {
+interface GrimoireFacetChoice {
   value: string;
   label: string;
   count: number;

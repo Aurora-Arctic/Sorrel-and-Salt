@@ -10,7 +10,7 @@ import type { SeedTransaction, SeedUser } from './types';
 // not an admin: no OAuth account and unverified (the dev site keeps one unverified user to test that path), so no sign-in reaches it. Keeps its old
 // file and export names, as deploy.yml lists the file.
 
-export const BOOTSTRAP_ADMIN: SeedUser = {
+const BOOTSTRAP_ADMIN: SeedUser = {
   id: BOOTSTRAP_USER_ID,
   name: 'Seed System User',
   email: 'admin@seed.sorrelandsalt.com',
@@ -21,7 +21,7 @@ export const BOOTSTRAP_ADMIN: SeedUser = {
  * The account a signed-out support request is written as. Seeded on every environment with no seat and no way in: no OAuth account,
  * no password and `canCreateWorkspace` false.
  */
-export const SIGNED_OUT_SENDER: SeedUser = {
+const SIGNED_OUT_SENDER: SeedUser = {
   id: SIGNED_OUT_SENDER_ID,
   name: 'Support, signed out',
   email: 'signed-out@seed.sorrelandsalt.com',
@@ -32,7 +32,7 @@ export const SIGNED_OUT_SENDER: SeedUser = {
  * The actor of a scheduled job's writes. Seeded on every environment with no seat and no way in: no OAuth account, no password and
  * `canCreateWorkspace` false.
  */
-export const SYSTEM_ACTOR: SeedUser = {
+const SYSTEM_ACTOR: SeedUser = {
   id: SYSTEM_ACTOR_ID,
   name: 'System',
   email: 'system@seed.sorrelandsalt.com',

@@ -2,7 +2,7 @@
  * The pages a signed-out visitor may reach. An entry is an exact path, or a path ending `/*` for everything beneath it, so
  * `/sign-in` does not admit `/sign-in-help`.
  */
-export const PUBLIC_ROUTES = [
+const PUBLIC_ROUTES = [
   '/',
   '/sign-in',
   '/forgot-password',
@@ -29,7 +29,7 @@ export const PUBLIC_ROUTES = [
   '/help/glossary',
   '/help/search',
   // What a crawler or a browser asks for with no cookie and no page to ask it.
-  // The icon and manifest files are listed ahead of their existence so the first favicon request
+  // The icon files are listed ahead of their existence so the first favicon request
   // is never redirected to sign-in.
   '/robots.txt',
   '/sitemap.xml',

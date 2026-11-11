@@ -1,6 +1,6 @@
 import 'server-only';
 import { findOneById, findWorkspaceMemberPauseForMail } from '../../../db/repository';
-import { deliver } from '../../../lib/mail-transport';
+import { deliverMessageFor } from '../../../lib/deliver-message-for';
 import { memberPauseNotice } from '../../../lib/pause-job-mail';
 import { users } from '../../identity/schema/users';
 import { workspaces } from '../schema/workspaces';
@@ -22,7 +22,5 @@ export async function memberPauseMessageFor(mail: MemberPauseMail): Promise<Mess
 
 /** A transport failure throws, so a job's step is retried. */
 export async function sendMemberPauseMail(mail: MemberPauseMail): Promise<boolean> {
-  const message = await memberPauseMessageFor(mail);
-  if (!message) return false;
-  return deliver(message);
+  return deliverMessageFor(memberPauseMessageFor, mail);
 }

@@ -1,7 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
+import { sourceFiles } from '../support/repo-scan';
 
 // While a navigation is on its way, the shell draws the destination's own skeleton, chosen by its
 // address from the registry in src/app/skeletons.ts. A page with no entry would wait on a bare page
@@ -36,10 +37,7 @@ const SLOT = /^@/;
 
 /** Every `page.tsx` under src/app, as a path from the repo root. */
 function pages(): string[] {
-  return (readdirSync(APP, { recursive: true }) as string[])
-    .filter((file) => file === 'page.tsx' || file.endsWith('/page.tsx'))
-    .map((file) => relative(REPO_ROOT, join(APP, file)))
-    .sort();
+  return sourceFiles({ under: 'src/app/', extension: /(?:^|\/)page\.tsx$/ }).sort();
 }
 
 const segmentsOf = (file: string): string[] =>
@@ -70,13 +68,18 @@ function skeletonHomes(file: string): string[] {
 type Host = 'main' | 'coven' | 'admin' | 'help';
 const REGION = /<SectionBody\s+region="(coven|admin|help)"/;
 
-/** The region a layout's source mounts, directly or through a component of `src/components` it draws. */
+/** The region a layout's source mounts, directly or through a component of `src/components`, or a shared layout of `src/app`, it draws. */
 function regionIn(source: string): Host | null {
   const own = REGION.exec(source);
   if (own) return own[1] as Host;
   for (const [, name] of source.matchAll(/import \w+ from '@\/components\/(\w+)'/g)) {
     const component = join(REPO_ROOT, 'src/components', name!, 'index.tsx');
     const drawn = existsSync(component) && REGION.exec(readFileSync(component, 'utf8'));
+    if (drawn) return drawn[1] as Host;
+  }
+  for (const [, path] of source.matchAll(/import \w+ from '@\/(app\/[^']+)'/g)) {
+    const shared = join(REPO_ROOT, 'src', `${path}.tsx`);
+    const drawn = existsSync(shared) && REGION.exec(readFileSync(shared, 'utf8'));
     if (drawn) return drawn[1] as Host;
   }
   return null;

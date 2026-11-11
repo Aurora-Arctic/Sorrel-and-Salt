@@ -41,14 +41,3 @@ export function roundedSquarePath({ x, y, size, radius: r }: RoundedSquare): str
     `V${y + r}A${r} ${r} 0 0 1 ${x + r} ${y}Z`
   );
 }
-
-// The ring is one even-odd path rather than a soot square painted over a chalk one, so the card shows through it.
-export function qrSvg(link: string, fill: string): string {
-  const { size, dotRadius, dots, finders } = qrShapes(link);
-  const parts = finders.flatMap(({ outer, inner, centre }) => [
-    `<path data-finder="${outer.x},${outer.y}" fill-rule="evenodd" d="${roundedSquarePath(outer)}${roundedSquarePath(inner)}"/>`,
-    `<rect x="${centre.x}" y="${centre.y}" width="${centre.size}" height="${centre.size}" rx="${centre.radius}"/>`,
-  ]);
-  for (const { cx, cy } of dots) parts.push(`<circle cx="${cx}" cy="${cy}" r="${dotRadius}"/>`);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" fill="${fill}">${parts.join('')}</svg>`;
-}

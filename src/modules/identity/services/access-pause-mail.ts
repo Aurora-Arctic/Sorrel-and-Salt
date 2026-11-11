@@ -1,6 +1,6 @@
 import 'server-only';
 import { findOneById } from '../../../db/repository';
-import { deliver } from '../../../lib/mail-transport';
+import { deliverMessageFor } from '../../../lib/deliver-message-for';
 import { accessPauseNotice } from '../../../lib/pause-job-mail';
 import { userAccessPauses } from '../schema/user-access-pauses';
 import { users } from '../schema/users';
@@ -19,7 +19,5 @@ export async function accessPauseMessageFor(mail: AccessPauseMail): Promise<Mess
 
 /** A transport failure throws, so a job's step is retried. */
 export async function sendAccessPauseMail(mail: AccessPauseMail): Promise<boolean> {
-  const message = await accessPauseMessageFor(mail);
-  if (!message) return false;
-  return deliver(message);
+  return deliverMessageFor(accessPauseMessageFor, mail);
 }

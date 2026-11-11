@@ -1,26 +1,25 @@
 import type { Metadata, Route } from 'next';
 import { cache } from 'react';
 import { notFound, permanentRedirect } from 'next/navigation';
-import IngredientEntry from '../../../../../components/IngredientEntry';
-import { pageTitleOf } from '../../../../../components/IngredientEntry/page-title';
-import type { LinkedIngredient } from '../../../../../components/IngredientEntry/types';
-import { Forbidden, NotFound } from '../../../../../lib/errors';
-import { getSession } from '../../../../../lib/request-session';
-import ShownToggle from '../../../../../components/IngredientEntry/shown-toggle';
-import ReviewMark from '../../../../../components/IngredientEntry/review-mark';
-import { cardName } from '../../../../../components/IngredientCard/card-name';
-import { curates } from '../../../../../lib/site-roles';
-import { entryJsonLd } from '../../../../../lib/json-ld';
-import { entryDescription, publicPageMetadata } from '../../../../../lib/page-metadata';
-import { viewerIfSignedIn } from '../../../../../lib/viewer';
+import IngredientEntry from '@/components/IngredientEntry';
+import { pageTitleOf } from '@/components/IngredientEntry/page-title';
+import type { LinkedIngredient } from '@/components/IngredientEntry/types';
+import { Forbidden, NotFound } from '@/lib/errors';
+import { getSession } from '@/lib/request-session';
+import ShownToggle from '@/components/IngredientEntry/shown-toggle';
+import ReviewMark from '@/components/IngredientEntry/review-mark';
+import { cardName } from '@/lib/ingredient-name';
+import { curates } from '@/lib/site-roles';
+import { entryJsonLd } from '@/lib/json-ld';
+import { entryDescription, publicPageMetadata } from '@/lib/page-metadata';
+import { viewerIfSignedIn } from '@/lib/viewer';
 import { readEntryReview, readEntrySourcing } from '@/app/compendium-reads';
 import { entryValues } from '@/app/entry-values';
 import { readCompendiumEntry, readCompendiumEntryAsCurator } from '@/modules/ingredients';
 import { publicCupboardOf } from './cupboard';
 import { covensHolding } from '@/app/plus-covens';
 import type { CompendiumEntryParams } from './types';
-
-const addressOf = (slug: string) => `/compendium/ingredients/${slug}` as Route;
+import { compendiumEntryPath } from '@/lib/compendium-path';
 
 // The public read first: cached, with no session. Only when it finds nothing is a session asked for, and
 // only a curator or keeper gets a second, uncached read that reaches a hidden entry. Everyone else gets the 404.
@@ -48,7 +47,7 @@ export async function generateMetadata({ params }: CompendiumEntryParams): Promi
   const metadata = publicPageMetadata(
     title,
     entryDescription(title, entry.description),
-    addressOf(entry.slug),
+    compendiumEntryPath(entry.slug),
   );
   // A hidden entry is a curator's to see here, and is never indexed.
   return entry.shown ? metadata : { ...metadata, robots: { index: false, follow: false } };
@@ -56,13 +55,13 @@ export async function generateMetadata({ params }: CompendiumEntryParams): Promi
 
 // A coven entry cannot be read here, so a link to one has no page to go to.
 const hrefOf = ({ slug, workspaceId }: LinkedIngredient): Route | undefined =>
-  workspaceId === null ? addressOf(slug) : undefined;
+  workspaceId === null ? compendiumEntryPath(slug) : undefined;
 
 export default async function CompendiumEntryPage({ params, searchParams }: CompendiumEntryParams) {
   const { slug } = await params;
   const found = await entryAt(slug);
   if (!found) notFound();
-  if (found.kind === 'moved') permanentRedirect(addressOf(found.slug));
+  if (found.kind === 'moved') permanentRedirect(compendiumEntryPath(found.slug));
 
   const shell = await viewerIfSignedIn();
   const { detail, movedAway } = found;
@@ -71,7 +70,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   // A bare `?edit` opens the compendium's edit modal over this page. The form's values are read
   // only for a curator who asks, as they are the longest read the page makes.
   const canEdit = shell?.viewer.canCurate === true;
-  const own = addressOf(entry.slug);
+  const own = compendiumEntryPath(entry.slug);
   const search = await searchParams;
   const opened =
     canEdit && 'edit' in search
@@ -145,7 +144,9 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
         covens={covens}
         heldInCovens={holding.length > 0}
         movedAway={
-          movedAway ? { name: movedAway.name, href: addressOf(movedAway.slug) } : undefined
+          movedAway
+            ? { name: movedAway.name, href: compendiumEntryPath(movedAway.slug) }
+            : undefined
         }
       />
     </>

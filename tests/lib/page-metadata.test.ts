@@ -7,6 +7,7 @@ import {
   pageTitle,
   publicPageMetadata,
 } from '@/lib/page-metadata';
+import { SITE_NAME, SITE_TITLE_NAME } from '@/lib/site';
 
 describe('page metadata', () => {
   it('keeps a short description whole, on one line', () => {
@@ -44,14 +45,27 @@ describe('page metadata', () => {
     expect(meta.twitter).not.toHaveProperty('images');
   });
 
-  it('gives the front page the site name alone, with the same social tags as any public page', () => {
-    const meta = publicPageMetadata('Sorrel & Salt', 'About it.', '/', { absolute: true });
-    expect(meta.title).toEqual({ absolute: 'Sorrel & Salt' });
+  it("titles a public page's share previews with the site name, ampersand and all", () => {
+    const meta = publicPageMetadata('Testwort', 'About it.', '/compendium/ingredients/testwort');
+    expect(meta.title).toBe('Testwort');
     expect(meta.openGraph).toMatchObject({
-      title: 'Sorrel & Salt',
+      title: 'Testwort | Sorrel & Salt',
+      siteName: 'Sorrel & Salt',
+    });
+    expect(meta.twitter).toMatchObject({ title: 'Testwort | Sorrel & Salt' });
+  });
+
+  it('spells the site name out in an absolute tab title, and keeps the ampersand in the share titles', () => {
+    const title = SITE_NAME;
+    expect(title).not.toBe(SITE_TITLE_NAME);
+    const meta = publicPageMetadata(title, 'About it.', '/', { absolute: true });
+    expect(meta.title).toEqual({ absolute: SITE_TITLE_NAME });
+    expect(meta.openGraph).toMatchObject({
+      title: SITE_NAME,
+      siteName: SITE_NAME,
       url: 'https://sorrelandsalt.com/',
     });
-    expect(meta.twitter).toMatchObject({ title: 'Sorrel & Salt' });
+    expect(meta.twitter).toMatchObject({ title: SITE_NAME });
   });
 
   it('keeps a noindex page out of search, and follows its links only when the page says', () => {

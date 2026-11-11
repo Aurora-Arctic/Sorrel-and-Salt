@@ -15,12 +15,7 @@ const WHAT_HAPPENED: Record<PasswordChange, string> = {
 };
 
 // Sent after every reset, change and first set, so a change the holder did not make does not go unnoticed.
-export function PasswordChanged({
-  url,
-  how,
-  origin = new URL(url).origin,
-  part,
-}: PasswordChangedProps) {
+function PasswordChanged({ url, how, origin = new URL(url).origin, part }: PasswordChangedProps) {
   return h(
     EmailLayout,
     { preview: PREVIEW, heading: SUBJECT, origin },

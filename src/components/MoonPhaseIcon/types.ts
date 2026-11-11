@@ -1,6 +1,6 @@
 import type { MOON_PHASES } from '../SpellBuilder/constants';
 
-export type MoonPhase = (typeof MOON_PHASES)[number];
+type MoonPhase = (typeof MOON_PHASES)[number];
 
 export type HalfMoonPhase = 'Waxing Moon' | 'Waning Moon';
 

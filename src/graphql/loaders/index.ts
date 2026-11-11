@@ -8,6 +8,7 @@ import {
 import {
   cardPositionById,
   cardTotalsByBatch,
+  passkeyHeldByUser,
   providersByUser,
   usersById,
   usersByIdForAdmin,
@@ -48,6 +49,7 @@ import type { Built, LoaderFactory } from './types';
 const LOADERS = {
   memberEmailsByMember,
   membershipsByUser,
+  passkeyHeldByUser,
   providersByUser,
   usersById,
   usersByIdForAdmin,

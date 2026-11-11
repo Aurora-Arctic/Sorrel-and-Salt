@@ -8,7 +8,7 @@ import { setQuery } from './search-params';
 // The second sign-in step (@story-75). Better Auth's client is mocked at the calls the step makes, so each test sets
 // the answer the server gives; tests/db/two-factor.test.ts proves the server gives it.
 vi.mock('next/navigation', async () => ({
-  useRouter: () => ({}),
+  ...(await import('../../support/next-navigation')),
   useSearchParams: (await import('./search-params')).useSearchParams,
 }));
 
@@ -34,7 +34,7 @@ const press = (element: Element) =>
 const field = (label: string) =>
   screen.getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
 
-const type = (label: string, value: string) =>
+const typeInField = (label: string, value: string) =>
   fireEvent.change(field(label), { target: { value } });
 
 async function passPassword() {
@@ -42,8 +42,8 @@ async function passPassword() {
     data: { twoFactorRedirect: true, twoFactorMethods: ['totp'] },
     error: null,
   });
-  type('Email Address', 'someone@two-factor-step.test');
-  type('Password', 'Testwort crowns the eastern hedge');
+  typeInField('Email Address', 'someone@two-factor-step.test');
+  typeInField('Password', 'Testwort crowns the eastern hedge');
   await press(screen.getByRole('button', { name: 'Sign In' }));
 }
 
@@ -78,7 +78,7 @@ describe('SignInPanel, the two-factor step', () => {
     await passPassword();
     expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled();
 
-    type('Code From Your App', ' 123 456 ');
+    typeInField('Code From Your App', ' 123 456 ');
     await press(screen.getByRole('button', { name: 'Verify' }));
 
     expect(verifyTotp).toHaveBeenCalledWith({ code: '123456', trustDevice: false });
@@ -90,7 +90,7 @@ describe('SignInPanel, the two-factor step', () => {
     await passPassword();
 
     await press(screen.getByRole('switch', { name: 'Trust This Device for 30 Days' }));
-    type('Code From Your App', '123456');
+    typeInField('Code From Your App', '123456');
     await press(screen.getByRole('button', { name: 'Verify' }));
 
     expect(verifyTotp).toHaveBeenCalledWith({ code: '123456', trustDevice: true });
@@ -110,7 +110,7 @@ describe('SignInPanel, the two-factor step', () => {
     await passPassword();
 
     await press(screen.getByRole('button', { name: 'Use a Backup Code' }));
-    type('Backup Code', ' AbCdE-12345 ');
+    typeInField('Backup Code', ' AbCdE-12345 ');
     await press(screen.getByRole('button', { name: 'Verify' }));
 
     expect(verifyTotp).not.toHaveBeenCalled();
@@ -122,7 +122,7 @@ describe('SignInPanel, the two-factor step', () => {
     verifyTotp.mockResolvedValue({ data: null, error: { status: 401, code: 'INVALID_CODE' } });
     await passPassword();
 
-    type('Code From Your App', '000000');
+    typeInField('Code From Your App', '000000');
     await press(screen.getByRole('button', { name: 'Verify' }));
 
     expect(field('Code From Your App')).toHaveAccessibleDescription(
@@ -138,7 +138,7 @@ describe('SignInPanel, the two-factor step', () => {
     });
     await passPassword();
 
-    type('Code From Your App', '000000');
+    typeInField('Code From Your App', '000000');
     await press(screen.getByRole('button', { name: 'Verify' }));
 
     expect(screen.getByRole('alert')).toHaveTextContent(CODE_LOCKED);
@@ -150,7 +150,7 @@ describe('SignInPanel, the two-factor step', () => {
       verifyTotp.mockResolvedValue({ data: null, error: { status: 401, code } });
       await passPassword();
 
-      type('Code From Your App', '000000');
+      typeInField('Code From Your App', '000000');
       await press(screen.getByRole('button', { name: 'Verify' }));
 
       expect(screen.getByRole('alert')).toHaveTextContent(CHALLENGE_EXPIRED);

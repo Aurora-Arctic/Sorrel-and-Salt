@@ -1,16 +1,14 @@
 import { render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import MemberList from '@/components/MemberList';
 import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../support/printed-text';
-import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/role-access';
+import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/roles';
 import type { MemberListEntry } from '@/components/MemberList/types';
 import { rowCells } from '../../support/table';
 
 // claude-docs/components/member-list.md
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }));
 
 const OWNER: MemberListEntry = {
   userId: 'u-owner',

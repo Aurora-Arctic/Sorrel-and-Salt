@@ -1,3 +1,4 @@
+import { labelByKey } from '@/lib/options';
 import { quantityText } from '@/lib/validation';
 import type { SaveStockInput } from '../../gql/graphql';
 import type { StockFormValues } from '../StockFields';
@@ -10,9 +11,14 @@ import type { StockBatchRows, StockDialogValues, StockForm, StockJar, StockRow }
 
 const AMOUNTS: readonly (keyof StockFormValues)[] = ['quantityOnHand', 'unit', 'lowStockThreshold'];
 
+export const variantLabel = (forms: readonly StockForm[], variantId: string): string =>
+  labelByKey(forms, 'variantId', variantId, '');
+
+export const jarValues = (jars: readonly StockJar[]): Map<string, StockFormValues> =>
+  new Map(jars.map((jar) => [jar.id, stockFormValues(jar)]));
+
 export function openingRows(jars: readonly StockJar[], forms: readonly StockForm[]): StockRow[] {
-  const labelOf = (jar: StockJar) =>
-    forms.find((form) => form.variantId === jar.variantId)?.label ?? '';
+  const labelOf = (jar: StockJar) => variantLabel(forms, jar.variantId);
   return [...jars]
     .sort((a, b) => labelOf(a).localeCompare(labelOf(b)))
     .map((jar) => ({
@@ -30,7 +36,7 @@ export function stockBatch(
   rows: readonly StockRow[],
   jars: readonly StockJar[],
 ): { input: SaveStockInput; from: StockBatchRows } {
-  const opening = new Map(jars.map((jar) => [jar.id, stockFormValues(jar)]));
+  const opening = jarValues(jars);
   const input: SaveStockInput = { create: [], update: [], delete: [] };
   const from: StockBatchRows = { create: [], update: [] };
   rows.forEach((row, index) => {
@@ -69,7 +75,7 @@ export function rowFieldOf(
  * The amount errors of the rows to be saved, by row and field, so a bad amount is said at its field before
  * anything is sent. A row marked removed is not read.
  */
-export function amountErrors(rows: readonly StockRow[]): Record<number, Record<string, string>> {
+function amountErrors(rows: readonly StockRow[]): Record<number, Record<string, string>> {
   const found: Record<number, Record<string, string>> = {};
   rows.forEach((row, index) => {
     if (row.removed) return;

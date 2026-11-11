@@ -5,6 +5,7 @@ import { fetchCardAssets } from '@/lib/invitation-cards/assets';
 import type { CardAssets } from '@/lib/invitation-cards/types';
 import { saveFile } from '@/lib/save-file';
 import BusinessCards from '@/components/BusinessCards';
+import { fill } from '../../support/interact';
 
 vi.mock('@/lib/invitation-cards/assets', () => ({ fetchCardAssets: vi.fn() }));
 vi.mock('@/lib/business-cards/pdf', () => ({ renderBusinessCards: vi.fn() }));
@@ -14,11 +15,6 @@ const ASSETS = { salt: new Uint8Array([1]) } as unknown as CardAssets;
 const PDF = new Uint8Array([37, 80, 68, 70]);
 
 const generate = () => screen.getByRole('button', { name: 'Generate' });
-const fill = (label: string, text: string) => {
-  const field = screen.getByRole('textbox', { name: label });
-  fireEvent.change(field, { target: { value: text } });
-  fireEvent.blur(field);
-};
 const fillAll = (email = 'testwort@example.test') => {
   fill('Name', 'Testwort Hollin');
   fill('Email', email);

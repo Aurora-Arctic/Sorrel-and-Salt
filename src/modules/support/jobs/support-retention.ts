@@ -1,3 +1,4 @@
+import { pageLoop } from '@/lib/jobs/page-loop';
 import { start } from '@/lib/jobs/runtime';
 import { RETENTION_PAGE_SIZE, RETENTION_STAGES } from './support-retention-pages';
 import { retentionDueStep } from './support-retention-steps';
@@ -12,16 +13,12 @@ export async function supportRetention(now: number, origin: string): Promise<num
   'use workflow';
   let batches = 0;
   for (const kind of RETENTION_STAGES) {
-    let after: string | null = null;
-    for (;;) {
-      const ids: string[] = await retentionDueStep(kind, now, after);
-      if (ids.length === 0) break;
-      // Recorded as a step, so a replay of the coordinator starts each batch once.
-      await start(supportRetentionBatch, [{ kind, ids, now, origin }]);
-      batches += 1;
-      if (ids.length < RETENTION_PAGE_SIZE) break;
-      after = ids[ids.length - 1] ?? null;
-    }
+    batches += await pageLoop(
+      RETENTION_PAGE_SIZE,
+      (after) => retentionDueStep(kind, now, after),
+      // Each batch start is recorded as a step, so a replay of the coordinator starts it once.
+      (ids) => start(supportRetentionBatch, [{ kind, ids, now, origin }]),
+    );
   }
   return batches;
 }

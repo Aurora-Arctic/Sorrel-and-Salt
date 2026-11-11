@@ -20,6 +20,7 @@ import {
   wrapChips,
 } from '../../support/sortable';
 import type { HarnessProps } from './types';
+import { expectBefore } from '../../support/interact';
 
 // Downshift's `useCombobox` (claude-docs/components/combobox.md).
 
@@ -58,7 +59,7 @@ function Harness({ initial = '', ...props }: HarnessProps) {
 }
 
 const box = () => screen.getByRole('combobox', { name: 'Form' });
-const type = (text: string) => fireEvent.change(box(), { target: { value: text } });
+const typeInBox = (text: string) => fireEvent.change(box(), { target: { value: text } });
 const key = (name: string) => fireEvent.keyDown(box(), { key: name });
 const options = () => screen.queryAllByRole('option').map((option) => option.textContent);
 
@@ -119,7 +120,7 @@ describe('Combobox', () => {
   it('opens as text is typed, what was typed first and then each suggestion', () => {
     render(<Harness suggestions={TWO_BUCKETS} />);
 
-    type('wax');
+    typeInBox('wax');
 
     expect(box()).toHaveAttribute('aria-expanded', 'true');
     expect(options()).toEqual([
@@ -133,7 +134,7 @@ describe('Combobox', () => {
   it('tells curated suggestions from ones in use by their group, not their colour', () => {
     render(<Harness suggestions={TWO_BUCKETS} />);
 
-    type('wax');
+    typeInBox('wax');
 
     const curated = screen.getByRole('group', { name: 'From Compendium' });
     const inUse = screen.getByRole('group', { name: 'From Coven' });
@@ -153,7 +154,7 @@ describe('Combobox', () => {
       pending: false,
     };
     render(<Harness suggestions={suggestions} />);
-    type('x');
+    typeInBox('x');
 
     const withIcon = screen.getByRole('option', { name: 'Wax' });
     const mark = withIcon.querySelector('svg')!;
@@ -164,7 +165,7 @@ describe('Combobox', () => {
   it('lists a source with one bucket without groups', () => {
     render(<Harness suggestions={ONE_BUCKET} />);
 
-    type('fix');
+    typeInBox('fix');
 
     expect(screen.queryByRole('group')).not.toBeInTheDocument();
     expect(options()).toEqual([
@@ -187,7 +188,7 @@ describe('Combobox', () => {
     it('lists them under their headings, in the order the headings first appear', () => {
       render(<Harness suggestions={HEADED} />);
 
-      type('fix');
+      typeInBox('fix');
 
       const groups = screen.getAllByRole('group');
       expect(groups).toHaveLength(2);
@@ -220,7 +221,7 @@ describe('Combobox', () => {
         />,
       );
 
-      type('fix');
+      typeInBox('fix');
 
       expect(screen.getAllByRole('option', { name: 'Fixture Bane' })).toHaveLength(2);
       expect(screen.getByRole('status', { name: 'Form suggestions' })).toHaveTextContent(/\b2\b/);
@@ -230,7 +231,7 @@ describe('Combobox', () => {
   it("makes a suggestion's label and note part of its name, so same-named ones are told apart", () => {
     render(<Harness suggestions={TWO_BUCKETS} />);
 
-    type('wax');
+    typeInBox('wax');
 
     expect(screen.getByRole('option', { name: /^Wax \(Animal\)/ })).toHaveAccessibleName(
       'Wax (Animal) Used by Testwort (Fixtura testalis)',
@@ -242,7 +243,7 @@ describe('Combobox', () => {
     render(<Harness suggestions={TWO_BUCKETS} />);
     expect(box()).not.toHaveAttribute('aria-activedescendant');
 
-    type('wax');
+    typeInBox('wax');
     expect(box()).not.toHaveAttribute('aria-activedescendant');
     key('ArrowDown');
     expect(box()).toHaveAttribute('aria-activedescendant');
@@ -252,7 +253,7 @@ describe('Combobox', () => {
     const onPick = vi.fn();
     render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} />);
 
-    type('wax');
+    typeInBox('wax');
     key('ArrowDown');
     key('ArrowDown');
     key('ArrowDown');
@@ -275,7 +276,7 @@ describe('Combobox', () => {
     const onPick = vi.fn();
     render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} />);
 
-    type('rhi');
+    typeInBox('rhi');
     fireEvent.click(screen.getByRole('option', { name: /Rhizomes/ }));
 
     expect(onPick).toHaveBeenCalledWith('Rhizomes', RHIZOMES);
@@ -287,7 +288,7 @@ describe('Combobox', () => {
       const { unmount } = render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} keepOpen />);
 
       box().focus();
-      type('wax');
+      typeInBox('wax');
       fireEvent.click(screen.getByRole('option', { name: 'Wax (Substance)' }));
 
       expect(onPick).toHaveBeenCalledWith('Wax', WAX_SUBSTANCE);
@@ -298,7 +299,7 @@ describe('Combobox', () => {
 
       // Why the list could have closed: the same pick on a single box does.
       render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} />);
-      type('wax');
+      typeInBox('wax');
       fireEvent.click(screen.getByRole('option', { name: 'Wax (Substance)' }));
       expect(box()).toHaveAttribute('aria-expanded', 'false');
     });
@@ -307,7 +308,7 @@ describe('Combobox', () => {
       const onPick = vi.fn();
       render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} keepOpen />);
 
-      type('wax');
+      typeInBox('wax');
       key('ArrowDown');
       key('ArrowDown');
       key('Enter');
@@ -353,7 +354,7 @@ describe('Combobox', () => {
     const onPick = vi.fn();
     render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} />);
 
-    type('rhizome');
+    typeInBox('rhizome');
     fireEvent.click(screen.getByRole('option', { name: 'Use what you typed: rhizome' }));
 
     expect(onPick).toHaveBeenCalledWith('rhizome', null);
@@ -378,7 +379,7 @@ describe('Combobox', () => {
       key('ArrowDown');
       expect(options()).toEqual(['Hedge FixtureUsed by Testwort', 'Fixture Bane', 'New Reference']);
 
-      type('fix');
+      typeInBox('fix');
       expect(options()[options().length - 1]).toBe('New Reference');
       expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
     });
@@ -397,7 +398,7 @@ describe('Combobox', () => {
       const onPick = vi.fn();
       render(<Harness suggestions={ONE_BUCKET} action={action(onSelect)} onPick={onPick} />);
 
-      type('fix');
+      typeInBox('fix');
       fireEvent.click(screen.getByRole('option', { name: 'New Reference' }));
       key('ArrowUp');
       expect(box()).toHaveAttribute(
@@ -418,7 +419,7 @@ describe('Combobox', () => {
     it('is offered for text no suggestion matches', () => {
       render(<Harness suggestions={BANE} />);
 
-      type('fixture ban');
+      typeInBox('fixture ban');
 
       expect(options()).toEqual(['Use what you typed: fixture ban', 'Fixture Bane']);
     });
@@ -426,7 +427,7 @@ describe('Combobox', () => {
     it('is left out when a suggestion matches, spaces and case aside', () => {
       render(<Harness suggestions={BANE} />);
 
-      type('  fixture BANE ');
+      typeInBox('  fixture BANE ');
 
       expect(options()).toEqual(['Fixture Bane']);
     });
@@ -435,7 +436,7 @@ describe('Combobox', () => {
       const onPick = vi.fn();
       render(<Harness suggestions={BANE} onPick={onPick} />);
 
-      type('fixture bane');
+      typeInBox('fixture bane');
       key('ArrowDown');
       key('Enter');
 
@@ -446,7 +447,7 @@ describe('Combobox', () => {
       const onPick = vi.fn();
       render(<Harness suggestions={BANE} onPick={onPick} highlightFirst />);
 
-      type('Fixture Bane');
+      typeInBox('Fixture Bane');
       key('Enter');
 
       expect(onPick).toHaveBeenCalledWith('Fixture Bane', BANE.options[0]);
@@ -459,7 +460,7 @@ describe('Combobox', () => {
       };
       render(<Harness suggestions={labelled} />);
 
-      type('fixture bane');
+      typeInBox('fixture bane');
 
       expect(options()).toEqual(['Use what you typed: fixture bane', 'Fixture Bane (Root)']);
     });
@@ -469,7 +470,7 @@ describe('Combobox', () => {
     it('offers the suggestions without it', () => {
       render(<Harness suggestions={ONE_BUCKET} offerTyped={false} />);
 
-      type('fix');
+      typeInBox('fix');
 
       expect(options()).toEqual(['Hedge FixtureUsed by Testwort', 'Fixture Bane']);
       expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
@@ -479,7 +480,7 @@ describe('Combobox', () => {
       const onCommit = vi.fn();
       render(<Harness suggestions={ONE_BUCKET} offerTyped={false} onCommit={onCommit} />);
 
-      type('fix');
+      typeInBox('fix');
       key('Enter');
 
       expect(onCommit).toHaveBeenCalledWith('fix');
@@ -488,7 +489,7 @@ describe('Combobox', () => {
     it('stays closed when it would have been the only row', () => {
       render(<Harness suggestions={{ options: [], pending: false }} offerTyped={false} />);
 
-      type('fix');
+      typeInBox('fix');
 
       expect(box()).toHaveAttribute('aria-expanded', 'false');
     });
@@ -499,7 +500,7 @@ describe('Combobox', () => {
     const onPick = vi.fn();
     render(<Harness suggestions={TWO_BUCKETS} onCommit={onCommit} onPick={onPick} />);
 
-    type('rhizome');
+    typeInBox('rhizome');
     const enter = fireEvent.keyDown(box(), { key: 'Enter' });
 
     expect(onCommit).toHaveBeenCalledWith('rhizome');
@@ -528,7 +529,7 @@ describe('Combobox', () => {
   it('closes an open list on Enter when it has no caller for it, keeping the text', () => {
     render(<Harness suggestions={TWO_BUCKETS} />);
 
-    type('wax');
+    typeInBox('wax');
     const enter = fireEvent.keyDown(box(), { key: 'Enter' });
 
     expect(enter).toBe(false);
@@ -539,7 +540,7 @@ describe('Combobox', () => {
   it('closes on Escape and keeps the text, opening again on ArrowDown', () => {
     render(<Harness suggestions={TWO_BUCKETS} />);
 
-    type('wax');
+    typeInBox('wax');
     // On the open list the key is the list's, so a modal around it stays.
     expect(key('Escape')).toBe(false);
     expect(box()).toHaveAttribute('aria-expanded', 'false');
@@ -558,7 +559,7 @@ describe('Combobox', () => {
     const onPick = vi.fn();
     render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} />);
 
-    type('wax');
+    typeInBox('wax');
     key('ArrowDown');
     // The focus moving to something else: Downshift would otherwise read a
     // blur with no `relatedTarget` as a tab away and already not select.
@@ -573,7 +574,7 @@ describe('Combobox', () => {
     const onCommit = vi.fn();
     render(<Harness onCommit={onCommit} />);
 
-    type('Hedge Fixture');
+    typeInBox('Hedge Fixture');
     key('ArrowDown');
     expect(box()).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('option')).not.toBeInTheDocument();
@@ -594,7 +595,7 @@ describe('Combobox', () => {
   it('opens once suggestions arrive for what was typed', () => {
     const { rerender } = render(<Harness suggestions={{ options: [], pending: true }} />);
 
-    type('wax');
+    typeInBox('wax');
     expect(screen.getByRole('status', { name: 'Form suggestions' })).toHaveTextContent(/\S/);
     expect(options()).toEqual([expect.stringContaining('wax')]);
 
@@ -611,7 +612,7 @@ describe('Combobox', () => {
     key('Delete');
     expect(onRemoveLast).not.toHaveBeenCalled();
 
-    type('');
+    typeInBox('');
     key('Backspace');
     key('Delete');
     expect(onRemoveLast).toHaveBeenCalledTimes(2);
@@ -622,7 +623,7 @@ describe('Combobox', () => {
     const status = () => screen.getByRole('status', { name: 'Form suggestions' });
 
     expect(status()).toBeEmptyDOMElement();
-    type('wax');
+    typeInBox('wax');
     expect(status()).toHaveTextContent(/\b3\b/);
 
     rerender(<Harness suggestions={{ options: [WAX_ANIMAL], pending: false }} />);
@@ -934,10 +935,7 @@ describe('Combobox', () => {
       expect(move).toHaveAccessibleDescription(/\S/);
       expect(move).toHaveTextContent('Venus');
       expect(move).not.toHaveAttribute('tabindex', '-1');
-      expect(
-        move.compareDocumentPosition(screen.getByRole('button', { name: 'Remove Venus' })) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(move, screen.getByRole('button', { name: 'Remove Venus' }));
     });
 
     it('moves an entry by keyboard, saying each step, the focus kept on the moved entry', async () => {
@@ -1490,7 +1488,7 @@ describe('Combobox empty message', () => {
   it('shows the message on a settled lookup with no rows, outside the listbox and announced', () => {
     render(<Harness offerTyped={false} suggestions={NONE} empty="Nothing Found" />);
 
-    type('zzz');
+    typeInBox('zzz');
 
     const message = screen.getByText('Nothing Found', { selector: 'div' });
     expect(message).toBeVisible();
@@ -1507,16 +1505,16 @@ describe('Combobox empty message', () => {
         empty="Nothing Found"
       />,
     );
-    type('zzz');
+    typeInBox('zzz');
     expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
 
     rerender(<Harness offerTyped={false} suggestions={NONE} empty="Nothing Found" initial="" />);
-    type('   ');
+    typeInBox('   ');
     expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
 
     // Passing false is the one way to say nothing.
     rerender(<Harness offerTyped={false} suggestions={NONE} empty={false} />);
-    type('zzz');
+    typeInBox('zzz');
     expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
     expect(status()).not.toHaveTextContent(/\S/);
   });
@@ -1524,7 +1522,7 @@ describe('Combobox empty message', () => {
   it('says it found nothing by default, so a box whose caller forgot `empty` never just shuts', () => {
     render(<Harness offerTyped={false} suggestions={NONE} />);
 
-    type('zzz');
+    typeInBox('zzz');
 
     const shown = screen.getAllByText(/zzz/).filter((node) => !status().contains(node));
     expect(shown.length).toBeGreaterThan(0);
@@ -1537,7 +1535,7 @@ describe('Combobox empty message', () => {
   it('closes the message on Escape alone, then leaves the next Escape to the dialog', () => {
     render(<Harness offerTyped={false} suggestions={NONE} empty="Nothing Found" />);
 
-    type('zzz');
+    typeInBox('zzz');
     expect(screen.getByText('Nothing Found', { selector: 'div' })).toBeVisible();
 
     expect(key('Escape')).toBe(false);
@@ -1548,14 +1546,14 @@ describe('Combobox empty message', () => {
     expect(key('Escape')).toBe(true);
     expect(box()).toHaveValue('zzz');
 
-    type('zzzz');
+    typeInBox('zzzz');
     expect(screen.getByText('Nothing Found', { selector: 'div' })).toBeVisible();
   });
 
   it('keeps the count in the status, and no message, once rows arrive', () => {
     render(<Harness offerTyped={false} suggestions={ONE_BUCKET} empty="Nothing Found" />);
 
-    type('fix');
+    typeInBox('fix');
 
     expect(status()).toHaveTextContent('2 suggestions');
     expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
@@ -1573,7 +1571,7 @@ describe('Combobox pending lookup', () => {
     const onPick = vi.fn();
     render(<Harness offerTyped={false} suggestions={LOOKING} onPick={onPick} />);
 
-    type('wax');
+    typeInBox('wax');
 
     const row = loadingRow();
     expect(row).toBeVisible();
@@ -1594,7 +1592,7 @@ describe('Combobox pending lookup', () => {
   it('draws the loading row beneath a typed row while no suggestion has arrived', () => {
     render(<Harness suggestions={LOOKING} />);
 
-    type('wax');
+    typeInBox('wax');
 
     expect(options()).toHaveLength(1);
     expect(loadingRow()).toBeVisible();
@@ -1602,11 +1600,11 @@ describe('Combobox pending lookup', () => {
 
   it('keeps the last rows, marked busy, while the next lookup is pending, then replaces them', () => {
     const { rerender } = render(<Harness offerTyped={false} suggestions={ONE_BUCKET} />);
-    type('fix');
+    typeInBox('fix');
     expect(options()).toHaveLength(2);
     expect(listbox()).not.toHaveAttribute('aria-busy');
 
-    type('fixt');
+    typeInBox('fixt');
     rerender(<Harness offerTyped={false} suggestions={LOOKING} />);
 
     expect(box()).toHaveAttribute('aria-expanded', 'true');
@@ -1628,12 +1626,12 @@ describe('Combobox pending lookup', () => {
 
   it('keeps nothing from a list that was closed, so the next lookup shows the loading row', () => {
     const { rerender } = render(<Harness offerTyped={false} suggestions={ONE_BUCKET} />);
-    type('fix');
+    typeInBox('fix');
     key('Escape');
     expect(box()).toHaveAttribute('aria-expanded', 'false');
 
     rerender(<Harness offerTyped={false} suggestions={LOOKING} />);
-    type('fixt');
+    typeInBox('fixt');
 
     expect(screen.queryAllByRole('option')).toHaveLength(0);
     expect(loadingRow()).toBeVisible();
@@ -1641,7 +1639,7 @@ describe('Combobox pending lookup', () => {
 
   it('closes the loading row on Escape alone, then leaves the next Escape to the dialog', () => {
     render(<Harness offerTyped={false} suggestions={LOOKING} />);
-    type('wax');
+    typeInBox('wax');
     expect(loadingRow()).toBeVisible();
 
     expect(key('Escape')).toBe(false);
@@ -1667,7 +1665,7 @@ describe('Combobox leading node and toggle', () => {
         }
       />,
     );
-    type('fix');
+    typeInBox('fix');
     expect(screen.getAllByRole('option')).toHaveLength(3);
 
     const go = screen.getByRole('button', { name: 'Go' });
@@ -1700,7 +1698,7 @@ describe('Combobox leading node and toggle', () => {
     );
 
     expect(screen.queryByRole('button', { name: /^Show Form/ })).not.toBeInTheDocument();
-    type('fix');
+    typeInBox('fix');
     expect(screen.getAllByRole('option')).toHaveLength(3);
   });
 

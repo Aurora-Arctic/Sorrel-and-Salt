@@ -1,12 +1,10 @@
-import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { helpTerms } from '../../lib/help-marks';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HashTarget from '../HashTarget';
 import { HelpBackLink } from '../HelpArticleView/back-link';
-import { EditLink } from '../IconTip';
+import { HelpArticleTitle } from '../HelpChrome';
 import type { HelpGlossaryProps } from './types';
-import '../HelpArticleView/title.scss';
 import './index.scss';
 
 // The glossary, beneath the help layout's header: one term and definition per row, each anchored by its slug so /help/glossary#steward lands on it
@@ -24,10 +22,7 @@ const HelpGlossary = ({ terms, editHref }: HelpGlossaryProps): ReactElement => {
   return (
     <div className="help-page help-glossary">
       <HelpBackLink href="/help" title="Help" />
-      <div className="help-article__title">
-        <h2>Glossary</h2>
-        {editHref && <EditLink href={editHref as Route} name="Glossary" />}
-      </div>
+      <HelpArticleTitle title="Glossary" editHref={editHref} editName="Glossary" />
       <dl>
         {terms.map((term, index) => (
           <div key={term.slug} id={term.slug} className="help-glossary__entry">

@@ -1,7 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { describe, expect, inject, it } from 'vitest';
-import { REPO_ROOT } from '../support/paths';
+import { describe, expect, it } from 'vitest';
+import { filesMatching, sourceFiles } from '../support/repo-scan';
 
 // A working's deduction is the only thing that lowers a jar, and it does so through
 // `decrementStock`, which locks the jar and floors at zero. A second path (a read-modify-write
@@ -12,16 +10,13 @@ const WRITER = 'src/db/repository/stock.ts';
 
 describe('the stock decrement path', () => {
   it('is named in one file, the repository writer', () => {
-    const files = inject('repoFiles').filter(
-      (file) => file.startsWith('src/') && /\.tsx?$/.test(file),
-    );
+    const files = sourceFiles({ under: 'src/' });
     // Precondition: the writer is in the listing, so an empty result means no second file.
     expect(files).toContain(WRITER);
 
-    const decrementing = files.filter((file) =>
-      /\bdecrementStock\b|quantity_on_hand\s*-|quantityOnHand\s*\}?\s*-\s/.test(
-        readFileSync(join(REPO_ROOT, file), 'utf8'),
-      ),
+    const decrementing = filesMatching(
+      files,
+      /\bdecrementStock\b|quantity_on_hand\s*-|quantityOnHand\s*\}?\s*-\s/,
     );
 
     // The writer, its declaration in the writer's type, and the one service that calls it. The demo seed is the

@@ -987,7 +987,7 @@ Linking a coven's own ingredient to the compendium meant the own entry stopped e
 - **Annotate and Make It Ours**, unchanged.
 - **Similar in the Compendium**, as a read-only list on an own entry with no formal name. The member sees which compendium entries the own entry might be, and each links to its compendium page. Nothing on the page changes the coven's data.
 - **In the Compendium**, for an own entry with a formal name, unchanged.
-- The shared helpers Make It Ours uses (`sortedNames`, `answered`, `foldForm`, `refuseLabelTaken`, the lock and layer-move helpers) and `DroppedOnConvert`, whose schema description is reworded to one direction.
+- The shared helpers Make It Ours uses (`sortedNames`, `answerOf`, `fold`, `refuseLabelTaken`, the lock and layer-move helpers) and `DroppedOnConvert`, whose schema description is reworded to one direction.
 
 ### What went where
 

@@ -1,6 +1,6 @@
 import 'server-only';
 import { findOneById } from '../../../db/repository';
-import { deliver } from '../../../lib/mail-transport';
+import { deliverMessageFor } from '../../../lib/deliver-message-for';
 import { supportTimeoutNotice } from '../../../lib/pause-job-mail';
 import { users } from '../../identity/schema/users';
 import { supportTimeouts } from '../schema/support-timeouts';
@@ -22,7 +22,5 @@ export async function supportTimeoutMessageFor(mail: SupportTimeoutMail): Promis
 
 /** Builds and sends `mail`; true once the transport took it, false when there was none to send. A transport failure throws, so a job's step is retried. */
 export async function sendSupportTimeoutMail(mail: SupportTimeoutMail): Promise<boolean> {
-  const message = await supportTimeoutMessageFor(mail);
-  if (!message) return false;
-  return deliver(message);
+  return deliverMessageFor(supportTimeoutMessageFor, mail);
 }

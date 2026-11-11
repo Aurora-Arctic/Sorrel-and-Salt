@@ -12,13 +12,15 @@ import {
   type GrimoireFacetCounts,
   type GrimoireQuery,
 } from '../../../db/repository';
+import { NO_SUCH_SPELL } from './spell-not-found';
 import { Forbidden, NotFound } from '../../../lib/errors';
+import { trimmedOrUndefined } from '../../../lib/text';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { summarizeSpellCategories } from '../validation/categories/summarize';
 import { spellCategories } from '../schema/spell-categories';
 import { spellSteps } from '../schema/spell-steps';
-import { stepsInSpells } from './step-views';
+import { linkedIngredientIds, stepsInSpells } from './step-views';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/query-length';
 import { categories } from '@/modules/vocabulary/schema/categories';
@@ -30,7 +32,7 @@ import type { SpellKey, SpellRow, SpellStepView } from '../types';
 
 /** As the compendium counts it: one character is no search. */
 function searchable(query: GrimoireQuery): GrimoireQuery {
-  const text = query.query?.trim();
+  const text = trimmedOrUndefined(query.query);
   const long = text !== undefined && Array.from(text.normalize('NFC')).length >= MIN_QUERY_LENGTH;
   return { ...query, query: long ? text : undefined };
 }
@@ -100,7 +102,7 @@ export async function readSpell(
 ): Promise<SpellRow> {
   const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
   const spell = await findOneSpell(membership, spellId);
-  if (!spell) throw new NotFound('No such spell in this coven');
+  if (!spell) throw new NotFound(NO_SUCH_SPELL);
   return spell;
 }
 
@@ -130,9 +132,7 @@ export function derivedCategoriesOf(
 ): Promise<(CategoryRow[] | Forbidden)[]> {
   return perCoven(session, refs, async (membership, spellIds) => {
     const steps = await findManyInSpells(membership, spellSteps, spellIds);
-    const linked = [
-      ...new Set(steps.flatMap((step) => (step.ingredientId === null ? [] : [step.ingredientId]))),
-    ];
+    const linked = linkedIngredientIds(steps);
     const pairs = await findManyOfSpellIngredientsIncludingSoftDeleted(
       membership,
       ingredientCategories,

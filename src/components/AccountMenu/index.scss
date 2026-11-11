@@ -60,7 +60,6 @@ $account-menu-avatar: 2rem;
   // The fill that draws the disc is dropped, so a border draws the circle,
   // inside the disc's size so the bar does not move.
   @include forced-colors {
-    box-sizing: border-box;
     border: 1px solid CanvasText;
   }
 }
@@ -107,6 +106,7 @@ $account-menu-avatar: 2rem;
 }
 
 .account-menu__panel {
+  box-sizing: content-box;
   position: absolute;
   top: calc(100% + #{space(2)});
   right: 0;
@@ -144,7 +144,6 @@ $account-menu-avatar: 2rem;
 .account-menu__item {
   display: flex;
   align-items: center;
-  box-sizing: border-box;
   width: 100%;
   min-height: $panel-row-height;
   padding: 0 space(3);
@@ -201,7 +200,6 @@ $account-menu-avatar: 2rem;
   @include badge('attention');
 
   justify-content: center;
-  box-sizing: border-box;
   min-width: 1.5rem;
   height: 1.5rem;
   padding: 0 space(1);
@@ -260,7 +258,7 @@ $account-menu-avatar: 2rem;
 
 // Sign Out is the last row, set off from the rest by a hairline above it.
 .account-menu__signout {
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 }
 
 // The last row's wash takes the panel's bottom rounding, inside its 1px edge.

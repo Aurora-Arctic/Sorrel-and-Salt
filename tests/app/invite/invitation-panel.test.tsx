@@ -1,12 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Session } from '@/lib/session';
+import { getSession } from '../../support/request-session';
 
 // The accept panel's page reads where the visitor stands. A signed-out visitor holding a link
 // has nothing of it read or written; a signed-in one refused gets the recorder.
 
-const getSession = vi.fn<() => Promise<Session | null>>();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+vi.mock('@/lib/request-session', () => import('../../support/request-session'));
 
 const invitationStanding = vi.fn();
 const recordCardAttempt = vi.fn();
@@ -17,7 +16,7 @@ vi.mock('@/modules/identity', () => ({
   getMe,
   isPlaceholderEmail: (email: string) => email.endsWith('@placeholder.test'),
 }));
-vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => ['google'] }));
+vi.mock('@/lib/configured-providers', () => ({ providersToPass: () => ['google'] }));
 
 const recorded: string[] = [];
 const landings: string[] = [];

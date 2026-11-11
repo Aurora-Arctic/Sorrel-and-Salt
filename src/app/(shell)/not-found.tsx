@@ -1,4 +1,4 @@
-import { NotFoundScreen } from '../../components/ErrorScreens';
+import { NotFoundScreen } from '@/components/ErrorScreens';
 
 export default function ShellNotFound() {
   return <NotFoundScreen />;

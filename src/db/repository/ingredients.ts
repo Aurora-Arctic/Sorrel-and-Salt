@@ -35,6 +35,7 @@ import {
 import type { Membership } from '@/modules/coven';
 import type { Curator } from '@/modules/identity';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
+import { hasText } from '../../lib/text';
 import {
   findPageCountInScopeIncludingSoftDeleted,
   findPageCountInTiers,
@@ -53,7 +54,7 @@ import {
   scopedTo,
 } from './predicates';
 import { cites, citesNothing } from './references';
-import { existsIn, selectFrom, selectOne } from './select';
+import { existsByKey, existsIn, selectFrom, selectOne, whenIds } from './select';
 import { sourcingScoreExpression } from './sourcing-score';
 import { curated } from './vocabularies';
 import { weightedSearch } from './weighted-search';
@@ -95,14 +96,15 @@ export function findManyOfIngredients<
   ingredientIds: readonly string[],
   heldBy?: Membership,
 ): Promise<ReadRow<TTable>[]> {
-  if (ingredientIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    table,
-    and(
-      notSoftDeleted(table),
-      ownedByIngredient(table),
-      inArray(table.ingredientId, [...ingredientIds]),
-      inUseIngredientParent(memberships, table.ingredientId, heldBy),
+  return whenIds(ingredientIds, () =>
+    selectFrom(
+      table,
+      and(
+        notSoftDeleted(table),
+        ownedByIngredient(table),
+        inArray(table.ingredientId, [...ingredientIds]),
+        inUseIngredientParent(memberships, table.ingredientId, heldBy),
+      ),
     ),
   );
 }
@@ -134,13 +136,14 @@ export function findReadableVariants(
   memberships: readonly Membership[],
   ids: readonly string[],
 ): Promise<(typeof ingredientVariants.$inferSelect)[]> {
-  if (ids.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    ingredientVariants,
-    and(
-      notSoftDeleted(ingredientVariants),
-      inArray(ingredientVariants.id, [...ids]),
-      inUseIngredientParent(memberships, ingredientVariants.ingredientId, undefined),
+  return whenIds(ids, () =>
+    selectFrom(
+      ingredientVariants,
+      and(
+        notSoftDeleted(ingredientVariants),
+        inArray(ingredientVariants.id, [...ids]),
+        inUseIngredientParent(memberships, ingredientVariants.ingredientId, undefined),
+      ),
     ),
   );
 }
@@ -157,13 +160,14 @@ export function findManyOfVariants<
   variantIds: readonly string[],
   heldBy?: Membership,
 ): Promise<ReadRow<TTable>[]> {
-  if (variantIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    table,
-    and(
-      notSoftDeleted(table),
-      inArray(table.variantId, [...variantIds]),
-      inUseVariantParent(memberships, table.variantId, heldBy),
+  return whenIds(variantIds, () =>
+    selectFrom(
+      table,
+      and(
+        notSoftDeleted(table),
+        inArray(table.variantId, [...variantIds]),
+        inUseVariantParent(memberships, table.variantId, heldBy),
+      ),
     ),
   );
 }
@@ -177,18 +181,19 @@ export function findDeitiesOfIngredients(
   ingredientIds: readonly string[],
   heldBy?: Membership,
 ): Promise<JoinedRow<typeof ingredientDeities.$inferSelect, typeof deities.$inferSelect>[]> {
-  if (ingredientIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    ingredientDeities,
-    and(
-      notSoftDeleted(ingredientDeities),
-      inArray(ingredientDeities.ingredientId, [...ingredientIds]),
-      inUseIngredientParent(memberships, ingredientDeities.ingredientId, heldBy),
+  return whenIds(ingredientIds, () =>
+    selectFrom(
+      ingredientDeities,
+      and(
+        notSoftDeleted(ingredientDeities),
+        inArray(ingredientDeities.ingredientId, [...ingredientIds]),
+        inUseIngredientParent(memberships, ingredientDeities.ingredientId, heldBy),
+      ),
+      {
+        leftJoin: deities,
+        on: and(eq(deities.id, ingredientDeities.deityId), curated(deities)) as SQL,
+      },
     ),
-    {
-      leftJoin: deities,
-      on: and(eq(deities.id, ingredientDeities.deityId), curated(deities)) as SQL,
-    },
   );
 }
 
@@ -203,35 +208,41 @@ export function findSubstitutesIncludingSoftDeleted(
   ids: readonly string[],
   heldBy?: Membership,
 ): Promise<JoinedRow<typeof ingredientSubstitutes.$inferSelect, IngredientRow>[]> {
-  if (ids.length === 0) return Promise.resolve([]);
-  const linked = alias(ingredients, 'linked');
-  const linkReadable = or(
-    isNull(ingredientSubstitutes.substituteId),
-    inCompendium(linked),
-    eq(linked.workspaceId, ingredients.workspaceId),
-  );
-  return selectFrom(
-    ingredientSubstitutes,
-    and(
-      notSoftDeleted(ingredientSubstitutes),
-      ...(of === 'ingredient'
-        ? [
-            ownedByIngredient(ingredientSubstitutes),
-            inArray(ingredientSubstitutes.ingredientId, [...ids]),
-            inUseIngredientParent(
-              memberships,
-              ingredientSubstitutes.ingredientId,
-              heldBy,
-              linkReadable,
-            ),
-          ]
-        : [
-            inArray(ingredientSubstitutes.variantId, [...ids]),
-            inUseVariantParent(memberships, ingredientSubstitutes.variantId, heldBy, linkReadable),
-          ]),
-    ),
-    { leftJoin: linked, on: eq(linked.id, ingredientSubstitutes.substituteId) },
-  );
+  return whenIds(ids, () => {
+    const linked = alias(ingredients, 'linked');
+    const linkReadable = or(
+      isNull(ingredientSubstitutes.substituteId),
+      inCompendium(linked),
+      eq(linked.workspaceId, ingredients.workspaceId),
+    );
+    return selectFrom(
+      ingredientSubstitutes,
+      and(
+        notSoftDeleted(ingredientSubstitutes),
+        ...(of === 'ingredient'
+          ? [
+              ownedByIngredient(ingredientSubstitutes),
+              inArray(ingredientSubstitutes.ingredientId, [...ids]),
+              inUseIngredientParent(
+                memberships,
+                ingredientSubstitutes.ingredientId,
+                heldBy,
+                linkReadable,
+              ),
+            ]
+          : [
+              inArray(ingredientSubstitutes.variantId, [...ids]),
+              inUseVariantParent(
+                memberships,
+                ingredientSubstitutes.variantId,
+                heldBy,
+                linkReadable,
+              ),
+            ]),
+      ),
+      { leftJoin: linked, on: eq(linked.id, ingredientSubstitutes.substituteId) },
+    );
+  });
 }
 
 /**
@@ -353,12 +364,11 @@ export function workspaceListScopeIncludingSoftDeleted(
       and(scopedTo(membership, ingredients), notSoftDeleted(ingredients)),
       and(
         inCompendium(ingredients),
-        existsIn(
+        existsByKey(
           workspaceCompendiumEntries,
-          and(
-            eq(workspaceCompendiumEntries.ingredientId, ingredients.id),
-            scopedTo(membership, workspaceCompendiumEntries),
-          ),
+          workspaceCompendiumEntries.ingredientId,
+          ingredients.id,
+          scopedTo(membership, workspaceCompendiumEntries),
         ),
       ),
     ),
@@ -374,14 +384,13 @@ export function workspaceListScopeIncludingSoftDeleted(
  * so it is an `OR` with null rather than `<> 0` alone, which SQL reads as unknown for null (claude-docs/db/compendium-read.md, "The coven list scope").
  */
 function holdsJarInStock(membership: Membership): SQL {
-  return existsIn(
+  return existsByKey(
     inventoryItems,
-    and(
-      eq(inventoryItems.ingredientId, ingredients.id),
-      scopedTo(membership, inventoryItems),
-      or(isNull(inventoryItems.quantityOnHand), ne(inventoryItems.quantityOnHand, '0')),
-      existsIn(ingredientVariants, eq(ingredientVariants.id, inventoryItems.variantId)),
-    ),
+    inventoryItems.ingredientId,
+    ingredients.id,
+    scopedTo(membership, inventoryItems),
+    or(isNull(inventoryItems.quantityOnHand), ne(inventoryItems.quantityOnHand, '0')),
+    existsByKey(ingredientVariants, ingredientVariants.id, inventoryItems.variantId),
   );
 }
 
@@ -390,21 +399,20 @@ function holdsJarInStock(membership: Membership): SQL {
  * A jar with no quantity never matches. The same rule as `stockState` in `src/components/StockBadge/stock-state.ts`; `tests/support/jar-states.ts` is the list both are tested against.
  */
 function holdsJarLowOrOut(membership: Membership): SQL {
-  return existsIn(
+  return existsByKey(
     inventoryItems,
-    and(
-      eq(inventoryItems.ingredientId, ingredients.id),
-      scopedTo(membership, inventoryItems),
-      or(
-        eq(inventoryItems.quantityOnHand, '0'),
-        and(
-          gt(inventoryItems.lowStockThreshold, '0'),
-          gt(inventoryItems.quantityOnHand, '0'),
-          lte(inventoryItems.quantityOnHand, inventoryItems.lowStockThreshold),
-        ),
+    inventoryItems.ingredientId,
+    ingredients.id,
+    scopedTo(membership, inventoryItems),
+    or(
+      eq(inventoryItems.quantityOnHand, '0'),
+      and(
+        gt(inventoryItems.lowStockThreshold, '0'),
+        gt(inventoryItems.quantityOnHand, '0'),
+        lte(inventoryItems.quantityOnHand, inventoryItems.lowStockThreshold),
       ),
-      existsIn(ingredientVariants, eq(ingredientVariants.id, inventoryItems.variantId)),
     ),
+    existsByKey(ingredientVariants, ingredientVariants.id, inventoryItems.variantId),
   );
 }
 
@@ -451,20 +459,21 @@ export async function findIngredientSuggestions(
       top(and(inCompendium(ingredients), eq(ingredients.shown, true), not(held)) as SQL),
     ])
   ).flat();
-  if (ids.length === 0) return [];
-  return findPageInTiers(
-    [membership],
-    ingredients,
-    {
-      ...order,
-      sort: [{ expression: sql`case when ${yours} then 0 else 1 end`, type: 'integer' }, ...sort],
-      carry: {
-        score: list.order.carry?.score as SQL<number | null>,
-        group: sql<SuggestionGroup>`case when ${yours} then 'yours' else 'compendium' end`,
+  return whenIds(ids, () =>
+    findPageInTiers(
+      [membership],
+      ingredients,
+      {
+        ...order,
+        sort: [{ expression: sql`case when ${yours} then 0 else 1 end`, type: 'integer' }, ...sort],
+        carry: {
+          score: list.order.carry?.score as SQL<number | null>,
+          group: sql<SuggestionGroup>`case when ${yours} then 'yours' else 'compendium' end`,
+        },
       },
-    },
-    page,
-    inArray(ingredients.id, ids),
+      page,
+      inArray(ingredients.id, ids),
+    ),
   );
 }
 
@@ -477,32 +486,30 @@ function formRank(form: string | undefined): SortPart | undefined {
   const wanted = form?.trim();
   if (!wanted) return undefined;
   const named = alias(ingredientForms, 'named');
-  const holdsForm = existsIn(
+  const holdsForm = existsByKey(
     ingredientVariants,
-    and(
-      eq(ingredientVariants.ingredientId, ingredients.id),
-      eq(fold(ingredientVariants.form), fold(wanted)),
-    ),
+    ingredientVariants.ingredientId,
+    ingredients.id,
+    eq(fold(ingredientVariants.form), fold(wanted)),
   );
-  const holdsGroupMate = existsIn(
+  const holdsGroupMate = existsByKey(
     ingredientVariants,
-    and(
-      eq(ingredientVariants.ingredientId, ingredients.id),
-      existsIn(
-        ingredientForms,
-        and(
-          curated(ingredientForms),
-          or(
-            eq(ingredientForms.id, ingredientVariants.formId),
-            eq(fold(ingredientForms.name), fold(ingredientVariants.form)),
-          ),
-          existsIn(
-            named,
-            and(
-              eq(fold(named.name), fold(wanted)),
-              eq(named.groupId, ingredientForms.groupId),
-              existsIn(ingredientFormGroups, eq(ingredientFormGroups.id, named.groupId)),
-            ),
+    ingredientVariants.ingredientId,
+    ingredients.id,
+    existsIn(
+      ingredientForms,
+      and(
+        curated(ingredientForms),
+        or(
+          eq(ingredientForms.id, ingredientVariants.formId),
+          eq(fold(ingredientForms.name), fold(ingredientVariants.form)),
+        ),
+        existsIn(
+          named,
+          and(
+            eq(fold(named.name), fold(wanted)),
+            eq(named.groupId, ingredientForms.groupId),
+            existsByKey(ingredientFormGroups, ingredientFormGroups.id, named.groupId),
           ),
         ),
       ),
@@ -560,10 +567,11 @@ export function findManyIngredients(
   memberships: readonly Membership[],
   ids: readonly string[],
 ): Promise<IngredientRow[]> {
-  if (ids.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    ingredients,
-    and(readableInTiers(memberships, ingredients), inArray(ingredients.id, [...ids])),
+  return whenIds(ids, () =>
+    selectFrom(
+      ingredients,
+      and(readableInTiers(memberships, ingredients), inArray(ingredients.id, [...ids])),
+    ),
   );
 }
 
@@ -693,12 +701,11 @@ function heldInNoneOf(memberships: readonly Membership[]): SQL {
 }
 
 function heldBy(memberships: readonly Membership[]): SQL {
-  return existsIn(
+  return existsByKey(
     workspaceCompendiumEntries,
-    and(
-      eq(workspaceCompendiumEntries.ingredientId, ingredients.id),
-      or(...memberships.map((membership) => scopedTo(membership, workspaceCompendiumEntries))),
-    ),
+    workspaceCompendiumEntries.ingredientId,
+    ingredients.id,
+    or(...memberships.map((membership) => scopedTo(membership, workspaceCompendiumEntries))),
   );
 }
 
@@ -820,9 +827,11 @@ export function citesNowhere(): SQL | undefined {
   return and(
     citesNothing('ingredientId'),
     not(
-      existsIn(
+      existsByKey(
         ingredientVariants,
-        and(eq(ingredientVariants.ingredientId, ingredients.id), cites('ingredientVariantId')),
+        ingredientVariants.ingredientId,
+        ingredients.id,
+        cites('ingredientVariantId'),
       ),
     ),
   );
@@ -832,7 +841,7 @@ export function citesNowhere(): SQL | undefined {
  * The entry has no live form: the keeper's to-do list of entries nobody can stock or put in a spell yet. A soft-deleted variant is none, through `existsIn`.
  */
 export function hasNoForm(): SQL {
-  return not(existsIn(ingredientVariants, eq(ingredientVariants.ingredientId, ingredients.id)));
+  return not(existsByKey(ingredientVariants, ingredientVariants.ingredientId, ingredients.id));
 }
 
 /** The category filter. The category may be filed on the entry or on a live form, and the variant's liveness is read here (claude-docs/db/compendium-read.md, "Filter arms"). */
@@ -856,7 +865,7 @@ const categoryArms = (categoryIds: readonly string[], mode: CategoryMode = 'all'
 export function pairIsLive(pair: { variantId: AnyPgColumn }): SQL | undefined {
   return or(
     isNull(pair.variantId),
-    existsIn(ingredientVariants, eq(ingredientVariants.id, pair.variantId)),
+    existsByKey(ingredientVariants, ingredientVariants.id, pair.variantId),
   );
 }
 
@@ -865,7 +874,7 @@ export function pairIsLive(pair: { variantId: AnyPgColumn }): SQL | undefined {
  * They are not folded here: the fold stays in SQL, beside the column's own.
  */
 export function stated(values: readonly string[] | undefined): string[] {
-  return (values ?? []).filter((value) => value.trim() !== '');
+  return (values ?? []).filter(hasText);
 }
 
 /**
@@ -893,9 +902,11 @@ export function listOrVariantHolds(
 ): SQL {
   return or(
     listHolds(list, value),
-    existsIn(
+    existsByKey(
       ingredientVariants,
-      and(eq(ingredientVariants.ingredientId, ingredients.id), listHolds(variantList, value)),
+      ingredientVariants.ingredientId,
+      ingredients.id,
+      listHolds(variantList, value),
     ),
   ) as SQL;
 }
@@ -918,12 +929,11 @@ export function elementArm(
     // Bound as one array through the column's encoder: an expression has none,
     // and Drizzle would otherwise spread the values into a row.
     arrayOverlaps(own, sql`${sql.param(wanted, ingredients.elements)}`),
-    existsIn(
+    existsByKey(
       ingredientVariants,
-      and(
-        eq(ingredientVariants.ingredientId, ingredients.id),
-        arrayOverlaps(ingredientVariants.elements, wanted),
-      ),
+      ingredientVariants.ingredientId,
+      ingredients.id,
+      arrayOverlaps(ingredientVariants.elements, wanted),
     ),
   );
 }
@@ -935,12 +945,11 @@ export function elementArm(
 function formArm(forms: readonly string[] | undefined): SQL | undefined {
   const wanted = stated(forms);
   if (wanted.length === 0) return undefined;
-  return existsIn(
+  return existsByKey(
     ingredientVariants,
-    and(
-      eq(ingredientVariants.ingredientId, ingredients.id),
-      inArray(fold(ingredientVariants.form), wanted.map(fold)),
-    ),
+    ingredientVariants.ingredientId,
+    ingredients.id,
+    inArray(fold(ingredientVariants.form), wanted.map(fold)),
   );
 }
 
@@ -950,13 +959,12 @@ function formArm(forms: readonly string[] | undefined): SQL | undefined {
  */
 function deityArm(deityIds: readonly string[] | undefined): SQL | undefined {
   if (!deityIds?.length) return undefined;
-  return existsIn(
+  return existsByKey(
     ingredientDeities,
-    and(
-      eq(ingredientDeities.ingredientId, ingredients.id),
-      inArray(ingredientDeities.deityId, deityIds),
-      pointsLive(deities, ingredientDeities.deityId),
-    ),
+    ingredientDeities.ingredientId,
+    ingredients.id,
+    inArray(ingredientDeities.deityId, deityIds),
+    pointsLive(deities, ingredientDeities.deityId),
   );
 }
 
@@ -968,15 +976,17 @@ export function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
   if (!toxic) return undefined;
   const flagged = or(
     eq(ingredients.toxic, true),
-    existsIn(
+    existsByKey(
       ingredientVariants,
-      and(eq(ingredientVariants.ingredientId, ingredients.id), eq(ingredientVariants.toxic, true)),
+      ingredientVariants.ingredientId,
+      ingredients.id,
+      eq(ingredientVariants.toxic, true),
     ),
   ) as SQL;
   return toxic === 'toxic' ? flagged : not(flagged);
 }
 
-export function listingArm(listing: IngredientFilter['listing']): SQL | undefined {
+function listingArm(listing: IngredientFilter['listing']): SQL | undefined {
   if (listing === 'all') return undefined;
   return eq(ingredients.shown, listing !== 'hidden');
 }
@@ -998,8 +1008,10 @@ export function reviewArm(reviewed: IngredientFilter['reviewed']): SQL | undefin
  */
 function pickedFormArm(formId: string | undefined): SQL | undefined {
   if (!formId) return undefined;
-  return existsIn(
+  return existsByKey(
     ingredientVariants,
-    and(eq(ingredientVariants.ingredientId, ingredients.id), eq(ingredientVariants.formId, formId)),
+    ingredientVariants.ingredientId,
+    ingredients.id,
+    eq(ingredientVariants.formId, formId),
   );
 }

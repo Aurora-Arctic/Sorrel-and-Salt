@@ -1,3 +1,4 @@
+import { ORIGIN } from './constants';
 import type { MemberPauseNotifier } from '@/modules/coven';
 import type { DocumentMailingNotifier } from '@/modules/documents';
 import type {
@@ -36,11 +37,11 @@ export const noSupportNotifier: SupportNotifier = {
 };
 
 export const noPauseNotifier: TimeoutNotifier & AccessPauseNotifier & MemberPauseNotifier = {
-  origin: async () => 'http://localhost:3000',
+  origin: async () => ORIGIN,
 };
 
 export const noDocumentMailingNotifier: DocumentMailingNotifier = {
-  origin: async () => 'http://localhost:3000',
+  origin: async () => ORIGIN,
 };
 
 export const PAUSE_MESSAGE = 'A fixture message to the user.';

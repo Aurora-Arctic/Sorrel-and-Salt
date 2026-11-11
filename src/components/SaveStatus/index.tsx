@@ -7,6 +7,7 @@ import Notice from '../Notice';
 import Spinner from '../Spinner';
 import type { SaveStatusProps } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // Where an autosaving form says how its saves go: inline beside the primary action, never a toast.
 // Only the conflict notice may go elsewhere (`conflictInto`), as it asks for a decision. Screen
@@ -63,7 +64,7 @@ const SaveStatus = ({
   if (next !== seen) setSeen(next);
 
   const retrying = next.failing && status === 'saving';
-  const classes = className ? `save-status ${className}` : 'save-status';
+  const classes = cx('save-status', className);
   const conflict = status === 'conflict' && (
     <Notice kind="warn" block inRegion={example} className="save-status__conflict">
       <span>{conflictMessage}</span>

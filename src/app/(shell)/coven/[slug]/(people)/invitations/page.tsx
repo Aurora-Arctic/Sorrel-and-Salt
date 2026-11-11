@@ -1,15 +1,13 @@
+import { covenPath } from '@/lib/coven-path';
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { notFound } from 'next/navigation';
-import PendingInvitations from '../../../../../../components/PendingInvitations';
-import { listHref, pagerHrefs } from '../../../../../../lib/list-href';
-import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
+import PendingInvitations from '@/components/PendingInvitations';
+import { listHref, pagerHrefs } from '@/lib/list-href';
+import { requireCovenMembership, requireSession } from '@/lib/request-session';
+import { covenAccessOf } from '@/lib/coven-access';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
-import {
-  countPendingWorkspaceInvitations,
-  listPendingWorkspaceInvitations,
-  rolePermits,
-} from '@/modules/coven';
+import { countPendingWorkspaceInvitations, listPendingWorkspaceInvitations } from '@/modules/coven';
 import type { CovenLayoutParams } from '../../types';
 import type { InvitationsPageProps } from './types';
 
@@ -25,7 +23,7 @@ export default async function InvitationsPage({
   const { slug } = await params;
   const query = await searchParams;
   const { workspace, membership } = await requireCovenMembership(slug);
-  if (!rolePermits(membership.role, { member: ['invite'] })) notFound();
+  if (!covenAccessOf(membership.role).canInvite) notFound();
   const session = await requireSession();
 
   const page = await readNumberedPage(
@@ -46,7 +44,7 @@ export default async function InvitationsPage({
         declinedAt,
       }))}
       position={page.position}
-      {...pagerHrefs(page.pageInfo, (cursor) => listHref(`/coven/${slug}/invitations`, cursor))}
+      {...pagerHrefs(page.pageInfo, (cursor) => listHref(covenPath(slug, 'invitations'), cursor))}
     />
   );
 }

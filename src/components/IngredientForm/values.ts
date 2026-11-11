@@ -1,6 +1,6 @@
+import { rawValidator } from '../../lib/typed-resolver';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
-import { zodResolver } from '@hookform/resolvers/zod';
 import type {
   FieldError,
   FieldErrors,
@@ -507,7 +507,7 @@ export function repeatedForm(
   return `"${text.trim()}" is already listed`;
 }
 
-export const PICK_ONLY_LISTS: readonly IngredientListName[] = [
+const PICK_ONLY_LISTS: readonly IngredientListName[] = [
   'celestialBodies',
   'zodiacSigns',
   'deities',
@@ -626,10 +626,10 @@ function resolverFor(
   schema: typeof LocalIngredientInput | typeof CompendiumIngredientInput,
   tier: 'coven' | 'compendium',
 ): Resolver<IngredientFormValues, unknown, IngredientFormInput> {
-  const validate = zodResolver(schema as typeof LocalIngredientInput, undefined, { raw: true });
+  const validate = rawValidator<IngredientFormValues, IngredientFormInput>(schema);
   const pickOnly = tier === 'compendium';
   return async (values, context, options) => {
-    const result = await validate(toInput(values), context, options as never);
+    const result = await validate(toInput(values), context, options);
     const raw = result.errors as Issues;
     const errors = placeIssues(raw, LIST_FIELDS);
     const forms: unknown[] = Array.isArray(raw.variants) ? raw.variants : [];

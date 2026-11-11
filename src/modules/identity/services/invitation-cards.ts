@@ -3,7 +3,6 @@ import { randomUUID } from 'node:crypto';
 import {
   findCardArrivalCount,
   findCardArrivalPage,
-  findCardAttemptCount,
   findCardAttemptPage,
   findCardBatchCount,
   findCardBatchPage,
@@ -22,7 +21,7 @@ import type {
   CardPosition,
   CardRow,
 } from '../../../db/repository';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
 import { batchName } from '../../../lib/invitation-cards/batch-name';
 import {
   CARDS_PER_SHEET,
@@ -30,31 +29,32 @@ import {
   MAX_SHEETS_PER_BATCH,
 } from '../../../lib/invitation-cards/limits';
 import { newCardToken } from '../../../lib/invitation-token';
+import { isNotFuture } from '../../../lib/pause-message';
+import { isCalendarDay } from '../../../lib/utc';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
 import { users } from '../schema/users';
 import { assertSiteAdmin } from './site-admin';
+import { trimmedOrNull, trimmedOrUndefined } from '../../../lib/text';
 import type { CardState, LiveCard, MintedCards } from '../types';
 
 // What a card admits is invitation-acceptance.ts's (claude-docs/design-decisions/auth.md, "An invitation card is a third shape of `invitations`").
-
-const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 // A blank text part is no filter, and a day is checked here: the database would refuse a malformed one with an error.
 function parsedBatchFilter(filter: CardBatchFilter): CardBatchFilter {
   const day = (value: string | undefined) => {
     if (!value) return undefined;
     if (
-      !DAY.test(value) ||
+      !isCalendarDay(value) ||
       Number.isNaN(Date.parse(value)) ||
       new Date(value).toISOString().slice(0, 10) !== value
     )
-      throw new ValidationError([{ path: ['day'], message: 'A day is written YYYY-MM-DD' }]);
+      throw fieldRefusal('day', 'A day is written YYYY-MM-DD');
     return value;
   };
   return {
-    batch: filter.batch?.trim() || undefined,
+    batch: trimmedOrUndefined(filter.batch),
     status: filter.status,
     mintedFrom: day(filter.mintedFrom),
     mintedTo: day(filter.mintedTo),
@@ -64,7 +64,7 @@ function parsedBatchFilter(filter: CardBatchFilter): CardBatchFilter {
 }
 
 function parsedArrivalFilter(filter: CardArrivalFilter): CardArrivalFilter {
-  return { query: filter.query?.trim() || undefined };
+  return { query: trimmedOrUndefined(filter.query) };
 }
 
 const REFUSAL = 'Only a site keeper may mint, list or revoke invitation cards';
@@ -89,10 +89,10 @@ export async function mintInvitationCards(
       message: `A batch is from 1 to ${MAX_SHEETS_PER_BATCH} sheets`,
     });
   }
-  if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
+  if (isNotFuture(expiresAt)) {
     issues.push({ path: ['expiresAt'], message: 'Choose an expiry date in the future' });
   }
-  const trimmedNote = note?.trim() || null;
+  const trimmedNote = trimmedOrNull(note);
   if (trimmedNote !== null && trimmedNote.length > MAX_NOTE_LENGTH) {
     issues.push({
       path: ['note'],
@@ -286,16 +286,4 @@ export async function listCardAttempts(
 ): Promise<PageEntry<CardAttemptRow>[]> {
   const admin = assertSiteAdmin(session, REFUSAL);
   return findCardAttemptPage(admin, parseInput(RowId, batchId), page);
-}
-
-/**
- * @throws {Forbidden} the session's role is not `admin`.
- */
-export async function countCardAttempts(
-  session: Session,
-  batchId: string,
-  start: Cursor | undefined,
-): Promise<PageCount> {
-  const admin = assertSiteAdmin(session, REFUSAL);
-  return findCardAttemptCount(admin, parseInput(RowId, batchId), start);
 }

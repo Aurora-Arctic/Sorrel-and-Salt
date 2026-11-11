@@ -9,9 +9,9 @@ import LocalTime from '../LocalTime';
 import ListFrame, { ListBody } from '../ListFrame';
 import { CardArrivalsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
-import { batchName } from './batches';
+import { batchName } from '../../lib/invitation-cards/batch-name';
 import { Mark } from '../UserList/marks';
-import UserLink from '../UserList/user-link';
+import { OpenModalLink } from '../Modal';
 import ArrivalsFilterForm from './arrivals-filter';
 import DownloadCsv from './download-csv';
 import { NO_ARRIVALS_FILTER } from './href';
@@ -26,9 +26,7 @@ const ArrivalsCsvDocument = graphql(`
   }
 `);
 
-export const readArrivalsCsv = async (
-  filter: ArrivalsFilter = NO_ARRIVALS_FILTER,
-): Promise<string> =>
+const readArrivalsCsv = async (filter: ArrivalsFilter = NO_ARRIVALS_FILTER): Promise<string> =>
   (await graphqlRequest(ArrivalsCsvDocument, { query: filter.query || undefined })).cardArrivalsCsv;
 
 function emptyText({ query }: ArrivalsFilter): string {
@@ -53,11 +51,9 @@ const AdminArrivals = ({
               heading: 'Name',
               cell: (arrival) =>
                 arrival.account ? (
-                  <UserLink
-                    href={arrival.account.openHref}
-                    heading={arrival.account.heading}
-                    name={arrival.accountName}
-                  />
+                  <OpenModalLink href={arrival.account.openHref} heading={arrival.account.heading}>
+                    {arrival.accountName}
+                  </OpenModalLink>
                 ) : (
                   arrival.accountName
                 ),

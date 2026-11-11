@@ -12,7 +12,7 @@ import {
 } from 'pdf-lib';
 import type { CardAssets } from '@/lib/invitation-cards/types';
 
-export const PUBLIC = path.join(process.cwd(), 'public/invitation-cards');
+const PUBLIC = path.join(process.cwd(), 'public/invitation-cards');
 export const read = (file: string) => new Uint8Array(readFileSync(path.join(PUBLIC, file)));
 export const assets: CardAssets = {
   salt: read('salt.png'),
@@ -35,7 +35,7 @@ export interface Box {
   bottom: number;
   top: number;
 }
-export type Matrix = [number, number, number, number, number, number];
+type Matrix = [number, number, number, number, number, number];
 
 export type Vector = [number, number];
 
@@ -62,7 +62,7 @@ export interface Drawn {
   textInks: number[][];
 }
 
-export function multiply([a, b, c, d, e, f]: Matrix, [A, B, C, D, E, F]: Matrix): Matrix {
+function multiply([a, b, c, d, e, f]: Matrix, [A, B, C, D, E, F]: Matrix): Matrix {
   return [
     a * A + b * C,
     a * B + b * D,
@@ -72,7 +72,7 @@ export function multiply([a, b, c, d, e, f]: Matrix, [A, B, C, D, E, F]: Matrix)
     e * B + f * D + F,
   ];
 }
-export const apply = ([a, b, c, d, e, f]: Matrix, x: number, y: number): [number, number] => [
+const apply = ([a, b, c, d, e, f]: Matrix, x: number, y: number): [number, number] => [
   a * x + c * y + e,
   b * x + d * y + f,
 ];
@@ -83,11 +83,11 @@ export const boxOf = (points: [number, number][]): Box => ({
   top: Math.max(...points.map((p) => p[1])),
 });
 
-export function tokens(source: string): string[] {
+function tokens(source: string): string[] {
   return source.match(/<[0-9a-fA-F]*>|\/[^\s/[\]<>()]+|\[|\]|[^\s/[\]<>()]+/g) ?? [];
 }
 
-export function contents(doc: PDFDocument, pageIndex: number): string {
+function contents(doc: PDFDocument, pageIndex: number): string {
   const page = doc.getPage(pageIndex);
   const value = page.node.Contents();
   const refs = value instanceof PDFArray ? value.asArray() : [value];

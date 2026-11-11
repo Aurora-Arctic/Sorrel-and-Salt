@@ -15,7 +15,7 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { identityOf } from '@/db/seed/coven-content';
 import { asTouch } from '../../support/db/touch-row';
 import { citationText } from '@/lib/citation';
-import type { RenderableEntryFile } from '@/db/seed/compendium/render-entry';
+import type { RenderableEntryFile } from '../../support/seed/render-entry';
 import { TESTWORT, fileOf, loadedOf, parsed } from './compendium/files-fixture';
 import { useTestDatabase } from '../../support/db/database';
 

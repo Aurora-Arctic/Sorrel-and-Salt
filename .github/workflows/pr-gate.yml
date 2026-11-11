@@ -193,7 +193,8 @@ jobs:
               - 'src/db/migrations/*.sql'
             # `tests/**`, `.storybook/main.ts` and the configs are not under
             # `src/**`, and a test-only PR is exactly what this job runs.
-            # tests/e2e/ is Playwright's and nothing Vitest runs imports it.
+            # Playwright's specs are left out, but not its helpers or config, which
+            # unit tests import (tests/e2e-database.test.ts, tests/playwright-config.test.ts).
             # The db image's inputs too, so a Postgres bump is tested on its own PR.
             vitest:
               - *shared
@@ -205,9 +206,10 @@ jobs:
               - '.github/scripts/lib/**'
               - 'src/**'
               - 'tests/**'
-              - '!tests/e2e/**'
+              - '!tests/e2e/**/*.spec.ts'
               - '.storybook/main.ts'
               - 'vitest.config.mts'
+              - 'playwright.config.ts'
               - 'codegen.ts'
               - 'package.json'
               - 'package-lock.json'

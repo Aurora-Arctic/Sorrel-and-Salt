@@ -1,16 +1,16 @@
 import { describe, expect, it, vi, afterAll, beforeAll } from 'vitest';
 import { WARM_IMPORT_TIMEOUT } from '../../../support/warm-import';
+import { sessionStateFromHeaders } from '../../../support/request-session';
 
 const ENDPOINT = 'http://localhost/api/graphql';
 
-vi.mock('@/lib/request-session', () => ({
-  sessionStateFromHeaders: async () => ({
-    session: null,
-    emailVerified: false,
-    termsAgreed: false,
-    sessionFresh: false,
-  }),
-}));
+const SIGNED_OUT = {
+  session: null,
+  emailVerified: false,
+  termsAgreed: false,
+  sessionFresh: false,
+};
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 // The mocked schema nests without end, so only the limits can refuse a query.
 vi.mock('@/graphql/schema', async () => {
@@ -44,6 +44,7 @@ let POST: (typeof import('@/app/api/graphql/route'))['POST'];
 
 beforeAll(async () => {
   vi.stubEnv('NODE_ENV', 'production');
+  sessionStateFromHeaders.mockResolvedValue(SIGNED_OUT);
   ({ POST } = await import('@/app/api/graphql/route'));
 }, WARM_IMPORT_TIMEOUT);
 

@@ -150,7 +150,7 @@ export function refuseAuth(message = 'The sign-in service refused the request'):
  * What every story starts with: a signed-out session, and a plain refusal for any other request,
  * so a story that needs an answer fails with its name in the console, not as a 404.
  */
-export const defaultHandlers: RequestHandler[] = [
+const defaultHandlers: RequestHandler[] = [
   http.get(apiPath('/api/auth/get-session'), () => HttpResponse.json(null)),
   http.all(apiPath('/api/*'), async ({ request }) => {
     let what = new URL(request.url).pathname;

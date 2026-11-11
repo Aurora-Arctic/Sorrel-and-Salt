@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { resetPasswordMessage } from '@/emails/reset-password';
+import { ORIGIN } from '../support/constants';
 
-const LINK = 'http://localhost:8000/api/auth/reset-password/token123?callbackURL=%2Freset-password';
+const LINK = `${ORIGIN}/api/auth/reset-password/token123?callbackURL=%2Freset-password`;
 
 describe('resetPasswordMessage', () => {
   it('addresses the account and carries the reset link, once in the text and twice in the HTML', async () => {

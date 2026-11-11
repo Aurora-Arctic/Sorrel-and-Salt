@@ -2,6 +2,7 @@
 // `withAudit`'s `AuditWriter` is the sole write mechanism. Import this file, never a sibling.
 
 export { rotateInvitationToken, withAudit } from './write';
+export { hashToken } from './tokens';
 export {
   findMany,
   findManyByIds,
@@ -111,7 +112,7 @@ export {
   findWorkspaceSeat,
 } from './memberships';
 export { findDemoWorkspace } from './workspaces';
-export { findWorkspaceHoldingSlug, findWorkspaceSlugs } from './workspace-slugs';
+export { findWorkspaceHoldingSlug } from './workspace-slugs';
 export {
   findCoMemberNamesIncludingSoftDeleted,
   findHoldsPasskey,
@@ -120,16 +121,17 @@ export {
   findPrivilegeChangeCount,
   findPrivilegeChangePage,
   findProvidersOfUsers,
+  findPasskeyHoldersAmong,
   findUserByEmail,
   findUserCount,
   findUserPage,
 } from './users';
+export { STAND_IN_USER_IDS } from './user-filters';
 export {
   findCardArrivalCount,
   findCardArrivalPage,
   findCardBatchCount,
   findCardBatchPage,
-  findCardAttemptCount,
   findCardAttemptPage,
   findCardBatchTotals,
   findCardCount,
@@ -269,7 +271,6 @@ export type {
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientRow,
-  InvitableRole,
   InvitableSiteRole,
   InvitationRow,
   InvitedCoven,
@@ -302,9 +303,4 @@ export type {
   VocabularySuggestion,
   WorkspaceInvitationValues,
 } from './types';
-export type {
-  DocumentMailingItem,
-  DocumentMailingRow,
-  PendingDocumentVersion,
-  WorkspaceSlugRow,
-} from './types';
+export type { DocumentMailingItem, DocumentMailingRow, PendingDocumentVersion } from './types';

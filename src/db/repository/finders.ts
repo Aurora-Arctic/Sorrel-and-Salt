@@ -4,8 +4,8 @@ import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { notSoftDeleted, readableInTiers, scopedTo } from './predicates';
-import { existsIn, pageBounds, selectFrom } from './select';
-import { readableSpells } from './spells';
+import { pageBounds, selectFrom, whenIds } from './select';
+import { inReadableSpell, readableSpells } from './spells';
 import type {
   Identified,
   Keyset,
@@ -53,8 +53,7 @@ export function findOneBySlug<
 export async function findManyByIds<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
 >(table: TTable, ids: readonly string[]): Promise<ReadRow<TTable>[]> {
-  if (ids.length === 0) return [];
-  return findMany(table, inArray(table.id, [...ids]));
+  return whenIds(ids, () => findMany(table, inArray(table.id, [...ids])));
 }
 
 export function findManyInWorkspace<TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped>(
@@ -204,7 +203,7 @@ function readableSpellRows(
 ): SQL | undefined {
   if (table === spells) return readableSpells(membership);
   const child = table as SpellScoped;
-  return existsIn(spells, and(eq(spells.id, child.spellId), readableSpells(membership)));
+  return inReadableSpell(membership, child.spellId);
 }
 
 /**

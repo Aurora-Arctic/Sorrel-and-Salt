@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
 import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
@@ -7,48 +7,37 @@ import { TOO_MANY_ATTEMPTS, WRONG_CREDENTIALS } from '@/lib/auth-messages';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { installHistory, setQuery } from './search-params';
 import { PASSWORD } from '../../support/constants';
+import {
+  assign,
+  field,
+  getSession,
+  press,
+  resetSignInHarness,
+  signInEmail,
+  signUpEmail,
+  typeInField,
+} from '../../support/sign-in-harness';
+import { expectBefore } from '../../support/interact';
 
 // The password sign-in form (@story-70). Better Auth's client is mocked at the two calls it makes, so each test sets the
 // answer the server gives; tests/db/password-sign-in.test.ts proves the server gives it.
-const signInEmail = vi.fn();
-const signUpEmail = vi.fn();
-const getSession = vi.fn();
-vi.mock('@/lib/auth-client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/auth-client')>()),
-  signIn: { social: vi.fn(), email: (...args: unknown[]) => signInEmail(...args) },
-  signUp: { email: (...args: unknown[]) => signUpEmail(...args) },
-  getSession: (...args: unknown[]) => getSession(...args),
-}));
-
-vi.mock('next/navigation', async () => ({
-  useRouter: () => ({}),
-  useSearchParams: (await import('./search-params')).useSearchParams,
-}));
-
-const assign = vi.fn();
-
-const press = (element: Element) =>
-  act(async () => {
-    fireEvent.click(element);
-  });
-
-// A required field's label ends in its aria-hidden mark, so the label is matched from its start.
-const field = (label: string) =>
-  screen.getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
-
-const type = (label: string, value: string) =>
-  fireEvent.change(field(label), { target: { value } });
+vi.mock('@/lib/auth-client', async () =>
+  (await import('../../support/sign-in-harness')).authClientMock(),
+);
+vi.mock('next/navigation', async () =>
+  (await import('../../support/sign-in-harness')).navigationMock(),
+);
 
 const submit = (name: string) => screen.getByRole('button', { name });
 
 function fillSignIn(email = 'someone@password-form.test') {
-  type('Email Address', email);
-  type('Password', PASSWORD);
+  typeInField('Email Address', email);
+  typeInField('Password', PASSWORD);
 }
 
 async function openSignUp() {
   await press(screen.getByRole('button', { name: 'Create an Account' }));
-  type('Name', 'Testwort Hedge');
+  typeInField('Name', 'Testwort Hedge');
   fillSignIn();
 }
 
@@ -66,22 +55,19 @@ describe('SignInPanel, email and password', () => {
     vi.restoreAllMocks();
     cleanup();
     setQuery('');
-    signInEmail.mockReset();
-    signUpEmail.mockReset();
-    getSession.mockReset();
-    assign.mockReset();
+    resetSignInHarness();
     document.cookie = `${LAST_USED_PROVIDER_COOKIE}=; max-age=0; path=/`;
   });
 
   it('tidies the address when the field is left: ends trimmed, lower-cased as it is saved', () => {
-    type('Email Address', '  Name@EXAMPLE.COM  ');
+    typeInField('Email Address', '  Name@EXAMPLE.COM  ');
     fireEvent.blur(field('Email Address'));
 
     expect(field('Email Address')).toHaveValue('name@example.com');
   });
 
   it('flags a malformed address when the field is left, linked to the field', () => {
-    type('Email Address', 'name@');
+    typeInField('Email Address', 'name@');
     fireEvent.blur(field('Email Address'));
 
     expect(field('Email Address')).toHaveAttribute('aria-invalid', 'true');
@@ -91,8 +77,8 @@ describe('SignInPanel, email and password', () => {
   });
 
   it('refuses a malformed address with the shared message, without asking the server', async () => {
-    type('Email Address', 'name@');
-    type('Password', PASSWORD);
+    typeInField('Email Address', 'name@');
+    typeInField('Password', PASSWORD);
 
     await press(submit('Sign In'));
 
@@ -102,16 +88,16 @@ describe('SignInPanel, email and password', () => {
 
   it('keeps Sign In disabled until both fields hold something', () => {
     expect(submit('Sign In')).toBeDisabled();
-    type('Email Address', 'someone@password-form.test');
+    typeInField('Email Address', 'someone@password-form.test');
     expect(submit('Sign In')).toBeDisabled();
-    type('Password', PASSWORD);
+    typeInField('Password', PASSWORD);
     expect(submit('Sign In')).toBeEnabled();
   });
 
   it('signs in with the trimmed address and the password as typed, then loads the sign-in page carrying next', async () => {
     signInEmail.mockResolvedValue({ data: {}, error: null });
     fillSignIn('  someone@password-form.test ');
-    type('Password', ` ${PASSWORD} `);
+    typeInField('Password', ` ${PASSWORD} `);
 
     await press(submit('Sign In'));
 
@@ -162,10 +148,10 @@ describe('SignInPanel, email and password', () => {
     await press(screen.getByRole('button', { name: 'Create an Account' }));
 
     expect(field('Password')).toHaveAttribute('autocomplete', 'new-password');
-    type('Email Address', 'someone@password-form.test');
-    type('Password', PASSWORD);
+    typeInField('Email Address', 'someone@password-form.test');
+    typeInField('Password', PASSWORD);
     expect(submit('Create Account')).toBeDisabled();
-    type('Name', 'Testwort Hedge');
+    typeInField('Name', 'Testwort Hedge');
     expect(submit('Create Account')).toBeEnabled();
   });
 
@@ -294,15 +280,13 @@ describe('SignInPanel, email and password', () => {
     const back = screen.getByRole('button', { name: 'Back to Sign-In Options' });
     const headings = screen.getAllByRole('heading', { name: /Sign In with Email/ });
     expect(headings).toHaveLength(1);
-    expect(
-      back.compareDocumentPosition(headings[0]) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(back, headings[0]);
   });
 
   it('holds the buttons and the email form as two views, each its own history entry, and keeps the typed address between them', async () => {
     expect(screen.getByRole('heading', { name: /Sign In with Email/ })).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'Continue with Google' })).toBeNull();
-    type('Email Address', 'someone@password-form.test');
+    typeInField('Email Address', 'someone@password-form.test');
 
     await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
     expect(history.back).toHaveBeenCalledTimes(1);
@@ -318,7 +302,7 @@ describe('SignInPanel, email and password', () => {
   it('keeps a switch to creating an account made in the form when Back returns to the buttons', async () => {
     await press(screen.getByRole('button', { name: 'Create an Account' }));
 
-    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
+    await press(screen.getByRole('button', { name: 'Back to Create Account Options' }));
 
     expect(screen.getByRole('heading', { level: 1, name: 'Create an Account' })).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'Sign In with a Passkey' })).toBeNull();
@@ -347,7 +331,7 @@ describe('SignInPanel, email and password', () => {
   it('keeps the email entry Back undoes when the mode is written, and carries the mode to the buttons', async () => {
     await press(screen.getByRole('button', { name: 'Create an Account' }));
 
-    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
+    await press(screen.getByRole('button', { name: 'Back to Create Account Options' }));
 
     // Back still goes back through history, so the entry kept its mark through the rewrite.
     expect(history.back).toHaveBeenCalledTimes(1);
@@ -378,7 +362,7 @@ describe('SignInPanel, email and password', () => {
       screen.getByRole('heading', { level: 1, name: 'Create an Account with Email' }),
     ).toBeInTheDocument();
 
-    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
+    await press(screen.getByRole('button', { name: 'Back to Create Account Options' }));
 
     expect(history.back).not.toHaveBeenCalled();
     expect(lastAddress().get('mode')).toBe('sign-up');
@@ -389,7 +373,7 @@ describe('SignInPanel, email and password', () => {
   it('after a reload, goes back through history when the entry beneath was in the same mode', async () => {
     reloadEmailEntry('sign-up', 'sign-up');
 
-    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
+    await press(screen.getByRole('button', { name: 'Back to Create Account Options' }));
 
     expect(history.back).toHaveBeenCalledTimes(1);
   });

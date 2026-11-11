@@ -1,10 +1,16 @@
 import 'server-only';
-import { findProvidersOfUsers, findUserCount, findUserPage } from '../../../db/repository';
+import {
+  findPasskeyHoldersAmong,
+  findProvidersOfUsers,
+  findUserCount,
+  findUserPage,
+} from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import { isSiteAdmin, refuseBatch } from './admin-changes';
 import { assertSiteAdmin } from './site-admin';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
+import { trimmedOrUndefined } from '../../../lib/text';
 import type { UserFilter, UserRow } from '../types';
 
 // A read, so the mutation sweep does not reach it: the check is here, by direct call, and the page confers no workspace access (claude-docs/auth/admin-users.md, "The user list").
@@ -36,7 +42,7 @@ export async function countUsers(
 }
 
 function trimmedFilter(filter: UserFilter): UserFilter {
-  return { ...filter, query: filter.query?.trim() || undefined };
+  return { ...filter, query: trimmedOrUndefined(filter.query) };
 }
 
 /** A DataLoader's batch. A site admin's alone, their own row included: every slot of anyone else's is a `Forbidden`. */
@@ -54,4 +60,16 @@ export async function providersOf(
       .map((row) => row.providerId)
       .sort(),
   );
+}
+
+/** A DataLoader's batch: whether each user holds at least one passkey. A site admin's alone, as `providersOf` is. */
+export async function holdsPasskey(
+  session: Session,
+  userIds: readonly string[],
+): Promise<(boolean | Forbidden)[]> {
+  if (!isSiteAdmin(session)) return refuseBatch(userIds, REFUSAL);
+  const holders = new Set(
+    await findPasskeyHoldersAmong(assertSiteAdmin(session, REFUSAL), [...new Set(userIds)]),
+  );
+  return userIds.map((id) => holders.has(id));
 }

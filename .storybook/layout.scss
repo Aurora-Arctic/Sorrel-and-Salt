@@ -3,6 +3,8 @@
 
 @use '../src/scss/layout' as *;
 
+@include box-sizing-reset;
+
 body:where(.workshop-app) {
   @include layout-base;
 }

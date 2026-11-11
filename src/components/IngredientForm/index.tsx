@@ -63,16 +63,15 @@ import {
   useFormHistory,
   useSettledWhilePressed,
 } from '../Field';
-import { ListField, MultiSelectField, ToggleField } from './fields';
-import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from './options';
+import CorrespondenceFields from './correspondence-fields';
+import { ToggleField } from './fields';
+import { NOMENCLATURE_OPTIONS } from './options';
 import {
   LookupListField,
   useCommonNameSuggestions,
   useCompendiumSubstitutes,
   useDeitySuggestions,
-  useCelestialBodySuggestions,
   useSubstituteSuggestions,
-  useZodiacSuggestions,
 } from './suggestions';
 import type {
   AfterSave,
@@ -992,44 +991,12 @@ const IngredientForm = ({
                     summary={<SectionSummary section="correspondences" />}
                     fold={fold('correspondences')}
                   >
-                    {/* Several at once, in the order chosen; none chosen is
-            the answer "none", so there is no None to choose. */}
-                    <MultiSelectField
-                      name="elements"
-                      label="Elements"
-                      placeholder="Add an element"
-                      options={ELEMENT_OPTIONS}
-                    />
-                    {/* Each list but the colours suggests, from the curated vocabularies where
-            there are some and from this coven and the compendium otherwise
-            (claude-docs/components/ingredient-form.md, "Suggestion lists"). */}
-                    <LookupListField
+                    <CorrespondenceFields
                       workspaceId={workspaceId}
-                      useSuggestions={useCelestialBodySuggestions}
-                      name="celestialBodies"
-                      ordered
                       pickOnly={compendium}
-                      legend="Celestial Bodies"
-                      entry="Celestial Body"
-                      placeholder="Add a body"
-                    />
-                    <LookupListField
-                      workspaceId={workspaceId}
-                      useSuggestions={useZodiacSuggestions}
-                      name="zodiacSigns"
-                      ordered
-                      pickOnly={compendium}
-                      legend="Zodiac Signs"
-                      entry="Zodiac Sign"
-                      placeholder="Add a sign"
-                    />
-                    <ListField
-                      name="colors"
-                      ordered
-                      legend="Colours"
-                      entry="Colour"
-                      hint="The colours it corresponds to in a working, not the colour it is."
-                      placeholder="Add a colour"
+                      hints={{
+                        colors: 'The colours it corresponds to in a working, not the colour it is.',
+                      }}
                     />
                     <LookupListField
                       workspaceId={workspaceId}

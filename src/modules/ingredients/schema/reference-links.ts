@@ -8,7 +8,7 @@ import { ingredients } from './ingredients';
 import { ingredientVariants } from './ingredient-variants';
 import { NAME_BASES } from './ingredient-enums';
 import { references } from './references';
-import { idColumn } from '../../../db/schema-parts';
+import { idColumn, notBlankIfSet } from '../../../db/schema-parts';
 
 // Which row a reference supports, one per citation: a nullable key per sourced table under one `num_nonnulls` CHECK. Full `auditColumns`:
 // a link is content, and unlinking leaves a tombstone (DESIGN.md §5, "References"). Adding a sourced table:
@@ -69,6 +69,6 @@ export const referenceLinks = pgTable(
       'reference_links_one_row',
       sql.raw(`num_nonnulls(${SOURCED_KEYS.map((key) => SOURCED[key].column).join(', ')}) = 1`),
     ),
-    check('reference_links_locator_not_blank', sql`locator is null or btrim(locator) <> ''`),
+    check('reference_links_locator_not_blank', notBlankIfSet('locator')),
   ],
 );

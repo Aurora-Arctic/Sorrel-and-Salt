@@ -1,17 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
+import { getSession } from '../support/request-session';
 
 // The plus's covens beside an entry page's pencil. The
 // session, the shell's covens and the held read are mocked: what they return is their own tests'.
 // Here: which covens the plus offers, which it marks held, and which it adds to by default.
 
-const getSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+vi.mock('@/lib/request-session', () => import('../support/request-session'));
 const viewerIfSignedIn = vi.fn();
 const covenRolesIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
 const covensHoldingEntry = vi.fn();
-vi.mock('@/modules/ingredients', () => ({ covensHoldingEntry }));
+vi.mock('@/modules/ingredients', () => ({
+  covensHoldingEntry,
+  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
+}));
 
 const { covensHolding, plusCovensOf } = await import('@/app/plus-covens');
 

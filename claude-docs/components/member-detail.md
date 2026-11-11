@@ -4,7 +4,7 @@
 
 ## How it opens
 
-The members page reads `?member=<id>` and finds that member among the rows it has already read, so opening reads nothing more. Each row's name is a link to its own address with the cursor kept (`MemberLink`, [`member-list.md`](member-list.md), "Contracts"), and the page is a `RouteModalProvider`, so a press opens the modal at once with its heading (`member-heading.tsx`: eyebrow Member, the name, and for a steward the address) and the body follows. `member-dialog.tsx` is the client edge, a `RouteModal` closing back to the list at the same cursor.
+The members page reads `?member=<id>` and finds that member among the rows it has already read, so opening reads nothing more. Each row's name is a link to its own address with the cursor kept (`OpenModalLink`, [`member-list.md`](member-list.md), "Contracts"), and the page is a `RouteModalProvider`, so a press opens the modal at once with its heading (`member-heading.tsx`: eyebrow Member, the name, and for a steward the address) and the body follows. `member-dialog.tsx` is the client edge, a `RouteModal` closing back to the list at the same cursor.
 
 An id not among this page's rows opens nothing: an error notice above the list says no member on this page has that address.
 
@@ -13,7 +13,7 @@ An id not among this page's rows opens nothing: an error notice above the list s
 - **Membership comes first**: a `<dl>` of Role (bold for a steward), Joined, Invited By (only when someone did) and Updated. The address is the heading's, so it is not repeated.
 - **Change Role sits beside Role**: the member list's `RoleControl` with `inModal`. It asks over the modal's body, and a refusal floats under it in the click feedback's callout, so nothing moves. It is keyed by the role, so the page's read after a change mounts a fresh control offering the others.
 - **A practitioner or observer sees the facts alone**, with no actions.
-- **Remove is last**, plain (`btn btn--quiet`), the red kept for its confirm. It is the member list's `RemoveControl` with `inModal`; success closes the modal through `onRemoved`, a refusal is a notice in the modal. Nobody removes themself: leaving is the coven page's.
+- **Remove is last**, plain (`btn btn--quiet`), the red kept for its confirm. It is the member list's `RemoveMemberControl` with `inModal`; success closes the modal through `onRemoved`, a refusal is a notice in the modal. Nobody removes themself: leaving is the coven page's.
 
 ## Coven Access
 

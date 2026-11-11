@@ -1,13 +1,13 @@
 import type { ReactElement } from 'react';
+import Day from '../Day';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { emptyList } from '../../lib/text';
-import { workspaceRoleLabel } from '../UserDetail/roles';
 import RoleTip from '../RoleTip';
 import { Mark } from '../UserList/marks';
+import OpenModalLink from '../Modal/open-modal-link';
 import UntilMark from '../UserList/until-mark';
-import MemberLink from './member-link';
-import { WORKSPACE_ROLE_ACCESS } from './role-access';
+import { WORKSPACE_ROLE_ACCESS, workspaceRoleLabel } from './roles';
 import type { MemberListEntry, MemberListProps } from './types';
 import './index.scss';
 
@@ -27,7 +27,9 @@ const columns = (
     cell: (member) => (
       <span className="member-list__name">
         {member.openHref && member.heading ? (
-          <MemberLink href={member.openHref} heading={member.heading} name={member.name} />
+          <OpenModalLink href={member.openHref} heading={member.heading}>
+            {member.name}
+          </OpenModalLink>
         ) : (
           member.name
         )}
@@ -61,11 +63,7 @@ const columns = (
   {
     heading: 'Joined',
     className: 'member-list__fact',
-    cell: (member) => (
-      <time dateTime={member.joinedAt.toISOString()}>
-        {member.joinedAt.toISOString().slice(0, 10)}
-      </time>
-    ),
+    cell: (member) => <Day at={member.joinedAt} />,
   },
   {
     heading: 'Invited By',

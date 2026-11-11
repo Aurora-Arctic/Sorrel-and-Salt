@@ -54,3 +54,19 @@ export async function latestMessageTo(
 
 /** The address-verification link in a mailed message. */
 export const VERIFY_LINK = /https?:\/\/[^\s\])>"]+\/verify-email\?[^\s\])>"]+/;
+
+/** The invitation's path from the mailed link: the build's origin is its fallback, not this server. */
+export async function mailedInvitePath(to: string): Promise<string> {
+  const message = await latestMessageTo(to);
+  const link = message.text.match(/https?:\/\/\S+\/invite\/[A-Za-z0-9_-]+/)?.[0];
+  if (!link) throw new Error(`no invitation link in the mail to ${to}: ${message.text}`);
+  return new URL(link).pathname;
+}
+
+/** How many messages to `address` Mailpit holds now, with no wait: "nothing was mailed" is read here. */
+export async function countMessagesTo(address: string): Promise<number> {
+  const search = mailpitUrl('/api/v1/search');
+  search.searchParams.set('query', `to:"${address}"`);
+  const { messages } = await get<{ messages: unknown[] }>(search);
+  return messages.length;
+}

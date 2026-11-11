@@ -1,21 +1,21 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { requireCovenMembership } from '../../../support/request-session';
+import { router } from '../../../support/next-navigation';
 
 // The `/coven/[slug]` layout runs the coven guard on the slug in its own URL segment and on nothing else.
 // The guard is mocked (tests/lib/request-session.test.ts's and the service's), to prove the layout awaits it before rendering anything.
 
-const requireCovenMembership = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireCovenMembership }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 // The switcher's list is the shell's cached lookup, given here.
 const viewerOf = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerOf }));
 // CovenNav marks the page you are on from the address, which Next reads from
 // the App Router's state; a test mounts no router, so the address is given.
 const pathname = vi.fn<() => string>();
-const push = vi.fn();
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
   usePathname: () => pathname(),
-  useRouter: () => ({ push }),
 }));
 
 const { default: CovenLayout, generateMetadata } =
@@ -31,7 +31,6 @@ const params = (slug: string) => Promise.resolve({ slug });
 
 beforeEach(() => {
   requireCovenMembership.mockReset();
-  push.mockClear();
   pathname.mockReturnValue('/coven/fixture-coven');
   viewerOf.mockResolvedValue({
     viewer: { name: 'Fixture Owner', canCurate: false, canCreate: true, verified: true },
@@ -78,7 +77,9 @@ describe('the /coven/[slug] layout', () => {
     fireEvent.click(screen.getByRole('combobox', { name: 'Coven' }));
     fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
 
-    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients/some-id');
+    expect(router.push).toHaveBeenCalledExactlyOnceWith(
+      '/coven/testwort-circle/ingredients/some-id',
+    );
   });
 
   describe('the demo notice', () => {
@@ -134,7 +135,7 @@ describe('the /coven/[slug] layout', () => {
 
     expect(requireCovenMembership).toHaveBeenCalledExactlyOnceWith('fixture-coven');
     expect(metadata.title).toEqual({
-      template: '%s | Fixture Coven | Sorrel & Salt',
+      template: '%s | Fixture Coven | Sorrel and Salt',
       default: 'Fixture Coven',
     });
   });

@@ -8,6 +8,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
+import { formatFailures, stripAnsi } from './lib/failure-list.mjs';
+import { setOutput } from './lib/github-output.mjs';
 import { buildSlowestFilesSection } from './lib/slowest-files.mjs';
 
 const RESULTS_PATH = process.env.VITEST_RESULTS || '/app/vitest-results.json';
@@ -19,16 +21,10 @@ const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage/coverage-summary.json';
 // The merged run's log: Vitest reports a missed threshold only there.
 const LOG_PATH = process.env.VITEST_LOG || '/app/output.log';
 const REPO_ROOT = '/app';
-const MAX_DETAILS = 15;
 // Set by the merge job: the run step found a part with no blob, and whether
 // every part job passed.
 const BLOBS_MISSING = process.env.VITEST_BLOBS_MISSING === 'true';
 const PARTS_PASSED = process.env.VITEST_PARTS_PASSED === 'true';
-
-function setOutput(name, value) {
-  const delim = `ghadelim_${Math.random().toString(36).slice(2)}`;
-  fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}<<${delim}\n${value}\n${delim}\n`);
-}
 
 // Vitest crashed before writing its results; the part's row says so and the
 // comment still posts.
@@ -83,19 +79,14 @@ for (const testResult of data.testResults ?? []) {
     failures.push({
       file,
       title: '(outside any test)',
-      message: testResult.message.split('\n')[0],
+      message: stripAnsi(testResult.message).split('\n')[0],
     });
   }
   for (const assertion of testResult.assertionResults ?? []) {
     if (assertion.status !== 'failed') continue;
-    const message = (assertion.failureMessages?.[0] ?? '').split('\n')[0];
+    const message = stripAnsi(assertion.failureMessages?.[0] ?? '').split('\n')[0];
     failures.push({ file, title: assertion.fullName, message });
   }
-}
-
-function stripAnsi(str) {
-  // eslint-disable-next-line no-control-regex
-  return str.replace(/\x1b\[[0-9;]*m/g, '');
 }
 
 // Each missed threshold, as Vitest's coverage provider words it.
@@ -120,20 +111,7 @@ const unexplained =
     : '';
 const summary = `${testSummary}${PART ? runDuration() : ''}${overBudget}${unexplained}`;
 
-let details = '';
-if (failures.length > 0) {
-  const lines = ['<details><summary>Failing tests</summary>', ''];
-  for (const { file, title, message } of failures.slice(0, MAX_DETAILS)) {
-    lines.push(`- \`${file}\` › ${title} — ${message}`);
-  }
-  if (failures.length > MAX_DETAILS) {
-    lines.push('');
-    lines.push(`*…and ${failures.length - MAX_DETAILS} more — see full output below.*`);
-  }
-  lines.push('');
-  lines.push('</details>');
-  details = lines.join('\n');
-}
+const details = formatFailures(failures, { heading: 'Failing tests' });
 
 setOutput('summary', summary);
 setOutput('details', details);

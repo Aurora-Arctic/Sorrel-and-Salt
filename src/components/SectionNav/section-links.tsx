@@ -1,6 +1,7 @@
 'use client';
 
 import { PendingLink } from '../../lib/navigation';
+import { TABLET_BAND, useMediaQuery } from '../../lib/use-media-query';
 import { usePathname } from 'next/navigation';
 import {
   type ReactElement,
@@ -9,8 +10,8 @@ import {
   useId,
   useLayoutEffect,
   useRef,
-  useState,
   useSyncExternalStore,
+  useState,
 } from 'react';
 import { useDismiss } from '../../lib/use-dismiss';
 import { isAtPath } from '../../lib/at-path';
@@ -25,19 +26,6 @@ import type { SectionNavItem, SectionNavProps } from './types';
 // How many sections stay in view on a phone, and what the server and first client render show; the stylesheet's
 // `--extra` class hides the rest, so the number lives here once.
 const VISIBLE = 4;
-
-// Wider than the phone (`$shell-phone-width`, _variables.scss) the tabs that fit are measured,
-// not fixed.
-const TABLET_BAND = '(min-width: 40.01rem)';
-const subscribeToBand = (notify: () => void): (() => void) => {
-  if (typeof window.matchMedia !== 'function') return () => undefined;
-  const query = window.matchMedia(TABLET_BAND);
-  query.addEventListener('change', notify);
-  return () => query.removeEventListener('change', notify);
-};
-const inTabletBand = (): boolean =>
-  typeof window.matchMedia === 'function' && window.matchMedia(TABLET_BAND).matches;
-const inTabletBandNever = (): boolean => false;
 
 const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
@@ -105,7 +93,7 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
   const open = openAt === pathname;
   const keyboard = useSyncExternalStore(subscribeToKeyboard, keyboardIsUp, keyboardIsNever);
 
-  const tablet = useSyncExternalStore(subscribeToBand, inTabletBand, inTabletBandNever);
+  const tablet = useMediaQuery(TABLET_BAND);
   const [fit, setFit] = useState<number | null>(null);
   // Each time the band is entered, measure afresh: the count is reset while rendering, as React
   // asks of state derived from a prop.

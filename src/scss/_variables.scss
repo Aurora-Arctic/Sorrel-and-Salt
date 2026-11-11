@@ -483,6 +483,12 @@ $fill-highlight-field: color-mix(in srgb, $accent 12%, $surface-card);
 // So one line reads on the page and on a card alike.
 $hairline: color-mix(in srgb, $text-muted 45%, transparent);
 
+// The one hairline border: every 1px line in the hairline colour is written as this.
+$hairline-border: 1px solid $hairline;
+
+// The same line in the muted text colour, for an edge that must read stronger than the hairline.
+$muted-border: 1px solid $text-muted;
+
 $edge-highlight: color-mix(in srgb, $accent 45%, $hairline);
 
 // One number for both themes, shared by the `focus-ring` mixin and the rings that set their own colour; each clears 3:1 where it
@@ -523,8 +529,10 @@ $stock-out-ink: badge-token('out-of-stock', 'fg');
 // the named families behind them do not actually rescue a render outside the
 // root layout — claude-docs/styling.md, "Known issue". Plain variables, so a
 // component can `@use` this file without _typography.scss's global rules.
-$font-body: var(--font-body), 'Lexend', Arial, Helvetica, sans-serif;
-$font-heading: var(--font-display), 'Cormorant Unicase', Georgia, 'Times New Roman', serif;
+$font-body: var(--font-body), 'Lexend', Verdana, Tahoma, 'Segoe UI', sans-serif;
+$font-heading:
+  var(--font-display), 'Cormorant Unicase', Garamond, 'Palatino Linotype', Palatino, 'Book Antiqua',
+  Georgia, serif;
 
 // No webfont: incidental inline code, and every platform ships a good monospace.
 $font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
@@ -542,6 +550,15 @@ $type-sizes: (
   // role below overline, since Lexend's "Compendium" is wider than a fifth of that at 0.75rem.
   'tab': 0.6875rem,
 );
+
+// The tracking of running text (paragraphs, links, definitions) and of the pull-quote beside it.
+$body-tracking: 0.02em;
+
+// The line height of a document's pull-quote and lede: looser than a heading, tighter than a paragraph.
+$document-line-height: 1.5;
+
+// The pull-quote's opening mark, a decorative size off the type scale: this many times the quote.
+$quote-mark-size: 3.25em;
 
 @function type-size($role) {
   @if not map.has-key($type-sizes, $role) {
@@ -761,6 +778,8 @@ $motion-medium: 300ms;
 // shows, so a quick answer never flashes one; skeletons are not held back.
 $loading-delay: 100ms;
 $spin-duration: 0.8s;
+// The Spinner ring's border. Its size is the ring's inside edge (content-box), so a spinner fitted to a given outer size takes this off twice.
+$spinner-border: 2px;
 $shimmer-duration: 1.4s;
 $pulse-duration: 2s;
 $arrive-duration: 200ms;
@@ -786,8 +805,13 @@ $shell-phone-width: $table-stack-width;
 // Under it the admin section nav tucks pages behind More (Priority+). Also where the site links leave the bar for the account
 // panel: with the Compendium link a keeper's bar outran an 882px window.
 $shell-tablet-width: 56rem;
-// Under it the brand is its initials; wider, the bar has room for the full name once the site links have gone.
-$shell-brand-width: 26rem;
+// The About Us pillar cards sit two across above this width and one across at it and under, then two across again at the phone
+// width and under, and one across at the narrow width and under.
+$about-pillars-stack-width: 46.875rem;
+$about-pillars-narrow-width: 31.25rem;
+// Under it the brand is its initials; wider, the bar has room for the full name once the site links have gone. 28rem: the
+// widest bar (split Add Ingredient button, account menu, theme toggle) needs 442px beside the full name.
+$shell-brand-width: 28rem;
 // Under 680px of its own width a tabbed page's Add is a plus.
 $tabbed-plus-width: 42.5rem;
 // Under 568px of its own width the pills drop beneath the heading and the plus.
@@ -846,6 +870,16 @@ $space-steps: (
 
   @return map.get($space-steps, $step);
 }
+
+// The air above a document section's heading, under its hairline: two thirds of the air above the rule.
+$document-section-rule-air: calc(#{space(8)} * 0.666);
+
+// The padding of a layout's `.page-column` and `.coven-layout`, which a frame inside the column takes back with a negative margin.
+$page-column-pad-block: space(6);
+$page-column-pad-inline: space(4);
+
+// The sign-in card's padding, on the page (SignInPanel) and in the dialog (SignInDialog).
+$sign-in-card-padding: space(5) space(6) space(6);
 
 // Room for a row of two or three category chips and a correspondence's list of colours. Shared with the entry's wait (Skeleton).
 $side-column: calc(#{space(8)} * 5);
@@ -1007,7 +1041,7 @@ $card-skeleton-heights: (
 // with no list named.
 $stack-row-skeleton-heights: (
   'default': 16rem,
-  'users': 32rem,
+  'users': 30.75rem,
   'members': 23.25rem,
   'support': 29.416rem,
   'invitation-cards': 28.25rem,
@@ -1017,8 +1051,8 @@ $stack-row-skeleton-heights: (
   'privilege-changes': 22.75rem,
   'pending-invitations': 13.375rem,
   'received-invitations': 11rem,
-  'groups': 12.637rem,
-  'values': 20rem,
+  'groups': 12.262rem,
+  'values': 18.25rem,
   'category-values': 14.625rem,
   'compendium': 23.612rem,
 );

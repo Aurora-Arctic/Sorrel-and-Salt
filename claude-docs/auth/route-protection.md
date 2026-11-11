@@ -24,8 +24,8 @@ answer.
   holds no data; `/compendium`, `/compendium/*`, `/robots.txt`, `/sitemap.xml`,
   `/llms.txt` and `/.well-known/*` (which covers `ai-catalog.json` and
   `ard.json`, [`../seo/ai-discovery.md`](../seo/ai-discovery.md)): the public
-  compendium's pages and the files a crawler reads, with the icon and manifest
-  files listed ahead of it; and `/opengraph-image`, the site's share card that a
+  compendium's pages and the files a crawler reads, with the manifest and the icon
+  files (the icons listed ahead of their existence); and `/opengraph-image`, the site's share card that a
   link preview fetches with no cookie (the compendium's own cards sit under
   `/compendium/*`, [`../seo/share-card.md`](../seo/share-card.md)). The
   `(public)` route group holds these pages, and its layout draws the chrome

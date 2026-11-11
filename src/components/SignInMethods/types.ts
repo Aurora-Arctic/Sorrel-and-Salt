@@ -25,7 +25,7 @@ export interface SignInMethodsProps {
  * Where a provider stands with this account: linked to it, ready to add, or
  * not addable here because this environment has no credentials for it.
  */
-export type ProviderRowState = 'linked' | 'addable' | 'unavailable';
+type ProviderRowState = 'linked' | 'addable' | 'unavailable';
 
 export type ProviderRemoval = 'offered' | 'last' | 'withheld';
 

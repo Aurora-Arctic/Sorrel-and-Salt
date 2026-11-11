@@ -1,9 +1,10 @@
 'use client';
 
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useRef } from 'react';
 import { stopImpersonating } from '../../lib/auth-client';
+import { settled } from '../../lib/auth-call';
 import BusyButton from '../BusyButton';
-import { useClickFeedback } from '../ClickFeedback';
+import { useGuardedAction } from '../ClickFeedback/use-guarded-action';
 import type { ImpersonationBannerProps } from './types';
 import './index.scss';
 import { reportLeaving } from '../../lib/navigation';
@@ -24,10 +25,22 @@ const STOP_FAILED = "Impersonation didn't stop. Please try again, or sign out to
 const HEIGHT_PROPERTY = '--impersonation-banner-height';
 
 const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactElement => {
-  const [pending, setPending] = useState(false);
-  const [failed, setFailed] = useState(false);
   const banner = useRef<HTMLElement>(null);
-  const { anchorRef, report, feedback } = useClickFeedback({ name: 'Stop Impersonating' });
+  const {
+    anchorRef,
+    run: stop,
+    pending,
+    failed,
+    feedback,
+  } = useGuardedAction({
+    name: 'Stop Impersonating',
+    action: async () => {
+      const { error } = await settled(stopImpersonating());
+      if (error) return STOP_FAILED;
+      reportLeaving();
+      window.location.assign(RETURN_TO);
+    },
+  });
 
   useEffect(() => {
     const element = banner.current;
@@ -42,24 +55,6 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
       root.style.removeProperty(HEIGHT_PROPERTY);
     };
   }, []);
-
-  async function stop() {
-    // `aria-disabled` lets a click through, so a second one is refused here.
-    if (pending) return;
-    setPending(true);
-    setFailed(false);
-    report(undefined);
-    const { error } = await stopImpersonating().catch((thrown: unknown) => ({ error: thrown }));
-    if (error) {
-      setPending(false);
-      setFailed(true);
-      // In a callout under the button (claude-docs/components/click-feedback.md).
-      report(STOP_FAILED);
-      return;
-    }
-    reportLeaving();
-    window.location.assign(RETURN_TO);
-  }
 
   return (
     // Held open while Stop is in flight or has failed (index.scss).

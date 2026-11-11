@@ -11,6 +11,7 @@ import { compareSpellCategories } from '@/modules/grimoire/validation/categories
 import { summarizeSpellCategories } from '@/modules/grimoire/validation/categories/summarize';
 import type { SpellStepValue, StepCategory } from './steps/types';
 import { stepNameOf } from './steps/values';
+import { CATEGORY_MATCH_TITLE } from '../SpellRecipe/sections';
 
 // Category Match: the assigned categories set against the jar's, as Carried, Missing and Extra rows (empty rows left out), read from the builder's current state
 // (claude-docs/components/spell-builder.md, "The comparison panel").
@@ -26,7 +27,7 @@ export interface ComparisonPanelProps {
 
 // Carried and Missing draw every chip; Extra has no bound, so it draws its first `EXTRA_CHIP_LIMIT`
 // and folds the rest behind CategoryChips' own +N.
-export const EXTRA_CHIP_LIMIT = 8;
+const EXTRA_CHIP_LIMIT = 8;
 
 function Row({
   label,
@@ -117,7 +118,7 @@ export function ComparisonPanel({
 
   return (
     <section id={id} className="comparison-panel" aria-labelledby={headingId}>
-      <Heading id={headingId}>Category Match</Heading>
+      <Heading id={headingId}>{CATEGORY_MATCH_TITLE}</Heading>
       {body}
     </section>
   );

@@ -2,15 +2,13 @@ import 'server-only';
 import { findOneById, findReplyAwaitingNotice, withAudit } from '../../../db/repository';
 import { deliver } from '../../../lib/mail-transport';
 import { supportReplyMessage } from '../../../lib/support-job-mail';
-import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
+import { SYSTEM_ACTOR_ID, SYSTEM_SESSION } from '../../../lib/system-actor';
 import { supportRequests } from '../schema/support-requests';
 import { supportRecipientFor } from './recipient';
 import type { Message } from '../../../lib/types';
 
 // The mail that tells a sender of a staff reply, sent by its job's step as the System account. The step reads the reply, the
 // request and the sender's address when it runs, so the run carries ids alone.
-
-const SYSTEM = { userId: SYSTEM_ACTOR_ID };
 
 /** The mail for reply `replyId` as the rows stand, or null when it is not one to send: not a public staff reply, already sent, or to a sender who has left. */
 async function replyMailFor(replyId: string, origin: string): Promise<Message | null> {
@@ -38,6 +36,6 @@ async function replyMailFor(replyId: string, origin: string): Promise<Message | 
 export async function sendReplyNotice(replyId: string, origin: string): Promise<boolean> {
   const message = await replyMailFor(replyId, origin);
   if (!message || !(await deliver(message))) return false;
-  await withAudit(SYSTEM, (write) => write.markReplyNoticeSent(replyId, new Date()));
+  await withAudit(SYSTEM_SESSION, (write) => write.markReplyNoticeSent(replyId, new Date()));
   return true;
 }

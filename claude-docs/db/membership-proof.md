@@ -126,7 +126,7 @@ calling service's decision.
   the coven's name and slug and the inviter's name for those alone
   ([`invitations.md`](invitations.md), "Accepting from the account page").
 
-The admin user list's reads (`findUserPage`, `findProvidersOfUsers`) and the
+The admin user list's reads (`findUserPage`, `findProvidersOfUsers`, `findPasskeyHoldersAmong`) and the
 privilege ledger's (`findPrivilegeChangePage`) span no workspace either, but take
 the `SiteAdmin` proof instead ([`auth/admin-users.md`](../auth/admin-users.md),
 "The user list" and "The privilege ledger").

@@ -4,6 +4,8 @@ import { SITE_ORIGIN } from './site';
 
 export const ERROR_REFERENCE_MAX_LENGTH = 100;
 
+export const ERROR_DETAIL_MAX_LENGTH = 500;
+
 export const PAGE_NOT_ON_SITE = "Start with / or the site's address.";
 
 /** Empty, or a path on this site: one `/` (not `//`, another host) or `SITE_ORIGIN` followed by a path, query or fragment. */
@@ -65,7 +67,33 @@ export function errorReferenceOf(value: string | null): string | undefined {
   return trimmed && trimmed.length <= ERROR_REFERENCE_MAX_LENGTH ? trimmed : undefined;
 }
 
+export const SUPPORT_DETAIL_PARAM = 'detail';
+
+export function errorDetailOf(value: string | null): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length <= ERROR_DETAIL_MAX_LENGTH ? trimmed : undefined;
+}
+
 export const SUPPORT_FROM_PARAM = 'from';
+
+/** The query that opens the support form as a bug report from an error page. */
+export function bugReportQuery({
+  code,
+  reference,
+  detail,
+}: {
+  code: number;
+  reference?: string;
+  detail?: string;
+}): string {
+  const params = new URLSearchParams({
+    [SUPPORT_PARAM]: 'bug',
+    [SUPPORT_ERROR_PARAM]: String(code),
+  });
+  if (reference) params.set(SUPPORT_REF_PARAM, reference);
+  if (detail) params.set(SUPPORT_DETAIL_PARAM, detail);
+  return params.toString();
+}
 
 export const SUPPORT_ABOUTS = [
   {
@@ -134,6 +162,7 @@ export function supportClosedHref(pathname: string, params: URLSearchParams): st
   rest.delete(SUPPORT_PARAM);
   rest.delete(SUPPORT_ERROR_PARAM);
   rest.delete(SUPPORT_REF_PARAM);
+  rest.delete(SUPPORT_DETAIL_PARAM);
   rest.delete(SUPPORT_FROM_PARAM);
   const lead = rest.toString();
   return lead ? `${pathname}?${lead}` : pathname;
@@ -155,3 +184,11 @@ export const DEFAULT_SUPPORT_VIEW: SupportView = 'needs_staff';
 /** A sender may be in several, so each is a narrowing of its own rather than a rank. */
 export const SUPPORT_SENDER_GROUPS = [{ value: 'beta_tester', label: 'Beta Testers' }] as const;
 export type SupportSenderGroup = (typeof SUPPORT_SENDER_GROUPS)[number]['value'];
+
+/** Derived from the invitation the sender accepted and never stored. */
+export const SUPPORT_SENDER_TIERS = ['beta_tester', 'standard'] as const;
+export type SupportSenderTier = (typeof SUPPORT_SENDER_TIERS)[number];
+
+/** What the Support dialog offers a visitor. */
+export const SUPPORT_DIALOG_KINDS = ['signedOut', 'unverified', 'timedOut', 'form'] as const;
+export type SupportDialogKind = (typeof SUPPORT_DIALOG_KINDS)[number];

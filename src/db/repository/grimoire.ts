@@ -1,13 +1,18 @@
 import { and, eq, inArray, isNotNull, type SQL, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
+import { fold as foldText } from '../../lib/text';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { categories } from '../../modules/vocabulary/schema/categories';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPageCountInReadableSpells, findPageInReadableSpells } from './finders';
-import { categoryArms as categoryArmsFor } from './category-arms';
-import { newestFirst, notSoftDeleted, scopedTo } from './predicates';
+import {
+  categoryArms as categoryArmsFor,
+  categoryFacetJoins,
+  withoutChosenIfAny,
+} from './category-arms';
+import { newestFirst, scopedTo } from './predicates';
 import { selectFrom } from './select';
 import { readableSpells, visibilityIn, visibilityText } from './spells';
 import type {
@@ -18,7 +23,6 @@ import type {
   SortPart,
   WeightedSearch,
 } from './types';
-import { inLiveGroup } from './vocabularies';
 import { weightedSearch } from './weighted-search';
 
 // The grimoire list's read, apart from `spells.ts` so `finders.ts` and this file do not import each other.
@@ -110,12 +114,7 @@ const folded = (column: TextColumn) => sql<string>`lower(btrim(${column}))`;
 
 function textArm(column: TextColumn, values: readonly string[] | undefined): SQL[] {
   if (!values || values.length === 0) return [];
-  return [
-    inArray(
-      folded(column),
-      values.map((value) => value.trim().toLowerCase()),
-    ),
-  ];
+  return [inArray(folded(column), values.map(foldText))];
 }
 
 /**
@@ -133,6 +132,10 @@ function whereOf(query: GrimoireQuery): SQL | undefined {
   );
 }
 
+// The order a page and its count both read, so the count's "before" matches the page's.
+const listOrder = (membership: Membership, query: GrimoireQuery) =>
+  orderOf(query, searchMatch(membership, query.query));
+
 /**
  * One page of the coven's grimoire this member may read (shared spells and their own private ones) in the asked-for
  * order, through the cursor helper (rule 8), narrowed by status, search and categories.
@@ -142,7 +145,7 @@ export function findGrimoirePage(
   page: PageRequest,
   query: GrimoireQuery,
 ): Promise<PageEntry<typeof spells.$inferSelect>[]> {
-  const order = orderOf(query, searchMatch(membership, query.query));
+  const order = listOrder(membership, query);
   return findPageInReadableSpells(membership, spells, order, page, whereOf(query));
 }
 
@@ -156,7 +159,7 @@ export function findGrimoireCount(
   query: GrimoireQuery,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  const order = orderOf(query, searchMatch(membership, query.query));
+  const order = listOrder(membership, query);
   return findPageCountInReadableSpells(membership, spells, order, start, whereOf(query));
 }
 
@@ -169,29 +172,23 @@ export function findGrimoireCategoryCounts(
   membership: Membership,
   query: GrimoireQuery,
 ): Promise<FacetCount[]> {
-  const rest = query.categoryMode === 'any' ? { ...query, categoryIds: undefined } : query;
+  const rest = withoutChosenIfAny(query);
   const match = searchMatch(membership, rest.query);
   const pair = alias(spellCategories, 'facet_pair');
-  return selectFrom(
-    spells,
-    and(readableSpells(membership), notSoftDeleted(spells), whereOf(rest)),
-    {
-      aggregate: {
-        value: sql<string>`${categories.id}`,
-        count: sql<number>`count(distinct ${spells.id})::int`,
-      },
-      over: { join: match?.join, wordMatch: match !== undefined },
-      joins: [
-        { type: 'inner', table: pair, on: eq(pair.spellId, spells.id) },
-        {
-          type: 'inner',
-          table: categories,
-          on: and(eq(categories.id, pair.categoryId), inLiveGroup(categories)),
-        },
-      ],
-      groupBy: [categories.id],
+  return selectFrom(spells, and(readableSpells(membership), whereOf(rest)), {
+    aggregate: {
+      value: sql<string>`${categories.id}`,
+      count: sql<number>`count(distinct ${spells.id})::int`,
     },
-  );
+    over: { join: match?.join, wordMatch: match !== undefined },
+    joins: categoryFacetJoins({
+      table: pair,
+      owner: pair.spellId,
+      category: pair.categoryId,
+      outer: spells.id,
+    }),
+    groupBy: [categories.id],
+  });
 }
 
 /**
@@ -211,15 +208,11 @@ export async function findGrimoireFacetCounts(
   ): Promise<FacetCount[]> => {
     const rest: GrimoireQuery = { ...query, [drop]: undefined };
     const match = searchMatch(membership, rest.query);
-    return selectFrom(
-      spells,
-      and(readableSpells(membership), notSoftDeleted(spells), whereOf(rest), present),
-      {
-        aggregate: { value, count: sql<number>`count(distinct ${spells.id})::int` },
-        over: { join: match?.join, wordMatch: match !== undefined },
-        groupBy: [groupBy],
-      },
-    );
+    return selectFrom(spells, and(readableSpells(membership), whereOf(rest), present), {
+      aggregate: { value, count: sql<number>`count(distinct ${spells.id})::int` },
+      over: { join: match?.join, wordMatch: match !== undefined },
+      groupBy: [groupBy],
+    });
   };
   const text = (column: TextColumn) =>
     [

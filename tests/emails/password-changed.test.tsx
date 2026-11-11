@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { passwordChangedMessage } from '@/emails/password-changed';
+import { ORIGIN } from '../support/constants';
 
-const FORGOT = 'http://localhost:8000/forgot-password';
+const FORGOT = `${ORIGIN}/forgot-password`;
 
 describe('passwordChangedMessage', () => {
   it.each(['reset', 'change', 'set'] as const)(

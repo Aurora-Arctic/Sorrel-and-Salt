@@ -1,8 +1,8 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { RouteModal } from '../../../../../components/Modal';
-import UserDetail from '../../../../../components/UserDetail';
+import { RouteModal } from '@/components/Modal';
+import UserDetail from '@/components/UserDetail';
 import type { UserDialogProps } from './types';
 
 // The users page's modal, opened by `?user=<id>` or at once by a press. The client edge between the

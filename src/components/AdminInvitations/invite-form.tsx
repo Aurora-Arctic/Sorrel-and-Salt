@@ -3,12 +3,9 @@
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { EmailAddress } from '../../lib/email-address-schema';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
-import { reasonProblem } from '../../modules/identity/validation/reason';
-import type { Failure } from '../../lib/types';
-import { FormActions, RadioGroupField, ReasonField } from '../Field';
-import InviteEmailField from '../InviteDialog/email-field';
+import { emailFailure } from '../../lib/email-failure';
+import { useFormSend } from '../../lib/use-form-send';
+import { EmailField, FormActions, RadioGroupField, ReasonField, useReasonNote } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { roleLabel, SITE_ROLE_ACCESS } from '../UserList/roles';
@@ -50,40 +47,28 @@ export const invitationRoleLabel = (role: InvitableSiteRole): string =>
 const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
   const [email, setEmail] = useState('');
   const [siteRole, setSiteRole] = useState<InvitableSiteRole>(SITE_ROLES[0]);
-  const [note, setNote] = useState('');
-  const [noteError, setNoteError] = useState<string>();
-  const [sending, setSending] = useState(false);
-  const [failure, setFailure] = useState<Failure>({});
+  const reason = useReasonNote();
+  const { sending, failure, setFailure, send } = useFormSend(['email']);
 
-  const discard = useDiscardGuard(email !== '' || siteRole !== SITE_ROLES[0] || note !== '');
+  const discard = useDiscardGuard(email !== '' || siteRole !== SITE_ROLES[0] || reason.note !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const noteProblem = reasonProblem(note);
-    setNoteError(noteProblem);
-    const parsed = EmailAddress.safeParse(email);
-    if (!parsed.success) {
-      return setFailure({
-        field: { name: 'email', message: parsed.error.issues[0]?.message ?? '' },
-      });
-    }
-    if (noteProblem) return;
+    const noteOk = reason.check();
+    const refused = emailFailure(email);
+    if (refused) return setFailure(refused);
+    if (!noteOk) return;
     const address = email.trim();
-    setSending(true);
-    setFailure({});
-    try {
-      await graphqlRequest(CreateAdminInvitationDocument, {
+    const sent = await send(() =>
+      graphqlRequest(CreateAdminInvitationDocument, {
         email: address,
         siteRole,
-        note: note.trim() || undefined,
-      });
-      setSending(false);
-      onSent(address);
-      close();
-    } catch (error) {
-      setSending(false);
-      setFailure(readGraphqlFailure(error, ['email']));
-    }
+        note: reason.note.trim() || undefined,
+      }),
+    );
+    if (!sent) return;
+    onSent(address);
+    close();
   }
 
   return (
@@ -93,10 +78,14 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         address can accept it.
       </p>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <InviteEmailField
+      <EmailField
+        name="email"
         value={email}
         error={failure.field?.message}
         disabled={sending}
+        // The address is someone else's, so the browser must not offer the signed-in person's own.
+        autoComplete="off"
+        ignorePasswordManagers
         onChange={(next) => {
           setEmail(next);
           if (failure.field) setFailure({ ...failure, field: undefined });
@@ -117,12 +106,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
       <ReasonField
         className="confirmed-action__note"
         hint={NOTE_HINT}
-        value={note}
-        onChange={(next) => {
-          setNote(next);
-          setNoteError(undefined);
-        }}
-        error={noteError}
+        {...reason.field}
         disabled={sending}
       />
       <FormActions

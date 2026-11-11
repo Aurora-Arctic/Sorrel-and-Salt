@@ -1,7 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { describe, expect, inject, it } from 'vitest';
-import { REPO_ROOT } from '../support/paths';
+import { describe, expect, it } from 'vitest';
+import { expectNamedOnlyIn, readSource, sourceFiles } from '../support/repo-scan';
 
 // `rotateInvitationToken` writes with no Membership or SiteAdmin proof and returns a live token, so only the invitation mail's callers may name it; a second one is argued for in the diff (CLAUDE.md rule 5).
 
@@ -16,21 +14,13 @@ const ALLOWED = [
 
 describe('the invitation token rotation', () => {
   it('is named only by its definition, the repository index, the invitation mail service and its own test', () => {
-    const files = inject('repoFiles').filter(
-      (file) => /\.[cm]?tsx?$/.test(file) && !file.includes('__lint-probe'),
-    );
-    // Precondition: the definition is in the listing, so an empty result means no other file.
-    expect(files).toContain(DEFINITION);
-
-    const naming = files.filter((file) =>
-      /\brotateInvitationToken\b/.test(readFileSync(join(REPO_ROOT, file), 'utf8')),
-    );
-
-    expect(naming.sort()).toEqual([...ALLOWED].sort());
+    expectNamedOnlyIn(sourceFiles(), /\brotateInvitationToken\b/, ALLOWED, {
+      definition: DEFINITION,
+    });
   });
 
   it('is called by the invitation mail service only for the two invitation kinds', () => {
-    const service = readFileSync(join(REPO_ROOT, ALLOWED[2]!), 'utf8');
+    const service = readSource(ALLOWED[2]!);
     // One call, so the service cannot rotate for a link of another kind.
     expect(service.match(/\brotateInvitationToken\(/g)).toHaveLength(1);
   });

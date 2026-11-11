@@ -1,43 +1,30 @@
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
-import PrivilegeLedger from '../../../../../components/PrivilegeLedger';
-import { privilegeLedgerHref } from '../../../../../components/PrivilegeLedger/href';
-import { PRIVILEGES } from '../../../../../components/PrivilegeLedger/privileges';
+import PrivilegeLedger from '@/components/PrivilegeLedger';
+import { privilegeLedgerHref } from '@/components/PrivilegeLedger/href';
+import { PRIVILEGES } from '@/components/PrivilegeLedger/privileges';
 import type {
   LedgerPerson,
   LedgerPrivilege,
   PrivilegeLedgerEntry,
-} from '../../../../../components/PrivilegeLedger/types';
-import { userListHref } from '../../../../../components/UserList/href';
-import { requireAdminSession } from '../../../../../lib/request-session';
-import { oneOf, single } from '../../../../../lib/search-params';
-import type { Session } from '../../../../../lib/session';
+} from '@/components/PrivilegeLedger/types';
+import { userListHref } from '@/components/UserList/href';
+import { requireAdminSession } from '@/lib/request-session';
+import { oneOf, single } from '@/lib/search-params';
+import type { Session } from '@/lib/session';
 import {
   countPrivilegeChanges,
   listPrivilegeChanges,
   listedOnUserList,
   usersForAdmin,
 } from '@/modules/identity';
-import { pagerHrefs } from '../../../../../lib/list-href';
-import { readListPlace } from '../../../curator/list-page';
+import { pagerHrefs } from '@/lib/list-href';
+import { readListPlace } from '@/app/(shell)/_admin/list-page';
 import { readNumberedPage } from '@/lib/numbered-page';
 import type { AdminPrivilegeChangesPageProps, PrivilegeChangesSearchParams } from './types';
 
 export const metadata: Metadata = pageTitle('Privilege Changes');
-
-function readLedgerPage(
-  session: Session,
-  filter: { query?: string; privilege?: LedgerPrivilege },
-  after: string | undefined,
-  before: string | undefined,
-) {
-  return readNumberedPage(
-    { after, before },
-    (request) => listPrivilegeChanges(session, filter, request),
-    (start) => countPrivilegeChanges(session, filter, start),
-  );
-}
 
 // The page and GraphQL's `privilegeChanges` end at the same service, paged by the same helper
 // (rules 1 and 8) and numbered as every admin list is; the users a page names are one read beside
@@ -50,7 +37,12 @@ const readLedger = cache(
     after: string | undefined,
     before: string | undefined,
   ) => {
-    const page = await readLedgerPage(session, { query, privilege }, after, before);
+    const filter = { query, privilege };
+    const page = await readNumberedPage(
+      { after, before },
+      (request) => listPrivilegeChanges(session, filter, request),
+      (start) => countPrivilegeChanges(session, filter, start),
+    );
     const ids = [...new Set(page.edges.flatMap(({ node }) => [node.userId, node.createdBy]))];
     const read = await usersForAdmin(session, ids);
     const people = new Map<string, LedgerPerson | null>(

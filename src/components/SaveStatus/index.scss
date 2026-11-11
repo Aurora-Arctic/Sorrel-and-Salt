@@ -20,10 +20,7 @@
 // triangle), and Retry sits in the notice's button ink. Doubled class to outrank the notice's
 // own bottom margin, which would lift it off the Save button's line.
 .save-status .save-status__failed {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(2);
+  @include wrap-row(space(2));
   margin: 0;
 
   // The notice puts its triangle level with the first line of text. Here the row is the height

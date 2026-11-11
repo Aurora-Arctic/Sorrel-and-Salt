@@ -2,15 +2,17 @@ import type { ReactElement, ReactNode } from 'react';
 import IconTip, { CopyIcon } from '../IconTip';
 import LocalTime from '../LocalTime';
 
-// The facts at the head of an opened request: Sent, Page and Error, with a fact before them and one beside Sent for the
+// The facts at the head of an opened request: Sent, Page, Error and Error Details, with a fact before them and one beside Sent for the
 // facts only one screen shows (From and Resolved for staff). Page takes a row of its own, so a path never sits beside a date.
 
-export interface SupportFactsProps {
+interface SupportFactsProps {
   createdAt: Date;
   path: string | null;
   errorCode: number | null;
   /** The crash digest; staff only, so the sender's dialog leaves it out and the Error fact shows the code alone. */
   errorReference?: string | null;
+  /** The error's name and message; staff only, like the reference. */
+  errorDetail?: string | null;
   lead?: ReactNode;
   afterSent?: ReactNode;
 }
@@ -20,6 +22,7 @@ const SupportFacts = ({
   path,
   errorCode,
   errorReference,
+  errorDetail,
   lead,
   afterSent,
 }: SupportFactsProps): ReactElement => (
@@ -61,6 +64,12 @@ const SupportFacts = ({
             </>
           )}
         </dd>
+      </div>
+    )}
+    {errorDetail && (
+      <div className="support-detail__fact--wide">
+        <dt>Error Details</dt>
+        <dd className="support-detail__mono">{errorDetail}</dd>
       </div>
     )}
   </dl>

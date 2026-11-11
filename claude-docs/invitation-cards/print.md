@@ -6,7 +6,7 @@ The design is the approved card canvas: the `Main` artboard is the front and the
 
 ## The API
 
-- `cardQrSvg(link)` returns the card's QR code as an SVG string. The dot geometry (`qrShapes`, `qrSvg`, `roundedSquarePath`) lives in `src/lib/qr`, shared with the two-factor screen's `QrCode` component; `cardQrSvg` only adds the card's tone (the heading's chalk, `CHALK`; `pdf.ts` fills it with `HEADING_INK`), and `pdf.ts` draws the same shapes as PDF operators.
+- The QR code's dot geometry (`qrShapes`, `roundedSquarePath`) lives in `src/lib/qr`, shared with the two-factor screen's `QrCode` component; `pdf.ts` draws the same shapes as PDF operators, filled with `HEADING_INK`.
 - `buildCardSheetsPdf({ links, expiresAt })` fetches the fonts and pictures from `public/invitation-cards/` and returns the PDF's bytes. Card `i` gets link `i`.
 - `renderCardSheets(input, assets)` in `pdf.ts` does the work without fetching, so tests pass it files read from disk.
 

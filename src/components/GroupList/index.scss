@@ -1,6 +1,6 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
-// Running text that is not a `<p>`, so it takes the measure itself.
 .group-list__description {
-  max-width: $measure;
+  @include list-description;
 }

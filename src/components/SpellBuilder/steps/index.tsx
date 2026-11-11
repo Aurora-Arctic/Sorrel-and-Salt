@@ -9,6 +9,7 @@ import { SortableSteps } from './sortable';
 import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
+import { plural } from '@/lib/text';
 
 // The jar's steps in the Jar section: the add box, Add Instruction and the list, one step open at a time, each moved by a handle
 // (claude-docs/components/spell-builder.md, "Steps").
@@ -157,8 +158,8 @@ export function SpellSteps({
   const headingId = useId();
   const ingredients = steps.filter((step) => !isInstruction(step)).length;
   const counts = [
-    `${steps.length} ${steps.length === 1 ? 'step' : 'steps'}`,
-    `${ingredients} ${ingredients === 1 ? 'ingredient' : 'ingredients'}`,
+    `${steps.length} ${plural(steps.length, 'step', 'steps')}`,
+    `${ingredients} ${plural(ingredients, 'ingredient', 'ingredients')}`,
   ].join(' · ');
 
   return (

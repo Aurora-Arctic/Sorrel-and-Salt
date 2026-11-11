@@ -20,7 +20,7 @@
 }
 
 // Scoped here: a card already labels each fact.
-@container data-table (width > #{$table-stack-width}) {
+@include container-from(data-table, #{$table-stack-width}) {
   .admin-cards__fact {
     color: $text-muted;
     font-size: type-size('caption');
@@ -28,7 +28,7 @@
 }
 
 // A narrower side inset than the shared tables so cells wrap less in the dialog.
-@container data-table (width > #{$table-stack-width}) {
+@include container-from(data-table, #{$table-stack-width}) {
   .data-table.admin-cards__refused {
     th,
     td {

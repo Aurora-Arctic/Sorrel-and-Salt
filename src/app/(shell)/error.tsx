@@ -1,6 +1,6 @@
 'use client';
 
-import { ErrorScreen } from '../../components/ErrorScreens';
+import { ErrorScreen } from '@/components/ErrorScreens';
 
 export default function ShellErrorBoundary({
   error,
@@ -9,5 +9,5 @@ export default function ShellErrorBoundary({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
-  return <ErrorScreen digest={error.digest} retry={retry} />;
+  return <ErrorScreen error={error} retry={retry} />;
 }

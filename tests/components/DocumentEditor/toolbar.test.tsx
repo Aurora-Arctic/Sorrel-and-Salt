@@ -5,9 +5,8 @@ import { mockGraphQLMutation } from '../../support/msw/graphql';
 import { warmImport } from '../../support/warm-import';
 import { linkAddressProblem } from '@/lib/link-address';
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/keepers/documents/disclaimer',
 }));
 
@@ -97,9 +96,9 @@ async function select(text: HTMLElement, words: string, { caret = false } = {}):
 }
 
 async function saveDraft(saved: string[]): Promise<string> {
-  const save = screen.getByRole('button', { name: 'Save Draft' });
-  await waitFor(() => expect(save).toBeEnabled());
-  fireEvent.click(save);
+  const saveDraft = screen.getByRole('button', { name: 'Save Draft' });
+  await waitFor(() => expect(saveDraft).toBeEnabled());
+  fireEvent.click(saveDraft);
   await waitFor(() => expect(saved).toHaveLength(1));
   // Found by name: while the save is in flight the button is named Saving Draft, so this waits for the save to land.
   await waitFor(() => expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled());

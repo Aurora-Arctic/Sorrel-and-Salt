@@ -58,6 +58,7 @@ const OPENED: SupportRequestDetailEntry = {
   message: 'The cauldron wobbles every time I save.',
   createdAt: new Date('2026-10-29T09:00:00Z'),
   path: '/coven/[slug]/grimoire',
+  errorDetail: "TypeError: Cannot read properties of undefined (reading 'steps')",
   issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1448',
   resolvedBy: null,
   resolvedAt: null,

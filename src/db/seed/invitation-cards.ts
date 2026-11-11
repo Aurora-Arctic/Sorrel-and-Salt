@@ -4,7 +4,7 @@ import { newCardToken } from '../../lib/invitation-token';
 import { cardInvitationAttempts } from '../../modules/coven/schema/card-invitation-attempts';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { users } from '../../modules/identity/schema/users';
-import { createHash } from 'node:crypto';
+import { hashToken } from '../repository';
 import { insertMissingBy } from './idempotent';
 import { FIXTURE_USERS } from './standard';
 import type { SeedTransaction } from './types';
@@ -26,7 +26,7 @@ interface SeedCardBatch {
   expiresInDays: number;
 }
 
-export const CARD_BATCHES: readonly SeedCardBatch[] = [
+const CARD_BATCHES: readonly SeedCardBatch[] = [
   { id: '7c2d41a0-5b3e-4f18-9a6d-2e8b1c4f7a01', state: 'live', sheets: 2, expiresInDays: 21 },
   { id: 'b39e0f52-8d14-4c67-a1e3-6f20d9b5c802', state: 'revoked', sheets: 1, expiresInDays: 14 },
   { id: 'e15a8c7d-3f96-4b2a-8c05-91d7a4e6b303', state: 'expired', sheets: 1, expiresInDays: -10 },
@@ -43,7 +43,7 @@ interface SeedCardSignUp {
 }
 
 /** A owns W, so the Covens Owned column shows one; B and D hold seats; C accepted a card before its batch expired. */
-export const CARD_SIGN_UPS: readonly SeedCardSignUp[] = [
+const CARD_SIGN_UPS: readonly SeedCardSignUp[] = [
   { batchId: LIVE.id, position: 1, userId: FIXTURE_USERS.A.id, daysAgo: 6 },
   { batchId: LIVE.id, position: 5, userId: FIXTURE_USERS.B.id, daysAgo: 3 },
   { batchId: LIVE.id, position: 12, userId: FIXTURE_USERS.D.id, daysAgo: 1 },
@@ -60,7 +60,7 @@ interface SeedCardRefusal {
   daysAgo: number;
 }
 
-export const CARD_REFUSALS: readonly SeedCardRefusal[] = [
+const CARD_REFUSALS: readonly SeedCardRefusal[] = [
   {
     batchId: REVOKED.id,
     position: 2,
@@ -164,7 +164,7 @@ export async function seedInvitationCards(tx: SeedTransaction): Promise<void> {
         kind: 'card',
         batchId,
         position,
-        tokenHash: sha256Hex(newCardToken()),
+        tokenHash: hashToken(newCardToken()),
         expiresAt,
         revokedAt: state === 'revoked' ? ago(3) : null,
         acceptedBy: signUp?.userId ?? null,
@@ -220,6 +220,3 @@ export async function seedInvitationCards(tx: SeedTransaction): Promise<void> {
     }),
   });
 }
-
-// The repository's `hashToken` (hex SHA-256) is not exported from its index, and the seed may not import past the index.
-const sha256Hex = (token: string) => createHash('sha256').update(token).digest('hex');

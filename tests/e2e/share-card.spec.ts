@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
-import { signInAs } from './session';
+import { signInKeeperOnSidePage } from './session';
 import { withSql } from './stories/coven-ingredients';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
@@ -22,19 +22,6 @@ async function cardOf(request: import('@playwright/test').APIRequestContext, slu
   expect(content, `og:image on ${slug}`).toBeTruthy();
   const url = new URL(content!.replace(/&amp;/g, '&'));
   return url.pathname + url.search;
-}
-
-async function authorOf(
-  browser: import('@playwright/test').Browser,
-  baseURL: string | undefined,
-  email: string,
-): Promise<string> {
-  const author = await browser.newPage({ baseURL });
-  try {
-    return (await signInAs(author, email, ['discord'], 'admin')).userId;
-  } finally {
-    await author.close();
-  }
 }
 
 async function seedEntry(
@@ -69,7 +56,7 @@ async function seedEntry(
 }
 
 test("a shown entry's card is a PNG", async ({ page, browser, baseURL }) => {
-  const author = await authorOf(browser, baseURL, 'author@share-card-png.test');
+  const author = await signInKeeperOnSidePage(browser, baseURL, 'author@share-card-png.test');
   const slug = await seedEntry(author, 'Fixture Card Shown');
 
   const response = await page.request.get(await cardOf(page.request, slug));
@@ -83,7 +70,7 @@ test("a hidden entry, a coven's own entry and an unknown slug each answer 404", 
   browser,
   baseURL,
 }) => {
-  const author = await authorOf(browser, baseURL, 'author@share-card-404.test');
+  const author = await signInKeeperOnSidePage(browser, baseURL, 'author@share-card-404.test');
   const hidden = await seedEntry(author, 'Fixture Card Hidden', { shown: false });
   const coven = await seedEntry(author, 'Fixture Card Coven', { workspaceId: WORKSPACE_W_ID });
 

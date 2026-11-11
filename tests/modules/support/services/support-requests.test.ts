@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
+import { ERROR_DETAIL_MAX_LENGTH } from '@/modules/support/validation/limits';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import type { Cursor, PageEntry, PageRequest } from '@/lib/types';
 import {
@@ -34,6 +35,7 @@ import { failureOf, useTestDatabase } from '../../../support/db/database';
 import type { SessionUser } from '../../../support/types';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
+import { ORIGIN } from '../../../support/constants';
 
 // Each refusal is paired with the same call succeeding once its precondition holds (claude-docs/design-decisions/support.md, "A support form, reviewed by keepers").
 
@@ -60,7 +62,7 @@ const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sti
 
 function notifier(): SupportNotifier {
   return {
-    origin: async () => 'http://localhost:3000',
+    origin: async () => ORIGIN,
   };
 }
 
@@ -68,7 +70,7 @@ const send = (user: SessionUser = C, input: Parameters<typeof sendSupportRequest
   sendSupportRequest(asUser(user), input, notifier());
 
 const mail: SupportNotifier = {
-  origin: async () => 'http://localhost:3000',
+  origin: async () => ORIGIN,
 };
 
 describe('sendSupportRequest', () => {
@@ -113,6 +115,43 @@ describe('sendSupportRequest', () => {
     expect(withRef.errorReference).toBe('abc123');
     expect((await send(C)).errorReference).toBeNull();
     await expect(send(C, { ...INPUT, errorReference: 'x'.repeat(101) })).rejects.toThrow();
+  });
+
+  it('stores the error detail, and none as null, and refuses one past its limit', async () => {
+    const detail = 'TypeError: Testwort is not a function';
+    const withDetail = await send(C, { ...INPUT, errorCode: 500, errorDetail: ` ${detail} ` });
+    const [{ error_detail: stored }] =
+      await sql`select error_detail from support_requests where id = ${withDetail.id}`;
+    expect(stored).toBe(detail);
+    expect((await getSupportRequest(asUser(E), withDetail.id)).errorDetail).toBe(detail);
+    expect((await send(C)).errorDetail).toBeNull();
+
+    const atLimit = await send(C, { ...INPUT, errorDetail: 'x'.repeat(ERROR_DETAIL_MAX_LENGTH) });
+    expect(atLimit.errorDetail).toHaveLength(ERROR_DETAIL_MAX_LENGTH);
+    expect(
+      await failureOf(send(C, { ...INPUT, errorDetail: 'x'.repeat(ERROR_DETAIL_MAX_LENGTH + 1) })),
+    ).toBeInstanceOf(ValidationError);
+  });
+
+  it('stores the error detail a signed-out visitor sends', async () => {
+    const address = 'detail@example.test';
+    await sql`delete from support_send_counts`;
+    await sendSignedOutSupportRequest(
+      {
+        about: 'bug',
+        email: address,
+        subject: 'Broke',
+        message: 'It broke.',
+        errorCode: 500,
+        errorDetail: 'Error: Testwort failed',
+      },
+      { clientIp: '203.0.113.8', notifier: notifier() } as Parameters<
+        typeof sendSignedOutSupportRequest
+      >[1],
+    );
+    const [{ error_detail: stored }] =
+      await sql`select error_detail from support_requests where sender_email = ${address}`;
+    expect(stored).toBe('Error: Testwort failed');
   });
 
   it('stores the path as sent, coven slug included, and no path as empty', async () => {
@@ -269,6 +308,15 @@ describe('mySupportRequests', () => {
     expect(entries.map((entry) => entry.node.errorReference)).toEqual([null]);
   });
 
+  it('carries no error detail on the sender’s own reads, though the request has one', async () => {
+    const request = await send(C, { ...INPUT, errorCode: 500, errorDetail: 'Error: Testwort' });
+    expect((await getSupportRequest(asUser(E), request.id)).errorDetail).toBe('Error: Testwort');
+
+    expect((await getMySupportRequest(asUser(C), request.id)).errorDetail).toBeNull();
+    const entries = await listMySupportRequests(asUser(C), PAGE);
+    expect(entries.map((entry) => entry.node.errorDetail)).toEqual([null]);
+  });
+
   it('refuses another sender’s request by id, which exists and is open', async () => {
     const request = await send(C);
     const [{ status }] = await sql`select status from support_requests where id = ${request.id}`;
@@ -423,7 +471,7 @@ describe('replyToSupportRequest', () => {
       body: 'A secret answer.',
       createdBy: E.id,
     });
-    expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
+    expect(replyNotices()).toEqual([[reply.id, ORIGIN]]);
   });
 
   it('lets a curator reply only to a request assigned to them', async () => {

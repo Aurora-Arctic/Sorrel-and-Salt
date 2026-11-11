@@ -124,6 +124,7 @@
 }
 
 .chip-color-field__thumb {
+  box-sizing: content-box;
   inline-size: 1.125rem;
   block-size: 1.125rem;
   border: 2px solid $chalk;
@@ -224,11 +225,8 @@
 }
 
 .chip-color-field__ground {
-  display: flex;
-  flex-wrap: wrap;
+  @include wrap-row(space(2));
   justify-content: center;
-  align-items: center;
-  gap: space(2);
   margin-block: space(5) space(2);
   padding: space(4);
   border-radius: radius('surface');
@@ -276,7 +274,7 @@
 // A phone's width: closer gaps and a narrower hex, so the three channels
 // keep room for their values and captions beside it. 30rem is where the
 // picker's own grid stops fitting its full captions, not a form's width.
-@container (max-width: 30rem) {
+@include container-to(null, 30rem) {
   .chip-color-field__controls {
     column-gap: space(1);
   }

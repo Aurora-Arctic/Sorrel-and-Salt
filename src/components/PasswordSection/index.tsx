@@ -5,9 +5,11 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { changePassword, requestPasswordReset, useSession } from '../../lib/auth-client';
+import { settled, type AuthFailure } from '../../lib/auth-call';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { TOO_MANY_ATTEMPTS, rateLimited } from '../../lib/auth-messages';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { isPlaceholderAddress } from '../../lib/email-address';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { newPasswordRefusal, PASSWORD_CHECK_UNAVAILABLE } from '../../lib/password-refusals';
 import BusyButton from '../BusyButton';
@@ -29,19 +31,13 @@ const SetPasswordDocument = graphql(`
   }
 `);
 
-interface Failure {
-  status?: number;
-  code?: string;
-  message?: string;
-}
-
 interface Refusal {
   alert?: string;
   current?: string;
   chosen?: string;
 }
 
-function changeRefusal(failure: Failure): Refusal {
+function changeRefusal(failure: AuthFailure): Refusal {
   const chosen = newPasswordRefusal(failure);
   if (chosen) return { chosen };
   if (failure.code === 'INVALID_PASSWORD') return { current: WRONG_CURRENT_PASSWORD };
@@ -89,10 +85,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
     setSending(true);
     setProblem({});
     setSaved(undefined);
-    const { error } = await requestPasswordReset({
-      email,
-      redirectTo: '/reset-password',
-    }).catch(() => ({ error: {} as { status?: number } }));
+    const { error } = await settled(requestPasswordReset({ email, redirectTo: '/reset-password' }));
     setSending(false);
     if (error) {
       setProblem({ alert: rateLimited(error) ? TOO_MANY_ATTEMPTS : GENERIC_RESET_REQUEST_ERROR });
@@ -116,11 +109,13 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
     // Better Auth answers `{ error }` for a refusal and throws for a dropped connection. The
     // server signs out every other session whatever the request says; asking for it keeps the
     // request honest.
-    const { error } = await changePassword({
-      currentPassword: current,
-      newPassword: chosen,
-      revokeOtherSessions: true,
-    }).catch(() => ({ error: {} as Failure }));
+    const { error } = await settled(
+      changePassword({
+        currentPassword: current,
+        newPassword: chosen,
+        revokeOtherSessions: true,
+      }),
+    );
     setChanging(false);
     if (error) {
       setProblem(changeRefusal(error));
@@ -163,7 +158,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
         {/* A password manager saves a password against the username in the same form, so the account's
             address rides along, read-only and visually hidden (not `display: none`, which managers skip). A placeholder address is no username. */}
-        {email && !email.endsWith('.invalid') && (
+        {email && !isPlaceholderAddress(email) && (
           <input
             type="email"
             name="username"
@@ -206,7 +201,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
           >
             {held ? 'Change Password' : 'Set Password'}
           </BusyButton>
-          {held && email && !email.endsWith('.invalid') && (
+          {held && email && !isPlaceholderAddress(email) && (
             <BusyButton
               type="button"
               className="btn btn--quiet btn--small"

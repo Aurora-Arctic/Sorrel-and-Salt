@@ -1,13 +1,16 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-
+import { typedResolver } from '../../lib/typed-resolver';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useId, useState } from 'react';
-import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
+import { heldByOf } from '../../lib/graphql-failure';
+import { PendingLink } from '../../lib/navigation';
+import type { HeldBy } from '../../lib/types';
+import { compendiumHref } from '../CompendiumList/href';
 import { KINDS as LIST_KINDS } from '../GroupedValueList/kinds';
 import { ConfirmQuestion, useDiscardGuard } from '../Modal';
 import FormIcon from '../FormIcon';
@@ -187,7 +190,7 @@ function defineKind<Input extends object>({
     ...copy,
     // The form's values always carry `groupId`, `''` for a flat kind, whose
     // schema parses them without it; the resolver is typed for the values.
-    resolver: zodResolver(schema) as unknown as Resolver<GroupedValueValues>,
+    resolver: typedResolver<GroupedValueValues>(schema),
     save: (values, id) => send(toInput(values), id),
     remove: async (id) => {
       await graphqlRequest(remove, { id });
@@ -336,8 +339,10 @@ const GroupedValueForm = ({
     formState: { isSubmitting, isDirty },
   } = methods;
   const [confirming, setConfirming] = useState(false);
+  // Kept with the sentence it came with, so a later alert never shows another refusal's link.
+  const [inUse, setInUse] = useState<{ message: string; heldBy: HeldBy }>();
   const discard = useDiscardGuard(isDirty);
-  const { root, history, setAlert, rootError, send } = useEntityForm({
+  const { root, history, setAlert, rootError, settle, send } = useEntityForm({
     methods,
     discard,
     save: (input) => spec.save(input, value?.id),
@@ -406,7 +411,17 @@ const GroupedValueForm = ({
           noValidate
         >
           <FormHistoryButtons />
-          {rootError && <Notice kind="error">{rootError}</Notice>}
+          {rootError && (
+            <Notice kind="error" result>
+              {rootError}
+              {inUse?.message === rootError && (
+                <>
+                  {' '}
+                  <PendingLink href={compendiumHref(inUse.heldBy)}>See All</PendingLink>
+                </>
+              )}
+            </Notice>
+          )}
           <FormErrorSummary />
           {/* Autofill off: Chrome takes a field named "name" for a person's and
             offers the user's own. */}
@@ -458,9 +473,13 @@ const GroupedValueForm = ({
             busy={remove.isPending}
             onConfirm={confirmDelete}
             onKeep={() => setConfirming(false)}
-            onRefused={(refusal) => {
+            onRefused={(refusal, error) => {
               setConfirming(false);
+              const heldBy = heldByOf(error);
+              setInUse(heldBy && { message: refusal, heldBy });
               setAlert(refusal);
+              // After the question hands the focus back to the delete button as it goes.
+              settle('result');
             }}
           />
         </form>

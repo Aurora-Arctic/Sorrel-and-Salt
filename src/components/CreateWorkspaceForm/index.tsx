@@ -12,6 +12,7 @@ import { FormActions } from '../Field';
 import { PlainTextField } from '../Field/plain-text-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
+import { covenPath } from '@/lib/coven-path';
 
 // A plain controlled input, not react-hook-form: every refusal is the server's, the creation gate's
 // included (claude-docs/components/create-workspace-form.md).
@@ -38,7 +39,7 @@ const CreateWorkspaceForm = (): ReactElement => {
     mutationFn: (name: string) => graphqlRequest(CreateWorkspaceDocument, { name }),
     onSuccess: ({ createWorkspace: { slug } }) => {
       setLeaving(true);
-      navigate(`/coven/${slug}`);
+      navigate(covenPath(slug));
       // The shell's switcher lists the viewer's covens from the layout, which
       // a client-side push does not re-run: refresh brings the new one in.
       refresh();

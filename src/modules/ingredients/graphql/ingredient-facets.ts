@@ -1,5 +1,4 @@
 import { builder } from '../../../graphql/builder';
-import type { BuilderTypes } from '../../../graphql/types';
 import type {
   CompendiumFacets,
   FacetCount,
@@ -7,7 +6,8 @@ import type {
   ReviewFacetValue,
   WorkspaceIngredientFacets,
 } from '../types';
-import { IngredientElementEnum, IngredientSourceEnum, ToxicFilterEnum } from './ingredient';
+import { IngredientElementEnum } from './correspondences';
+import { IngredientSourceEnum, ToxicFilterEnum } from './ingredient';
 
 // How many entries each search filter value would list, for the compendium (`compendiumFacets`) and a coven's list (`workspaceIngredientFacets`).
 // One small object type per value type, so each `value` is typed as the argument it is sent back as (claude-docs/graphql/schema.md, "compendiumFacets and workspaceIngredientFacets").
@@ -15,7 +15,7 @@ import { IngredientElementEnum, IngredientSourceEnum, ToxicFilterEnum } from './
 const COUNT_DESCRIPTION =
   'How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.';
 
-export const NameFacetCountRef = builder.objectRef<FacetCount>('NameFacetCount').implement({
+const NameFacetCountRef = builder.objectRef<FacetCount>('NameFacetCount').implement({
   description: 'A form, zodiac sign or celestial body, and how many entries it would list.',
   fields: (t) => ({
     value: t.exposeString('value', {
@@ -25,7 +25,7 @@ export const NameFacetCountRef = builder.objectRef<FacetCount>('NameFacetCount')
   }),
 });
 
-export const IdFacetCountRef = builder.objectRef<FacetCount>('IdFacetCount').implement({
+const IdFacetCountRef = builder.objectRef<FacetCount>('IdFacetCount').implement({
   description: 'A curated deity or category, by id, and how many entries it would list.',
   fields: (t) => ({
     value: t.exposeID('value', {
@@ -35,7 +35,7 @@ export const IdFacetCountRef = builder.objectRef<FacetCount>('IdFacetCount').imp
   }),
 });
 
-export const ElementFacetCountRef = builder
+const ElementFacetCountRef = builder
   .objectRef<IngredientFacets['elements'][number]>('ElementFacetCount')
   .implement({
     description: 'An element, and how many entries it would list.',
@@ -48,7 +48,7 @@ export const ElementFacetCountRef = builder
     }),
   });
 
-export const ToxicFacetCountRef = builder
+const ToxicFacetCountRef = builder
   .objectRef<IngredientFacets['toxic'][number]>('ToxicFacetCount')
   .implement({
     description: 'A toxic setting other than any, and how many entries it would list.',
@@ -61,7 +61,7 @@ export const ToxicFacetCountRef = builder
     }),
   });
 
-export const SourceFacetCountRef = builder
+const SourceFacetCountRef = builder
   .objectRef<WorkspaceIngredientFacets['source'][number]>('SourceFacetCount')
   .implement({
     description: 'A source, local or compendium, and how many entries it would list.',
@@ -78,63 +78,64 @@ const FACETS_DESCRIPTION =
   'Each kind is counted under the rest of the filter, leaving out that kind’s own choice, except categories under categoryMode all, which are counted with the chosen ones.';
 
 /**
- * The seven kinds, written once for both types. Generic over the parent so
- * `CompendiumFacets`, which adds a field, takes them as they are.
+ * The seven kinds both facet-count types carry, so a query selects them through one fragment
+ * (`... on IngredientFacetCounts`). The two object types inherit these fields and add their own.
  */
-function facetFields<Parent extends IngredientFacets>(
-  t: PothosSchemaTypes.ObjectFieldBuilder<BuilderTypes, Parent>,
-) {
-  return {
-    forms: t.field({
-      type: [NameFacetCountRef],
-      description:
-        'Every form some entry comes in, and every chosen form, most entries first, then by name. A form is spelled as its curated row, else as most entries spell it.',
-      resolve: (facets) => facets.forms,
+const IngredientFacetCountsRef = builder
+  .interfaceRef<IngredientFacets>('IngredientFacetCounts')
+  .implement({
+    description: 'The counts the compendium’s and a coven’s search filters share.',
+    fields: (t) => ({
+      forms: t.field({
+        type: [NameFacetCountRef],
+        description:
+          'Every form some entry comes in, and every chosen form, most entries first, then by name. A form is spelled as its curated row, else as most entries spell it.',
+        resolve: (facets) => facets.forms,
+      }),
+      deities: t.field({
+        type: [IdFacetCountRef],
+        description:
+          'Every deity some entry is linked to, and every chosen one, most entries first, then by id.',
+        resolve: (facets) => facets.deities,
+      }),
+      categories: t.field({
+        type: [IdFacetCountRef],
+        description:
+          'Every category some entry or live form carries, and every chosen one, most entries first, then by id.',
+        resolve: (facets) => facets.categories,
+      }),
+      zodiacSigns: t.field({
+        type: [NameFacetCountRef],
+        description: 'Every curated zodiac sign, by name, zeros included.',
+        resolve: (facets) => facets.zodiacSigns,
+      }),
+      celestialBodies: t.field({
+        type: [NameFacetCountRef],
+        description: 'Every curated celestial body, by name, zeros included.',
+        resolve: (facets) => facets.celestialBodies,
+      }),
+      elements: t.field({
+        type: [ElementFacetCountRef],
+        description: 'Every element, in the enum’s order, zeros included.',
+        resolve: (facets) => facets.elements,
+      }),
+      toxic: t.field({
+        type: [ToxicFacetCountRef],
+        description: 'toxic, then not_toxic, zeros included.',
+        resolve: (facets) => facets.toxic,
+      }),
     }),
-    deities: t.field({
-      type: [IdFacetCountRef],
-      description:
-        'Every deity some entry is linked to, and every chosen one, most entries first, then by id.',
-      resolve: (facets) => facets.deities,
-    }),
-    categories: t.field({
-      type: [IdFacetCountRef],
-      description:
-        'Every category some entry or live form carries, and every chosen one, most entries first, then by id.',
-      resolve: (facets) => facets.categories,
-    }),
-    zodiacSigns: t.field({
-      type: [NameFacetCountRef],
-      description: 'Every curated zodiac sign, by name, zeros included.',
-      resolve: (facets) => facets.zodiacSigns,
-    }),
-    celestialBodies: t.field({
-      type: [NameFacetCountRef],
-      description: 'Every curated celestial body, by name, zeros included.',
-      resolve: (facets) => facets.celestialBodies,
-    }),
-    elements: t.field({
-      type: [ElementFacetCountRef],
-      description: 'Every element, in the enum’s order, zeros included.',
-      resolve: (facets) => facets.elements,
-    }),
-    toxic: t.field({
-      type: [ToxicFacetCountRef],
-      description: 'toxic, then not_toxic, zeros included.',
-      resolve: (facets) => facets.toxic,
-    }),
-  };
-}
+  });
 
-// The coven's type carries the two settings only a coven's list has, and the
+// The coven's's type carries the two settings only a coven's list has, and the
 // compendium's carries No Refs, so the two stay separate types sharing
-// `facetFields` rather than one type with nullable fields.
+// `IngredientFacetCounts` rather than one type with nullable fields.
 export const IngredientFacetsRef = builder
   .objectRef<WorkspaceIngredientFacets>('IngredientFacets')
   .implement({
+    interfaces: [IngredientFacetCountsRef],
     description: `How many of a coven’s ingredients each search filter value would list. ${FACETS_DESCRIPTION}`,
     fields: (t) => ({
-      ...facetFields(t),
       source: t.field({
         type: [SourceFacetCountRef],
         description:
@@ -152,7 +153,7 @@ export const IngredientFacetsRef = builder
     }),
   });
 
-export const ReviewFacetCountRef = builder
+const ReviewFacetCountRef = builder
   .objectRef<FacetCount<ReviewFacetValue>>('ReviewFacetCount')
   .implement({
     description: 'A Reviewed setting, and how many entries it would list.',
@@ -169,9 +170,9 @@ export const ReviewFacetCountRef = builder
 export const CompendiumFacetsRef = builder
   .objectRef<CompendiumFacets>('CompendiumFacets')
   .implement({
+    interfaces: [IngredientFacetCountsRef],
     description: `How many compendium entries each search filter value would list. ${FACETS_DESCRIPTION}`,
     fields: (t) => ({
-      ...facetFields(t),
       withoutReferences: t.exposeInt('withoutReferences', {
         description:
           'How many entries cite no live reference, on themselves or a live form, under the rest of the filter: the same whether withoutReferences is chosen or not.',

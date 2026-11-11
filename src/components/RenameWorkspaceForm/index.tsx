@@ -3,15 +3,15 @@
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
-import { limitMessage } from '../../lib/formats';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
-import { COVEN_NAME_LIMIT } from '@/modules/coven/validation/workspace-name';
+import { COVEN_NAME_LIMIT, CovenName } from '@/modules/coven/validation/workspace-name';
 import { FormActions } from '../Field';
 import { PlainTextField } from '../Field/plain-text-field';
+import { useNameField } from '../Field/use-name-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
+import { covenPath } from '@/lib/coven-path';
 
 // A plain controlled input, as CreateWorkspaceForm is: every refusal is the server's (claude-docs/components/rename-workspace-form.md).
 
@@ -33,9 +33,8 @@ interface RenameWorkspaceFormProps {
 
 const RenameWorkspaceForm = ({ workspaceId, name }: RenameWorkspaceFormProps): ReactElement => {
   const { navigate, refresh } = usePendingNavigation();
-  const [value, setValue] = useState(name);
-  const [alert, setAlert] = useState<string>();
-  const [fieldError, setFieldError] = useState<string>();
+  const field = useNameField(name, CovenName);
+  const { value, setValue, typed, alert, setAlert, fieldError } = field;
   // Stays busy until the coven's new address has loaded, so a second press cannot rename twice.
   const [leaving, setLeaving] = useState(false);
 
@@ -44,19 +43,14 @@ const RenameWorkspaceForm = ({ workspaceId, name }: RenameWorkspaceFormProps): R
       graphqlRequest(RenameWorkspaceDocument, { workspaceId, name: typed }),
     onSuccess: ({ renameWorkspace: { slug } }) => {
       setLeaving(true);
-      navigate(`/coven/${slug}`);
+      navigate(covenPath(slug));
       // The shell's switcher lists the viewer's covens from the layout, which a client-side push does not re-run.
       refresh();
     },
-    onError: (failure) => {
-      const { field, alert: message } = readGraphqlFailure(failure, ['name']);
-      setFieldError(field?.message);
-      setAlert(message);
-    },
+    onError: field.fail,
   });
 
   const busy = mutation.isPending || leaving;
-  const typed = value.trim();
   // Outer whitespace is no change, and a blank name is none: the service refuses it.
   const dirty = typed !== '' && typed !== name;
   const discard = useDiscardGuard(value !== name && !busy);
@@ -66,19 +60,10 @@ const RenameWorkspaceForm = ({ workspaceId, name }: RenameWorkspaceFormProps): R
     // A disabled submit stops a click, not a form submitted by other means.
     if (!dirty || busy) return;
     setAlert(undefined);
-    if (value.trim().length > COVEN_NAME_LIMIT) {
-      setFieldError(limitMessage(COVEN_NAME_LIMIT));
-      return;
-    }
-    setFieldError(undefined);
-    mutation.mutate(value);
+    if (field.check()) mutation.mutate(value);
   };
 
-  const cancel = (): void => {
-    setValue(name);
-    setAlert(undefined);
-    setFieldError(undefined);
-  };
+  const cancel = (): void => field.reset();
 
   return (
     <>
@@ -90,10 +75,7 @@ const RenameWorkspaceForm = ({ workspaceId, name }: RenameWorkspaceFormProps): R
           autoComplete="off"
           limit={COVEN_NAME_LIMIT}
           value={value}
-          onChange={(next) => {
-            setValue(next);
-            setFieldError(undefined);
-          }}
+          onChange={setValue}
           error={fieldError}
         />
         <FormActions noun="Coven" dirty={dirty} submitting={busy} holdCancel onCancel={cancel} />

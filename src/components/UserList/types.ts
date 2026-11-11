@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { ReactElement } from 'react';
 import type { ModalHeading } from '../Modal/types';
 import type { UserRole } from '../../lib/session';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
@@ -15,6 +16,8 @@ export interface UserListEntry {
   agreedDisclaimerVersion: number | null;
   agreedEthicsVersion: number | null;
   providers: readonly string[];
+  /** Whether they hold at least one passkey, which is not an account and so not among the providers. */
+  hasPasskey: boolean;
   emailVerified: boolean;
   primaryAdmin: boolean;
   openHref: Route;
@@ -58,12 +61,6 @@ export interface HistoryLinkProps {
   name: string;
 }
 
-export interface UserLinkProps {
-  href: Route;
-  heading: ModalHeading;
-  name: string;
-}
-
 export interface ImpersonateButtonProps {
   userId: string;
   /** The user's name, completing the button's accessible name. */
@@ -71,7 +68,7 @@ export interface ImpersonateButtonProps {
 }
 
 /** What a row's creation control does: approve a user awaiting it, or revoke it. */
-export type CreationAction = 'approve' | 'revoke';
+type CreationAction = 'approve' | 'revoke';
 
 /** What a row's role control does: make a user a keeper, or stop one being one. */
 export interface RoleControlProps {
@@ -123,6 +120,13 @@ export interface LockedControlProps {
 
 export interface ProviderLogoProps {
   id: string;
+}
+
+export type SignInMarksProps = Pick<UserListEntry, 'providers' | 'hasPasskey'>;
+
+export interface OwnLoginMarkProps {
+  label: string;
+  icon: ReactElement;
 }
 
 export interface UntilMarkProps {

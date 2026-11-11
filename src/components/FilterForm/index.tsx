@@ -12,6 +12,7 @@ import {
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useListNavigation } from '../ListFrame';
 import type { FilterFormProps, FilterValue } from './types';
+import { cx } from '@/lib/class-names';
 
 // A list's filter, a toolbar that applies as it changes: a select or switch on change, a type-ahead once
 // a choice settles, the search on submit or Enter, each opening the first page softly through
@@ -134,7 +135,7 @@ const FilterForm = ({
     <search aria-label={label}>
       {sorrel && <div className="filter-sorrel" aria-hidden="true" />}
       <form
-        className={className ? `filter-row ${className}` : 'filter-row'}
+        className={cx('filter-row', className)}
         ref={form}
         method="get"
         action={action}

@@ -16,6 +16,7 @@ import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import { reportLeaving } from '../../lib/navigation';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
+import { useRestoredFromCache } from '../../lib/use-restored-from-cache';
 import { EMAIL_VIEW, EMAIL_VIEW_PARAM, MODE_PARAM, SIGN_UP_MODE, modeFromParam } from './address';
 import ModeSwitch from './mode-switch';
 import PasswordForm from './password-form';
@@ -25,6 +26,7 @@ import type { ProviderId } from '../../lib/types';
 import { LastUsedMark, SignInBack, signInHeader } from './header';
 import type { SignInAttempt, SignInMode, SignInPanelProps, SignInView } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 export { LastUsedMark, SignInBack, signInHeader } from './header';
 
@@ -56,7 +58,6 @@ const SignInPanel = ({
   error,
   configured,
   mode: initialMode = 'sign-in',
-  onModeChange,
   inDialog = false,
   signUpLandsOnNext,
   onSignedUp,
@@ -65,10 +66,6 @@ const SignInPanel = ({
 }: SignInPanelProps): ReactElement => {
   // Held here, not in the form, so a switch made in either view holds in the other.
   const [mode, setMode] = useState<SignInMode>(initialMode);
-  const switchMode = (to: SignInMode): void => {
-    setMode(to);
-    onModeChange?.(to);
-  };
   const signingUp = mode === 'sign-up';
   // The server-rendered callback error, the page's own, until a press starts
   // a new attempt. A failure of that press is said under its own button
@@ -161,13 +158,7 @@ const SignInPanel = ({
   }, [inDialog, header, goBack, onHeaderChange]);
 
   const [signingIn, setSigningIn] = useState<SignInAttempt | null>(null);
-  useEffect(() => {
-    const restored = (event: PageTransitionEvent) => {
-      if (event.persisted) setSigningIn(null);
-    };
-    window.addEventListener('pageshow', restored);
-    return () => window.removeEventListener('pageshow', restored);
-  }, []);
+  useRestoredFromCache(() => setSigningIn(null));
 
   const signInWith = async (providerId: ProviderId): Promise<string | undefined> => {
     setMessage(undefined);
@@ -190,18 +181,18 @@ const SignInPanel = ({
     return undefined;
   };
 
-  const classes = [
+  const classes = cx(
     // Its own card ground, `.panel`, on /sign-in, which holds nothing else; a dialog is its own
     // (claude-docs/components/sign-in-panel.md, "Styling").
     inDialog ? 'sign-in-panel' : 'panel sign-in-panel',
     codeStep && 'sign-in-panel--code',
-  ];
+  );
   return (
-    <div className={classes.filter(Boolean).join(' ')} ref={panelRef}>
+    <div className={classes} ref={panelRef}>
       {message && <Notice kind="error">{message}</Notice>}
       {!inDialog && (
         <div className="sign-in-panel__head">
-          {header.back && <SignInBack onBack={goBack} />}
+          {header.back && <SignInBack label={header.backLabel} onBack={goBack} />}
           <PageHeader
             className="sign-in-panel__header"
             headingClassName="auth-title"
@@ -216,7 +207,7 @@ const SignInPanel = ({
         <PasswordForm
           next={next}
           mode={mode}
-          onModeChange={switchMode}
+          onModeChange={setMode}
           signUpLandsOnNext={signUpLandsOnNext}
           onSignedUp={onSignedUp}
           email={email}
@@ -256,7 +247,7 @@ const SignInPanel = ({
               Continue with Email
             </button>
           </div>
-          <ModeSwitch mode={mode} onSwitch={switchMode} />
+          <ModeSwitch mode={mode} onSwitch={setMode} />
         </>
       )}
     </div>

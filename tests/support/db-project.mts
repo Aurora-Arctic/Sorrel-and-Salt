@@ -8,7 +8,7 @@ import type { TestConfig } from './types.ts';
 // a package without `"type": "module"` to Node as CommonJS.
 
 // Fixed, not the machine's cores: the connection budget (claude-docs/testing/db-harness.md, "Connections per run") is arithmetic over this number.
-export const DB_WORKER_CAP = 12;
+const DB_WORKER_CAP = 12;
 
 // `project.config.maxWorkers` is `undefined` in globalSetup unless pinned here,
 // and db-global-setup.ts needs the number to know how many clones to make. The
@@ -30,7 +30,7 @@ export const dbHarness = {
   runner: './tests/support/db-runner.ts',
 } satisfies TestConfig;
 
-export const BOUNDED_POSTGRES_PLUGIN = 'sorrel:bounded-postgres';
+const BOUNDED_POSTGRES_PLUGIN = 'sorrel:bounded-postgres';
 const BOUNDED_POSTGRES = fileURLToPath(new URL('./db/bounded-postgres.ts', import.meta.url));
 
 // `postgres` resolves to bounded-postgres.ts in every file the project transforms, so one constant caps every pool; a `resolveId` plugin, as Vite deprecates `resolve.alias`'s `customResolver`.

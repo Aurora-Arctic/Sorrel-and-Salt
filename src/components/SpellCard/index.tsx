@@ -7,7 +7,7 @@ import LinkHint from '../LinkHint';
 import SpellMarks from '../SpellMarks';
 import SpellMoreMenu from '../SpellRecipe/more-menu';
 import { SpellCardFrame } from './frame';
-import { UNTITLED_SPELL } from './untitled';
+import { spellNameOf } from './untitled';
 import CardRecordWorking from './record-working';
 import type { SpellCardProps } from './types';
 import './index.scss';
@@ -15,8 +15,6 @@ import './index.scss';
 // One spell in the grimoire's list: title, intent, Draft and Private badges, assigned categories,
 // last editor and made count, and the actions. Presentational, in IngredientCard's pattern, with no drawer; the title links where
 // `href` is given (claude-docs/components/spell-card.md).
-
-export { UNTITLED_SPELL };
 
 export const SPELL_LOOK_PLACE = 'look';
 
@@ -39,7 +37,7 @@ const SpellCard = ({
   level = 2,
 }: SpellCardProps): ReactElement => {
   const Heading = `h${level}` as const;
-  const name = (title ?? '').trim() || UNTITLED_SPELL;
+  const name = spellNameOf(title);
   const purpose = (intent ?? '').trim();
   // How often it has been made: none says nothing, as a spell never worked has nothing to say.
   const made =

@@ -44,9 +44,13 @@ Each job below has one shared piece, and a component or page uses it, never a co
 - **Reduced motion and the 400 ms fade limit**: `prefersReducedMotion` and `FADE_LIMIT_MS` (`src/lib/motion.ts`). Guard: `reduced-motion`.
 - **Matching typed text**: `fold` (`src/lib/text.ts`). Guard: `text-folding`.
 - **Showing a quantity**: `formatQuantity` (`src/lib/quantity.ts`).
+- **Joining class names**: `cx` (`src/lib/class-names.ts`). Lint rule: `sorrel/class-names-joined-through-cx`.
+- **Plural words, "has text", and option labels**: `plural` and `hasText` (`src/lib/text.ts`), `labelOf` (`src/lib/options.ts`).
+- **An untitled spell's name**: `spellNameOf` (`src/components/SpellCard/untitled.ts`). Lint rule: `sorrel/spell-name-through-spell-name-of`.
 - **Downloading a file**: `saveFile` (`src/lib/save-file.ts`).
 - **A drag handle**: `GripHandle` (`src/components/GripHandle/`). Guard: `sortable-wiring`.
-- **A breakpoint**: the mixins in `src/scss/_mixins.scss` (`phone-down`, `above-phone`, `tablet-down`, `above-tablet`, `width-from`, `width-to`), never a hand-written `@media` width query. Guard: `breakpoints`.
+- **A page and its skeleton**: `PanelSection`, `NarrowPanelPage`, `HelpFrontShell`, `HelpArticlePage`, `DocumentPageSkeleton` and the title constants (`ADD_INGREDIENT_TITLE`, `NEW_SPELL_TITLE`, the spell section titles in `SpellRecipe/sections.ts`) are written once and used by both. Guard: `page-pieces`.
+- **A breakpoint**: the mixins in `src/scss/_mixins.scss` (`phone-down`, `above-phone`, `tablet-down`, `above-tablet`, `width-from`, `width-to`; `container-from` and `container-to` for a container width), never a hand-written `@media` or `@container` width query. Guard: `breakpoints`.
 
 ## Destructive controls
 
@@ -83,7 +87,7 @@ How a typed input is built and checked. `claude-docs/components/field.md` holds 
 
    Enforced by Field's defaults and by review.
 
-10. **R10. A date uses `DateField`**, with `min` and `max` from the shared day helpers such as `latestDay()`. A date is never a text field checked with a regex. Enforced by R1's lint rule.
+10. **R10. A date uses `DateField`**, with `min` and `max` from the shared day helpers such as `latestDay()`. A date is never a text field checked with a regex. The one exception is the Start and End boxes in the range picker's popover (`src/components/DateRangeField/range-ends.tsx`): typed days checked by `CalendarDay`, beside the calendar and never instead of it. Enforced by R1's lint rule.
 11. **R11. A field that accepts only listed values is a select or a combobox restricted to the list.** A field that suggests values but accepts any text says so in its hint. Enforced by review only.
 12. **R12. A link field accepts only what the page renders.** The editor's link dialog, the link plugin and the page renderer share one rule, `src/lib/link-address.ts`. An email address gains `mailto:` (the shared email rule decides), a bare host gains `https://`, and `http://` becomes `https://`. Enforced by R3.
 13. **R13. Each new field is proved by three tests.** Its value is tidied when the person leaves it; a bad value is refused on Save, with the summary taking focus where the form has one; the server refuses the same value. Enforced by review, through `.claude/rules/testing.md`.

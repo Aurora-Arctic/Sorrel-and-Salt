@@ -9,13 +9,17 @@ import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
 import { categoryRefs } from '@/components/IngredientCard/category-refs';
 import { CardCategoryVocabulary } from '@/components/IngredientCard/category-vocabulary';
 import { StockBadge } from '@/components/StockBadge';
+import { router } from '../../support/next-navigation';
+import { expectBefore, isBefore } from '../../support/interact';
 
 // (claude-docs/components/ingredient-card.md): the card is presentational, so each case is its props in and what rendered out. The names, forms and notes are the test's own data.
 // Marks are found by their exact text and asserted by presence or absence, never by what the words say.
 
 // The name link navigates through the shared hook, so the App Router is mocked.
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
+  usePathname: () => '/here',
+}));
 
 const HREF = '/compendium/ingredients/testwort-testalis' as Route;
 const LEAF = {
@@ -109,15 +113,13 @@ describe('IngredientCard', () => {
       </CardCategoryVocabulary>,
     );
 
-    const follows = (a: HTMLElement, b: HTMLElement) =>
-      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
     const name = screen.getByRole('heading');
     const chips = screen.getByRole('list', { name: 'Categories' });
     const form = screen.getByText('Testleaf', { selector: 'span' });
     const jars = screen.getByRole('list', { name: 'Jars' });
-    expect(follows(name, chips)).toBe(true);
-    expect(follows(chips, form)).toBe(true);
-    expect(follows(form, jars)).toBe(true);
+    expect(isBefore(name, chips)).toBe(true);
+    expect(isBefore(chips, form)).toBe(true);
+    expect(isBefore(form, jars)).toBe(true);
   });
 
   it("leaves the forms line out when asked, keeping the formal name and the forms' cautions", () => {
@@ -221,9 +223,7 @@ describe('IngredientCard', () => {
       ];
 
       for (const [at, mark] of order.slice(1).entries()) {
-        expect(
-          order[at]!.compareDocumentPosition(mark!) & Node.DOCUMENT_POSITION_FOLLOWING,
-        ).toBeTruthy();
+        expectBefore(order[at]!, mark!);
       }
     });
 
@@ -395,9 +395,7 @@ describe('IngredientCard recency', () => {
     ];
 
     for (const [at, mark] of order.slice(1).entries()) {
-      expect(
-        order[at]!.compareDocumentPosition(mark!) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(order[at]!, mark!);
     }
   });
 

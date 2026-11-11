@@ -1,7 +1,8 @@
 'use client';
 
-import { type ReactElement, useEffect, useId, useState } from 'react';
+import { type ReactElement, useId, useState } from 'react';
 import { linkSocial, signOut, unlinkAccount } from '../../lib/auth-client';
+import { settled } from '../../lib/auth-call';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import {
   ACCOUNT_PASSKEYS_PATH,
@@ -18,10 +19,12 @@ import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import Notice from '../Notice';
+import { useRestoredFromCache } from '../../lib/use-restored-from-cache';
 import { ProviderRow } from './provider-row';
 import { SectionRow } from './section-row';
 import type { ProviderRemoval, SignInMethodError, SignInMethodsProps } from './types';
 import './index.scss';
+import { plural } from '@/lib/text';
 
 // The account page's list of the ways into this account. A session too old to remove one is offered a fresh sign-in in
 // place of every Remove. The heading and intro are the page's (claude-docs/components/sign-in-methods.md).
@@ -50,13 +53,7 @@ const SignInMethods = ({
   // The page is left for the provider's own, so on success `linking` stays set
   // until the browser goes; a return from the back-forward cache (the page
   // restored as it was left) clears it, as on /sign-in.
-  useEffect(() => {
-    const restored = (event: PageTransitionEvent) => {
-      if (event.persisted) setLinking(undefined);
-    };
-    window.addEventListener('pageshow', restored);
-    return () => window.removeEventListener('pageshow', restored);
-  }, []);
+  useRestoredFromCache(() => setLinking(undefined));
 
   const handleAdd = async (providerId: ProviderId): Promise<string | undefined> => {
     if (!configured.includes(providerId)) return undefined;
@@ -93,9 +90,7 @@ const SignInMethods = ({
     setPending(account.id);
     // A refusal answers `error` with a code; a dropped connection throws, and takes the generic
     // sentence.
-    const result = await unlinkAccount({ accountId: account.id }).catch(() => ({
-      error: { code: undefined },
-    }));
+    const result = await settled(unlinkAccount({ accountId: account.id }));
     setPending(undefined);
     // The row survives a refusal, so the sentence goes under its Remove.
     if (result?.error) return unlinkErrorMessage(result.error.code);
@@ -111,7 +106,7 @@ const SignInMethods = ({
     setSigningOut(true);
     setAlert(undefined);
     signInAgain.report(undefined);
-    const { error: failure } = await signOut().catch((thrown: unknown) => ({ error: thrown }));
+    const { error: failure } = await settled(signOut());
     if (failure) {
       setSigningOut(false);
       signInAgain.report(GENERIC_FAILURE);
@@ -183,7 +178,7 @@ const SignInMethods = ({
           status={
             passkeyCount === 0
               ? 'None Added'
-              : `${passkeyCount} ${passkeyCount === 1 ? 'passkey' : 'passkeys'}`
+              : `${passkeyCount} ${plural(passkeyCount, 'passkey', 'passkeys')}`
           }
           href={ACCOUNT_PASSKEYS_PATH}
           linkLabel="Manage Passkeys"

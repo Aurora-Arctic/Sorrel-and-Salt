@@ -1,17 +1,25 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import { hasText } from '@/lib/text';
+import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
+import { MS_PER_DAY } from '../../lib/duration';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
-import type { Failure } from '../../lib/types';
-import { expiryOfDay } from '../../lib/utc';
-import DateField from '../DateField';
-import { FieldShell, FormActions, PlainTextField, SwitchField, fieldDescription } from '../Field';
+import { useFormSend } from '../../lib/use-form-send';
+import { expiryOfDay, isoDayInUtc } from '../../lib/utc';
+import {
+  FieldShell,
+  FormActions,
+  PlainDateField,
+  PlainTextField,
+  SwitchField,
+  fieldDescription,
+  usePlainProblems,
+} from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import MintedCards from './minted';
+import { fieldMessage } from '../../lib/graphql-failure';
 import type { MintedBatch } from './minted';
 import {
   CARDS_PER_SHEET,
@@ -38,6 +46,8 @@ const CreateInvitationCardsDocument = graphql(`
   }
 `);
 
+const SHEETS_HINT = `A Letter sheet holds ${CARDS_PER_SHEET} cards.`;
+
 const NOTE_HINT =
   'Shown to keepers beside the batch on the Invitation Cards tab, and searchable there.';
 
@@ -48,17 +58,17 @@ export const SHEETS_REQUIRED = 'Enter how many sheets to mint, like 3';
 /** A day as an expiry: the end of that day in UTC-12, so the card lasts through its printed day everywhere. */
 const expiryOf = (day: string): string => expiryOfDay(day).toISOString();
 
-/** The day after today in UTC: the service refuses an expiry at or before now. */
-const earliestDay = (): string =>
-  new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+const dayFromNow = (days: number): string => isoDayInUtc(new Date(Date.now() + days * MS_PER_DAY));
 
-const defaultDay = (): string =>
-  new Date(Date.now() + DEFAULT_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+/** The day after today in UTC: the service refuses an expiry at or before now. */
+const earliestDay = (): string => dayFromNow(1);
+
+const defaultDay = (): string => dayFromNow(DEFAULT_EXPIRY_DAYS);
 
 /** A decimal count is rounded to the nearest whole sheet, not refused. */
 const wholeSheets = (text: string): string => {
   const sheets = Number(text);
-  return text.trim() !== '' && Number.isFinite(sheets) && !Number.isInteger(sheets)
+  return hasText(text) && Number.isFinite(sheets) && !Number.isInteger(sheets)
     ? String(Math.round(sheets))
     : text;
 };
@@ -66,11 +76,11 @@ const wholeSheets = (text: string): string => {
 const sheetsOf = (typed: string): number | undefined => {
   const text = wholeSheets(typed);
   const sheets = Number(text);
-  return text.trim() !== '' && Number.isInteger(sheets) ? sheets : undefined;
+  return hasText(text) && Number.isInteger(sheets) ? sheets : undefined;
 };
 
 const sheetsRefusal = (text: string): string | undefined => {
-  if (text.trim() === '') return undefined;
+  if (!hasText(text)) return undefined;
   const sheets = sheetsOf(text);
   const inRange = sheets !== undefined && sheets >= 1 && sheets <= MAX_SHEETS_PER_BATCH;
   return inRange ? undefined : `A batch is from 1 to ${MAX_SHEETS_PER_BATCH} sheets`;
@@ -82,9 +92,10 @@ const totalOf = (text: string): string | undefined => {
   return `${sheets * CARDS_PER_SHEET} cards`;
 };
 
+const FIELDS = ['sheets', 'expiresAt', 'note'] as const;
+
 const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const sheetsId = useId();
-  const dayId = useId();
   const [sheets, setSheets] = useState('');
   const [first] = useState(defaultDay);
   const [day, setDay] = useState(first);
@@ -92,26 +103,16 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const [note, setNote] = useState('');
   const [beta, setBeta] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
-  const [minting, setMinting] = useState(false);
-  const [failure, setFailure] = useState<Failure>({});
+  const { sending: minting, failure, setFailure, send } = useFormSend(FIELDS);
   const [minted, setMinted] = useState<MintedBatch>();
-  const [pressed, setPressed] = useState(false);
-  const sheetsRef = useRef<HTMLInputElement>(null);
+  const { formRef, shown, edited, refuse } = usePlainProblems(['sheets'], failure);
   const [totalRow, setTotalRow] = useState<HTMLDivElement | null>(null);
   const sheetsField = fieldDescription({
     id: sheetsId,
-    hint: `A Letter sheet holds ${CARDS_PER_SHEET} cards.`,
-    error:
-      sheetsRefusal(sheets) ??
-      (pressed && sheets.trim() === '' ? SHEETS_REQUIRED : undefined) ??
-      (failure.field?.name === 'sheets' ? failure.field.message : undefined),
-  });
-  const dayField = fieldDescription({
-    id: dayId,
-    error: failure.field?.name === 'expiresAt' ? failure.field.message : undefined,
+    hint: SHEETS_HINT,
+    error: sheetsRefusal(sheets) ?? shown.sheets,
   });
   const { aria: sheetsAria, ...sheetsShell } = sheetsField;
-  const { aria: dayAria, ...dayShell } = dayField;
 
   // Anything typed or changed is a change; once minted the codes are what a way out would lose, until the PDF is saved.
   const discard = useDiscardGuard(
@@ -122,28 +123,20 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
     event.preventDefault();
     const wanted = sheetsOf(sheets);
     if (wanted === undefined || sheetsRefusal(sheets)) {
-      flushSync(() => {
-        setPressed(true);
-        setSheets(wholeSheets(sheets));
-      });
-      sheetsRef.current?.focus();
+      setSheets(wholeSheets(sheets));
+      refuse({ sheets: SHEETS_REQUIRED });
+      setFailure({});
       return;
     }
-    setMinting(true);
-    setFailure({});
-    try {
+    await send(async () => {
       const answer = await graphqlRequest(CreateInvitationCardsDocument, {
         sheets: wanted,
         expiresAt: expiryOf(day),
         beta,
         note: note.trim() || undefined,
       });
-      setMinting(false);
       setMinted(answer.createInvitationCards);
-    } catch (error) {
-      setMinting(false);
-      setFailure(readGraphqlFailure(error, ['sheets', 'expiresAt', 'note']));
-    }
+    });
   }
 
   if (minted) {
@@ -159,7 +152,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   }
 
   return (
-    <form className="form" noValidate onSubmit={(event) => void submit(event)}>
+    <form ref={formRef} className="form" noValidate onSubmit={(event) => void submit(event)}>
       <p>
         Each card admits one signed-in account, once. After minting, the only copy of the cards is
         the PDF you download; it cannot be made again.
@@ -169,7 +162,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         <FieldShell
           label="Number of Sheets"
           required
-          hint={`A Letter sheet holds ${CARDS_PER_SHEET} cards.`}
+          hint={SHEETS_HINT}
           {...sheetsShell}
           errorInto={totalRow}
           after={
@@ -196,22 +189,22 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
             {...sheetsAria}
             value={sheets}
             disabled={minting}
-            ref={sheetsRef}
-            onChange={(event) => setSheets(event.target.value)}
+            onChange={(event) => {
+              setSheets(event.target.value);
+              edited('sheets');
+            }}
             onBlur={() => setSheets(wholeSheets)}
           />
         </FieldShell>
-        <FieldShell label="Expires On" required {...dayShell}>
-          <DateField
-            id={dayShell.controlId}
-            labelledBy={dayShell.labelId}
-            value={day}
-            min={earliestDay()}
-            disabled={minting}
-            onChange={setDay}
-            {...dayAria}
-          />
-        </FieldShell>
+        <PlainDateField
+          label="Expires On"
+          required
+          value={day}
+          min={earliestDay()}
+          disabled={minting}
+          onChange={setDay}
+          error={fieldMessage(failure, 'expiresAt')}
+        />
       </div>
       <PlainTextField
         name="note"
@@ -223,7 +216,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         limit={MAX_NOTE_LENGTH}
         value={note}
         disabled={minting}
-        error={failure.field?.name === 'note' ? failure.field.message : undefined}
+        error={fieldMessage(failure, 'note')}
         onChange={setNote}
       />
       <div className="admin-cards__switches">

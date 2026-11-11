@@ -1,5 +1,5 @@
-import { PauseControl } from '../../../../../../components/UserList';
-import { requireAdminSession } from '../../../../../../lib/request-session';
+import { PauseControl } from '@/components/UserList';
+import { requireAdminSession } from '@/lib/request-session';
 import { readPauseState } from '../../pause-state';
 
 // The switch on keeper changes, beside the page's heading while Users is open.

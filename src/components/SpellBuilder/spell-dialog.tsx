@@ -4,14 +4,14 @@ import { useQuery } from '@tanstack/react-query';
 import type { Route } from 'next';
 import { useSearchParams } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
-import { NEW, opensNewSpell } from '../AppShell/add-href';
+import { NEW, NEW_SPELL_TITLE, opensNewSpell } from '../AppShell/add-href';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { withParam } from '../../lib/list-href';
 import { usePendingNavigation } from '../../lib/navigation';
 import { RouteModal } from '../Modal';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import type { ModalHeading } from '../Modal/types';
-import { UNTITLED_SPELL } from '../SpellCard';
+import { spellNameOf } from '../SpellCard/untitled';
 import { copiedHrefOf } from '../SpellRecipe/copied-href';
 import { deletedHrefOf } from '../SpellRecipe/deleted-href';
 import SpellBuilder from '.';
@@ -31,7 +31,7 @@ const withEdit = (closeHref: Route, id: string) => withParam(closeHref, 'edit', 
 const EDIT_SPELL = 'Edit Spell';
 
 export const newSpellHeading = (covenName: string): ModalHeading => ({
-  title: 'New Spell',
+  title: NEW_SPELL_TITLE,
   destination: covenName,
 });
 
@@ -72,7 +72,7 @@ export default function SpellDialog({
   });
   const steps = stepsRead.data?.spell.steps;
   const heading: ModalHeading = spell
-    ? { eyebrow: EDIT_SPELL, title: spell.title?.trim() || UNTITLED_SPELL }
+    ? { eyebrow: EDIT_SPELL, title: spellNameOf(spell.title) }
     : newSpellHeading(covenName);
   return (
     <RouteModal

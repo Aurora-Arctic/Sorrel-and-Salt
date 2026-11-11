@@ -19,6 +19,7 @@ export type UserDetailUser = Pick<
   | 'primaryAdmin'
   | 'canCreateWorkspace'
   | 'providers'
+  | 'hasPasskey'
   | 'createdAt'
   | 'agreedTermsVersion'
   | 'agreedDisclaimerVersion'
@@ -50,7 +51,7 @@ export interface UserDetailProps {
   changesPaused?: boolean;
 }
 
-export interface AccessPausePerson {
+interface AccessPausePerson {
   id: string;
   name: string;
 }

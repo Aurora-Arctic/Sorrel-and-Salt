@@ -1,5 +1,5 @@
 import { ISO_DAY, QUOTE_PAIRS } from '../../../lib/citation';
-import { type FieldFormat, tidy, withScheme } from '../../../lib/formats';
+import { type FieldFormat, tidy, trimEnds, withScheme } from '../../../lib/formats';
 import type { ReferenceTextField } from './types';
 
 // How a reference's fields are tidied, and the shapes the schema's extra checks accept. Pure and client-safe, so the server stores
@@ -62,7 +62,6 @@ export const formatLocator: FieldFormat = (text) => dashRanges(tidy(text));
 
 const title: FieldFormat = (text) => unquote(tidy(text));
 const numbers: FieldFormat = (text) => dashNumbers(tidy(text));
-const trimmed: FieldFormat = (text) => text.trim();
 
 // Declared in `CitationFields`' order, which is the order the form and the schema take them in.
 export const FORMAT_OF: Record<ReferenceTextField, FieldFormat> = {
@@ -79,9 +78,9 @@ export const FORMAT_OF: Record<ReferenceTextField, FieldFormat> = {
   published: (text) => dashRanges(tidy(text)),
   pages: numbers,
   host: tidy,
-  url: (text) => withScheme(text.trim()),
-  modified: trimmed,
-  accessed: trimmed,
+  url: (text) => withScheme(trimEnds(text)),
+  modified: trimEnds,
+  accessed: trimEnds,
   note: tidy,
 };
 

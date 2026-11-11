@@ -10,7 +10,8 @@ import { HistoryIcon } from '../IconTip/icons';
 import Skeleton from '../Skeleton';
 import { LocalDay } from '../SupportRequests/day-range';
 import ConfirmedAction from '../ConfirmedAction';
-import { Ledger, PauseFields, Until, endOf, pauseReady } from './access-pause-parts';
+import Until from '../LocalTime/until';
+import { Ledger, PauseFields, endOf, pauseReady } from './access-pause-parts';
 import type { PausePanelProps, PauseSpan, StandingPause } from './types';
 import '../SupportRequests/timeout-panel.scss';
 

@@ -142,7 +142,11 @@ what it scans — an empty listing satisfies every `toEqual([])`.
   loads rather than excluded as two trees, since Vitest's `exclude` takes no
   negation and `DB_FREE` could not be carved back out of them; a file added
   under those trees during a watch session is in both projects until the
-  session restarts. That glob does reach a test inside a directory
+  session restarts. Because no project runs a file under `tests/e2e/`, a unit
+  test of a Playwright helper there sits outside it and imports the helper: at
+  the top of `tests/` (`tests/playwright-config.test.ts`,
+  `tests/e2e-database.test.ts`), or in `tests/guards/` when it is a guard
+  (`tests/guards/axe-scans.test.ts`). The `include` glob does reach a test inside a directory
   literally named `[...all]` (`tests/app/api/auth/[...all]/route.test.ts`) —
   `[...]` is glob metacharacter syntax, so it was worth confirming rather
   than assuming. Its one setup file is `tests/support/setup-msw.ts`, the MSW
@@ -437,10 +441,11 @@ wired into `pre-commit` — CLAUDE.md's pre-commit list is unchanged by this tas
 
 **Wired into CI.** `pr-gate.yml`'s `vitest` job calls the real
 `.github/workflows/vitest.yml`, path-filtered off `src/**`, `tests/**` less
-`tests/e2e/**` (Playwright's, and nothing Vitest runs imports it — the `!`
-exclusion is why the `changes` step sets
-`predicate-quantifier: some-with-excludes`), `vitest.config.mts`, and
-`package{,-lock}.json`. `tests/**` is load-bearing: without it a test-only PR —
+the Playwright specs, `tests/e2e/**/*.spec.ts` (the `!` exclusion is why the
+`changes` step sets `predicate-quantifier: some-with-excludes`),
+`vitest.config.mts`, `playwright.config.ts` and `package{,-lock}.json`. The
+Playwright helpers under `tests/e2e/` and the config stay in because unit tests
+import them. `tests/**` is load-bearing: without it a test-only PR —
 the one kind whose whole content is what this job runs — would skip the job and
 report green. It runs in `build-image.yml`'s shared `testing` container plus its
 own `services: postgres:` (a `build-db-image` job feeding

@@ -24,11 +24,10 @@
   input {
     position: relative;
     flex: none;
-    box-sizing: border-box;
     inline-size: $track-width;
     block-size: $track-height;
     margin: 0;
-    border: 1px solid $text-muted;
+    border: $muted-border;
     border-radius: radius('pill');
     background-color: $surface-card;
     appearance: none;
@@ -114,11 +113,10 @@
   .shown-switch__spinner {
     @include loading-motion(spinner-turn $spin-duration linear infinite);
 
-    // Border-box, so the ring's 2px border sits inside the thumb's size.
+    // The ring's outer edge is the thumb's: its border comes off the size.
     display: block;
-    box-sizing: border-box;
-    inline-size: 100%;
-    block-size: 100%;
+    inline-size: calc(100% - #{$spinner-border * 2});
+    block-size: calc(100% - #{$spinner-border * 2});
     margin: 0;
     padding: 0;
   }

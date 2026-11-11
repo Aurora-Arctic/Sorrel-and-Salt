@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { useDismiss } from '../../lib/use-dismiss';
 import { byAudience, HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { useAnnounce } from '../ClickFeedback/status-region';
@@ -16,12 +17,13 @@ import { MoveFailedNotice, useOptimisticOrder } from './use-optimistic-order';
 import { SortableColumn } from '@/lib/sortable/column';
 import { useHelpSortableRow } from './sortable';
 import type { HelpGuidesBarProps, HelpOutlineAudience, HelpOutlineOrderGuide } from './types';
+import { plural } from '@/lib/text';
 
 // The keepers' Guides bar: the guides under their audience, Public, then Staff, then Keeper, once each. At rest it
 // lists those the filter admits; in Reorder Mode every live guide, each moved by its grip among its own audience's
 // alone, the whole order saved at every move (claude-docs/components/help-outline.md, "The Guides bar").
 
-export const OrderHelpGuidesDocument = graphql(`
+const OrderHelpGuidesDocument = graphql(`
   mutation OrderHelpGuides($ids: [ID!]!) {
     orderHelpGuides(ids: $ids) {
       id
@@ -141,16 +143,14 @@ const HelpGuidesBar = ({
   useEffect(() => {
     closeRef.current = close;
   });
-  useEffect(() => {
-    if (!reordering || saving) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || event.defaultPrevented) return;
+  useDismiss({
+    active: reordering && !saving,
+    onEscape: (event) => {
+      if (event.defaultPrevented) return;
       if (modeRef.current?.querySelector('.is-dragging')) return;
       closeRef.current();
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [reordering, saving]);
+    },
+  });
 
   const onMove = (audience: HelpOutlineAudience, from: number, to: number) => {
     const run = rows.filter((row) => row.audience === audience);
@@ -279,7 +279,7 @@ const HelpGuidesBar = ({
                                 <span className="badge help-outline__count">
                                   {`${guide.subPages} `}
                                   <span className="visually-hidden">
-                                    {guide.subPages === 1 ? 'Sub Page' : 'Sub Pages'}
+                                    {plural(guide.subPages, 'Sub Page', 'Sub Pages')}
                                   </span>
                                 </span>
                               )}

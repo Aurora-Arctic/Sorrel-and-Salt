@@ -49,6 +49,7 @@ The `/coven/[slug]` layout draws a quiet warning (`kind="warn" quiet`, a status 
 ## Result focus
 
 - The submit button is disabled until the form is dirty again, and a disabled control cannot hold focus, so the browser would otherwise drop it to the page; `settle()` moves focus to the first invalid control inside ref, else to the Notice marked result.
+- `settle('result')` reverses the order, the Notice marked result first, for an answer that is not about the fields: a refused delete, whose refusal must take the focus even while a field is still marked from an earlier save.
 
 ## Not here
 

@@ -1,16 +1,16 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { useClickFeedback } from '../ClickFeedback';
 import { useFade } from '../ClickFeedback/fade';
-import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
+import IconTip from '../IconTip';
 import { AddCupboardEntryDocument } from '../IngredientEntry/add-cupboard-entry';
 import MenuButton from '../MenuButton';
-import Spinner from '../Spinner';
+import AddGlyph from './glyph';
 import { HoldingCount, holdingText } from './holding';
 import type { NamedAddIconProps } from './types';
 import { ADD, HELD_MARK } from './wording';
@@ -27,37 +27,6 @@ interface Added {
   to: string;
   last: boolean;
 }
-
-/**
- * The glyph in the plus: the spinner while busy, the check once an add has worked, and the plus.
- * While the check fades back (`returning`) both are drawn, stacked, so the one fades into the
- * other; the stylesheet does the drawing and the fades from the button's `data-state`.
- */
-const Glyph = ({
-  state,
-  busy,
-  onFaded,
-}: {
-  state: 'added' | 'returning' | undefined;
-  busy: boolean;
-  onFaded: ReturnType<typeof useFade>['onAnimationEnd'];
-}): ReactElement =>
-  state ? (
-    <span className="add-icon__glyphs">
-      <span className="add-icon__check" onAnimationEnd={onFaded}>
-        <CheckIcon />
-      </span>
-      {state === 'returning' && (
-        <span className="add-icon__plus">
-          <PlusIcon />
-        </span>
-      )}
-    </span>
-  ) : busy ? (
-    <Spinner />
-  ) : (
-    <PlusIcon />
-  );
 
 /**
  * The plus: with one writable coven it adds there directly, with no quantity, and the page reads
@@ -77,16 +46,9 @@ const AddIcon = ({
   // name holds a comma of its own. Then how many covens hold it, and which.
   const label = `${ADD}: ${entry}${holdingText(holders)}`;
   const { pending, refresh } = usePendingNavigation();
-  const feedback = useClickFeedback({ name: label });
-  const { anchorRef } = feedback;
   const plus = useRef<HTMLButtonElement | null>(null);
-  const plusRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      plus.current = node;
-      anchorRef(node);
-    },
-    [anchorRef],
-  );
+  const feedback = useClickFeedback({ name: label, ref: plus });
+  const { anchorRef } = feedback;
   // The check after a success: it holds for ADDED_HOLD_MS and until the page has been read again, then
   // fades back to the plus, unless the add left every coven holding the entry, when it stays until the
   // held mark replaces it. `useFade` keeps it drawn while it fades and drops the fade under reduced motion.
@@ -129,12 +91,12 @@ const AddIcon = ({
     setHeld(false);
     add.mutate(to);
   };
-  const glyph = <Glyph state={state} busy={busy} onFaded={fade.onAnimationEnd} />;
+  const glyph = <AddGlyph state={state} busy={busy} onFaded={fade.onAnimationEnd} />;
 
   const control =
     covens.length > 1 ? (
       <MenuButton
-        ref={plusRef}
+        ref={anchorRef}
         label={label}
         className="add-icon"
         icon={
@@ -156,7 +118,7 @@ const AddIcon = ({
       />
     ) : (
       <button
-        ref={plusRef}
+        ref={anchorRef}
         type="button"
         className="add-icon"
         data-state={state}

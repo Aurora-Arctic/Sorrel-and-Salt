@@ -1,12 +1,13 @@
 import type { ReactElement } from 'react';
+import Day from '../Day';
 import UserListFilter from './filter';
-import { Mark, ProviderLogo } from './marks';
+import { Mark, SignInMarks } from './marks';
 import UntilMark from './until-mark';
 import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
 import PrimaryAdminMark from './primary-admin-mark';
-import UserLink from './user-link';
 import { roleLabel, SITE_ROLE_ACCESS } from './roles';
+import OpenModalLink from '../Modal/open-modal-link';
 import RoleTip from '../RoleTip';
 import ListFrame, { ListBody } from '../ListFrame';
 import { UserListBodySkeleton } from './skeleton';
@@ -51,7 +52,9 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     cell: (user) => (
       <span className="user-list__name">
         <HistoryLink email={user.email} name={user.name} />
-        <UserLink href={user.openHref} heading={user.heading} name={user.name} />
+        <OpenModalLink href={user.openHref} heading={user.heading}>
+          {user.name}
+        </OpenModalLink>
       </span>
     ),
   },
@@ -117,13 +120,7 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     heading: 'Logins',
     className: 'user-list__fact user-list__mark-column',
     headingClassName: 'user-list__mark-column',
-    cell: (user) => (
-      <span className="user-list__providers">
-        {user.providers.map((id) => (
-          <ProviderLogo key={id} id={id} />
-        ))}
-      </span>
-    ),
+    cell: (user) => <SignInMarks providers={user.providers} hasPasskey={user.hasPasskey} />,
   },
   {
     heading: 'Terms',
@@ -138,11 +135,7 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
   {
     heading: 'Signed Up',
     className: 'user-list__fact',
-    cell: (user) => (
-      <time dateTime={user.createdAt.toISOString()}>
-        {user.createdAt.toISOString().slice(0, 10)}
-      </time>
-    ),
+    cell: (user) => <Day at={user.createdAt} />,
   },
   canImpersonate && {
     heading: 'Impersonate',

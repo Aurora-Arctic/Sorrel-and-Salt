@@ -8,7 +8,7 @@ import {
   stableJson,
 } from '@/db/seed/compendium/content-hash';
 import { entryFilePath, parseEntryFile } from '@/db/seed/compendium/parse-entry';
-import { renderEntryFile } from '@/db/seed/compendium/render-entry';
+import { renderEntryFile } from '../../../support/seed/render-entry';
 import { fileOf, TESTWORT } from './files-fixture';
 import type { SeedCompendiumEntry } from '@/db/seed/types';
 

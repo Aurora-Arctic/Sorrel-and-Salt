@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
-import { check, date, foreignKey, numeric, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
-import { QUANTITY_PRECISION, QUANTITY_SCALE } from './quantities';
+import { check, date, foreignKey, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { quantityColumn } from './quantity-column';
 import { UNITS, UNITS_BY_DIMENSION, UNIT_DIMENSIONS } from './units';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from './ingredients';
@@ -29,6 +29,9 @@ const UNIT_MATCHES_DIMENSION = sql.raw(
 );
 
 // Stock hangs off the ingredient, which is why `spell_steps` references `ingredients` and not this table.
+/** The index that refuses a second live jar of one form in a coven. */
+export const INVENTORY_ITEMS_VARIANT_UNIQUE = 'inventory_items_workspace_id_variant_id_unique';
+
 export const inventoryItems = pgTable(
   'inventory_items',
   {
@@ -45,19 +48,13 @@ export const inventoryItems = pgTable(
     // Precision and scale from ./quantities.ts, which the Zod ceiling reads too.
     // Nullable because `0` already means out of stock, and "we have this,
     // unweighed" must stay sayable.
-    quantityOnHand: numeric('quantity_on_hand', {
-      precision: QUANTITY_PRECISION,
-      scale: QUANTITY_SCALE,
-    }),
+    quantityOnHand: quantityColumn('quantity_on_hand'),
     unit: inventoryUnit('unit'),
     // Stored beside the unit rather than derived, so a query can group by it.
     unitDimension: unitDimension('unit_dimension'),
     // Written at creation with a dimension-appropriate default, not defaulted
     // at read time; no database default, since it depends on the row's unit.
-    lowStockThreshold: numeric('low_stock_threshold', {
-      precision: QUANTITY_PRECISION,
-      scale: QUANTITY_SCALE,
-    }),
+    lowStockThreshold: quantityColumn('low_stock_threshold'),
     // Where this jar came from ("foraged by the creek") — where the stock came
     // from, not where the entry did (`ingredients.workspace_id`).
     source: text('source'),
@@ -68,12 +65,7 @@ export const inventoryItems = pgTable(
     check('inventory_items_unit_matches_dimension', UNIT_MATCHES_DIMENSION),
     // What "already added" means, per form. Partial per CLAUDE.md
     // rule 4: throwing a jar out is recoverable, so it must not reserve the form.
-    liveUnique(
-      'inventory_items_workspace_id_variant_id_unique',
-      table,
-      table.workspaceId,
-      table.variantId,
-    ),
+    liveUnique(INVENTORY_ITEMS_VARIANT_UNIQUE, table, table.workspaceId, table.variantId),
     // The variant and the ingredient beside it, as a pair, so no row holds
     // another ingredient's form.
     foreignKey({

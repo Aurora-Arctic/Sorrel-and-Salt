@@ -88,7 +88,7 @@ type CommonNameSuggestion {
 """
 How many compendium entries each search filter value would list. Each kind is counted under the rest of the filter, leaving out that kind’s own choice, except categories under categoryMode all, which are counted with the chosen ones.
 """
-type CompendiumFacets {
+type CompendiumFacets implements IngredientFacetCounts {
   """
   Every category some entry or live form carries, and every chosen one, most entries first, then by id.
   """
@@ -705,10 +705,40 @@ enum IngredientElement {
   water
 }
 
+"""The counts the compendium’s and a coven’s search filters share."""
+interface IngredientFacetCounts {
+  """
+  Every category some entry or live form carries, and every chosen one, most entries first, then by id.
+  """
+  categories: [IdFacetCount!]!
+
+  """Every curated celestial body, by name, zeros included."""
+  celestialBodies: [NameFacetCount!]!
+
+  """
+  Every deity some entry is linked to, and every chosen one, most entries first, then by id.
+  """
+  deities: [IdFacetCount!]!
+
+  """Every element, in the enum’s order, zeros included."""
+  elements: [ElementFacetCount!]!
+
+  """
+  Every form some entry comes in, and every chosen form, most entries first, then by name. A form is spelled as its curated row, else as most entries spell it.
+  """
+  forms: [NameFacetCount!]!
+
+  """toxic, then not_toxic, zeros included."""
+  toxic: [ToxicFacetCount!]!
+
+  """Every curated zodiac sign, by name, zeros included."""
+  zodiacSigns: [NameFacetCount!]!
+}
+
 """
 How many of a coven’s ingredients each search filter value would list. Each kind is counted under the rest of the filter, leaving out that kind’s own choice, except categories under categoryMode all, which are counted with the chosen ones.
 """
-type IngredientFacets {
+type IngredientFacets implements IngredientFacetCounts {
   """
   Every category some entry or live form carries, and every chosen one, most entries first, then by id.
   """
@@ -2710,6 +2740,7 @@ input SignedOutSupportRequestInput {
   """Where the reply is mailed."""
   email: String!
   errorCode: Int
+  errorDetail: String
   errorReference: String
 
   """1 to 4000 characters."""
@@ -3051,6 +3082,11 @@ type SupportRequest {
   errorCode: Int
 
   """
+  The name and message of the error the sender reported from. Staff only.
+  """
+  errorDetail: String
+
+  """
   The digest of the error page the sender came from, to match the server log. Staff only.
   """
   errorReference: String
@@ -3098,6 +3134,9 @@ input SupportRequestInput {
 
   """The HTTP status of the error page, if any."""
   errorCode: Int
+
+  """The error's name and message, at most 500 characters."""
+  errorDetail: String
 
   """The digest of the error page, if any."""
   errorReference: String
@@ -3234,6 +3273,9 @@ type User {
   canCreateWorkspace: Boolean!
   email: String!
   emailVerified: Boolean!
+
+  """Whether the account holds at least one passkey."""
+  hasPasskey: Boolean!
   id: ID!
   image: String
   memberships: [WorkspaceMember!]!

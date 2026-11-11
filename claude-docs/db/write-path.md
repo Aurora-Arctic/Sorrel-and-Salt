@@ -89,7 +89,10 @@ and nothing else reads it.
 **Where the named writes live.** Beside the table's finders, in its repository
 file, not in `write.ts`: `admin-roles.ts` exports `adminRoleWrites` and
 `invitations.ts` `invitationWrites`, each a function of a `WriterContext` (the
-transaction, the session, and the writer's own stamped `insert` and `update`),
+transaction, the session, the writer's own stamped `insert` and `update`, and
+`stampInsert` and `stampUpdate`, which stamp a raw payload for a multi-row insert or an
+update built by hand: `applyAudit` is called nowhere else in the repository,
+`tests/guards/repository-shared-pieces.test.ts`),
 whose result `writerFor` spreads into the writer. A new marked table touches its
 own repository file; the writer's surface, `AuditWriter`, is where its methods
 are argued for, and `write.test.ts` pins their number.

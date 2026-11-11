@@ -2,6 +2,8 @@
 
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { twoFactor } from '../../lib/auth-client';
+import { settled, type AuthFailure } from '../../lib/auth-call';
+import { codeDigits } from '../../lib/formats';
 import { reportLeaving } from '../../lib/navigation';
 import { WRONG_CODE } from '../../lib/auth-messages';
 import { signInPath } from '../../lib/sign-in';
@@ -18,21 +20,16 @@ export const CODE_LOCKED =
   'Too many wrong codes. Your account is locked for 15 minutes; please try again after that.';
 export const CHALLENGE_EXPIRED =
   'Your sign-in timed out or had too many wrong codes. Please enter your password again.';
-export const GENERIC_CODE_ERROR = "We couldn't check that code. Please try again.";
+const GENERIC_CODE_ERROR = "We couldn't check that code. Please try again.";
 
 type Method = 'app' | 'backup';
-
-interface Failure {
-  status?: number;
-  code?: string;
-}
 
 interface Refusal {
   alert?: string;
   code?: string;
 }
 
-function refusal(failure: Failure): Refusal | 'restart' {
+function refusal(failure: AuthFailure): Refusal | 'restart' {
   if (failure.code === 'INVALID_TWO_FACTOR_COOKIE') return 'restart';
   if (failure.code === 'TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE') return 'restart';
   if (failure.code === 'ACCOUNT_TEMPORARILY_LOCKED') return { alert: CODE_LOCKED };
@@ -49,7 +46,7 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
 
-  const entered = method === 'app' ? code.replace(/\s/g, '') : code.trim();
+  const entered = method === 'app' ? codeDigits(code) : code.trim();
   const ready = entered !== '' && !pending;
 
   const switchMethod = (): void => {
@@ -65,9 +62,7 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
     setPending(true);
     setProblem({});
     const verify = method === 'app' ? twoFactor.verifyTotp : twoFactor.verifyBackupCode;
-    const { error } = await verify({ code: entered, trustDevice }).catch(() => ({
-      error: {} as Failure,
-    }));
+    const { error } = await settled(verify({ code: entered, trustDevice }));
     if (error) {
       setPending(false);
       const answer = refusal(error);

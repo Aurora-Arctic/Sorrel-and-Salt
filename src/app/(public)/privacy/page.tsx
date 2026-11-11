@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { publicPageMetadata } from '@/lib/page-metadata';
-import { SITE_NAME } from '../../../lib/site';
+import { SITE_NAME } from '@/lib/site';
 import { currentDocumentPage } from '../_documents';
 import { PRIVACY_PLACEHOLDERS } from './placeholders';
 

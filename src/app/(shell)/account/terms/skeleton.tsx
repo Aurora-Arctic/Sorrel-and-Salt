@@ -1,4 +1,5 @@
 import PageFrame from '@/components/PageFrame';
+import { TERMS_TITLE } from '@/components/TermsAgreement/head';
 import PageHeader from '@/components/PageHeader';
 import Skeleton from '@/components/Skeleton';
 
@@ -6,7 +7,7 @@ import Skeleton from '@/components/Skeleton';
 export const AccountTermsSkeleton = () => (
   <PageFrame as="div" narrow>
     <section className="page-frame__section panel">
-      <PageHeader title="Terms of Use" />
+      <PageHeader title={TERMS_TITLE} />
       <Skeleton shape="block" quiet />
     </section>
   </PageFrame>

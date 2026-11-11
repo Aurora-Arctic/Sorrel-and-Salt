@@ -1,3 +1,4 @@
+import { hasText } from '@/lib/text';
 import type { ReactElement, ReactNode } from 'react';
 import NewTabHint from '@/components/LinkHint/new-tab-hint';
 import { Fragment } from 'react';
@@ -126,7 +127,7 @@ export function NoteMarks({
 
 function NoteItem({ note }: { note: Note }): ReactElement {
   const { number, reference, locator, sectionLabel } = note;
-  const located = (locator ?? '').trim() !== '';
+  const located = hasText(locator);
   const short = renderShortCitation(reference, located);
   return (
     <li id={noteId(number)} className="ingredient-entry__note">

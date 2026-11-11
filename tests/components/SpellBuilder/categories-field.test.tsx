@@ -1,19 +1,17 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import type {
   CreateSpellMutation,
   CreateSpellMutationVariables,
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import type { CategoryNode } from '../IngredientForm/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+import { renderWithQuery } from '../../support/render-with-query';
+import { save, submitForm } from '../../support/interact';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
@@ -40,17 +38,11 @@ const [TESTWARD, SHIELD] = CATEGORIES;
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}, { shut = false } = {}) {
   offerCategories(CATEGORIES);
-  const view = render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SpellBuilder workspaceId="w1" {...props} />
-    </QueryClientProvider>,
-  );
+  const view = renderWithQuery(<SpellBuilder workspaceId="w1" {...props} />);
   if (props.spell && !shut) fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
   return view;
 }
 
-const save = () => screen.getByRole('button', { name: /^Sav/ });
-const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 const box = () => screen.getByRole('combobox', { name: 'Category' });
 const chip = (name: string) => screen.queryByRole('button', { name: `Remove ${name}` });
 
@@ -133,7 +125,7 @@ describe('the spell builder’s categories', () => {
 
     await pick('Testward');
     await pick('Fixture Shield');
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].input.categoryIds).toEqual([TESTWARD.id, SHIELD.id]);
@@ -161,13 +153,13 @@ describe('the spell builder’s categories', () => {
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     fireEvent.click(chip('Testward') as HTMLElement);
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({ id: 's9', input: { categoryIds: [SHIELD.id] } });
     await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
     fireEvent.click(chip('Fixture Shield') as HTMLElement);
-    submit();
+    submitForm();
     await waitFor(() => expect(calls).toHaveLength(2));
     expect(calls[1].input.categoryIds).toEqual([]);
   });
@@ -190,7 +182,7 @@ describe('the spell builder’s categories', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), {
       target: { value: 'Hedge Ward Renewed' },
     });
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].input).not.toHaveProperty('categoryIds');
@@ -211,7 +203,7 @@ describe('the spell builder’s categories', () => {
 
     await pick('Testward');
     await pick('Fixture Shield');
-    submit();
+    submitForm();
 
     await waitFor(() => expect(box()).toBeInvalid());
     expect(box()).toHaveAccessibleDescription(/Fixture Shield/);

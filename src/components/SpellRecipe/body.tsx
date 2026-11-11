@@ -7,7 +7,7 @@ import OneOffBadge from '../StepRow/one-off-badge';
 import MoonPhaseIcon from '../MoonPhaseIcon';
 import { SafetyMark } from '../SafetyNote';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
-import { UNTITLED_SPELL } from '../SpellCard';
+import { spellNameOf } from '../SpellCard/untitled';
 import { VerdictMark } from '../SpellBuilder/verdict-mark';
 import { STEPS_ID, STEPS_TITLE_ID } from './sections';
 import type {
@@ -66,7 +66,7 @@ export const SpellRecipeLead = ({
   intent,
   categories,
 }: SpellRecipeLeadProps): ReactElement | null => {
-  const name = (title ?? '').trim() || UNTITLED_SPELL;
+  const name = spellNameOf(title);
   const purpose = (intent ?? '').trim();
   return purpose !== '' || categories.length > 0 ? (
     <div className="spell-recipe__lead">

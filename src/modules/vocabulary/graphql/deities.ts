@@ -18,7 +18,7 @@ import { curatedVocabularyWrites } from './curated';
 
 // Public, so no scope in the readers; tests/db/graphql-query-scopes.test.ts holds every other query to its refusal.
 
-export const DeityTraditionRef = curatedVocabularyWrites({
+const DeityTraditionRef = curatedVocabularyWrites({
   ref: builder.objectRef<DeityTraditionRow>('DeityTradition'),
   services: {
     create: createDeityTradition,

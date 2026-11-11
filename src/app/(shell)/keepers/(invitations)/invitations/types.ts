@@ -1,7 +1,7 @@
 import type {
   AdminInvitationsCursor,
   AdminInvitationsFilter,
-} from '../../../../../components/AdminInvitations/types';
+} from '@/components/AdminInvitations/types';
 
 export interface AdminInvitationsPageProps {
   searchParams: Promise<InvitationsSearchParams>;

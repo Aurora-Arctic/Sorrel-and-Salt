@@ -1,7 +1,5 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { REPO_ROOT } from '../support/paths';
+import { readSource as source, sourceFiles } from '../support/repo-scan';
 
 // CLAUDE.md rule 4, read as text off the repository (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention"): every finder the index exports filters tombstones, bar the escape hatches, each of which says so in its name.
 // Each reader's behaviour is its service's READS table's (claude-docs/testing/layer-ownership.md, "The owning layer"). Read as text, not imported, because importing the repository would instantiate a Postgres client, which the `unit` project must not.
@@ -36,7 +34,10 @@ const FILTERING_PREDICATES: Record<string, string> = {
   standingOnUser: `${REPOSITORY}/support.ts`,
 };
 
-const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
+/** The folder's function predicates that hold a child table's rows to a readable, live parent, each with the visibility rule its body must call. */
+const READABLE_PARENT_PREDICATES: Record<string, RegExp> = {
+  inReadableWorking: /\breadableWorkings\(/,
+};
 
 function predicateBody(name: string): string {
   const text = source(FILTERING_PREDICATES[name]);
@@ -45,9 +46,9 @@ function predicateBody(name: string): string {
   return text.slice(start, text.indexOf(';\n', start) + 1);
 }
 
-const FILES = readdirSync(join(REPO_ROOT, REPOSITORY), { withFileTypes: true })
-  .filter((entry) => entry.isFile() && entry.name.endsWith('.ts'))
-  .map((entry) => `${REPOSITORY}/${entry.name}`);
+const FILES = sourceFiles({ under: `${REPOSITORY}/`, extension: /\.ts$/ }).filter(
+  (file) => !file.slice(REPOSITORY.length + 1).includes('/'),
+);
 
 const declaration = (name: string) =>
   new RegExp(`^(?:export )?(?:async )?function ${name}\\b`, 'm');
@@ -128,10 +129,12 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
         continue;
       // Either it filters itself or it delegates to something that does: a sibling finder (`findPage` and its kin, or another the
       // index exports and this guard holds, never a hatch), `readableSpells` or `readableWorkings` (with the visibility rule),
-      // `readableInTiers` (with the tier) or `curated` (with the group's).
-      const delegates = [...finders, ...Object.keys(FILTERING_PREDICATES)].some(
-        (sibling) => sibling !== finder && new RegExp(`\\b${sibling}\\(`).test(body),
-      );
+      // `readableInTiers` (with the tier), `curated` (with the group's) or a shared predicate the next two tests hold.
+      const delegates = [
+        ...finders,
+        ...Object.keys(FILTERING_PREDICATES),
+        ...Object.keys(READABLE_PARENT_PREDICATES),
+      ].some((sibling) => sibling !== finder && new RegExp(`\\b${sibling}\\(`).test(body));
       expect(
         delegates ||
           /notSoftDeleted\(|find(?:Many|One|Page)\w*(?<!IncludingSoftDeleted)\(|readableSpells\(|readableWorkings\(|readableInTiers\(|\bcurated\(/.test(
@@ -147,6 +150,12 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
       expect(predicateBody(name), `${name} applies notSoftDeleted(...)`).toMatch(
         /notSoftDeleted\(/,
       );
+    }
+  });
+
+  it('admits a readable-parent predicate only while it applies its visibility rule itself', () => {
+    for (const [name, rule] of Object.entries(READABLE_PARENT_PREDICATES)) {
+      expect(functionBody(name), `${name} applies ${rule.source}`).toMatch(rule);
     }
   });
 

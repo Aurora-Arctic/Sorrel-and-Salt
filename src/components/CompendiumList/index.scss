@@ -14,7 +14,7 @@
 
   flex-wrap: nowrap;
 
-  @container data-table (max-width: #{$table-stack-width}) {
+  @include container-to(data-table, #{$table-stack-width}) {
     flex-wrap: wrap;
   }
 }
@@ -68,12 +68,12 @@ $categories-wide: 75rem;
   .category-chips {
     flex-wrap: nowrap;
 
-    @container data-table (max-width: #{$table-stack-width}) {
+    @include container-to(data-table, #{$table-stack-width}) {
       flex-wrap: wrap;
     }
   }
 
-  @container data-table (min-width: #{$categories-wide}) {
+  @include container-from(data-table, #{$categories-wide}) {
     min-inline-size: calc(#{$categories-floor} + 2 * #{$table-cell-inset});
   }
 }

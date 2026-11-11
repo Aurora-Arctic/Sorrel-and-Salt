@@ -1,8 +1,8 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
+import { exposeCorrespondences } from './correspondences';
 import {
   CATEGORY_MODES,
-  INGREDIENT_ELEMENTS,
   INGREDIENT_SOURCES,
   COMPENDIUM_LISTINGS,
   COMPENDIUM_ORDERS,
@@ -54,9 +54,6 @@ export const CategoryModeEnum = builder.enumType('CategoryMode', {
   description:
     'How a search combines the categories it is given: all (the default), an entry must carry every one; or any, at least one. A category counts when it is filed on the entry or on any live form.',
 });
-export const IngredientElementEnum = builder.enumType('IngredientElement', {
-  values: INGREDIENT_ELEMENTS,
-});
 
 // Declared before any is implemented, since the types below name one another.
 export const IngredientRef = builder.objectRef<IngredientRow>('Ingredient');
@@ -65,7 +62,7 @@ export const IngredientVariantRef = builder.objectRef<IngredientVariantRow>('Ing
 /**
  * No `audit`, as `folkNames` carries none.
  */
-export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').implement({
+const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').implement({
   description:
     'Another ingredient to use in its place: a link to one, or the name of one not entered.',
   fields: (t) => ({
@@ -101,7 +98,7 @@ export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').impl
 /**
  * Its id is what promoting it names. No `audit`.
  */
-export const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement({
+const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement({
   description: 'An alternative name for an ingredient.',
   fields: (t) => ({
     id: t.exposeID('id'),
@@ -112,24 +109,21 @@ export const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement(
 /**
  * No `audit`, as `folkNames` carries none.
  */
-export const IngredientDeityRef = builder
-  .objectRef<IngredientDeityRow>('IngredientDeity')
-  .implement({
-    description:
-      'A deity the ingredient corresponds to: one picked from the curated list, or typed.',
-    fields: (t) => ({
-      name: t.exposeString('name', {
-        description: "The name as saved: a picked deity's curated spelling, or the typed text.",
-      }),
-      deity: t.field({
-        type: DeityRef,
-        nullable: true,
-        description:
-          'The curated deity picked: null on a typed name, and once that deity or its tradition is retired.',
-        resolve: (deity) => deity.deity,
-      }),
+const IngredientDeityRef = builder.objectRef<IngredientDeityRow>('IngredientDeity').implement({
+  description: 'A deity the ingredient corresponds to: one picked from the curated list, or typed.',
+  fields: (t) => ({
+    name: t.exposeString('name', {
+      description: "The name as saved: a picked deity's curated spelling, or the typed text.",
     }),
-  });
+    deity: t.field({
+      type: DeityRef,
+      nullable: true,
+      description:
+        'The curated deity picked: null on a typed name, and once that deity or its tradition is retired.',
+      resolve: (deity) => deity.deity,
+    }),
+  }),
+});
 
 /**
  * One form of an ingredient (DESIGN.md §7): what it adds to its ingredient, never what it overrides.
@@ -154,10 +148,7 @@ IngredientVariantRef.implement({
     toxic: t.exposeBoolean('toxic', {
       description: "Whether this form is toxic: its own flag, never its ingredient's.",
     }),
-    elements: t.expose('elements', { type: [IngredientElementEnum], nullable: true }),
-    celestialBodies: t.exposeStringList('celestialBodies', { nullable: true }),
-    zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
-    colors: t.exposeStringList('colors', { nullable: true }),
+    ...exposeCorrespondences(t),
     // This form's own additions, never its ingredient's, which the client
     // shows beside them (the union rule). The row is the loaders' key, as an
     // ingredient's is theirs.
@@ -198,10 +189,7 @@ IngredientRef.implement({
         "Whether the public compendium lists the entry; a coven's own entry is always shown.",
     }),
     description: t.exposeString('description', { nullable: true }),
-    elements: t.expose('elements', { type: [IngredientElementEnum], nullable: true }),
-    celestialBodies: t.exposeStringList('celestialBodies', { nullable: true }),
-    zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
-    colors: t.exposeStringList('colors', { nullable: true }),
+    ...exposeCorrespondences(t),
     safetyNotes: t.exposeString('safetyNotes', { nullable: true }),
     toxic: t.exposeBoolean('toxic', {
       description: 'Whether the ingredient is toxic. Each form carries its own flag.',

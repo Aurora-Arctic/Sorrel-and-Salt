@@ -26,7 +26,7 @@ A module's index re-exports its `graphql/` files, so loading the index is what
 registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `@/modules/coven`, `@/modules/vocabulary` and `@/modules/ingredients` for that side effect, never the
 `graphql/` path, which is internal. `identity` has `User`, `me`, the admin user list's `users` connection and the
-`providersByUser` loader; `coven` has
+`providersByUser` and `passkeyHeldByUser` loaders; `coven` has
 `Workspace`, `WorkspaceMember`, the `membershipsByUser` loader and the
 `User.memberships` field; `vocabulary` has `CorrespondenceSuggestion`,
 `FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
@@ -145,7 +145,8 @@ expiry in the service they guard.
 
 - **`vocabulary/services/curated-writes.ts`** — a curated write's steps,
   each taking the table's `CuratedVocabulary` descriptor (`types.ts`):
-  `refuseSlugCollision`, `liveRow` for an id that may name nothing,
+  `refuseSlugCollision`, `liveRow` for an id that may name nothing, `bySlug`,
+  `createCurated` and `deleteCurated` for the shared create and delete,
   `parseUnderLiveParent` for a row filed under a group, and a group's
   `moveTarget`, `updateGroup` and `deleteGroup`, built on
   `group-moves.ts` and a `CuratedGroup` whose `members` are the `MovedRows`
@@ -424,6 +425,14 @@ instead ("No folk names recorded."), since a field is filled in rather than adde
 `noun` is the plural, matched by a plural verb. One wording serves all six lists.
 The plural reads true however many rows the list could have held, and naming each
 filter, not calling it "that filter", shows a keeper which one to change.
+
+### Building a coven or compendium address
+
+`covenPath(slug, ...segments)` in `src/lib/coven-path.ts` and `compendiumEntryPath(slug)` in
+`src/lib/compendium-path.ts` build these addresses, typed `Route`, with every part encoded. A
+segment that is `false` or `undefined` is left out, so `covenPath(slug, 'grimoire', drafts && 'drafts')`
+is one call either way. The caller adds a query or hash after it. A template literal starting
+`/coven/${` or `/compendium/ingredients/${` is refused by `tests/guards/coven-paths.test.ts`.
 
 ### Moving a page to another coven
 

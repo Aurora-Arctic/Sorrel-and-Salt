@@ -1,23 +1,25 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadCompendiumEntryForm } from '@/components/CompendiumEntryForm/lazy';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE, encodeCursor } from '@/lib/pagination';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
 import { entryDetail } from '../../../support/entry-detail';
+import { getSession } from '../../../support/request-session';
+import { renderWithQuery } from '../../../support/render-with-query';
 
 // The form loads on first use; loading it once up front keeps each test off a cold import.
 beforeAll(async () => {
   await loadCompendiumEntryForm();
 });
 
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 const redirect = vi.fn((_to: string) => {
   throw new Error('redirected');
 });
-vi.mock('next/navigation', () => ({ redirect, useRouter: () => router }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
+  redirect,
+}));
 
 const viewerIfSignedIn = vi.fn();
 const covenRolesIfSignedIn = vi.fn();
@@ -50,8 +52,7 @@ vi.mock('@/app/compendium-reads', () => ({
 const resolveCompendiumSlug = vi.fn();
 const readSourcingScore = vi.fn(async () => null);
 const SESSION = { userId: 'user-fixture' };
-const getSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 const covensHoldingEntry = vi.fn();
 const readCompendiumReview = vi.fn();
 const getIngredient = vi.fn();
@@ -125,7 +126,7 @@ const shellOf = (...canWrite: boolean[]) => ({
 
 async function renderPage(params: Record<string, string | string[]> = {}) {
   const page = await Page({ searchParams: Promise.resolve(params) });
-  render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+  renderWithQuery(page);
 }
 
 const sizeRead = () => readCompendium.mock.lastCall![3] as number;

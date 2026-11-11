@@ -20,7 +20,7 @@ import type {
  * The six groups in order, which nothing reads (groups list alphabetically), kept so the two compare. Each names its icon, written only into a group the seed
  * inserts, so a keeper's later choice survives a reseed; migration 0077 carried them onto earlier databases.
  */
-export const FORM_GROUPS: SeedIngredientFormGroup[] = [
+const FORM_GROUPS: SeedIngredientFormGroup[] = [
   {
     name: 'Botanical',
     description: 'Parts of a plant or fungus - grown in the dirt.',

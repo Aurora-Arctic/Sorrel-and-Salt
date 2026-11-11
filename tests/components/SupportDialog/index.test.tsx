@@ -1,19 +1,18 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeQueryClient } from '@/lib/graphql-client';
 import type { SupportDialogStateQuery } from '@/gql/graphql';
 import { graphqlLink, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 const search = vi.fn<() => string>();
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn(), back: vi.fn() };
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   // The router answers the framework's own route on a 404; the dialog must read the address bar instead.
   usePathname: () => '/_not-found',
   useSearchParams: () => new URLSearchParams(search()),
-  useRouter: () => router,
 }));
 
 const { default: SupportDialog } = await import('@/components/SupportDialog');
@@ -27,11 +26,7 @@ function answer(state: Answer): void {
 }
 
 function open() {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SupportDialog />
-    </QueryClientProvider>,
-  );
+  return renderWithQuery(<SupportDialog />);
 }
 
 beforeEach(() => {
@@ -100,6 +95,24 @@ describe('SupportDialog', () => {
     );
     expect(within(dialog).getByRole('textbox', { name: 'Page' })).toHaveValue(
       '/coven/fixture-coven',
+    );
+  });
+
+  it('carries the error detail from the address into the form, read-only', async () => {
+    search.mockReturnValue('support=bug&error=500&ref=abc&detail=TypeError%3A+Testwort');
+    open();
+    const detail = await screen.findByRole('group', { name: 'Error Details' });
+    expect(detail).toHaveTextContent('TypeError: Testwort');
+    expect(within(detail).queryByRole('textbox')).toBeNull();
+  });
+
+  it('carries the error detail into the signed-out form too', async () => {
+    answer({ kind: 'signedOut', until: null });
+    search.mockReturnValue('support=bug&error=500&ref=abc&detail=TypeError%3A+Testwort');
+    open();
+    await screen.findByRole('textbox', { name: /Email/ });
+    expect(screen.getByRole('group', { name: 'Error Details' })).toHaveTextContent(
+      'TypeError: Testwort',
     );
   });
 

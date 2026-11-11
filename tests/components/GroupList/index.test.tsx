@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { router } from '../../support/next-navigation';
 import GroupList from '@/components/GroupList';
 import { groupsHref } from '@/components/GroupList/href';
 import type { GroupListEntry } from '@/components/GroupList/types';
@@ -7,8 +8,6 @@ import { FILTER_ROWS } from '../../support/filter-form';
 import type { FilterFormSubject } from '../../support/types';
 
 // The soft pager and the filter navigate through the App Router.
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/group-list.md
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RunArgumentRefused, assertRunArguments } from '@/lib/jobs/run-arguments';
+import { ORIGIN } from '../../support/constants';
 
 // A job's arguments are kept in its event log, so only ids, a kind, the site origin, a lock length and a return path pass.
 
@@ -12,28 +13,22 @@ describe('assertRunArguments', () => {
     ['an id', [ID]],
     ['an id and an origin', [ID, 'https://sorrelandsalt.example']],
     ['an id and no origin', [ID, null]],
-    [
-      'a support status mail',
-      [{ kind: 'received', requestId: ID, origin: 'http://localhost:8000' }],
-    ],
-    [
-      'a password notice',
-      [{ kind: 'password-changed', userId: ID, origin: 'http://localhost:8000', how: 'reset' }],
-    ],
+    ['a support status mail', [{ kind: 'received', requestId: ID, origin: ORIGIN }]],
+    ['a password notice', [{ kind: 'password-changed', userId: ID, origin: ORIGIN, how: 'reset' }]],
     [
       'a change link',
       [
         {
           kind: 'change',
           userId: ID,
-          authBase: 'http://localhost:8000/api/auth',
+          authBase: `${ORIGIN}/api/auth`,
           next: '/account/support?request=' + OTHER,
         },
       ],
     ],
     [
       'a change link with no return path',
-      [{ kind: 'change', userId: ID, authBase: 'http://localhost:8000/api/auth', next: null }],
+      [{ kind: 'change', userId: ID, authBase: `${ORIGIN}/api/auth`, next: null }],
     ],
     [
       'a lockout',

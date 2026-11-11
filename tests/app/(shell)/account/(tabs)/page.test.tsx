@@ -1,21 +1,15 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
-import type { Session } from '@/lib/session';
+import { requireSession } from '../../../../support/request-session';
+import { renderWithQuery } from '../../../../support/render-with-query';
 
 // The Account tab: the Name, Email and Invitations sections, each linked from the page's own nav (claude-docs/auth/admin-bootstrap.md, "The account page").
 // The session, row and linked accounts are mocked (tests/lib/request-session.test.ts's and the identity service's); that an unverified account never reaches the page is `requireSession()`'s, asserted there and in tests/e2e/account.spec.ts.
 
-const requireSession = vi.fn<() => Promise<Session>>();
-vi.mock('@/lib/request-session', () => ({ requireSession }));
+vi.mock('@/lib/request-session', () => import('../../../../support/request-session'));
 vi.mock('@/modules/coven', () => ({ firstCovenSlugOf: async () => undefined }));
 // Accept reads the router, which a page test has no app to give.
-vi.mock('next/navigation', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('next/navigation')>()),
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-}));
 
 const getMe = vi.fn();
 const listReceivedInvitations = vi.fn();
@@ -54,7 +48,7 @@ async function renderPage(email = 'ada@example.test', searchParams: Record<strin
     verificationSentAt: null,
   });
   const page = await AccountPage({ searchParams: Promise.resolve(searchParams) });
-  render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+  renderWithQuery(page);
 }
 
 const section = (name: string) => screen.getByRole('region', { name });

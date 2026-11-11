@@ -3,7 +3,7 @@ import { StrictMode, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useFormHistory } from '@/components/Field';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { byLabel, choose, press, redo, type, typeIn, undo } from '../../support/interact';
+import { byLabel, choose, press, redo, save, type, typeIn, undo } from '../../support/interact';
 import { HistoryProbe, type ProbeHandles } from '../../support/form-history';
 
 function mount(
@@ -30,8 +30,6 @@ const focusIn = (label: string) => act(() => byLabel(label, 'input').focus());
 const submits = (handles: { current: ProbeHandles | null }) =>
   (handles.current!.methods.control as unknown as { _formState: { submitCount: number } })
     ._formState.submitCount;
-
-const save = () => screen.getByRole('button', { name: 'Save' });
 
 afterEach(() => {
   vi.useRealTimers();

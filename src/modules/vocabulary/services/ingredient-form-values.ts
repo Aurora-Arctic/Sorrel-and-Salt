@@ -3,22 +3,32 @@ import {
   findCompendiumFormRenameClashes,
   findIngredientFormValueCount,
   findIngredientFormValues,
-  findOneBySlug,
   withAudit,
 } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { formSlug } from '../../../lib/slugify';
-import { joinAnd, plural } from '../../../lib/text';
+import { joinAndMore, plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { assertCurator } from '@/modules/identity';
-import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
+import {
+  INGREDIENT_VARIANTS_FORM_UNIQUE,
+  ingredientFormGroups,
+  ingredientForms,
+} from '../schema/ingredient-forms';
 import { IngredientFormValueInput } from '../validation/ingredient-form-value';
 import { cachedFilteredList } from './curated-lists';
-import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-writes';
-import { describeEntry, refuseWhileHeld } from './held-entries';
+import {
+  bySlug,
+  createCurated,
+  deleteCurated,
+  liveRow,
+  parseUnderLiveParent,
+  refuseSlugCollision,
+} from './curated-writes';
+import { ENTRIES_NAMED, describeEntry } from './held-entries';
 import type {
   CuratedVocabulary,
   IngredientFormValueFilter,
@@ -58,9 +68,7 @@ export function countIngredientFormValues(
  * @throws {NotFound} no live form holds the slug.
  */
 export async function getIngredientFormValueBySlug(slug: string): Promise<IngredientFormValueRow> {
-  const row = await findOneBySlug(ingredientForms, slug);
-  if (!row) throw new NotFound('No such form');
-  return row;
+  return bySlug(FORMS, slug);
 }
 
 /**
@@ -75,12 +83,7 @@ export async function createIngredientFormValue(
   const { fields, groupName } = await parseForm(input);
   const slug = formSlug(fields.name, groupName);
 
-  const written = await withAudit(session, async (write) => {
-    const [row] = await write.insert(ingredientForms, { ...fields, slug });
-    return row;
-  }).catch((error: unknown) => refuseSlugCollision(FORMS, error, slug));
-  expireCompendium();
-  return written;
+  return createCurated(session, FORMS, fields, slug);
 }
 
 /**
@@ -112,7 +115,7 @@ export async function updateIngredientFormValue(
     return row;
   }).catch(async (error: unknown) => {
     if (renamed) await refuseDoubledForms(rename, error);
-    return refuseSlugCollision(FORMS, error, slug);
+    return refuseSlugCollision(FORMS, error, fields.name, slug);
   });
   expireCompendium();
   return written;
@@ -126,22 +129,17 @@ export async function updateIngredientFormValue(
  */
 export async function deleteIngredientFormValue(session: Session, id: string): Promise<void> {
   assertCurator(session);
-  const form = await liveRow(FORMS, id);
   // Read through the compendium's own filter on the pick.
-  await refuseWhileHeld(
-    { formId: form.id },
-    {
+  await deleteCurated(session, FORMS, id, (form) => ({
+    filter: { formId: form.id },
+    // The list filters forms by their text, which every entry picking this form holds.
+    heldBy: { forms: [form.name] },
+    wording: {
       name: form.name,
       holding: 'is the form of',
       remedy: (count) => `Change ${plural(count, 'its', 'their')} form first.`,
     },
-  );
-
-  await withAudit(session, async (write) => {
-    const [row] = await write.softDeleteByIds(ingredientForms, [id]);
-    if (!row) throw new NotFound('No such form');
-  });
-  expireCompendium();
+  }));
 }
 
 /** The input parsed, its group checked live, and the group's name, which the slug carries. */
@@ -161,26 +159,22 @@ async function refuseDoubledForms(
   rename: { id: string; from: string; to: string },
   error?: unknown,
 ): Promise<void> {
-  if (error !== undefined && violatedUniqueIndex(error) !== 'ingredient_variants_form_unique') {
+  if (error !== undefined && violatedUniqueIndex(error) !== INGREDIENT_VARIANTS_FORM_UNIQUE) {
     return;
   }
-  const renaming = `Renaming "${rename.from}" to "${rename.to}"`;
   const doubled = await findCompendiumFormRenameClashes(rename.id, rename.to);
-  if (doubled.length > 0) {
-    const entries = joinAnd(doubled.map(describeEntry));
-    throw new ValidationError([
-      {
-        path: ['name'],
-        message: `${renaming} would give ${entries} two forms called "${rename.to}" — remove one of them first`,
-      },
-    ]);
+  const count = doubled.length;
+  if (count > 0) {
+    const entries = joinAndMore(doubled.slice(0, ENTRIES_NAMED).map(describeEntry), count);
+    throw fieldRefusal(
+      'name',
+      `"${rename.to}" already exists on ${count} compendium ${plural(count, 'entry', 'entries')} that also ${plural(count, 'has', 'have')} "${rename.from}" — ${entries}. Remove one of the two forms from ${plural(count, 'it', 'each')} first.`,
+    );
   }
   if (error !== undefined) {
-    throw new ValidationError([
-      {
-        path: ['name'],
-        message: `${renaming} would give a compendium entry two forms of one name — try again`,
-      },
-    ]);
+    throw fieldRefusal(
+      'name',
+      `"${rename.to}" already exists on a compendium entry that also has "${rename.from}" — try again`,
+    );
   }
 }

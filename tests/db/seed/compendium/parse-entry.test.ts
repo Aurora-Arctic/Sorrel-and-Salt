@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parse, stringify } from 'yaml';
 import { entryFilePath, parseEntryFile } from '@/db/seed/compendium/parse-entry';
-import { renderEntryFile } from '@/db/seed/compendium/render-entry';
+import { renderEntryFile } from '../../../support/seed/render-entry';
 import { wordsOf } from '../compendium-fixture';
 import { fileOf, TESTWORT } from './files-fixture';
 

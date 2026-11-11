@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 export type DocumentPlaceholders = Readonly<Record<string, ReactNode>>;
 
-export interface DocumentHistoryEntry {
+interface DocumentHistoryEntry {
   number: number;
   publishedAt: Date;
   href: string;

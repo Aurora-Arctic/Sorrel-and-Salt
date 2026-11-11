@@ -27,6 +27,7 @@ import {
 } from './typing';
 import type { SearchSentenceProps } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 function leadNode(lead: string): ReactNode {
   const count = /^(?:\d+|No(?= |$))/.exec(lead)?.[0];
@@ -220,7 +221,7 @@ export default function SearchSentence({
       {hasTail ? `, ${fullClauses}` : null}
     </>
   );
-  const rootClass = `search-sentence${className ? ` ${className}` : ''}`;
+  const rootClass = cx('search-sentence', className);
   const announced = !searching || returned;
   const statusRegion = (
     // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role

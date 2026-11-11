@@ -4,7 +4,7 @@
 
 It reuses the parts of the staff dialog ([`SupportRequests`](support-requests.md)): `facts.tsx` (Sent, then Page on a row of its own, then Error; the grid's gaps are unchanged), `thread.tsx` and the `support-detail` rules. It differs from the staff dialog in what it leaves out and how it names people:
 
-- **The Error fact shows the status code alone.** The error reference (the crash digest) is staff-only: the sender's reads return none, the GraphQL field is curator-only, and the staff dialog keeps it with its Copy button.
+- **The Error fact shows the status code alone.** The error reference and the error detail are staff-only: the sender's reads return neither, the GraphQL fields are curator-only, and the staff dialog keeps them, the reference with its Copy button.
 - **A Resolve button** (`resolve-button.tsx`) shows while the request is open or waiting on the sender. It resolves the sender's own request without a reply (`resolveMySupportRequest`), allowed on an open request too so a sender who has their answer need not wait for staff; the admin side then reads "Resolved by Sender".
 - **No** issue panel, settings column, time-out panel or assignment. There is no From fact: the sender knows who they are.
 - **Tags and site name, not people.** The sender's own message is named "You" and tagged "You"; every reply is named for the site (`SITE_NAME`, "Sorrel & Salt") and tagged "Staff", whether a curator or a keeper wrote it. A staff member's name is never read for this dialog. Each entry's meta line is who, the tag and when, with the time short (`30 Oct, 2:01 pm`).

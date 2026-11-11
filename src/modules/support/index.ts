@@ -19,7 +19,6 @@ export * from './loaders/timeouts-by-address';
 export * from './loaders/timeouts-by-sender';
 export * from './loaders/users-on-requests';
 export type {
-  SupportRequestView,
   SupportAbout,
   SupportNotifier,
   SupportRequestFilter,

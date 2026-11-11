@@ -1,8 +1,7 @@
 'use client';
 
-import { usePendingNavigation } from '../../lib/navigation';
+import { useLeaveCoven } from '../../lib/navigation';
 import type { ReactElement } from 'react';
-import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../ConfirmedAction';
 import { LeaveWorkspaceDocument } from './documents';
@@ -19,7 +18,7 @@ const LeaveWorkspaceButton = ({
   successors,
   quiet = false,
 }: LeaveWorkspaceButtonProps): ReactElement => {
-  const { navigate, refresh } = usePendingNavigation();
+  const leaveCoven = useLeaveCoven();
   // The sole steward would be refused, so they are shown the ways out instead.
   if (successors)
     return <OwnerExit workspaceId={workspaceId} name={name} successors={successors} />;
@@ -39,13 +38,8 @@ const LeaveWorkspaceButton = ({
       busy="Leaving"
       confirmClass="btn btn--destructive"
       send={() => graphqlRequest(LeaveWorkspaceDocument, { workspaceId })}
-      // The coven is closed to this user now, so the page cannot be read again:
-      // replace it with the landing, and refresh so the shell's switcher stops
-      // listing it (a client-side replace does not re-run the layout).
-      onSent={() => {
-        navigate(COVEN_LANDING_PATH, { replace: true });
-        refresh();
-      }}
+      // The coven is closed to this user now, so the page cannot be read again.
+      onSent={leaveCoven}
     />
   );
 };

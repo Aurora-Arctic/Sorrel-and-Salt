@@ -1,14 +1,12 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 import ConfirmedAction from '@/components/ConfirmedAction';
 import type { ConfirmedActionProps } from '@/components/ConfirmedAction/types';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { limitMessage } from '@/lib/formats';
 import { REASON_LIMIT } from '@/modules/identity/validation/reason';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
-
-const router = { refresh: vi.fn(), push: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // Its asking, busy confirm, refusal and success are proved once here (layer-ownership.md, rule 6).
 

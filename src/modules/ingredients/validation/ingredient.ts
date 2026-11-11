@@ -8,7 +8,7 @@ import {
   UNSETTLED_KIND,
 } from '../schema/ingredient-enums';
 import { trimEnds } from '../../../lib/formats';
-import { RowId, optionalText, requiredText } from '../../../lib/validation';
+import { isRowId, optionalText, requiredText } from '../../../lib/validation';
 import { elementArray, textEntries } from './lists';
 import { formatLocator } from './reference-format';
 import type {
@@ -155,7 +155,7 @@ const variant = z
     // Not a uuid names nothing and would be a driver error at the comparison.
     for (const key of ['id', 'formId'] as const) {
       const id = value[key];
-      if (id && !RowId.safeParse(id).success) {
+      if (id && !isRowId(id)) {
         ctx.addIssue({ code: 'custom', path: [key], message: 'No such form' });
       }
     }
@@ -316,7 +316,7 @@ function linkOrNameRules<IdKey extends string>(
         refuse(index, messages.both);
       } else if (link) {
         // Not a uuid names nothing and would be a driver error at the comparison.
-        if (!RowId.safeParse(link).success) refuse(index, messages.noSuchLink);
+        if (!isRowId(link)) refuse(index, messages.noSuchLink);
         else if (links.has(link)) refuse(index, messages.linkRepeated);
         links.add(link);
       } else if (entry.name) {
@@ -351,7 +351,7 @@ function substituteRules(entries: readonly SubstituteFields[], ctx: z.Refinement
     if (!substituteVariantId) return;
     const path = ['substitutes', index, 'substituteVariantId'];
     // Not a uuid names nothing and would be a driver error at the comparison.
-    if (!RowId.safeParse(substituteVariantId).success) {
+    if (!isRowId(substituteVariantId)) {
       ctx.addIssue({ code: 'custom', path, message: 'No such form to pick' });
     } else if (!ingredientId) {
       ctx.addIssue({ code: 'custom', path, message: 'Choose the ingredient this is a form of' });
@@ -386,7 +386,7 @@ function referenceRules(
   entries.forEach(({ referenceId, supports }, index) => {
     if (!referenceId) refuse(index, 'Choose a source');
     // Not a uuid names nothing and would be a driver error at the comparison.
-    else if (!RowId.safeParse(referenceId).success) refuse(index, 'No such source');
+    else if (!isRowId(referenceId)) refuse(index, 'No such source');
     else if (listed.has(referenceId)) refuse(index, 'This source is already listed');
     else listed.add(referenceId);
     supports?.forEach((field, at) => {
@@ -433,7 +433,7 @@ function covenCitationRules(
 function categoryRules(ids: readonly string[], ctx: z.RefinementCtx) {
   ids.forEach((id, index) => {
     // Not a uuid names nothing and would be a driver error at the comparison.
-    if (!RowId.safeParse(id).success) {
+    if (!isRowId(id)) {
       ctx.addIssue({ code: 'custom', path: ['categoryIds', index], message: 'No such category' });
     }
   });

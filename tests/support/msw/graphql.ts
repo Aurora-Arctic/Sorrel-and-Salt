@@ -9,6 +9,7 @@ import { maskError } from '@/graphql/errors';
 import {
   AccessPaused,
   Forbidden,
+  InUse,
   NotFound,
   RateLimited,
   StaleWrite,
@@ -43,12 +44,34 @@ export function mockGraphQLMutation<
   );
 }
 
+/**
+ * A mutation held unanswered until the returned function is called, for asserting what the page shows
+ * while it is in flight. Call it before the test ends, or the open request stalls the tests after it.
+ */
+export function mockGraphQLPendingMutation<TData extends GraphQLQuery>(
+  operationName: string,
+  data: TData,
+): () => void {
+  let release = () => {};
+  const answered = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  server.use(
+    graphqlLink.mutation<TData>(operationName, async () => {
+      await answered;
+      return HttpResponse.json({ data });
+    }),
+  );
+  return release;
+}
+
 function thrownFor({
   code,
   fieldErrors = [],
   currentRevision = 1,
   retryAfterSeconds = 60,
   pausedUntil = null,
+  heldBy = {},
   message,
 }: MockedError): Error {
   switch (code) {
@@ -58,6 +81,8 @@ function thrownFor({
       return new AccessPaused(pausedUntil, message);
     case 'FORBIDDEN':
       return new Forbidden(message);
+    case 'IN_USE':
+      return new InUse(message ?? 'In use', heldBy);
     case 'NOT_FOUND':
       return new NotFound(message);
     case 'STALE_WRITE':

@@ -15,7 +15,7 @@ import type { SupportEmailReplyProps } from './types';
 const titleOf = (requestSubject: string): string =>
   supportTitle('Reply to your support request', requestSubject);
 
-export function SupportEmailReply({
+function SupportEmailReply({
   url,
   origin = new URL(url).origin,
   part,

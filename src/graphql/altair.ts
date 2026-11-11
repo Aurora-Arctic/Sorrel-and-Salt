@@ -5,7 +5,7 @@ import altairPackage from 'altair-static/package.json';
 // (claude-docs/graphql/manual-api-testing.md). Rendered here, not by Yoga's `renderGraphiQL`, which
 // never sees the request and so cannot make the endpoint absolute.
 
-export const ALTAIR_ASSETS_URL = `https://cdn.jsdelivr.net/npm/altair-static@${altairPackage.version}/build/dist/`;
+const ALTAIR_ASSETS_URL = `https://cdn.jsdelivr.net/npm/altair-static@${altairPackage.version}/build/dist/`;
 
 export function isBrowserNavigation(request: Request): boolean {
   return request.method === 'GET' && (request.headers.get('accept') ?? '').includes('text/html');

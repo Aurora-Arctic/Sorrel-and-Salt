@@ -5,7 +5,7 @@ import { route } from '../../../.storybook/route';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import DeleteWorkspaceButton from '../DeleteWorkspaceButton';
-import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
+import { WORKSPACE_ROLE_ACCESS } from '../MemberList/roles';
 import PageNav from '../PageNav';
 import { PendingLink } from '../../lib/navigation';
 import LeaveWorkspaceButton from '.';

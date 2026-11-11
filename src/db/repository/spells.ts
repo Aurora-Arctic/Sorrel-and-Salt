@@ -8,7 +8,7 @@ import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
 import { inTiers, notSoftDeleted, scopedTo } from './predicates';
-import { existsIn, selectFrom, selectOne } from './select';
+import { existsByKey, selectFrom, selectOne, whenIds } from './select';
 import type {
   AuditWriter,
   IngredientRow,
@@ -33,6 +33,11 @@ export function readableSpells(membership: Membership): SQL | undefined {
   );
 }
 
+/** The row whose `spell_id` column (or the spell-step's) names a spell the reader may read: the parent check for a table with no coven of its own. */
+export function inReadableSpell(membership: Membership, spellIdColumn: unknown): SQL {
+  return existsByKey(spells, spells.id, spellIdColumn, readableSpells(membership));
+}
+
 /**
  * The reader rule for a working: its spell is readable, and the working is the coven's if shared, else its
  * recorder's or a participant's. Live only: the participant and deduction rows have no `deleted_at`.
@@ -40,16 +45,15 @@ export function readableSpells(membership: Membership): SQL | undefined {
 export function readableWorkings(membership: Membership): SQL | undefined {
   return and(
     notSoftDeleted(spellWorkings),
-    existsIn(spells, and(eq(spells.id, spellWorkings.spellId), readableSpells(membership))),
+    inReadableSpell(membership, spellWorkings.spellId),
     or(
       eq(spellWorkings.visibility, 'workspace'),
       eq(spellWorkings.createdBy, membership.userId),
-      existsIn(
+      existsByKey(
         spellWorkingParticipants,
-        and(
-          eq(spellWorkingParticipants.workingId, spellWorkings.id),
-          eq(spellWorkingParticipants.userId, membership.userId),
-        ),
+        spellWorkingParticipants.workingId,
+        spellWorkings.id,
+        eq(spellWorkingParticipants.userId, membership.userId),
       ),
     ),
   );
@@ -98,13 +102,14 @@ export function findManyInSpells<
   table: TTable,
   spellIds: readonly string[],
 ): Promise<TTable['$inferSelect'][]> {
-  if (spellIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    table,
-    and(
-      notSoftDeleted(table),
-      inArray(table.spellId, [...spellIds]),
-      existsIn(spells, and(eq(spells.id, table.spellId), readableSpells(membership))),
+  return whenIds(spellIds, () =>
+    selectFrom(
+      table,
+      and(
+        notSoftDeleted(table),
+        inArray(table.spellId, [...spellIds]),
+        inReadableSpell(membership, table.spellId),
+      ),
     ),
   );
 }
@@ -118,17 +123,17 @@ export function findIngredientsInSpellsIncludingSoftDeleted(
   membership: Membership,
   ingredientIds: readonly string[],
 ): Promise<IngredientRow[]> {
-  if (ingredientIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    ingredients,
-    and(
-      inArray(ingredients.id, [...ingredientIds]),
-      inTiers([membership], ingredients),
-      existsIn(
-        spellSteps,
-        and(
-          eq(spellSteps.ingredientId, ingredients.id),
-          existsIn(spells, and(eq(spells.id, spellSteps.spellId), readableSpells(membership))),
+  return whenIds(ingredientIds, () =>
+    selectFrom(
+      ingredients,
+      and(
+        inArray(ingredients.id, [...ingredientIds]),
+        inTiers([membership], ingredients),
+        existsByKey(
+          spellSteps,
+          spellSteps.ingredientId,
+          ingredients.id,
+          inReadableSpell(membership, spellSteps.spellId),
         ),
       ),
     ),
@@ -194,26 +199,28 @@ export function spellStepWrites({
   'lockStepsOfVariants' | 'moveSteps' | 'softDeleteSpell' | 'softDeleteStepsOfSpell'
 > {
   const inCovenSpell = (membership: Membership) =>
-    existsIn(spells, and(eq(spells.id, spellSteps.spellId), scopedTo(membership, spells)));
+    existsByKey(spells, spells.id, spellSteps.spellId, scopedTo(membership, spells));
   return {
     lockStepsOfVariants: (membership, variantIds) => {
-      if (variantIds.length === 0) return Promise.resolve([]);
-      return selectFrom(
-        spellSteps,
-        and(
-          notSoftDeleted(spellSteps),
-          inArray(spellSteps.variantId, [...variantIds]),
-          inCovenSpell(membership),
+      return whenIds(variantIds, () =>
+        selectFrom(
+          spellSteps,
+          and(
+            notSoftDeleted(spellSteps),
+            inArray(spellSteps.variantId, [...variantIds]),
+            inCovenSpell(membership),
+          ),
+          { lockIn: tx, lockOrder: spellSteps.id },
         ),
-        { lockIn: tx, lockOrder: spellSteps.id },
       );
     },
     moveSteps: (membership, stepIds, to) => {
-      if (stepIds.length === 0) return Promise.resolve([]);
-      return update(
-        spellSteps,
-        { ingredientId: to.ingredientId, variantId: to.variantId },
-        and(inArray(spellSteps.id, [...stepIds]), inCovenSpell(membership)),
+      return whenIds(stepIds, () =>
+        update(
+          spellSteps,
+          { ingredientId: to.ingredientId, variantId: to.variantId },
+          and(inArray(spellSteps.id, [...stepIds]), inCovenSpell(membership)),
+        ),
       );
     },
     // The spell under the reader's rule, so a private spell goes only for its author; its steps

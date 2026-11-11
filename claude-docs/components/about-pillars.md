@@ -5,6 +5,7 @@
 ## Contracts
 
 - **Presentational.** It takes `pillars` (`types.ts`) and works nothing out. The wording is in `src/app/(public)/about/placeholders.tsx`, not in the component.
+- **The markup is `AboutCards`'s** (`src/components/AboutCards`), which this and the other About row both render through; this component passes its row's class and its cards.
 - **It is reached through a placeholder.** `documents/about.md` holds a paragraph that is exactly `{aboutPillars}` under "What Sorrel & Salt Is", and the About routes hand `DocumentPage` this component for that name. A version published before the placeholder existed has bullets there instead and renders as prose ([`document-page.md`](document-page.md)).
 - **The card wording is not versioned.** A keeper edits the prose around the cards, not the cards.
 - **Headings are `h3`**, since the section's `h2` comes from the markdown. The jump menu is read from the markdown, so the cards add no entries.

@@ -42,6 +42,7 @@ import type {
   SharedFieldProps,
 } from './types';
 import { draftOf, sourceTierOf } from './values';
+import { cx } from '@/lib/class-names';
 
 // The References field: one search over the compendium's sources and this coven's, each pick a
 // one-line row beneath the box (claude-docs/components/ingredient-form.md, "The references"). Typed
@@ -49,7 +50,7 @@ import { draftOf, sourceTierOf } from './values';
 
 // The search and the panel's two saves select the same fields, written out in each: a document is its
 // caller's own text, so a fragment defined elsewhere would not be sent with it.
-export const ReferenceSuggestionsDocument = graphql(`
+const ReferenceSuggestionsDocument = graphql(`
   query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {
     referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
@@ -327,13 +328,11 @@ export function ReferencesField({
             return (
               <li
                 key={row.id}
-                className={[
+                className={cx(
                   'ingredient-form__reference',
                   open && 'is-open',
                   invalid && 'is-invalid',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
+                )}
               >
                 {/* One line: the source's short form, its italics real,
                     the whole citation the pointer's tooltip and its

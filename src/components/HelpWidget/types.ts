@@ -3,14 +3,14 @@ import type { Route } from 'next';
 /** Who can put a refusal right, as the invitation refusals widget words it. */
 export type RefusalFixer = 'You' | 'Whoever Sent It' | 'A Keeper' | 'No One Needs To';
 
-export interface RefusalFix {
+interface RefusalFix {
   who: RefusalFixer;
   /** One sentence: what the reader does now. */
   now: string;
 }
 
 /** The button the accept page shows beside a refusal. */
-export interface RefusalAction {
+interface RefusalAction {
   label: string;
   href: Route;
 }

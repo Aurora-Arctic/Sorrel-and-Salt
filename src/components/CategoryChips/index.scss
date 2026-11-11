@@ -51,7 +51,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: space(2);
-  box-sizing: border-box;
   max-inline-size: calc(100vw - #{space(4)});
   padding: space(3);
 

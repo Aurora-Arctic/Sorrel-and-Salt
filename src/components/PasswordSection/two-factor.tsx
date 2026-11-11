@@ -3,12 +3,14 @@
 import { type FormEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { twoFactor, useSession } from '../../lib/auth-client';
+import { settled, type AuthFailure } from '../../lib/auth-call';
 import { TOO_MANY_ATTEMPTS, WRONG_CODE, rateLimited } from '../../lib/auth-messages';
 import { useLeaveGuard } from '../../lib/navigation';
+import { codeDigits } from '../../lib/formats';
 import { saveFile } from '../../lib/save-file';
-import { SITE_NAME } from '../../lib/site';
+import { SITE_NAME, SITE_TITLE_NAME } from '../../lib/site';
 import BusyButton from '../BusyButton';
-import { PlainTextField } from '../Field';
+import { CodeField } from '../Field';
 import { CopyIcon, DownloadIcon, PrintIcon } from '../IconTip';
 import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
@@ -23,23 +25,18 @@ import type { TwoFactorSettingsProps } from './types';
 // confirmed; turning off takes the password (claude-docs/components/password-section.md, "Two-factor").
 
 export const WRONG_PASSWORD = "That isn't your password.";
-export const GENERIC_TWO_FACTOR_ERROR = "We couldn't change two-factor. Please try again.";
+const GENERIC_TWO_FACTOR_ERROR = "We couldn't change two-factor. Please try again.";
 // A lock on password sign-in holds the right password here too; the owner is told the lock is why.
 export const PASSWORD_SIGN_IN_PAUSED_MESSAGE =
   'Password sign-in is paused for this account after too many wrong passwords. Please wait a few minutes, then try again.';
 // Turning off wants a session younger than Better Auth's `freshAge`, a day, as removing a sign-in
 // method does.
-export const STALE_SESSION =
+export const STALE_SESSION_TURN_OFF =
   'Turning two-factor off needs a recent sign-in. Sign out and sign back in, then turn it off.';
 
 interface Enrolment {
   totpURI: string;
   backupCodes: string[];
-}
-
-interface Failure {
-  status?: number;
-  code?: string;
 }
 
 interface Refusal {
@@ -48,11 +45,11 @@ interface Refusal {
   code?: string;
 }
 
-function refusal(failure: Failure): Refusal {
+function refusal(failure: AuthFailure): Refusal {
   if (failure.code === 'PASSWORD_SIGN_IN_PAUSED') return { alert: PASSWORD_SIGN_IN_PAUSED_MESSAGE };
   if (failure.code === 'INVALID_PASSWORD') return { password: WRONG_PASSWORD };
   if (failure.code === 'INVALID_CODE') return { code: WRONG_CODE };
-  if (failure.code === 'SESSION_NOT_FRESH') return { alert: STALE_SESSION };
+  if (failure.code === 'SESSION_NOT_FRESH') return { alert: STALE_SESSION_TURN_OFF };
   if (rateLimited(failure)) return { alert: TOO_MANY_ATTEMPTS };
   return { alert: GENERIC_TWO_FACTOR_ERROR };
 }
@@ -103,7 +100,7 @@ function printCodes(codes: string[], email: string | undefined): void {
     parent.append(element);
     return element;
   };
-  doc.title = `${SITE_NAME} Backup Codes`;
+  doc.title = `${SITE_TITLE_NAME} Backup Codes`;
   add('style', PRINT_STYLE, doc.head);
   add('h1', `${SITE_NAME} Backup Codes`);
   if (email) add('p', email);
@@ -178,17 +175,17 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
     target?.scrollIntoView({ block: 'start' });
   }, [warning]);
 
-  const entered = code.replace(/\s/g, '');
+  const entered = codeDigits(code);
 
   // Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both
   // arrive here.
   const run = async <T,>(
-    call: () => Promise<{ data: T | null; error: Failure | null }>,
+    call: () => Promise<{ data: T | null; error: AuthFailure | null }>,
   ): Promise<T | undefined> => {
     setPending(true);
     setProblem({});
     setSaved(undefined);
-    const { data, error } = await call().catch(() => ({ data: null, error: {} as Failure }));
+    const { data, error } = await settled(call());
     setPending(false);
     if (error || !data) {
       setProblem(refusal(error ?? {}));
@@ -347,17 +344,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
           </ol>
           {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
           <form className="form" onSubmit={confirm} noValidate>
-            <PlainTextField
-              label="Code From Your App"
-              required
-              placeholder="123456"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              spellCheck={false}
-              value={code}
-              onChange={setCode}
-              error={problem.code}
-            />
+            <CodeField value={code} onChange={setCode} error={problem.code} />
             <div className="form__actions">
               <BusyButton
                 type="submit"

@@ -24,7 +24,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 // hidden so it is no scroll container at all (claude-docs/components/modal.md, "Clipped, not hidden").
 .modal-dialog {
   container: modal / inline-size;
-  box-sizing: border-box;
   width: min(calc($dialog-column + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
   max-height: calc(100dvh - #{$modal-gap} * 2);
   overflow: clip;
@@ -296,10 +295,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 }
 
 .modal-dialog__under {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(3);
+  @include wrap-row(space(3));
 
   &:empty {
     display: none;
@@ -442,7 +438,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   @include modal-surface($shadow-floating);
   position: relative;
   isolation: isolate;
-  box-sizing: border-box;
   width: min(100%, $narrow-column);
   min-inline-size: 0;
   margin: auto;
@@ -475,7 +470,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   @include focus-ring;
 }
 
-@container modal-main (max-width: #{$narrow-column + $modal-padding}) {
+@include container-to(modal-main, #{$narrow-column + $modal-padding}) {
   .confirm-overlay__card .modal__actions {
     flex-direction: column;
     align-items: stretch;

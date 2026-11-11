@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import AddAction from '@/app/(shell)/curator/add-action';
+import AddAction from '@/app/(shell)/_admin/add-action';
 
 const NEW_SPELL_HREF = '/coven/fixture/grimoire?new=spell-fixture' as Route;
 

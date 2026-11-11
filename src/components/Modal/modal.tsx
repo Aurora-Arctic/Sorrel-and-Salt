@@ -15,11 +15,13 @@ import {
 import { CloseGuardContext, closeGuardSlot } from './close-guard';
 import { ConfirmLayerContext } from './confirm-layer';
 import { firstShownField } from './fields';
+import { useOnTurnedOn } from './use-on-turned-on';
 import { pageHeading } from './page-heading';
 import { holdPage } from './page-hold';
 import { HeaderNoteContext, HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // A dialog on the native element's modal mode: `showModal()` gives the top layer, the inert page
 // (the focus trap) and the `cancel` event for Escape. The owner closes it by unmounting it, so a
@@ -143,23 +145,19 @@ const Modal = ({
 
   // Contents that arrive after it opened (a route modal's form in place of its skeleton) take the
   // focus on their first field, if it is still on the dialog itself and not on Close.
-  const wasLoading = useRef(loading);
-  useEffect(() => {
+  useOnTurnedOn(!loading, () => {
     const dialog = ref.current;
-    if (wasLoading.current && !loading && dialog && document.activeElement === dialog) {
+    if (dialog && document.activeElement === dialog) {
       const title = focusTitle ? dialog.querySelector<HTMLElement>('.modal-dialog__title') : null;
       (title ?? firstShownField(body.current ?? dialog))?.focus();
     }
-    wasLoading.current = loading;
-  }, [loading, focusTitle]);
+  });
   // A view the contents switch to whose heading is the title takes the focus there as it turns on.
-  const wasTitled = useRef(focusTitle);
-  useEffect(() => {
-    if (focusTitle && !wasTitled.current && ref.current?.open) {
+  useOnTurnedOn(focusTitle, () => {
+    if (ref.current?.open) {
       ref.current.querySelector<HTMLElement>('.modal-dialog__title')?.focus();
     }
-    wasTitled.current = focusTitle;
-  }, [focusTitle]);
+  });
   // open, fading, then closed; closed asks the owner once, in an effect, so no render reads a ref.
 
   const [phase, setPhase] = useState<ModalPhase>('open');
@@ -271,9 +269,7 @@ const Modal = ({
   return (
     <dialog
       ref={ref}
-      className={['modal modal-dialog', size && `modal-dialog--${size}`, closing && 'is-closing']
-        .filter(Boolean)
-        .join(' ')}
+      className={cx('modal modal-dialog', size && `modal-dialog--${size}`, closing && 'is-closing')}
       // Focusable by script alone, for a dialog with no field to take the focus.
       tabIndex={-1}
       aria-labelledby={(eyebrow
@@ -291,13 +287,11 @@ const Modal = ({
       }}
     >
       <div
-        className={[
+        className={cx(
           'modal-dialog__header',
           topEnd !== undefined && 'modal-dialog__header--topped',
           headerAlign === 'center' && 'modal-dialog__header--centered',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        )}
       >
         {/* An edit dialog's head: what it does to what kind, then which entry. The hidden commas
             are for the dialog's name alone, which a screen reader would otherwise run together. */}

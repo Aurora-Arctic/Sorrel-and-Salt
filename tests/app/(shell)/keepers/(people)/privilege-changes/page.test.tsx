@@ -3,15 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm, sent } from '../../../../../support/filter-form';
+import { requireAdminSession } from '../../../../../support/request-session';
 
 // The `/keepers/privilege-changes` page: the guard, then the ledger read, its count and the users it names, the search parameters turned into the filter and the page, and the pager's links keeping the filter.
 // The guard and services are mocked: what they decide is tests/lib/request-session.test.ts's and tests/modules/identity/services/privilege-changes.test.ts's.
 
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
+vi.mock('@/lib/request-session', () => import('../../../../../support/request-session'));
 
 // The filter's shared form holds the router, which only a mounted app provides.
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const listPrivilegeChanges = vi.fn();
 const countPrivilegeChanges = vi.fn();

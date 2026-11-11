@@ -1,7 +1,6 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import AnnotateDialog from '@/components/IngredientEntry/annotate-dialog';
 import { CUPBOARD_MENU_LABEL } from '@/components/IngredientEntry/cupboard-writes';
 import { UNSAVED_CHANGES_LOST } from '@/components/Modal';
@@ -11,13 +10,11 @@ import type {
   MakeItOursMutation,
   RemoveCupboardEntryMutation,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { cupboardEntryFormModule } from '@/components/IngredientEntry/lazy-forms';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // claude-docs/components/ingredient-entry.md
 
@@ -54,10 +51,8 @@ const MORE: NonNullable<AnnotateDialogProps['more']> = {
 };
 
 function renderDialog(props: Partial<AnnotateDialogProps> = {}) {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <AnnotateDialog closeHref={CLOSE} opened={OPENED} more={MORE} {...props} />
-    </QueryClientProvider>,
+  return renderWithQuery(
+    <AnnotateDialog closeHref={CLOSE} opened={OPENED} more={MORE} {...props} />,
   );
 }
 

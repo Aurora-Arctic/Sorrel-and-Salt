@@ -31,13 +31,13 @@ test(
     await field(page.getByRole('main'), 'Email Address').fill(email);
 
     await field(page.getByRole('main'), 'Password').fill(BREACHED_PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
+    await page.getByRole('button', { name: 'Create Account', exact: true }).click();
     await expect(field(page.getByRole('main'), 'Password')).toHaveAttribute('aria-invalid', 'true');
     const none = await withSql((sql) => sql`select 1 from users where email = ${email}`);
     expect(none).toHaveLength(0);
 
     await field(page.getByRole('main'), 'Password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
+    await page.getByRole('button', { name: 'Create Account', exact: true }).click();
     await expect(page).toHaveURL('/account/email?next=%2Fcoven');
     await assertNoAccessibilityViolations(page);
 

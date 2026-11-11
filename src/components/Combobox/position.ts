@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  autoUpdate,
   flip,
   type Middleware,
   type MiddlewareState,
@@ -11,7 +10,8 @@ import {
   size,
   useFloating,
 } from '@floating-ui/react-dom';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useAutoPosition } from '../../lib/use-auto-position';
 
 // Where an open list sits: beneath the box, as wide as its anchor, flipped above when there is more room there, on Floating UI, fixed so a scrolling ancestor cannot clip it
 // (claude-docs/components/combobox.md, "Where the list opens").
@@ -97,11 +97,7 @@ export function useListPosition(
     ],
   });
 
-  const { reference, floating } = elements;
-  useEffect(() => {
-    if (!isOpen || !reference || !floating) return;
-    return autoUpdate(reference, floating, update);
-  }, [isOpen, reference, floating, update]);
+  useAutoPosition(isOpen, elements.reference as Element | null, elements.floating, update);
 
   return {
     setControl,

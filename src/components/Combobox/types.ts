@@ -1,6 +1,7 @@
 import type { useSortable } from '@dnd-kit/sortable';
 import type { ReactNode, Ref } from 'react';
 import type { GroupColors } from '../../lib/types';
+import type { AutoCapitalize, EnterKeyHint } from '../Field/types';
 
 export interface ComboboxOption {
   value: string;
@@ -67,9 +68,9 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   /** Turns the browser's spell-check off for a box whose words are names, not prose. */
   spellCheck?: boolean;
   /** `none` for a box whose words are not sentences; unset, the browser decides. */
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  autoCapitalize?: AutoCapitalize;
   /** The label on a phone keyboard's Enter key. */
-  enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
+  enterKeyHint?: EnterKeyHint;
   required?: boolean;
   qualifier?: ComboboxQualifier;
   listAnchor?: HTMLElement | null;

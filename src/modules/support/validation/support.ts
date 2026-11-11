@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  ERROR_DETAIL_MAX_LENGTH,
   ERROR_REFERENCE_MAX_LENGTH,
   ISSUE_LINK_EXPECTED,
   ISSUE_REPOSITORY,
@@ -14,7 +15,7 @@ import {
   MESSAGE_REQUIRED,
   ABOUT_REQUIRED,
 } from '../../../lib/support-messages';
-import { trimEnds } from '../../../lib/formats';
+import { limitMessage, trimEnds } from '../../../lib/formats';
 import { limitedText } from '../../../lib/validation';
 import { supportRequestAbout } from '../schema/support-requests';
 
@@ -27,8 +28,8 @@ import {
 } from './limits';
 
 export {
+  ERROR_DETAIL_MAX_LENGTH,
   ERROR_REFERENCE_MAX_LENGTH,
-  ISSUE_REPOSITORY,
   MESSAGE_MAX_LENGTH,
   PATH_MAX_LENGTH,
   SUBJECT_MAX_LENGTH,
@@ -58,6 +59,11 @@ export const SupportRequestInput = z.object({
     .string()
     .trim()
     .max(ERROR_REFERENCE_MAX_LENGTH, { error: 'That error reference is too long' })
+    .nullish(),
+  errorDetail: z
+    .string()
+    .trim()
+    .max(ERROR_DETAIL_MAX_LENGTH, { error: limitMessage(ERROR_DETAIL_MAX_LENGTH) })
     .nullish(),
 });
 
@@ -94,6 +100,7 @@ export const SignedOutSupportRequestInput = z.object({
   path: SupportRequestInput.shape.path,
   errorCode: SupportRequestInput.shape.errorCode,
   errorReference: SupportRequestInput.shape.errorReference,
+  errorDetail: SupportRequestInput.shape.errorDetail,
   website: z.string().nullish(),
 });
 

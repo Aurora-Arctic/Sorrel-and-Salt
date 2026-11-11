@@ -4,8 +4,8 @@ import SupportList from '@/components/SupportList';
 import type { SupportListEntry } from '@/components/SupportList/types';
 import type { SupportSenderRequestEntry } from '@/components/SupportSenderRequest/types';
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/account/support',
   useSearchParams: () => new URLSearchParams(),
 }));

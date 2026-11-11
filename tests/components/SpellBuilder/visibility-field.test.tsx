@@ -1,19 +1,17 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type {
   CreateSpellMutation,
   CreateSpellMutationVariables,
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { VISIBILITY_LABELS } from '@/components/GrimoireList/params';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+import { renderWithQuery } from '../../support/render-with-query';
+import { save, submitForm } from '../../support/interact';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
@@ -22,19 +20,13 @@ beforeEach(() => offerCategories([]));
 // That the service refuses a narrowing is tests/modules/grimoire/services/spells.test.ts's; here the builder shows that refusal's words in its notice.
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}, { openAll = true } = {}) {
-  const view = render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SpellBuilder workspaceId="w1" {...props} />
-    </QueryClientProvider>,
-  );
+  const view = renderWithQuery(<SpellBuilder workspaceId="w1" {...props} />);
   if (props.spell && openAll) fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
   return view;
 }
 
 const toggle = () => screen.getByRole('switch', { name: VISIBILITY_LABELS.workspace });
-const save = () => screen.getByRole('button', { name: /^Sav/ });
 const title = () => screen.getByRole('textbox', { name: 'Title' });
-const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 const sharing = () => screen.queryByRole('group', { name: /^Share Fixture Working\?/ });
 
 const SPELL: SpellBuilderSpell = {
@@ -139,7 +131,7 @@ describe('SpellBuilder visibility', () => {
     renderBuilder();
 
     fireEvent.change(title(), { target: { value: 'Fixture Working' } });
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input).toMatchObject({ visibility: 'private' });
@@ -151,7 +143,7 @@ describe('SpellBuilder visibility', () => {
 
     fireEvent.click(toggle());
     fireEvent.change(title(), { target: { value: 'Fixture Working' } });
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input).toMatchObject({ visibility: 'workspace' });
@@ -244,7 +236,7 @@ describe('SpellBuilder visibility', () => {
       expect(toggle()).not.toBeChecked();
 
       fireEvent.change(title(), { target: { value: 'Fixture Working Again' } });
-      submit();
+      submitForm();
 
       const notice = await screen.findByText(NARROWING_REFUSED);
       expect(notice).toHaveAttribute('role', 'alert');
@@ -268,7 +260,7 @@ describe('SpellBuilder visibility', () => {
 
       fireEvent.click(toggle());
       fireEvent.change(title(), { target: { value: 'Fixture Working' } });
-      submit();
+      submitForm();
 
       await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
       expect(toggle()).toBeChecked();

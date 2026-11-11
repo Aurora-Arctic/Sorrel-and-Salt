@@ -1,32 +1,26 @@
 import type { Route } from 'next';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { router } from '../../support/next-navigation';
 import CovenCards from '@/components/CovenCards';
 import type { CovenCardEntry, CovenCardsProps } from '@/components/CovenCards/types';
 import type { WorkspaceIngredientFacets } from '@/modules/ingredients';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { filterForm, sent } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { RouteModal, RouteModalProvider } from '@/components/Modal';
 import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
+import { expectBefore } from '../../support/interact';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // A coven's Ingredients list: a link per entry inside the coven, the coven's own label,
 // the jars beneath the forms, Edit in the foot where an entry has an edit address, and a filter with the coven's three extra
 // choices (claude-docs/components/coven-cards.md).
 
-const client = makeQueryClient();
-const Cards = (props: CovenCardsProps): ReactElement => (
-  <QueryClientProvider client={client}>
-    <CovenCards {...props} />
-  </QueryClientProvider>
-);
+const Cards = (props: CovenCardsProps): ReactElement => <CovenCards {...props} />;
 
 const FILTER: CovenCardsProps['filter'] = {
   query: '',
@@ -120,7 +114,7 @@ describe('CovenCards', () => {
   });
 
   it('links each entry to its page inside the coven', () => {
-    render(<Cards {...props()} />);
+    renderWithQuery(<Cards {...props()} />);
     const list = screen.getByRole('list', { name: 'Ingredients' });
     const hrefs = ENTRIES.map(({ label }) =>
       within(list).getByRole('link', { name: label }).getAttribute('href'),
@@ -129,7 +123,7 @@ describe('CovenCards', () => {
   });
 
   it("opens an entry's details modal over the list from its Quick Look, the name a plain link to its page", async () => {
-    render(
+    renderWithQuery(
       <Navigating push={router.push}>
         <RouteModalProvider>
           <Cards {...props()} />
@@ -158,7 +152,7 @@ describe('CovenCards', () => {
   });
 
   it('draws no forms line, the jar lines standing in its place', () => {
-    render(<Cards {...props()} />);
+    renderWithQuery(<Cards {...props()} />);
     const card = screen.getByRole('list', { name: 'Ingredients' });
     expect(within(card).getAllByText(/Fixture Herb/)).toHaveLength(1);
     expect(within(card).queryByText(/Fixture Oil/i)).toBeNull();
@@ -172,7 +166,7 @@ describe('CovenCards', () => {
       ],
       jars: [{ id: 'j1', variantId: 'v1', quantity: 3, unit: 'oz', threshold: null }],
     };
-    render(<Cards {...props({ entries: [{ ...ENTRIES[0]!, stock }, ENTRIES[1]!] })} />);
+    renderWithQuery(<Cards {...props({ entries: [{ ...ENTRIES[0]!, stock }, ENTRIES[1]!] })} />);
     const list = screen.getByRole('list', { name: 'Ingredients' });
     const pencils = within(list).getAllByRole('button', { name: /^Edit Stock/ });
     expect(pencils).toHaveLength(1);
@@ -182,7 +176,7 @@ describe('CovenCards', () => {
   it("puts Edit Stock first in a card's foot, before Edit", () => {
     const editHref = '/coven/fixture-coven/ingredients?edit=e1' as Route;
     const stock = { forms: [{ variantId: 'v1', label: 'Fixture Herb' }], jars: [] };
-    render(
+    renderWithQuery(
       <Cards
         {...props({
           entries: [
@@ -199,12 +193,12 @@ describe('CovenCards', () => {
     const list = screen.getByRole('list', { name: 'Ingredients' });
     const pencil = within(list).getByRole('button', { name: /^Edit Stock/ });
     const edit = within(list).getByRole('link', { name: /^Edit Testwort/ });
-    expect(pencil.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(pencil, edit);
   });
 
   it('draws Edit on a card only when it is given an edit address, named for the entry', () => {
     const editHref = '/coven/fixture-coven/ingredients?edit=e1' as Route;
-    render(
+    renderWithQuery(
       <Cards
         {...props({
           entries: [
@@ -228,7 +222,7 @@ describe('CovenCards', () => {
 
   it('draws Annotate on a card only when it is given an annotate address, named for the entry', () => {
     const annotateHref = '/coven/fixture-coven/ingredients?annotate=e2' as Route;
-    render(
+    renderWithQuery(
       <Cards
         {...props({
           entries: [
@@ -247,14 +241,14 @@ describe('CovenCards', () => {
   });
 
   it('holds no button on a card where the role may do nothing more', () => {
-    render(<Cards {...props()} />);
+    renderWithQuery(<Cards {...props()} />);
     const list = screen.getByRole('list', { name: 'Ingredients' });
     expect(within(list).queryAllByRole('button')).toHaveLength(0);
   });
 
   it('puts the Compact switch, on by default, inside the search landmark', () => {
     mockGraphQLQuery('CovenFacetCounts', () => ({}));
-    render(<Cards {...props()} />);
+    renderWithQuery(<Cards {...props()} />);
     const compact = screen.getByRole('switch', { name: 'Compact' });
     expect(compact.closest('search')).not.toBeNull();
     expect(compact).toBeChecked();
@@ -266,7 +260,7 @@ describe('CovenCards', () => {
   const noMatchState = () => screen.queryByRole('status', { name: 'No Matches' });
 
   it('draws an empty cupboard as its own status, with no add of its own', () => {
-    render(<Cards {...props(empty)} />);
+    renderWithQuery(<Cards {...props(empty)} />);
     expect(screen.queryByRole('list', { name: 'Ingredients' })).toBeNull();
     expect(noMatchState()).toBeNull();
     // The page header's action is the one way to add; a writer's empty cupboard draws no button.
@@ -274,7 +268,7 @@ describe('CovenCards', () => {
   });
 
   it('links the empty cupboard to the Ingredients help article', () => {
-    render(<Cards {...props(empty)} />);
+    renderWithQuery(<Cards {...props(empty)} />);
 
     expect(within(emptyState()!).getByRole('link', { name: 'Learn More' })).toHaveAttribute(
       'href',
@@ -283,7 +277,7 @@ describe('CovenCards', () => {
   });
 
   it("draws a viewer's empty cupboard with no add", () => {
-    render(<Cards {...props({ ...empty, canAdd: false })} />);
+    renderWithQuery(<Cards {...props({ ...empty, canAdd: false })} />);
     expect(emptyState()).not.toBeNull();
     expect(within(emptyState()!).queryByRole('button')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Add Ingredient' })).toBeNull();
@@ -291,11 +285,11 @@ describe('CovenCards', () => {
 
   // The roles named are the state's data (rule 2's exception): nothing else tells a viewer who to ask.
   it('names, to a viewer only, the roles that can fill an empty cupboard', () => {
-    const { unmount } = render(<Cards {...props({ ...empty, canAdd: false })} />);
+    const { unmount } = renderWithQuery(<Cards {...props({ ...empty, canAdd: false })} />);
     expect(emptyState()).toHaveTextContent(/\bpractitioner\b/i);
     expect(emptyState()).toHaveTextContent(/\bsteward\b/i);
     unmount();
-    render(<Cards {...props(empty)} />);
+    renderWithQuery(<Cards {...props(empty)} />);
     expect(emptyState()).not.toHaveTextContent(/\bpractitioner\b|\bsteward\b/i);
   });
 
@@ -304,17 +298,17 @@ describe('CovenCards', () => {
   it('draws no count line over an empty cupboard, and keeps it over a filter that matched nothing', () => {
     // Only the regions that say something: a combobox's results announcer is a status region too.
     const saying = () => screen.getAllByRole('status').filter((region) => region.textContent);
-    const { unmount } = render(<Cards {...props(empty)} />);
+    const { unmount } = renderWithQuery(<Cards {...props(empty)} />);
     expect(saying()).toEqual([emptyState()]);
     unmount();
 
-    render(<Cards {...props({ ...empty, filter: { ...FILTER, query: 'Knitbone' } })} />);
+    renderWithQuery(<Cards {...props({ ...empty, filter: { ...FILTER, query: 'Knitbone' } })} />);
     expect(saying()).toHaveLength(2);
     expect(saying()).toContain(noMatchState());
   });
 
   it('draws a search matching nothing as the no-match state, handing the search to the Compendium', () => {
-    render(<Cards {...props({ ...empty, filter: { ...FILTER, query: 'Knitbone' } })} />);
+    renderWithQuery(<Cards {...props({ ...empty, filter: { ...FILTER, query: 'Knitbone' } })} />);
     expect(emptyState()).toBeNull();
     const state = noMatchState();
     expect(state).not.toBeNull();
@@ -334,7 +328,7 @@ describe('CovenCards', () => {
   });
 
   it('treats a coven-only filter matching nothing as no match, offering only Clear Filters', () => {
-    render(<Cards {...props({ ...empty, filter: { ...FILTER, inStock: true } })} />);
+    renderWithQuery(<Cards {...props({ ...empty, filter: { ...FILTER, inStock: true } })} />);
     expect(emptyState()).toBeNull();
     expect(noMatchState()).not.toBeNull();
     // No search word, so nothing to hand the Compendium: the one way on is the whole cupboard.
@@ -362,7 +356,7 @@ describe('CovenCards', () => {
         lowStockOnly: 0,
       },
     }));
-    render(<Cards {...props()} />);
+    renderWithQuery(<Cards {...props()} />);
     fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     expect(screen.getByRole('switch', { name: /^In Stock/ })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: /^Low Stock Only/ })).toBeInTheDocument();
@@ -393,7 +387,7 @@ describe('CovenCards', () => {
         lowStockOnly: 0,
       },
     }));
-    render(
+    renderWithQuery(
       <Navigating push={router.push}>
         <Cards {...props({ filter: { ...FILTER, inStock: true } })} />
       </Navigating>,

@@ -1,11 +1,11 @@
 'use client';
 
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
+import { repeatable } from '@/lib/repeat-announcement';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../ConfirmedAction';
-import { FieldShell, SwitchField, fieldDescription } from '../Field';
-import Spinner from '../Spinner';
+import { PlainSelectField, SwitchField } from '../Field';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import IssuePanel from './issue-panel';
@@ -14,6 +14,7 @@ import TimeoutPanel from './timeout-panel';
 import { stands } from '../UserDetail/access-pause-parts';
 import type { SupportDetailProps, SupportTimeoutEntry } from './types';
 import { AnnounceContext, useSupportAction } from './use-support-action';
+import { DELETED_ACCOUNT, senderLabel } from './labels';
 import SenderName from './sender-name';
 import SupportFacts from './facts';
 import SupportThread from './thread';
@@ -50,7 +51,15 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
   const open = request.status === 'open';
   const assign = useSupportAction();
   const visible = useSupportAction();
-  const { aria, ...assignField } = fieldDescription({ id: useId() });
+  const current = request.assignee;
+  // An assignee paused since the assignment stays listed, chosen and not choosable again.
+  const assigneeChoices = [
+    { value: '', label: 'Unassigned' },
+    ...assignees.map((person) => ({ value: person.id, label: person.name })),
+    ...(current?.paused && !assignees.some((person) => person.id === current.id)
+      ? [{ value: current.id, label: current.name, disabled: true, note: 'Paused' }]
+      : []),
+  ];
   const failure = assign.failure.alert ?? visible.failure.alert;
 
   return (
@@ -61,6 +70,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
           path={request.path}
           errorCode={request.errorCode}
           errorReference={request.errorReference}
+          errorDetail={request.errorDetail}
           lead={
             !request.anonymised && (
               <div className="support-detail__fact--wide">
@@ -81,7 +91,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
                       )}
                     </>
                   ) : (
-                    'Deleted account'
+                    DELETED_ACCOUNT
                   )}
                 </dd>
               </div>
@@ -117,9 +127,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               : [
                   {
                     id: request.id,
-                    name: request.signedOut
-                      ? 'Signed-out sender'
-                      : (request.sender?.name ?? 'Deleted account'),
+                    name: senderLabel(request),
                     tag: 'Sender',
                     at: request.createdAt,
                     body: request.message,
@@ -129,7 +137,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               .filter((reply) => !(request.anonymised && reply.fromSender))
               .map((reply) => ({
                 id: reply.id,
-                name: reply.author?.name ?? 'Deleted account',
+                name: reply.author?.name ?? DELETED_ACCOUNT,
                 tag: reply.fromSender ? 'Sender' : 'Staff',
                 internal: !reply.fromSender && reply.internal,
                 at: reply.createdAt,
@@ -172,37 +180,24 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
 
       {edits && (
         <aside className="support-detail__side" aria-label="Request Settings">
-          <FieldShell label="Assignee" {...assignField}>
-            <span className="field__control">
-              <select
-                id={assignField.controlId}
-                className="select"
-                {...aria}
-                value={request.assignee?.id ?? ''}
-                aria-busy={assign.busy || undefined}
-                disabled={assign.busy}
-                onChange={(event) => {
-                  if (assign.busy) return;
-                  void assign.run(
-                    () =>
-                      graphqlRequest(AssignDocument, {
-                        id: request.id,
-                        assigneeId: event.target.value || null,
-                      }),
-                    event.target.value ? 'Request assigned.' : 'Request unassigned.',
-                  );
-                }}
-              >
-                <option value="">Unassigned</option>
-                {assignees.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {person.name}
-                  </option>
-                ))}
-              </select>
-              {assign.busy && <Spinner className="field__busy" />}
-            </span>
-          </FieldShell>
+          <PlainSelectField
+            label="Assignee"
+            value={request.assignee?.id ?? ''}
+            busy={assign.busy}
+            disabled={assign.busy}
+            options={assigneeChoices}
+            onChange={(picked) => {
+              if (assign.busy) return;
+              void assign.run(
+                () =>
+                  graphqlRequest(AssignDocument, {
+                    id: request.id,
+                    assigneeId: picked || null,
+                  }),
+                picked ? 'Request assigned.' : 'Request unassigned.',
+              );
+            }}
+          />
           <SwitchField
             label="Shared With Curators"
             name="curatorVisible"
@@ -245,16 +240,13 @@ const standingTimeout = (timeouts: SupportTimeoutEntry[]): SupportTimeoutEntry |
   timeouts.find((timeout) => stands(timeout, Date.now()));
 
 const SupportDetail = (props: SupportDetailProps): ReactElement => {
-  // The last write's outcome. A trailing no-break space on every other call lets a repeat be spoken,
+  // The last write's outcome. `repeatable` lets a repeat be spoken,
   // since a live region speaks only a change.
   const [said, setSaid] = useState({ text: '', count: 0 });
   const announce = (text: string): void => setSaid(({ count }) => ({ text, count: count + 1 }));
   return (
     <AnnounceContext value={announce}>
-      <output className="visually-hidden">
-        {said.text}
-        {said.count % 2 === 0 && said.count > 0 ? '\u00a0' : ''}
-      </output>
+      <output className="visually-hidden">{repeatable(said.text, said.count)}</output>
       <DetailBody {...props} />
     </AnnounceContext>
   );

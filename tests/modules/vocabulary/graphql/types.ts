@@ -25,7 +25,7 @@ export interface FilteredFormValues {
   edges: { node: { name: string } }[];
 }
 
-export interface AstrologySuggestion {
+interface AstrologySuggestion {
   value: string;
   description: string | null;
   curated: boolean;
@@ -36,7 +36,7 @@ export interface AstrologySuggestionConnection {
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }
 
-export interface DeitySuggestionNode {
+interface DeitySuggestionNode {
   id: string | null;
   value: string;
   description: string | null;

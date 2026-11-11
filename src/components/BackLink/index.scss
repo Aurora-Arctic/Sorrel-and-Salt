@@ -1,0 +1,69 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The "Back to …" link's look, shared by every "Back to …" link: the entry and recipe pages, sign-in and the help pages
+// (claude-docs/components/ingredient-entry.md, "The back link").
+.back-link {
+  margin-inline-start: -$back-chevron-pull;
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  color: $text-muted;
+  font-size: type-size('small');
+  text-decoration: none;
+  @include state-fade(color);
+
+  // The chevron steps back and grows on hover and focus, in place of an underline, at twice the
+  // short motion; it holds still under reduced motion.
+  > svg {
+    flex: none;
+    transition: transform calc(#{$motion-short} * 2) ease-out;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+
+    > svg {
+      // A fifth of its own 1em box, so the step follows the link's size.
+      transform: translateX(-20%) scale(1.25);
+    }
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  // A link to the top of the page: the chevron points up and steps up, by the same fifth.
+  &--up:hover,
+  &--up:focus-visible {
+    > svg {
+      transform: translateY(-20%) scale(1.25);
+    }
+  }
+
+  // A link onward: the chevron follows the text, hangs past the column's end instead of its start, and steps forward.
+  &--forward {
+    margin-inline: 0 calc(-1 * #{$back-chevron-pull});
+  }
+
+  &--forward:hover,
+  &--forward:focus-visible {
+    > svg {
+      transform: translateX(20%) scale(1.25);
+    }
+  }
+
+  @include reduced-motion {
+    > svg,
+    &:hover > svg,
+    &:focus-visible > svg,
+    &--up:hover > svg,
+    &--up:focus-visible > svg,
+    &--forward:hover > svg,
+    &--forward:focus-visible > svg {
+      transition: none;
+      transform: none;
+    }
+  }
+}

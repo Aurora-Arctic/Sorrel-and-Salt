@@ -1,8 +1,8 @@
-import type { Browser, Locator, Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
-import { signInAgainAs, signInAs } from './session';
+import { signInAgainAs, signInAs, signInKeeperOnSidePage } from './session';
 import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
@@ -117,15 +117,6 @@ const refuse = (page: Page, operation: string, message: string) =>
 
 // Every check of an item is soft, so one run shows each item that fails, not only the first.
 const check = expect.configure({ soft: true, timeout: 2_000 });
-
-async function authorOf(browser: Browser, baseURL: string | undefined, email: string) {
-  const author = await browser.newPage({ baseURL });
-  try {
-    return (await signInAs(author, email, ['discord'], 'admin')).userId;
-  } finally {
-    await author.close();
-  }
-}
 
 async function seedSourcedEntry(author: string, name: string) {
   return withSql(async (sql) => {
@@ -304,7 +295,11 @@ test.describe('under forced colours', () => {
         });
       }),
     );
-    const author = await authorOf(browser, baseURL, 'author@forced-colours-menu.test');
+    const author = await signInKeeperOnSidePage(
+      browser,
+      baseURL,
+      'author@forced-colours-menu.test',
+    );
     const { id, slug } = await seedSourcedEntry(author, NAME);
     // The second coven holds the entry, so its item in the plus's menu is disabled.
     await withSql((sql) =>
@@ -397,7 +392,11 @@ test.describe('under forced colours', () => {
     browser,
     baseURL,
   }) => {
-    const author = await authorOf(browser, baseURL, 'author@forced-colours-entry.test');
+    const author = await signInKeeperOnSidePage(
+      browser,
+      baseURL,
+      'author@forced-colours-entry.test',
+    );
     const { slug } = await seedSourcedEntry(author, 'Fixture Prismwort Entry');
     await page.goto(`/compendium/ingredients/${slug}`);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -621,7 +620,11 @@ test('a jumped-to note and mark take the fill a jumped-to source takes', async (
   browser,
   baseURL,
 }) => {
-  const author = await authorOf(browser, baseURL, 'author@forced-colours-target.test');
+  const author = await signInKeeperOnSidePage(
+    browser,
+    baseURL,
+    'author@forced-colours-target.test',
+  );
   const { slug } = await seedSourcedEntry(author, 'Fixture Prismwort Target');
   await page.goto(`/compendium/ingredients/${slug}`);
   const background = async (locator: Locator) => (await drawnOf(locator)).background;

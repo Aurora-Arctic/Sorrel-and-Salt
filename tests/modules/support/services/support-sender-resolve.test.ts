@@ -14,6 +14,7 @@ import {
 import type { SupportNotifier } from '@/modules/support';
 import { A, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { ORIGIN } from '../../../support/constants';
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -26,7 +27,7 @@ beforeEach(async () => {
 
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 const mail: SupportNotifier = {
-  origin: async () => 'http://localhost:3000',
+  origin: async () => ORIGIN,
 };
 
 const sendAs = (user: typeof C) => sendSupportRequest(asUser(user), INPUT, mail);

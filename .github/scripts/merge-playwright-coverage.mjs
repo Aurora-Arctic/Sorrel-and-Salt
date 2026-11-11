@@ -9,6 +9,7 @@ import path from 'node:path';
 import MCR from 'monocart-coverage-reports';
 import coverageOptions from '../../tests/e2e/coverage.config.ts';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
+import { setOutput } from './lib/github-output.mjs';
 
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR ?? '/app/.reports/coverage-downloads';
 const OUTPUT_DIR = process.env.MERGED_OUTPUT_DIR ?? '/app/.reports/coverage-e2e-merged';
@@ -19,11 +20,6 @@ const SUITES = [
   { name: 'Gate', artifact: 'playwright-coverage' },
   { name: 'Story', artifact: 'playwright-coverage-stories' },
 ];
-
-function setOutput(name, value) {
-  const delim = `ghadelim_${Math.random().toString(36).slice(2)}`;
-  fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}<<${delim}\n${value}\n${delim}\n`);
-}
 
 const included = SUITES.map((suite) => ({
   ...suite,

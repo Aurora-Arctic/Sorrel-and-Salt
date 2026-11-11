@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, within } from '@testing-library/react';
+import { expect } from 'vitest';
 
 // What a person does to a form in a component test (press, choose, type), written once for every form.
 // Fields are found by label, not role and name, as a role query names every element of the role, most of a
@@ -55,4 +56,53 @@ export function redo({ meta = false, viaY = false } = {}): boolean {
     metaKey: meta,
     shiftKey: !viaY,
   });
+}
+
+// The form's Save button, whatever it is named: Save, Save Draft, Saving.
+export const save = (): HTMLElement => screen.getByRole('button', { name: /^Sav/ });
+
+// Submits the form `button` sits in, as pressing it does, without the click.
+export const submitForm = (button: HTMLElement = save()): boolean =>
+  fireEvent.submit(button.closest('form') as HTMLFormElement);
+
+// One change, then the blur that follows it, for a form that tidies or validates a field when it is left.
+export function fill(label: string, text: string): void {
+  const field = screen.getByRole('textbox', { name: label });
+  fireEvent.change(field, { target: { value: text } });
+  fireEvent.blur(field);
+}
+
+// True when `a` comes before `b` in the document, whether or not one holds the other.
+export const isBefore = (a: Node | null, b: Node | null): boolean =>
+  a !== null &&
+  b !== null &&
+  Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+export function expectBefore(a: Node, b: Node): void {
+  expect(isBefore(a, b)).toBe(true);
+}
+
+// The sign-in dialog open over a page, with Google available and Discord switched off.
+export function expectSignInDialogProviders(): void {
+  const dialog = screen.getByRole('dialog', { name: 'Sign In' });
+  expect(within(dialog).getByRole('button', { name: 'Continue with Google' })).toBeEnabled();
+  expect(within(dialog).getByRole('button', { name: 'Continue with Discord' })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+}
+
+// A required field's label ends in its aria-hidden mark, so the label is matched from its start.
+export const labelled = (scope: Pick<typeof screen, 'getByLabelText'>, label: string) =>
+  scope.getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
+
+// The sign-up form's three fields, filled inside `scope` (the dialog, or the page).
+export function fillSignUp(
+  scope: HTMLElement | null,
+  { name, email, password }: { name: string; email: string; password: string },
+): void {
+  const inScope = scope ? within(scope) : screen;
+  fireEvent.change(labelled(inScope, 'Name'), { target: { value: name } });
+  fireEvent.change(labelled(inScope, 'Email Address'), { target: { value: email } });
+  fireEvent.change(labelled(inScope, 'Password'), { target: { value: password } });
 }

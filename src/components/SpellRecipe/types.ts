@@ -11,7 +11,7 @@ import type { SpellMarksProps } from '../SpellMarks/types';
 import type { VerdictKind } from '../SpellBuilder/verdict-mark';
 import type { IngredientRow } from '@/modules/ingredients';
 
-export interface InstructionRecipeStep {
+interface InstructionRecipeStep {
   kind: 'instruction';
   id: string;
   body: string;
@@ -44,10 +44,7 @@ export interface IngredientRecipeStep {
   body: string | null;
 }
 
-export interface IngredientLook extends Pick<
-  IngredientRow,
-  'name' | 'canonicalName' | 'nomenclature'
-> {
+interface IngredientLook extends Pick<IngredientRow, 'name' | 'canonicalName' | 'nomenclature'> {
   href: Route;
 }
 
@@ -108,7 +105,7 @@ export type SpellRecipeBodyProps = Pick<
   | 'dayOfWeek'
 >;
 
-export type RecipeHeadingLevel = 2 | 3;
+type RecipeHeadingLevel = 2 | 3;
 
 export type SpellRecipeLeadProps = Pick<SpellRecipeBodyProps, 'title' | 'intent' | 'categories'>;
 
@@ -122,7 +119,7 @@ export interface SpellRecipeSummaryProps {
   level?: RecipeHeadingLevel;
 }
 
-export interface SpellLookOpened extends SpellMarksProps {
+interface SpellLookOpened extends SpellMarksProps {
   title: string | null;
   lastEdit: LastEditProps | null;
   recipeHref: Route;

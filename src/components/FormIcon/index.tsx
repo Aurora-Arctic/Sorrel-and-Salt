@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { FORM_SHAPES, SPOON } from './icons';
 import type { FormIconProps } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // The small mark beside a form saying what kind of thing it is: its group's icon, or the generic salt
 // spoon. Hidden from assistive technology, as the form's name stands beside it. A caller hands over the
@@ -16,7 +17,7 @@ const FormIcon = ({ name, className }: FormIconProps): ReactElement => {
       : SPOON;
   return (
     <svg
-      className={className ? `form-icon ${className}` : 'form-icon'}
+      className={cx('form-icon', className)}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

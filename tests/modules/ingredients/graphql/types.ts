@@ -1,6 +1,6 @@
 import type { Answer } from '../../../support/graphql/types';
 
-export interface FolkNameNode {
+interface FolkNameNode {
   id: string;
   name: string;
 }
@@ -10,7 +10,7 @@ export interface CommonNameConnection {
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }
 
-export interface CompendiumNode {
+interface CompendiumNode {
   id: string;
   name: string;
   canonicalName: string | null;
@@ -66,7 +66,7 @@ export interface IngredientVariantNode {
   audit: { createdBy: string; updatedBy: string };
 }
 
-export interface IngredientDeityNode {
+interface IngredientDeityNode {
   name: string;
   deity: { id: string; tradition?: { name: string } } | null;
 }

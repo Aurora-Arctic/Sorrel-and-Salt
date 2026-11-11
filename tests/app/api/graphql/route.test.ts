@@ -6,14 +6,13 @@ warmImport(() => import('@/app/api/graphql/route'));
 const ENDPOINT = 'http://localhost/api/graphql';
 
 // Signed out: the real session reader loads Better Auth, which needs secrets in production.
-vi.mock('@/lib/request-session', () => ({
-  sessionStateFromHeaders: async () => ({
-    session: null,
-    emailVerified: false,
-    termsAgreed: false,
-    sessionFresh: false,
-  }),
-}));
+const SIGNED_OUT = {
+  session: null,
+  emailVerified: false,
+  termsAgreed: false,
+  sessionFresh: false,
+};
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 type Route = typeof import('@/app/api/graphql/route');
 
@@ -24,6 +23,8 @@ function routeIn(nodeEnv: string): () => Route {
     vi.resetModules();
     vi.stubEnv('NODE_ENV', nodeEnv);
     route = await import('@/app/api/graphql/route');
+    const { sessionStateFromHeaders } = await import('@/lib/request-session');
+    vi.mocked(sessionStateFromHeaders).mockResolvedValue(SIGNED_OUT);
   });
   afterAll(() => {
     vi.unstubAllEnvs();

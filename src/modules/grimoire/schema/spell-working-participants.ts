@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { check, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditStampColumns, users } from '../../identity/schema/users';
-import { idColumn } from '../../../db/schema-parts';
+import { idColumn, notBlankIfSet } from '../../../db/schema-parts';
 import { spellWorkings } from './spell-workings';
 
 // Rows are replaced wholesale when participants change, so the table has the four stamp columns and no `deleted_at`
@@ -25,10 +25,7 @@ export const spellWorkingParticipants = pgTable(
       'spell_working_participants_one_identity',
       sql`num_nonnulls(${table.userId}, ${table.name}) = 1`,
     ),
-    check(
-      'spell_working_participants_name_not_blank',
-      sql`${table.name} is null or btrim(${table.name}) <> ''`,
-    ),
+    check('spell_working_participants_name_not_blank', notBlankIfSet(table.name)),
     // Not partial: the table has no `deleted_at` for a predicate to name.
     uniqueIndex('spell_working_participants_working_id_user_id_unique').on(
       table.workingId,

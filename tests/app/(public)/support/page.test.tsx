@@ -1,13 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
+import { getSession, sessionIsVerified } from '../../../support/request-session';
 
 // What /support shows each kind of visitor: Sign In to nobody signed in, the email page's redirect to an
 // unverified account, the end of a timeout, and otherwise the form. The session and service are mocked.
 
-const getSession = vi.fn<() => Promise<Session | null>>();
-const sessionIsVerified = vi.fn<() => Promise<boolean>>();
-vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 const getMySupportTimeout = vi.fn<() => Promise<{ until: Date | null } | null>>();
 vi.mock('@/modules/support', () => ({ getMySupportTimeout }));
@@ -15,14 +14,18 @@ vi.mock('@/modules/support', () => ({ getMySupportTimeout }));
 const redirect = vi.fn((path: string) => {
   throw new Error(`redirect:${path}`);
 });
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
   redirect,
-  useRouter: () => ({ push: vi.fn() }),
   usePathname: () => '/support',
 }));
 
+const panelState = vi.fn<(state: unknown) => void>();
 vi.mock('@/components/SupportPanel', () => ({
-  default: ({ state }: { state: { kind: string } }) => <p>{`panel:${state.kind}`}</p>,
+  default: ({ state }: { state: { kind: string } }) => {
+    panelState(state);
+    return <p>{`panel:${state.kind}`}</p>;
+  },
 }));
 
 const { default: SupportPage, metadata } = await import('@/app/(public)/support/page');
@@ -86,6 +89,44 @@ describe('the /support page', () => {
     await show();
 
     expect(screen.getByText('panel:form')).toBeVisible();
+  });
+
+  it('gives the signed-out form the error reference and detail the address carries', async () => {
+    getSession.mockResolvedValue(null);
+    render(
+      await SupportPage({
+        searchParams: Promise.resolve({
+          support: 'bug',
+          ref: 'abc123',
+          detail: 'TypeError: Testwort',
+        }),
+      }),
+    );
+
+    expect(panelState).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        kind: 'signed-out',
+        errorReference: 'abc123',
+        errorDetail: 'TypeError: Testwort',
+      }),
+    );
+  });
+
+  it('gives the form the error reference and detail the address carries', async () => {
+    render(
+      await SupportPage({
+        searchParams: Promise.resolve({
+          support: 'bug',
+          error: '500',
+          ref: 'abc123',
+          detail: 'TypeError: Testwort',
+        }),
+      }),
+    );
+
+    expect(panelState).toHaveBeenLastCalledWith(
+      expect.objectContaining({ errorReference: 'abc123', errorDetail: 'TypeError: Testwort' }),
+    );
   });
 });
 

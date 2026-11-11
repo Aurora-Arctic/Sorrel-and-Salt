@@ -7,7 +7,7 @@ const subjectOf = ({ covenName }: { covenName: string }): string =>
   `Your Access to ${covenName} Was Paused`;
 
 // Never the steward's note.
-export function CovenAccessPaused({
+function CovenAccessPaused({
   url,
   covenName,
   until,

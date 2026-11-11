@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
-import { latestMessageTo } from './mailpit';
+import { sendInvitationFromDialog, refusalAt as sharedRefusalAt } from './invitations';
+import { latestMessageTo, mailedInvitePath } from './mailpit';
 import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
@@ -35,38 +36,14 @@ test.beforeAll(async ({ browser, slot }) => {
   });
 });
 
-/** The invitation's path from the mailed link: the build's origin is its fallback, not this server. */
-async function mailedInvitePath(to: string): Promise<string> {
-  const message = await latestMessageTo(to);
-  const link = message.text.match(/https?:\/\/\S+\/invite\/[A-Za-z0-9_-]+/)?.[0];
-  if (!link) throw new Error(`no invitation link in: ${message.text}`);
-  return new URL(link).pathname;
-}
-
 async function ownerInvites(page: Page, email: string): Promise<void> {
   await signInAgainAs(page, ownerId);
   await page.goto(`/coven/${COVEN_SLUG}/members`);
-  await page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }).click();
-  const dialog = page.getByRole('dialog');
-  await dialog.getByRole('textbox', { name: 'Email Address' }).fill(email);
-  await dialog.getByRole('radio', { name: 'Practitioner' }).check();
-  await dialog.getByRole('button', { name: 'Send Invitation' }).click();
-  await expect(dialog.getByRole('button', { name: 'Done' })).toBeVisible();
-  await dialog.getByRole('button', { name: 'Done' }).click();
-  await expect(dialog).toHaveCount(0);
+  await sendInvitationFromDialog(page, email, 'Practitioner');
 }
 
-async function refusalAt(page: Page, path: string): Promise<string> {
-  await page.goto(path);
-  await expect(page.getByRole('heading', { level: 1, name: 'Your Invitation' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
-  const refusal = page.getByRole('main').getByRole('alert');
-  await expect(refusal).toBeVisible();
-  const message = (await refusal.textContent()) ?? '';
-  expect(message).not.toContain(COVEN_NAME);
-  await assertNoSidewaysScroll(page, { restore: true });
-  return message;
-}
+const refusalAt = (page: Page, path: string) =>
+  sharedRefusalAt(page, path, COVEN_NAME, { shape: true });
 
 test.describe('a coven’s invitation from the account page', () => {
   test('D is told on /coven and in the account menu, and the shell redraws once D accepts it on the account page', async ({
@@ -174,6 +151,24 @@ test.describe('a declined coven invitation', () => {
   });
 });
 
+test('an invite address typed with spaces and a capitalised domain is tidied on leaving the field, and the invitation reaches it', async ({
+  page,
+}) => {
+  const tidy = address('tidy');
+  await signInAgainAs(page, ownerId);
+  await page.goto(`/coven/${COVEN_SLUG}/members`);
+  await page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  const email = dialog.getByRole('textbox', { name: 'Email Address' });
+  await email.fill(`  ${tidy.replace(DOMAIN, DOMAIN.toUpperCase())}  `);
+  await email.blur();
+  await expect(email).toHaveValue(tidy);
+  await dialog.getByRole('radio', { name: 'Practitioner' }).check();
+  await dialog.getByRole('button', { name: 'Send Invitation' }).click();
+  await expect(dialog.getByRole('button', { name: 'Done' })).toBeVisible();
+  expect((await latestMessageTo(tidy)).text).toContain('/invite/');
+});
+
 // Last in the file: it deletes the coven every walk above shares; workers take a file's tests in order.
 test.describe('a deleted coven’s invitation', () => {
   test('F’s link is refused for a reason of its own once the coven is deleted', async ({
@@ -211,21 +206,3 @@ async function userIdOf(email: string): Promise<string> {
   const [{ id }] = await withE2eSql((sql) => sql`select id from users where email = ${email}`);
   return id as string;
 }
-
-test('an invite address typed with spaces and a capitalised domain is tidied on leaving the field, and the invitation reaches it', async ({
-  page,
-}) => {
-  const tidy = address('tidy');
-  await signInAgainAs(page, ownerId);
-  await page.goto(`/coven/${COVEN_SLUG}/members`);
-  await page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }).click();
-  const dialog = page.getByRole('dialog');
-  const email = dialog.getByRole('textbox', { name: 'Email Address' });
-  await email.fill(`  ${tidy.replace(DOMAIN, DOMAIN.toUpperCase())}  `);
-  await email.blur();
-  await expect(email).toHaveValue(tidy);
-  await dialog.getByRole('radio', { name: 'Practitioner' }).check();
-  await dialog.getByRole('button', { name: 'Send Invitation' }).click();
-  await expect(dialog.getByRole('button', { name: 'Done' })).toBeVisible();
-  expect((await latestMessageTo(tidy)).text).toContain('/invite/');
-});

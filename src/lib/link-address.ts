@@ -5,11 +5,14 @@ import { hasScheme, withScheme, type FieldFormat } from './formats';
 // and its link plugin and by the page that renders the saved Markdown, so what the editor accepts is
 // what the page opens. Pure and client-safe.
 
-/** The schemes the link plugin accepts; the renderer's pattern below opens the same ones. */
+/** The schemes the link plugin accepts; `OPENABLE_ADDRESS` is built from them, so the page opens the same ones. */
 export const LINK_SCHEMES = ['https', 'mailto'];
 
 /** An address the site opens: a path on the site (not `//`), a fragment or query, `https:` or `mailto:`. */
-export const OPENABLE_ADDRESS = /^(\/(?!\/)|#|\?|https:|mailto:)/i;
+export const OPENABLE_ADDRESS = new RegExp(
+  `^(\\/(?!\\/)|#|\\?|${LINK_SCHEMES.map((scheme) => `${scheme}:`).join('|')})`,
+  'i',
+);
 
 export const isOpenableAddress = (address: string): boolean => OPENABLE_ADDRESS.test(address);
 

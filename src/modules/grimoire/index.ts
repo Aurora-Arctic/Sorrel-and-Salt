@@ -1,5 +1,4 @@
 // Schema tables are reached at `@/modules/grimoire/schema/*`; `services/*` and `types.ts` are internal.
-export * from './services/spell-visibility';
 export * from './services/spells';
 export * from './services/spell-reads';
 export * from './services/workings';

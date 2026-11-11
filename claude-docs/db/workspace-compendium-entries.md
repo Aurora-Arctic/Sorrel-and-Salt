@@ -90,7 +90,7 @@ It checks `ingredient: create` and `delete` and `inventory: update`, exported as
 
 A retired entry converts the same way, its children read through the cupboard row (`heldBy`).
 
-**Moving.** Each jar of a copied form is updated in place, so its id, quantity, unit and threshold are unchanged and only its ingredient and form change; forms are matched by `foldForm`, exact here since the copy took the forms' own text. Spell layers move the same way through `moveLayers`, every spell of the coven included, private ones whoever wrote them. A jar or layer on a form deleted earlier is in no read and stays where it is.
+**Moving.** Each jar of a copied form is updated in place, so its id, quantity, unit and threshold are unchanged and only its ingredient and form change; forms are matched by `fold`, exact here since the copy took the forms' own text. Spell layers move the same way through `moveLayers`, every spell of the coven included, private ones whoever wrote them. A jar or layer on a form deleted earlier is in no read and stays where it is.
 
 **What is lost.** Only a folk name the new name took: the answer, a `ConvertedCompendium`, carries the new entry and a `DroppedOnConvert` whose `folkNames` lists it; every other list is empty.
 

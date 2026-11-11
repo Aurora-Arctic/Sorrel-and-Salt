@@ -1,25 +1,25 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
-import { makeQueryClient } from '@/lib/graphql-client';
 import {
   CovenSwitchProvider,
   useCovenSwitchRegistration,
 } from '@/components/CovenSwitchTargets/context';
 import { entryDetail } from '../../../support/entry-detail';
+import { requireCovenMembership, requireSession } from '../../../support/request-session';
+import { renderWithQuery } from '../../../support/render-with-query';
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');
 });
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ notFound, useRouter: () => router }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
+  notFound,
+}));
 
-const requireCovenMembership = vi.fn();
-const requireSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireCovenMembership, requireSession }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 const viewerOf = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerOf }));
@@ -66,13 +66,11 @@ function Registration() {
 const registered = () =>
   JSON.parse(screen.getByTestId('switch-registration').textContent ?? 'null');
 const renderPage = (ui: ReactElement) =>
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <CovenSwitchProvider>
-        {ui}
-        <Registration />
-      </CovenSwitchProvider>
-    </QueryClientProvider>,
+  renderWithQuery(
+    <CovenSwitchProvider>
+      {ui}
+      <Registration />
+    </CovenSwitchProvider>,
   );
 
 const { default: Page, generateMetadata } =

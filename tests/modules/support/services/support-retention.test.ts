@@ -230,6 +230,17 @@ describe('one day’s run', () => {
     });
   });
 
+  it('clears the error detail of a request it anonymises, and keeps a newer one’s', async () => {
+    const [old] = await closedRows(1, 13);
+    const [recent] = await closedRows(1, 11);
+    await sql`update support_requests set error_detail = 'Error: Testwort' where id in ${sql([old!, recent!])}`;
+
+    expect(await runDay()).toMatchObject({ anonymise: 1 });
+
+    expect(await rowOf(old!)).toMatchObject({ created_by: SYSTEM_ACTOR_ID, error_detail: null });
+    expect(await rowOf(recent!)).toMatchObject({ error_detail: 'Error: Testwort' });
+  });
+
   it('does nothing on a second run the same day', async () => {
     const [noticeDue] = await resolvedRows(1, 6);
     const [lapsed] = await resolvedRows(1, 8);

@@ -85,7 +85,7 @@ export function pick(picks: Picks, kind: keyof Picks, name: string): CuratedPick
  * A celestial body or sign is stored as its row's current spelling;
  * a retired one is left off, and an empty list is stored as null.
  */
-export function spelled(
+function spelled(
   picks: Picks,
   kind: 'celestialBodies' | 'zodiacSigns',
   values: readonly string[] | null | undefined,
@@ -191,9 +191,6 @@ export function variantColumns({ variant, form }: PickedVariant, picks: Picks): 
     colors: variant.colors ?? null,
   };
 }
-
-/** The fold the variant's unique index keys a form by. */
-export const foldForm = (form: string): string => form.trim().toLowerCase();
 
 export type FolkNameRow = Pick<typeof ingredientFolkNames.$inferInsert, 'ingredientId' | 'name'>;
 

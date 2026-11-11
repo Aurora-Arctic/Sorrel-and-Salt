@@ -26,7 +26,7 @@ function recordCalls() {
 
 const send = () => screen.getByRole('button', { name: /Send Request|Sending/ });
 
-function fill() {
+function fillForm() {
   fireEvent.click(screen.getByRole('radio', { name: /^Account/ }));
   fireEvent.change(screen.getByRole('textbox', { name: /Email/ }), {
     target: { value: ' visitor@example.test ' },
@@ -74,7 +74,7 @@ describe('SignedOutSupportForm', () => {
       return { sendSignedOutSupportRequest: true };
     });
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
 
     fireEvent.click(send());
 
@@ -89,13 +89,40 @@ describe('SignedOutSupportForm', () => {
     expect(calls[0]!.input.website).toBeUndefined();
   });
 
+  it('shows the error detail read-only and sends it with the error reference', async () => {
+    const calls = recordCalls();
+    const detail = 'TypeError: Testwort is not a function';
+    render(
+      <SignedOutSupportForm path="/broken" errorReference="c0a1b2c3d4e" errorDetail={detail} />,
+    );
+    const shown = screen.getByRole('group', { name: 'Error Details' });
+    expect(shown).toHaveTextContent(detail);
+    expect(within(shown).queryByRole('textbox')).toBeNull();
+    for (const field of screen.getAllByRole('textbox')) expect(field).not.toHaveValue(detail);
+    fillForm();
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input).toMatchObject({ errorReference: 'c0a1b2c3d4e', errorDetail: detail });
+  });
+
+  it('shows no error detail, and sends neither it nor a reference, when none is given', async () => {
+    const calls = recordCalls();
+    render(<SignedOutSupportForm path="/support" />);
+    expect(screen.queryByRole('group', { name: 'Error Details' })).toBeNull();
+    fillForm();
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input).not.toHaveProperty('errorDetail');
+    expect(calls[0]?.input).not.toHaveProperty('errorReference');
+  });
+
   it('says the limit was reached, with the server’s words, and keeps what was written', async () => {
     mockGraphQLError('SendSignedOutSupportRequest', {
       code: 'RATE_LIMITED',
       message: 'You have sent too many requests today. Try again later.',
     });
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
 
     fireEvent.click(send());
 
@@ -123,7 +150,7 @@ describe('SignedOutSupportForm', () => {
 
   it('refuses on Send Request with the same words the box showed when it was left', async () => {
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
     const email = screen.getByRole('textbox', { name: /Email/ });
     fireEvent.change(email, { target: { value: 'visitor@example.invalid' } });
     fireEvent.blur(email);
@@ -147,7 +174,7 @@ describe('SignedOutSupportForm', () => {
       return { sendSignedOutSupportRequest: true };
     });
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
     fireEvent.change(screen.getByRole('textbox', { name: /Email/ }), {
       target: { value: 'visitor' },
     });
@@ -196,7 +223,7 @@ describe('SignedOutSupportForm', () => {
   it('focuses the first wrong field after the topics when a topic is chosen', async () => {
     const calls = recordCalls();
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
     fireEvent.change(box(/Subject/), { target: { value: ' ' } });
     fireEvent.change(box(/Message/), { target: { value: '' } });
 
@@ -212,7 +239,7 @@ describe('SignedOutSupportForm', () => {
   it('focuses the address first when it is the first wrong field', async () => {
     recordCalls();
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
     fireEvent.change(box(/Email/), { target: { value: '' } });
     fireEvent.change(box(/Message/), { target: { value: '' } });
 

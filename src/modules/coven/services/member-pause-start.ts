@@ -1,6 +1,5 @@
 import 'server-only';
-import { send } from '../../../lib/mail';
-import { startMailJob } from '../../../lib/mail-job';
+import { startMessageMail } from '../../../lib/mail-job';
 import { memberPauseMail } from '../jobs/member-pause-mail';
 import { memberPauseMessageFor } from './member-pause-mail';
 import type { MemberPauseMail } from '../types';
@@ -13,8 +12,5 @@ import type { MemberPauseMail } from '../types';
  */
 export async function mailPausedMember(pauseId: string, origin: string): Promise<void> {
   const mail: MemberPauseMail = { kind: 'member-pause', pauseId, origin };
-  await startMailJob(memberPauseMail, [mail], 'coven access pause', async () => {
-    const message = await memberPauseMessageFor(mail);
-    if (message) await send(message);
-  });
+  await startMessageMail(memberPauseMail, mail, 'coven access pause', memberPauseMessageFor);
 }

@@ -3,22 +3,16 @@
 // control can open the same dialog (claude-docs/components/modal.md, "Add Ingredient").
 
 import {
-  NEW_COMPENDIUM_ENTRY,
   NEW_COVEN_INGREDIENT_PREFIX,
   NEW_INGREDIENT,
   NEW_SPELL,
   NEW_SPELL_PREFIX,
+  covenPath,
 } from '../../lib/coven-path';
 
 export const NEW = 'new';
-
-export {
-  NEW_COMPENDIUM_ENTRY,
-  NEW_COVEN_INGREDIENT_PREFIX,
-  NEW_INGREDIENT,
-  NEW_SPELL,
-  NEW_SPELL_PREFIX,
-};
+export const ADD_INGREDIENT_TITLE = 'Add Ingredient';
+export const NEW_SPELL_TITLE = 'New Spell';
 
 function slugAfter(value: string, prefix: string): string | null {
   return value.startsWith(prefix) && value.length > prefix.length
@@ -32,7 +26,7 @@ export function askedCoven(value: string | null, onAdmin = false): 'default' | s
   return slugAfter(value, NEW_COVEN_INGREDIENT_PREFIX);
 }
 
-export function askedSpell(value: string | null): 'current' | string | null {
+function askedSpell(value: string | null): 'current' | string | null {
   if (value === null) return null;
   if (value === NEW_SPELL) return 'current';
   return slugAfter(value, NEW_SPELL_PREFIX);
@@ -59,7 +53,7 @@ export function opensNewSpell(value: string | null, slug: string): boolean {
 export function newSpellElsewhere(value: string | null, pathname: string): string | null {
   const asked = askedSpell(value);
   if (asked === null || asked === 'current') return null;
-  const grimoire = `/coven/${asked}/grimoire`;
+  const grimoire = covenPath(asked, 'grimoire');
   if (pathname === grimoire || pathname.startsWith(`${grimoire}/`)) return null;
   return `${grimoire}?${NEW}=${spellValue(asked)}`;
 }

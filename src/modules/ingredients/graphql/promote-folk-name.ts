@@ -3,13 +3,11 @@ import { sessionOf } from '../../../graphql/context-helpers';
 import { clearIngredientChildren } from '../loaders/ingredient-children';
 import { promoteFolkName } from '../services/promote-folk-name';
 import { IngredientRef } from './ingredient';
+import { tierScope } from './tier-scope';
 
 // Swaps an ingredient's display name with one of its folk names, over both
 // tiers: a null workspaceId names a compendium entry and takes the admin scope,
 // otherwise the service's membership check decides.
-const tierScope = (_root: unknown, { workspaceId }: { workspaceId?: string | null }) =>
-  workspaceId == null ? { curator: true } : { signedIn: true };
-
 builder.mutationField('promoteFolkName', (t) =>
   t.field({
     type: IngredientRef,
