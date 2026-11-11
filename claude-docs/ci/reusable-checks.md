@@ -194,12 +194,12 @@
   retry (its `flaky` output). It is never a required check, which keeps red
   scaffolds off the merge path, and nothing waits on it, which keeps the gate's
   time down (`claude-docs/testing/acceptance.md`).
-- **`playwright-coverage.yml`** — the two Playwright suites' coverage, merged,
+- **`playwright-coverage.yml`** — where the two Playwright suites' shards join, and their coverage is merged,
   called by `pr-gate.yml`'s `playwright-coverage` job in the `testing` image.
   That job `needs` `playwright` and `stories` and runs after both whatever their
   result (`!cancelled()` keeps a failed suite from skipping it, and also names
-  the stand-down, which it would otherwise ignore; it is no required check, and
-  the workflow carries `continue-on-error` too). A run that stands down leaves it
+  the stand-down, which it would otherwise ignore; a failed gate fails the job, so it fails the
+  run; a story never does). A run that stands down leaves it
   skipped, as for the other called workflows. Its steps run only when `changes`
   says a suite ran (`should-run`), and write nothing otherwise: the
   `pr-comments` job has already marked the section Skipped. It downloads each
@@ -210,8 +210,8 @@
   `check-coverage-downloads.mjs` tells them apart by asking the run's artifact
   list (the called workflow and its caller grant `actions: read` for this). For
   the second kind the job writes the Playwright comment's Coverage section as a failure
-  saying coverage is missing for this commit, with the run link, merges nothing,
-  and fails, so "Re-run failed jobs" runs it again. Otherwise
+  saying coverage is missing for this commit, with the run link, and merges nothing; the
+  job's own result stays green. Otherwise
   `merge-playwright-coverage.mjs` merges the `raw/` data that is there, and the
   job uploads `playwright-coverage-merged`, writes the job summary and writes the
   Coverage section. A merge that fails writes its log there, and a merge that

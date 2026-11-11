@@ -16,7 +16,8 @@
   config, the e2e image) as a step-level `if:`; it carries `continue-on-error`
   and is never a required check. `playwright-coverage` merges the coverage
   artifacts of `playwright` and `stories` after both, whether they passed or
-  failed; it carries `continue-on-error` and is never a required check.
+  failed, and is where their shards join (`merge-reports` per suite). It fails
+  when the gate failed; a story never fails it.
   `pr-comments` starts this run's Vitest and Playwright comments once
   `gitflow` finishes, whatever its result; nothing needs it
   ([`pr-comments.md`](pr-comments.md)). These two are the jobs with a

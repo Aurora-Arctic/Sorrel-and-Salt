@@ -10,9 +10,9 @@ name: Playwright Coverage
 #     (claude-docs/ci/pr-comments.md).
 # The job fails, through a step, when the gate suite failed: a failed test, a
 # shard that left no blob, or a shard job that failed. A story never fails it;
-# a failed story or a lost story blob marks the stories section failed. Never a
-# required check: `continue-on-error` below keeps the job's own result green, and
-# nothing waits on it.
+# a failed story or a lost story blob marks the stories section failed. A
+# problem with the coverage alone marks the Coverage section failed and leaves
+# the job's result green.
 #
 # A reusable workflow, not a job of pr-gate.yml, because a job with its own
 # runner is reported cancelled, a failing check, when an edit's run cancels
@@ -46,6 +46,18 @@ on:
         required: false
         type: boolean
         default: false
+      gate-shards:
+        description: >-
+          The gate suite's shard count, from playwright.yml's `shards` output.
+          Empty when the suite did not run; empty when it ran is a failure.
+        required: false
+        type: string
+        default: ''
+      stories-shards:
+        description: The story suite's shard count, as `gate-shards` is the gate's.
+        required: false
+        type: string
+        default: ''
       gate-failed:
         description: >-
           True when a gate shard job failed. A failure the shards' reports hold,
@@ -78,7 +90,6 @@ permissions:
 
 jobs:
   playwright-coverage:
-    continue-on-error: true
     runs-on: ubuntu-26.04
     container:
       image: ${{ inputs.image }}
@@ -125,6 +136,7 @@ jobs:
         continue-on-error: true
         env:
           SUITE: gate
+          SHARDS: ${{ inputs.gate-shards }}
           BLOBS_DIR: /app/.reports/blob-reports/gate
           PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
         run: node .github/scripts/join-playwright-shards.mjs 2>&1 | tee /app/gate.log
@@ -162,6 +174,7 @@ jobs:
         continue-on-error: true
         env:
           SUITE: stories
+          SHARDS: ${{ inputs.stories-shards }}
           BLOBS_DIR: /app/.reports/blob-reports/stories
           PLAYWRIGHT_JSON_OUTPUT_NAME: /app/stories-playwright-results.json
         run: node .github/scripts/join-playwright-shards.mjs 2>&1 | tee /app/stories.log
@@ -293,6 +306,7 @@ jobs:
       - name: Merge coverage
         id: merge
         if: inputs.should-run && steps.check.outputs.missing == ''
+        continue-on-error: true
         run: node .github/scripts/merge-playwright-coverage.mjs 2>&1 | tee /app/output.log
 
       - name: Upload merged coverage artifact
@@ -354,10 +368,6 @@ jobs:
           outcome: failure
           log-file: /app/output.log
           summary: Coverage is missing for this commit, because an uploaded artifact could not be downloaded. Re-run the job.
-
-      - name: Fail when a coverage artifact could not be downloaded
-        if: inputs.should-run && steps.check.outputs.missing != ''
-        run: exit 1
 
       # The last step, so every section above is written first. Only the gate
       # fails the job; a story never does.

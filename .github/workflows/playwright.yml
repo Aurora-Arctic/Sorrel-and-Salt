@@ -7,6 +7,12 @@ name: Playwright E2E
 # Playwright's Chromium has no musl support.
 on:
   workflow_call:
+    outputs:
+      shards:
+        description: >-
+          How many shards the suite ran as, for the join to count blobs against.
+          Empty when the job did not run.
+        value: ${{ jobs.playwright.outputs.shards }}
     inputs:
       image:
         description: E2E testing image ref to run against (from build-e2e-image.yml)
@@ -56,9 +62,12 @@ jobs:
   # shards write blob reports, which playwright-coverage.yml joins
   # (claude-docs/ci/runner-budget.md, "Playwright shards"). The job is named
   # `playwright`, so each shard's check reads "playwright / playwright (n)".
-  # Add a shard by editing the matrix below; the join reads its count there.
+  # Add a shard by editing the matrix below; the join takes its count from the
+  # `shards` output.
   playwright:
     if: inputs.should-run
+    outputs:
+      shards: ${{ strategy.job-total }}
     runs-on: ubuntu-26.04
     strategy:
       # A failed shard must not cancel the others: the join needs every
@@ -66,8 +75,6 @@ jobs:
       fail-fast: false
       matrix:
         # The build-only run builds once and runs no spec, so it takes one shard.
-        # Keep the line's shape: join-playwright-shards.mjs reads the stories
-        # list after `inputs.suite == 'stories'` and the gate list last.
         shard: ${{ fromJSON(inputs.build-only && '[1]' || inputs.suite == 'stories' && '[1,2]' || '[1,2,3]') }}
     container:
       image: ${{ inputs.image }}

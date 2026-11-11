@@ -162,8 +162,9 @@ jobs:
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}
 
-  # The required check, "vitest / vitest": the caller's job name, a slash, this
-  # one. Keep this job named `vitest`; renaming it needs the ruleset changed.
+  # The check "vitest / vitest": the caller's job name, a slash, this one. It is
+  # the one claude-docs/ci/aggregating-workflows.md lists for branch protection;
+  # renaming this job means changing that list.
   vitest:
     needs: [vitest-dom, vitest-node, vitest-db]
     # Run after a failed part too, so the PR comment still appears. A

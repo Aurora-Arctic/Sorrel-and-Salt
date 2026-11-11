@@ -355,8 +355,8 @@ jobs:
   # Where the Playwright shards of both suites join: playwright-coverage.yml
   # merges each suite's blob reports, writes the Playwright comment's Gate and
   # Stories sections, and merges the JavaScript coverage into its Coverage
-  # section. Never a required check (it carries `continue-on-error`, and nothing
-  # waits on it), though a failed gate fails one of its steps. Its `if:`
+  # section. A failed gate fails
+  # one of its steps, so this job fails the run; a story never does. Its `if:`
   # keeps a failed suite from skipping the merge, and stays false on a stand-down.
   # It is a called workflow, not a job here, so that a run which stands down
   # leaves it skipped like the other called workflows.
@@ -379,6 +379,8 @@ jobs:
       pr-number: ${{ github.event.pull_request.number }}
       should-run: ${{ needs.changes.outputs.playwright == 'true' || needs.changes.outputs.stories == 'true' }}
       gate-should-run: ${{ needs.changes.outputs.playwright == 'true' }}
+      gate-shards: ${{ needs.playwright.outputs.shards }}
+      stories-shards: ${{ needs.stories.outputs.shards }}
       stories-should-run: ${{ needs.changes.outputs.stories == 'true' }}
       # A shard job that failed. A failed test or story, or a lost blob, is
       # found by the called workflow in the shards' reports: a story passes its
