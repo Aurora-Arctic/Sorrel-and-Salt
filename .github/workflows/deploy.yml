@@ -310,11 +310,13 @@ jobs:
           PROD_FLAG: ${{ needs.resolve-target.outputs.prod_flag }}
           GIT_BRANCH: ${{ needs.resolve-target.outputs.git_branch }}
         run: |
+          # --archive=tgz uploads one tarball: unarchived, each output file is an
+          # upload, and the free plan refuses more than 5,000 a day.
           # --meta is the runtime half of --git-branch: actions/checkout leaves
           # a detached HEAD, so without it the deployment has no branch
           # association and resolves the Preview-wide DATABASE_URL. Production
           # ignores it. stdout is the URL and stderr the build log; keep them apart.
-          if vercel deploy --prebuilt $PROD_FLAG \
+          if vercel deploy --prebuilt --archive=tgz $PROD_FLAG \
               --meta githubDeployment=1 --meta githubCommitRef="$GIT_BRANCH" \
               --token="$VERCEL_DEPLOY_TOKEN" \
               > deploy-url.txt 2> deploy.log; then
