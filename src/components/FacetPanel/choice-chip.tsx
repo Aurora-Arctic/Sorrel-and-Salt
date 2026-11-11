@@ -1,5 +1,6 @@
 'use client';
 
+import { cx } from '@/lib/class-names';
 import { FADE_LIMIT_MS, prefersReducedMotion } from '@/lib/motion';
 import {
   type FocusEvent,
@@ -158,9 +159,11 @@ export function ChoiceChip<T extends string>({
   };
 
   const describedBy =
-    [chipHint ? chipHintId : hint && hintId, note && noteId, error && errorId]
-      .filter(Boolean)
-      .join(' ') || undefined;
+    cx(
+      chipHint ? chipHintId : hint ? hintId : false,
+      note ? noteId : false,
+      error ? errorId : false,
+    ) || undefined;
 
   const face = (
     <>
@@ -230,13 +233,11 @@ export function ChoiceChip<T extends string>({
                   </summary>
                   <div
                     ref={menuRef}
-                    className={[
+                    className={cx(
                       'facet-chip__menu',
                       phase === 'open' && 'is-open',
                       alignEnd && 'facet-chip__menu--end',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
+                    )}
                     onTransitionEnd={onFadeEnd}
                   >
                     {options.map((option) => (

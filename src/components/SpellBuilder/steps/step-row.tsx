@@ -17,6 +17,7 @@ import { UNIT_OPTIONS } from '../../StockFields';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { type QuickLookCoven, StepQuickLook } from '../step-quick-look';
 import { isInstruction, safetyOf, stepNameOf } from './values';
+import { cx } from '@/lib/class-names';
 
 // One step of the jar: its drag handle, then StepRow's drawing with the controls around it. Closed
 // it reads amount and instruction on one muted line; open it shows amount, unit, instruction and,
@@ -100,14 +101,12 @@ export function BuilderStepRow({
         row.current = node;
         sortable.setNodeRef(node);
       }}
-      className={[
+      className={cx(
         'spell-step',
         'step-row--card',
         instruction && 'step-row--instruction',
         sortable.isDragging && 'is-dragging',
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      )}
       style={{
         transform: CSS.Translate.toString(sortable.transform),
         transition: sortable.transition,
@@ -153,7 +152,7 @@ export function BuilderStepRow({
           type="button"
           // One disclosure button in one place (second design review): the pencil while the row is
           // closed, the up chevron, light, once it is open. It keeps the focus when it flips.
-          className={['step-row__edit', open && 'step-row__edit--close'].filter(Boolean).join(' ')}
+          className={cx('step-row__edit', open && 'step-row__edit--close')}
           aria-label={`${open ? 'Close' : 'Edit'} ${name}`}
           aria-expanded={open}
           aria-controls={fieldsId}

@@ -62,6 +62,7 @@ import {
   tryMembership,
 } from '@/modules/coven';
 import { curatedNames } from '@/modules/vocabulary';
+import { plural } from '../../../lib/text';
 
 // (claude-docs/db/workspace-compendium-entries.md, "Reading it").
 
@@ -297,7 +298,7 @@ export async function removeCupboardEntry(
     if (jars.length > 0) {
       throw fieldRefusal(
         'ingredientId',
-        `This coven holds ${jars.length} ${jars.length === 1 ? 'jar' : 'jars'} of this entry — empty its jars first`,
+        `This coven holds ${jars.length} ${plural(jars.length, 'jar', 'jars')} of this entry — empty its jars first`,
       );
     }
     const [removed] = await write.softDeleteByIdInWorkspace(

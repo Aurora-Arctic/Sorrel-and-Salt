@@ -13,6 +13,7 @@ import { MoveFailedNotice, useOptimisticOrder } from './use-optimistic-order';
 import { SortableColumn } from '@/lib/sortable/column';
 import { useHelpSortableRow } from './sortable';
 import type { HelpOrderColumn, HelpOrderList, HelpOrderRow } from './types';
+import { cx } from '@/lib/class-names';
 
 // A guide's sub pages, or the FAQ, as a stacking table with a grip on every row: a drop saves at once, in the whole
 // order, the rows the filter leaves out among it. The markup is StackTable's, which takes server cell functions and
@@ -40,7 +41,7 @@ const write = (list: HelpOrderList, ids: string[]) =>
     : graphqlRequest(OrderHelpSubPagesDocument, { id: list.guideId, input: { childIds: ids } });
 
 const cellClass = ({ className, corner }: HelpOrderColumn) =>
-  [className, corner && 'data-table__card-action'].filter(Boolean).join(' ') || undefined;
+  cx(className, corner && 'data-table__card-action') || undefined;
 
 const OrderRow = ({
   row,

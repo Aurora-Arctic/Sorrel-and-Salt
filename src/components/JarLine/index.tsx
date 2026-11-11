@@ -3,6 +3,7 @@ import { JarDrawing, ONE_OFF_HELD, pickJarShape } from '../JarShelf';
 import { StockJarButton } from '../StockDialog';
 import type { JarLineProps } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // A jar you can press beside its name and words: the recipe page's In the Cupboard and the
 // completion preview draw their lines through it, so the shake and the name's growth are one thing
@@ -23,7 +24,7 @@ export default function JarLine({
   const modifier = oneOff || tone === 'ok' ? '' : ` jar-shelf__jar--${tone}`;
   const nameText = <span className="jar-line__name">{name}</span>;
   return (
-    <li className={`jar-line${oneOff ? ' is-one-off' : ''}${className ? ` ${className}` : ''}`}>
+    <li className={cx('jar-line', oneOff && 'is-one-off', className)}>
       <span className={`jar-line__jar${modifier}`}>
         <JarDrawing shape={pickJarShape(seed, kind)} held={oneOff ? ONE_OFF_HELD : held} />
       </span>

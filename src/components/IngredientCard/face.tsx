@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, type ReactElement } from 'react';
+import { hasText } from '@/lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { PendingLink } from '../../lib/navigation';
 import CategoryChips from '../CategoryChips';
@@ -44,8 +45,8 @@ const CardFace = ({
   const marked = kind === 'own' || Boolean(retired);
   const safe =
     Boolean(toxic) ||
-    (safetyNotes ?? '').trim() !== '' ||
-    variants.some((v) => v.toxic || (v.safetyNotes ?? '').trim() !== '');
+    hasText(safetyNotes) ||
+    variants.some((v) => v.toxic || hasText(v.safetyNotes));
   const cornered = safe || recency != null;
   // The first word apart, so the safety badge beside the name drops below only once that word would have
   // to break to fit (index.scss). Spans do not change the link's name.

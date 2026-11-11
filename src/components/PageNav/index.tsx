@@ -9,6 +9,7 @@ import SkeletonText from '../Skeleton/text';
 import { ChevronIcon } from '../IconTip/icons';
 import type { PageNavEntry, PageNavItem, PageNavProps } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // A menu of jump links to a page's sections (claude-docs/components/page-nav.md). The anchors jump,
 // so it works before the script loads; the script only moves `aria-current`. A group is set apart
@@ -102,9 +103,7 @@ export default function PageNav({
     <li
       key={entry.href}
       className={
-        [apart && 'page-nav__apart', entry.narrowOnly && 'page-nav__narrow']
-          .filter(Boolean)
-          .join(' ') || undefined
+        cx(apart && 'page-nav__apart', entry.narrowOnly && 'page-nav__narrow') || undefined
       }
     >
       {pending ? (
@@ -141,12 +140,10 @@ export default function PageNav({
             <li
               key={`group-${at}`}
               className={
-                [
+                cx(
                   item.entries[0]?.apart && 'page-nav__apart',
                   item.entries.every((entry) => entry.narrowOnly) && 'page-nav__narrow',
-                ]
-                  .filter(Boolean)
-                  .join(' ') || undefined
+                ) || undefined
               }
             >
               <span className="page-nav__group" id={`${groupId}-${at}`}>

@@ -11,7 +11,8 @@ import FormIcon from '../FormIcon';
 import Skeleton from '../Skeleton';
 import ReadFailure from './read-failure';
 import type { EntrySummary } from '../Combobox/types';
-import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from './options';
+import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from './options';
+import { labelOf } from '@/lib/options';
 import type { EntryHref, SubstituteListEntry, SubstituteSummaryProps } from './types';
 import { tierOf } from './values';
 

@@ -50,43 +50,41 @@ const whereOf = ({
   return { path: audience === 'admin' ? COMPENDIUM_PATH : PUBLIC_COMPENDIUM_PATH };
 };
 
-const panelOf = (filter: Held, coven: boolean, admin: boolean): FacetPanelFilter => ({
-  covens: filter.covens ?? [],
-  covensNot: filter.covensNot ?? false,
-  categories: filter.categories,
-  categoryMode: filter.categoryMode,
-  forms: filter.forms,
-  deities: filter.deities,
-  zodiac: filter.zodiac,
-  celestialBodies: filter.celestialBodies,
-  elements: filter.elements,
-  toxic: filter.toxic ?? '',
-  withoutReferences: filter.withoutReferences,
-  withoutForms: filter.withoutForms,
-  ...(admin && { reviewed: filter.reviewed ?? '', hidden: filter.hidden ?? false }),
-  ...(coven && {
-    source: filter.source ?? '',
-    inStock: filter.inStock ?? false,
-    lowStockOnly: filter.lowStockOnly ?? false,
-  }),
-});
-
-const noFacets = (coven: boolean, admin: boolean): FacetPanelFilter => ({
-  covens: [],
+// What each facet holds when nothing is chosen. One list drives `panelOf` and `noFacets`, so the two lay their
+// keys out in the same order, which the `JSON.stringify` comparisons of a panel against the filter shown rely on.
+const FACET_DEFAULTS = {
+  covens: [] as readonly string[],
   covensNot: false,
-  categories: [],
-  categoryMode: 'all',
-  forms: [],
-  deities: [],
-  zodiac: [],
-  celestialBodies: [],
-  elements: [],
-  toxic: '',
+  categories: [] as readonly string[],
+  categoryMode: 'all' as FacetPanelFilter['categoryMode'],
+  forms: [] as readonly string[],
+  deities: [] as readonly string[],
+  zodiac: [] as readonly string[],
+  celestialBodies: [] as readonly string[],
+  elements: [] as readonly string[],
+  toxic: '' as FacetPanelFilter['toxic'],
   withoutReferences: false,
   withoutForms: false,
-  ...(admin && { reviewed: '' as const, hidden: false }),
-  ...(coven && { source: '', inStock: false, lowStockOnly: false }),
+};
+const ADMIN_FACET_DEFAULTS = { reviewed: '' as const, hidden: false };
+const COVEN_FACET_DEFAULTS = { source: '' as const, inStock: false, lowStockOnly: false };
+
+/** The facets a panel of this kind holds, each at its default. */
+const facetDefaults = (coven: boolean, admin: boolean) => ({
+  ...FACET_DEFAULTS,
+  ...(admin && ADMIN_FACET_DEFAULTS),
+  ...(coven && COVEN_FACET_DEFAULTS),
 });
+
+const panelOf = (filter: Held, coven: boolean, admin: boolean): FacetPanelFilter => {
+  const defaults: Record<string, unknown> = facetDefaults(coven, admin);
+  const held: Record<string, unknown> = filter;
+  return Object.fromEntries(
+    Object.entries(defaults).map(([key, none]) => [key, held[key] ?? none]),
+  ) as unknown as FacetPanelFilter;
+};
+
+const noFacets = (coven: boolean, admin: boolean): FacetPanelFilter => facetDefaults(coven, admin);
 
 const changeOf = (panel: FacetPanelFilter) => ({
   covens: [...(panel.covens ?? [])],

@@ -9,6 +9,7 @@ import { EmptyMessage, Popup } from './popup';
 import { useListPosition } from './position';
 import { chipsRoom } from './room';
 import type { ComboboxChoice, ComboboxMultiSelectProps } from './types';
+import { cx } from '@/lib/class-names';
 
 // A closed set holding several values: the select-only box on Downshift's `useSelect` with `useMultipleSelection`, the chips inside the control ahead of the box
 // (claude-docs/components/combobox.md, "The multi-select box").
@@ -121,9 +122,7 @@ export function ComboboxMultiSelect({
       {/* Presentational: the box inside is what a reader and the keyboard reach, and the chips' x and the clear sit beside it. */}
       <div
         role="presentation"
-        className={['input combobox__control combobox__control--select', invalid && 'is-invalid']
-          .filter(Boolean)
-          .join(' ')}
+        className={cx('input combobox__control combobox__control--select', invalid && 'is-invalid')}
         onMouseDown={pressControl}
       >
         <div className="combobox__values">
@@ -223,13 +222,11 @@ export function ComboboxMultiSelect({
             left.map((choice, index) => (
               <li
                 key={choice.value}
-                className={[
+                className={cx(
                   'combobox__option',
                   index === highlightedIndex && 'is-highlighted',
                   choice.disabled && 'is-disabled',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
+                )}
                 {...getItemProps({ item: choice, index })}
               >
                 <span className="combobox__label">

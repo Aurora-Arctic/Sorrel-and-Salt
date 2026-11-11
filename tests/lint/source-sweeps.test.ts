@@ -570,3 +570,151 @@ tester.run('placeholder-is-short', rules['placeholder-is-short'], {
     },
   ],
 });
+
+// A class-name join written by hand: `.filter(Boolean).join(' ')` building a class, or `className` added by a ternary.
+// The same join building an `aria-describedby` id list or a sentence is another job, and passes.
+tester.run('class-names-joined-through-cx', rules['class-names-joined-through-cx'], {
+  valid: [
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "export const P = ({ open, className }) => <div className={cx('panel', open && 'is-open', className)} />;",
+    },
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "export const P = ({ hintId, errorId, error }) => <input aria-describedby={[hintId, error && errorId].filter(Boolean).join(' ') || undefined} />;",
+    },
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "const describedBy = [hintId, note && noteId, error && errorId].filter(Boolean).join(' ');",
+    },
+    {
+      filename: at('src/components/Panel/supply.ts'),
+      cwd: REPO_ROOT,
+      code: "const amountLine = [quantity, unit].filter(Boolean).join(' ');",
+    },
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "announce([`Added ${name}.`, warning].filter(Boolean).join(' '));",
+    },
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "const label = title ? `${title} copy` : 'copy';",
+    },
+    {
+      // An optional modifier inside a template is left alone.
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "export const P = ({ open }) => <li className={`panel${open ? ' is-open' : ''}`} />;",
+    },
+    {
+      // The joiner itself, outside the components and the app.
+      filename: at('src/lib/class-names.ts'),
+      cwd: REPO_ROOT,
+      code: "export const cx = (...parts) => parts.filter(Boolean).join(' ');",
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "export const P = ({ open }) => <div className={['panel', open && 'is-open'].filter(Boolean).join(' ')} />;",
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "const classes = ['panel', open && 'is-open'];\nexport const P = () => <div className={classes.filter(Boolean).join(' ')} />;",
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "const rootClass = ['panel', open && 'is-open'].filter(Boolean).join(' ');",
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "const props = { id, className: ['panel', invalid && 'is-invalid'].filter(Boolean).join(' ') };",
+      errors: 1,
+    },
+    {
+      // A local joiner function.
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "const classes = (...names) => names.filter(Boolean).join(' ');",
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Panel/cells.ts'),
+      cwd: REPO_ROOT,
+      code: "export function cellClass({ className, corner }) {\n  return [className, corner && 'cell--corner'].filter(Boolean).join(' ') || undefined;\n}",
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "export const P = ({ className }) => <p className={className ? `meta ${className}` : 'meta'} />;",
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "export const P = ({ className }) => <li className={`jar-line${className ? ` ${className}` : ''}`} />;",
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Panel/index.tsx'),
+      cwd: REPO_ROOT,
+      code: "const headClass = headingClassName ? `head ${headingClassName}` : 'head';",
+      errors: 1,
+    },
+    {
+      filename: at('src/app/(shell)/coven/page.tsx'),
+      cwd: REPO_ROOT,
+      code: "export default function Page() { return <main className={['page', wide && 'page--wide'].filter(Boolean).join(' ')} />; }",
+      errors: 1,
+    },
+  ],
+});
+
+// A spell's shown name comes from `spellNameOf`, so the trimming and the fallback are one edit.
+tester.run('spell-name-through-spell-name-of', rules['spell-name-through-spell-name-of'], {
+  valid: [
+    {
+      filename: at('src/components/SpellCard/untitled.ts'),
+      cwd: REPO_ROOT,
+      code: 'export const spellNameOf = (title) => title?.trim() || UNTITLED_SPELL;',
+    },
+    {
+      filename: at('src/components/SpellRecipe/body.tsx'),
+      cwd: REPO_ROOT,
+      code: 'const name = spellNameOf(title);',
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/components/SpellRecipe/body.tsx'),
+      cwd: REPO_ROOT,
+      code: "const name = (title ?? '').trim() || UNTITLED_SPELL;",
+      errors: 1,
+    },
+    {
+      filename: at('src/components/SpellRecipe/deleted-href.ts'),
+      cwd: REPO_ROOT,
+      code: 'export const name = (title) => title?.trim() ?? UNTITLED_SPELL;',
+      errors: 1,
+    },
+    {
+      filename: at('src/app/(shell)/coven/[slug]/grimoire/[id]/page.tsx'),
+      cwd: REPO_ROOT,
+      code: 'const name = spell.title?.trim() || UNTITLED_SPELL;',
+      errors: 1,
+    },
+  ],
+});

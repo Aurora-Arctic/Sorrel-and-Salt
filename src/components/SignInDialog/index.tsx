@@ -4,7 +4,7 @@ import { type MouseEvent, type ReactElement, useCallback, useRef, useState } fro
 import { emailPagePath } from '../../lib/account-email';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
-import { safeReturnPath, signInPath } from '../../lib/sign-in';
+import { CHECK_INBOX, safeReturnPath, signInPath } from '../../lib/sign-in';
 import Modal from '../Modal';
 import SignInPanel, { LastUsedMark, SignInBack, signInHeader } from '../SignInPanel';
 import { withMode } from '../SignInPanel/address';
@@ -13,8 +13,7 @@ import type { SignInDialogProps } from './types';
 import './index.scss';
 
 const INBOX_TITLE = 'Check Your Inbox';
-const INBOX_LEDE =
-  "Your email address isn't confirmed yet. Check your inbox for our message, or press Confirm Your Email to send a new one. Its link brings you back to this page.";
+const INBOX_LEDE = `${CHECK_INBOX} Its link brings you back to this page.`;
 
 /**
  * Sign In over the page it is on. A link to the sign-in page, so a press for a new tab and a

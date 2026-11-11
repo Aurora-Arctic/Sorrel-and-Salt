@@ -7,6 +7,7 @@ import Spinner from '../Spinner';
 import { ChevronIcon, PlusIcon } from '../IconTip/icons';
 import { useListPosition } from './position';
 import type { ComboboxChoice, ComboboxSelectProps } from './types';
+import { cx } from '@/lib/class-names';
 
 // The combobox's closed-set sibling, on Downshift's `useSelect`, for a field nothing is typed into
 // (claude-docs/components/combobox.md, "The select-only box").
@@ -69,14 +70,12 @@ export function ComboboxSelect({
   const option = ({ choice, index }: { choice: ComboboxChoice; index: number }) => (
     <li
       key={choice.value}
-      className={[
+      className={cx(
         'combobox__option',
         choice.create && 'combobox__option--create',
         index === highlightedIndex && 'is-highlighted',
         choice.disabled && 'is-disabled',
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      )}
       {...getItemProps({ item: choice, index })}
     >
       {choice.create && <PlusIcon />}
@@ -93,22 +92,15 @@ export function ComboboxSelect({
   );
 
   return (
-    <div
-      className={['combobox', fit && 'combobox--fit', isOpen && 'is-open']
-        .filter(Boolean)
-        .join(' ')}
-      ref={setControl}
-    >
+    <div className={cx('combobox', fit && 'combobox--fit', isOpen && 'is-open')} ref={setControl}>
       {/* The control is the box itself: nothing is typed, so the whole of it
           is the one target, and it takes the focus. */}
       <div
-        className={[
+        className={cx(
           'input combobox__control combobox__control--select',
           invalid && 'is-invalid',
           disabled && 'is-disabled',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        )}
         {...getToggleButtonProps({
           ref: inputRef,
           onBlur,

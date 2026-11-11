@@ -62,20 +62,20 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-48  | Wrapping flex row (`display:flex; flex-wrap:wrap; align-items:center; gap`) repeated 25 times                                                                | medium   | Styles        |     19 |     2 | Moved to MC.9                                   |
 | D-49  | The lede text is written in both a page and its skeleton                                                                                                     | medium   | Pages and lib |     21 |     3 | Moved to MC.2                                   |
 | D-50  | `src/lib/utc.ts` repeats the `formatToParts` plus `part()` block four times, and one email does its own date formatting                                      | medium   | Pages and lib |     18 |  3.25 | Moved to MC.2                                   |
-| D-51  | "Has text" check (`(x ?? '').trim() !== ''`) written as a local `said` in four places and inline in six more                                                 | medium   | Components    |     16 |  1.25 | Moved to MC.7                                   |
+| D-51  | "Has text" check (`(x ?? '').trim() !== ''`) written as a local `said` in four places and inline in six more                                                 | medium   | Components    |     16 |  1.25 | Fixed                                           |
 | D-52  | The coven access flags (`rolePermits` x4) are computed in more than one layout and page                                                                      | medium   | Pages and lib |     15 |   4.5 | Moved to MC.2                                   |
-| D-53  | Untitled-spell name expression written in ten places                                                                                                         | medium   | Components    |     15 |   1.5 | Moved to MC.7                                   |
-| D-54  | Hand-written singular/plural ternaries beside an existing `plural()` helper                                                                                  | medium   | Components    |     15 |  3.25 | Moved to MC.7                                   |
+| D-53  | Untitled-spell name expression written in ten places                                                                                                         | medium   | Components    |     15 |   1.5 | Fixed                                           |
+| D-54  | Hand-written singular/plural ternaries beside an existing `plural()` helper                                                                                  | medium   | Components    |     15 |  3.25 | Fixed                                           |
 | D-55  | Four public document pages and their versions repeated eight times, plus eight skeletons                                                                     | medium   | Pages and lib |     14 |     4 | Moved to MC.2                                   |
 | D-56  | Three near-identical support reply forms                                                                                                                     | medium   | Components    |     14 |   5.5 | Fixed                                           |
 | D-57  | Hairline surface box repeated 12 times (exact triplicates)                                                                                                   | medium   | Styles        |     14 |   1.5 | Moved to MC.9                                   |
 | D-58  | Two pages read search params by hand instead of `single()` and `trimmed()`                                                                                   | medium   | Pages and lib |     13 |  1.25 | Moved to MC.2                                   |
 | D-59  | "named only in an allowed set of files" guards each rebuild the same scanner                                                                                 | medium   | Tests         |     13 |     2 | Moved to MC.1                                   |
 | D-60  | The pause tables' repository files are near-copies, and re-implement `noEndOrAhead`                                                                          | medium   | Server        |     12 |   3.5 | Fixed                                           |
-| D-61  | A class-name joiner is hand-written in about nine components with four different idioms                                                                      | medium   | Components    |     12 |     4 | Moved to MC.7                                   |
+| D-61  | A class-name joiner is hand-written in about nine components with four different idioms                                                                      | medium   | Components    |     12 |     4 | Fixed                                           |
 | D-62  | small e2e helpers copied across specs: `authorOf` x3, `openFilters`/`applyFilters` x2, `grimoireList` x2                                                     | medium   | Tests         |     11 |     2 | Moved to MC.1                                   |
 | D-63  | Trim, then empty to undefined or null, written inline in eight services                                                                                      | medium   | Server        |     11 |     2 | Fixed in part                                   |
-| D-64  | Value-to-label lookups with a fallback, written eleven times                                                                                                 | medium   | Components    |     11 |     2 | Moved to MC.7                                   |
+| D-64  | Value-to-label lookups with a fallback, written eleven times                                                                                                 | medium   | Components    |     11 |     2 | Fixed                                           |
 | D-65  | "No such compendium entry" and the curator / uuid guard / NotFound sequence repeated                                                                         | medium   | Server        |     10 |     2 | Fixed                                           |
 | D-66  | Readable-spell parent check repeated in `spells.ts` and `workings.ts`; `grimoire.ts` ANDs `notSoftDeleted(spells)` after `readableSpells`                    | medium   | Server        |     10 |   1.5 | Fixed                                           |
 | D-67  | Vocabulary admin services repeat the create and delete sequences                                                                                             | medium   | Server        |      9 |   4.5 | Fixed                                           |
@@ -108,7 +108,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-94  | DateField and DateRangeField duplicate the popover shell, bounds and weekday-word helper                                                                     | medium   | Components    |      5 |     3 | Moved to MC.8                                   |
 | D-95  | SignInPanel/in-dialog.test.tsx copies the password-form harness                                                                                              | medium   | Tests         |      5 |   1.5 | Moved to MC.1                                   |
 | D-96  | Compendium filter schema repeats two transform shapes                                                                                                        | medium   | Server        |      4 |     2 | Fixed                                           |
-| D-97  | CompendiumList re-describes the filter in words beside existing builders                                                                                     | medium   | Components    |      4 |  4.75 | Moved to MC.7                                   |
+| D-97  | CompendiumList re-describes the filter in words beside existing builders                                                                                     | medium   | Components    |      4 |  4.75 | Fixed                                           |
 | D-98  | `box-sizing: border-box` declared 68 times with no global reset                                                                                              | medium   | Styles        |      4 |     2 | Moved to MC.9                                   |
 | D-99  | Jar muted-stroke overrides repeated in three sheets                                                                                                          | medium   | Styles        |      4 |   1.5 | Moved to MC.9                                   |
 | D-100 | the three `lint-*-boundary` guards repeat the probe test and the exemption-directive scanner                                                                 | medium   | Tests         |      4 |   1.5 | Moved to MC.1                                   |
@@ -120,7 +120,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-106 | Single-name forms (NameForm, RenameWorkspaceForm) copy each other                                                                                            | medium   | Components    |      5 |  3.25 | Fixed                                           |
 | D-107 | "this field's server message, or undefined" repeated 8 times in 5 forms                                                                                      | medium   | Components    |      4 |     1 | Fixed                                           |
 | D-108 | Plain-state text fields hand-build `fieldDescription` + `FieldShell` + `<input className="input">` in four forms                                             | medium   | Components    |      4 |     3 | Fixed                                           |
-| D-109 | DocumentMailingPanel hand-writes `joinList` and a count pluralisation, twice with drifted wording                                                            | medium   | Components    |      4 |     1 | Moved to MC.7                                   |
+| D-109 | DocumentMailingPanel hand-writes `joinList` and a count pluralisation, twice with drifted wording                                                            | medium   | Components    |      4 |     1 | Fixed                                           |
 | D-110 | AboutPillars and AboutRoles are near-copies                                                                                                                  | medium   | Components    |      3 |     2 | Moved to MC.8                                   |
 | D-111 | Unit compatibility rule stated in three places                                                                                                               | medium   | Server        |      3 |   1.5 | Fixed                                           |
 | D-112 | Spell field list written five times                                                                                                                          | medium   | Server        |      3 |     2 | Fixed                                           |
@@ -152,8 +152,8 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-138 | AccountMenu trigger and panel each derive the same counts and labels                                                                                         | medium   | Components    |      1 |     1 | Moved to MC.8                                   |
 | D-139 | Combobox repeats option-row, group-heading and indicator markup                                                                                              | medium   | Components    |      1 |     4 | Moved to MC.8                                   |
 | D-140 | floating-ui `autoUpdate` wired by hand in four effects                                                                                                       | medium   | Components    |      1 |     3 | Moved to MC.6                                   |
-| D-141 | Unverified-email sentence exists in five places                                                                                                              | medium   | Components    |      1 |     1 | Moved to MC.7                                   |
-| D-142 | Invitation-path regex written three times                                                                                                                    | medium   | Components    |      1 |     1 | Moved to MC.7                                   |
+| D-141 | Unverified-email sentence exists in five places                                                                                                              | medium   | Components    |      1 |     1 | Fixed                                           |
+| D-142 | Invitation-path regex written three times                                                                                                                    | medium   | Components    |      1 |     1 | Fixed                                           |
 | D-143 | `Passkeys` keeps its own `GENERIC` failure text and a re-export used only by a test                                                                          | low      | Components    |      4 |   0.5 | Fixed                                           |
 | D-144 | `downloadCodes` re-implements `AdminCards/save-file.ts`                                                                                                      | low      | Components    |      2 |   0.5 | Fixed                                           |
 | D-145 | Exports used by nothing outside their own file, and exports under two spellings                                                                              | low      | Unused code   |     52 |  2.25 | Moved to MC.9                                   |
@@ -175,7 +175,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-161 | `TABLET_BAND` and its `useSyncExternalStore` subscription written in both PageNav and SectionNav                                                             | low      | Components    |      4 |     1 | Moved to MC.6                                   |
 | D-162 | "Deleted account" and "Signed-out sender" literals repeated across the support screens                                                                       | low      | Components    |      4 |   0.5 | Fixed                                           |
 | D-163 | `pageshow` "restored from the back-forward cache" effect written three times                                                                                 | low      | Components    |      4 |     1 | Moved to MC.6                                   |
-| D-164 | Calendar-day regex `/^\d{4}-\d{2}-\d{2}$/` written three times                                                                                               | low      | Components    |      4 |   0.5 | Moved to MC.7                                   |
+| D-164 | Calendar-day regex `/^\d{4}-\d{2}-\d{2}$/` written three times                                                                                               | low      | Components    |      4 |   0.5 | Fixed                                           |
 | D-165 | Dead CSS                                                                                                                                                     | low      | Styles        |      3 |  0.25 | Moved to MC.9                                   |
 | D-166 | three guards each carry their own recursive file walker beside the shared `inject('repoFiles')` listing                                                      | low      | Tests         |      3 |     1 | Moved to MC.1                                   |
 | D-167 | Distinct linked ingredient ids derived twice                                                                                                                 | low      | Server        |      3 |   0.5 | Fixed in part                                   |
@@ -221,7 +221,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-207 | Tier-2 uncurated suggestion select repeated                                                                                                                  | low      | Server        |      1 |     1 | Fixed                                           |
 | D-208 | `requireAdminSession` and `requireCuratorSession` are the same function with a different assertion                                                           | low      | Pages and lib |      1 |   0.5 | Moved to MC.2                                   |
 | D-209 | `PublicLayout` writes `<main><PageColumn as="div">` once per branch                                                                                          | low      | Pages and lib |      1 |  0.25 | Moved to MC.2                                   |
-| D-210 | The `'Prev' \| 'Next'` label union is written three times in `Pager/types.ts`                                                                                | low      | Components    |      1 |  0.25 | Moved to MC.7                                   |
+| D-210 | The `'Prev' \| 'Next'` label union is written three times in `Pager/types.ts`                                                                                | low      | Components    |      1 |  0.25 | Fixed                                           |
 | D-211 | SkeletonFrame writes the context-row lead twice in one file                                                                                                  | low      | Components    |      1 |  0.25 | Moved to MC.8                                   |
 | D-212 | Steps selection written four times with no guard                                                                                                             | low      | Components    |      1 |   0.5 | Moved to MC.8                                   |
 | D-213 | AppShell `onCuratedPage` re-implements `isAtPath`                                                                                                            | low      | Components    |      1 |  0.25 | Moved to MC.6                                   |
@@ -229,7 +229,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-215 | `Field/radio-group-field.tsx` writes the radio `<input>` three times                                                                                         | low      | Components    |      1 |     1 | Fixed                                           |
 | D-216 | `Field/use-form-history.ts` `undo` and `redo` are near-identical                                                                                             | low      | Components    |      1 |   0.5 | Fixed                                           |
 | D-217 | `CovenHome` repeats `id={pending ? undefined : '…'}` with `aria-labelledby` across four sections                                                             | low      | Components    |      1 |     1 | Moved to MC.8                                   |
-| D-218 | `buildSearchSentence` repeats one "picked values to clause" block fourteen times                                                                             | low      | Components    |      1 |   1.5 | Moved to MC.7                                   |
+| D-218 | `buildSearchSentence` repeats one "picked values to clause" block fourteen times                                                                             | low      | Components    |      1 |   1.5 | Fixed                                           |
 | D-219 | `configuredProviders()` call with its lint-disable and comment repeated in three layouts                                                                     | low      | Components    |      1 |     1 | Moved to MC.8                                   |
 | D-220 | SignInDialog inbox view repeats the "Confirm Your Email" link and `emailPagePath`                                                                            | low      | Components    |      1 |   0.5 | Moved to MC.8                                   |
 | D-221 | DocumentPage blockquote CSS hard-codes values                                                                                                                | low      | Components    |      1 |     1 | Moved to MC.9                                   |
@@ -252,14 +252,14 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-238 | The `framed` flag gives three help components and their skeletons two header layouts each                                                                    | medium   | Components    |      4 |  0.75 | Moved to MC.8                                   |
 | D-239 | HelpFrontSkeleton repeats HelpFront's wrapper markup                                                                                                         | low      | Components    |      2 |  0.25 | Moved to MC.2                                   |
 | D-240 | AddIngredientAction and NewSpellAction are near twins                                                                                                        | low      | Components    |      2 |  0.25 | Moved to MC.6                                   |
-| D-241 | `autoCapitalize`, `enterKeyHint` and `format` are typed by hand a second time in Combobox                                                                    | low      | Components    |      2 |   0.1 | Moved to MC.7                                   |
-| D-242 | The set of openable link schemes is written in a list and again in a regex                                                                                   | low      | Components    |      3 |  0.25 | Moved to MC.7                                   |
+| D-241 | `autoCapitalize`, `enterKeyHint` and `format` are typed by hand a second time in Combobox                                                                    | low      | Components    |      2 |   0.1 | Fixed                                           |
+| D-242 | The set of openable link schemes is written in a list and again in a regex                                                                                   | low      | Components    |      3 |  0.25 | Fixed                                           |
 | D-243 | Duplicate, unused and test-only exports remain among the form and support files                                                                              | low      | Components    |      6 |  0.25 | Moved to MC.9                                   |
 | D-244 | Four container queries add `0.01rem` by hand, and the breakpoint guard checks only `@media`                                                                  | low      | Styles        |      4 |   0.5 | Moved to MC.9                                   |
 | D-245 | `adminDeclaration` re-implements the pause note parser, with a second constant for the same 500                                                              | low      | Server        |      3 |  0.25 | Fixed                                           |
 | D-246 | `spell-step.ts` builds three `z.guid` schemas beside `requiredRowId`, and `SummariesInput` takes a bare string id                                            | low      | Server        |      4 |   0.1 | Fixed                                           |
-| D-247 | `reference-format.ts` has a local `trimmed` format equal to `trimEnds`                                                                                       | low      | Server        |      3 |   0.1 | Moved to MC.7                                   |
-| D-248 | `category-group.ts` writes the hex-colour message twice                                                                                                      | low      | Server        |      2 |   0.1 | Moved to MC.7                                   |
+| D-247 | `reference-format.ts` has a local `trimmed` format equal to `trimEnds`                                                                                       | low      | Server        |      3 |   0.1 | Fixed                                           |
+| D-248 | `category-group.ts` writes the hex-colour message twice                                                                                                      | low      | Server        |      2 |   0.1 | Fixed                                           |
 | D-249 | `support.test.ts` has two `describe` blocks that prove the same error reference limit                                                                        | low      | Tests         |      2 |   0.1 | Moved to MC.1                                   |
 | D-250 | The coven name limit test is copied into create and rename with the literals 80 and 81                                                                       | low      | Tests         |      4 |   0.1 | Moved to MC.1                                   |
 | D-251 | The email field contract tests are repeated in four component test files                                                                                     | low      | Tests         |      4 |  0.25 | Moved to MC.1                                   |
@@ -1615,7 +1615,7 @@ Two more page-and-skeleton pairs:
 - **Tests covering the callers:** `tests/lib/page-metadata*`, `tests/lib/help-marks*`, IngredientForm and SpellBuilder component tests.
 
 - **Estimate:** 1.25 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `hasText` in `src/lib/text.ts` replaces the `said` copies and the inline checks in the entry, safety note, card, spell steps, references and the repository; `formal-name.tsx` keeps its trimmed value because it uses the text, not the yes or no.
 
 ### D-52: The coven access flags (`rolePermits` x4) are computed in more than one layout and page
 
@@ -1690,7 +1690,7 @@ Two more page-and-skeleton pairs:
 - **Tests covering the callers:** SpellCard, SpellBuilder, SpellRecipe component tests.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `spellNameOf` in `src/components/SpellCard/untitled.ts` names an untitled spell; the `spell-name-through-spell-name-of` lint rule refuses `|| UNTITLED_SPELL`.
 
 ### D-54: Hand-written singular/plural ternaries beside an existing `plural()` helper
 
@@ -1716,7 +1716,7 @@ Two more page-and-skeleton pairs:
 - **Tests covering the callers:** each folder's component tests; `tests/lib/text.test.ts`.
 
 - **Estimate:** 3.25 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. Every singular or plural word ternary uses `plural()` from `src/lib/text.ts`; the ids and titles that test for one item, and the local `plural` in `Field/character-count.tsx` (which appends a suffix), are left.
 
 ### D-55: Four public document pages and their versions repeated eight times, plus eight skeletons
 
@@ -1947,7 +1947,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** component tests across `tests/components`.
 
 - **Estimate:** 4 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `cx` in `src/lib/class-names.ts` joins class names; the `class-names-joined-through-cx` lint rule refuses `.filter(Boolean).join(' ')` for classes and the `className ? ... : ...` ternary.
 
 ### D-62: small e2e helpers copied across specs: `authorOf` x3, `openFilters`/`applyFilters` x2, `grimoireList` x2
 
@@ -2004,7 +2004,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** `tests/components/SupportRequests`, `SupportList`, `UserList`, `UserDetail`, `IngredientForm`, `PrivilegeLedger`.
 
 - **Estimate:** 2 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `labelOf` and `labelByKey` in `src/lib/options.ts` serve every keyed label lookup, including `providerLabel`, the back link, and the two StockDialog copies.
 
 ### D-65: "No such compendium entry" and the curator / uuid guard / NotFound sequence repeated
 
@@ -2750,7 +2750,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** tests/components/CompendiumList/*
 
 - **Estimate:** 4.75 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. Part 1: `plural()`, the shared builders, and `chosenClause`/`joinedNames` in CompendiumList, whose empty-state wording differs from `buildSearchSentence`, so it cannot share that builder without changing visible text; the JSX variants stay for the links they carry. Part 2: `FACET_DEFAULTS` drives `panelOf` and `noFacets`, and `toFacetOptions` builds the facet choices; `changeOf` and `heldFilter` transform values and stay. The `IngredientFacetCounts` GraphQL interface carries the seven shared lists on both types, and both queries spread one `IngredientFacetCountsFields` fragment.
 
 ### D-98: `box-sizing: border-box` declared 68 times with no global reset
 
@@ -2947,7 +2947,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/components/DocumentMailingPanel/`.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `DocumentMailingPanel` uses `joinList` and `plural`.
 
 ### D-110: AboutPillars and AboutRoles are near-copies
 
@@ -3478,7 +3478,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** SignInDialog and InvitationAcceptance component tests; invitation-acceptance service test (content is not tested, so only the wiring).
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `UNCONFIRMED_EMAIL` and `CHECK_INBOX` in `src/lib/sign-in.ts` carry the shared opening; the dialog, the invitation page, the email form, the sign-in error map and the invitation service add their own endings. The wording is unchanged.
 
 ### D-142: Invitation-path regex written three times
 
@@ -3492,7 +3492,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** tests/lib for account-email and invitation-link; sign-in page e2e.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `invitationTokenFromPath` in `src/lib/invitation-link.ts` reads the token from an invitation path.
 
 ### D-143: `Passkeys` keeps its own `GENERIC` failure text and a re-export used only by a test
 
@@ -4003,7 +4003,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 - **Tests covering the callers:** `tests/components/RecordWorking/*`, `tests/components/AdminCards/*`, `tests/modules/identity/*invitation-cards*`, `tests/components/DateField/*`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `isCalendarDay` in `src/lib/utc.ts` replaces the three copies; `DateField/calendar.tsx` and `lib/citation.ts` keep their patterns because they capture the parts.
 
 ### D-165: Dead CSS
 
@@ -4694,7 +4694,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/components/Pager/`.
 
 - **Estimate:** 0.25 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `PagerLabel` names the union once in `Pager/types.ts`.
 
 ### D-211: SkeletonFrame writes the context-row lead twice in one file
 
@@ -4806,7 +4806,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/components/IngredientSearch/sentence.test.ts*`.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `listClause` and `flagClause` in `buildSearchSentence` build the list and yes-or-no clauses.
 
 ### D-219: `configuredProviders()` call with its lint-disable and comment repeated in three layouts
 
@@ -5150,7 +5150,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** Type check only.
 
 - **Estimate:** 0.1 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `AutoCapitalize` and `EnterKeyHint` are exported from `src/components/Field/types.ts`, and the Field set and Combobox both use them. Combobox has no `format` prop, so there was no `FieldFormat` copy to replace.
 
 ### D-242: The set of openable link schemes is written in a list and again in a regex
 
@@ -5165,7 +5165,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/lib/link-address.test.ts`, and the RichTextEditor and DocumentPage tests.
 
 - **Estimate:** 0.25 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `OPENABLE_ADDRESS` in `src/lib/link-address.ts` is built from `LINK_SCHEMES`.
 
 ### D-243: Duplicate, unused and test-only exports remain among the form and support files
 
@@ -5247,7 +5247,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/modules/ingredients/validation/reference*.test.ts`.
 
 - **Estimate:** 0.1 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `reference-format.ts` uses `trimEnds` from `src/lib/formats.ts`.
 
 ### D-248: `category-group.ts` writes the hex-colour message twice
 
@@ -5261,7 +5261,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/modules/vocabulary/validation/category-group.test.ts`.
 
 - **Estimate:** 0.1 hours
-- **Status:** Not fixed: moved to MC.7.
+- **Status:** Fixed. `HEX_MESSAGE` is the one colour refusal in `category-group.ts`.
 
 ### D-249: `support.test.ts` has two `describe` blocks that prove the same error reference limit
 

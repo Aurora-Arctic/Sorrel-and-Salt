@@ -4,6 +4,7 @@ import Pager from '../Pager';
 import StuckMark from './stuck-mark';
 import type { IngredientSearchProps } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 export { IngredientSearchForm, useSearchText } from './form';
 
@@ -21,7 +22,7 @@ const IngredientSearch = ({
   className,
   skeleton,
 }: IngredientSearchProps): ReactElement => (
-  <ListFrame className={className ? `ingredient-search ${className}` : 'ingredient-search'}>
+  <ListFrame className={cx('ingredient-search', className)}>
     <StuckMark />
     {search}
     {action && <div className="ingredient-search__action">{action}</div>}

@@ -3,6 +3,12 @@ import type { FieldMask } from '../../lib/formats';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import type { ComboboxOption, ComboboxQualifier, Suggestions } from '../Combobox/types';
 
+/** What the browser may capitalise as the person types. */
+export type AutoCapitalize = 'none' | 'sentences' | 'words' | 'characters';
+
+/** The label on a phone keyboard's Enter key. */
+export type EnterKeyHint = 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
+
 /** A specific autofill token, or `off`. Never `on` or empty, which would let a password manager fill any field. */
 export type AutofillToken = Exclude<AutoFill, 'on' | ''>;
 
@@ -94,9 +100,9 @@ export interface TextControlProps extends FieldProps {
   /** On for prose (the default for multiline), off for an identifier (the default for a single-line email, url or tel). */
   spellCheck?: boolean;
   /** `none` by default for email and url. */
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  autoCapitalize?: AutoCapitalize;
   /** The label on a phone keyboard's Enter key: `next` between fields, `done` or `send` on the last. */
-  enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
+  enterKeyHint?: EnterKeyHint;
   /** Takes focus when the field appears, for a step that replaces the form the person was typing in. */
   autoFocus?: boolean;
   describedBy?: string;
@@ -340,6 +346,6 @@ export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> ex
   offerTyped?: boolean;
   typedIcon?: ReactNode;
   after?: ReactNode;
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  enterKeyHint?: 'next' | 'done' | 'go' | 'search' | 'send' | 'enter' | 'previous';
+  autoCapitalize?: AutoCapitalize;
+  enterKeyHint?: EnterKeyHint;
 }

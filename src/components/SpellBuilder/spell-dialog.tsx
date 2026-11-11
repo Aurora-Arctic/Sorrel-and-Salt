@@ -11,7 +11,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { RouteModal } from '../Modal';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import type { ModalHeading } from '../Modal/types';
-import { UNTITLED_SPELL } from '../SpellCard';
+import { spellNameOf } from '../SpellCard/untitled';
 import { copiedHrefOf } from '../SpellRecipe/copied-href';
 import { deletedHrefOf } from '../SpellRecipe/deleted-href';
 import SpellBuilder from '.';
@@ -72,7 +72,7 @@ export default function SpellDialog({
   });
   const steps = stepsRead.data?.spell.steps;
   const heading: ModalHeading = spell
-    ? { eyebrow: EDIT_SPELL, title: spell.title?.trim() || UNTITLED_SPELL }
+    ? { eyebrow: EDIT_SPELL, title: spellNameOf(spell.title) }
     : newSpellHeading(covenName);
   return (
     <RouteModal

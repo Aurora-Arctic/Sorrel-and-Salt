@@ -9,6 +9,7 @@ import { useBadgePlace, useCalloutPlace } from './position';
 import { useAnnounce } from './status-region';
 import type { ClickFeedback, ClickFeedbackOptions } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // What a click outside a form says when it fails: the service's sentence in an alert callout under the
 // control, a badge that brings it back, and the control described by the failure until a later try
@@ -185,14 +186,12 @@ export function useClickFeedback({ name, ref }: ClickFeedbackOptions): ClickFeed
             badgePlace.setFloating(node);
           }}
           type="button"
-          className={[
+          className={cx(
             'click-feedback__badge',
             beside && 'click-feedback__badge--beside',
             badgePlace.placed && 'is-placed',
             badgeFade.closing && 'is-closing',
-          ]
-            .filter(Boolean)
-            .join(' ')}
+          )}
           style={badgePlace.style}
           aria-label={`Show the error for ${name}`}
           aria-expanded={open}
@@ -219,13 +218,11 @@ export function useClickFeedback({ name, ref }: ClickFeedbackOptions): ClickFeed
           }}
           id={calloutFade.closing ? undefined : calloutId}
           role={calloutFade.closing ? undefined : 'alert'}
-          className={[
+          className={cx(
             'click-feedback__callout',
             calloutPlace.placed && 'is-placed',
             calloutFade.closing && 'is-closing',
-          ]
-            .filter(Boolean)
-            .join(' ')}
+          )}
           style={calloutPlace.style}
           inert={calloutFade.closing || undefined}
           aria-hidden={calloutFade.closing || undefined}
