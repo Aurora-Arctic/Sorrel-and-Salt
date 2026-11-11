@@ -578,7 +578,10 @@ async function runSteps(
 }
 
 export interface JobResult {
+  /** The job's own result, its check's: failure when a step concluded failure. */
   result: 'success' | 'failure' | 'skipped';
+  /** The job's `continue-on-error`, which keeps its failure from failing the workflow run. */
+  continues: boolean;
   outputs: Record<string, string>;
   steps: Record<string, StepRecord>;
   log: string;
@@ -606,6 +609,7 @@ export async function runJob(job: Job, options: RunOptions): Promise<JobResult> 
   });
   return {
     result: run.failed ? 'failure' : 'success',
+    continues: truthy(evaluateValue(job['continue-on-error'] ?? false, context)),
     outputs: Object.fromEntries(
       Object.entries(evaluateMap(job.outputs, { ...context, steps: run.records })).map(
         ([key, value]) => [key, stringify(value)],
@@ -639,7 +643,7 @@ export async function runWorkflow(
     const needs = Object.fromEntries(needsOf(job).map((need) => [need, results[need]]));
     const context: Context = { ...options.context, needs, steps: {} };
     if (!holds(job.if, context, jobStatus(needs))) {
-      results[name] = { result: 'skipped', outputs: {}, steps: {}, log: '' };
+      results[name] = { result: 'skipped', continues: false, outputs: {}, steps: {}, log: '' };
       continue;
     }
     const root = join(options.root, `job-${name}`);
@@ -651,26 +655,43 @@ export async function runWorkflow(
 }
 
 /**
+ * A called workflow's result as its caller's `needs.<job>.result` reads it: failure when one of its jobs
+ * failed without `continue-on-error`, which keeps a job's failure from failing the run.
+ */
+export function workflowResult(jobs: Record<string, JobResult>): 'success' | 'failure' {
+  return Object.values(jobs).some(({ result, continues }) => result === 'failure' && !continues)
+    ? 'failure'
+    : 'success';
+}
+
+/**
  * A called workflow's `outputs` as its caller's `needs.<job>.outputs` reads them, with no step run:
  * each job's `outputs:` evaluated with its `inputs`, `matrix` and `strategy` contexts and an empty
- * `steps`, a matrix job's from its last shard (GitHub keeps the last to finish), a skipped job's empty.
+ * `steps`, a matrix job's only where every shard writes it alike (GitHub keeps whichever finishes last), a
+ * skipped job's empty.
  */
 export function calledOutputs(workflow: Workflow, inputs: Context, base: Context = {}) {
   const jobs = Object.fromEntries(
     Object.entries(workflow.jobs).map(([name, job]) => {
       const context: Context = { ...base, inputs, needs: {}, steps: {} };
       if (!holds(job.if, context, PASSING)) return [name, { outputs: {} }];
-      const runs = matrixRuns(job, context);
-      const last = runs[runs.length - 1];
-      const at = { ...context, matrix: last?.matrix ?? {}, strategy: last?.strategy ?? {} };
+      // Every shard writes the job's outputs, and whichever finishes last is kept, so a value is
+      // dependable only when every shard writes it alike; one that differs reads as unset.
+      const written = matrixRuns(job, context).map(({ matrix, strategy }) =>
+        Object.fromEntries(
+          Object.entries(evaluateMap(job.outputs, { ...context, matrix, strategy })).map(
+            ([key, value]) => [key, stringify(value)],
+          ),
+        ),
+      );
       return [
         name,
         {
           outputs: Object.fromEntries(
-            Object.entries(evaluateMap(job.outputs, at)).map(([key, value]) => [
-              key,
-              stringify(value),
-            ]),
+            Object.keys(job.outputs ?? {}).map((key) => {
+              const values = new Set(written.map((outputs) => outputs[key]));
+              return [key, values.size === 1 ? [...values][0] : ''];
+            }),
           ),
         },
       ];

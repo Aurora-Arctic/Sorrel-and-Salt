@@ -40,6 +40,7 @@ import {
   stringify,
   underRoot,
   uploadsOf,
+  workflowResult,
 } from '../../support/github-workflow';
 import { type TimedTest, mergedPlaywrightReport } from '../../support/github-scripts';
 import { fromRoot } from '../../support/paths';
@@ -685,9 +686,43 @@ describe('what a workflow reads from the workflows it calls', () => {
       return !from || workflow.jobs[from[1]]?.outputs?.[from[2]] === undefined;
     });
 
-    // Precondition: the scan found pr-gate's reads of its called workflows' outputs.
-    expect(refs.filter(({ file }) => file === 'pr-gate.yml').length).toBeGreaterThan(0);
+    // Precondition: the scan found pr-gate's reads of its called workflows' outputs, each suite's shard
+    // count among them.
+    const gateReads = refs.filter(({ file }) => file === 'pr-gate.yml');
+    expect(gateReads).toContainEqual(
+      expect.objectContaining({ caller: 'playwright', output: 'shards' }),
+    );
+    expect(gateReads).toContainEqual(
+      expect.objectContaining({ caller: 'stories', output: 'shards' }),
+    );
     expect(unbacked).toEqual([]);
+  });
+
+  it("is a matrix job's output only where every shard writes it alike, as the last shard to finish wins", () => {
+    const workflow = {
+      on: {
+        workflow_call: {
+          outputs: {
+            total: { value: '${{ jobs.shard.outputs.total }}' },
+            index: { value: '${{ jobs.shard.outputs.index }}' },
+            step: { value: '${{ jobs.shard.outputs.step }}' },
+          },
+        },
+      },
+      jobs: {
+        shard: {
+          strategy: { matrix: { n: [1, 2, 3, 4] } },
+          outputs: {
+            total: '${{ strategy.job-total }}',
+            index: '${{ matrix.n }}',
+            step: '${{ steps.run.outputs.value }}',
+          },
+          steps: [],
+        },
+      },
+    } as unknown as Workflow;
+
+    expect(calledOutputs(workflow, {}, base)).toEqual({ total: '4', index: '', step: '' });
   });
 });
 
@@ -821,17 +856,31 @@ console.log('Merged ' + files.length + ' reports');
 
 // Node itself, but for the coverage merge, which the last describe below runs for real: here it reports
 // that it merged.
+// Node itself, but for the coverage merge, which the last describe below runs for real: here it reports
+// that it merged, or fails when COVERAGE_MERGE_FAILS is set. The download check runs for real, which asks
+// GitHub nothing while every download succeeded; with COVERAGE_LOST set it names that artifact missing,
+// as it does for one the run holds but could not download.
 const STUB_NODE = `#!/usr/bin/env bash
 case "$1" in
-  *merge-playwright-coverage.mjs) printf 'ran=true\\nsummary=Testwort coverage\\ndetails=\\n' >> "$GITHUB_OUTPUT" ;;
+  *merge-playwright-coverage.mjs)
+    if [ -n "$COVERAGE_MERGE_FAILS" ]; then echo 'Testwort coverage merge failed' >&2; exit 1; fi
+    printf 'ran=true\\nsummary=Testwort coverage\\ndetails=\\n' >> "$GITHUB_OUTPUT" ;;
+  *check-coverage-downloads.mjs)
+    if [ -n "$COVERAGE_LOST" ]; then printf 'missing=%s\\n' "$COVERAGE_LOST" >> "$GITHUB_OUTPUT"; exit 0; fi
+    exec "$REAL_NODE" "$@" ;;
   *) exec "$REAL_NODE" "$@" ;;
 esac
 `;
 
 /** The blob and coverage artifacts one suite's shards leave in the run, each shard's from `shards`. */
-function shardArtifacts(suite: Suite, needs: Record<string, Need>, shards: Shards): Artifact[] {
-  const inputs = callWith(PR_GATE.jobs[suite], PLAYWRIGHT, { ...base, needs });
-  return jobRuns(PLAYWRIGHT, inputs)
+function shardArtifacts(
+  suite: Suite,
+  needs: Record<string, Need>,
+  shards: Shards,
+  playwright = PLAYWRIGHT,
+): Artifact[] {
+  const inputs = callWith(PR_GATE.jobs[suite], playwright, { ...base, needs });
+  return jobRuns(playwright, inputs)
     .filter(({ job, context }) => job.strategy?.matrix && holds(job.if, context, PASS))
     .flatMap(({ job, context }, index) => {
       const report = shards(index);
@@ -859,6 +908,13 @@ interface Join {
   /** The result of pr-gate's `playwright` and `stories` jobs, success unless given. */
   results?: Partial<Record<Suite, string>>;
   shards?: Partial<Record<Suite, Shards>>;
+  /** playwright.yml as the run has it, the repository's unless given. */
+  playwright?: Workflow;
+  /** Outputs of a suite's called workflow set over what it gives. */
+  outputs?: Partial<Record<Suite, Record<string, string>>>;
+  /** Coverage downloads that fail, by their artifact pattern. */
+  lostDownloads?: string[];
+  env?: Record<string, string>;
 }
 
 /**
@@ -866,15 +922,26 @@ interface Join {
  * workflow outputs, every job of playwright-coverage.yml run against the artifacts the shards left, and the
  * Playwright comment its steps write.
  */
-async function runJoin({ filters = {}, results = {}, shards = {} }: Join = {}) {
+async function runJoin({
+  filters = {},
+  results = {},
+  shards = {},
+  playwright = PLAYWRIGHT,
+  outputs = {},
+  lostDownloads = [],
+  env = {},
+}: Join = {}) {
   const gate = gateNeeds(filters);
   const suiteNeed = (suite: Suite): Need => ({
     result: results[suite] ?? 'success',
-    outputs: calledOutputs(
-      PLAYWRIGHT,
-      callWith(PR_GATE.jobs[suite], PLAYWRIGHT, { ...base, needs: gate }),
-      base,
-    ),
+    outputs: {
+      ...calledOutputs(
+        playwright,
+        callWith(PR_GATE.jobs[suite], playwright, { ...base, needs: gate }),
+        base,
+      ),
+      ...outputs[suite],
+    },
   });
   const needs: Record<string, Need> = {
     ...gate,
@@ -892,14 +959,18 @@ async function runJoin({ filters = {}, results = {}, shards = {} }: Join = {}) {
   ).toBe(true);
 
   const artifacts = (['playwright', 'stories'] as const).flatMap((suite) =>
-    shardArtifacts(suite, gate, shards[suite] ?? passing[suite]),
+    shardArtifacts(suite, gate, shards[suite] ?? passing[suite], playwright),
   );
   const { github, comments } = fakeGitHub([]);
   const written: string[] = [];
-  const merges = join(root, 'merge-calls');
+  // A folder of its own, so a test may run the join more than once.
+  const at = mkdtempSync(join(root, 'join-'));
+  const merges = join(at, 'merge-calls');
   writeFileSync(merges, '');
   const uses: UsesHandler = async (step, context, jobRoot) => {
     if (step.uses?.startsWith('actions/download-artifact')) {
+      const pattern = stringify(evaluateValue(step.with?.pattern ?? step.with?.name, context));
+      if (lostDownloads.includes(pattern)) return { outcome: 'failure' };
       downloadInto({ steps: [step] }, artifacts, context, jobRoot);
       return { outcome: 'success' };
     }
@@ -921,9 +992,9 @@ async function runJoin({ filters = {}, results = {}, shards = {} }: Join = {}) {
   };
   const jobs = await runWorkflow(COVERAGE, {
     context: { ...base, inputs: callWith(caller, COVERAGE, { ...base, needs }) },
-    root,
+    root: at,
     stubs: { npx: STUB_MERGE_NPX, node: STUB_NODE },
-    env: { MERGE_CALLS: merges, REAL_NODE: process.execPath },
+    env: { MERGE_CALLS: merges, REAL_NODE: process.execPath, ...env },
     uses,
   });
   const merged = readFileSync(merges, 'utf8')
@@ -933,7 +1004,11 @@ async function runJoin({ filters = {}, results = {}, shards = {} }: Join = {}) {
 
   expect(comments.length, 'one Playwright comment at most').toBeLessThanOrEqual(1);
   return {
-    failed: Object.values(jobs).some(({ result }) => result === 'failure'),
+    needs,
+    // The run's result as pr-gate's `playwright-coverage` job reads it.
+    failed: workflowResult(jobs) === 'failure',
+    // Each job's own result, its check's.
+    results: Object.fromEntries(Object.entries(jobs).map(([name, { result }]) => [name, result])),
     log: Object.values(jobs)
       .map(({ log }) => log)
       .join('\n'),
@@ -1025,6 +1100,8 @@ describe('the Playwright shards, joined in playwright-coverage', () => {
       const { fails, ...statuses } = expected;
 
       expect(run.failed, run.log).toBe(fails);
+      expect(Object.values(run.results), run.log).toContain(fails ? 'failure' : 'success');
+      expect(Object.values(run.results), run.log).not.toContain(fails ? 'success' : 'failure');
       for (const [section, status] of Object.entries(statuses)) {
         expect(
           run.written.filter((key) => key === section),
@@ -1053,7 +1130,12 @@ describe('the Playwright shards, joined in playwright-coverage', () => {
     async (_, filters, kept) => {
       const run = await runJoin({ filters });
       const dropped = kept === 'gate' ? 'stories' : 'gate';
+      const caller = (section: 'gate' | 'stories') =>
+        section === 'gate' ? 'playwright' : 'stories';
 
+      // The suite that did not run gives no shard count, and the one that ran gives its own.
+      expect(run.needs[caller(dropped)].outputs?.shards).toBe('');
+      expect(run.needs[caller(kept)].outputs?.shards).toBe(String(kept === 'gate' ? 3 : 2));
       expect(run.failed, run.log).toBe(false);
       expect(run.merges[kept]).toHaveLength(1);
       expect(run.merges[dropped]).toEqual([]);
@@ -1069,6 +1151,127 @@ describe('the Playwright shards, joined in playwright-coverage', () => {
     expect(run.failed, run.log).toBe(false);
     expect(run.merges).toEqual({ gate: [], stories: [] });
     expect(run.written).toEqual([]);
+  });
+});
+
+/** The shard counts playwright.yml's matrix gives each of pr-gate's two suites. */
+const shardCounts = (playwright: Workflow) =>
+  Object.fromEntries(
+    (['playwright', 'stories'] as const).map((suite) => [
+      suite,
+      jobRuns(
+        playwright,
+        callWith(PR_GATE.jobs[suite], playwright, { ...base, needs: gateNeeds() }),
+      ).filter(({ job, context }) => job.strategy?.matrix && holds(job.if, context, PASS)).length,
+    ]),
+  ) as Record<Suite, number>;
+
+/** playwright.yml with one suite's matrix a shard larger, and nothing else changed. */
+function withOneMoreShard(suite: Suite): Workflow {
+  const workflow = structuredClone(PLAYWRIGHT);
+  const job = Object.values(workflow.jobs).find((found) => found.strategy?.matrix) as Job;
+  const matrix = job.strategy?.matrix as Record<string, string>;
+  const count = shardCounts(PLAYWRIGHT)[suite];
+  const list = (size: number) =>
+    `'${JSON.stringify(Array.from({ length: size }, (_, index) => index + 1))}'`;
+  matrix.shard = matrix.shard.replace(list(count), list(count + 1));
+  return workflow;
+}
+
+describe("each suite's shard count, as the join expects it", () => {
+  it.each(['playwright', 'stories'] as const)(
+    'follows the %s matrix with no other edit: every shard of the larger matrix passes, one fewer does not',
+    async (suite) => {
+      const playwright = withOneMoreShard(suite);
+      const before = shardCounts(PLAYWRIGHT);
+      const after = shardCounts(playwright);
+      const section = suite === 'playwright' ? 'gate' : 'stories';
+      // Precondition: only this suite's matrix grew.
+      expect(after).toEqual({ ...before, [suite]: before[suite] + 1 });
+
+      const every = await runJoin({ playwright });
+      const short = await runJoin({
+        playwright,
+        shards: {
+          [suite]: (index: number) => (index === after[suite] - 1 ? null : passing[suite](index)),
+        },
+      });
+
+      expect(every.needs[suite].outputs?.shards).toBe(String(after[suite]));
+      expect(every.merges[section][0]?.specs).toHaveLength(after[suite]);
+      expect(every.failed, every.log).toBe(false);
+      expect(every.sections[section]?.status, every.log).toBe('passed');
+      expect(short.merges[section][0]?.specs).toHaveLength(before[suite]);
+      expect(short.sections[section]?.status, short.log).toBe('failed');
+      expect(short.failed, short.log).toBe(suite === 'playwright');
+    },
+  );
+
+  it.each([
+    ['no', ''],
+    ['a non-numeric', 'three'],
+  ])(
+    'fails the gate, though every shard left a blob and passed, when the gate suite ran and gave %s shard count',
+    async (_, shards) => {
+      const run = await runJoin({ outputs: { playwright: { shards } } });
+
+      expect(run.merges.gate).toHaveLength(1);
+      expect(run.failed, run.log).toBe(true);
+      expect(run.results['playwright-coverage'], run.log).toBe('failure');
+      expect(run.sections.gate?.status, run.log).toBe('failed');
+    },
+  );
+
+  it('marks the stories failed, and fails nothing, when the story suite ran and gave no shard count', async () => {
+    const run = await runJoin({ outputs: { stories: { shards: '' } } });
+
+    expect(run.merges.stories).toHaveLength(1);
+    expect(run.failed, run.log).toBe(false);
+    expect(run.sections.stories?.status, run.log).toBe('failed');
+    expect(run.sections.gate?.status, run.log).toBe('passed');
+  });
+});
+
+describe("the playwright-coverage job's own result", () => {
+  it('is failure when the gate failed, so the failure fails the run pr-gate reads', async () => {
+    const run = await runJoin({
+      shards: { playwright: (index) => gateShard(index + 1, index === 0) },
+    });
+
+    expect(run.results['playwright-coverage'], run.log).toBe('failure');
+    expect(run.failed, run.log).toBe(true);
+  });
+
+  it.each([
+    [
+      'a coverage artifact was lost in download',
+      {
+        lostDownloads: ['playwright-coverage-gate-*'],
+        env: { COVERAGE_LOST: 'playwright-coverage-gate-*' },
+      },
+    ],
+    ['the coverage merge failed', { env: { COVERAGE_MERGE_FAILS: '1' } }],
+  ] as [string, Join][])(
+    'is success, both suites having passed, when %s, the coverage section saying so',
+    async (_, scenario) => {
+      const run = await runJoin(scenario);
+
+      // Precondition: the suites passed, and the coverage problem reached the comment.
+      expect(run.sections.gate?.status, run.log).toBe('passed');
+      expect(run.sections.stories?.status, run.log).toBe('passed');
+      expect(run.sections.coverage?.status, run.log).toBe('failed');
+      expect(run.results['playwright-coverage'], run.log).toBe('success');
+      expect(run.failed, run.log).toBe(false);
+    },
+  );
+
+  it('is success when a story failed', async () => {
+    const run = await runJoin({
+      shards: { stories: (index) => storyShard(index + 1, index === 0) },
+    });
+
+    expect(run.sections.stories?.status, run.log).toBe('failed');
+    expect(run.results['playwright-coverage'], run.log).toBe('success');
   });
 });
 
