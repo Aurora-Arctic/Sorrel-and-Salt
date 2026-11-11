@@ -1,6 +1,6 @@
 ## MC — Cleanup
 
-MC ids hold grouped clean-up work from the audits, the first being M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)). They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
+MC ids hold grouped clean-up work from two audits: M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)) for MC.1 → MC.9, and M17.10's test performance audit ([`audits/test-performance.md`](../audits/test-performance.md)) for MC.10 → MC.14. They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
 
 **MC.1 — Tidy the Test Support and Scripts** · 16.25h
 
@@ -165,4 +165,107 @@ _Acceptance criteria:_
 - `npm run lint:unused` is no worse than before and reports less than before for D-129 and D-145; it stays non-blocking, with no CI gate and no pre-commit step
 - `postSingle` reuses `upsertComment` and the four unused `pr-comment.cjs` exports are gone (S-5); `DEFAULT_PROJECT` is removed and one `defaultOf` helper serves the three lookups (S-6)
 - The duplicate, unused and test-only exports in D-243 are deleted or un-exported, and `container-from` and `container-to` mixins write every container width query, `container-from` using `(width > X)` so no `0.01rem` step is needed, with `tests/guards/breakpoints.test.ts` refusing a raw `@container` width (D-244)
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
+
+**MC.10 — Shard the CI Test Jobs** · 5h
+
+_Story:_ As a developer, I want the long CI test jobs split into shards, so that every CI test step finishes in under 7 minutes and a pull request gets its answer sooner.
+
+Minted from the test performance audit (M17.10). Findings: T-1, T-2, T-3, T-4, T-5, T-7; each is in `claude-docs/audits/test-performance.md`. No CI test job is sharded, and three are at or over 7 minutes: the Playwright gate (563 tests), the stories and the `vitest-dom` project. The axe sweep's 29 persona tests cap how evenly Playwright shards can be balanced, the Playwright comment shows no duration, slowest-files list or separate stories coverage, and the timing tables in `runner-budget.md` are about 9 times out of date. Playwright and the `vitest-dom` project are sharded in one PR because they share the comment and summarise scripts. `db` stays one job, because each shard would build its own template database. The two earlier rejections of Playwright sharding were made when the gate had 56 tests.
+
+_Acceptance criteria:_
+
+- The Playwright gate runs as 3 shards and the stories as 2, each using a matrix and `--shard` with the blob reporter, and `merge-reports` joins them into one report (T-1, T-3)
+- The axe sweep generates one test per route group and per modal group from `ROUTE_SCANS` and `MODAL_SCANS`, so `fullyParallel` can spread them, and `tests/guards/axe-scans.test.ts` still passes (T-2)
+- Shard cache, coverage and report artifacts have shard-unique names, and `playwright-coverage` reads every shard's artifacts (T-3)
+- The shards join at the end of the run, with no new aggregator job (R-2): the Playwright shards join in the job that runs `merge-reports`, which runs when a shard fails and fails when any shard failed; `vitest / vitest` stays the required check and still needs every part
+- `summarize-playwright.mjs`, `summarize-vitest.mjs` and the sections of `pr-gate.yml` (`needs` and the skipped-section logic) aggregate across shards, and `vitest.yml` no longer hard-codes a blob count of 3 or a fixed `VITEST_PARTS_PASSED` (T-3)
+- The `vitest-dom` project is re-measured first, following `runner-budget.md`'s deferred order, and is sharded with `--shard` and a unique blob name only if its test step is still over 7 minutes (R-1); the PR says which
+- The Playwright comment shows its duration, a slowest-files list beside Vitest's, and the stories coverage figure on its own line (T-4, T-5)
+- The comment warns about each Playwright test over 30s, naming the test (R-3)
+- Every CI test step is under 7 minutes in the PR's own run
+- The timing tables in `claude-docs/ci/runner-budget.md` are refreshed from CI, and the file gains R-2 (shards join in the end-of-run merge jobs) (T-7)
+- `claude-docs/testing/layer-ownership.md`, "The file budget", gains R-3 (30s per Playwright test, named in the comment)
+- The two rejections of Playwright sharding in `claude-docs/design-decisions/ci.md` are corrected in place: they were made at 56 tests, the gate now has 563, and the entry weighs each shard's repeated cost, about 94s outside the test step plus about 81s of server start inside it, so about 3 minutes per extra shard, against about 4 minutes of test time each shard removes
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
+
+**MC.11 — Wait on State in Playwright, Not on Time** · 4h
+
+_Story:_ As a developer, I want Playwright tests that wait on page state instead of on the clock, so that they stop flaking and the slowest ones get shorter.
+
+Minted from the test performance audit (M17.10). Findings: T-6, T-8, T-9, T-9a, T-10, T-11, T-12; each is in `claude-docs/audits/test-performance.md`. The Playwright specs use 22 `networkidle` waits, six real sleeps that a state wait would replace, and five sleeps that are timing requirements. `hydrated(page, selector)` is defined twice. Several files are slow because they wait: `stack-row-skeleton`, `admin-help`, `admin-documents`, `admin-cards`, the 57s `stories/07-admin` test and the 46s `stories/03-ingredient-autosave` test. Two tests flaked in CI, `spell-quantity-input` (a 30s failure) and the `admin-help` keeper test (a 120s failure), and the gate retries twice where `acceptance.md` says once. The flakes are found and fixed in this task.
+
+_Acceptance criteria:_
+
+- One shared `hydrated(page, selector)` helper replaces the two copies in `skeleton-layout` and `skeleton-back-scroll` and all 22 `networkidle` waits (T-8)
+- The six sleeps in T-9 wait on state: the held request at `back-during-navigation:56,59`, `hydrated` at `back-during-navigation:109`, the `REAL` selector at `stack-row-skeleton:155`, `expect.poll` at `step-row-stays-open:41`, and a state wait at `menu-button-edge:53` and `admin-documents:641`
+- The five sleeps that stay (`back-during-navigation:131`, `route-scroll:51`, `navigation-wait:238`, `spell-dialog-size:53`, `ingredient-details-modal:250`) go through one shared helper that names why the wait is the requirement (T-9a)
+- A guard in `tests/guards/` refuses `networkidle` and `waitForTimeout` outside that helper; it lands in the same commit as the sweep, is seen failing once with a copy put back, and has an empty allowlist
+- The cause of the wait in `stack-row-skeleton`, `admin-help`, `admin-documents`, `admin-cards`, the 57s `stories/07-admin` test and the 46s `stories/03-ingredient-autosave` test is found and fixed, so that no Playwright test except the axe sweep's (split in MC.10) takes over 30s in CI, and the PR table gives each test's time before and after (T-10, R-3)
+- The `spell-quantity-input` flake and the `admin-help` keeper-test flake are found and fixed, and each has a regression check showing it no longer flakes (T-6)
+- The gate's CI retries are set to 1, and `claude-docs/testing/acceptance.md` states the retry count as the config sets it (T-6)
+- The gate comment names each flaky test (`includeFlaky: true` and `FLAKY_NOTE`) and writes a `::warning` annotation per flaky test, and `failOnFlakyTests` is not set (R-13)
+- `claude-docs/testing/e2e.md` gains R-7 (no sleeps and no `networkidle`; the named wait helper) and R-13 (a flake never blocks, CI retries once, the comment names it, and a flake seen later gets a bug task through `/create-bug-task` and is never skipped)
+- The read-only story tests named in T-11 (`stories/06-grimoire` stories 49, 52, 54 and 56) share one seed where `claude-docs/testing/e2e.md`, "Databases and reseeding", allows it, and the PR classifies `spell-recipe-layout` and `coven-ingredients` as read-only or writing
+- The `back-during-navigation` seed moves to `beforeAll` and the file is no longer serial (T-12)
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
+
+**MC.12 — Trim the Playwright Suites to What a Browser Adds** · 6.5h
+
+_Story:_ As a developer, I want Playwright to run only the checks that need a browser, so that the gate is shorter and each rule is proved once.
+
+Minted from the test performance audit (M17.10). Findings: T-13, T-14, T-15, T-16, T-17, T-18, T-19, T-20; each is in `claude-docs/audits/test-performance.md`. Width sweeps cross breakpoints that do not exist, pairs of tests run identical bodies at two widths or themes, and some tests pin colours, font weights and exact pixel sizes, which are presentation (layout-ownership rule 4). About 25 gate scans and about 29 story scans repeat a default state the axe sweep already covers, and the sweep runs the full rule set in both themes although a theme switch changes only colour tokens. Four gate specs repeat a flow that a story or a Vitest test proves. The specs have no shared list of the app's widths. Nothing is cut for speed alone: every cut is a duplicate or a presentation pin.
+
+_Acceptance criteria:_
+
+- A shared e2e breakpoint file lists the widths the code crosses (640, 896, 928, 800, the page-header container widths and `TABLET_BAND`) with the 375 phone width as the one constant outside the list, and a guard in `tests/guards/` refuses a `setViewportSize` width that comes from neither; it lands in the same commit, is seen failing once with a copy put back, and has an empty allowlist (R-4)
+- No width is written in two places that must change together: the breakpoint file is checked against MC.9's `container-from` and `container-to` mixins (D-244) and against D-12, and the PR names any width it restates and why
+- The width sweeps are cut as T-13 sets out: `tabbed-page-alignment` keeps 712 and drops 500, 600, 680, 700 and 1000; `jump-menu-width` keeps 700, 900 and 1000, with its stale `width < 1200` guard at 928; `page-with-nav-layout` drops 1280; `shell.spec.ts:430-436` uses one `goto` and a `setViewportSize` per step
+- The identical-body pairs in T-14 are merged or cut (`skeleton-layout`, `skeleton-back-scroll`, `help-pages`, `spell-recipe-layout`, `theme-switch`, `spell-quick-look`, `spell-footer-layout`, `ingredient-details-modal`), and no loop row runs the same code as another (R-5)
+- The design pins in T-15 are cut, the unasserted screenshots in `stories/06-spell-preview` are deleted, and the merges in T-16 are made
+- Every kept width, pin and loop row in T-17 is still proved by a test that is not cut, and the PR table names, for each cut, the test that keeps its rule proved
+- `scanBothThemes` and the sweep's `collectBothThemes` run the full rule set in light and only the colour rules (`color-contrast`, `link-in-text-block`) in dark through `AxeBuilder.withRules`, and a full scan at 375 covers the shell's tab bar and each phone sheet (R-6)
+- The gate scans and story scans that repeat a state the sweep covers are cut (T-18, T-19), each scan left carries a comment naming the state the sweep cannot reach, and the distinct-state scans listed in T-18 stay
+- The PR records the axe sweep's summed seconds before and after
+- The gate specs repeated by another layer are cut (`coven-rename:24`, `admin-cards:12`, `support-sender-resolve:13` after its admin-list and menu-count assertions are checked, `graphql:8`), `security-headers:30` and `error-pages:86` are cut or moved to Vitest, and the specs T-20 lists as needing a real server stay (T-20)
+- `claude-docs/testing/layer-ownership.md` gains a widths line under rule 4 naming the shared breakpoint file and the 375 constant (R-4), and rule 9's "one axe scan per page state" is replaced by R-6's five parts
+- The entries "Trimming the double-theme and double-width axe scans" and "Cutting accessibility scans for speed" in `claude-docs/design-decisions/ci.md` are corrected in place and say why they were reassessed
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
+
+**MC.13 — Speed Up the Slow Vitest Dom Files** · 6.5h
+
+_Story:_ As a developer, I want the slowest component tests to render only what they prove, so that the `vitest-dom` job is shorter.
+
+Minted from the test performance audit (M17.10). Findings: T-21, T-22, T-23; each is in `claude-docs/audits/test-performance.md`. `pdf.test.ts` takes 59s and renders about 640 cards, 495 of them in one test. Several large files render a whole form or builder to prove one field: `IngredientForm/index`, `IngredientForm/variants`, `SpellBuilder/steps` and `IngredientForm/compendium`. About 13s of tests sleep on a real clock. `IngredientForm/index` still has about 45 tests that need the whole tree, so it stays over the file budget by decision. Savings are measured in CI, never from a single-file run, because the variants file runs 10 to 50 times slower in a full run (an earlier 20s guard on it was added and reverted for that reason).
+
+_Acceptance criteria:_
+
+- `pdf.test.ts` builds its `ten` and 11-card documents once, drops the 1, 10, 20 and 21 rows and the 495-card build, and tests `MAX_SHEETS_PER_BATCH` on a pure sheet-count function extracted from `renderCardSheets` (T-21)
+- The `IngredientForm/index` tests that prove one field move to a `FormProvider` harness or the `MultiSelectField` describe, the repeats are cut or merged as T-22 lists, and the sentence check at `:1099` asserts role and kind
+- The `variants` tests named in T-22 use `renderVariants()` and the `:303` repeat is cut
+- A new `SpellSteps` harness, modelled on `list-field.test.tsx`, serves the about 38 `SpellBuilder/steps` tests that need one field; the repeats and copy lines in T-22 are cut, and class checks assert `aria-expanded` or an accessible name
+- The `compendium` repeats in T-22 are cut, moved to `substitutes.test.tsx` or merged
+- Every real sleep in T-23 is replaced by fake timers with `advanceTimersByTimeAsync`, by `typingClock()` or by an `act` flush; the sleeps T-23 keeps (the lock and race guards, the 20 ms database polls, the `pg_sleep` calls and the `setTimeout(0)` flushes) go through one named wait helper in `tests/support/` that says why the wait is the requirement, and a guard in `tests/guards/` refuses a real sleep in a Vitest file outside it; the guard lands in the same commit, is seen failing once with a copy put back, and has an empty allowlist. `setTimeout(0)` flushes are not sleeps and stay (R-7)
+- `claude-docs/testing/where-tests-live.md` gains R-7's Vitest half: no real sleeps, fake timers with `advanceTimersByTimeAsync`, and the named wait helper for a wait that is the requirement
+- `tests/lib/watch-loads.test.ts` is confirmed to test a test helper and is cut (R-14), and every other cut in the PR table names the test that keeps its rule proved
+- The saving is measured by comparing the `vitest-dom` job's CI timings before and after, not a single-file run, and the PR records both
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
+
+**MC.14 — Pay Database Setup Once and Prove Each Rule Once in Vitest** · 5h
+
+_Story:_ As a developer, I want database tests to pay their setup once per file and to prove each rule in one test, so that the database job is shorter and a rule has one place to change.
+
+Minted from the test performance audit (M17.10). Findings: T-24, T-25, T-26 (T-27 is recorded as checked and not a duplicate); each is in `claude-docs/audits/test-performance.md`. `password-lockout` and `two-factor` pay for password hashing in every test, the seed tests and `stock.test.ts` truncate and re-seed per test, and several repository, service and component tests prove a rule that another test already proves. MC.8 and MC.9 changed code the findings point at, so their diffs are checked first.
+
+_Acceptance criteria:_
+
+- MC.8's and MC.9's merged diffs over `tests/` and the paths the findings cite are checked first, and each finding they changed is updated or dropped in the PR table
+- `password-lockout` signs up once in `beforeAll` and resets the failure counts per test, `two-factor` shares one enrolled account and merges the rotation pair, and no test hasher is added because the real hash is what is under test (T-24)
+- `seed/compendium.test.ts` shares one fixture seed for its read-only tests, replaces or deletes `:465`, and has one `afterAll(seedSharedVocabularies)` (T-25)
+- `seed/index.test.ts` runs one `describe.each(SEED_ENTRIES)` with one `beforeAll`, in the order dry run, seed and fill, idempotent, no-resurrect, and `:221` is cut (T-25)
+- `stock.test.ts` creates its three ingredients in `beforeAll`, resets only `inventory_items` and `workspace_compendium_entries` per test, and keeps the fixture-mutating tests in their own describe (T-25); a writing test still gets its own setup (R-9)
+- The repeats in T-26 are cut, merged or trimmed in `tests/db/repository/invitations.test.ts`, `invitation-acceptance-by-token`, `identity/graphql/admin-invitations`, `sourcing-score.test.ts`, `HelpWidget/unit-converter`, `grimoire/services/workings`, `password-lockout:173`, `user-list.test.ts` and `add-ingredient-button`, and the style and class checks are cut from `LinkHint`, `IconTip` and `comparison-panel`
+- The four `tests/scss` files stay, and the checks T-27 records as cleared (the soft-delete pairs, the membership-proof tests, the narrowing refusal in `workings.test.ts:441` and `graphql/working.test.ts:329`, the GraphQL refusal codes, `plan-deductions:103`, `password-lockout:234`, `Modal:704`) are not cut
+- `help-reads.test.ts` has positive staff reads (glossary, index, sitemap) beside its absence checks (R-12)
+- Every cut names, in the PR table, the test that keeps its rule proved, and no authorization test that asserts a direct-id refusal is removed
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
