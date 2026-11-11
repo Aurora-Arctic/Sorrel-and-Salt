@@ -1,10 +1,9 @@
+import { hasText } from '@/lib/text';
 import { useId, type ReactElement } from 'react';
 import FormIcon from '../FormIcon';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { SafetyNoteProps } from './types';
 import './index.scss';
-
-const said = (notes: string | null | undefined): notes is string => (notes ?? '').trim() !== '';
 
 // The ingredient's caution as a region labelled by its visible Caution heading, not an aria-label. Text to read, so
 // nothing in it takes focus (claude-docs/components/safety-note.md, "Contracts").
@@ -16,9 +15,9 @@ const SafetyNote = ({
   compact = false,
 }: SafetyNoteProps): ReactElement | null => {
   const headingId = useId();
-  const forms = variants.filter((variant) => said(variant.safetyNotes));
+  const forms = variants.filter((variant) => hasText(variant.safetyNotes));
 
-  if (!said(safetyNotes) && forms.length === 0 && !footnote) {
+  if (!hasText(safetyNotes) && forms.length === 0 && !footnote) {
     return null;
   }
 
@@ -32,7 +31,7 @@ const SafetyNote = ({
       <Heading id={headingId} className="safety-note__heading">
         Caution
       </Heading>
-      {said(safetyNotes) && <p className="safety-note__text">{safetyNotes}</p>}
+      {hasText(safetyNotes) && <p className="safety-note__text">{safetyNotes}</p>}
       {forms.length > 0 && (
         <dl className="safety-note__forms">
           {forms.map((variant) => (

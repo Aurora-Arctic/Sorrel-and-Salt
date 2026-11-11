@@ -414,6 +414,23 @@ describe('FacetPanel', () => {
       expect(within(toxic).getByRole('radio', { name: 'Any' })).toBeChecked();
     });
 
+    it.each([
+      ['toxic', 'Toxic 0'],
+      ['not_toxic', 'Not Toxic 9'],
+    ] as const)(
+      'shows a held %s setting while one side counts none, and lets it be cleared',
+      (held, radio) => {
+        // Precondition: one side counts none, which alone rests an unset chip on Any.
+        const facets = { ...FACETS, toxic: [{ ...FACETS.toxic[0]!, count: 0 }, FACETS.toxic[1]!] };
+        openPanel({ toxic: held }, { facets });
+        const toxic = screen.getByRole('group', { name: 'Toxic' });
+
+        expect(within(toxic).getByRole('radio', { name: radio })).toBeChecked();
+        expect(within(toxic).getByRole('radio', { name: 'Any' })).not.toBeChecked();
+        expect(within(toxic).getByRole('radio', { name: 'Any' })).toBeEnabled();
+      },
+    );
+
     it('sends the held choices through the GET form even while the menus are shut', () => {
       stubViewport(true);
       const { container } = render(
@@ -733,13 +750,13 @@ describe('FacetPanel', () => {
       expect(within(group()).queryByRole('radio')).toBeNull();
     });
 
-    it('does the same when Not Toxic is zero, even if it was the chosen value', () => {
+    it('does the same when Not Toxic is zero and nothing is chosen', () => {
       withToxic(
         [
           { value: 'toxic', label: 'Toxic', count: 4 },
           { value: 'not_toxic', label: 'Not Toxic', count: 0 },
         ],
-        { toxic: 'not_toxic' },
+        { toxic: '' },
       );
       const chip = within(group()).getByRole('button', { name: /Any/ });
       expect(chip).toBeDisabled();

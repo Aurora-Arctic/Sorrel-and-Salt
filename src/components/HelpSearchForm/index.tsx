@@ -1,5 +1,6 @@
 'use client';
 
+import { hasText } from '@/lib/text';
 import { type FormEvent, type ReactElement, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { usePendingNavigation } from '../../lib/navigation';
@@ -27,7 +28,7 @@ const HelpSearchForm = ({ query = '', size }: HelpSearchFormProps): ReactElement
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const value = new FormData(event.currentTarget).get('q');
-    if (typeof value !== 'string' || value.trim() === '') {
+    if (typeof value !== 'string' || !hasText(value)) {
       if (pathname !== '/help') navigate('/help');
       return;
     }

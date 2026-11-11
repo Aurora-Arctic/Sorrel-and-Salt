@@ -18,6 +18,7 @@ import Spinner from '../Spinner';
 import type { MenuButtonItem, MenuButtonProps, MenuSection } from './types';
 import './index.scss';
 import { PendingLink } from '../../lib/navigation';
+import { cx } from '@/lib/class-names';
 
 // A labelled button with a chevron opening a menu, the APG menu-button pattern
 // (claude-docs/components/menu-button.md). Placed on Floating UI, fixed so a scrolling dialog
@@ -37,14 +38,12 @@ const greenFirst = (items: readonly MenuButtonItem[]): MenuButtonItem[] => {
 };
 
 const itemClass = (item: MenuButtonItem, chosen: boolean): string =>
-  [
+  cx(
     'menu-button__item',
     item.destructive && 'menu-button__item--destructive',
     item.primary && 'menu-button__item--primary',
     chosen && 'is-chosen',
-  ]
-    .filter(Boolean)
-    .join(' ');
+  );
 
 /**
  * One section: a group named by its visible label (APG: `role="group"` and `aria-labelledby`), a
@@ -257,13 +256,11 @@ export default function MenuButton({
         inert={!open}
         hidden={!drawn}
         style={listStyle}
-        className={[
+        className={cx(
           'menu-button__menu',
           buttonType && 'menu-button__menu--button-type',
           !open && 'is-closing',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        )}
         onKeyDown={onMenuKey}
         onAnimationEnd={(event) => {
           if (!open && event.target === event.currentTarget) setDrawn(false);

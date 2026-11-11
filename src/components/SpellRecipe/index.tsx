@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import BackLink from '../IngredientEntry/back-link';
 import LastEdit from '../LastEdit';
 import LinkHint from '../LinkHint';
-import { UNTITLED_SPELL } from '../SpellCard';
+import { spellNameOf } from '../SpellCard/untitled';
 import SpellMarks from '../SpellMarks';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
@@ -32,7 +32,7 @@ const SpellRecipe = ({
   aside,
   workings,
 }: SpellRecipeProps): ReactElement => {
-  const name = (title ?? '').trim() || UNTITLED_SPELL;
+  const name = spellNameOf(title);
   // The side column's lines carry the Quick Look eyes, so a step names its ingredient plainly; the
   // Quick Look modal, which has no side column, keeps the eye on its steps.
   const plain = steps.map((step) => (step.kind === 'ingredient' ? { ...step, look: null } : step));

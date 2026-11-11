@@ -78,7 +78,7 @@ export default function FacetPanel({
     (filter.inStock ? 1 : 0) +
     (filter.lowStockOnly ? 1 : 0);
 
-  const toxicStuck = facets.toxic.some((choice) => choice.count === 0);
+  const toxicStuck = filter.toxic === '' && facets.toxic.some((choice) => choice.count === 0);
   // The Source chip is stuck the same way: a source with nothing behind it means every matching
   // entry comes from the other, so the filter cannot narrow. Unread counts leave it free.
   const sourceStuck = facets.source?.some((choice) => choice.count === 0) ?? false;
@@ -150,7 +150,8 @@ export default function FacetPanel({
                 ]}
                 // Toxic is the one facet that keeps a zero-count value: all three
                 // choices always show. With either side empty, every matching entry
-                // shares one toxicity, so the chip rests on Any and cannot narrow.
+                // shares one toxicity, so the chip rests on Any and cannot narrow, unless a setting is held,
+                // which always shows and can be cleared.
                 value={toxicStuck ? '' : filter.toxic}
                 disabled={toxicStuck}
                 chipHint={

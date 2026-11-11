@@ -30,6 +30,7 @@ import {
   MAX_SHEETS_PER_BATCH,
 } from '../../../lib/invitation-cards/limits';
 import { newCardToken } from '../../../lib/invitation-token';
+import { isCalendarDay } from '../../../lib/utc';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
@@ -40,14 +41,12 @@ import type { CardState, LiveCard, MintedCards } from '../types';
 
 // What a card admits is invitation-acceptance.ts's (claude-docs/design-decisions/auth.md, "An invitation card is a third shape of `invitations`").
 
-const DAY = /^\d{4}-\d{2}-\d{2}$/;
-
 // A blank text part is no filter, and a day is checked here: the database would refuse a malformed one with an error.
 function parsedBatchFilter(filter: CardBatchFilter): CardBatchFilter {
   const day = (value: string | undefined) => {
     if (!value) return undefined;
     if (
-      !DAY.test(value) ||
+      !isCalendarDay(value) ||
       Number.isNaN(Date.parse(value)) ||
       new Date(value).toISOString().slice(0, 10) !== value
     )

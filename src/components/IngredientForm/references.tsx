@@ -42,6 +42,7 @@ import type {
   SharedFieldProps,
 } from './types';
 import { draftOf, sourceTierOf } from './values';
+import { cx } from '@/lib/class-names';
 
 // The References field: one search over the compendium's sources and this coven's, each pick a
 // one-line row beneath the box (claude-docs/components/ingredient-form.md, "The references"). Typed
@@ -327,13 +328,11 @@ export function ReferencesField({
             return (
               <li
                 key={row.id}
-                className={[
+                className={cx(
                   'ingredient-form__reference',
                   open && 'is-open',
                   invalid && 'is-invalid',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
+                )}
               >
                 {/* One line: the source's short form, its italics real,
                     the whole citation the pointer's tooltip and its

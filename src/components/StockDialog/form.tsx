@@ -1,5 +1,6 @@
 'use client';
 
+import { labelByKey } from '@/lib/options';
 import { type ReactElement, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   type FieldErrors,
@@ -231,8 +232,7 @@ export const StockDialogForm = ({
   // A form just added, whose Quantity takes the focus once its fields are drawn.
   const [focusAdded, setFocusAdded] = useState<string | null>(opened.seeded);
   const opening = useMemo(() => new Map(jars.map((jar) => [jar.id, stockFormValues(jar)])), [jars]);
-  const labelOf = (variantId: string) =>
-    forms.find((form) => form.variantId === variantId)?.label ?? '';
+  const labelOf = (variantId: string) => labelByKey(forms, 'variantId', variantId, '');
   const addable = unheld(forms, rows);
   const found = rows.findIndex((row) => row.variantId === chosenVariant);
   const chosen = found >= 0 ? found : rows.length > 0 ? 0 : -1;

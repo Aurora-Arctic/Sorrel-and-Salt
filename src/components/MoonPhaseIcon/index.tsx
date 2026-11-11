@@ -2,6 +2,7 @@ import { type ReactElement, useId } from 'react';
 import { HALVES, LIT_PARTS, MARIA } from './icons';
 import type { MoonLayer, MoonPhaseIconProps } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // The moon beside a phase's name, on FormIcon's 24-unit square. Fills are theme tokens, not `currentColor`. Hidden
 // from assistive technology (claude-docs/components/spell-builder.md, "The fields").
@@ -20,7 +21,7 @@ const MoonPhaseIcon = ({ phase, className }: MoonPhaseIconProps): ReactElement |
   const shadowed = phase !== 'Dark Moon';
   return (
     <svg
-      className={className ? `moon-phase-icon ${className}` : 'moon-phase-icon'}
+      className={cx('moon-phase-icon', className)}
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"

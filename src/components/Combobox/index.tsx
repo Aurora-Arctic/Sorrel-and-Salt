@@ -13,7 +13,7 @@ import {
   useState,
 } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { fold } from '@/lib/text';
+import { fold, hasText, plural } from '@/lib/text';
 import Spinner from '../Spinner';
 import { ChevronIcon, CrossIcon } from '../IconTip/icons';
 import { EmptyMessage, noMatch, Popup } from './popup';
@@ -30,6 +30,7 @@ import type {
   TypedRow,
 } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 export { ComboboxEntry } from './entry';
 export { ComboboxMultiSelect } from './multi-select';
@@ -153,7 +154,7 @@ function statusOf(
   if (!suggestions) return '';
   if (!isOpen) return empty ?? '';
   const count = suggestions.options.length;
-  if (count > 0) return `${count} ${noun}${count === 1 ? '' : 's'}`;
+  if (count > 0) return `${count} ${noun}${plural(count, '', 's')}`;
   return suggestions.pending ? `Looking for ${noun}s` : `No ${noun}s`;
 }
 
@@ -238,7 +239,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     message !== undefined &&
     wantsOpen &&
     suggestions?.pending === false &&
-    value.trim() !== '' &&
+    hasText(value) &&
     items.length === 0;
   const popupOpen = listOpen || showEmpty;
   const wrapped = message !== undefined;
@@ -342,15 +343,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     return (
       <li
         key={keyOf(item)}
-        className={[
+        className={cx(
           'combobox__option',
           (isTyped(item) || isAction(item)) && 'combobox__option--typed',
           colors && 'is-coloured',
           !isTyped(item) && !isAction(item) && item.disabled && 'is-disabled',
           highlighted && 'is-highlighted',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        )}
         style={colors && chipColors(colors)}
         {...getItemProps({ item, index: at })}
       >
@@ -529,9 +528,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         after={<>{showEmpty && <EmptyMessage>{message}</EmptyMessage>}</>}
       >
         <ul
-          className={['combobox__list', listOpen && 'is-open', wrapped && 'is-inset']
-            .filter(Boolean)
-            .join(' ')}
+          className={cx('combobox__list', listOpen && 'is-open', wrapped && 'is-inset')}
           style={wrapped ? undefined : listStyle}
           data-placement={wrapped ? undefined : placement}
           {...getMenuProps({

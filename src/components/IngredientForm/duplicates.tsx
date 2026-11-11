@@ -32,6 +32,7 @@ import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps 
 // The +'s look is the card's plus's, so its stylesheet; not AddIcon itself, which sends its own
 // add where this one hands the entry to the form.
 import '../AddIcon/index.scss';
+import { plural } from '@/lib/text';
 
 // The "did you mean": once typing settles the name asks `possibleDuplicates`, and each near match
 // is listed under the field with a + or an eye. A save is held while a match shows; an edit's never
@@ -441,7 +442,7 @@ const titleOf = ({ name, canonicalName }: Duplicate) =>
  */
 function sentenceFor(blocking: boolean, asking: boolean, exactCount: number): string {
   if (asking) {
-    return `The compendium already has ${exactCount === 1 ? 'an entry' : 'entries'} of this name.`;
+    return `The compendium already has ${plural(exactCount, 'an entry', 'entries')} of this name.`;
   }
   return blocking
     ? 'Your save is on hold, as these entries have a similar name. Check them, or create this one anyway.'

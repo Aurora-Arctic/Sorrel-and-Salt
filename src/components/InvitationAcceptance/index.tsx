@@ -4,6 +4,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { CHECK_INBOX } from '../../lib/sign-in';
 import BusyButton from '../BusyButton';
 import { useGuardedAction } from '../ClickFeedback/use-guarded-action';
 import Notice from '../Notice';
@@ -48,8 +49,7 @@ const CARD_SIGNED_OUT_GRANT =
   "You've been given a card to join Sorrel & Salt. Create an account or sign in to accept it.";
 
 /** To every unverified account that matched the address, new or not: a resend is the same press either way. */
-const UNVERIFIED_GRANT =
-  "Your email address isn't confirmed yet. Check your inbox for our message, or press Confirm Your Email to send a new one. Its link brings you back here to accept this invitation.";
+const UNVERIFIED_GRANT = `${CHECK_INBOX} Its link brings you back here to accept this invitation.`;
 
 /** When a verification link came back refused, whatever the reason, by the state it comes back to. */
 const LINK_FAILED = {

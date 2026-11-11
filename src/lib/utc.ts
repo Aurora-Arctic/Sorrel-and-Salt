@@ -124,6 +124,9 @@ export function utcMinute(at: Date): string {
   return `${at.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
 
+/** Whether `text` is written `YYYY-MM-DD`. The shape only: the range of the month and day is its caller's to check. */
+export const isCalendarDay = (text: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(text);
+
 /** How a pause or time-out ends, as a phrase after its subject: "until <date>", or `noEnd` where it has no end. */
 export function untilPhrase(
   until: Date | null,

@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { plural } from '@/lib/text';
 
 // How many of the viewer's covens hold a compendium entry, and which: every membership counts, a
 // viewer's coven too, unlike the plus's menu, which lists only covens the viewer may write in
@@ -7,7 +8,7 @@ import type { ReactElement } from 'react';
 export const holdingText = (holding: readonly string[]): string =>
   holding.length === 0
     ? ''
-    : `. In ${holding.length} ${holding.length === 1 ? 'coven' : 'covens'}: ${holding.join(', ')}`;
+    : `. In ${holding.length} ${plural(holding.length, 'coven', 'covens')}: ${holding.join(', ')}`;
 
 /**
  * The number drawn on the mark's corner. Kept from the accessibility tree, since the control's

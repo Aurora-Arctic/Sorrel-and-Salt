@@ -44,6 +44,9 @@ Each job below has one shared piece, and a component or page uses it, never a co
 - **Reduced motion and the 400 ms fade limit**: `prefersReducedMotion` and `FADE_LIMIT_MS` (`src/lib/motion.ts`). Guard: `reduced-motion`.
 - **Matching typed text**: `fold` (`src/lib/text.ts`). Guard: `text-folding`.
 - **Showing a quantity**: `formatQuantity` (`src/lib/quantity.ts`).
+- **Joining class names**: `cx` (`src/lib/class-names.ts`). Lint rule: `sorrel/class-names-joined-through-cx`.
+- **Plural words, "has text", and option labels**: `plural` and `hasText` (`src/lib/text.ts`), `labelOf` (`src/lib/options.ts`).
+- **An untitled spell's name**: `spellNameOf` (`src/components/SpellCard/untitled.ts`). Lint rule: `sorrel/spell-name-through-spell-name-of`.
 - **Downloading a file**: `saveFile` (`src/lib/save-file.ts`).
 - **A drag handle**: `GripHandle` (`src/components/GripHandle/`). Guard: `sortable-wiring`.
 - **A page and its skeleton**: `PanelSection`, `NarrowPanelPage`, `HelpFrontShell`, `HelpArticlePage`, `DocumentPageSkeleton` and the title constants (`ADD_INGREDIENT_TITLE`, `NEW_SPELL_TITLE`, the spell section titles in `SpellRecipe/sections.ts`) are written once and used by both. Guard: `page-pieces`.

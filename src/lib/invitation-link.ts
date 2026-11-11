@@ -14,3 +14,8 @@ export function invitationLinkPath(token: string, site: boolean): string {
 export function isSiteInvitationMarker(value: string | string[] | undefined): boolean {
   return value === SITE_INVITATION_VALUE;
 }
+
+/** The token of an invitation path (`/invite/<token>`), or null for any other path, including one with a query string. */
+export function invitationTokenFromPath(path: string): string | null {
+  return /^\/invite\/([^/?#]+)$/.exec(path)?.[1] ?? null;
+}

@@ -1,7 +1,9 @@
 'use client';
 
+import { labelOf } from '@/lib/options';
+
 import { type ReactElement } from 'react';
-import { emptyList, noMatchText } from '../../lib/text';
+import { emptyList, noMatchText, plural } from '../../lib/text';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import { SupportDetailSkeleton, SupportListBodySkeleton } from './skeleton';
@@ -39,9 +41,6 @@ import './index.scss';
 // (claude-docs/components/support-requests.md).
 
 const NO_FILTER: Filter = { about: '', view: DEFAULT_SUPPORT_VIEW, errorCode: '', sender: '' };
-
-const labelOf = (options: readonly { value: string; label: string }[], value: string): string =>
-  options.find((option) => option.value === value)?.label ?? value;
 
 /** "No support requests match “Bug” and 500. …", naming the filters in use. */
 function emptyText({ about, errorCode }: Filter): string {
@@ -108,7 +107,7 @@ const SupportRequests = ({
         />
         <ListBody skeleton={<SupportListBodySkeleton />}>
           <output className="visually-hidden">
-            {requests.length} {requests.length === 1 ? 'Request' : 'Requests'}
+            {requests.length} {plural(requests.length, 'Request', 'Requests')}
           </output>
           <StackTable
             columns={[
