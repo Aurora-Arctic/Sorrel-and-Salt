@@ -11,6 +11,7 @@ export { EmailField } from './email-field';
 export { CodeField } from './code-field';
 export { DateFieldShell, PlainDateField } from './plain-date-field';
 export { SelectField } from './select-field';
+export { PlainSelectField } from './plain-select-field';
 export { RadioGroupField } from './radio-group-field';
 export { SwitchField } from './switch-field';
 export { VisibilitySwitch } from './visibility-switch';

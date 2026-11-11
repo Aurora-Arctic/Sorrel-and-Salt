@@ -153,6 +153,23 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
   onChange?: (value: string) => void;
 }
 
+/** A closed set in a form that holds its values in state: the caller holds `value` and the `error` text. */
+export interface PlainSelectFieldProps {
+  /** The ids' base, where the caller must name the label outside the field; one is made when it is left out. */
+  id?: string;
+  label: string;
+  hint?: string;
+  required?: boolean;
+  /** A short action shown until a choice is made, and not itself a choice: "Choose a group". */
+  placeholder?: string;
+  options: readonly SelectOption[];
+  disabled?: boolean;
+  busy?: boolean;
+  error?: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
 /**
  * An on-or-off choice in a plain-state form, such as a list filter's No Refs. Held by the caller
  * through `checked`, or left to the native checkbox from `defaultChecked`. Not a react-hook-form
