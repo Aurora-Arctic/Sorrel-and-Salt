@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, scanBothThemes } from './axe';
-import { MODAL_SCANS, ROUTE_SCANS, type Persona } from './axe-scans';
+import { ROUTE_SCANS, SWEEP_TESTS, type ScannedModal, type ScannedRoute } from './axe-scans';
 import {
   MODAL_OPENERS,
   recordUnreached,
@@ -225,63 +225,45 @@ test.describe('the grimoire', () => {
   });
 });
 
-// The sweep over tests/e2e/axe-scans.ts in both themes, one test per person for pages and one for modals, each
-// seeding its own coven so another test recreating the slot's database cannot take its rows. Findings are
+// The sweep over tests/e2e/axe-scans.ts in both themes, one test per run of pages or modals per person (SWEEP_TESTS),
+// each seeding its own coven so another test recreating the slot's database cannot take its rows. Findings are
 // collected, not thrown, so one run lists every page; the full result goes to .reports/axe-sweep/.
 test.describe('the accessibility sweep', () => {
-  const personas = [...new Set(ROUTE_SCANS.flatMap(({ as }) => as as readonly Persona[]))];
-  for (const persona of personas) {
-    const routes = ROUTE_SCANS.filter(({ as }) => (as as readonly Persona[]).includes(persona));
-    test(`every page, as ${persona}`, async ({ page }) => {
-      test.setTimeout(60_000 + routes.length * 30_000);
+  for (const { title, kind, as: persona, scans } of SWEEP_TESTS) {
+    test(title, async ({ page }) => {
+      test.setTimeout(60_000 + scans.length * 30_000);
       // One stuck opener fails its own scan, not the whole test.
       page.setDefaultTimeout(8_000);
       const world = await seedWorld(page);
       await signIn(page, world, persona);
       const result: SweepResult = { persona, findings: [], unreached: [] };
-      for (const scan of routes) {
-        const { route } = scan;
-        const path = ROUTE_VISITS[route](world);
-        if (path === null) continue;
-        await test.step(route, async () => {
-          try {
-            await visit(page, path, 'status' in scan ? scan.status : undefined);
-            await collectBothThemes(page, route, result);
-          } catch (error) {
-            await recordUnreached(page, route, error, result);
-          }
-        });
+      for (const id of scans) {
+        if (kind === 'pages') {
+          const scan = ROUTE_SCANS.find(({ route }) => route === id);
+          const path = ROUTE_VISITS[id as ScannedRoute](world);
+          if (!scan || path === null) continue;
+          await test.step(id, async () => {
+            try {
+              await visit(page, path, 'status' in scan ? scan.status : undefined);
+              await collectBothThemes(page, id, result);
+            } catch (error) {
+              await recordUnreached(page, id, error, result);
+            }
+          });
+        } else {
+          await test.step(id, async () => {
+            try {
+              const dialog = await MODAL_OPENERS[id as ScannedModal](page, world);
+              await expect(dialog).toBeVisible({ timeout: 10_000 });
+              await collectBothThemes(page, id, result, dialog);
+            } catch (error) {
+              await recordUnreached(page, id, error, result);
+            }
+            await page.keyboard.press('Escape').catch(() => {});
+          });
+        }
       }
-      expect(reportSweep(`${persona}-pages`, result)).toBe('');
-    });
-  }
-
-  const modalPersonas = [...new Set(MODAL_SCANS.map(({ as }) => as as Persona))];
-  for (const persona of modalPersonas) {
-    // Two-factor signs in an account of its own, so it goes last.
-    const modals = MODAL_SCANS.filter(({ as }) => as === persona).sort(
-      (a, b) => Number(a.id === 'two-factor-warning') - Number(b.id === 'two-factor-warning'),
-    );
-    test(`every modal, as ${persona}`, async ({ page }) => {
-      test.setTimeout(60_000 + modals.length * 30_000);
-      // One stuck opener fails its own scan, not the whole test.
-      page.setDefaultTimeout(8_000);
-      const world = await seedWorld(page);
-      await signIn(page, world, persona);
-      const result: SweepResult = { persona, findings: [], unreached: [] };
-      for (const { id } of modals) {
-        await test.step(id, async () => {
-          try {
-            const dialog = await MODAL_OPENERS[id](page, world);
-            await expect(dialog).toBeVisible({ timeout: 10_000 });
-            await collectBothThemes(page, id, result, dialog);
-          } catch (error) {
-            await recordUnreached(page, id, error, result);
-          }
-          await page.keyboard.press('Escape').catch(() => {});
-        });
-      }
-      expect(reportSweep(`${persona}-modals`, result)).toBe('');
+      expect(reportSweep(`${persona}-${title.replace(/\W+/g, '-')}`, result)).toBe('');
     });
   }
 });
