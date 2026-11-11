@@ -26,7 +26,7 @@ export type PageInfo = { title: string; disambiguation?: boolean } | { missing: 
 /** Lookups by `wikiKey(requested title)`. */
 export type PageLookup = ReadonlyMap<string, PageInfo>;
 
-export type UnresolvedReason =
+type UnresolvedReason =
   | 'no-wikipedia-source'
   | 'no-heading'
   | 'collision'
@@ -48,7 +48,7 @@ export interface Resolution {
   article: string;
 }
 
-export interface Unresolved {
+interface Unresolved {
   path: string;
   source: string;
   headedAs?: string;

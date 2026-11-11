@@ -5,7 +5,7 @@ export interface RoundedSquare {
   radius: number;
 }
 
-export interface QrFinder {
+interface QrFinder {
   outer: RoundedSquare;
   inner: RoundedSquare;
   centre: RoundedSquare;

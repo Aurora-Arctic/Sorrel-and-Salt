@@ -24,8 +24,8 @@ import type { RetentionBatch, RetentionStage, SupportRequestRow } from '../types
 // ids due for each stage a page at a time and hands each page to a batch, and each batch reads its rows' status and dates again
 // before it writes, so a batch run twice, two runs at once, or a batch that follows a reopen, changes nothing.
 
-export const NOTICE_AFTER_DAYS = 5;
-export const ANONYMISE_AFTER_MONTHS = 12;
+const NOTICE_AFTER_DAYS = 5;
+const ANONYMISE_AFTER_MONTHS = 12;
 
 /** Requests resolved before this instant have waited out their days and are due to close. */
 function closesBefore(now: number): Date {
@@ -67,7 +67,7 @@ async function closingNoticeFor(
  *
  * @throws {MailNotSent} the transport failed this attempt; nothing is stamped, so a retry sends it.
  */
-export async function sendClosingNotice(
+async function sendClosingNotice(
   requestId: string,
   origin: string,
   now: Date = new Date(),

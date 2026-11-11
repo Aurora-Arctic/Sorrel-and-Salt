@@ -53,8 +53,8 @@ export const CURATED: CuratedNames = {
 };
 
 /** An entry's word count bounds, and a form's ceiling: the curator's defaults (README, rule 5). */
-export const ENTRY_WORDS = { min: 100, max: 250 } as const;
-export const VARIANT_WORDS_MAX = 120;
+const ENTRY_WORDS = { min: 100, max: 250 } as const;
+const VARIANT_WORDS_MAX = 120;
 
 // A binomial, a trinomial with or without its rank (`subsp.`, `var.`, `f.`), a hybrid's `×`, a quoted cultivar, a genus or
 // higher taxon alone (`Usnea`), or a group within a genus named by rank (`Rubus subg. Rubus`).

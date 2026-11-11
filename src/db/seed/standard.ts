@@ -786,7 +786,7 @@ const RETIRED_COMPENDIUM_SLUGS: {
  * Writes `RETIRED_COMPENDIUM_SLUGS`, keyed on entry and slug (the slug index is not unique, so a reseed would
  * stack copies). `retired_at` defaults to the run's instant, so the 180-day window runs from the last write. (claude-docs/db/standard-scenario.md, "Retired slugs")
  */
-export async function insertMissingRetiredSlugs(
+async function insertMissingRetiredSlugs(
   tx: SeedTransaction,
   ingredientIds: Map<string, string>,
 ): Promise<void> {

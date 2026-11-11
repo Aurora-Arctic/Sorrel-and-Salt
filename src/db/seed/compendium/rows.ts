@@ -85,7 +85,7 @@ export function pick(picks: Picks, kind: keyof Picks, name: string): CuratedPick
  * A celestial body or sign is stored as its row's current spelling;
  * a retired one is left off, and an empty list is stored as null.
  */
-export function spelled(
+function spelled(
   picks: Picks,
   kind: 'celestialBodies' | 'zodiacSigns',
   values: readonly string[] | null | undefined,

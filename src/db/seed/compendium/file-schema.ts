@@ -19,7 +19,7 @@ import type {
 // a list (claude-docs/compendium/compendium-seed/README.md, "An entry, field by field"). The file
 // spells `colours`, the row `colors`; `toEntry` is where they meet.
 
-export const FILE_STATUSES = ['draft', 'needs-review', 'approved'] as const;
+const FILE_STATUSES = ['draft', 'needs-review', 'approved'] as const;
 
 type InFile<Field> = Field extends 'colors' ? 'colours' : Field;
 

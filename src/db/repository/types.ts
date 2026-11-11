@@ -44,12 +44,12 @@ import type { AuditFields, AuditSession, Generic, WithoutAuditFields } from '../
 import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
 import type { FormGroupIcon } from '../../modules/vocabulary/schema/form-group-icons';
 
-export type AuditColumnName = keyof typeof auditColumns;
+type AuditColumnName = keyof typeof auditColumns;
 
 // A table admits the methods its own columns allow: `{ deletedAt?: never }` is
 // satisfied only by a table without the column.
 export type SoftDeletable = { deletedAt: AnyPgColumn };
-export type HardDeletable = { deletedAt?: never };
+type HardDeletable = { deletedAt?: never };
 
 export type WorkspaceScoped = { workspaceId: AnyPgColumn };
 export type Unscoped = { workspaceId?: never };
@@ -86,9 +86,9 @@ export type Revisioned = { revision: AnyPgColumn };
 
 export type Slugged = { slug: AnyPgColumn };
 
-export type Writable<TTable extends PgTable> = Omit<TTable['$inferInsert'], AuditColumnName>;
+type Writable<TTable extends PgTable> = Omit<TTable['$inferInsert'], AuditColumnName>;
 
-export type WritableInWorkspace<TTable extends PgTable> = Omit<Writable<TTable>, 'workspaceId'>;
+type WritableInWorkspace<TTable extends PgTable> = Omit<Writable<TTable>, 'workspaceId'>;
 
 /**
  * A sort column a page can be keyed on. NOT NULL, because a NULL key makes
@@ -1055,14 +1055,14 @@ export interface CitingLink {
   reference: ReferenceRow;
 }
 
-export type UnreadIngredientColumn = 'curatorReviewedBy';
+type UnreadIngredientColumn = 'curatorReviewedBy';
 
 /** Without the curator who reviewed it, which no finder reads with the row (`unread-columns.ts`). */
 export type IngredientRow = Omit<typeof ingredients.$inferSelect, UnreadIngredientColumn>;
 
 export type DocumentRow = typeof documents.$inferSelect;
 
-export interface DocumentTextInput {
+interface DocumentTextInput {
   title: string;
   lede: string;
 }
@@ -1071,7 +1071,7 @@ export type DocumentVersionRow = typeof documentVersions.$inferSelect;
 
 export type DocumentMailingRow = typeof documentMailings.$inferSelect;
 
-export interface DocumentMailingInput {
+interface DocumentMailingInput {
   items: readonly { versionId: string; summary: string }[];
   recipientCount: number;
 }
@@ -1098,7 +1098,7 @@ export type DocumentMailingRecipientRow = typeof documentMailingRecipients.$infe
 export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 
 /** What a site access pause is set with: `until` null for no end date, and always a note saying why. */
-export interface UserAccessPauseInput {
+interface UserAccessPauseInput {
   until: Date | null;
   note: string;
   message?: string | null;
@@ -1111,7 +1111,7 @@ type WorkspaceSlugRow = typeof workspaceSlugs.$inferSelect;
 export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
 
 /** What a coven pause is set with: `until` null for no end date, and a note or none. */
-export interface WorkspaceMemberPauseInput {
+interface WorkspaceMemberPauseInput {
   until: Date | null;
   note: string | null;
   message?: string | null;
@@ -1130,10 +1130,10 @@ export type StockRow = typeof inventoryItems.$inferSelect;
 
 export type CupboardEntryRow = typeof workspaceCompendiumEntries.$inferSelect;
 
-export type VariantRow = typeof ingredientVariants.$inferSelect;
+type VariantRow = typeof ingredientVariants.$inferSelect;
 
-export type SpellStepRow = typeof spellSteps.$inferSelect;
-export type SpellRow = typeof spells.$inferSelect;
+type SpellStepRow = typeof spellSteps.$inferSelect;
+type SpellRow = typeof spells.$inferSelect;
 export type WorkingRow = typeof spellWorkings.$inferSelect;
 export type WorkingParticipantRow = typeof spellWorkingParticipants.$inferSelect;
 export type WorkingDeductionRow = typeof spellWorkingDeductions.$inferSelect;
@@ -1141,7 +1141,7 @@ export interface WorkingCount {
   spellId: string;
   count: number;
 }
-export interface WorkingParticipantValue {
+interface WorkingParticipantValue {
   userId?: string;
   name?: string;
 }
@@ -1186,8 +1186,6 @@ export type SiteInvitationRow = AddressInvitationRow & {
   role: null;
   siteRole: InvitableSiteRole;
 };
-
-export type { InvitableRole } from '../../lib/invitable-roles';
 
 /** What an invitation on either tier starts with; the expiry defaults to seven days out. */
 type InvitationValues = Pick<typeof invitations.$inferInsert, 'email' | 'expiresAt' | 'note'> & {
@@ -1323,7 +1321,7 @@ export interface CategoryFilter {
   groupId?: string;
 }
 
-export type AstrologyList = 'celestialBodies' | 'zodiacSigns';
+type AstrologyList = 'celestialBodies' | 'zodiacSigns';
 
 export type AstrologyVocabulary = FlatTable;
 

@@ -20,7 +20,7 @@ export interface AuditSession {
 }
 
 /** How a privilege change came about, as `user_privilege_changes.via` records it. */
-export type PrivilegeRoute = (typeof userPrivilegeRoute.enumValues)[number];
+type PrivilegeRoute = (typeof userPrivilegeRoute.enumValues)[number];
 
 /**
  * What a write changing `users.role` or `users.can_create_workspace` declares

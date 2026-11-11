@@ -24,7 +24,7 @@ const SLUG_ATTEMPTS = 5;
  * live coven's current address count as taken; an old address does not, and the coven's own (`exceptWorkspaceId`) does not. Free as
  * of this read; the unique index decides a race.
  */
-export async function freeCovenSlug(name: string, exceptWorkspaceId?: string): Promise<string> {
+async function freeCovenSlug(name: string, exceptWorkspaceId?: string): Promise<string> {
   const base = slugify(name) || FALLBACK_SLUG;
   for (let n = 1; ; n++) {
     const candidate = n === 1 ? base : `${base}-${n}`;

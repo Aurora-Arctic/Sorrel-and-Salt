@@ -25,35 +25,33 @@ export const WorkspaceRef = builder.objectRef<WorkspaceRow>('Workspace').impleme
   }),
 });
 
-export const WorkspaceMemberRef = builder
-  .objectRef<MembershipWithWorkspace>('WorkspaceMember')
-  .implement({
-    fields: (t) => ({
-      role: t.expose('role', { type: WorkspaceRoleEnum }),
-      joinedAt: t.expose('joinedAt', { type: 'DateTime' }),
-      workspace: t.field({ type: WorkspaceRef, resolve: (member) => member.workspace }),
-      user: t.field({ type: CoMemberRef, resolve: (member) => ({ id: member.userId }) }),
-      // Null for a coven's creator.
-      invitedBy: t.field({
-        type: CoMemberRef,
-        nullable: true,
-        resolve: (member) => (member.invitedBy ? { id: member.invitedBy } : null),
-      }),
-      // On a field of its own rather than on `user`, which every member reads; anyone else gets `FORBIDDEN`.
-      email: t.field({
-        type: 'String',
-        nullable: true,
-        description:
-          "The member's address, as their own account holds it now. Owners only; null for someone the coven no longer seats.",
-        resolve: (member, _args, { loaders }) =>
-          loaders.memberEmailsByMember.load({
-            workspaceId: member.workspaceId,
-            userId: member.userId,
-          }),
-      }),
-      audit: t.field({ type: AuditInfo, resolve: (member) => member }),
+const WorkspaceMemberRef = builder.objectRef<MembershipWithWorkspace>('WorkspaceMember').implement({
+  fields: (t) => ({
+    role: t.expose('role', { type: WorkspaceRoleEnum }),
+    joinedAt: t.expose('joinedAt', { type: 'DateTime' }),
+    workspace: t.field({ type: WorkspaceRef, resolve: (member) => member.workspace }),
+    user: t.field({ type: CoMemberRef, resolve: (member) => ({ id: member.userId }) }),
+    // Null for a coven's creator.
+    invitedBy: t.field({
+      type: CoMemberRef,
+      nullable: true,
+      resolve: (member) => (member.invitedBy ? { id: member.invitedBy } : null),
     }),
-  });
+    // On a field of its own rather than on `user`, which every member reads; anyone else gets `FORBIDDEN`.
+    email: t.field({
+      type: 'String',
+      nullable: true,
+      description:
+        "The member's address, as their own account holds it now. Owners only; null for someone the coven no longer seats.",
+      resolve: (member, _args, { loaders }) =>
+        loaders.memberEmailsByMember.load({
+          workspaceId: member.workspaceId,
+          userId: member.userId,
+        }),
+    }),
+    audit: t.field({ type: AuditInfo, resolve: (member) => member }),
+  }),
+});
 
 // Here because `WorkspaceRef`'s own fields are built before `WorkspaceMemberRef` exists.
 builder.objectField(WorkspaceRef, 'members', (t) =>

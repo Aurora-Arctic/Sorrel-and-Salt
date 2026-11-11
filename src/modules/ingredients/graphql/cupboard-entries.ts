@@ -26,7 +26,7 @@ import { EXPECTED_REVISION, IngredientRef } from './ingredient';
 // A coven's cupboard entry over the wire: the coven's own say over one compendium entry, read beside the entry so a client can show both.
 // Who may read it is the service's check, through the loader (claude-docs/graphql/schema.md, "Cupboard entries").
 
-export const CupboardEntryRef = builder.objectRef<CupboardEntryNode>('CupboardEntry').implement({
+const CupboardEntryRef = builder.objectRef<CupboardEntryNode>('CupboardEntry').implement({
   description:
     "A coven's own say over one compendium entry it holds. A null field is the compendium's value; an empty list is one the coven cleared.",
   fields: (t) => ({

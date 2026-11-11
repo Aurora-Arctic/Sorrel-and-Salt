@@ -28,9 +28,9 @@ export type SpellInput = z.input<typeof SpellInputSchema>;
 /** Each field left out is unchanged; a null revision overwrites. */
 export type SpellUpdate = z.input<typeof UpdateSpellInputSchema>;
 
-export type SpellStepIngredient = IngredientRow & { deleted: boolean };
+type SpellStepIngredient = IngredientRow & { deleted: boolean };
 
-export type SpellStepVariant = IngredientVariantRow & { deleted: boolean };
+type SpellStepVariant = IngredientVariantRow & { deleted: boolean };
 
 export type SpellStepView = SpellStepRow & {
   ingredient: SpellStepIngredient | null;
@@ -39,7 +39,7 @@ export type SpellStepView = SpellStepRow & {
 
 export type SpellKey = Pick<SpellRow, 'id' | 'workspaceId'>;
 
-export type { WorkingDeductionRow, WorkingParticipantRow, WorkingRow };
+export type { WorkingRow };
 
 export interface WorkingWarning {
   stepId: string;

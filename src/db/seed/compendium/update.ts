@@ -479,7 +479,7 @@ export interface UpdatePlan {
   formInUse: boolean;
 }
 
-export function planUpdate(item: SeedItem, state: PresentState, ctx: UpdateContext): UpdatePlan {
+function planUpdate(item: SeedItem, state: PresentState, ctx: UpdateContext): UpdatePlan {
   const { entry } = item;
   const { picks } = ctx;
   const scalars = scalarDiffs(entry, state.row, picks);
@@ -502,7 +502,7 @@ export function planUpdate(item: SeedItem, state: PresentState, ctx: UpdateConte
 }
 
 /** What the run does with one present entry, the state table's rows. */
-export type Outcome =
+type Outcome =
   | { kind: 'skip' }
   | { kind: 'retired' }
   | { kind: 'pending'; differs: string[] }

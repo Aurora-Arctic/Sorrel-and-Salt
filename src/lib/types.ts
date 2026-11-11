@@ -58,7 +58,7 @@ export interface SocialProvider {
   hidden?: true;
 }
 
-export interface ProviderProfile {
+interface ProviderProfile {
   /** The profile field naming the provider account; the first one present, where profiles come in more than one shape. */
   accountId: readonly [string, ...string[]];
   vouches: boolean;

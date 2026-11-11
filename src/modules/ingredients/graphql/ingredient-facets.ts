@@ -15,7 +15,7 @@ import { IngredientSourceEnum, ToxicFilterEnum } from './ingredient';
 const COUNT_DESCRIPTION =
   'How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.';
 
-export const NameFacetCountRef = builder.objectRef<FacetCount>('NameFacetCount').implement({
+const NameFacetCountRef = builder.objectRef<FacetCount>('NameFacetCount').implement({
   description: 'A form, zodiac sign or celestial body, and how many entries it would list.',
   fields: (t) => ({
     value: t.exposeString('value', {
@@ -25,7 +25,7 @@ export const NameFacetCountRef = builder.objectRef<FacetCount>('NameFacetCount')
   }),
 });
 
-export const IdFacetCountRef = builder.objectRef<FacetCount>('IdFacetCount').implement({
+const IdFacetCountRef = builder.objectRef<FacetCount>('IdFacetCount').implement({
   description: 'A curated deity or category, by id, and how many entries it would list.',
   fields: (t) => ({
     value: t.exposeID('value', {
@@ -35,7 +35,7 @@ export const IdFacetCountRef = builder.objectRef<FacetCount>('IdFacetCount').imp
   }),
 });
 
-export const ElementFacetCountRef = builder
+const ElementFacetCountRef = builder
   .objectRef<IngredientFacets['elements'][number]>('ElementFacetCount')
   .implement({
     description: 'An element, and how many entries it would list.',
@@ -48,7 +48,7 @@ export const ElementFacetCountRef = builder
     }),
   });
 
-export const ToxicFacetCountRef = builder
+const ToxicFacetCountRef = builder
   .objectRef<IngredientFacets['toxic'][number]>('ToxicFacetCount')
   .implement({
     description: 'A toxic setting other than any, and how many entries it would list.',
@@ -61,7 +61,7 @@ export const ToxicFacetCountRef = builder
     }),
   });
 
-export const SourceFacetCountRef = builder
+const SourceFacetCountRef = builder
   .objectRef<WorkspaceIngredientFacets['source'][number]>('SourceFacetCount')
   .implement({
     description: 'A source, local or compendium, and how many entries it would list.',
@@ -81,7 +81,7 @@ const FACETS_DESCRIPTION =
  * The seven kinds both facet-count types carry, so a query selects them through one fragment
  * (`... on IngredientFacetCounts`). The two object types inherit these fields and add their own.
  */
-export const IngredientFacetCountsRef = builder
+const IngredientFacetCountsRef = builder
   .interfaceRef<IngredientFacets>('IngredientFacetCounts')
   .implement({
     description: 'The counts the compendium’s and a coven’s search filters share.',
@@ -153,7 +153,7 @@ export const IngredientFacetsRef = builder
     }),
   });
 
-export const ReviewFacetCountRef = builder
+const ReviewFacetCountRef = builder
   .objectRef<FacetCount<ReviewFacetValue>>('ReviewFacetCount')
   .implement({
     description: 'A Reviewed setting, and how many entries it would list.',
