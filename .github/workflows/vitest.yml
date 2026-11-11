@@ -195,16 +195,21 @@ jobs:
           merge-multiple: true
           path: /app/.reports/blobs
 
-      # Merges the three results into one run and applies the coverage
+      # Merges the parts' results into one run and applies the coverage
       # thresholds over it. Exits non-zero on a failed test in any part, or
-      # when a part left no blob (it crashed before writing one).
+      # when a part left no blob (it crashed before writing one). The parts
+      # are the jobs this one needs, so a part added to `needs` is counted
+      # with no edit here.
       - name: Run vitest
         id: run
         if: ${{ !cancelled() }}
+        env:
+          PART_RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
           set -o pipefail
           ls /app/.reports/blobs
-          if [ "$(ls /app/.reports/blobs/blob-*.json | wc -l)" -ne 3 ]; then
+          parts=$(wc -w <<< "$PART_RESULTS")
+          if [ "$(ls /app/.reports/blobs/blob-*.json | wc -l)" -ne "$parts" ]; then
             echo "::error::A vitest part left no blob; see its job." | tee /app/output.log
             echo "blobs-missing=true" >> "$GITHUB_OUTPUT"
             exit 1
@@ -218,8 +223,14 @@ jobs:
           VITEST_OUTCOME: ${{ steps.run.outcome }}
           VITEST_LOG: /app/output.log
           VITEST_BLOBS_MISSING: ${{ steps.run.outputs.blobs-missing }}
-          VITEST_PARTS_PASSED: ${{ needs.vitest-dom.result == 'success' && needs.vitest-node.result == 'success' && needs.vitest-db.result == 'success' }}
-        run: node .github/scripts/summarize-vitest.mjs
+          PART_RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          VITEST_PARTS_PASSED=true
+          for result in $PART_RESULTS; do
+            [ "$result" = success ] || VITEST_PARTS_PASSED=false
+          done
+          export VITEST_PARTS_PASSED
+          node .github/scripts/summarize-vitest.mjs
 
       # Not failure-only: a coverage report on every run.
       - name: Upload coverage artifact
