@@ -196,7 +196,7 @@ const SignInPanel = ({
       {message && <Notice kind="error">{message}</Notice>}
       {!inDialog && (
         <div className="sign-in-panel__head">
-          {header.back && <SignInBack onBack={goBack} />}
+          {header.back && <SignInBack label={header.backLabel} onBack={goBack} />}
           <PageHeader
             className="sign-in-panel__header"
             headingClassName="auth-title"

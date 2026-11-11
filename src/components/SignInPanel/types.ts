@@ -19,6 +19,8 @@ export interface SignInHeader {
   title: string;
   /** Back shows above the title, returning from the email form to the buttons. */
   back: boolean;
+  /** The Back button's text, which names the options it returns to in this mode. */
+  backLabel: string;
   /** The Last Used mark goes with the title. */
   lastUsed: boolean;
   lede?: string;

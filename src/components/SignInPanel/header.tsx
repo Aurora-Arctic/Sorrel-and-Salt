@@ -15,6 +15,11 @@ const EMAIL_VIEW_TITLES: Record<SignInMode, string> = {
   'sign-up': 'Create an Account with Email',
 };
 
+const BACK_LABELS: Record<SignInMode, string> = {
+  'sign-in': 'Back to Sign-In Options',
+  'sign-up': 'Back to Create Account Options',
+};
+
 const CODE_TITLE = 'Enter Your Code';
 
 export function signInHeader({
@@ -33,6 +38,7 @@ export function signInHeader({
   return {
     title: view === 'code' ? CODE_TITLE : titles[mode],
     back: view === 'email',
+    backLabel: BACK_LABELS[mode],
     lastUsed: view === 'email' && mode === 'sign-in' && lastUsedPassword,
     lede: ledes?.[mode],
     focusTitle: view === 'email',
@@ -40,10 +46,16 @@ export function signInHeader({
 }
 
 /** Back from the email form to the buttons, above the title. */
-export const SignInBack = ({ onBack }: { onBack: () => void }): ReactElement => (
+export const SignInBack = ({
+  label,
+  onBack,
+}: {
+  label: string;
+  onBack: () => void;
+}): ReactElement => (
   <button type="button" className="back-link sign-in-panel__back" onClick={onBack}>
     <BackChevron />
-    Back to Sign-In Options
+    {label}
   </button>
 );
 

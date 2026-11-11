@@ -68,7 +68,11 @@ const SignInDialog = ({
       {open && (
         <Modal
           title={inbox ? INBOX_TITLE : header.title}
-          aboveName={!inbox && header.back && reported && <SignInBack onBack={reported.back} />}
+          aboveName={
+            !inbox &&
+            header.back &&
+            reported && <SignInBack label={header.backLabel} onBack={reported.back} />
+          }
           focusTitle={!inbox && header.focusTitle}
           headerAlign="center"
           under={
