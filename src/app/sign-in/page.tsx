@@ -12,9 +12,7 @@ import { safeReturnPath, signInErrorMessage } from '@/lib/sign-in';
 import { invitationTokenFromPath } from '@/lib/invitation-link';
 import { publicPageMetadata } from '@/lib/page-metadata';
 import { SITE_NAME } from '@/lib/site';
-// Server component, so the env var names this reads never reach the client bundle; only the `configured` ids pass as a prop.
-// oxlint-disable-next-line no-restricted-imports
-import { configuredProviders } from '@/lib/social-providers-config';
+import { providersToPass } from '@/lib/configured-providers';
 import type { SignInPageProps } from './types';
 import PageFrame from '@/components/PageFrame';
 
@@ -47,7 +45,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
     redirect((await sessionIsVerified()) ? target : (emailPagePath(target) as Route));
   }
   const error = signInErrorMessage(params.error);
-  const configured = configuredProviders();
+  const configured = providersToPass();
 
   return (
     <PageFrame narrow>

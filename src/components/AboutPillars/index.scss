@@ -3,21 +3,12 @@
 
 // Four cards in a grid two across where the document page has its menu beside the text (the same width test as its grid), and one
 // beneath another below that, where two across would be too narrow for their sentences.
-.about-pillars {
-  @include list-reset;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: space(5);
+@include about-cards('about-pillars', var(--pillar));
 
+.about-pillars {
   @include above-phone {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
-
-// The document body's list rule would win over a margin set on the row alone, so the row's air is set here: space(7) above and
-// below, more than the body gives the end of a list, since the group is a block of its own.
-.document-page__body .about-pillars {
-  margin-block: space(7);
 }
 
 // The card is the quiet card primitive, which also lights up under a pointer; this one is not a control, so it keeps its hue
@@ -36,20 +27,10 @@
     color: $text-primary;
   }
 
-  &[data-accent='accent'] {
-    --pillar: #{$accent};
-  }
-
-  &[data-accent='clay'] {
-    --pillar: #{$clay};
-  }
-
-  &[data-accent='sloe'] {
-    --pillar: #{$sloe};
-  }
-
-  &[data-accent='woad'] {
-    --pillar: #{$woad};
+  @each $name, $colour in ('accent': $accent, 'clay': $clay, 'sloe': $sloe, 'woad': $woad) {
+    &[data-accent='#{$name}'] {
+      --pillar: #{$colour};
+    }
   }
 
   .eyebrow {
@@ -67,22 +48,4 @@
   align-items: center;
   justify-content: space-between;
   gap: space(3);
-}
-
-.about-pillars__icon {
-  display: flex;
-  flex: none;
-  inline-size: $icon-size-large;
-  block-size: $icon-size-large;
-  color: var(--pillar);
-
-  svg {
-    inline-size: 100%;
-    block-size: 100%;
-  }
-}
-
-// Within the document body the h3 rule adds its own top margin; a card's heading sits directly under its label.
-.document-page__body .about-pillars__heading {
-  margin: 0;
 }

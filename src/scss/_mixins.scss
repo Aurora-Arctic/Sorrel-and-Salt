@@ -24,6 +24,14 @@
   }
 }
 
+// A flex row whose items stack, full width, on a phone.
+@mixin phone-column {
+  @include phone-down {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 @mixin above-phone {
   @include width-from(calc(#{$shell-phone-width} + 0.01rem)) {
     @content;
@@ -1287,5 +1295,39 @@
   &::before {
     inset-block-start: calc(#{space(3)} + #{$notice-mark-drop});
     inset-inline-start: space(4);
+  }
+}
+
+// The About Us page's card rows (AboutPillars, AboutRoles) share one grid, one icon box and one heading rule; `$block` is the
+// row's class. The document body's list and heading rules would win over a margin set on the row alone, so the row's air is set
+// here: space(7) above and below, more than the body gives the end of a list, since the group is a block of its own.
+@mixin about-cards($block, $icon-color) {
+  .#{$block} {
+    @include list-reset;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: space(5);
+  }
+
+  .document-page__body .#{$block} {
+    margin-block: space(7);
+  }
+
+  .#{$block}__icon {
+    display: flex;
+    flex: none;
+    inline-size: $icon-size-large;
+    block-size: $icon-size-large;
+    color: $icon-color;
+
+    svg {
+      inline-size: 100%;
+      block-size: 100%;
+    }
+  }
+
+  // Within the document body the h3 rule adds its own top margin; a card's heading sits directly under its label.
+  .document-page__body .#{$block}__heading {
+    margin: 0;
   }
 }

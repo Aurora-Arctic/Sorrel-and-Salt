@@ -8,15 +8,19 @@ import { PendingLink } from '../../lib/navigation';
 
 // The 404 and 500 screens, shared by the root routes and the shell's (claude-docs/components/error-page.md).
 
+const BackToSite = (): ReactElement => (
+  <PendingLink className="btn btn--quiet" href="/">
+    Back to Sorrel &amp; Salt
+  </PendingLink>
+);
+
 export const NotFoundScreen = ({ withinMain = false }: { withinMain?: boolean }): ReactElement => (
   <ErrorPage
     title="Page Not Found"
     withinMain={withinMain}
     reason="There is nothing at this address."
   >
-    <PendingLink className="btn btn--quiet" href="/">
-      Back to Sorrel &amp; Salt
-    </PendingLink>
+    <BackToSite />
     <PendingLink className="btn btn--quiet" href="/help">
       Help
     </PendingLink>
@@ -41,9 +45,7 @@ export const ErrorScreen = ({
       <button type="button" className="btn btn--solid" onClick={() => retry()}>
         Try Again
       </button>
-      <PendingLink className="btn btn--quiet" href="/">
-        Back to Sorrel &amp; Salt
-      </PendingLink>
+      <BackToSite />
       <ReportThis code={500} reference={reference} detail={detail} />
     </ErrorPage>
   );

@@ -1,12 +1,17 @@
 'use client';
 
 import { type ChangeEvent, type FocusEvent, type ReactElement, useId, useState } from 'react';
-import Spinner from '../Spinner';
 import { CharacterCount } from './character-count';
 import { fieldDescription } from './description';
 import { useMask } from './mask';
 import { FieldShell } from './shell';
-import { blurFormat, browserAttributes } from './text-control';
+import {
+  afterCount,
+  blurFormat,
+  browserAttributes,
+  describedByWithCount,
+  TextControl,
+} from './text-control';
 import type { PlainTextFieldProps } from './types';
 
 /**
@@ -60,7 +65,7 @@ export function PlainTextField({
     id,
     hint,
     note,
-    describedBy: [describedBy, limit && countId].filter(Boolean).join(' ') || undefined,
+    describedBy: describedByWithCount(describedBy, limit, countId),
     error: error ?? problem,
     invalid,
   });
@@ -111,26 +116,13 @@ export function PlainTextField({
       note={note}
       required={required}
       action={action}
-      after={
-        limit || after ? (
-          <>
-            {limit ? <CharacterCount id={countId} length={value.length} limit={limit} /> : null}
-            {after}
-          </>
-        ) : undefined
-      }
+      after={afterCount(
+        limit ? <CharacterCount id={countId} length={value.length} limit={limit} /> : null,
+        after,
+      )}
       {...description}
     >
-      {multiline ? (
-        <textarea className="textarea" rows={rows} {...control} />
-      ) : busy === undefined ? (
-        <input className="input" type={type} {...control} />
-      ) : (
-        <span className="field__control">
-          <input className="input" type={type} aria-busy={busy || undefined} {...control} />
-          {busy && <Spinner className="field__busy" />}
-        </span>
-      )}
+      <TextControl multiline={multiline} rows={rows} type={type} busy={busy} control={control} />
     </FieldShell>
   );
 }

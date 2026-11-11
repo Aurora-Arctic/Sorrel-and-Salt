@@ -850,6 +850,9 @@ $space-steps: (
   @return map.get($space-steps, $step);
 }
 
+// The sign-in card's padding, on the page (SignInPanel) and in the dialog (SignInDialog).
+$sign-in-card-padding: space(5) space(6) space(6);
+
 // Room for a row of two or three category chips and a correspondence's list of colours. Shared with the entry's wait (Skeleton).
 $side-column: calc(#{space(8)} * 5);
 

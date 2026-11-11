@@ -9,6 +9,8 @@ export interface GripHandleProps {
   className: string;
   /** Ids to read after dnd-kit's own instructions. */
   describedBy?: string;
+  /** Stops the handle taking a drag, as a row held still does. */
+  disabled?: boolean;
   onFocus?: () => void;
   onBlur?: () => void;
   /** Drawn after the grip, as a combobox entry's text is. */

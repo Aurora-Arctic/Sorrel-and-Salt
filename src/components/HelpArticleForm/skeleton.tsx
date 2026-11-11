@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { RichTextEditorSkeleton } from '../RichTextEditor/skeleton';
-import { BackChevron } from '../IngredientEntry/back-chevron';
+import { BackChevron } from '../BackLink/chevron';
 import { HelpArticlePage } from './page';
 import PageHeader from '../PageHeader';
 import Skeleton from '../Skeleton';

@@ -3,6 +3,7 @@
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { twoFactor } from '../../lib/auth-client';
 import { settled, type AuthFailure } from '../../lib/auth-call';
+import { codeDigits } from '../../lib/formats';
 import { reportLeaving } from '../../lib/navigation';
 import { WRONG_CODE } from '../../lib/auth-messages';
 import { signInPath } from '../../lib/sign-in';
@@ -45,7 +46,7 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
 
-  const entered = method === 'app' ? code.replace(/\s/g, '') : code.trim();
+  const entered = method === 'app' ? codeDigits(code) : code.trim();
   const ready = entered !== '' && !pending;
 
   const switchMethod = (): void => {

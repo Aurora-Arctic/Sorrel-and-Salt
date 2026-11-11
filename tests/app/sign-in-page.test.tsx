@@ -18,7 +18,7 @@ const redirect = vi.fn((to: string) => {
 });
 vi.mock('next/navigation', () => ({ redirect }));
 
-vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => [] }));
+vi.mock('@/lib/configured-providers', () => ({ providersToPass: () => [] }));
 const SignInPanel = vi.fn<(props: { ledes?: unknown; mode?: unknown }) => null>(() => null);
 vi.mock('@/components/SignInPanel', () => ({ default: SignInPanel }));
 

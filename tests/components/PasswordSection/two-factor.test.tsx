@@ -2,7 +2,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import TwoFactorSettings, {
   PASSWORD_SIGN_IN_PAUSED_MESSAGE,
-  STALE_SESSION,
+  STALE_SESSION_TURN_OFF,
   WRONG_PASSWORD,
 } from '@/components/PasswordSection/two-factor';
 import { WRONG_CODE } from '@/lib/auth-messages';
@@ -304,7 +304,7 @@ describe('TwoFactorSettings', () => {
     typeInField('Confirm Your Password', PASSWORD);
     await press(button('Turn Off Two-Factor'));
 
-    expect(within(twoFactorRegion()).getByRole('alert')).toHaveTextContent(STALE_SESSION);
+    expect(within(twoFactorRegion()).getByRole('alert')).toHaveTextContent(STALE_SESSION_TURN_OFF);
     expect(isOn()).toBe(true);
   });
 });

@@ -1,7 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The "Back to …" link's look, shared by the ingredient entry page and the spell recipe page
+// The "Back to …" link's look, shared by every "Back to …" link: the entry and recipe pages, sign-in and the help pages
 // (claude-docs/components/ingredient-entry.md, "The back link").
 .back-link {
   margin-inline-start: -$back-chevron-pull;

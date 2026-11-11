@@ -1,13 +1,9 @@
 import type { Metadata, Route } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
-import { helpPath, keeperHelpEditPath } from '@/lib/help-paths';
-import { helpViewerOffers } from '@/lib/help-viewer';
-import { readGlossaryTerms } from '@/lib/help-glossary';
-import { guideSteps, linkTo } from '@/lib/help-pages';
+import { helpArticleMetadata, helpArticleProps } from '@/lib/help-article-props';
+import { helpPath } from '@/lib/help-paths';
 import { orNotFound } from '@/lib/or-not-found';
-import { publicPageMetadata } from '@/lib/page-metadata';
-import { SITE_NAME } from '@/lib/site';
 import { readHelpArticle } from '@/modules/help';
 
 type Props = { params: Promise<{ slug: string }> };
@@ -25,11 +21,7 @@ async function topLevel(slug: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const found = await topLevel(slug);
-  return publicPageMetadata(
-    found.title,
-    linkTo(found).summary ?? `${found.title}, a help article on ${SITE_NAME}.`,
-    helpPath(found),
-  );
+  return helpArticleMetadata(found);
 }
 
 export default async function Page({ params }: Props) {
@@ -38,14 +30,8 @@ export default async function Page({ params }: Props) {
   return (
     <HelpArticleView
       framed
-      terms={await readGlossaryTerms()}
-      title={found.title}
-      body={found.body}
-      editName={found.kind === 'guide' ? 'Guide' : 'Article'}
+      {...await helpArticleProps(found)}
       parent={{ title: 'Help', href: '/help' }}
-      subpages={found.children.map(linkTo)}
-      editHref={(await helpViewerOffers()).edit ? keeperHelpEditPath(found.id) : undefined}
-      steps={guideSteps(linkTo(found), found.children.map(linkTo), helpPath(found))}
     />
   );
 }
