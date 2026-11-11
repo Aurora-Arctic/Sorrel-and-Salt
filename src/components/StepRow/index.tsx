@@ -3,6 +3,7 @@ import { plainQuantity } from '@/lib/quantity';
 import FormIcon from '../FormIcon';
 import './index.scss';
 import type { StepRowProps } from './types';
+import { cx } from '@/lib/class-names';
 
 // One step of a spell. Presentational: the spell builder hands it editing controls and the recipe page none
 // (claude-docs/components/step-row.md).
@@ -73,14 +74,12 @@ export default function StepRow({
   const collapsible = open !== undefined && name !== null;
   // An instruction-only step opens and closes too, but is one line of text, not a card of fields.
   const textCard = open !== undefined && name === null;
-  const className_ = [
+  const className_ = cx(
     'step-row',
     collapsible && (open ? 'step-row--open' : 'step-row--closed'),
     textCard && !open && 'step-row--folded',
     className,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  );
   const identity = (
     <>
       {handle && <div className="step-row__handle">{handle}</div>}

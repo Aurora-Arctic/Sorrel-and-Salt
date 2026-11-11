@@ -21,6 +21,7 @@ import InfoTip from '../InfoTip';
 import TipAnchor from '../InfoTip/tip-anchor';
 import { FacetCount } from './facet-count';
 import './choice-chip.scss';
+import { cx } from '@/lib/class-names';
 
 // One choice from a few, drawn as a chip reading "Match: All" that opens a menu of radios. A
 // `<details>` so it opens before the script runs, with native radios so the GET form sends the
@@ -230,13 +231,11 @@ export function ChoiceChip<T extends string>({
                   </summary>
                   <div
                     ref={menuRef}
-                    className={[
+                    className={cx(
                       'facet-chip__menu',
                       phase === 'open' && 'is-open',
                       alignEnd && 'facet-chip__menu--end',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
+                    )}
                     onTransitionEnd={onFadeEnd}
                   >
                     {options.map((option) => (

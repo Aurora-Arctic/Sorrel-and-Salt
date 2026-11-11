@@ -1,3 +1,4 @@
+import { labelByKey } from '@/lib/options';
 import { quantityText } from '@/lib/validation';
 import type { SaveStockInput } from '../../gql/graphql';
 import type { StockFormValues } from '../StockFields';
@@ -11,8 +12,7 @@ import type { StockBatchRows, StockDialogValues, StockForm, StockJar, StockRow }
 const AMOUNTS: readonly (keyof StockFormValues)[] = ['quantityOnHand', 'unit', 'lowStockThreshold'];
 
 export function openingRows(jars: readonly StockJar[], forms: readonly StockForm[]): StockRow[] {
-  const labelOf = (jar: StockJar) =>
-    forms.find((form) => form.variantId === jar.variantId)?.label ?? '';
+  const labelOf = (jar: StockJar) => labelByKey(forms, 'variantId', jar.variantId, '');
   return [...jars]
     .sort((a, b) => labelOf(a).localeCompare(labelOf(b)))
     .map((jar) => ({

@@ -29,14 +29,22 @@ const OkQuery = graphql(`
   operations it finds and the schema types they reach, so a schema change that
   no document touches leaves `src/gql/` alone. Removing or renaming a field
   that a document selects fails `npm run codegen` at validation.
-- **No shared fragments.** A document is sent as its caller's own text, so a
-  fragment defined in another `graphql()` call would not be sent with the
-  documents that spread it. Where several documents select the same fields, each
-  writes them out (the reference search and the reference panel's two saves, in
-  `src/components/IngredientForm/`). A fragment defined inside the same call as
-  the operation that spreads it still works. `tests/lib/graphql-document.test.ts`
-  fails on any call whose text is not the whole document codegen generated for it,
-  which is what a fragment from elsewhere leaves. Fragment masking is off
+- **A fragment from another call is appended when the document is sent.**
+  `graphql()` records every fragment definition in the text it is given, and the
+  document it returns is a `String` whose `toString()` is the caller's text
+  followed by each fragment that text spreads but does not define, found by name,
+  transitively, once each. The caller's text stays first, because
+  `operationNameOf` reads the name from the start. This happens at send time, so
+  module load order does not matter, and a spread fragment defined nowhere throws
+  an error naming it. A spread fragment must be defined in the same file or in a
+  file that file imports directly: a bare `import './…'` counts and `import type`
+  does not, because only an imported file has loaded by then.
+  `tests/lib/graphql-document.test.ts` compares each call with its generated
+  document, fragments included, and fails on a spread fragment from a file that is
+  not imported. The shared selection of the two facet-count queries is the example
+  (`src/components/CompendiumList/live-facets.ts`); the reference search and the
+  reference panel's two saves in `src/components/IngredientForm/` can now share
+  a fragment and still write theirs out. Fragment masking is off
   (`presetConfig.fragmentMasking` in `codegen.ts`).
 - **Committed, and guarded.** CI's `checks / codegen` leg
   (`.github/workflows/checks.yml`) runs `npm run codegen` and fails on any file
@@ -62,8 +70,8 @@ const OkQuery = graphql(`
   document's text to its generated copy in `src/gql/graphql.ts`, and a bundler
   cannot drop entries from a map looked up by a string, so a page that imported
   it would ship all of them. The browser therefore never imports `src/gql/` at
-  runtime: `src/lib/graphql-document.ts`'s `graphql` returns the caller's own
-  text, typed by `gql.ts`'s overloads through a type-only import. Codegen still
+  runtime: `src/lib/graphql-document.ts`'s `graphql` returns the caller's text with
+  any borrowed fragments appended on sending, typed by `gql.ts`'s overloads through a type-only import. Codegen still
   finds each call by the name `graphql`, wherever it is imported from. What is
   sent is the same query text as before, so the server and the wire are
   unchanged. Codegen's compiler plugin, the usual way to do this, did not split

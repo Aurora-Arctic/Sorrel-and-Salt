@@ -35,6 +35,7 @@ import {
 import type { Membership } from '@/modules/coven';
 import type { Curator } from '@/modules/identity';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
+import { hasText } from '../../lib/text';
 import {
   findPageCountInScopeIncludingSoftDeleted,
   findPageCountInTiers,
@@ -873,7 +874,7 @@ export function pairIsLive(pair: { variantId: AnyPgColumn }): SQL | undefined {
  * They are not folded here: the fold stays in SQL, beside the column's own.
  */
 export function stated(values: readonly string[] | undefined): string[] {
-  return (values ?? []).filter((value) => value.trim() !== '');
+  return (values ?? []).filter(hasText);
 }
 
 /**

@@ -19,11 +19,13 @@ const WHERE: Record<GroupColorColumn, string> = {
   colorLight: 'The light theme colour reads {ratio}:1 on the light page',
 };
 
+const HEX_MESSAGE = 'Choose a colour, as a hex like #4e8bc2';
+
 const color = (column: GroupColorColumn) =>
   z
-    .string({ error: 'Choose a colour, as a hex like #4e8bc2' })
+    .string({ error: HEX_MESSAGE })
     .transform(hexColour)
-    .pipe(z.string().regex(HEX_COLOR, { error: 'Choose a colour, as a hex like #4e8bc2' }))
+    .pipe(z.string().regex(HEX_COLOR, { error: HEX_MESSAGE }))
     .superRefine((hex, context) => {
       // Zod runs this after a shape refusal too.
       if (!HEX_COLOR.test(hex)) return;

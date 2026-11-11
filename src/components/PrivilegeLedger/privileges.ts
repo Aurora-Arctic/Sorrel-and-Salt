@@ -1,3 +1,4 @@
+import { labelOf } from '@/lib/options';
 import type { SelectOption } from '../Field/types';
 import type { LedgerPrivilege } from './types';
 
@@ -14,4 +15,4 @@ export const PRIVILEGE_LABELS: readonly (SelectOption & { value: LedgerPrivilege
 export const PRIVILEGES: readonly LedgerPrivilege[] = PRIVILEGE_LABELS.map(({ value }) => value);
 
 export const privilegeLabel = (privilege: LedgerPrivilege): string =>
-  PRIVILEGE_LABELS.find(({ value }) => value === privilege)?.label ?? privilege;
+  labelOf(PRIVILEGE_LABELS, privilege);

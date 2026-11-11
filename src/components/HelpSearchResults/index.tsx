@@ -6,6 +6,7 @@ import { HelpBackLink } from '../HelpArticleView/back-link';
 import { emphasise } from './emphasis';
 import type { HelpSearchResultsProps } from './types';
 import './index.scss';
+import { plural } from '@/lib/text';
 
 const KIND = { faq: 'Question', term: 'Term' } as const;
 
@@ -20,7 +21,7 @@ const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactEle
     {results.length > 0 ? (
       <>
         <output className="help-results__count">
-          {results.length} {results.length === 1 ? 'result' : 'results'} for “{query}”
+          {results.length} {plural(results.length, 'result', 'results')} for “{query}”
         </output>
         <ul className="help-results__list">
           {results.map((result) => (

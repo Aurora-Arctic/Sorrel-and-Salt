@@ -1,9 +1,11 @@
 'use client';
 
+import { labelOf } from '@/lib/options';
+
 import type { ReactElement } from 'react';
 import { listHref } from '../../lib/list-href';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
-import { emptyList } from '../../lib/text';
+import { emptyList, plural } from '../../lib/text';
 import LocalTime from '../LocalTime';
 import { OpenModalLink, RouteModal } from '../Modal';
 import { SupportIcon } from '../IconTip/icons';
@@ -19,17 +21,14 @@ import './index.scss';
 
 // A row opens the request in a dialog at `?request=<id>` (claude-docs/components/support-list.md).
 
-const labelOfAbout = (value: string): string =>
-  ABOUT_OPTIONS.find((about) => about.value === value)?.label ?? value;
-
 const repliesText = (count: number): string => {
   if (count === 0) return 'No reply yet';
-  return count === 1 ? '1 reply' : `${count} replies`;
+  return `${count} ${plural(count, 'reply', 'replies')}`;
 };
 
 const countsText = ({ open, closed }: SupportListProps['counts']): string => {
   if (open === 0 && closed === 0) return 'No Requests Yet';
-  const part = (n: number, word: string) => `${n} ${word} Request${n === 1 ? '' : 's'}`;
+  const part = (n: number, word: string) => `${n} ${word} Request${plural(n, '', 's')}`;
   return `${part(open, 'Open')} / ${part(closed, 'Closed')}`;
 };
 
@@ -74,7 +73,7 @@ const SupportList = ({
                 <span className={statusBadgeClass(request.status)}>
                   {senderStatusLabel(request.status, request.staffWroteLast)}
                 </span>
-                <span>{labelOfAbout(request.about)}</span>
+                <span>{labelOf(ABOUT_OPTIONS, request.about)}</span>
                 <LocalTime at={request.createdAt} short="day" />
                 <span>{repliesText(request.replyCount)}</span>
               </div>
@@ -91,7 +90,7 @@ const SupportList = ({
         content={
           opened && {
             heading: {
-              eyebrow: `Support · ${labelOfAbout(opened.about)}`,
+              eyebrow: `Support · ${labelOf(ABOUT_OPTIONS, opened.about)}`,
               title: opened.subject,
               under: (
                 <div className="badges">

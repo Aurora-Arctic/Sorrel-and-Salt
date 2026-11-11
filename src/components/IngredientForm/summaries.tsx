@@ -6,7 +6,8 @@ import type { ReactElement, ReactNode } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { shortCitationText } from '@/lib/short-citation';
 import { capitalise, plural } from '@/lib/text';
-import { NOMENCLATURE_OPTIONS, labelOf } from './options';
+import { NOMENCLATURE_OPTIONS } from './options';
+import { labelOf } from '@/lib/options';
 import type {
   FieldNoun,
   IngredientElement,

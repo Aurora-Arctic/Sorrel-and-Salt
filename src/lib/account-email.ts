@@ -1,4 +1,5 @@
 import { messageLookup, safeReturnPath } from './sign-in';
+import { invitationTokenFromPath } from './invitation-link';
 
 // Pure helpers for /account/email?error=; a code is Better Auth's, and the page never shows one raw.
 
@@ -24,14 +25,11 @@ const EMAIL_PAGE = '/account/email';
 
 const VERIFIED_LANDING = `${EMAIL_PAGE}?verified`;
 
-// One segment after /invite/: the invitation page, which a link from an invitation lands on directly.
-const INVITATION_PATH = /^\/invite\/[^/?#]+$/;
-
 /** `next` is carried on to Continue only once it has passed `safeReturnPath`; an invitation is landed on itself, as Continue has nowhere else to go. */
 export function verifiedLanding(next: string | undefined): string {
   const path = safeReturnPath(next);
   if (path === undefined) return VERIFIED_LANDING;
-  if (INVITATION_PATH.test(path)) return path;
+  if (invitationTokenFromPath(path) !== null) return path;
   return `${VERIFIED_LANDING}&next=${encodeURIComponent(path)}`;
 }
 

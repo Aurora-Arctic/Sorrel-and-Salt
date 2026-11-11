@@ -89,6 +89,12 @@ function stateExpired(sentence: string) {
 
 // One sentence for every failure that trying again can fix: a callback that broke partway, a pre-redirect failure that
 // never reaches a `?error=` code, and the fallback for a code the map does not name.
+/** The opening every notice about an unconfirmed address shares, so the fact is worded once. */
+export const UNCONFIRMED_EMAIL = "Your email address isn't confirmed yet.";
+
+/** What an unconfirmed person is told to do; the caller adds where the link leads. */
+export const CHECK_INBOX = `${UNCONFIRMED_EMAIL} Check your inbox for our message, or press Confirm Your Email to send a new one.`;
+
 export const GENERIC_SIGN_IN_ERROR = "We couldn't sign you in. Please try again.";
 
 // Better Auth's own OAuth callback error codes (node_modules/better-auth/dist/oauth2/errors.mjs) plus providers' own. Every
@@ -115,8 +121,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   // No `email_not_found`: a provider that shares no address gets a placeholder
   // and the email page asks (src/lib/auth.ts, `orPlaceholder`).
   // Reached only if a provider ever requires verification; none does today.
-  email_not_verified:
-    "Your email address isn't confirmed yet. Open the link we emailed you, or change the address on your email page.",
+  email_not_verified: `${UNCONFIRMED_EMAIL} Open the link we emailed you, or change the address on your email page.`,
   ...stateExpired('That sign-in expired, or was started in another tab. Please start again here.'),
   // A verification link opened from a signed-out browser (src/lib/auth.ts):
   // the link still works, so the sentence says to open it again.

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   expiryOfDay,
   inUtc,
+  isCalendarDay,
   isoDayInUtc,
   longMinuteInUtc,
   longMinuteInZone,
@@ -76,6 +77,27 @@ describe('printedDayOf', () => {
     expect(printedDayOf(new Date('2027-01-30T12:00:00.000Z'))).toBe('2027-01-29');
     expect(printedDayOf(expiryOfDay('2028-03-01'))).toBe('2028-03-01');
   });
+});
+
+describe('isCalendarDay', () => {
+  it('accepts a day written YYYY-MM-DD', () => {
+    expect(isCalendarDay('2026-11-10')).toBe(true);
+  });
+
+  it('checks the shape only, leaving the range to its caller', () => {
+    expect(isCalendarDay('2026-13-45')).toBe(true);
+  });
+
+  it.each([
+    '2026-1-10',
+    '2026-11-1',
+    '20261110',
+    '2026/11/10',
+    ' 2026-11-10',
+    '2026-11-10 ',
+    '2026-11-10T00:00',
+    '',
+  ])('refuses %j', (text) => expect(isCalendarDay(text)).toBe(false));
 });
 
 describe('untilPhrase', () => {

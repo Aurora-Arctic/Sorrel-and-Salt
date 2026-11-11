@@ -89,6 +89,10 @@ export function titleCase(text: string): string {
     .join(' ');
 }
 
+/** Whether `value` holds anything besides white space. */
+export const hasText = (value: string | null | undefined): value is string =>
+  value != null && value.trim() !== '';
+
 /** Blank and absent read alike, as an optional field left empty. */
 export const trimmedOrUndefined = (text: string | null | undefined): string | undefined =>
   text?.trim() || undefined;

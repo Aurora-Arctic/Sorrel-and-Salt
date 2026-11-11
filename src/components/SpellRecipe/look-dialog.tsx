@@ -7,7 +7,8 @@ import LastEdit from '../LastEdit';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
 import Notice from '../Notice';
-import { SPELL_LOOK_PLACE, UNTITLED_SPELL } from '../SpellCard';
+import { SPELL_LOOK_PLACE } from '../SpellCard';
+import { spellNameOf } from '../SpellCard/untitled';
 import SpellMarks from '../SpellMarks';
 import type { SpellLookDialogProps } from './types';
 import './index.scss';
@@ -36,7 +37,7 @@ export default function SpellLookDialog({
       />
     );
   }
-  const name = opened ? opened.title?.trim() || UNTITLED_SPELL : '';
+  const name = opened ? spellNameOf(opened.title) : '';
   const heading: ModalHeading | undefined = opened && {
     title: name,
     ...(opened.editHref && {

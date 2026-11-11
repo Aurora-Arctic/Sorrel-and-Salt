@@ -2,6 +2,7 @@ import { type ReactElement, type ReactNode, useId } from 'react';
 import { ChevronIcon } from '../IconTip/icons';
 import type { CollapsibleSectionProps, FoldFlagProps, FoldIds, FoldIdsOptions } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 export { FoldAll } from './fold-all';
 
@@ -19,7 +20,7 @@ export function useFoldIds({ block, open, invalid, flagged }: FoldIdsOptions): F
     summaryId,
     flagId,
     fieldsId: `${id}-fields`,
-    className: [block, open && 'is-open', invalid && 'is-invalid'].filter(Boolean).join(' '),
+    className: cx(block, open && 'is-open', invalid && 'is-invalid'),
     describedBy: [!open && summaryId, flagged && flagId].filter(Boolean).join(' ') || undefined,
   };
 }

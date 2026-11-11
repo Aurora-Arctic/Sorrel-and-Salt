@@ -6,6 +6,7 @@ import TipAnchor from '../InfoTip/tip-anchor';
 import CategoryTipChip from './category-tip-chip';
 import { chipTip } from './chip-tip';
 import type { CardCategory, CategoryChipsProps } from './types';
+import { plural } from '@/lib/text';
 
 const PANEL_MIN_PX = 192;
 const PANEL_GAP_PX = 8;
@@ -64,7 +65,7 @@ const CategoryMore = ({ categories, label, tipOf }: CategoryMoreProps): ReactEle
           className="category-more__button"
           aria-expanded={open}
           aria-controls={panelId}
-          aria-label={`${categories.length} more ${categories.length === 1 ? 'category' : 'categories'} for ${label}`}
+          aria-label={`${categories.length} more ${plural(categories.length, 'category', 'categories')} for ${label}`}
           onClick={toggle}
         >
           +{categories.length}

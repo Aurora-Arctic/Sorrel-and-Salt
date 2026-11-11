@@ -1,5 +1,7 @@
 'use client';
 
+import { labelOf } from '@/lib/options';
+
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -159,8 +161,7 @@ const SupportRequestByLink = (): ReactElement => {
   }
 
   const { request } = state;
-  const about =
-    SUPPORT_ABOUTS.find((option) => option.value === request.about)?.label ?? request.about;
+  const about = labelOf(SUPPORT_ABOUTS, request.about);
   const staffWroteLast = request.replies[request.replies.length - 1]?.fromSender === false;
   return (
     <div className="page-with-nav">

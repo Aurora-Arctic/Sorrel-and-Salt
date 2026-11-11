@@ -8,6 +8,7 @@ import SkeletonText from '../Skeleton/text';
 import '../FacetPanel/choice-chip.scss';
 import '../IconTip/index.scss';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // The form while it loads, drawn from the form's own classes and fixed words: a guide's fields, as an article opens on, so
 // every label, control, hint and the Save row stand where the real ones will. Words are drawn as bars at their own size.
@@ -22,7 +23,7 @@ const Label = ({ children, required }: { children: string; required?: boolean })
 );
 
 const Hint = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <p className={['field__hint', className].filter(Boolean).join(' ')}>
+  <p className={cx('field__hint', className)}>
     <SkeletonText>{children}</SkeletonText>
   </p>
 );

@@ -16,6 +16,7 @@ import {
   PreviewIcon,
   ReorderIcon,
 } from './icons';
+import { cx } from '@/lib/class-names';
 
 // The icon controls that are a button rather than a link, shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ
 // (claude-docs/components/icon-tip.md).
@@ -30,7 +31,7 @@ export const IconButton = ({
 }: IconButtonProps): ReactElement => (
   <button
     type="button"
-    className={className ? `icon-tip__edit ${className}` : 'icon-tip__edit'}
+    className={cx('icon-tip__edit', className)}
     aria-pressed={pressed}
     onClick={onClick}
   >
@@ -101,7 +102,7 @@ export const ReorderButton = ({
     <button
       ref={ref}
       type="button"
-      className={className ? `icon-tip__edit ${className}` : 'icon-tip__edit'}
+      className={cx('icon-tip__edit', className)}
       aria-pressed={pressed}
       onClick={onClick}
     >

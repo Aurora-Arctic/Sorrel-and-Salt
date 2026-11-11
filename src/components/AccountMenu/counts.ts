@@ -1,9 +1,9 @@
 import { cappedCount, cappedWords } from '../FacetPanel/capped-count';
-
+import { plural } from '@/lib/text';
 // What the account menu says about a count of support requests, in the button's name and in the panel.
 
 export function countText(count: number, what: string): string {
-  return `${cappedWords(count)} ${count === 1 ? 'request' : 'requests'} ${what}`;
+  return `${cappedWords(count)} ${plural(count, 'request', 'requests')} ${what}`;
 }
 
 export function supportTip(
@@ -11,5 +11,5 @@ export function supportTip(
   tipWhat: string,
 ): { shown: number | string; tip: string } {
   const shown = cappedCount(count);
-  return { shown, tip: `${shown} Support ${count === 1 ? 'Request' : 'Requests'} ${tipWhat}` };
+  return { shown, tip: `${shown} Support ${plural(count, 'Request', 'Requests')} ${tipWhat}` };
 }

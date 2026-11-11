@@ -10,9 +10,10 @@ import CategoryChips from '../CategoryChips';
 import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { ColumnSort, OtherOrder, SortDirection, StackColumn } from '../DataTable/types';
-import { NO_MATCH_ADVICE, emptyList, noMatchLead } from '../../lib/text';
+import { NO_MATCH_ADVICE, emptyList, noMatchLead, plural } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
-import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
+import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
+import { labelOf } from '@/lib/options';
 import { CompendiumListBodySkeleton } from './skeleton';
 import IngredientSearch from '../IngredientSearch';
 import { facetChoices, vocabulariesOf } from './facets';
@@ -170,14 +171,6 @@ const andNodes = (items: readonly ReactNode[]): ReactNode =>
     </Fragment>
   ));
 
-const orValues = (values: readonly string[]): ReactNode =>
-  values.map((each, index) => (
-    <Fragment key={index}>
-      {index === 0 ? null : ' or '}
-      {value(`“${each}”`)}
-    </Fragment>
-  ));
-
 const joinedNames = (names: readonly string[], word: string): ReactNode =>
   names.map((each, index) => (
     <Fragment key={index}>
@@ -185,6 +178,19 @@ const joinedNames = (names: readonly string[], word: string): ReactNode =>
       {value(each)}
     </Fragment>
   ));
+
+const orValues = (values: readonly string[]): ReactNode =>
+  joinedNames(
+    values.map((each) => `“${each}”`),
+    ' or ',
+  );
+
+/** A clause that names a facet and lists what was chosen: "the form “a” or “b”". */
+const chosenClause = (one: string, many: string, count: number, listed: ReactNode): ReactNode => (
+  <>
+    the {plural(count, one, many)} {listed}
+  </>
+);
 
 export function emptyText(
   {
@@ -213,46 +219,38 @@ export function emptyText(
   const named = categories.flatMap((slug) => known.find((each) => each.slug === slug)?.name ?? []);
   const filters = [
     query && value(`“${query}”`),
-    forms.length > 0 && (
-      <>
-        the {forms.length === 1 ? 'form' : 'forms'} {orValues(forms)}
-      </>
-    ),
-    deityNames.length > 0 && (
-      <>
-        the {deityNames.length === 1 ? 'deity' : 'deities'} {orValues(deityNames)}
-      </>
-    ),
-    zodiac.length > 0 && (
-      <>
-        the {zodiac.length === 1 ? 'sign' : 'signs'} {orValues(zodiac)}
-      </>
-    ),
-    celestialBodies.length > 0 && (
-      <>
-        the {celestialBodies.length === 1 ? 'celestial body' : 'celestial bodies'}{' '}
-        {orValues(celestialBodies)}
-      </>
-    ),
+    forms.length > 0 && chosenClause('form', 'forms', forms.length, orValues(forms)),
+    deityNames.length > 0 &&
+      chosenClause('deity', 'deities', deityNames.length, orValues(deityNames)),
+    zodiac.length > 0 && chosenClause('sign', 'signs', zodiac.length, orValues(zodiac)),
+    celestialBodies.length > 0 &&
+      chosenClause(
+        'celestial body',
+        'celestial bodies',
+        celestialBodies.length,
+        orValues(celestialBodies),
+      ),
     toxicLabel && <>the toxic setting {value(toxicLabel)}</>,
     withoutReferences && value('No Refs'),
     withoutForms && value('No Form'),
     hidden && value('Hidden'),
-    elements.length > 0 && (
-      <>
-        the {elements.length === 1 ? 'element' : 'elements'}{' '}
-        {joinedNames(
+    elements.length > 0 &&
+      chosenClause(
+        'element',
+        'elements',
+        elements.length,
+        joinedNames(
           elements.map((each) => labelOf(ELEMENT_OPTIONS, each)),
           ' or ',
-        )}
-      </>
-    ),
-    named.length > 0 && (
-      <>
-        the {named.length === 1 ? 'category' : 'categories'}{' '}
-        {joinedNames(named, categoryMode === 'any' ? ' or ' : ' and ')}
-      </>
-    ),
+        ),
+      ),
+    named.length > 0 &&
+      chosenClause(
+        'category',
+        'categories',
+        named.length,
+        joinedNames(named, categoryMode === 'any' ? ' or ' : ' and '),
+      ),
   ].filter((filter): filter is Exclude<typeof filter, false | '' | undefined> => Boolean(filter));
   return (
     <span className="compendium-list__empty">

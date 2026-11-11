@@ -322,8 +322,8 @@ The public entry page is where a reader notices a correspondence is wrong, so §
 ### Decision
 
 1. **Codegen writes each document as a string** (`documentMode: 'string'`), not a parsed syntax tree, so the browser parses nothing at load. The client sends `String(document)` and reads the operation name with `operationNameOf`.
-2. **Callers import `graphql` from `src/lib/graphql-document.ts`**, which returns the text it is given, typed as codegen's generated function. Codegen still finds and types every call, but nothing in the browser imports `src/gql/gql.ts`, the map of every document. `tests/lib/graphql-document.test.ts` asserts that each call's text is the document codegen generated for it.
-3. **There are no shared fragments.** A caller's text must be its whole document, so `ReferenceRow` is written out in each caller.
+2. **Callers import `graphql` from `src/lib/graphql-document.ts`**, which returns the text it is given as a `String` that gains the fragments it borrows when sent, typed as codegen's generated function. Codegen still finds and types every call, but nothing in the browser imports `src/gql/gql.ts`, the map of every document. `tests/lib/graphql-document.test.ts` asserts that each call's text, with its borrowed fragments, is the document codegen generated for it.
+3. **A fragment may be shared across calls** (see the next section). It replaces the earlier rule that a caller's text is its whole document.
 4. **No server package reaches the browser.** The page sizes and the cursor codec live in `src/lib/cursor.ts`, which imports neither `@pothos/core` nor `graphql` and encodes with `btoa` and `atob` rather than `Buffer`; `src/lib/pagination.ts` re-exports them. `tests/guards/browser-server-packages.test.ts` walks every file a `'use client'` file imports and fails on a runtime import of either package, or of `src/gql/`.
 
 ### Why
@@ -359,3 +359,15 @@ Measured on a production build, gzip of the scripts requested before the `load` 
 
 - **Codegen's Babel compiler plugin under Turbopack.** It runs, but Turbopack keeps every export of `src/gql/graphql.ts` live, so a page still held all 130 documents (about 1% smaller). Two tool facts found on the way: the preset's `exports` map hides its `babel` subpath, so the plugin cannot be named from the package; and `withWorkflow` owns the plain `*.ts` and `*.tsx` `turbopack.rules` keys and adds its own content test, so a rule must use brace keys (`*.{ts,cts}`, `*.{tsx,jsx}`) to reach every file.
 - **A custom codegen plugin emitting one module per document**: a larger task, and the identity function reaches the same split.
+
+## A fragment is shared across graphql() calls
+
+**Status:** decided. Live home: `claude-docs/graphql/client-types.md`.
+
+### Decision
+
+`graphql()` records each fragment definition it is given. The document it returns appends, when sent, every fragment its text spreads but does not define, transitively and once each, after the caller's text. A spread fragment must be defined in the caller's file or in a file it imports at runtime. `tests/lib/graphql-document.test.ts` fails on a call that breaks that rule or whose document differs from the generated one.
+
+### Why
+
+Without it, two queries selecting the same fields wrote them out twice, and a field added to one was missed in the other. Resolving at send time, by name, keeps a page importing only the files it uses, and the import rule keeps a borrowed fragment from being missing when the document is sent.

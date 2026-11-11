@@ -22,6 +22,40 @@ import type {
 // the clicking settles, and TanStack Query keys it by filter, so a replaced filter's answer is never
 // shown (claude-docs/components/compendium-list.md, "The panel's counts").
 
+// Defined for its side effect: both queries below borrow it by name when sent.
+graphql(`
+  fragment IngredientFacetCountsFields on IngredientFacetCounts {
+    forms {
+      value
+      count
+    }
+    deities {
+      value
+      count
+    }
+    categories {
+      value
+      count
+    }
+    zodiacSigns {
+      value
+      count
+    }
+    celestialBodies {
+      value
+      count
+    }
+    elements {
+      value
+      count
+    }
+    toxic {
+      value
+      count
+    }
+  }
+`);
+
 const CompendiumFacetCountsDocument = graphql(`
   query CompendiumFacetCounts(
     $query: String
@@ -57,34 +91,7 @@ const CompendiumFacetCountsDocument = graphql(`
       covenIds: $covenIds
       covensNot: $covensNot
     ) {
-      forms {
-        value
-        count
-      }
-      deities {
-        value
-        count
-      }
-      categories {
-        value
-        count
-      }
-      zodiacSigns {
-        value
-        count
-      }
-      celestialBodies {
-        value
-        count
-      }
-      elements {
-        value
-        count
-      }
-      toxic {
-        value
-        count
-      }
+      ...IngredientFacetCountsFields
       withoutReferences
       withoutForms
       reviewed {
@@ -126,34 +133,7 @@ const CovenFacetCountsDocument = graphql(`
       inStock: $inStock
       lowStockOnly: $lowStockOnly
     ) {
-      forms {
-        value
-        count
-      }
-      deities {
-        value
-        count
-      }
-      categories {
-        value
-        count
-      }
-      zodiacSigns {
-        value
-        count
-      }
-      celestialBodies {
-        value
-        count
-      }
-      elements {
-        value
-        count
-      }
-      toxic {
-        value
-        count
-      }
+      ...IngredientFacetCountsFields
       source {
         value
         count

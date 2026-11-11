@@ -5,6 +5,7 @@ import EmptyState from '../EmptyState';
 import Skeleton from '../Skeleton';
 import { SortSelect } from './sort-select';
 import type { ColumnSort, SortChoice, StackColumn, StackTableProps } from './types';
+import { cx } from '@/lib/class-names';
 
 // The admin lists' table: the `.data-table` primitive in its scrolling frame, stacking into cards at
 // phone width. It carries the explicit roles WebKit needs once `display` changes, and each cell's
@@ -12,10 +13,7 @@ import type { ColumnSort, SortChoice, StackColumn, StackTableProps } from './typ
 
 /** The cell's class: the column's own, then the card-corner placement for a corner action. */
 function cellClass<Row>({ className, action }: StackColumn<Row>): string | undefined {
-  return (
-    [className, action === 'corner' && 'data-table__card-action'].filter(Boolean).join(' ') ||
-    undefined
-  );
+  return cx(className, action === 'corner' && 'data-table__card-action') || undefined;
 }
 
 /**
@@ -108,14 +106,12 @@ function StackTable<Row>({
       )}
       <table
         aria-hidden={pending || undefined}
-        className={[
+        className={cx(
           'data-table data-table--stack',
           pending &&
             `data-table--pending data-table--pending-${pendingKind ?? 'default'} skeleton-text`,
           className,
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        )}
         aria-label={label}
         {...tableRole('table')}
       >
