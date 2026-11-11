@@ -5,6 +5,10 @@
 `deploymentEnabled: { "**": false }`, so Vercel's Git integration deploys
 nothing and this workflow is the only path.
 
+- **One upload** — `vercel deploy` passes `--archive=tgz`, so the build goes up
+  as one tarball. Without it every output file is a separate upload, and
+  Vercel's free plan refuses more than 5,000 a day
+  (`tests/guards/vercel-deploy-archive.test.ts`).
 - **Triggers** — push to `main` (`--prod`, `sorrelandsalt.com`); push to
   `staging` (Preview aliased to `staging.sorrelandsalt.com`); and a
   `pull_request` into `main` from a `hotfix/**` head (Preview aliased to a
