@@ -3,29 +3,25 @@ import type { ReactElement } from 'react';
 import { helpTerms } from '../../lib/help-marks';
 import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
-import HelpSearchForm from '../HelpSearchForm';
+import { HelpArticleTitle, HelpPageHead } from '../HelpChrome';
 import { HELP_WIDGET_ELEMENTS } from '../HelpWidget';
-import { EditLink } from '../IconTip';
-import { BackChevron } from '../IngredientEntry/back-chevron';
-import PageHeader from '../PageHeader';
+import { BackChevron } from '../BackLink/chevron';
 import PageNav from '../PageNav';
 import { HelpBackLink } from './back-link';
 import type { HelpArticleViewProps } from './types';
 import './index.scss';
-import './title.scss';
 
 /** A body with this many sections gains a contents menu; fewer are in view without one. */
 const MENU_FROM = 3;
 
 // One help article: its body as sanitised Markdown with its widgets drawn, the pages beneath it and the search box,
-// which the help layout's header holds when framed (claude-docs/components/help-pages.md).
+// which the public help header holds when a page stands under it (claude-docs/components/help-pages.md).
 const HelpArticleView = ({
   title,
   body,
   subpages,
   parent,
   heading = 'Help',
-  framed = false,
   terms = [],
   steps = {},
   editHref,
@@ -49,13 +45,9 @@ const HelpArticleView = ({
       className={withMenu ? 'help-page help-article page-with-nav' : 'help-page help-article'}
     >
       <div className="help-article__head">
-        {!framed && <PageHeader title={heading} />}
-        {!framed && <HelpSearchForm />}
+        <HelpPageHead heading={heading} />
         {parent && <HelpBackLink href={parent.href} title={parent.title} />}
-        <div className="help-article__title">
-          <h2>{title}</h2>
-          {editHref && <EditLink href={editHref as Route} name={editName} />}
-        </div>
+        <HelpArticleTitle title={title} editHref={editHref} editName={editName} />
       </div>
       {withMenu && <PageNav label="On This Page" entries={entries} collapsible />}
       <div className="help-article__body">{content}</div>

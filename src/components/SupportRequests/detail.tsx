@@ -1,12 +1,11 @@
 'use client';
 
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { repeatable } from '@/lib/repeat-announcement';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../ConfirmedAction';
-import { FieldShell, SwitchField, fieldDescription } from '../Field';
-import { ComboboxSelect } from '../Combobox/select';
+import { PlainSelectField, SwitchField } from '../Field';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import IssuePanel from './issue-panel';
@@ -52,7 +51,6 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
   const open = request.status === 'open';
   const assign = useSupportAction();
   const visible = useSupportAction();
-  const { aria, ...assignField } = fieldDescription({ id: useId() });
   const current = request.assignee;
   // An assignee paused since the assignment stays listed, chosen and not choosable again.
   const assigneeChoices = [
@@ -182,29 +180,24 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
 
       {edits && (
         <aside className="support-detail__side" aria-label="Request Settings">
-          <FieldShell label="Assignee" {...assignField}>
-            <ComboboxSelect
-              id={assignField.controlId}
-              label="Assignee"
-              labelId={assignField.labelId}
-              aria-describedby={aria['aria-describedby']}
-              value={request.assignee?.id ?? ''}
-              busy={assign.busy}
-              disabled={assign.busy}
-              choices={assigneeChoices}
-              onChange={(picked) => {
-                if (assign.busy) return;
-                void assign.run(
-                  () =>
-                    graphqlRequest(AssignDocument, {
-                      id: request.id,
-                      assigneeId: picked || null,
-                    }),
-                  picked ? 'Request assigned.' : 'Request unassigned.',
-                );
-              }}
-            />
-          </FieldShell>
+          <PlainSelectField
+            label="Assignee"
+            value={request.assignee?.id ?? ''}
+            busy={assign.busy}
+            disabled={assign.busy}
+            options={assigneeChoices}
+            onChange={(picked) => {
+              if (assign.busy) return;
+              void assign.run(
+                () =>
+                  graphqlRequest(AssignDocument, {
+                    id: request.id,
+                    assigneeId: picked || null,
+                  }),
+                picked ? 'Request assigned.' : 'Request unassigned.',
+              );
+            }}
+          />
           <SwitchField
             label="Shared With Curators"
             name="curatorVisible"

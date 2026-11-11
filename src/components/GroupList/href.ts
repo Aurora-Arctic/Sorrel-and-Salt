@@ -5,10 +5,6 @@ import type { GroupKind } from '../GroupForm/types';
 import { KINDS } from './kinds';
 import type { GroupsPlace } from './types';
 
-export function groupsPath(kind: GroupKind): Route {
-  return KINDS[kind].path;
-}
-
 export function groupsHref(kind: GroupKind, place: GroupsPlace, dialog?: ListDialog): Route {
   return listHref(KINDS[kind].path, {
     query: place.query,

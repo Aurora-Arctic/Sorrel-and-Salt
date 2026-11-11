@@ -4,7 +4,8 @@ import { useMultipleSelection, useSelect, type UseSelectStateChangeOptions } fro
 import { type MouseEvent, type ReactElement, useState } from 'react';
 import { ComboboxEntry } from './entry';
 import { keepEscapeInList } from './escape';
-import { ChevronIcon, CrossIcon } from '../IconTip/icons';
+import { ChevronIcon } from '../IconTip/icons';
+import { ClearButton, IndicatorSeparator, OptionLabel } from './parts';
 import { EmptyMessage, Popup } from './popup';
 import { useListPosition } from './position';
 import { chipsRoom } from './room';
@@ -182,24 +183,15 @@ export function ComboboxMultiSelect({
         </div>
         <div className="combobox__indicators">
           {/* Drawn while empty too, hidden, so the control keeps one width. */}
-          <button
-            type="button"
-            className={empty ? 'combobox__indicator is-empty' : 'combobox__indicator'}
-            aria-label={`Clear ${label}`}
-            aria-hidden={empty || undefined}
-            tabIndex={empty ? -1 : undefined}
-            disabled={empty}
-            onClick={() => {
+          <ClearButton
+            empty={empty}
+            label={`Clear ${label}`}
+            onClear={() => {
               setSelectedItems([]);
               focusBox();
             }}
-          >
-            <CrossIcon />
-          </button>
-          <span
-            className={empty ? 'combobox__separator is-empty' : 'combobox__separator'}
-            aria-hidden="true"
           />
+          <IndicatorSeparator empty={empty} />
           <span className="combobox__indicator" aria-hidden="true">
             <ChevronIcon />
           </span>
@@ -229,21 +221,9 @@ export function ComboboxMultiSelect({
                 )}
                 {...getItemProps({ item: choice, index })}
               >
-                <span className="combobox__label">
-                  {choice.icon && (
-                    <span className="combobox__icon" aria-hidden="true">
-                      {choice.icon}
-                    </span>
-                  )}
+                <OptionLabel icon={choice.icon} count={choice.count}>
                   {choice.label}
-                  {/* The space is a text node of the label's own, as a span's leading one is dropped from the name. */}
-                  {choice.count !== undefined && (
-                    <>
-                      {' '}
-                      <span className="combobox__count">{choice.count}</span>
-                    </>
-                  )}
-                </span>
+                </OptionLabel>
                 {choice.note && <div className="combobox__note">{choice.note}</div>}
               </li>
             ))}

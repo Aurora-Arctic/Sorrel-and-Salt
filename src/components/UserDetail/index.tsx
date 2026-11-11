@@ -10,7 +10,7 @@ import { roleLabel } from '../UserList/roles';
 import TimeoutPanel from '../SupportRequests/timeout-panel';
 import AccessPausePanel from './access-pause-panel';
 import ImpersonateAction from './impersonate-action';
-import { workspaceRoleLabel, workspaceRoleRank } from './roles';
+import { workspaceRoleLabel, workspaceRoleRank } from '../MemberList/roles';
 import type { UserCoven, UserDetailProps } from './types';
 import './index.scss';
 

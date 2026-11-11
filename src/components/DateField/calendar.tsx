@@ -22,6 +22,8 @@ export function parseDay(day: string): Date | undefined {
 // The gap between the field and the calendar, and the margin the calendar keeps from the window.
 const GAP = 8;
 const MARGIN = 8;
+/** The margin the calendar keeps from the window's sides. */
+export const EDGE = 16;
 
 /** Whether the browser can put the calendar in the top layer; an older one leaves it in flow. */
 export const hasPopover = (): boolean =>
@@ -37,12 +39,21 @@ export function useCalendarPopover({
   fieldId,
   panel,
   close,
+  layoutKey,
+  fieldWide,
+  alignEnd,
 }: {
   open: boolean;
   floating: boolean;
   fieldId: string;
   panel: RefObject<HTMLDivElement | null>;
   close: () => void;
+  /** Placed again when this changes, for a calendar whose width does (the months it shows). */
+  layoutKey?: unknown;
+  /** The panel is as wide as its field (within the window margin) instead of as wide as its content. */
+  fieldWide?: boolean;
+  /** The panel's right edge sits on the field's right edge and it extends leftwards, instead of left on left. */
+  alignEnd?: boolean;
 }): void {
   useLayoutEffect(() => {
     const el = panel.current;
@@ -52,25 +63,50 @@ export function useCalendarPopover({
       const button = document.getElementById(fieldId);
       if (!button) return;
       const at = button.getBoundingClientRect();
+      if (fieldWide) {
+        el.style.setProperty(
+          '--calendar-width',
+          `${Math.min(at.width, window.innerWidth - 2 * EDGE)}px`,
+        );
+      } else {
+        el.style.removeProperty('--calendar-width');
+      }
+      // Measured at its natural height; it goes below the field if it fits, else above if it fits there, else on the side with
+      // more room, capped to that room and scrolling.
+      el.style.removeProperty('--calendar-max-height');
+      el.style.overflowY = '';
       const below = window.innerHeight - at.bottom - GAP - MARGIN;
       const above = at.top - GAP - MARGIN;
-      const top =
-        el.offsetHeight > below && above > below
-          ? Math.max(MARGIN, at.top - GAP - el.offsetHeight)
-          : at.bottom + GAP;
-      const left = Math.max(MARGIN, Math.min(at.left, window.innerWidth - el.offsetWidth - MARGIN));
+      const height = el.offsetHeight;
+      const onTop = height > below && above > below;
+      const room = onTop ? above : below;
+      if (height > room) {
+        el.style.setProperty('--calendar-max-height', `${room}px`);
+        el.style.overflowY = 'auto';
+      }
+      const top = onTop ? Math.max(MARGIN, at.top - GAP - Math.min(height, room)) : at.bottom + GAP;
+      const wanted = alignEnd ? at.right - el.offsetWidth : at.left;
+      const left = Math.max(EDGE, Math.min(wanted, window.innerWidth - el.offsetWidth - EDGE));
       el.style.setProperty('--calendar-top', `${top}px`);
       el.style.setProperty('--calendar-left', `${left}px`);
     };
     place();
+    // The months load after the panel opens and the picked range changes its height, so it is placed again as it resizes.
+    const watch = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(place);
+    watch?.observe(el);
     window.addEventListener('resize', place);
-    document.addEventListener('scroll', place, true);
+    // The panel's own scrolling must not place it again, which would reset its scroll position.
+    const onScroll = (event: Event) => {
+      if (!(event.target instanceof Node && el.contains(event.target))) place();
+    };
+    document.addEventListener('scroll', onScroll, true);
     return () => {
+      watch?.disconnect();
       window.removeEventListener('resize', place);
-      document.removeEventListener('scroll', place, true);
+      document.removeEventListener('scroll', onScroll, true);
       if (el.matches(':popover-open')) el.hidePopover();
     };
-  }, [open, floating, fieldId, panel]);
+  }, [open, floating, fieldId, panel, layoutKey, fieldWide, alignEnd]);
   // A manual popover has no light dismiss, so a press outside the calendar and its field closes it.
   useDismiss({
     active: open && floating,

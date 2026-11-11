@@ -12,6 +12,7 @@ import { RecordButton } from '../IconTip';
 import Modal from '../Modal';
 import Notice from '../Notice';
 import RecordWorkingForm from '../RecordWorking/form';
+import { UNAVAILABLE_INGREDIENT } from '../RecordWorking/warnings';
 import type { WorkingStep } from '../RecordWorking';
 import Skeleton from '../Skeleton';
 import type { SpellCardRecordWorkingProps } from './types';
@@ -38,9 +39,6 @@ const RecordWorkingSetupDocument = graphql(`
     }
   }
 `);
-
-/** What the recipe page calls a linked ingredient it cannot read. */
-const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
 
 function workingStepsOf(steps: RecordWorkingSetupQuery['spell']['steps']): WorkingStep[] {
   return steps.flatMap((step): WorkingStep[] => {

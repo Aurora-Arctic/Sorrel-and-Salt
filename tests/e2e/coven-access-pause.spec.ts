@@ -41,7 +41,8 @@ test('an owner pauses a member’s access to the coven, the member sees the paus
   const modal = page.getByRole('dialog', { name: 'Fixture Member' });
   const access = modal.getByRole('region', { name: 'Coven Access' });
   await access.getByRole('button', { name: 'Coven Access' }).click();
-  await access.getByRole('combobox', { name: 'For' }).selectOption({ label: '1 Week' });
+  await access.getByRole('combobox', { name: 'For' }).click();
+  await page.getByRole('option', { name: '1 Week' }).click();
   await access.getByRole('textbox', { name: 'Note' }).fill('Cooling off');
   await access.getByRole('button', { name: 'Pause Access' }).click();
   await expect(modal.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();

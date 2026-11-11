@@ -8,14 +8,14 @@ const TOO_LONG = limitMessage(PAUSE_TEXT_MAX_LENGTH);
 const PAST_END = 'Choose a time in the future';
 const NO_NOTE = 'Write a note saying why';
 
+/** Whether a time is invalid or not in the future: the one rule for an end or expiry, so a caller with its own sentence and issue list still shares it. */
+export function isNotFuture(time: Date): boolean {
+  return !(time instanceof Date) || Number.isNaN(time.getTime()) || time.getTime() <= Date.now();
+}
+
 /** @throws {ValidationError} on `['until']` when it is given and is not a valid time in the future. `null` and `undefined` mean no end. */
 export function parsePauseEnd(until: Date | null | undefined): void {
-  if (
-    until != null &&
-    (!(until instanceof Date) || Number.isNaN(until.getTime()) || until.getTime() <= Date.now())
-  ) {
-    throw fieldRefusal('until', PAST_END);
-  }
+  if (until != null && isNotFuture(until)) throw fieldRefusal('until', PAST_END);
 }
 
 /**

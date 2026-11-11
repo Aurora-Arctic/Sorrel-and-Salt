@@ -1,6 +1,7 @@
 'use client';
 
 import { type MouseEvent, type ReactElement, useCallback, useRef, useState } from 'react';
+import ConfirmEmailLink from '../ConfirmEmailLink';
 import { emailPagePath } from '../../lib/account-email';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
@@ -99,9 +100,7 @@ const SignInDialog = ({
           {inbox ? (
             // The email page's form sends the new message, with the wait between mails it reads on the server.
             <p className="sign-in-dialog__inbox">
-              <a className="btn btn--quiet" href={emailPagePath(next)}>
-                Confirm Your Email
-              </a>
+              <ConfirmEmailLink href={emailPagePath(next)} />
             </p>
           ) : (
             <SignInPanel

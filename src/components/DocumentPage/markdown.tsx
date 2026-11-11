@@ -401,6 +401,11 @@ function sectionsOf(tree: Root, reserved: readonly string[]): PageNavEntry[] {
   return entries;
 }
 
+/** Replaces a tree's children with what `fn` makes of them; the hast and mdast child types agree here, which a cast says once. */
+function mapChildren(tree: Root, fn: (children: ElementContent[]) => ElementContent[]): void {
+  tree.children = fn(tree.children as ElementContent[]) as RootContent[];
+}
+
 export function renderMarkdown(
   body: string,
   placeholders: DocumentPlaceholders = {},
@@ -415,18 +420,15 @@ export function renderMarkdown(
   widgets: HelpWidgets = {},
 ): { content: ReactNode; entries: PageNavEntry[] } {
   const tree = markdownProcessor.runSync(markdownProcessor.parse(body)) as Root;
-  tree.children = openableLinks(tree.children as ElementContent[]) as RootContent[];
+  mapChildren(tree, openableLinks);
   if (terms) {
-    tree.children = markTerms(tree.children as ElementContent[], terms) as RootContent[];
-    tree.children = shapeCallouts(tree.children as ElementContent[]) as RootContent[];
-    tree.children = shapeFigures(tree.children as ElementContent[]) as RootContent[];
+    mapChildren(tree, (children) => markTerms(children, terms));
+    mapChildren(tree, shapeCallouts);
+    mapChildren(tree, shapeFigures);
   }
-  tree.children = markWidgets(tree.children as ElementContent[], widgets) as RootContent[];
-  tree.children = markPlaceholders(
-    tree.children as ElementContent[],
-    placeholders,
-  ) as RootContent[];
-  tree.children = frameTables(tree.children as ElementContent[]) as RootContent[];
+  mapChildren(tree, (children) => markWidgets(children, widgets));
+  mapChildren(tree, (children) => markPlaceholders(children, placeholders));
+  mapChildren(tree, frameTables);
   visitElements(tree, shapeFootnotes);
   const entries = sectionsOf(tree, reserved);
   if (lowerHeadings) {

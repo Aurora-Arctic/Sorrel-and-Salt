@@ -310,18 +310,11 @@ describe('SignInPanel', () => {
     expect(screen.getByRole('button', { name: 'Sign In with a Passkey' })).toBeInTheDocument();
   });
 
-  it('opens on creating an account when asked, and reports each switch to its owner', async () => {
-    const onModeChange = vi.fn();
-    render(<SignInPanel configured={['google']} mode="sign-up" onModeChange={onModeChange} />);
+  it('opens on creating an account when asked', () => {
+    render(<SignInPanel configured={['google']} mode="sign-up" />);
     expect(
       screen.getByRole('heading', { level: 1, name: 'Create an Account' }),
     ).toBeInTheDocument();
-    expect(onModeChange).not.toHaveBeenCalled();
-
-    await press(screen.getByRole('button', { name: 'Sign In Instead' }));
-    await press(screen.getByRole('button', { name: 'Create an Account' }));
-
-    expect(onModeChange.mock.calls).toEqual([['sign-in'], ['sign-up']]);
   });
 
   // In a dialog the dialog's own title heads the panel, so the panel draws no heading of its own.

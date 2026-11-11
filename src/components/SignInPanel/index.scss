@@ -14,7 +14,7 @@
 .sign-in-panel.panel {
   width: 100%;
 
-  padding: space(5) space(6) space(6);
+  padding: $sign-in-card-padding;
 }
 
 // The code step alone: with the buttons gone nothing sets the column's width, so it takes the

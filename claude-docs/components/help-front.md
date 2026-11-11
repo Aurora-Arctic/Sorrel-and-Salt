@@ -10,6 +10,6 @@
 - **One column.** `HelpFrontHead` (`head.tsx`) carries `.help-page`, and every page beneath carries it too, so each section takes the header's edges at every width. A page with a jump menu keeps its text column at `$measure` and puts the menu beside or above it (`index.scss`; [`help-pages.md`](help-pages.md), "The jump menu").
 - **The skeleton** is `HelpFrontSkeleton` (`skeleton.tsx`): the same `HelpFrontHead` with an empty box over the page's skeleton, drawn when a public help page is reached from outside the help pages (`framed('help', …)`, `src/components/SkeletonFrame`).
 
-The pages beneath take `framed`, which leaves out the heading and the box they draw when they stand alone (`HelpIndex`, `HelpArticleView`); `HelpGlossary` and `HelpSearchResults` draw neither.
+`HelpFrontShell` wraps its children in `HelpFrame` (`src/components/HelpChrome`), so the pages beneath leave out the heading and the box they draw when they stand alone (`HelpIndex`, `HelpArticleView`, and the quick links of `HelpIndexSkeleton` appear only inside it); `HelpGlossary` and `HelpSearchResults` draw neither.
 
 Story: `Pages / Help / HelpFront` in `index.stories.tsx`. Test: `tests/components/HelpFront/index.test.tsx`; the header's position, the column's edges and the held search are in `tests/e2e/help-pages.spec.ts`, "the help header".

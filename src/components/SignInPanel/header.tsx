@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { BackChevron } from '../IngredientEntry/back-chevron';
+import { BackChevron } from '../BackLink/chevron';
 import type { SignInHeader, SignInLedes, SignInMode, SignInView } from './types';
 
 // The panel's head, worked out once for the sign-in page and the dialog around a panel alike: each draws

@@ -1,13 +1,11 @@
 import type { ReactElement } from 'react';
 import { HELP_GLOSSARY_CARD } from '../../lib/help-pages';
 import { HELP_QUICK_LINKS } from '../../lib/help-quick-links';
-import HelpSearchForm from '../HelpSearchForm';
-import { BackChevron } from '../IngredientEntry/back-chevron';
+import { HelpArticleTitle, HelpPageHead, WhenHelpFramed } from '../HelpChrome';
+import { BackChevron } from '../BackLink/chevron';
 import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
-import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import { SkeletonWords } from '../Skeleton/text';
-import '../HelpArticleView/title.scss';
 import './index.scss';
 
 /** Each stand-in guide's title and summary lengths, in words, so the cards vary as the real ones do. */
@@ -27,27 +25,23 @@ const QUESTIONS = [
   [5, 34],
 ] as const;
 
-// A help index with its guides still to come: the heading and the search box (left to the help header when framed),
+// A help index with its guides still to come: the heading and the search box, left to the public help header when it holds them,
 // the quick links' shipped titles on the public index, the jump menu, the guide cards with their kind and the glossary's own card,
 // then, with the menu, the questions and Back to Top. Words still to come are bars of about their length.
 export const HelpIndexSkeleton = ({
   heading = 'Help',
-  framed,
   menu,
   back,
 }: {
   heading?: string;
-  /** The public index under the help header, drawn without the heading and box and with the quick links. */
-  framed?: boolean;
   /** The jump menu and the questions it leads to: the page draws both when it has questions, which the public index always does. */
   menu?: boolean;
   /** The title of the index the page links back to, drawn as the page draws it. */
   back?: string;
 }): ReactElement => (
   <div className={menu ? 'help-page help-index page-with-nav' : 'help-page help-index'}>
-    {!framed && <PageHeader title={heading} />}
-    {!framed && <HelpSearchForm />}
-    {framed && (
+    <HelpPageHead heading={heading} />
+    <WhenHelpFramed>
       <ul className="help-index__quick" aria-label="Quick Links">
         {HELP_QUICK_LINKS.map((title) => (
           <li key={title}>
@@ -55,7 +49,7 @@ export const HelpIndexSkeleton = ({
           </li>
         ))}
       </ul>
-    )}
+    </WhenHelpFramed>
     {back && <HelpBackLinkSkeleton>Back to {back}</HelpBackLinkSkeleton>}
     {menu && (
       <PageNav
@@ -92,9 +86,7 @@ export const HelpIndexSkeleton = ({
     </section>
     {menu && (
       <section className="help-index__section" aria-label="Frequently Asked Questions">
-        <div className="help-article__title">
-          <h2>Frequently Asked Questions</h2>
-        </div>
+        <HelpArticleTitle title="Frequently Asked Questions" />
         {QUESTIONS.map(([question, answer], n) => (
           <div key={n} className="help-index__faq">
             <h3>

@@ -27,7 +27,6 @@ export default async function Page() {
   return (
     <HelpIndex
       faq={faq.map(({ node }) => node)}
-      framed
       quickLinks={quick}
       articles={articles.map(({ node }) => linkTo(node))}
       terms={terms}

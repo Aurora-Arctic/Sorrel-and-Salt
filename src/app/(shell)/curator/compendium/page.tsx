@@ -7,7 +7,7 @@ import CompendiumList from '@/components/CompendiumList';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { compendiumHref } from '@/components/CompendiumList/href';
 import { editHeading } from '@/components/CompendiumList/heading';
-import { cardName } from '@/components/IngredientCard/card-name';
+import { cardName } from '@/lib/ingredient-name';
 import { detailsHeading, detailsMarks } from '@/components/IngredientEntry/details';
 import DetailsDialog from '@/components/IngredientEntry/details-dialog';
 import ShownToggle from '@/components/IngredientEntry/shown-toggle';

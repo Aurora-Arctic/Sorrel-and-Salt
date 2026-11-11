@@ -26,7 +26,13 @@
   inset-block-start: var(--calendar-top, 0);
   inset-inline-start: var(--calendar-left, 0);
   margin: 0;
-  max-inline-size: calc(100vw - #{space(4)});
+  // Border-box so a field-wide panel is exactly the field's width; the months never shrink below their own.
+  box-sizing: border-box;
+  inline-size: var(--calendar-width, fit-content);
+  min-inline-size: min-content;
+  max-inline-size: calc(100vw - #{space(6)});
+  // Set when neither side of the field has room for the panel; the hook then also makes it scroll.
+  max-block-size: var(--calendar-max-height, none);
   overflow: visible;
   color: inherit;
 }
