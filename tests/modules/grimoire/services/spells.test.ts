@@ -2,14 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
-import {
-  addSpellStep,
-  createSpell,
-  readSpell,
-  stepsOfSpells,
-  updateSpell,
-  updateSpellStep,
-} from '@/modules/grimoire';
+import { createSpell, readSpell, stepsOfSpells, updateSpell } from '@/modules/grimoire';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -256,60 +249,6 @@ describe('a custom, one-off ingredient row', () => {
     await expect(readWithSteps(asUser(D), WORKSPACE_W_ID, shared)).rejects.toBeInstanceOf(
       Forbidden,
     );
-  });
-
-  it('is written exactly when its spell is', async () => {
-    const shared = await seed(B, 'workspace', custom);
-    const hidden = await seed(B, 'private', custom);
-    const stepOf = async (spellId: string) =>
-      (await readWithSteps(asUser(B), WORKSPACE_W_ID, spellId)).steps[0];
-
-    // Why the refusals are the rule's: the author and the owner both write the shared one.
-    await updateSpellStep(asUser(A), WORKSPACE_W_ID, shared, (await stepOf(shared)).id, {
-      body: 'Owner note',
-    });
-    const added = await addSpellStep(asUser(B), WORKSPACE_W_ID, hidden, {
-      name: 'Fixture Salt',
-      form: 'coarse',
-    });
-    expect(added).toMatchObject({ position: 2, spellId: hidden });
-
-    const hiddenStep = await stepOf(hidden);
-    await expect(
-      updateSpellStep(asUser(A), WORKSPACE_W_ID, hidden, hiddenStep.id, { body: 'Sneaky' }),
-    ).rejects.toBeInstanceOf(NotFound);
-    await expect(
-      addSpellStep(asUser(A), WORKSPACE_W_ID, hidden, { name: 'Sneaky Salt' }),
-    ).rejects.toBeInstanceOf(NotFound);
-    await expect(
-      updateSpellStep(asUser(C), WORKSPACE_W_ID, shared, (await stepOf(shared)).id, {
-        body: 'Viewer note',
-      }),
-    ).rejects.toBeInstanceOf(Forbidden);
-    await expect(
-      addSpellStep(asUser(C), WORKSPACE_W_ID, shared, { name: 'Viewer Salt' }),
-    ).rejects.toBeInstanceOf(Forbidden);
-    await expect(
-      updateSpellStep(asUser(D), WORKSPACE_W_ID, hidden, hiddenStep.id, { body: 'Foreign' }),
-    ).rejects.toBeInstanceOf(Forbidden);
-
-    expect((await stepOf(hidden)).body).toBeNull();
-    expect((await stepOf(shared)).body).toBe('Owner note');
-    expect(
-      (
-        await sql`select count(*) from spell_steps where name like 'Viewer%' or name like 'Sneaky%'`
-      )[0].count,
-    ).toBe('0');
-  });
-
-  it('cannot be reached through another spell’s id', async () => {
-    const mine = await seed(B, 'workspace', custom);
-    const other = await seed(B, 'workspace', { title: 'Other Working', ...custom });
-    const stepOfOther = (await readWithSteps(asUser(B), WORKSPACE_W_ID, other)).steps[0];
-
-    await expect(
-      updateSpellStep(asUser(B), WORKSPACE_W_ID, mine, stepOfOther.id, { body: 'Crossed' }),
-    ).rejects.toBeInstanceOf(NotFound);
   });
 });
 

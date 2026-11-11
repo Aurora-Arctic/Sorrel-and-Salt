@@ -1,6 +1,7 @@
 import QRCode from 'qrcode';
 import { describe, expect, it } from 'vitest';
-import { cardQrSvg } from '@/lib/invitation-cards';
+import { QR_TONE } from '@/lib/invitation-cards/qr';
+import { qrSvg } from '@/lib/qr';
 import { CHALK } from '@/lib/invitation-cards/layout';
 
 const LINK = 'https://sorrelandsalt.com/i/Hk7pQ2xRm9TbWz4N';
@@ -20,11 +21,11 @@ function dotCentres(svg: string): Set<string> {
   return centres;
 }
 
-describe('cardQrSvg', () => {
+describe('a card’s QR code in the card tone', () => {
   it('encodes the card link at error correction L in a 29 × 29 grid', () => {
     const qr = QRCode.create(LINK, { errorCorrectionLevel: 'L' });
     expect(qr.modules.size).toBe(29);
-    expect(cardQrSvg(LINK)).toContain('viewBox="0 0 29 29"');
+    expect(qrSvg(LINK, QR_TONE)).toContain('viewBox="0 0 29 29"');
   });
 
   it('draws a dot for every dark module outside the finders and nowhere else', () => {
@@ -37,11 +38,11 @@ describe('cardQrSvg', () => {
       }
     }
     expect(expected.size).toBeGreaterThan(100);
-    expect(dotCentres(cardQrSvg(LINK))).toEqual(expected);
+    expect(dotCentres(qrSvg(LINK, QR_TONE))).toEqual(expected);
   });
 
   it('draws the three finders as rounded squares in heading chalk, with a see-through ring and no background', () => {
-    const svg = cardQrSvg(LINK);
+    const svg = qrSvg(LINK, QR_TONE);
     for (const [x, y] of [
       [0, 0],
       [22, 0],

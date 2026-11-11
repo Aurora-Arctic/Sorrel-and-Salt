@@ -112,7 +112,7 @@ export {
   findWorkspaceSeat,
 } from './memberships';
 export { findDemoWorkspace } from './workspaces';
-export { findWorkspaceHoldingSlug, findWorkspaceSlugs } from './workspace-slugs';
+export { findWorkspaceHoldingSlug } from './workspace-slugs';
 export {
   findCoMemberNamesIncludingSoftDeleted,
   findHoldsPasskey,
@@ -132,7 +132,6 @@ export {
   findCardArrivalPage,
   findCardBatchCount,
   findCardBatchPage,
-  findCardAttemptCount,
   findCardAttemptPage,
   findCardBatchTotals,
   findCardCount,
