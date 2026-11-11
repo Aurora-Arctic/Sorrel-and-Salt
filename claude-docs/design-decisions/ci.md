@@ -290,7 +290,8 @@ Playwright is kept to what only a real server can prove; what was missing was tr
   - **Postgres `fsync=off` and friends** for the test instance: clones take tens of milliseconds and each test writes a handful of rows, so the saving is estimated at 1–3 s of summed test time, under a second of wall. Revisit only if a profile shows database waits.
   - **Trimming the double-theme and double-width axe scans:** they are the accessibility gate. A quarter fewer scans would save about 2 s of wall at 6 workers (estimate), not worth the coverage.
   - **Splitting the 12.9 s compendium flow:** the longest test plus startup is the floor of any run, and 12.9 s is under the 27.5 s ideal span, so it is off the critical path.
-  - **CI sharding, `--only-changed`, project dependencies:** sharding pays more in pulls than it saves; `--only-changed` does not fit a gate that must run everything; seeding already lives in `globalSetup`.
+  - **`--only-changed`, project dependencies:** `--only-changed` does not fit a gate that must run everything; seeding already lives in `globalSetup`.
+  - **CI sharding:** rejected at 56 tests, because the pulls cost more than it saved. Reversed at 563 tests: each extra shard costs about 3 minutes of repeated work and removes about 4 minutes of test time (`claude-docs/ci/runner-budget.md`, "Playwright shards").
   - **A smaller build** (`productionBrowserSourceMaps` off): shared with the coverage report CI needs, and a change to the production bundle.
 
 ### Why
@@ -673,7 +674,7 @@ Case B was read back as `[[{"context":"call-plain / leg (leg-off)"}]]`, case C a
 Part 1, in `vitest.yml` and `playwright.yml`:
 
 - `vitest-dom`, `vitest-node` and `vitest-db` carry `if: inputs.should-run`. The merge job `vitest` carries `if: ${{ !cancelled() && inputs.should-run }}`, so it still runs after a failed part but not on a filtered-off run.
-- The `playwright` job carries `if: inputs.should-run`. The step-level `should-run` gating is gone from both files.
+- The `playwright` job (now the `playwright-shard` jobs and the merge job `playwright`) carries `if: inputs.should-run`; the merge job's is `!cancelled() && inputs.should-run && !inputs.build-only`. The step-level `should-run` gating is gone from both files.
 - Check names are unchanged (`vitest / vitest`, `playwright / playwright`). The only other caller of `playwright.yml` is `e2e-cache.yml`'s `warm` job, which relies on the default `should-run: true`.
 - `playwright-coverage` reads only the `playwright` and `stories` results and outputs and uses `!cancelled()`. A skipped inner job leaves the caller's result `success` with empty outputs, so nothing breaks. Nothing `needs:` the vitest job.
 
@@ -1019,7 +1020,7 @@ A copy, class or memorial test adds no coverage of behaviour and costs a CI-minu
 - **Not taken:**
   - **Builds or Playwright on Blacksmith** (`claude-docs/ci/runner-budget.md`, "Why Blacksmith was dropped"). Revisit only if the free tier is raised or Playwright grows past about 5 minutes.
   - **Merging the seven small `checks` legs into one runner:** saves about 150 s of free GitHub minutes per run and changes every check name, with no gate-time gain because they run beside Playwright.
-  - **Sharding Playwright across runners:** 56 tests do not need it, and the pull and build are fixed costs each shard would repeat.
+  - **Sharding Playwright across runners:** rejected at 56 tests, where the pull and build were fixed costs each shard would repeat. **Taken once the gate suite reached 563 tests** (three shards, stories two): an extra shard repeats about 3 minutes (about 94 s outside the test step and about 81 s of server start inside it) and removes about 4 minutes of test time, and the runners are free. See `claude-docs/ci/runner-budget.md`, "Playwright shards".
 
 ### Why
 

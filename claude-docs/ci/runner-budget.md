@@ -5,6 +5,7 @@ public repo. No job runs on Blacksmith (see "Why Blacksmith was dropped").
 The sizing record is [`ci.md`, "The CI Vitest job: DOM only where needed, GitHub's runner"](../design-decisions/ci.md#the-ci-vitest-job-dom-only-where-needed-githubs-runner).
 
 - **A CI test step's budget is 7 minutes.** A job whose test step passes 7 minutes in two consecutive runs gets another shard (`--shard` with the blob reporter and `merge-reports`), never a longer timeout.
+- **R-2: no aggregator job.** A sharded workflow adds no job whose only work is to join its shards. The job that already runs at the end (`vitest`, `playwright`) `needs` the shards and merges them, so the required check names stay `vitest / vitest` and `playwright / playwright`.
 - **The Vitest jobs run on GitHub's 4-vCPU public-repo runner, with three
   workers.** The suite is mostly per-file overhead spread over `dbMaxWorkers`
   = cores − 1 (`tests/support/db-project.mts`), which reads the core count at
@@ -26,6 +27,7 @@ The sizing record is [`ci.md`, "The CI Vitest job: DOM only where needed, GitHub
   few seconds to restore about 160 MB, 25–40s to build and start the servers
   with no spec run, and 10s to save. The minutes are free; the return is the
   build time each pull request's Playwright job no longer spends cold.
+- **Playwright is sharded; Vitest is not, beyond its three parts.** See "Playwright shards" below.
 - **Service containers probe fast.** Every service uses
   `--health-start-interval=1s` (Docker 25 or later) for its first ten
   seconds, so it is marked healthy within a second of being ready, not at the
@@ -39,23 +41,21 @@ starting its services. A Playwright step's gap from its start to the list
 reporter's `Running N tests` line is the build, the servers and the template
 seed; the rest is the tests.
 
-| Job                           | Time   | Where it goes                                                                                                                                                            |
-| ----------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `playwright`                  | 139s   | pull 40s · cache restore 6s · Run Playwright tests 81s (`next build`, 8 servers and the seed 33s · 62 tests on 4 workers 53s) · coverage upload 2s                       |
-| `stories`                     | 166s   | pull 46s · cache restore 5s · Run Playwright tests 104s (build, 6 servers and the seed 21s · 50 stories on 4 workers 64s in that run, and the step 85–131s over the six) |
-| `vitest`                      | 5m37s  | pull 27s · Run vitest 300s, over 344 files and 4,320 tests (before the split below)                                                                                      |
-| `checks / build`              | 71s    | pull 28s · build 30–47s · cache save 4s                                                                                                                                  |
-| the other seven `checks` legs | 25–49s | pull 22–28s, then the tool                                                                                                                                               |
-| the three image builds        | 16–30s | finding the content-hash tag already published, and skipping the build                                                                                                   |
-| `changes`                     | ~8s    | the path filters                                                                                                                                                         |
+| Job                           | Time      | Where it goes                                                                                                                                                            |
+| ----------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `playwright` (one shard)      | see below | pull 40s · cache restore 6s · Run Playwright tests (`next build`, 8 servers and the seed 33s, then the shard's tests) · coverage and blob upload                         |
+| `stories`                     | 166s      | pull 46s · cache restore 5s · Run Playwright tests 104s (build, 6 servers and the seed 21s · 50 stories on 4 workers 64s in that run, and the step 85–131s over the six) |
+| `vitest`                      | 5m37s     | pull 27s · Run vitest 300s, over 344 files and 4,320 tests (before the split below)                                                                                      |
+| `checks / build`              | 71s       | pull 28s · build 30–47s · cache save 4s                                                                                                                                  |
+| the other seven `checks` legs | 25–49s    | pull 22–28s, then the tool                                                                                                                                               |
+| the three image builds        | 16–30s    | finding the content-hash tag already published, and skipping the build                                                                                                   |
+| `changes`                     | ~8s       | the path filters                                                                                                                                                         |
 
-- **`vitest` is the critical path to the required checks**, longer than
-  `playwright` (about 143s). `stories` runs beside `playwright` on the same
-  image and finishes about half a minute later, but is never a required check.
-- **In both Playwright jobs the test span is set by the longest serial spec
-  file**, not by the work: `shell.spec.ts` is 34 s of the e2e job's 53 s, and
+- **The gate suite is now 563 tests**, sharded (see "Playwright shards"). `stories` runs beside `playwright` on the same image and is never a required check.
+- **In both Playwright jobs the test span was set by the longest serial spec
+  file** when the suites were small: `shell.spec.ts` 34 s of the e2e job's 53 s, and
   `07-admin.spec.ts` 62 s of the stories job's 64 s, each on one worker while
-  the other three wait ([`ci.md`, "Faster Playwright runs on the same CPU and RAM"](../design-decisions/ci.md#faster-playwright-runs-on-the-same-cpu-and-ram)).
+  the other three waited ([`ci.md`, "Faster Playwright runs on the same CPU and RAM"](../design-decisions/ci.md#faster-playwright-runs-on-the-same-cpu-and-ram)).
   Neither job saves a cache: Playwright's save would run after the tests, on
   the critical path, and the build leg's never restores.
 - **`testTimeout` is 20,000 ms** in `vitest.config.mts`. Three workers sharing
@@ -92,6 +92,15 @@ too, as it would have drawn about twice the free tier on its own.
 organisation only after no workflow names a Blacksmith `runs-on` label. A
 label with no app behind it queues forever rather than failing, so
 uninstalling first hangs every open PR's job.
+
+## Playwright shards
+
+`playwright.yml` runs its tests as a matrix of shards: **three for the gate suite, two for stories, one for `build-only`**. Each shard is a job of its own with the `playwright-shard` id, runs `--shard i/n --reporter=list,blob`, and uploads its blob report. The `playwright` job `needs` every shard, runs `playwright merge-reports`, and writes the one summary, comment and html report a single run did (R-2 above).
+
+- **What a shard repeats.** About 94 s outside the test step (the container pull, the checkout, the cache restore and the uploads) and about 81 s inside it (`next build`, the eight servers and the template seed), about 3 minutes per extra shard in all. The gate suite's 563 tests, at the 30 s per test budget, take about 4 minutes more per shard that is left out, so a shard removes about 4 minutes of test time and costs about 3 minutes of repeated work, on runners that are free. These are figures from the single-job runs before the split, not from a sharded run: read the first sharded gate runs before trusting them.
+- **The shard count follows the suite's size, not the file count.** Playwright splits a `fullyParallel` file by test and keeps a `mode: 'serial'` describe whole in one shard, so only such a describe can set a shard's span. The axe sweep in `tests/e2e/axe.spec.ts` is listed as chunks of `SWEEP_CHUNK` (6) routes per test so that the sweep's cost spreads over the shards.
+- **The merged result.** A shard failing fails its own job; the `playwright` job's last step then fails the run, and its `outcome` output is `failure`. For stories the shard step has `continue-on-error`, and only the merge step's outcome decides the section's result.
+- **`vitest-dom` is not sharded.** The 7 minute rule applies to its test step. It was not re-measured against a latest completed `staging` run: `pr-gate.yml` does not run on a push to `staging`, and the recent gate runs on pull requests skipped the Vitest parts. Re-read the step's time on a real gate run before sharding it.
 
 ## Splitting the Vitest job
 

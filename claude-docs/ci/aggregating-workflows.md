@@ -156,7 +156,7 @@
   - **An inner job with a false `if:`** (a plain job inside the reusable
     workflow, such as `vitest.yml`'s `vitest`) keeps its qualified name
     (`caller / inner`) and reports `skipped`; it is not renamed. `vitest.yml`'s
-    four jobs and `playwright.yml`'s job carry `if: inputs.should-run`, and
+    four jobs and `playwright.yml`'s shard job carry `if: inputs.should-run`, and
     `checks.yml`'s path-filtered jobs carry `if: inputs.run-<leg>`.
   - **A matrix job cannot use one on its own matrix values.** `if: matrix.x` on
     the job is rejected when the file loads: `Unrecognized named-value:
