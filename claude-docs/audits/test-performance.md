@@ -18,13 +18,13 @@ This audit measures where the CI test jobs spend their time, lists tests that ar
 
 **The five follow-up tasks (proposed, 26 h in all).**
 
-| Id | Title | Estimate |
-| --- | --- | --- |
-| MC.10 | Shard the CI Test Jobs | 5 h |
-| MC.11 | Wait on State in Playwright, Not on Time | 3.5 h |
-| MC.12 | Trim the Playwright Suites to What a Browser Adds | 6.5 h |
-| MC.13 | Speed Up the Slow Vitest Dom Files | 6 h |
-| MC.14 | Pay Database Setup Once and Prove Each Rule Once in Vitest | 5 h |
+| Id    | Title                                                      | Estimate |
+| ----- | ---------------------------------------------------------- | -------- |
+| MC.10 | Shard the CI Test Jobs                                     | 5 h      |
+| MC.11 | Wait on State in Playwright, Not on Time                   | 3.5 h    |
+| MC.12 | Trim the Playwright Suites to What a Browser Adds          | 6.5 h    |
+| MC.13 | Speed Up the Slow Vitest Dom Files                         | 6 h      |
+| MC.14 | Pay Database Setup Once and Prove Each Rule Once in Vitest | 5 h      |
 
 **How sure the findings are.** Every finding was checked against the code by a read-only pass, with file and line references. Line numbers are from the `/app` checkout on branch `feature/mc.9-clean-up-styles-unused-code` as of 2026-11-11. MC.8 and MC.9 were not yet merged, so each task re-checks its findings against their diffs first.
 
@@ -34,13 +34,13 @@ This audit measures where the CI test jobs spend their time, lists tests that ar
 
 All figures in this section are **CI measurements** from runs A and B. Every job runs on `ubuntu-26.04` (4 vCPU), in containers, with no shard or matrix anywhere.
 
-| Job | Job total | Test step | Startup inside step | Real test time | Tests | Over 7 min? |
-| --- | --- | --- | --- | --- | --- | --- |
-| `playwright` gate | 14m49s | 795 s | about 81 s | about 714 s | 563 | Yes |
-| `stories` | 9m30s | 476 s | about 99 s | about 378 s | 128 | Yes |
-| `vitest-dom` | 7m54s | 426 s | not measured | 402 s (6m42s) | 4,397 | Borderline |
-| `vitest-db` | 7m18s | 363 s | about 42 s (template build) | 321 s (5m21s) | 4,799 | No |
-| `vitest-node` | 3m33s | 159 s | not measured | not measured | 2,940 | No |
+| Job               | Job total | Test step | Startup inside step         | Real test time | Tests | Over 7 min? |
+| ----------------- | --------- | --------- | --------------------------- | -------------- | ----- | ----------- |
+| `playwright` gate | 14m49s    | 795 s     | about 81 s                  | about 714 s    | 563   | Yes         |
+| `stories`         | 9m30s     | 476 s     | about 99 s                  | about 378 s    | 128   | Yes         |
+| `vitest-dom`      | 7m54s     | 426 s     | not measured                | 402 s (6m42s)  | 4,397 | Borderline  |
+| `vitest-db`       | 7m18s     | 363 s     | about 42 s (template build) | 321 s (5m21s)  | 4,799 | No          |
+| `vitest-node`     | 3m33s     | 159 s     | not measured                | not measured   | 2,940 | No          |
 
 - **Gate:** 4 workers, 2 retries, `fullyParallel`. Summed test seconds were 2,517 (run A) and 2,558 (run B).
 - **Stories:** 1 retry, 4 workers. Summed test seconds were 1,398 (run A) and 1,061 (run B).
@@ -62,18 +62,18 @@ All figures in this section are **CI measurements** from runs A and B. Every job
 
 ### Gate Files by Median Summed Seconds (CI)
 
-| File | Summed s | Tests | Note |
-| --- | --- | --- | --- |
-| `axe.spec.ts` | 589 | 29 | 23% of the gate. "Every modal, as steward" alone takes 114 s, and one test cannot be split across shards. |
-| `admin-compendium` | 178 | 29 | |
-| `skeleton-layout` | 156 | 65 | |
-| `admin-documents` | 135 | 14 | One test takes 29.8 s. |
-| `admin-help` | 101 | 3 | Its keeper test is the flaky one: 120 s fail, then 42 s pass. |
-| `stack-row-skeleton` | 101 | 2 | Two 375 px tests (light and dark) take 48-52 s each. |
-| `help-pages` | 89 | 42 | |
-| `shell` | 71 | 20 | |
-| `document-pages` | 63 | 35 | |
-| `admin-cards` | 49 | 4 | One test takes 27.4 s. |
+| File                 | Summed s | Tests | Note                                                                                                      |
+| -------------------- | -------- | ----- | --------------------------------------------------------------------------------------------------------- |
+| `axe.spec.ts`        | 589      | 29    | 23% of the gate. "Every modal, as steward" alone takes 114 s, and one test cannot be split across shards. |
+| `admin-compendium`   | 178      | 29    |                                                                                                           |
+| `skeleton-layout`    | 156      | 65    |                                                                                                           |
+| `admin-documents`    | 135      | 14    | One test takes 29.8 s.                                                                                    |
+| `admin-help`         | 101      | 3     | Its keeper test is the flaky one: 120 s fail, then 42 s pass.                                             |
+| `stack-row-skeleton` | 101      | 2     | Two 375 px tests (light and dark) take 48-52 s each.                                                      |
+| `help-pages`         | 89       | 42    |                                                                                                           |
+| `shell`              | 71       | 20    |                                                                                                           |
+| `document-pages`     | 63       | 35    |                                                                                                           |
+| `admin-cards`        | 49       | 4     | One test takes 27.4 s.                                                                                    |
 
 - **Next tier:** `navigation-wait` 48 s, `coven-ingredients` 47 s, `ingredient-details-modal` 43 s, `admin` 40 s, `spell-recipe-layout` 40 s, `card-click` 37 s, `forced-colours` 36 s.
 - **Layout, width, and skeleton files:** 18 files, about 434 s, or 17% of the gate. The stories suite has none.
@@ -81,18 +81,18 @@ All figures in this section are **CI measurements** from runs A and B. Every job
 
 ### Slowest Vitest Files (CI, Run A, Comment's Top 10)
 
-| File | Time | Tests |
-| --- | --- | --- |
-| `tests/lib/invitation-cards/pdf.test.ts` | 59.3 s | 26 |
-| `IngredientForm/index.test.tsx` | 33.5 s | 51 |
-| `IngredientForm/variants.test.tsx` | 23.4 s | 14 |
-| `SpellBuilder/steps.test.tsx` | 22.6 s | 51 |
-| `IngredientForm/compendium.test.tsx` | 17.0 s | 32 |
-| `tests/db/seed/compendium.test.ts` | 14.9 s | 63 |
-| `password-lockout` | 14.8 s | not listed |
-| `seed/index.test.ts` | 14.4 s | 35 |
-| `two-factor` | 12.5 s | not listed |
-| `DocumentEditor/toolbar` | 12.3 s | 23 |
+| File                                     | Time   | Tests      |
+| ---------------------------------------- | ------ | ---------- |
+| `tests/lib/invitation-cards/pdf.test.ts` | 59.3 s | 26         |
+| `IngredientForm/index.test.tsx`          | 33.5 s | 51         |
+| `IngredientForm/variants.test.tsx`       | 23.4 s | 14         |
+| `SpellBuilder/steps.test.tsx`            | 22.6 s | 51         |
+| `IngredientForm/compendium.test.tsx`     | 17.0 s | 32         |
+| `tests/db/seed/compendium.test.ts`       | 14.9 s | 63         |
+| `password-lockout`                       | 14.8 s | not listed |
+| `seed/index.test.ts`                     | 14.4 s | 35         |
+| `two-factor`                             | 12.5 s | not listed |
+| `DocumentEditor/toolbar`                 | 12.3 s | 23         |
 
 The part logs print no per-file lines beyond the comment's top 10. The full list is in the part JSON artifacts, which CI keeps for 1 day.
 
@@ -449,67 +449,67 @@ Recorded so nobody re-audits them.
 
 ### Shared Pieces a Fix Reuses
 
-| Area | Helpers |
-| --- | --- |
+| Area       | Helpers                                                                                                                                                                                               |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Playwright | `tests/e2e/axe.ts` (`assertNoSidewaysScroll`, `scanBothThemes`), `holdServerAnswers`, `seedCoven` (`tests/e2e/stories/coven-ingredients.ts`), `recreateE2eDatabase`, `base-config.ts`, `axe-scans.ts` |
-| Vitest | `typingClock`, `renderWithQuery`, `interact.tsx`, `ingredient-form.tsx`, `variants-harness`, the `list-field.test.tsx` `FormProvider` model, `importAuth`, `truncateAllTables` |
+| Vitest     | `typingClock`, `renderWithQuery`, `interact.tsx`, `ingredient-form.tsx`, `variants-harness`, the `list-field.test.tsx` `FormProvider` model, `importAuth`, `truncateAllTables`                        |
 
 New pieces:
 
-| Piece | Why |
-| --- | --- |
-| A shared e2e breakpoint file | Specs have no export of the app's widths |
-| `hydrated` | Moved from its two copies into one |
-| A named-wait helper | So the guard can allow only the sleeps that stay |
-| A `SpellSteps` harness | For the steps tests that need one field, not the whole builder |
+| Piece                        | Why                                                            |
+| ---------------------------- | -------------------------------------------------------------- |
+| A shared e2e breakpoint file | Specs have no export of the app's widths                       |
+| `hydrated`                   | Moved from its two copies into one                             |
+| A named-wait helper          | So the guard can allow only the sleeps that stay               |
+| A `SpellSteps` harness       | For the steps tests that need one field, not the whole builder |
 
 ## Past Attempts
 
 `ci.md` is [`design-decisions/ci.md`](../design-decisions/ci.md); `runner-budget.md` is [`ci/runner-budget.md`](../ci/runner-budget.md). This table records what was tried before and how each earlier decision relates to this audit's proposals.
 
-| Proposal | Before | Outcome and why | Where | Effect on this audit |
-| --- | --- | --- | --- | --- |
-| Shard Playwright | Rejected twice (M11.18, MB.235) | "Sharding pays more in pulls than it saves". Rejected when the gate had 56 tests; it now has 563 (714 s). | `ci.md:300`, `:1024-1028` | Put to the owner as a changed situation, not a new idea. MC.10 cites both decisions and corrects them. |
-| Shard `vitest-dom` | Deferred, not rejected; the order was to cut the seed tests, re-measure, then decide | The merge job already accepts any number of blobs. | `runner-budget.md`, "Splitting the Vitest job" | MC.10 follows the deferred plan. |
-| Shard `vitest-db` | Rejected: each shard builds its own template | Agrees with this audit. | `runner-budget.md` | No change. |
-| Axe sweep | Built per persona in M11.8 (`fe2c624b1`); no split tried | | `axe.spec.ts:231` | The split is new. |
-| Axe trims | "Trimming the double-theme and double-width axe scans" rejected: about 2 s saved, "not worth the coverage". M14.27 still cut repeats of the same page state (rule 9). | | `ci.md:292-294`, `:411-412` | T-18 and T-19 cut only same-state, same-persona repeats, which rule 9 already allows. They never cut a theme or a width of the sweep. |
-| End-to-end trims | "Trimming e2e past duplicates" ruled out | | `ci.md:995`, `:1008` | Every Playwright cut in MC.12 is a duplicate (identical body, same state) or a rule 4 presentation pin. Nothing is cut for speed alone. |
-| `E2E_COVERAGE` | Opt-in since M11.18 (`27d866b97`); both suites merged since M14.28 | Never reconsidered. | `e2e.md:507`, `:547-553` | Kept (see [Keep](#keep)). |
-| Retries | Never lowered. `acceptance.md:43` says CI uses one retry, which is wrong for the gate (2). | | | MC.11 corrects the doc. |
-| `networkidle` and sleeps | No ban ever. MB.296 (`149137ad6`) fixed two flakes by waiting on state. | | | R-7 is new. |
-| Shared seed and serial | Done in M11.18 (`b7b87c677`): serial dropped where not chained, setup in `beforeAll`, enforced by lint `sorrel/e2e-chained-tests-serial`. Vitest: MB.183 and MB.184. | | `e2e.md:200-222` | T-11, T-12, and T-25 are the remaining cases, not a new mechanism. R-8 points at the existing lint rule. |
-| Whole-form exemption | `IngredientForm/index.test.tsx` "holds only whole-form tests"; `:87-93` requires a `FormProvider` harness for one field | | `layer-ownership.md:87-93`, `:147-152` | T-22 moves the 6 single-field tests that broke the exemption, and the exemption stays. |
-| Variants file guard | A 20 s guard was added (`15f46de79`) and reverted (`4c3ee3a8f`): full runs make that file 10 to 50 times slower than alone. | | | MC.13 measures in CI, never alone. |
-| `isolate` and pool | `db` runs `isolate: false` (MB.238). Threads for all but `dom`. Unisolated `dom` failed. | | `db-harness.md:162-170`, `runner-budget.md` | Nothing proposed; recorded. |
-| Password hasher | scrypt N=2^14 accepted by the owner on 2026-10-16 | | `auth.md:1289-1293` | Agrees: no test hasher. |
-| Workers | 4 for the Playwright gate (MB.236), 3 for Vitest. Blacksmith 8-vCPU was dropped on cost. | | `runner-budget.md:7-15` | Sharding adds runners, not workers. |
-| Other tried and left out | Video off (7-17%), `FILE_COPY` clone, `fsync=off`, a fourth Vitest worker, `--only-changed`, source maps off, and merging the `checks` legs | | `runner-budget.md`, `ci.md:290-295`, `e2e.md:504` | Not re-proposed. |
+| Proposal                 | Before                                                                                                                                                                | Outcome and why                                                                                           | Where                                             | Effect on this audit                                                                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Shard Playwright         | Rejected twice (M11.18, MB.235)                                                                                                                                       | "Sharding pays more in pulls than it saves". Rejected when the gate had 56 tests; it now has 563 (714 s). | `ci.md:300`, `:1024-1028`                         | Put to the owner as a changed situation, not a new idea. MC.10 cites both decisions and corrects them.                                  |
+| Shard `vitest-dom`       | Deferred, not rejected; the order was to cut the seed tests, re-measure, then decide                                                                                  | The merge job already accepts any number of blobs.                                                        | `runner-budget.md`, "Splitting the Vitest job"    | MC.10 follows the deferred plan.                                                                                                        |
+| Shard `vitest-db`        | Rejected: each shard builds its own template                                                                                                                          | Agrees with this audit.                                                                                   | `runner-budget.md`                                | No change.                                                                                                                              |
+| Axe sweep                | Built per persona in M11.8 (`fe2c624b1`); no split tried                                                                                                              |                                                                                                           | `axe.spec.ts:231`                                 | The split is new.                                                                                                                       |
+| Axe trims                | "Trimming the double-theme and double-width axe scans" rejected: about 2 s saved, "not worth the coverage". M14.27 still cut repeats of the same page state (rule 9). |                                                                                                           | `ci.md:292-294`, `:411-412`                       | T-18 and T-19 cut only same-state, same-persona repeats, which rule 9 already allows. They never cut a theme or a width of the sweep.   |
+| End-to-end trims         | "Trimming e2e past duplicates" ruled out                                                                                                                              |                                                                                                           | `ci.md:995`, `:1008`                              | Every Playwright cut in MC.12 is a duplicate (identical body, same state) or a rule 4 presentation pin. Nothing is cut for speed alone. |
+| `E2E_COVERAGE`           | Opt-in since M11.18 (`27d866b97`); both suites merged since M14.28                                                                                                    | Never reconsidered.                                                                                       | `e2e.md:507`, `:547-553`                          | Kept (see [Keep](#keep)).                                                                                                               |
+| Retries                  | Never lowered. `acceptance.md:43` says CI uses one retry, which is wrong for the gate (2).                                                                            |                                                                                                           |                                                   | MC.11 corrects the doc.                                                                                                                 |
+| `networkidle` and sleeps | No ban ever. MB.296 (`149137ad6`) fixed two flakes by waiting on state.                                                                                               |                                                                                                           |                                                   | R-7 is new.                                                                                                                             |
+| Shared seed and serial   | Done in M11.18 (`b7b87c677`): serial dropped where not chained, setup in `beforeAll`, enforced by lint `sorrel/e2e-chained-tests-serial`. Vitest: MB.183 and MB.184.  |                                                                                                           | `e2e.md:200-222`                                  | T-11, T-12, and T-25 are the remaining cases, not a new mechanism. R-8 points at the existing lint rule.                                |
+| Whole-form exemption     | `IngredientForm/index.test.tsx` "holds only whole-form tests"; `:87-93` requires a `FormProvider` harness for one field                                               |                                                                                                           | `layer-ownership.md:87-93`, `:147-152`            | T-22 moves the 6 single-field tests that broke the exemption, and the exemption stays.                                                  |
+| Variants file guard      | A 20 s guard was added (`15f46de79`) and reverted (`4c3ee3a8f`): full runs make that file 10 to 50 times slower than alone.                                           |                                                                                                           |                                                   | MC.13 measures in CI, never alone.                                                                                                      |
+| `isolate` and pool       | `db` runs `isolate: false` (MB.238). Threads for all but `dom`. Unisolated `dom` failed.                                                                              |                                                                                                           | `db-harness.md:162-170`, `runner-budget.md`       | Nothing proposed; recorded.                                                                                                             |
+| Password hasher          | scrypt N=2^14 accepted by the owner on 2026-10-16                                                                                                                     |                                                                                                           | `auth.md:1289-1293`                               | Agrees: no test hasher.                                                                                                                 |
+| Workers                  | 4 for the Playwright gate (MB.236), 3 for Vitest. Blacksmith 8-vCPU was dropped on cost.                                                                              |                                                                                                           | `runner-budget.md:7-15`                           | Sharding adds runners, not workers.                                                                                                     |
+| Other tried and left out | Video off (7-17%), `FILE_COPY` clone, `fsync=off`, a fourth Vitest worker, `--only-changed`, source maps off, and merging the `checks` legs                           |                                                                                                           | `runner-budget.md`, `ci.md:290-295`, `e2e.md:504` | Not re-proposed.                                                                                                                        |
 
 ## Proposed Tasks
 
 **Proposed, pending the owner's approval.** None is minted. They belong in the Z. Cleanup milestone as MC.10 to MC.14: five tasks, 26 h, against a limit of 10 tasks. The estimates are calibrated on these existing tasks, and an existing MC task runs 6 to 16 h.
 
-| Task | Estimate |
-| --- | --- |
-| MB.224 | 3.5 h |
-| MB.225 (db tests) | 2.5 h |
-| MB.226 | 3 h |
-| MB.227 | 3.5 h |
-| MB.228 (component tests) | 4 h |
-| MB.229 | 2.5 h |
-| MB.230 (Playwright duplicates) | 3 h |
-| MB.236 (four workers) | 1 h |
-| M1.14 (CI workflows) | 2 h |
-| M11.25 (happy-dom) | 4.5 h |
+| Task                           | Estimate |
+| ------------------------------ | -------- |
+| MB.224                         | 3.5 h    |
+| MB.225 (db tests)              | 2.5 h    |
+| MB.226                         | 3 h      |
+| MB.227                         | 3.5 h    |
+| MB.228 (component tests)       | 4 h      |
+| MB.229                         | 2.5 h    |
+| MB.230 (Playwright duplicates) | 3 h      |
+| MB.236 (four workers)          | 1 h      |
+| M1.14 (CI workflows)           | 2 h      |
+| M11.25 (happy-dom)             | 4.5 h    |
 
-| Id | Title | Est. | Findings | Effect on the 7-minute goal |
-| --- | --- | --- | --- | --- |
-| MC.10 | Shard the CI Test Jobs | 5 h | T-1 to T-5, T-7 | Gate about 5-6 min per shard (3 shards), stories about 5 min (2), dom about 4 min (2). All estimates. |
-| MC.11 | Wait on State in Playwright, Not on Time | 3.5 h | T-6, T-8 to T-12 | Shrinks the slowest gate tests; flakes go to bug tasks. |
-| MC.12 | Trim the Playwright Suites to What a Browser Adds | 6.5 h (R-6 adds 1 h for the dark colour-only pass and the phone scans) | T-13 to T-20 | About 30-40 gate tests, about 54 scans, and about 6 specs fewer (estimate). |
-| MC.13 | Speed Up the Slow Vitest Dom Files | 6 h | T-21 to T-23 | About 80-90 s summed (estimate); `IngredientForm/index` stays over budget by decision. |
-| MC.14 | Pay Database Setup Once and Prove Each Rule Once in Vitest | 5 h | T-24 to T-26 (T-27 recorded as cleared) | About 12-18 s summed (estimate); less duplication. |
+| Id    | Title                                                      | Est.                                                                   | Findings                                | Effect on the 7-minute goal                                                                           |
+| ----- | ---------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| MC.10 | Shard the CI Test Jobs                                     | 5 h                                                                    | T-1 to T-5, T-7                         | Gate about 5-6 min per shard (3 shards), stories about 5 min (2), dom about 4 min (2). All estimates. |
+| MC.11 | Wait on State in Playwright, Not on Time                   | 3.5 h                                                                  | T-6, T-8 to T-12                        | Shrinks the slowest gate tests; flakes go to bug tasks.                                               |
+| MC.12 | Trim the Playwright Suites to What a Browser Adds          | 6.5 h (R-6 adds 1 h for the dark colour-only pass and the phone scans) | T-13 to T-20                            | About 30-40 gate tests, about 54 scans, and about 6 specs fewer (estimate).                           |
+| MC.13 | Speed Up the Slow Vitest Dom Files                         | 6 h                                                                    | T-21 to T-23                            | About 80-90 s summed (estimate); `IngredientForm/index` stays over budget by decision.                |
+| MC.14 | Pay Database Setup Once and Prove Each Rule Once in Vitest | 5 h                                                                    | T-24 to T-26 (T-27 recorded as cleared) | About 12-18 s summed (estimate); less duplication.                                                    |
 
 The nine-task draft was 28.5 h; consolidating to five saves one setup and one review per merged pair, so the total is 26 h by this table's sum.
 
@@ -558,23 +558,23 @@ Each rule names its source. "Repo" means the rule rests on this audit's own meas
 
 Where this table and the rule text below differ, the table wins.
 
-| Rule | Decision | Note |
-| --- | --- | --- |
-| R-15 | Approved | One sentence beside `testing.md`'s threshold line. Mutation testing named, not proposed. |
-| R-14 | Approved as a rule 1 line | Helpers under `tests/support/` and `tests/e2e/` are proved by their users; `tests/guards/` excepted. MC.13 confirms `watch-loads.test.ts` tests a test helper before cutting it. |
-| R-13 | Approved, softened | A flake never blocks: no `failOnFlakyTests`. CI retries 1. The gate comment names each flaky test and writes a `::warning`. Bug task per flake. |
-| R-12 | Approved as a widening | `testing.md`'s precondition line widens to every absence check. MC.14 adds help-reads' positive staff reads. |
-| R-11 | Not a new rule | Already `layer-ownership.md` rule 6. Rule 6 is widened to "a form field or one builder step"; MC.13 moves the leftover tests. R-9 likewise extends the file-budget section's existing "seed once per file" line. |
-| R-10 | Folded into R-9 | R-9 reads: "Setup a file's tests only read runs once; a test that writes gets its own." |
-| R-9 | Approved | The real password hash stays. |
-| R-8 | Recorded | Already enforced by `sorrel/e2e-chained-tests-serial`. Its home stays `e2e.md`; the rules list points there instead of restating it. |
-| R-7 | Approved | Both runners. The real waits Vitest keeps (db race guards, 20 ms polls, `pg_sleep`) go through the named helper too. |
-| R-6 | Approved, reworked | Full rules once in light; colour rules only in dark; phone layouts scanned once as their own state; same-state repeats cut. |
-| R-5 | Approved | Axe sweep themes are outside it. |
-| R-4 | Approved | The 375 phone width is allowed as the one constant outside the breakpoint list. |
-| R-3 | Approved, reworded | 30 s per test, not per file (`fullyParallel`). MC.11 gains the `07-admin` and autosave story tests. |
-| R-2 | Changed | No new aggregator jobs. Shards join in the existing end-of-run merge jobs, as Vitest's parts do now. |
-| R-1 | Approved, changed | A shard is added once a test step passes 7 minutes. No headroom. The two-consecutive-runs condition and "never raise the timeout" stand. |
+| Rule | Decision                  | Note                                                                                                                                                                                                             |
+| ---- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R-15 | Approved                  | One sentence beside `testing.md`'s threshold line. Mutation testing named, not proposed.                                                                                                                         |
+| R-14 | Approved as a rule 1 line | Helpers under `tests/support/` and `tests/e2e/` are proved by their users; `tests/guards/` excepted. MC.13 confirms `watch-loads.test.ts` tests a test helper before cutting it.                                 |
+| R-13 | Approved, softened        | A flake never blocks: no `failOnFlakyTests`. CI retries 1. The gate comment names each flaky test and writes a `::warning`. Bug task per flake.                                                                  |
+| R-12 | Approved as a widening    | `testing.md`'s precondition line widens to every absence check. MC.14 adds help-reads' positive staff reads.                                                                                                     |
+| R-11 | Not a new rule            | Already `layer-ownership.md` rule 6. Rule 6 is widened to "a form field or one builder step"; MC.13 moves the leftover tests. R-9 likewise extends the file-budget section's existing "seed once per file" line. |
+| R-10 | Folded into R-9           | R-9 reads: "Setup a file's tests only read runs once; a test that writes gets its own."                                                                                                                          |
+| R-9  | Approved                  | The real password hash stays.                                                                                                                                                                                    |
+| R-8  | Recorded                  | Already enforced by `sorrel/e2e-chained-tests-serial`. Its home stays `e2e.md`; the rules list points there instead of restating it.                                                                             |
+| R-7  | Approved                  | Both runners. The real waits Vitest keeps (db race guards, 20 ms polls, `pg_sleep`) go through the named helper too.                                                                                             |
+| R-6  | Approved, reworked        | Full rules once in light; colour rules only in dark; phone layouts scanned once as their own state; same-state repeats cut.                                                                                      |
+| R-5  | Approved                  | Axe sweep themes are outside it.                                                                                                                                                                                 |
+| R-4  | Approved                  | The 375 phone width is allowed as the one constant outside the breakpoint list.                                                                                                                                  |
+| R-3  | Approved, reworded        | 30 s per test, not per file (`fullyParallel`). MC.11 gains the `07-admin` and autosave story tests.                                                                                                              |
+| R-2  | Changed                   | No new aggregator jobs. Shards join in the existing end-of-run merge jobs, as Vitest's parts do now.                                                                                                             |
+| R-1  | Approved, changed         | A shard is added once a test step passes 7 minutes. No headroom. The two-consecutive-runs condition and "never raise the timeout" stand.                                                                         |
 
 **Which rules are in live docs.** A live doc must not describe a mechanism the code lacks. M17.10 writes R-1, R-5, R-8 (a pointer), R-9, R-11, R-12, R-14, and R-15 into the live docs. R-2, R-3, R-4, R-6, R-7, and R-13 are written by the task that builds their mechanism (MC.10, MC.11, MC.12); until then this audit is their only home.
 
@@ -661,28 +661,28 @@ No change is proposed for any of these.
 
 The rule codes above cite these. Each URL was verified by the research pass, except as noted.
 
-| Code | Source | URL |
-| --- | --- | --- |
-| [PW-api] | Playwright `Page` API | https://playwright.dev/docs/api/class-page |
-| [PW-bp] | Playwright best practices | https://playwright.dev/docs/best-practices |
-| [PW-par] | Playwright parallelism | https://playwright.dev/docs/test-parallel |
-| [PW-shard] | Playwright sharding | https://playwright.dev/docs/test-sharding |
-| [PW-cfg] | Playwright `TestConfig` | https://playwright.dev/docs/api/class-testconfig |
-| [PW-a11y] | Playwright accessibility testing | https://playwright.dev/docs/accessibility-testing |
-| [PW-emulation] | Playwright emulation | https://playwright.dev/docs/emulation |
-| [VT-perf] | Vitest, improving performance | https://vitest.dev/guide/improving-performance |
-| [VT-timers] | Vitest, fake timers | https://vitest.dev/guide/mocking/timers |
-| [VT-slow] | Vitest `slowTestThreshold` | https://vitest.dev/config/slowtestthreshold |
-| [Fowler-pyr] | The Practical Test Pyramid | https://martinfowler.com/articles/practical-test-pyramid.html |
-| [Fowler-nd] | Eradicating Non-Determinism in Tests | https://martinfowler.com/articles/nonDeterminism.html |
-| [Fowler-CI] | Continuous Integration | https://martinfowler.com/articles/continuousIntegration.html |
-| [Fowler-cov] | TestCoverage | https://martinfowler.com/bliki/TestCoverage.html |
-| [SWE-G] | Software Engineering at Google, chapter 11 | https://abseil.io/resources/swe-book/html/ch11.html |
-| [TL] | Testing Library guiding principles and query priority | https://testing-library.com/docs/guiding-principles and https://testing-library.com/docs/queries/about |
-| [Dodds-impl] | Testing Implementation Details | https://kentcdodds.com/blog/testing-implementation-details |
-| [Deque] | Automated testing study identifies 57% of digital accessibility issues | https://www.deque.com/blog/automated-testing-study-identifies-57-percent-of-digital-accessibility-issues |
-| [Inoz] | Inozemtseva and Holmes, "Coverage Is Not Strongly Correlated with Test Suite Effectiveness", ICSE 2014 | https://www.cs.ubc.ca/~rtholmes/papers/icse_2014_inozemtseva.pdf |
-| [Yoo] | Yoo and Harman, "Regression testing minimization, selection and prioritization: a survey", STVR 2012 | https://coinse.github.io/publications/pdfs/Yoo2010uq.pdf |
-| [GH-req] | GitHub, troubleshooting required status checks | https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/troubleshooting-required-status-checks |
-| [JS-flaky] | An empirical study of flaky tests in JavaScript | https://arxiv.org/abs/2207.01047 |
-| [Luo] | Luo et al., "An empirical analysis of flaky tests", FSE 2014 | Read second-hand: the figures were taken from other sources and the paper itself was not read. |
+| Code           | Source                                                                                                 | URL                                                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [PW-api]       | Playwright `Page` API                                                                                  | https://playwright.dev/docs/api/class-page                                                                                                                    |
+| [PW-bp]        | Playwright best practices                                                                              | https://playwright.dev/docs/best-practices                                                                                                                    |
+| [PW-par]       | Playwright parallelism                                                                                 | https://playwright.dev/docs/test-parallel                                                                                                                     |
+| [PW-shard]     | Playwright sharding                                                                                    | https://playwright.dev/docs/test-sharding                                                                                                                     |
+| [PW-cfg]       | Playwright `TestConfig`                                                                                | https://playwright.dev/docs/api/class-testconfig                                                                                                              |
+| [PW-a11y]      | Playwright accessibility testing                                                                       | https://playwright.dev/docs/accessibility-testing                                                                                                             |
+| [PW-emulation] | Playwright emulation                                                                                   | https://playwright.dev/docs/emulation                                                                                                                         |
+| [VT-perf]      | Vitest, improving performance                                                                          | https://vitest.dev/guide/improving-performance                                                                                                                |
+| [VT-timers]    | Vitest, fake timers                                                                                    | https://vitest.dev/guide/mocking/timers                                                                                                                       |
+| [VT-slow]      | Vitest `slowTestThreshold`                                                                             | https://vitest.dev/config/slowtestthreshold                                                                                                                   |
+| [Fowler-pyr]   | The Practical Test Pyramid                                                                             | https://martinfowler.com/articles/practical-test-pyramid.html                                                                                                 |
+| [Fowler-nd]    | Eradicating Non-Determinism in Tests                                                                   | https://martinfowler.com/articles/nonDeterminism.html                                                                                                         |
+| [Fowler-CI]    | Continuous Integration                                                                                 | https://martinfowler.com/articles/continuousIntegration.html                                                                                                  |
+| [Fowler-cov]   | TestCoverage                                                                                           | https://martinfowler.com/bliki/TestCoverage.html                                                                                                              |
+| [SWE-G]        | Software Engineering at Google, chapter 11                                                             | https://abseil.io/resources/swe-book/html/ch11.html                                                                                                           |
+| [TL]           | Testing Library guiding principles and query priority                                                  | https://testing-library.com/docs/guiding-principles and https://testing-library.com/docs/queries/about                                                        |
+| [Dodds-impl]   | Testing Implementation Details                                                                         | https://kentcdodds.com/blog/testing-implementation-details                                                                                                    |
+| [Deque]        | Automated testing study identifies 57% of digital accessibility issues                                 | https://www.deque.com/blog/automated-testing-study-identifies-57-percent-of-digital-accessibility-issues                                                      |
+| [Inoz]         | Inozemtseva and Holmes, "Coverage Is Not Strongly Correlated with Test Suite Effectiveness", ICSE 2014 | https://www.cs.ubc.ca/~rtholmes/papers/icse_2014_inozemtseva.pdf                                                                                              |
+| [Yoo]          | Yoo and Harman, "Regression testing minimization, selection and prioritization: a survey", STVR 2012   | https://coinse.github.io/publications/pdfs/Yoo2010uq.pdf                                                                                                      |
+| [GH-req]       | GitHub, troubleshooting required status checks                                                         | https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/troubleshooting-required-status-checks |
+| [JS-flaky]     | An empirical study of flaky tests in JavaScript                                                        | https://arxiv.org/abs/2207.01047                                                                                                                              |
+| [Luo]          | Luo et al., "An empirical analysis of flaky tests", FSE 2014                                           | Read second-hand: the figures were taken from other sources and the paper itself was not read.                                                                |
