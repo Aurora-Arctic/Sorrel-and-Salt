@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { stringify } from 'yaml';
 import type { LoadedCompendium } from '@/db/seed/compendium/load';
 import { entryFilePath, parseEntryFile } from '@/db/seed/compendium/parse-entry';
-import { renderEntryFile, type RenderableEntryFile } from '@/db/seed/compendium/render-entry';
+import { renderEntryFile, type RenderableEntryFile } from '../../../support/seed/render-entry';
 import { FIXTURE_SHARD } from '../compendium-fixture';
 import type {
   SeedCitation,
