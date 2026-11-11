@@ -36,6 +36,7 @@ const ConfirmedAction = ({
   closeOnSent = false,
   inModal = false,
   refusalInModal = 'notice',
+  returnTo,
 }: ConfirmedActionProps): ReactElement => {
   const { refresh } = usePendingNavigation();
   const warningId = useId();
@@ -129,6 +130,7 @@ const ConfirmedAction = ({
         type="button"
         disabled={disabled}
         aria-label={accessibleName}
+        aria-busy={sending || undefined}
         onClick={() => {
           report(undefined);
           reason.reset();
@@ -149,7 +151,7 @@ const ConfirmedAction = ({
             <Answers {...answerProps} onCancel={cancel} />
           </ConfirmOverlay>
         ) : (
-          <Modal title={title} onClose={cancel} returnTo={() => openRef.current}>
+          <Modal title={title} onClose={cancel} returnTo={() => returnTo?.() ?? openRef.current}>
             {(close) => (
               <>
                 <p>{question}</p>

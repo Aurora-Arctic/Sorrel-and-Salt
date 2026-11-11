@@ -60,6 +60,8 @@ export interface ConfirmedActionProps {
    * (claude-docs/components/user-list.md, "Table").
    */
   refusalInModal?: 'notice' | 'callout';
+  /** Where the focus goes as the modal closes when the row's button is gone, a success having replaced it; absent, the page heading. */
+  returnTo?: () => HTMLElement | null;
 }
 
 /** `ConfirmedAction`'s confirm and Cancel, under its question. */
