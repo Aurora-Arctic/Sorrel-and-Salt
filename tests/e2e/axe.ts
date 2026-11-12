@@ -114,24 +114,28 @@ export async function settleTransitions(page: Page) {
  */
 export const COLOUR_RULES = ['color-contrast', 'link-in-text-block'];
 
-// Scans the page in the dark theme (colour rules only) and then the light (every rule), the site's default
-// last. A transition starts only at the
-// first style change after the switch, so the scheme is read as matching and two frames pass before the settle,
-// or the settle finds nothing running and axe reads a colour part-way along its ease.
+// Switches the colour scheme and waits until every colour has finished easing to it. A transition starts only at
+// the first style change after the switch, so the scheme is read as matching and two frames pass before the
+// settle, or the settle finds nothing running and a read sees a colour part-way along its ease.
+export async function switchColourScheme(page: Page, colorScheme: 'dark' | 'light') {
+  await page.emulateMedia({ colorScheme });
+  await page.waitForFunction(
+    (scheme) => matchMedia(`(prefers-color-scheme: ${scheme})`).matches,
+    colorScheme,
+  );
+  await page.evaluate(
+    () =>
+      new Promise<void>((done) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => done()));
+      }),
+  );
+  await settleTransitions(page);
+}
+
+// Scans the page in the dark theme (colour rules only) and then the light (every rule), the site's default last.
 export async function scanBothThemes(page: Page) {
   for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
-    await page.waitForFunction(
-      (scheme) => matchMedia(`(prefers-color-scheme: ${scheme})`).matches,
-      colorScheme,
-    );
-    await page.evaluate(
-      () =>
-        new Promise<void>((done) => {
-          requestAnimationFrame(() => requestAnimationFrame(() => done()));
-        }),
-    );
-    await settleTransitions(page);
+    await switchColourScheme(page, colorScheme);
     await assertNoAccessibilityViolations(
       page,
       colorScheme === 'dark' ? { onlyRules: COLOUR_RULES } : {},

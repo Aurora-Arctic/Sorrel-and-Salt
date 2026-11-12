@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { ingredientSlug } from '@/lib/slugify';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
-import { accessibilityFindings, COLOUR_RULES, type AxeFinding } from './axe';
+import { accessibilityFindings, COLOUR_RULES, switchColourScheme, type AxeFinding } from './axe';
 import type { Persona, ScannedModal, ScannedRoute } from './axe-scans';
 import { PASSWORD, signInAgainAs, signInAs } from './session';
 import {
@@ -692,7 +692,7 @@ export async function scanBothThemes(
   within?: Locator,
 ): Promise<void> {
   for (const theme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme: theme });
+    await switchColourScheme(page, theme);
     if (within) await expect(within).toBeVisible();
     const options = theme === 'dark' ? { onlyRules: COLOUR_RULES } : {};
     for (const finding of await accessibilityFindings(page, options)) {

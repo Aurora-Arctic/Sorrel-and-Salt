@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Browser, Page, Response } from '@playwright/test';
 import { test, expect } from '../fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll, scanBothThemes } from '../axe';
 import { recreateE2eDatabase, withE2eSql } from '../database';
 import { graphqlFromPage } from '../graphql';
 import { VERIFY_LINK, latestMessageTo } from '../mailpit';
@@ -551,11 +551,8 @@ test(
     const history = listed.getByRole('link', { name: 'Privilege changes for Ledger Fixturewort' });
     await history.hover();
     await expect(page.getByRole('tooltip')).toBeVisible();
-    for (const colorScheme of ['dark', 'light'] as const) {
-      await page.emulateMedia({ colorScheme });
-      // Sweep gap: the privilege-changes tooltip open over a user's history link, in each theme.
-      await assertNoAccessibilityViolations(page);
-    }
+    // Sweep gap: the privilege-changes tooltip open over a user's history link, in each theme.
+    await scanBothThemes(page);
     await history.click();
     await expect(page).toHaveURL(
       `/keepers/privilege-changes?query=${encodeURIComponent(subjectEmail)}`,
