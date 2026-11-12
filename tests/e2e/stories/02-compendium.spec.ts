@@ -72,6 +72,7 @@ test(
       await expect(compendiumList(page).getByRole('link', { name: 'Sign In' })).toHaveCount(0);
       await expect(page.getByRole('button', { name: ADD_TO_MY_INGREDIENTS })).toHaveCount(0);
       await expect(cards.first()).toBeVisible();
+      // Sweep gap: the page state reached in "anyone browses the compendium signed out, narrows it by folk name, category and ", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
 
@@ -150,6 +151,7 @@ test(
       await expect(page.getByRole('list', { name: 'Categories' }).getByRole('listitem')).toHaveText(
         [/Gambling/, /Protection/],
       );
+      // Sweep gap: the page state reached in "anyone browses the compendium signed out, narrows it by folk name, category and ", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
   },
@@ -258,6 +260,7 @@ test(
       ).toHaveCount(1);
       expect(await cupboardRows()).toHaveLength(1);
       expect(await heldRows()).toHaveLength(0);
+      // Sweep gap: the page state reached in "a member adds a compendium entry to the coven, gives it a form and a quantity in", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
 
@@ -293,6 +296,7 @@ test(
       await expect(leaf.unit).toHaveText('g');
       await expect(leaf.threshold).toHaveValue('10');
       await editor.cancel.click();
+      // Sweep gap: the page state reached in "a member adds a compendium entry to the coven, gives it a form and a quantity in", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
   },
@@ -451,6 +455,7 @@ test(
       for (const link of await matches.all()) {
         expect(hrefs).toContain(await link.getAttribute('href'));
       }
+      // Sweep gap: the page state reached in "typing a name like existing entries warns of each by its formal name, a name lik", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
 
       const [opened] = await Promise.all([context.waitForEvent('page'), matches.first().click()]);
@@ -590,6 +595,7 @@ test(
       await expect(link).toHaveAttribute('href', 'https://fixtures.example/alpha');
       await expect(link).toHaveAttribute('rel', /noopener/);
       await expect(entries.nth(2).getByRole('link', { name: /source/i })).toHaveCount(0);
+      // Sweep gap: the page state reached in "a reader sees where an entry’s information came from, and an entry with no sourc", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
 
@@ -600,6 +606,7 @@ test(
       await expect(section).toBeVisible();
       await expect(section.getByRole('list')).toHaveCount(0);
       await expect(section.locator('p')).toBeVisible();
+      // Sweep gap: the page state reached in "a reader sees where an entry’s information came from, and an entry with no sourc", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
   },

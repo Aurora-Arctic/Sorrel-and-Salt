@@ -62,6 +62,7 @@ test('the unit converter converts within a dimension and shows the refusal acros
   await expect(result).toContainText(CONVERSION_REFUSALS.dimension);
   await expect(result).not.toContainText('NaN');
 
+  // Sweep gap: the page state reached in "the unit converter converts within a dimension and shows the refusal across one", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
@@ -83,6 +84,7 @@ test('the invitation refusals find a half-remembered message and open the full l
   await page.getByText('Every Message the Page Can Give').click();
   const every = page.getByRole('list', { name: 'Every Message the Page Can Give' });
   await expect(every.getByRole('listitem').first()).toBeVisible();
+  // Sweep gap: the page state reached in "the invitation refusals find a half-remembered message and open the full list", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
@@ -93,6 +95,7 @@ test('the role permission table marks each role', async ({ page }) => {
 
   await expect(table).toBeVisible();
   await expect(table.getByRole('columnheader')).toHaveCount(4);
+  // Sweep gap: the page state reached in "the role permission table marks each role", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
@@ -103,6 +106,7 @@ test('the autosave states show the save line in each of its six states', async (
   await expect(page.getByText('::widget[autosave-status]')).toHaveCount(0);
   await expect(page.getByRole('definition')).toHaveCount(6);
   await expect(page.getByRole('note', { name: 'Retries' })).toBeVisible();
+  // Sweep gap: the page state reached in "the autosave states show the save line in each of its six states", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });

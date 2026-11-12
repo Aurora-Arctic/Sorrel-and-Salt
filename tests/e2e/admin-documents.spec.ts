@@ -85,6 +85,7 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await expect(editorOf(page)).toBeVisible();
   // The scan covers the editor's toolbar too, so it waits for it.
   await expect(toolbarOf(page).getByRole('button').first()).toBeVisible();
+  // Sweep gap: the document editor with its toolbar
   await assertNoAccessibilityViolations(page);
 
   await reader.goto('/disclaimer');
@@ -100,6 +101,7 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await expect(editorOf(page)).toContainText('agreeing to the terms is agreeing to it');
   const save = main.getByRole('button', { name: 'Save Draft' });
   await expect(save).toBeDisabled();
+  // Sweep gap: the editor after a draft save
   await assertNoAccessibilityViolations(page);
 
   await appendTo(page, 'agreeing to the terms is agreeing to it', ADDITION);
@@ -115,6 +117,7 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await main.getByRole('button', { name: 'Publish', exact: true }).click();
   const confirmation = page.getByRole('dialog');
   await expect(confirmation).toBeVisible();
+  // Sweep gap: the publish confirmation dialog
   await assertNoAccessibilityViolations(page);
   await confirmation.getByRole('button', { name: 'Publish', exact: true }).click();
   await expect(confirmation).toHaveCount(0);
@@ -133,6 +136,7 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   const changed = member.getByRole('main').getByRole('list').getByRole('link');
   await expect(changed).toHaveCount(1);
   await expect(changed).toHaveAttribute('href', '/disclaimer');
+  // Sweep gap: a published change in the version list
   await assertNoAccessibilityViolations(member);
   await member.getByRole('button', { name: 'Agree & Continue' }).click();
   await expect(member).toHaveURL(/\/account$/);
@@ -164,6 +168,7 @@ test('publishing the terms warns that every account will agree again, and sends 
   const confirmation = page.getByRole('dialog');
   await expect(confirmation).toContainText(/every account/i);
   await expect(confirmation).toContainText(/agree/i);
+  // Sweep gap: the terms publish warning
   await assertNoAccessibilityViolations(page);
   await confirmation.getByRole('button', { name: 'Publish', exact: true }).click();
   await expect(confirmation).toHaveCount(0);
@@ -229,6 +234,7 @@ test('a curator is refused every document editor and the Email Updates page with
       page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
     ).toBeVisible();
   }
+  // Sweep gap: a curator refused the document editors
   await assertNoAccessibilityViolations(page);
 });
 
@@ -280,6 +286,7 @@ test('an admin publishes the privacy policy and the code of ethics, then emails 
   await expect(privacy).toBeVisible();
   await expect(ethics).toBeVisible();
   await expect(email).toBeDisabled();
+  // Sweep gap: the Email Updates page with a document chosen
   await assertNoAccessibilityViolations(page);
   await privacy.fill('A new promise about your email.');
   await ethics.fill('A new duty to name your sources.');
@@ -292,6 +299,7 @@ test('an admin publishes the privacy policy and the code of ethics, then emails 
   const confirmation = page.getByRole('dialog', { name: 'Email Every Account' });
   await expect(confirmation).toContainText('Privacy Policy');
   await expect(confirmation).toContainText('Code of Ethics');
+  // Sweep gap: the Email Updates confirmation dialog
   await assertNoAccessibilityViolations(page);
   await confirmation.getByRole('button', { name: 'Send Emails' }).click();
   await expect(confirmation).toHaveCount(0);
@@ -305,6 +313,7 @@ test('an admin publishes the privacy policy and the code of ethics, then emails 
   await page.reload();
   await expect(progress).toHaveCount(1);
   await expect(main.getByRole('button', { name: 'Email Every Account' })).toHaveCount(0);
+  // Sweep gap: the Email Updates progress state
   await assertNoAccessibilityViolations(page);
 });
 

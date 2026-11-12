@@ -41,7 +41,6 @@ for (const { path, title, link } of DOCUMENTS) {
       path,
     );
     await assertNoSidewaysScroll(page, { restore: true });
-    await assertNoAccessibilityViolations(page);
   });
 
   test(`${path} reads the same inside the shell, linked from its footer`, async ({ page }) => {
@@ -52,7 +51,6 @@ for (const { path, title, link } of DOCUMENTS) {
     await expect(page).toHaveURL(new RegExp(`${path}$`));
     await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign In', exact: true })).toHaveCount(0);
-    await assertNoAccessibilityViolations(page);
   });
 
   test(`the compendium search finds nothing for "${title}"`, async ({ page }) => {
@@ -75,6 +73,7 @@ test('/privacy draws the access cards under Who Can See What', async ({ page }) 
     .poll(async () => (await article.getByRole('group').count()) - (await menuGroups.count()))
     .toBe(11);
   await expect(article.getByText('{access-cards}')).toHaveCount(0);
+  // Sweep gap: the page state reached in "/privacy draws the access cards under Who Can See What", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
 });
 

@@ -72,6 +72,7 @@ test('the compendium form stands inside the viewport on a phone', async ({ page 
   await page.goto('/curator/compendium?new=ingredient-compendium');
 
   await expectInsideViewport(page, page.getByRole('dialog', { name: 'Add Ingredient' }));
+  // Sweep gap: the add form's dialog at a phone width
   await assertNoAccessibilityViolations(page);
 });
 
@@ -100,6 +101,7 @@ test('the compendium form stands inside the viewport and keeps its pickers insid
   await adding.getByRole('combobox', { name: 'Celestial Body' }).click();
   await adding.getByRole('combobox', { name: 'Celestial Body' }).fill('M');
   await expect(adding.getByRole('listbox', { name: 'Celestial Body suggestions' })).toBeVisible();
+  // Sweep gap: the add form with a picker's suggestions open
   await assertNoAccessibilityViolations(page);
 });
 
@@ -126,6 +128,7 @@ test('Enter turns the No Refs switch, as Space does, and Apply Filters applies i
 
   await applyFilters(page, panel);
   await expect(page).toHaveURL(/withoutReferences=1/);
+  // Sweep gap: the list filtered by No Refs
   await assertNoAccessibilityViolations(page);
 });
 
@@ -186,6 +189,7 @@ test('the edit source panel leaves the dialog in place and closes from its top b
   expect(await body.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   expect(await adding.evaluate((element) => element.scrollTop)).toBe(0);
   await expect(adding.getByRole('button', { name: 'Close', exact: true })).toBeInViewport();
+  // Sweep gap: the edit source panel open over the dialog
   await assertNoAccessibilityViolations(page);
 
   await editing.getByRole('textbox', { name: /^Title/ }).fill('Fixtureleaf Herbal');
@@ -223,6 +227,7 @@ test('the toxic toggle starts off, saves, and reads back on reopening', async ({
   await expect(toggle).toBeFocused();
   await page.keyboard.press('Space');
   await expect(toggle).toBeChecked();
+  // Sweep gap: the toxic switch on
   await assertNoAccessibilityViolations(page);
   // Save Ingredient is shut once nothing is left to save, which is when the autosave has stored the
   // toggle; clicking it instead would race the autosave.
@@ -253,6 +258,7 @@ test('a name typed shows matching rows, and a pick opens its Quick Look over the
   await expect(rows.first()).toBeVisible();
   // Why the URL below could have carried the typed text: it was not applied while typing.
   await expect(page).not.toHaveURL(/query=/);
+  // Sweep gap: the typed query's suggestions over the list
   await assertNoAccessibilityViolations(page);
 
   await rows.first().click();
@@ -517,6 +523,7 @@ test('the Categories picker is usable at 375px and has no accessibility violatio
 
   await box.fill('cl');
   await expect(page.getByRole('option').first()).toBeVisible();
+  // Sweep gap: the Categories picker's options open at a phone width
   await assertNoAccessibilityViolations(page);
 });
 
@@ -562,6 +569,7 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   await expect(edit('Modewort One')).toBeVisible();
   await expect(edit('Modewort Both')).toBeVisible();
   await expect(edit('Modewort None')).toHaveCount(0);
+  // Sweep gap: the match mode applied to two categories
   await assertNoAccessibilityViolations(page);
 
   await page.reload();
@@ -616,6 +624,7 @@ test('a curator sees the covens holding an entry, then promotes a folk name and 
   await dialog.getByRole('button', { name: 'Delete Ingredient' }).click();
   const deleting = dialog.getByRole('group', { name: /Delete/ });
   await expect(deleting.getByRole('status')).toContainText('2');
+  // Sweep gap: the delete group with the covens that hold the entry
   await assertNoAccessibilityViolations(page);
 
   await page.goto(editUrl);
@@ -635,6 +644,7 @@ test('a curator sees the covens holding an entry, then promotes a folk name and 
 
   const question = page.getByRole('button', { name: 'Promote', exact: true });
   await expect(question).toBeVisible();
+  // Sweep gap: the Promote question for a folk name
   await assertNoAccessibilityViolations(page);
   await question.click();
 
@@ -868,6 +878,7 @@ test('at 375px the panel is a modal sheet that closes on Escape, with no accessi
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
   );
   expect(overflow).toBe(false);
+  // Sweep gap: the Filters panel as a modal sheet at a phone width
   await assertNoAccessibilityViolations(page);
 
   await page.keyboard.press('Escape');
@@ -1125,6 +1136,7 @@ test('No Form lists the entries with no form, counts them, and lives in the addr
   await expect.poll(shownNames).toBe('AB');
   await openFilters(page);
   await expect(page.getByRole('switch', { name: /^No Form/ })).toBeChecked();
+  // Sweep gap: the list filtered by No Form
   await assertNoAccessibilityViolations(page);
   await page.goBack();
   await expect(page).not.toHaveURL(/withoutForms/);
@@ -1178,5 +1190,6 @@ test('the Sourcing Score heading sorts lowest first, then highest first, and eac
   await expect(page).toHaveURL(/[?&]order=desc(&|$)/);
   await expect(scoreHead).toHaveAttribute('aria-sort', 'descending');
   expect(await cellScore(1)).toBeGreaterThanOrEqual(await cellScore(2));
+  // Sweep gap: the list sorted by Sourcing Score
   await assertNoAccessibilityViolations(page);
 });

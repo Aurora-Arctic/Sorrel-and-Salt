@@ -46,6 +46,7 @@ test('an owner pauses a member’s access to the coven, the member sees the paus
   await access.getByRole('textbox', { name: 'Note' }).fill('Cooling off');
   await access.getByRole('button', { name: 'Pause Access' }).click();
   await expect(modal.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+  // Sweep gap: the page state reached in "an owner pauses a member’s access to the coven, the member sees the paused page,", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await modal.getByRole('button', { name: 'Pause', exact: true }).click();
 
@@ -70,6 +71,7 @@ test('an owner pauses a member’s access to the coven, the member sees the paus
   await expect(memberPage.getByRole('main')).toContainText(
     'Your access to Fixture Paused Coven is paused until',
   );
+  // Sweep gap: the page state reached in "an owner pauses a member’s access to the coven, the member sees the paused page,", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(memberPage);
 
   await access.getByRole('button', { name: 'Lift Pause' }).click();
@@ -106,6 +108,7 @@ test('a member whose access is paused leaves the coven from its paused page', as
   await page.getByRole('main').getByRole('button', { name: 'Leave Coven', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toContainText('Leave Fixture Leaving Coven?');
+  // Sweep gap: the page state reached in "a member whose access is paused leaves the coven from its paused page", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await dialog.getByRole('button', { name: 'Leave Coven', exact: true }).click();
 
@@ -157,6 +160,7 @@ test('a member paused in the coven they would land in is taken to their next cov
   await page.goto(`/coven/${alder.slug}`);
   await expect(page).toHaveURL(`/coven-paused/${alder.slug}`);
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(/Fixture Alder Coven/);
+  // Sweep gap: the page state reached in "a member paused in the coven they would land in is taken to their next coven, an", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await page
     .getByRole('list', { name: 'Your Other Covens' })

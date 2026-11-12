@@ -12,14 +12,18 @@ export interface AxeFinding {
 // Settles first: a theme switch scanned straight after would read a colour part-way along its ease. The title
 // is waited for too: a soft navigation leaves the document with no <title> for milliseconds, so axe's
 // document-title rule fails. `skipRules` is for the workshop, whose story page has no level-one heading.
+// `onlyRules` runs just those rules, which is how the dark theme is scanned (COLOUR_RULES).
 export async function accessibilityFindings(
   page: Page,
-  { skipRules = [] }: { skipRules?: string[] } = {},
+  { skipRules = [], onlyRules }: { skipRules?: string[]; onlyRules?: string[] } = {},
 ): Promise<AxeFinding[]> {
   await expect(page).toHaveTitle(/\S/);
   await settleTransitions(page);
-  const scan = async () =>
-    (await new AxeBuilder({ page }).disableRules(skipRules).analyze()).violations;
+  const scan = async () => {
+    const builder = new AxeBuilder({ page });
+    if (onlyRules) builder.withRules(onlyRules);
+    return (await builder.disableRules(skipRules).analyze()).violations;
+  };
   let violations = await scan();
   // The metadata swap can also land between the wait above and the scan's read: a
   // missing title is scanned again once, after waiting for one. A page that never has a title
@@ -40,7 +44,7 @@ export async function accessibilityFindings(
 
 export async function assertNoAccessibilityViolations(
   page: Page,
-  options: { skipRules?: string[] } = {},
+  options: { skipRules?: string[]; onlyRules?: string[] } = {},
 ) {
   const findings = await accessibilityFindings(page, options);
   const summary = findings
@@ -100,7 +104,14 @@ export async function settleTransitions(page: Page) {
   });
 }
 
-// Scans the page in the dark theme and then the light, the site's default last. A transition starts only at the
+/**
+ * The rules a theme switch can change: it swaps colour tokens and no markup (`data-theme` plus Sass), so the dark
+ * scan runs these two and the light scan runs every rule.
+ */
+export const COLOUR_RULES = ['color-contrast', 'link-in-text-block'];
+
+// Scans the page in the dark theme (colour rules only) and then the light (every rule), the site's default
+// last. A transition starts only at the
 // first style change after the switch, so the scheme is read as matching and two frames pass before the settle,
 // or the settle finds nothing running and axe reads a colour part-way along its ease.
 export async function scanBothThemes(page: Page) {
@@ -117,6 +128,9 @@ export async function scanBothThemes(page: Page) {
         }),
     );
     await settleTransitions(page);
-    await assertNoAccessibilityViolations(page);
+    await assertNoAccessibilityViolations(
+      page,
+      colorScheme === 'dark' ? { onlyRules: COLOUR_RULES } : {},
+    );
   }
 }

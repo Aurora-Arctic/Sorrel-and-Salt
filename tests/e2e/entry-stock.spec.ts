@@ -116,6 +116,7 @@ test('a coven’s entry pages list its jars under Stock, and Edit Stock in the h
   await test.step('at a phone’s width the section is axe-clean and scrolls nowhere sideways', async () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await assertNoSidewaysScroll(page, { restore: true });
+    // Sweep gap: the page state reached in "a coven’s entry pages list its jars under Stock, and Edit Stock in the heading c", which no sweep route or modal opens.
     await assertNoAccessibilityViolations(page);
   });
 });

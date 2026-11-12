@@ -273,6 +273,7 @@ test.describe('under forced colours', () => {
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
 
+    // Sweep gap: the page state reached in "the public compendium list keeps its edges and marks its states", which no sweep route or modal opens.
     await assertNoAccessibilityViolations(page, { skipRules: FORCED_SKIP });
   });
 
@@ -384,6 +385,7 @@ test.describe('under forced colours', () => {
 
     await page.goto(`/coven/fixture-coven-prism-two/ingredients`);
     await expect(page.getByRole('list', { name: 'Ingredients' })).toBeVisible();
+    // Sweep gap: the page state reached in "the plus", which no sweep route or modal opens.
     await assertNoAccessibilityViolations(page, { skipRules: FORCED_SKIP });
   });
 
@@ -429,6 +431,7 @@ test.describe('under forced colours', () => {
     await expect(source).toHaveCount(1);
     await check.poll(() => marksOf(source)).toContain(p.Highlight);
 
+    // Sweep gap: the page state reached in "the entry page marks its current section and the jumped-to note and source", which no sweep route or modal opens.
     await assertNoAccessibilityViolations(page, { skipRules: FORCED_SKIP });
   });
 
@@ -550,6 +553,7 @@ test.describe('under forced colours', () => {
 
     await page.goto('/curator/compendium');
     await expect(page.getByRole('link', { name: /^Edit / }).first()).toBeVisible();
+    // Sweep gap: the page state reached in "the admin list", which no sweep route or modal opens.
     await assertNoAccessibilityViolations(page, { skipRules: FORCED_SKIP });
 
     await page.goto(`/compendium/ingredients/${ingredientSlug(BOTH, null)}`);

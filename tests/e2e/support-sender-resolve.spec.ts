@@ -1,5 +1,4 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 
@@ -34,7 +33,6 @@ test('a sender resolves a waiting request, the menu count goes out and the admin
 
   await page.getByRole('link', { name: subject }).click();
   const dialog = page.getByRole('dialog', { name: subject });
-  await assertNoAccessibilityViolations(page);
   await dialog.getByRole('button', { name: 'Resolve' }).click();
   await expect(dialog.getByRole('button', { name: 'Resolve' })).toBeHidden();
   await expect(page.getByRole('button', { name: /waiting on you/ })).toHaveCount(0);

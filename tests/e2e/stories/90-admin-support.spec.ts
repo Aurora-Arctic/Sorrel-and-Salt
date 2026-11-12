@@ -56,7 +56,6 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
       const row = page.getByRole('row').filter({ hasText: 'Wobbling Cauldron' });
       await expect(row).toContainText('Fixture Person');
       await expect(row).toContainText('500');
-      await assertNoAccessibilityViolations(page);
       await row.getByRole('link', { name: 'Wobbling Cauldron' }).click();
       await expect(page.getByRole('dialog', { name: 'Wobbling Cauldron' })).toBeVisible();
     });
@@ -145,6 +144,7 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
     });
 
     await test.step('with requests showing, the page passes the accessibility check', async () => {
+      // Sweep gap: the page state reached in "an admin replies, assigns, shares, links an issue, resolves and times a sender o", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
   });

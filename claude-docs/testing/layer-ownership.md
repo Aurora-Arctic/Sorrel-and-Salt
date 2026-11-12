@@ -113,12 +113,24 @@ cited by number in the PR table of the task that applies it.
    story suite in `tests/e2e/stories/` walks each story as a user would and
    tags it `@story-N`. The gate suite (`tests/e2e/*.spec.ts`) keeps only what
    no story walks and only a real server can prove: cookies, mail, the cache,
-   the production build's config, the GraphQL route, and one axe scan per
-   page state (a dialog or an open menu adds markup the plain page scan never
-   sees). A gate spec a story flow proves is deleted. A service rule keeps its
+   the production build's config, the GraphQL route, and the axe scans of
+   states the sweep cannot reach (below). A gate spec a story flow proves is deleted. A service rule keeps its
    own Vitest test, with its direct-id refusal; a story flow does not replace
    it, because a flow shows the control is absent and the rule shows the
    service refuses.
+   Each axe check runs once per distinct markup and colour state:
+   1. The axe sweep (`tests/e2e/axe.spec.ts`) scans every route and modal
+      once with the full rule set, in light, at desktop width.
+   2. In dark it runs only the colour rules (`color-contrast` and
+      `link-in-text-block`), because a theme switch changes colour tokens and
+      no markup. The dark scan stays because it checks colours in context;
+      `tests/scss/tokens.test.ts` checks only the token pairs.
+   3. A phone layout whose markup differs is its own state: the shell's tab
+      bar and each phone sheet are scanned once, in full, at 375 px.
+   4. Any other spec or story scans only a state the sweep cannot reach (an
+      open menu, an error, a status), and a one-line `// Sweep gap:` comment
+      names that state. A scan that repeats a sweep state is cut.
+   5. No manual or keyboard check is cut: axe finds only part of the issues.
 10. **SQL text appears only as the precondition of an EXPLAIN plan test**, and
     a plan test keeps its row counts.
 

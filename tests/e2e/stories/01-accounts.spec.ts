@@ -43,6 +43,7 @@ test.describe('signing in', () => {
         // pass the scans below on a page this test is not about.
         await expect(button).toHaveAttribute('aria-disabled', 'true');
       }
+      // Sweep gap: the page state reached in "a visitor follows Sign In from the front door to every roster provider, each rea", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       await assertNoSidewaysScroll(page);
 
@@ -74,6 +75,7 @@ test.describe('signing in', () => {
       // announcer into the body on every page.
       await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
       await expect(page.getByRole('button', { name: 'Continue with Discord' })).toBeVisible();
+      // Sweep gap: the page state reached in "a provider callback that fails returns the visitor to the sign-in page with an a", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     },
   );
@@ -101,7 +103,6 @@ test.describe('the landing an account with no coven meets', () => {
       await expect(page.getByRole('navigation', { name: 'Coven' })).toHaveCount(0);
       await expect(main.getByRole('link', { name: 'Create Coven', exact: true })).toHaveCount(0);
       await expect(main.getByRole('status')).toHaveCount(0);
-      await scanBothThemes(page);
       await assertNoSidewaysScroll(page);
     },
   );
@@ -123,6 +124,7 @@ test.describe('the landing an account with no coven meets', () => {
       await page.goto('/coven');
       const notice = page.getByRole('main').getByRole('status');
       await expect(notice).toBeVisible();
+      // Sweep gap: the page state reached in "a new account with an invitation waiting is told so on the landing and led to it", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
 
@@ -153,6 +155,7 @@ test.describe('creating a coven', () => {
         .getByRole('main')
         .getByRole('link', { name: 'Create Coven', exact: true });
       await expect(create).toBeVisible();
+      // Sweep gap: the page state reached in "a holder of the right starts from the landing, names a coven from the keyboard a", which no sweep route or modal opens.
       await scanBothThemes(page);
       await assertNoSidewaysScroll(page);
 
@@ -160,7 +163,6 @@ test.describe('creating a coven', () => {
       await expect(page).toHaveURL(/\/coven\/new$/);
       const name = page.getByRole('textbox', { name: 'Name' });
       await expect(name).toBeVisible();
-      await scanBothThemes(page);
       await assertNoSidewaysScroll(page);
 
       expect(await tabTo(page, name)).toBe(true);
@@ -237,6 +239,7 @@ test.describe('creating a coven', () => {
       await expect(page.getByRole('main').getByRole('status')).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Name' })).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Create Coven', exact: true })).toHaveCount(0);
+      // Sweep gap: the page state reached in "a user without the right finds no way to create a coven, and the create page off", which no sweep route or modal opens.
       await scanBothThemes(page);
       await assertNoSidewaysScroll(page);
 
@@ -333,6 +336,7 @@ test(
 
     await switcher.click();
     await expect(page.getByRole('option', { name: 'Fixture Beta', exact: true })).toBeVisible();
+    // Sweep gap: the page state reached in "a member of several covens switches between them and stays in the same section, ", which no sweep route or modal opens.
     await assertNoAccessibilityViolations(page);
     await page.getByRole('option', { name: 'Fixture Beta', exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/coven/${beta.slug}/members$`));

@@ -68,6 +68,7 @@ test('a member sees a coven’s own entry link the compendium entry it replaces,
   await why.focus();
   // Open, the tip shows; Playwright's role queries skip it while it is hidden.
   await expect(page.getByRole('tooltip')).toBeVisible();
+  // Sweep gap: the page state reached in "a member sees a coven’s own entry link the compendium entry it replaces, with on", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
 });
 

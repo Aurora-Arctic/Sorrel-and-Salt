@@ -30,20 +30,19 @@ test('the footer Support link clears the tab bar and a tap opens the dialog', as
 
   await link.tap();
   await expect(page.getByRole('dialog')).toBeVisible();
-  await assertNoAccessibilityViolations(page);
 });
 
 test('the home page shows the footer to a signed-in visitor', async ({ page }) => {
   await signInAs(page, 'home@footer-tab-bar.test');
   await page.goto('/');
   await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Support' })).toBeVisible();
+  // Sweep gap: the page state reached in "the home page shows the footer to a signed-in visitor", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
 });
 
 test('the home page shows the footer to a signed-out visitor', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Support' })).toBeVisible();
-  await assertNoAccessibilityViolations(page);
 });
 
 test('the footer sits at the foot of the window on a short page', async ({ page }) => {

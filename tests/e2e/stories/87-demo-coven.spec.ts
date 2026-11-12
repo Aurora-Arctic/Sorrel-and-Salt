@@ -1,5 +1,4 @@
 import { test, expect } from '../fixtures';
-import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 import { withSql } from './accounts-setup';
@@ -44,7 +43,6 @@ test.describe('Story 87: A New Account Lands in the Demo Coven', { tag: '@story-
       await expect(heading).toContainText('Demo');
       await expect(page.getByText(VIEWER_NOTICE)).toBeVisible();
       await expect(page.getByText(OWNER_NOTICE)).toHaveCount(0);
-      await assertNoAccessibilityViolations(page);
     });
 
     await test.step('Ingredients and Grimoire open with the notice and offer no way to add', async () => {
@@ -115,7 +113,6 @@ test.describe('Story 87: A New Account Lands in the Demo Coven', { tag: '@story-
     await page.goto('/coven');
     await expect(page).toHaveURL(new RegExp(`/coven/${own.slug}$`));
     await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(/Testwort Coven/);
-    await assertNoAccessibilityViolations(page);
   });
 
   test('a site keeper owns the demo coven', async ({ page }) => {

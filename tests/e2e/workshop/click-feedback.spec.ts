@@ -195,6 +195,7 @@ for (const width of WIDTHS) {
       test('axe finds nothing with the callout open', async ({ page }) => {
         await openStory(page, 'bordered', theme, width);
         await placed(page);
+        // Sweep gap: the page state reached in "axe finds nothing with the callout open", which no sweep route or modal opens.
         await assertNoAccessibilityViolations(page, { skipRules: ['page-has-heading-one'] });
       });
     });

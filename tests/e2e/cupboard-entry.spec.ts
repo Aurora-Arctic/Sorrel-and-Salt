@@ -71,6 +71,7 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Read the Disclaimer' }).first()).toBeVisible();
   await page.setViewportSize({ width: 375, height: 812 });
+  // Sweep gap: the page state reached in "a member sees a held compendium entry with the coven’s label and marks, the publ", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
 
   await page.goto(`/compendium/ingredients/${slug}`);
@@ -99,5 +100,6 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   );
   await page.goto(`/coven/${coven.slug}/ingredients/${own.ingredientId}`);
   await expect(page.getByRole('heading', { name: 'Similar in the Compendium' })).toBeVisible();
+  // Sweep gap: the page state reached in "a member sees a held compendium entry with the coven’s label and marks, the publ", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
 });

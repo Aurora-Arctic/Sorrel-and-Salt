@@ -50,6 +50,7 @@ test('the eye opens a spell in a modal over the list, keeps the filter, stacks i
     'href',
     `${grimoire}/${shared}`,
   );
+  // Sweep gap: the page state reached in "the eye opens a spell in a modal over the list, keeps the filter, stacks ingredi", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
 
   // The step's eye opens the ingredient's details over the modal, at the same address plus

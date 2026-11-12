@@ -64,6 +64,7 @@ test('a member makes a held compendium entry the coven’s own and lands on it, 
   await page.keyboard.press('Enter');
   const ask = page.getByRole('alertdialog', { name: 'Make It Ours' });
   await expect(ask).toBeVisible();
+  // Sweep gap: the page state reached in "a member makes a held compendium entry the coven’s own and lands on it, the jar ", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await ask.getByRole('button', { name: 'Make It Ours' }).focus();
   await page.keyboard.press('Enter');
@@ -84,5 +85,6 @@ test('a member makes a held compendium entry the coven’s own and lands on it, 
   );
   expect(jar).toEqual({ ingredient_id: ownId, workspace_id: coven.id });
 
+  // Sweep gap: the page state reached in "a member makes a held compendium entry the coven’s own and lands on it, the jar ", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
 });

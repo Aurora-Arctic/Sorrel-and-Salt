@@ -117,6 +117,7 @@ test('a keeper writes a guide on the form’s own page', async ({ page }) => {
   // Precondition: no search finds the row yet, so the row below is one this test wrote.
   await expectNotListed(page, PARENT);
   await page.goto(PATH);
+  // Sweep gap: the new guide form
   await assertNoAccessibilityViolations(page);
 
   // A public guide, as only a guide holds sub pages.
@@ -131,6 +132,7 @@ test('a keeper writes a guide on the form’s own page', async ({ page }) => {
     .getByRole('textbox', { name: /^Summary/ })
     .fill('A guide the test writes.');
   await writeBody(page, 'A paragraph the test writes.');
+  // Sweep gap: the guide form with a body written
   await assertNoAccessibilityViolations(page);
   await page.getByRole('button', { name: 'Save Guide' }).click();
   await expectBackAtOutline(page);
@@ -181,6 +183,7 @@ test('a keeper adds a staff sub page from a guide’s pane, and a reserved title
   await page.getByRole('button', { name: 'Save Article' }).click();
   await expect(title(page)).toHaveAttribute('aria-invalid', 'true');
   await expect(page).toHaveURL(`${PATH}/new`);
+  // Sweep gap: a reserved title refused on the sub page form
   await assertNoAccessibilityViolations(page);
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.getByRole('button', { name: 'Discard Changes' }).click();
@@ -200,6 +203,7 @@ test('a parent keeps its staff audience and is not deleted while a live sub page
 
   // A parent with a live sub page is not deleted: the refusal says why, and the form stays.
   await page.getByRole('button', { name: 'Delete Guide' }).click();
+  // Sweep gap: the refusal to delete a guide with a live sub page
   await assertNoAccessibilityViolations(page);
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
@@ -238,6 +242,7 @@ test('a curator, a practitioner and an observer get the styled not-authorized pa
   expect((await page.goto(PATH))?.status()).toBe(403);
   await expect(notAuthorized(page)).toBeVisible();
   await expect(addLink(page)).toHaveCount(0);
+  // Sweep gap: the not-authorized page for a curator, a practitioner and an observer
   await assertNoAccessibilityViolations(page);
 
   const coven = await seedCoven(page, 'Fixture Coven Help Keepers', 'admin-help-coven.test', {

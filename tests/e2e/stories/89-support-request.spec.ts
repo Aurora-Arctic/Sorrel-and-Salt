@@ -26,7 +26,6 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       await page.getByRole('contentinfo').getByRole('link', { name: 'Support' }).click();
       await expect(page.getByRole('dialog')).toBeVisible();
       await expect(page).toHaveURL(/\/account\?support=/);
-      await assertNoAccessibilityViolations(page);
     });
 
     const dialog = page.getByRole('dialog');
@@ -36,6 +35,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       await dialog.getByRole('button', { name: 'Send Request' }).click();
       await expect(dialog.getByLabel('Subject')).toBeFocused();
       await expect(dialog.getByText('Write a subject')).toBeVisible();
+      // Sweep gap: the page state reached in "a member sends a question from the footer and later reads the admin reply", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       await dialog.getByLabel('Subject').fill('Where is the moon table?');
       await dialog.getByLabel('Message').fill('I cannot find the moon table in my coven.');
@@ -45,6 +45,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
         '/account/support',
       );
       await expect(dialog.getByRole('link', { name: 'Your Support Requests' })).toBeVisible();
+      // Sweep gap: the page state reached in "a member sends a question from the footer and later reads the admin reply", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       await dialog.getByRole('button', { name: 'Done' }).click();
       await expect(dialog).toBeHidden();
@@ -75,7 +76,6 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       await expect(thread).toContainText('You');
       await expect(thread).toContainText('Staff');
       await expect(request.getByLabel(/^Your Reply/)).toBeEnabled();
-      await assertNoAccessibilityViolations(page);
       await request.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(request).toBeHidden();
       await expect(page).not.toHaveURL(/request=/);

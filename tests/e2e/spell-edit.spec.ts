@@ -56,6 +56,7 @@ test('a member edits a saved spell from its card and its recipe page, and a view
   await expect(
     page.getByRole('dialog', { name: 'Edit Spell, Fixture Working Renamed' }),
   ).toBeVisible();
+  // Sweep gap: the page state reached in "a member edits a saved spell from its card and its recipe page, and a viewer can", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page).toHaveURL(recipe);

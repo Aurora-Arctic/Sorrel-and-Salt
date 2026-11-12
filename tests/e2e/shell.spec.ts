@@ -65,14 +65,6 @@ async function seedFixtures(page: Page): Promise<void> {
   });
 }
 
-async function toggleTheme(page: Page): Promise<void> {
-  const toggle = page.getByRole('button', { name: 'Toggle light and dark mode' });
-  const before = await toggle.getAttribute('aria-pressed');
-  await toggle.click();
-  await expect(toggle).not.toHaveAttribute('aria-pressed', before!);
-  await settleTransitions(page);
-}
-
 test('a member on the coven page sees the bar, the coven nav and the account panel', async ({
   page,
 }) => {
@@ -120,6 +112,7 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
   await expect(signOut).toBeFocused();
   await expect(banner.getByRole('button', { name: 'Show the error for Sign Out' })).toBeVisible();
   await settleTransitions(page);
+  // Sweep gap: the page state reached in "a member on the coven page sees the bar, the coven nav and the account panel", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await page.unroute('**/api/auth/sign-out');
 
@@ -219,22 +212,16 @@ const PAGES = [
 ] as const;
 
 for (const [name, who, path, nav] of PAGES) {
-  // The account page at a desktop width is account.spec.ts's scan.
-  for (const viewport of path === '/account' ? [PHONE] : [DESKTOP, PHONE]) {
-    test(`${name} passes the scans at ${viewport.width}px in both themes`, async ({ page }) => {
-      await signInAgainAs(page, users[who].id);
-      await page.setViewportSize(viewport);
-      await page.goto(path);
-      await expect(page.getByRole('banner')).toBeVisible();
-      await expect(page.getByRole('main')).toBeVisible();
-      if (nav) await expect(page.getByRole('navigation', { name: nav })).toBeVisible();
+  test(`${name} does not scroll sideways at ${PHONE.width}px`, async ({ page }) => {
+    await signInAgainAs(page, users[who].id);
+    await page.setViewportSize(PHONE);
+    await page.goto(path);
+    await expect(page.getByRole('banner')).toBeVisible();
+    await expect(page.getByRole('main')).toBeVisible();
+    if (nav) await expect(page.getByRole('navigation', { name: nav })).toBeVisible();
 
-      await assertNoAccessibilityViolations(page);
-      await toggleTheme(page);
-      await assertNoAccessibilityViolations(page);
-      if (viewport === PHONE) await assertNoSidewaysScroll(page);
-    });
-  }
+    await assertNoSidewaysScroll(page);
+  });
 }
 
 // The bar's end group, the add button with its menu through the theme toggle, ran past the window at

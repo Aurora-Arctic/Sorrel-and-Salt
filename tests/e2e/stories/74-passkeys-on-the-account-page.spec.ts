@@ -37,6 +37,7 @@ test.describe('passkeys on the account page', () => {
       const section = page.getByRole('region', { name: 'Passkeys' });
       const list = section.getByRole('list', { name: 'Passkeys' });
       await expect(list.getByRole('listitem')).toHaveCount(1);
+      // Sweep gap: the page state reached in "a signed-in account adds a passkey, renames it and removes another, and the list", which no sweep route or modal opens.
       await scanBothThemes(page);
 
       await section.getByRole('button', { name: 'Add a Passkey' }).click();
@@ -53,14 +54,12 @@ test.describe('passkeys on the account page', () => {
       await section.getByRole('button', { name: `Rename ${made}` }).click();
       const dialog = page.getByRole('dialog', { name: 'Rename Passkey' });
       await dialog.getByRole('textbox', { name: 'Name' }).fill('Phone');
-      await scanBothThemes(page);
       await dialog.getByRole('button', { name: 'Save Name' }).click();
       await expect(dialog).toBeHidden();
       await expect(section.getByRole('button', { name: 'Rename Phone' })).toBeVisible();
 
       await section.getByRole('button', { name: 'Remove Laptop' }).click();
       const confirm = page.getByRole('dialog', { name: 'Remove Passkey' });
-      await scanBothThemes(page);
       await confirm.getByRole('button', { name: 'Remove', exact: true }).click();
       await expect(list.getByRole('listitem')).toHaveCount(1);
       await expect(section.getByRole('button', { name: 'Remove Phone' })).toBeVisible();
@@ -71,7 +70,6 @@ test.describe('passkeys on the account page', () => {
       await expect(section.getByRole('button', { name: 'Remove Phone' })).toBeVisible();
       const rows = await withSql((sql) => sql`select name from passkeys where user_id = ${userId}`);
       expect(rows.map((row) => row.name)).toEqual(['Phone']);
-      await scanBothThemes(page);
     },
   );
 });

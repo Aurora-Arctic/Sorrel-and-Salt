@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
+import { assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
@@ -155,7 +155,6 @@ test('the stuck row holds at 375px without a sideways scroll or an axe violation
   expect(filters!.y).toBeGreaterThanOrEqual(box!.y + box!.height - 1);
   expect(filters!.y + filters!.height).toBeLessThanOrEqual(row!.y + row!.height + 1);
   expect(filters!.y + filters!.height).toBeLessThanOrEqual(700);
-  await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
 

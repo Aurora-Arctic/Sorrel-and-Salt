@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
+import { assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 
 // `fullyParallel` splits this file across workers, each reseeding its own slot's database in `beforeAll`;
@@ -24,12 +24,6 @@ test('the entry page renders signed out, without a redirect', async ({ page }) =
   expect(Math.abs(edges.welcomeBottom - edges.viewport)).toBeLessThanOrEqual(1);
   expect(Math.abs(edges.footerTop - edges.viewport)).toBeLessThanOrEqual(1);
   await assertNoSidewaysScroll(page);
-  // Playwright's context is light unless told otherwise, and the site's own
-  // default is dark, so each theme is named.
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
-    await assertNoAccessibilityViolations(page);
-  }
 });
 
 // The ornaments are imported assets, so they are served under /_next/static

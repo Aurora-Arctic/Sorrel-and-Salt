@@ -1,5 +1,4 @@
 import { test, expect } from '../fixtures';
-import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
 import { seedCoven } from './coven-ingredients';
@@ -23,7 +22,6 @@ test.describe('Story 96: A Steward Renames the Coven', { tag: '@story-96' }, () 
       await page.goto(`/coven/${old}`);
       const name = page.getByRole('textbox', { name: 'Name' });
       await expect(name).toHaveValue('Fixture Story Before');
-      await assertNoAccessibilityViolations(page);
       await name.fill('Fixture Story After');
       await page.getByRole('button', { name: /^Save/ }).click();
     });
@@ -31,7 +29,6 @@ test.describe('Story 96: A Steward Renames the Coven', { tag: '@story-96' }, () 
     await test.step('the coven loads at its new address', async () => {
       await expect(page).toHaveURL(/\/coven\/fixture-story-after$/);
       await expect(page.getByRole('textbox', { name: 'Name' })).toHaveValue('Fixture Story After');
-      await assertNoAccessibilityViolations(page);
     });
 
     await test.step('the old address takes the Steward to the new one', async () => {

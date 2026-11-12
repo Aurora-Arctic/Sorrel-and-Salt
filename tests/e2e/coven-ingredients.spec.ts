@@ -284,10 +284,12 @@ test('the page passes axe at both densities and holds at a phone width', async (
 
   await page.goto(listPath(coven));
   await expect(cardsIn(ingredientList(page))).toHaveCount(3);
+  // Sweep gap: the page state reached in "the page passes axe at both densities and holds at a phone width", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
 
   await compactSwitch(page).click();
   await expect(page.locator('html')).toHaveAttribute('data-card-density', 'regular');
+  // Sweep gap: the page state reached in "the page passes axe at both densities and holds at a phone width", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
@@ -367,6 +369,7 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await moreButton.click();
   await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
   await expectMenuInsideDialog();
+  // Sweep gap: the page state reached in "a held compendium entry", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
   await page.keyboard.press('Escape');
   await expect(menu).toHaveCount(0);

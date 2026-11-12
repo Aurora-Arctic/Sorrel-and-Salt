@@ -88,6 +88,7 @@ test.describe('who is in a coven', () => {
           else await expect(row).not.toContainText(address);
         }
         if (reader === ash) {
+          // Sweep gap: the page state reached in "an owner and a member read the roll with every role, and a viewer is turned away", which no sweep route or modal opens.
           await assertNoAccessibilityViolations(page);
           await assertNoSidewaysScroll(page);
         }
@@ -130,6 +131,7 @@ test.describe('who is in a coven', () => {
         await expect(page.getByRole('table', { name: 'Members' })).toHaveCount(0);
       }
       expect((await page.goto('/coven/no-such-coven'))?.status()).toBe(404);
+      // Sweep gap: the page state reached in "a signed-in stranger meets the same 404 at the coven and its roll as at an addre", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     },
   );
@@ -168,12 +170,14 @@ test.describe('removing a member, and leaving', () => {
       const dialog = await openMember(page, BIRCH);
       await dialog.getByRole('button', { name: `Remove ${BIRCH}` }).click();
       await expect(dialog.getByRole('button', { name: 'Remove', exact: true })).toBeEnabled();
+      // Sweep gap: the page state reached in "an owner removes a member from the roll, and the removed member is turned away f", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
       await expect(dialog).toHaveCount(0);
       await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/members$`));
       await expectRoll(page, { [ASH]: 'Steward', [CEDAR]: 'Observer' }, NAMES);
       await page.setViewportSize({ width: 375, height: 812 });
+      // Sweep gap: the page state reached in "an owner removes a member from the roll, and the removed member is turned away f", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       await assertNoSidewaysScroll(page);
 
@@ -212,6 +216,7 @@ test.describe('removing a member, and leaving', () => {
       const dialog = page.getByRole('dialog');
       const confirm = dialog.getByRole('button', { name: 'Leave Coven', exact: true });
       await expect(confirm).toBeEnabled();
+      // Sweep gap: the page state reached in "a viewer leaves the coven from its page, lands outside it, and is turned away fr", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       await confirm.click();
 
@@ -255,6 +260,7 @@ test.describe('removing a member, and leaving', () => {
       await expect(modal.getByRole('alert')).toBeVisible();
       await expect(modal.getByRole('button', { name: 'Remove', exact: true })).toHaveCount(0);
       await expect(remove).toBeVisible();
+      // Sweep gap: the page state reached in "a member has no remove or role control, and a removal sent from a page they load", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       expect(await seatsOf(coven.id)).toEqual({
         [ash]: 'owner',
@@ -323,6 +329,7 @@ test.describe('the last owner', () => {
       expect(at!.x).toBeLessThan(button!.x + button!.width);
       expect(at!.x + at!.width).toBeGreaterThan(button!.x);
       expect(await facts.boundingBox()).toEqual(placed);
+      // Sweep gap: the page state reached in "the only owner cannot demote themself or be removed: the refusal is said under i", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       await expectRoll(
         page,
@@ -362,6 +369,7 @@ test.describe('the last owner', () => {
       await expect(dialog.getByRole('option')).toHaveCount(2);
       await dialog.getByRole('option', { name: new RegExp(BIRCH) }).click();
       await expect(dialog.getByRole('button', { name: 'Promote and Leave' })).toBeEnabled();
+      // Sweep gap: the page state reached in "the only owner is offered no plain leave, and leaves by handing the coven to ano", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
 
       await dialog.getByRole('button', { name: 'Promote and Leave' }).focus();
@@ -410,6 +418,7 @@ test.describe('the last owner', () => {
         page.getByRole('main').getByRole('button', { name: 'Leave Coven', exact: true }),
       ).toBeFocused();
       await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}$`));
+      // Sweep gap: the page state reached in "a leave sent from a page loaded while another owner was there is refused once th", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       expect(await seatsOf(coven.id)).toEqual({ [ash]: 'owner', [cedar]: 'member' });
 
@@ -443,6 +452,7 @@ test.describe('the last owner', () => {
       await dialog.getByRole('button', { name: `Change Role for ${BIRCH}` }).click();
       await dialog.getByRole('radio', { name: /^Steward/ }).check();
       await expect(dialog.getByRole('button', { name: 'Promote', exact: true })).toBeEnabled();
+      // Sweep gap: the page state reached in "with two owners one demotes the other, and the owner left cannot demote themself", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       await dialog.getByRole('button', { name: 'Promote', exact: true }).click();
       await expect(dialog.getByRole('region', { name: 'Membership' })).toContainText('Steward');

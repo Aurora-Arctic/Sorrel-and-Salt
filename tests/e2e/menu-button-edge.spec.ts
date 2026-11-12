@@ -75,6 +75,7 @@ for (const { viewport, hangs } of [
     expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
     expect(box.y).toBeGreaterThanOrEqual(button.y + button.height);
     expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+    // Sweep gap: the page state reached in "the Add Ingredient menu opens under the chevron, inside a ${viewport.width}px wi", which no sweep route or modal opens.
     if (hangs) await assertNoAccessibilityViolations(page);
   });
 }

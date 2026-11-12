@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
+import { assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInKeeperOnSidePage } from './session';
 import { withSql } from './stories/coven-ingredients';
@@ -103,7 +103,6 @@ test('a visitor reads an entry with its details and each form on a phone, a long
     'href',
     url,
   );
-  await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
 

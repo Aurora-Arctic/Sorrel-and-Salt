@@ -79,9 +79,11 @@ test.describe('the sign-in dialog', () => {
       await expect(dialog, how).toBeVisible();
       await expect(dialog.getByRole('button', { name: 'Continue with Email' })).toBeVisible();
       if (how === 'Close') {
+        // Sweep gap: the page state reached in "opens over a public page from the bar, passes axe in both themes, and Close, Esc", which no sweep route or modal opens.
         await scanBothThemes(page);
         await dialog.getByRole('button', { name: 'Continue with Email' }).click();
         await expect(field(dialog, 'Email Address')).toBeVisible();
+        // Sweep gap: the page state reached in "opens over a public page from the bar, passes axe in both themes, and Close, Esc", which no sweep route or modal opens.
         await scanBothThemes(page);
       }
 
@@ -111,6 +113,7 @@ test.describe('the sign-in dialog', () => {
       `/account/email?next=${encodeURIComponent(here)}`,
     );
     await expect(page).toHaveURL(here);
+    // Sweep gap: the page state reached in "opens over a public page from the bar, passes axe in both themes, and Close, Esc", which no sweep route or modal opens.
     await scanBothThemes(page);
     // The mailed link comes back here, through the confirmed view's Continue.
     const mailed = new URL((await latestMessageTo(address)).text.match(VERIFY_LINK)![0]);
@@ -137,6 +140,7 @@ test.describe('the sign-in dialog', () => {
     expect(above!.y + above!.height).toBeLessThanOrEqual(
       (await main.getByRole('link', { name: 'Sign In' }).boundingBox())!.y,
     );
+    // Sweep gap: the page state reached in "a signed-out invitation offers Create Account and Sign In as equal choices, and ", which no sweep route or modal opens.
     await scanBothThemes(page);
 
     await page.goto(INVITATION);
@@ -158,6 +162,7 @@ test.describe('the sign-in dialog', () => {
     const signUp = page.getByRole('dialog', { name: 'Create an Account' });
     await expect(signUp.getByRole('button', { name: 'Continue with Email' })).toBeVisible();
     await expect(signUp.getByRole('button', { name: 'Sign In with a Passkey' })).toHaveCount(0);
+    // Sweep gap: the page state reached in "a signed-out invitation offers Create Account and Sign In as equal choices, and ", which no sweep route or modal opens.
     await scanBothThemes(page);
     await expect(page).toHaveURL(INVITATION);
 
@@ -172,6 +177,7 @@ test.describe('the sign-in dialog', () => {
     await expect(main.getByRole('link', { name: 'Confirm Your Email' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
     await expect(main.getByRole('alert')).toHaveCount(0);
+    // Sweep gap: the page state reached in "a signed-out invitation offers Create Account and Sign In as equal choices, and ", which no sweep route or modal opens.
     await scanBothThemes(page);
 
     // A refused link comes back with ?error=: the inbox state says so, beside the way to a new one.
@@ -179,6 +185,7 @@ test.describe('the sign-in dialog', () => {
     await expect(main.getByRole('alert')).toBeVisible();
     await expect(main).not.toContainText('TOKEN_EXPIRED');
     await expect(main.getByRole('link', { name: 'Confirm Your Email' })).toBeVisible();
+    // Sweep gap: the page state reached in "a signed-out invitation offers Create Account and Sign In as equal choices, and ", which no sweep route or modal opens.
     await scanBothThemes(page);
 
     const message = await latestMessageTo(INVITED);

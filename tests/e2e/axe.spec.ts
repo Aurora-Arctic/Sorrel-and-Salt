@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, scanBothThemes } from './axe';
+import { assertNoAccessibilityViolations, COLOUR_RULES, scanBothThemes } from './axe';
 import { ROUTE_SCANS, SWEEP_TESTS, type ScannedModal, type ScannedRoute } from './axe-scans';
 import {
   MODAL_OPENERS,
@@ -30,6 +30,22 @@ test('a seeded violation fails the scan', async ({ page }) => {
     '<html><head><title>Fixture</title></head><body><img src="x.png"></body></html>',
   );
   await expect(assertNoAccessibilityViolations(page)).rejects.toThrow();
+});
+
+// The dark scan is narrowed to the colour rules because a theme switch changes only colour tokens, so it must
+// still fail a colour fault and must not report one the rules outside the list own.
+test('the dark scan fails a contrast fault in dark only', async ({ page }) => {
+  await page.setContent(
+    '<html lang="en"><head><title>Fixture</title><style>@media (prefers-color-scheme: dark) { p { color: #777; background: #808080; } }</style></head><body><main><h1>Fixture</h1><p>Low contrast in dark</p></main></body></html>',
+  );
+  await expect(scanBothThemes(page)).rejects.toThrow();
+});
+
+test('the dark colour pass reports no fault outside the colour rules', async ({ page }) => {
+  await page.setContent(
+    '<html><head><title>Fixture</title></head><body><img src="x.png"></body></html>',
+  );
+  await assertNoAccessibilityViolations(page, { onlyRules: COLOUR_RULES });
 });
 
 // A soft navigation removes the <title> and puts the next one back a
@@ -225,7 +241,48 @@ test.describe('the grimoire', () => {
   });
 });
 
-// The sweep over tests/e2e/axe-scans.ts in both themes, one test per run of pages or modals per person (SWEEP_TESTS),
+// The phone layout is its own markup state the sweep, at desktop width, cannot reach: the shell's tab bar and the
+// Filters sheet, each scanned in full once at 375, with the colour rules again in dark.
+// 375 is the phone width every e2e spec shares (assertNoSidewaysScroll defaults to it).
+const PHONE = { width: 375, height: 812 };
+
+test.describe('the phone layout', () => {
+  test.beforeAll(async () => {
+    await recreateE2eDatabase();
+  });
+
+  test('the coven tab bar', async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    const world = await seedWorld(page);
+    await signIn(page, world, 'steward');
+    await visit(page, ROUTE_VISITS['/coven/[slug]'](world) ?? '');
+    await expect(page.getByRole('navigation', { name: 'Coven' })).toBeVisible();
+    await scanBothThemes(page);
+  });
+
+  test('the curator tab bar with its More menu open', async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    const world = await seedWorld(page);
+    await signIn(page, world, 'curator');
+    await visit(page, '/curator/categories');
+    const more = page
+      .getByRole('navigation', { name: 'Curator' })
+      .getByRole('button', { name: 'More', exact: true });
+    await more.click();
+    await expect(more).toHaveAttribute('aria-expanded', 'true');
+    await scanBothThemes(page);
+  });
+
+  test('the Filters sheet', async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    const coven = await covenWithSpell(page, 'Fixture Coven Axe Sheet', 'axe-sheet.test');
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    await openFilters(page);
+    await scanBothThemes(page);
+  });
+});
+
+// The sweep over tests/e2e/axe-scans.ts, the full rule set in light and the colour rules in dark, one test per run of pages or modals per person (SWEEP_TESTS),
 // each seeding its own coven so another test recreating the slot's database cannot take its rows. Findings are
 // collected, not thrown, so one run lists every page; the full result goes to .reports/axe-sweep/.
 test.describe('the accessibility sweep', () => {

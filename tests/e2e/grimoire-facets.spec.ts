@@ -108,6 +108,7 @@ test('the Compact switch sets the grimoire list density and the filter is access
   await compact.uncheck();
   await expect(page.locator('html')).toHaveAttribute('data-card-density', 'regular');
   await openFilters(page);
+  // Sweep gap: the page state reached in "the Compact switch sets the grimoire list density and the filter is accessible", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
 });
 

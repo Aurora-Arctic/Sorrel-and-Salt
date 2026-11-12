@@ -33,5 +33,6 @@ test('a failed Save puts focus on the error summary, which links to the field an
   const target = await link.getAttribute('href');
   await link.click();
   await expect(adding.locator(target!)).toBeFocused();
+  // Sweep gap: the page state reached in "a failed Save puts focus on the error summary, which links to the field and pref", which no sweep route or modal opens.
   await assertNoAccessibilityViolations(page);
 });

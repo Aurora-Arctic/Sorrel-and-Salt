@@ -43,6 +43,7 @@ test('a keeper opens Business Cards from the Keepers index and from the Keepers 
     'aria-current',
     'page',
   );
+  // Sweep gap: the Business Cards page as a keeper arrives from the index
   await assertNoAccessibilityViolations(page);
 });
 
@@ -108,6 +109,7 @@ test('Generate refuses empty or wrong boxes without building, and with them fill
   expect(bothPdf.getPageCount()).toBe(2);
 
   expect(requests).toEqual([]);
+  // Sweep gap: the page after Generate refuses empty or wrong boxes
   await assertNoAccessibilityViolations(page);
 });
 

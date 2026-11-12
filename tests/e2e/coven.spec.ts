@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
+import { assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
@@ -94,7 +94,6 @@ test('real Tab presses reach the Overview link, and the page passes the scans', 
   }
   expect(reached).toBe(true);
 
-  await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
 
@@ -128,6 +127,5 @@ test("a refused deletion in the only owner's exit keeps Cancel inside the dialog
   const frame = (await dialog.boundingBox())!;
   expect(box.x + box.width).toBeLessThanOrEqual(frame.x + frame.width);
   await assertNoSidewaysScroll(page);
-  await assertNoAccessibilityViolations(page);
   await page.unrouteAll();
 });

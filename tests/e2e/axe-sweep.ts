@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { ingredientSlug } from '@/lib/slugify';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
-import { accessibilityFindings, type AxeFinding } from './axe';
+import { accessibilityFindings, COLOUR_RULES, type AxeFinding } from './axe';
 import type { Persona, ScannedModal, ScannedRoute } from './axe-scans';
 import { PASSWORD, signInAgainAs, signInAs } from './session';
 import {
@@ -684,7 +684,7 @@ export interface SweepResult {
   unreached: Unreached[];
 }
 
-/** Scans what is on screen in the dark theme and the light, the site's default first. */
+/** Scans what is on screen in the dark theme (colour rules only) and the light (every rule). */
 export async function scanBothThemes(
   page: Page,
   scan: string,
@@ -694,7 +694,8 @@ export async function scanBothThemes(
   for (const theme of ['dark', 'light'] as const) {
     await page.emulateMedia({ colorScheme: theme });
     if (within) await expect(within).toBeVisible();
-    for (const finding of await accessibilityFindings(page)) {
+    const options = theme === 'dark' ? { onlyRules: COLOUR_RULES } : {};
+    for (const finding of await accessibilityFindings(page, options)) {
       result.findings.push({ ...finding, scan, theme });
     }
   }

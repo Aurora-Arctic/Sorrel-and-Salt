@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { Locator, Page } from '@playwright/test';
 import { insertHelpArticle } from '../support/db/insert-help-article';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, scanBothThemes } from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 
@@ -125,6 +125,7 @@ test('a keeper reorders the guides within their audience, and each move saves at
     'true',
   );
   await expect(nav(page).getByRole('button', { name: /Save Order|Cancel/ })).toHaveCount(0);
+  // Sweep gap: the guide list in Reorder Mode
   await assertNoAccessibilityViolations(page);
 
   // Pressing Reorder again leaves the mode with the saved order as it was.
@@ -165,6 +166,18 @@ test('a keeper reorders the guides within their audience, and each move saves at
     .toEqual([BIRCH, ASH]);
 });
 
+// The phone layout is its own markup state the sweep, at desktop width, cannot reach: Reorder Mode as a sheet, scanned
+// in full once at 375 (375 is the phone width the other specs share).
+test('at a phone, Reorder Mode as a sheet passes the scans', async ({ page }) => {
+  await signInAs(page, 'e4@admin-help-order.test', ['discord'], 'admin');
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(PATH);
+  await page.getByRole('button', { name: 'Reorder' }).click();
+  await expect(said(page, 'Reorder mode.')).toBeAttached();
+  // Sweep gap: the page state reached in "at a phone, Reorder Mode as a sheet passes the scans", which no sweep route or modal opens.
+  await scanBothThemes(page);
+});
+
 test('a keeper drops a sub page above another, and the guide keeps the order', async ({ page }) => {
   await signInAs(page, 'e2@admin-help-order.test', ['discord'], 'admin');
   await page.goto(PATH);
@@ -174,6 +187,7 @@ test('a keeper drops a sub page above another, and the guide keeps the order', a
   // Precondition: Kindling first, and no Move Up or Move Down left to press.
   await expect.poll(async () => mine(await titles())).toEqual([ASH_ONE, ASH_TWO]);
   await expect(table.getByRole('button', { name: /Move Up|Move Down/ })).toHaveCount(0);
+  // Sweep gap: a sub page table in Reorder Mode
   await assertNoAccessibilityViolations(page);
 
   await moveUp(page, table.getByRole('button', { name: `Move ${ASH_TWO}` }), ASH_TWO);
@@ -188,6 +202,7 @@ test('a keeper drops an FAQ entry above another, and the FAQ keeps the order', a
   const table = page.getByRole('table', { name: 'FAQ' });
   const titles = () => table.getByRole('rowheader').allTextContents();
   await expect.poll(async () => mine(await titles())).toEqual([FAQ_ONE, FAQ_TWO]);
+  // Sweep gap: an FAQ table in Reorder Mode
   await assertNoAccessibilityViolations(page);
 
   await moveUp(page, table.getByRole('button', { name: `Move ${FAQ_TWO}` }), FAQ_TWO);

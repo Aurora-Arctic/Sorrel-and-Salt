@@ -160,6 +160,7 @@ test(
       await expect(
         page.getByRole('navigation', { name: 'Coven' }).getByRole('link', { name: 'Ingredients' }),
       ).toHaveAttribute('aria-current', 'page');
+      // Sweep gap: the page state reached in "the coven", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       await assertNoSidewaysScroll(page);
     });
@@ -211,6 +212,7 @@ test(
       await expect(cards).toHaveCount(4);
       await expect(nameSearch(page)).toHaveValue('');
       expect(new URL(page.url()).search).toBe('');
+      // Sweep gap: the page state reached in "searching the list by name, folk name or formal name narrows it to what the cove", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
   },
@@ -251,6 +253,7 @@ test(
       await expect(cards).toHaveCount(1);
       await expect(rowOf(list, 'Rosemary')).toBeVisible();
       expect(new URL(page.url()).search).not.toBe('');
+      // Sweep gap: the page state reached in "several categories at once keep only the entries filed under every one, and the ", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
 
@@ -325,6 +328,7 @@ test(
         'Low Stock at 10 g or less',
       );
       await page.keyboard.press('Escape');
+      // Sweep gap: the page state reached in "low and out-of-stock rows are badged apart, by a threshold the row shows and edi", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
 
@@ -450,6 +454,7 @@ test(
       ]);
       expect(new URL(page.url()).pathname).toBe(path);
       expect(await stillSameDocument(page)).toBe(true);
+      // Sweep gap: the page state reached in "a member edits an ingredient", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
 
@@ -594,6 +599,7 @@ test(
       const details = page.getByRole('dialog', { name: 'Rosemary', exact: true });
       await expect(details).toBeVisible();
       await expect(stockEditor(details, 'Rosemary').open).toHaveCount(0);
+      // Sweep gap: the page state reached in "a member edits an ingredient", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
   },
@@ -698,6 +704,7 @@ test(
       await edit.click();
       await bin.click();
       await expect(question).toContainText('Testwort');
+      // Sweep gap: the page state reached in "deleting the coven", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
       await question.getByRole('button', { name: 'Cancel', exact: true }).click();
 
@@ -792,6 +799,7 @@ test(
       await expect(cardsIn(ingredientList(page))).toHaveCount(0);
       await expect(firstAdd).toBeVisible();
       await expect(empty.getByRole('button')).toHaveCount(0);
+      // Sweep gap: the page state reached in "an empty list prompts the first add, and a filter matching nothing points to cle", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
 
       // Filters is a button only once the page has hydrated (claude-docs/components/facet-panel.md).
@@ -821,6 +829,7 @@ test(
         'href',
         '/compendium?query=Knitbone',
       );
+      // Sweep gap: the page state reached in "an empty list prompts the first add, and a filter matching nothing points to cle", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
 
       await filterOf(page).getByRole('button', { name: 'Clear Name' }).click();
@@ -904,6 +913,7 @@ test(
       await expect(cards).toHaveCount(2);
       await expect(rowOf(list, 'Rosemary')).toBeVisible();
       await expect(localBadge(rowOf(list, 'Testwort'))).toBeVisible();
+      // Sweep gap: the page state reached in "the source filter and in-stock-only narrow the list, the address keeps both, and", which no sweep route or modal opens.
       await assertNoAccessibilityViolations(page);
     });
 
