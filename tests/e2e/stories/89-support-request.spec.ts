@@ -35,7 +35,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       await dialog.getByRole('button', { name: 'Send Request' }).click();
       await expect(dialog.getByLabel('Subject')).toBeFocused();
       await expect(dialog.getByText('Write a subject')).toBeVisible();
-      // Sweep gap: the page state reached in "a member sends a question from the footer and later reads the admin reply", which no sweep route or modal opens.
+      // Sweep gap: the Support dialog with the Subject field's error and focus on it.
       await assertNoAccessibilityViolations(page);
       await dialog.getByLabel('Subject').fill('Where is the moon table?');
       await dialog.getByLabel('Message').fill('I cannot find the moon table in my coven.');
@@ -45,7 +45,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
         '/account/support',
       );
       await expect(dialog.getByRole('link', { name: 'Your Support Requests' })).toBeVisible();
-      // Sweep gap: the page state reached in "a member sends a question from the footer and later reads the admin reply", which no sweep route or modal opens.
+      // Sweep gap: the Support dialog after the request is received, linking to Your Support Requests.
       await assertNoAccessibilityViolations(page);
       await dialog.getByRole('button', { name: 'Done' }).click();
       await expect(dialog).toBeHidden();

@@ -40,7 +40,7 @@ for (const [index, path] of [
     await expect(dialog.getByRole('textbox', { name: 'Page' })).toHaveAccessibleDescription(
       /Opened from the Error 404 page/,
     );
-    // Sweep gap: the page state reached in "Report This on a 404 at ${path} names that page", which no sweep route or modal opens.
+    // Sweep gap: the Contact Support dialog opened from Report This, with its Page field described by the error page.
     await assertNoAccessibilityViolations(page);
   });
 }

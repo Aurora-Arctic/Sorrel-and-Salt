@@ -37,7 +37,7 @@ test.describe('passkeys on the account page', () => {
       const section = page.getByRole('region', { name: 'Passkeys' });
       const list = section.getByRole('list', { name: 'Passkeys' });
       await expect(list.getByRole('listitem')).toHaveCount(1);
-      // Sweep gap: the page state reached in "a signed-in account adds a passkey, renames it and removes another, and the list", which no sweep route or modal opens.
+      // Sweep gap: the sign-in page of an account with one passkey listed.
       await scanBothThemes(page);
 
       await section.getByRole('button', { name: 'Add a Passkey' }).click();

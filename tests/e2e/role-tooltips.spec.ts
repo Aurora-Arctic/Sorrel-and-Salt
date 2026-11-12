@@ -26,7 +26,7 @@ test('a keeper opens a role tip on the People page and reads what the role may d
   await expect(tip).toBeVisible();
   await expect(tip).toHaveText(SITE_ROLE_ACCESS.admin);
 
-  // Sweep gap: the page state reached in "a keeper opens a role tip on the People page and reads what the role may do", which no sweep route or modal opens.
+  // Sweep gap: the role tip open on the People page.
   await assertNoAccessibilityViolations(page);
   await page.keyboard.press('Escape');
   await expect(tip).toBeHidden();
@@ -86,6 +86,6 @@ test('an owner opens a role tip on the members page and reads what the role may 
   await expect(tip).toBeVisible();
   await expect(tip).toHaveText(WORKSPACE_ROLE_ACCESS.viewer);
 
-  // Sweep gap: the page state reached in "an owner opens a role tip on the members page and reads what the role may do", which no sweep route or modal opens.
+  // Sweep gap: the role tip open on the members page.
   await assertNoAccessibilityViolations(page);
 });

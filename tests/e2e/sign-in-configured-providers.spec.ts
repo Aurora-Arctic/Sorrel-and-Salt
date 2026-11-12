@@ -36,7 +36,7 @@ test('every provider renders available, not greyed, with no accessibility violat
     await expect(button).toBeVisible();
     await expect(button).not.toHaveAttribute('aria-disabled');
   }
-  // Sweep gap: the page state reached in "every provider renders available, not greyed, with no accessibility violations", which no sweep route or modal opens.
+  // Sweep gap: the sign-in page with every provider configured and available.
   await assertNoAccessibilityViolations(page);
 });
 
@@ -52,7 +52,7 @@ test('each provider button’s hover state has no accessibility violations', asy
     // Proves axe sees the hover colour rather than the resting one.
     await expect.poll(background).not.toBe(resting);
 
-    // Sweep gap: the page state reached in "each provider button’s hover state has no accessibility violations", which no sweep route or modal opens.
+    // Sweep gap: a provider button under the pointer, in its hover colours.
     await assertNoAccessibilityViolations(page);
   }
 });
@@ -73,7 +73,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
     const button = page.getByRole('button', { name: 'Continue with Google Last Used' });
     await expect(button).toBeVisible();
     await expect(button).not.toHaveAttribute('aria-disabled');
-    // Sweep gap: the page state reached in "the last-used badge has no accessibility violations in the ${colorScheme} theme", which no sweep route or modal opens.
+    // Sweep gap: the sign-in page with the Last Used badge on a provider.
     await assertNoAccessibilityViolations(page);
     // At a phone's width the badge, hanging past its button's left edge, is
     // what could push the page sideways.

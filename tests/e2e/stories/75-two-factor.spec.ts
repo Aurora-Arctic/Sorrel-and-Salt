@@ -53,7 +53,7 @@ test(
     await expect(
       section.getByRole('list', { name: 'Backup Codes' }).getByRole('listitem'),
     ).not.toHaveCount(0);
-    // Sweep gap: the page state reached in "someone with a password turns on two-factor from the account page, then signs in", which no sweep route or modal opens.
+    // Sweep gap: the account page showing the two-factor QR code and its backup codes.
     await assertNoAccessibilityViolations(page);
     const [before] = await withSql(
       (sql) => sql<{ two_factor_enabled: boolean }[]>`
@@ -84,7 +84,7 @@ test(
     const main = page.getByRole('main');
     await expect(main.getByRole('heading', { name: 'Enter Your Code' })).toBeVisible();
     await expect(page).toHaveURL(/\/sign-in/);
-    // Sweep gap: the page state reached in "someone with a password turns on two-factor from the account page, then signs in", which no sweep route or modal opens.
+    // Sweep gap: the sign-in page asking for a two-factor code after the password.
     await assertNoAccessibilityViolations(page);
 
     await page.setViewportSize({ width: 390, height: 844 });

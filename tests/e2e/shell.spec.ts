@@ -112,7 +112,7 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
   await expect(signOut).toBeFocused();
   await expect(banner.getByRole('button', { name: 'Show the error for Sign Out' })).toBeVisible();
   await settleTransitions(page);
-  // Sweep gap: the page state reached in "a member on the coven page sees the bar, the coven nav and the account panel", which no sweep route or modal opens.
+  // Sweep gap: the banner with the Sign Out failure alert shown.
   await assertNoAccessibilityViolations(page);
   await page.unroute('**/api/auth/sign-out');
 

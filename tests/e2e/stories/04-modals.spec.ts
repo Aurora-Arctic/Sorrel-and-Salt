@@ -127,8 +127,6 @@ test(
         await expect(destinationMenu(page).toggle).toHaveCount(0);
         await expect(dialog).toHaveAccessibleName(namesCoven(FIRST));
         await expect(nameField(dialog)).toBeVisible();
-        // Sweep gap: the page state reached in "a member opens Add Ingredient from the shell, adding to the coven it is on", which no sweep route or modal opens.
-        if (path === '/account') await assertNoAccessibilityViolations(page);
 
         // The page behind is inert while the dialog is open: walking back past the dialog's first control
         // never reaches the bar's own, which the banner holds outside the dialog.
@@ -297,7 +295,7 @@ test(
       ).toBeVisible();
       // The save waits on the question: nothing was written.
       expect(await savedRows(coven.id, 'Ostrelvine')).toHaveLength(0);
-      // Sweep gap: the page state reached in "a member saves a name-only stub, and Save & Add Another keeps the dialog for the", which no sweep route or modal opens.
+      // Sweep gap: the Add Ingredient dialog asking about a similar existing entry, with Create Anyway offered.
       await assertNoAccessibilityViolations(page);
 
       await own.click();
@@ -363,7 +361,7 @@ test(
       await expect(categoryChip(dialog, 'Love')).toHaveCount(0);
       await expect(categoryChip(dialog, 'Protection')).toBeVisible();
       await expect(categoryChip(dialog, 'Prosperity')).toBeVisible();
-      // Sweep gap: the page state reached in "a member files a new ingredient under categories through the picker", which no sweep route or modal opens.
+      // Sweep gap: the Add Ingredient dialog with Protection and Prosperity category chips filed.
       await assertNoAccessibilityViolations(page);
     });
 
@@ -684,7 +682,7 @@ test(
       ).toBeVisible();
       await expect(categoryChip(dialog, 'Protection')).toBeVisible();
       await expect(dialog.getByRole('button', { name: 'Edit Root', exact: true })).toBeVisible();
-      // Sweep gap: the page state reached in "a member opens an entry", which no sweep route or modal opens.
+      // Sweep gap: the ingredient entry dialog with a folk name, a category chip and Edit Root.
       await assertNoAccessibilityViolations(page);
 
       await page.keyboard.press('Escape');

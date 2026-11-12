@@ -1,5 +1,4 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { insertSpell, localIngredient, seedCoven, withSql } from './stories/coven-ingredients';
@@ -50,8 +49,6 @@ test('the eye opens a spell in a modal over the list, keeps the filter, stacks i
     'href',
     `${grimoire}/${shared}`,
   );
-  // Sweep gap: the page state reached in "the eye opens a spell in a modal over the list, keeps the filter, stacks ingredi", which no sweep route or modal opens.
-  await assertNoAccessibilityViolations(page);
 
   // The step's eye opens the ingredient's details over the modal, at the same address plus
   // &entry=<id>; Escape closes the details and the spell's modal is still there.

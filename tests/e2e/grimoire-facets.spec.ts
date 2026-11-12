@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
+import { assertNoSidewaysScroll } from './axe';
 import { signInAgainAs } from './session';
 import { insertSpell, openFilters, seedCoven, withSql } from './stories/coven-ingredients';
 
@@ -108,8 +108,6 @@ test('the Compact switch sets the grimoire list density and the filter is access
   await compact.uncheck();
   await expect(page.locator('html')).toHaveAttribute('data-card-density', 'regular');
   await openFilters(page);
-  // Sweep gap: the page state reached in "the Compact switch sets the grimoire list density and the filter is accessible", which no sweep route or modal opens.
-  await assertNoAccessibilityViolations(page);
 });
 
 test('at 375px the grimoire filter panel opens, a facet can be picked, and the page does not scroll sideways', async ({

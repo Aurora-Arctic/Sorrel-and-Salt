@@ -36,7 +36,7 @@ test('the home page shows the footer to a signed-in visitor', async ({ page }) =
   await signInAs(page, 'home@footer-tab-bar.test');
   await page.goto('/');
   await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Support' })).toBeVisible();
-  // Sweep gap: the page state reached in "the home page shows the footer to a signed-in visitor", which no sweep route or modal opens.
+  // Sweep gap: the home page signed in, which the sweep scans only signed out.
   await assertNoAccessibilityViolations(page);
 });
 

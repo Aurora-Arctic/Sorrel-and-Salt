@@ -63,8 +63,6 @@ test(
       ).toContainText('Fixture Previewwort');
       await expect(pane.getByRole('button')).toHaveCount(1);
       await expect(pane.getByRole('link')).toHaveCount(0);
-      // Sweep gap: the page state reached in "a member or viewer opens a spell full screen with everything the printed spell s", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
       await page.keyboard.press('Escape');
       await expect(pane).toHaveCount(0);
       await expect(preview).toBeFocused();
@@ -276,7 +274,7 @@ test(
     const awake = pane.getByRole('button', { name: 'Screen Awake' });
     await expect(awake).toHaveAttribute('aria-pressed', 'true');
     expect(await counts()).toEqual({ requests: 1, releases: 0 });
-    // Sweep gap: the page state reached in "the pane keeps the screen awake, says so, and lets it be turned off", which no sweep route or modal opens.
+    // Sweep gap: the spell preview pane with Screen Awake pressed.
     await assertNoAccessibilityViolations(page);
     const scene = pane.locator('.spell-preview__scene');
     await expect(scene).toHaveAttribute('aria-hidden', 'true');

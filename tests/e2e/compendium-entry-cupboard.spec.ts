@@ -90,7 +90,7 @@ test('a member adds the entry from its public page, and the three dots then offe
     await expect(check()).toBeVisible();
     await expect(shelf()).toBeVisible();
     expect(await heldRows()).toHaveLength(1);
-    // Sweep gap: the page state reached in "a member adds the entry from its public page, and the three dots then offer its ", which no sweep route or modal opens.
+    // Sweep gap: the public entry page after a member adds it, with the check shown.
     await assertNoAccessibilityViolations(page);
   });
 
@@ -231,7 +231,7 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
     await expect(addMenu.getByRole('menuitem')).toHaveText([FIRST, SECOND]);
     await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(await heldRows(one.id)).toHaveLength(0);
-    // Sweep gap: the page state reached in "a member of two covens chooses from the plus’s menu, the holding coven then disa", which no sweep route or modal opens.
+    // Sweep gap: the plus menu open, listing the member's two covens.
     await assertNoAccessibilityViolations(page);
   });
 
@@ -274,7 +274,7 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
     await expect(page.getByRole('heading', { level: 1 })).toContainText(NAME_TWO);
     await expect(add()).toHaveCount(0);
     await expect(page.getByRole('main').getByRole('button', { name: HELD })).toBeVisible();
-    // Sweep gap: the page state reached in "a member of two covens chooses from the plus’s menu, the holding coven then disa", which no sweep route or modal opens.
+    // Sweep gap: a coven's own entry page with the held check shown.
     await assertNoAccessibilityViolations(page);
   });
 });
@@ -359,7 +359,7 @@ test('the Quick Look window has the plus, then the check, on a compendium list f
       ).toHaveCount(1);
       await expect(add()).toHaveCount(0);
       await expect(check()).toBeVisible();
-      // Sweep gap: the page state reached in "the Quick Look window has the plus, then the check, on a compendium list for a m", which no sweep route or modal opens.
+      // Sweep gap: Quick Look on the compendium list with the check shown after adding.
       await assertNoAccessibilityViolations(page);
     });
 

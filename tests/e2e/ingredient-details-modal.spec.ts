@@ -79,8 +79,6 @@ test.describe('on the admin Compendium list', () => {
       'href',
       `/compendium/ingredients/${slug}`,
     );
-    // Sweep gap: the page state reached in "Quick Look opens the details, and Escape and Close give the eye its focus back", which no sweep route or modal opens.
-    await assertNoAccessibilityViolations(page);
 
     await page.keyboard.press('Escape');
     await expect(details).toHaveCount(0);
@@ -399,7 +397,7 @@ test.describe("on a coven's Ingredients", () => {
     await expect(details).toBeVisible();
     await expect(editIn(details)).toBeVisible();
 
-    // Sweep gap: the page state reached in "the open details pass axe and hold at a phone width", which no sweep route or modal opens.
+    // Sweep gap: the Quick Look details with the Edit button, at 375 px.
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page);
   });
@@ -461,7 +459,7 @@ test.describe('on the public compendium', () => {
       `/compendium/ingredients/${ingredientSlug(PUBLIC_NAME, PUBLIC_FORMAL)}`,
     );
     await expect(details.getByRole('link', { name: /^Edit/ })).toHaveCount(0);
-    // Sweep gap: the page state reached in "a visitor with no account opens Quick Look and reads the entry", which no sweep route or modal opens.
+    // Sweep gap: Quick Look open on the public compendium list for a visitor with no account.
     await assertNoAccessibilityViolations(page);
 
     await page.keyboard.press('Escape');

@@ -131,7 +131,7 @@ test.describe('the addresses', () => {
     await page.goto('/help/staff');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('link', { name: new RegExp(HELP.curation.title) })).toHaveCount(0);
-    // Sweep gap: the page state reached in "a member who is neither curator nor keeper is refused the staff pages with the n", which no sweep route or modal opens.
+    // Sweep gap: the staff help index as a member who is neither curator nor keeper, with no staff article listed.
     await assertNoAccessibilityViolations(page);
   });
 
@@ -166,13 +166,9 @@ test.describe('the staff help pages', () => {
     // A curator does not reach a keeper row, and a public row lives under /help.
     await expect(page.getByRole('link', { name: new RegExp(HELP.keeper.title) })).toHaveCount(0);
     await expect(page.locator(`a[href="/help/staff/${HELP.guide.slug}"]`)).toHaveCount(0);
-    // Sweep gap: the page state reached in "a curator reaches them from /curator, opens an article and its sub page, and sea", which no sweep route or modal opens.
-    await assertNoAccessibilityViolations(page);
 
     await page.getByRole('link', { name: new RegExp(HELP.curation.title) }).click();
     await expect(page.getByRole('heading', { level: 2, name: HELP.curation.title })).toBeVisible();
-    // Sweep gap: the page state reached in "a curator reaches them from /curator, opens an article and its sub page, and sea", which no sweep route or modal opens.
-    await assertNoAccessibilityViolations(page);
 
     // The sub page list's link, not the guide's Next link to the same page.
     await page.getByRole('link', { name: HELP.curationForms.title, exact: true }).click();
@@ -182,8 +178,6 @@ test.describe('the staff help pages', () => {
     await expect(
       page.getByRole('heading', { level: 2, name: HELP.curationForms.title }),
     ).toBeVisible();
-    // Sweep gap: the page state reached in "a curator reaches them from /curator, opens an article and its sub page, and sea", which no sweep route or modal opens.
-    await assertNoAccessibilityViolations(page);
 
     const search = page.getByRole('search');
     await search.getByRole('searchbox').fill(STAFF_WORD);
@@ -196,7 +190,7 @@ test.describe('the staff help pages', () => {
     await expect(
       page.getByRole('link', { name: new RegExp(HELP.staffKindling.title) }),
     ).toHaveAttribute('href', `/help/staff/${HELP.guide.slug}/${HELP.staffKindling.slug}`);
-    // Sweep gap: the page state reached in "a curator reaches them from /curator, opens an article and its sub page, and sea", which no sweep route or modal opens.
+    // Sweep gap: the help search results listing staff articles for a curator.
     await assertNoAccessibilityViolations(page);
   });
 
@@ -513,12 +507,12 @@ test.describe('sideways scroll', () => {
     test(`${name} has no sideways scroll, signed out and signed in`, async ({ page }) => {
       await page.goto(path!);
       await assertNoSidewaysScroll(page, { restore: true });
-      // Sweep gap: the page state reached in "${name} has no sideways scroll, signed out and signed in", which no sweep route or modal opens.
+      // Sweep gap: the help search that matches nothing, and the help page for an article never written.
       if (SCANNED_HERE.has(name)) await assertNoAccessibilityViolations(page);
 
       await signInAs(page, `reader-${name.replace(/ /g, '-')}@help-pages-axe.test`);
       await page.goto(path!);
-      // Sweep gap: the page state reached in "${name} has no sideways scroll, signed out and signed in", which no sweep route or modal opens.
+      // Sweep gap: the help search that matches nothing, and the help page for an article never written.
       if (SCANNED_HERE.has(name)) await assertNoAccessibilityViolations(page);
     });
   }
@@ -609,8 +603,6 @@ test.describe('screenshots', () => {
       }),
     ).toEqual({ scrolls: true, fits: true });
     await settleTransitions(page);
-    // Sweep gap: the page state reached in "Enter opens the picture full size as one named image, scrolling, and Escape or C", which no sweep route or modal opens.
-    await assertNoAccessibilityViolations(page);
 
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);

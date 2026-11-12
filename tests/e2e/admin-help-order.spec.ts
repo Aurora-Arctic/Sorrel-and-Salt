@@ -174,7 +174,7 @@ test('at a phone, Reorder Mode as a sheet passes the scans', async ({ page }) =>
   await page.goto(PATH);
   await page.getByRole('button', { name: 'Reorder' }).click();
   await expect(said(page, 'Reorder mode.')).toBeAttached();
-  // Sweep gap: the page state reached in "at a phone, Reorder Mode as a sheet passes the scans", which no sweep route or modal opens.
+  // Sweep gap: the Reorder Mode sheet at 375 px.
   await scanBothThemes(page);
 });
 

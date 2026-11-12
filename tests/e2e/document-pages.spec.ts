@@ -73,7 +73,7 @@ test('/privacy draws the access cards under Who Can See What', async ({ page }) 
     .poll(async () => (await article.getByRole('group').count()) - (await menuGroups.count()))
     .toBe(11);
   await expect(article.getByText('{access-cards}')).toHaveCount(0);
-  // Sweep gap: the page state reached in "/privacy draws the access cards under Who Can See What", which no sweep route or modal opens.
+  // Sweep gap: the privacy page with the access-cards groups drawn from the widget.
   await assertNoAccessibilityViolations(page);
 });
 

@@ -91,7 +91,7 @@ test.describe('story 17: everyone but a keeper is kept from editing the compendi
           page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
         ).toBeVisible();
         await assertNoSidewaysScroll(page, { restore: true });
-        // Sweep gap: the page state reached in "a coven owner who is not a keeper meets the 403 page on ${group}, which a keeper", which no sweep route or modal opens.
+        // Sweep gap: the not-authorized page a signed-in steward meets at a curator or keepers address, with the shell around it.
         await assertNoAccessibilityViolations(page);
       },
     );
@@ -138,7 +138,7 @@ test.describe('story 17: everyone but a keeper is kept from editing the compendi
       await expect(page.getByRole('heading', { level: 1, name, exact: true })).toBeVisible();
       await expect(page.getByRole('link', { name: /^(edit|delete)/i })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /^(edit|delete)/i })).toHaveCount(0);
-      // Sweep gap: the page state reached in "a coven owner who is not a keeper finds no way to edit a compendium entry a keep", which no sweep route or modal opens.
+      // Sweep gap: the public compendium entry page read by a signed-in steward, with the shell and no edit controls.
       await assertNoAccessibilityViolations(page);
 
       await signInAgainAs(page, adminId);
@@ -184,7 +184,7 @@ test.describe('story 19: a keeper sees a user’s covens but reaches none of the
       await expect(covens.getByRole('link')).toHaveCount(0);
       // Impersonation is not registered in this run, so there is no Impersonate.
       await expect(dialog.getByRole('button', { name: /Impersonate/ })).toHaveCount(0);
-      // Sweep gap: the page state reached in "an admin opens a user from the list and sees each coven they hold by name and ro", which no sweep route or modal opens.
+      // Sweep gap: the keeper's user dialog for a user who holds a Steward seat and an Observer seat, listing both covens.
       await assertNoAccessibilityViolations(page);
 
       await dialog.getByRole('button', { name: 'Close', exact: true }).click();
@@ -232,7 +232,7 @@ test.describe('story 19: a keeper sees a user’s covens but reaches none of the
           expect(await response?.text()).not.toContain(`${W} ${tag}`);
           await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
           await expect(page.getByRole('navigation', { name: 'Coven' })).toHaveCount(0);
-          // Sweep gap: the page state reached in "${visitor} meets the 404 page at each of a coven’s pages its owner opens", which no sweep route or modal opens.
+          // Sweep gap: the 404 page a signed-in non-member meets at a coven address, with the shell around it.
           await assertNoAccessibilityViolations(page);
         }
       },
@@ -287,7 +287,7 @@ async function moveAndDelete(page: Page, dialog: Locator, picker: string, destin
   await dialog.getByRole('button', { name: 'Continue' }).click();
   const confirm = dialog.getByRole('button', { name: 'Move and Delete' });
   await expect(confirm).toBeVisible();
-  // Sweep gap: the page state reached in "${visitor} meets the 404 page at each of a coven’s pages its owner opens", which no sweep route or modal opens.
+  // Sweep gap: the Move and Delete confirmation inside a vocabulary dialog, after a replacement is chosen.
   await assertNoAccessibilityViolations(page);
   await confirm.click();
 }
@@ -316,8 +316,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       const name = adding.getByRole('textbox', { name: 'Name', exact: true });
       await expect(name).toBeVisible();
       await expect(busy(adding)).toHaveCount(0);
-      // Sweep gap: the page state reached in "an admin adds a compendium entry, edits it, and deletes it, the list following e", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
 
       const addForm = async (dialog: Locator, form: string) => {
         const box = dialog.getByRole('combobox', { name: 'New Form' });
@@ -364,7 +362,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await addForm(editing, 'Oil');
       const oil = editing.getByRole('group', { name: 'Oil', exact: true });
       await oil.getByRole('textbox', { name: 'Safety Notes' }).fill('Dilute before use.');
-      // Sweep gap: the page state reached in "an admin adds a compendium entry, edits it, and deletes it, the list following e", which no sweep route or modal opens.
+      // Sweep gap: the compendium entry dialog with an Oil form added and its Safety Notes filled.
       await assertNoAccessibilityViolations(page);
       await expect(save).toBeEnabled();
       await save.click();
@@ -388,7 +386,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(reopenedOil.getByRole('textbox', { name: 'Safety Notes' })).toHaveValue(
         'Dilute before use.',
       );
-      // Sweep gap: the page state reached in "an admin adds a compendium entry, edits it, and deletes it, the list following e", which no sweep route or modal opens.
+      // Sweep gap: the compendium entry dialog reopened with an Oil form's Details & Care section expanded.
       await assertNoAccessibilityViolations(page);
       await renamed.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(renamed).toHaveCount(0);
@@ -441,8 +439,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(adding).toBeVisible();
       await expect(page).toHaveURL(/\/curator\/categories\?new$/);
       await expect(adding.getByRole('button', { name: 'Save Category' })).toBeDisabled();
-      // Sweep gap: the page state reached in "an admin adds a category, edits it, and deletes it, and is told which entries ho", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
       await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft');
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       await adding.getByRole('combobox', { name: 'Group' }).click();
@@ -465,7 +461,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(busy(editing)).toHaveCount(1);
       await expect(editing.getByRole('textbox')).toHaveCount(0);
       await expect(page).toHaveURL(/\/curator\/categories$/);
-      // Sweep gap: the page state reached in "an admin adds a category, edits it, and deletes it, and is told which entries ho", which no sweep route or modal opens.
+      // Sweep gap: the Edit Category dialog while its content is still loading, with the busy status and no fields.
       await assertNoAccessibilityViolations(page);
       const pressed = await editing.elementHandle();
       await editGate.release();
@@ -478,8 +474,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await page.unrouteAll();
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft Renamed');
       await editing.getByRole('textbox', { name: 'Description' }).fill('Rewritten by the story');
-      // Sweep gap: the page state reached in "an admin adds a category, edits it, and deletes it, and is told which entries ho", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Category' }).click();
       await expect(editing).toHaveCount(0);
       const renamed = rowOf(page, 'Categories', 'Aaa Testcraft Renamed');
@@ -504,7 +498,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await deleteFrom(held, 'Category');
       await expect(held.getByRole('alert')).toContainText('Bay Laurel');
       await expect(held).toBeVisible();
-      // Sweep gap: the page state reached in "an admin adds a category, edits it, and deletes it, and is told which entries ho", which no sweep route or modal opens.
+      // Sweep gap: the Edit Category dialog showing the refusal alert for a category that entries still hold.
       await assertNoAccessibilityViolations(page);
       await held.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(held).toHaveCount(0);
@@ -538,7 +532,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
         .fill('#0c5393');
       const saveNew = adding.getByRole('button', { name: 'Save Group' });
       await expect(saveNew).toBeEnabled();
-      // Sweep gap: the page state reached in "an admin adds a category group, is refused a colour too dark for its ground, ren", which no sweep route or modal opens.
+      // Sweep gap: the Add Category Group dialog with both theme colours filled, showing the colour preview.
       await assertNoAccessibilityViolations(page);
       await saveNew.click();
       await expect(adding).toHaveCount(0);
@@ -553,7 +547,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(editing).toBeVisible();
       const dark = editing.getByRole('textbox', { name: 'Dark Theme Colour', exact: true });
       // Scanned before the bad colour goes in, so the preview shows it at its failing contrast.
-      // Sweep gap: the page state reached in "an admin adds a category group, is refused a colour too dark for its ground, ren", which no sweep route or modal opens.
+      // Sweep gap: the Edit Category Group dialog with its colour preview shown at a saved colour.
       await assertNoAccessibilityViolations(page);
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Bulwarks');
       await dark.fill('#0c5393');
@@ -654,7 +648,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await undo.click();
       await expect(name).toHaveValue(savedName);
       await expect(save).toBeDisabled();
-      // Sweep gap: the page state reached in "an admin undoes and redoes edits in a category group and in a category, back to ", which no sweep route or modal opens.
+      // Sweep gap: the Edit Category Group dialog after an undo, with the Edit History status filled.
       await assertNoAccessibilityViolations(page);
 
       // The picker reports every pointer move; one chord still takes the whole drag back.
@@ -717,8 +711,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       await adding.getByRole('combobox', { name: 'Group' }).click();
       await adding.getByRole('option', { name: 'Mineral', exact: true }).click();
-      // Sweep gap: the page state reached in "an admin adds a form, renames it and moves it to another group, and deletes it", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
       await adding.getByRole('button', { name: 'Save Form' }).click();
       await expect(adding).toHaveCount(0);
       const row = rowOf(page, 'Forms', 'Aaa Testwort Shard');
@@ -740,8 +732,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(save).toHaveAccessibleDescription(/\S/);
       await editing.getByRole('combobox', { name: 'Group' }).click();
       await editing.getByRole('option', { name: 'Substance', exact: true }).click();
-      // Sweep gap: the page state reached in "an admin adds a form, renames it and moves it to another group, and deletes it", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
       await save.click();
       await expect(editing).toHaveCount(0);
       await expect(rowOf(page, 'Forms', 'Aaa Testwort Shard')).toHaveCount(0);
@@ -783,8 +773,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       const save = adding.getByRole('button', { name: 'Save Group' });
       await expect(save).toBeEnabled();
-      // Sweep gap: the page state reached in "an admin adds a form group, renames it, and moves its form before deleting it", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
       await save.click();
       await expect(adding).toHaveCount(0);
       const row = rowOf(page, 'Form Groups', 'Aaa Fixture Matter');
@@ -805,8 +793,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       });
       await expect(editing).toBeVisible();
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Fixture Stuff');
-      // Sweep gap: the page state reached in "an admin adds a form group, renames it, and moves its form before deleting it", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Group' }).click();
       await expect(editing).toHaveCount(0);
       await expect(rowOf(page, 'Form Groups', 'Aaa Fixture Stuff')).toBeVisible();
@@ -864,8 +850,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
         await expect(adding.getByRole('button', { name: `Save ${label}` })).toBeDisabled();
         await adding.getByRole('textbox', { name: 'Name' }).fill(added);
         await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
-        // Sweep gap: the page state reached in "an admin adds a ${label.toLowerCase()}, renames it, and deletes it", which no sweep route or modal opens.
-        await assertNoAccessibilityViolations(page);
         await adding.getByRole('button', { name: `Save ${label}` }).click();
         await expect(adding).toHaveCount(0);
         const row = rowOf(page, title, added);
@@ -882,8 +866,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
         await editing.getByRole('textbox', { name: 'Name' }).fill(renamedTo);
         await editing.getByRole('textbox', { name: 'Description' }).fill('Rewritten by the story');
         await expect(save).toHaveAccessibleDescription(/\S/);
-        // Sweep gap: the page state reached in "an admin adds a ${label.toLowerCase()}, renames it, and deletes it", which no sweep route or modal opens.
-        await assertNoAccessibilityViolations(page);
         await save.click();
         await expect(editing).toHaveCount(0);
         const renamed = rowOf(page, title, renamedTo);
@@ -922,8 +904,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       const saveNew = adding.getByRole('button', { name: 'Save Tradition' });
       await expect(saveNew).toBeEnabled();
-      // Sweep gap: the page state reached in "an admin adds a deity tradition, renames it, and moves its deity before deleting", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
       await saveNew.click();
       await expect(adding).toHaveCount(0);
       const row = rowOf(page, 'Deity Traditions', 'Aaa Fixtural');
@@ -944,8 +924,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       });
       await expect(editing).toBeVisible();
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Mockish');
-      // Sweep gap: the page state reached in "an admin adds a deity tradition, renames it, and moves its deity before deleting", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Tradition' }).click();
       await expect(editing).toHaveCount(0);
       await expect(rowOf(page, 'Deity Traditions', 'Aaa Mockish')).toBeVisible();
@@ -1003,8 +981,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await tradition.click();
       await adding.getByRole('option', { name: 'Greek', exact: true }).click();
       await expect(tradition).toHaveValue('Greek');
-      // Sweep gap: the page state reached in "an admin adds and renames a deity, is refused its delete while an entry holds it", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
       await adding.getByRole('button', { name: 'Save Deity' }).click();
       await expect(adding).toHaveCount(0);
       const row = rowOf(page, 'Deities', 'Aaa Testris');
@@ -1021,8 +997,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
         `/curator/deities?query=Aaa+Testri&edit=${deitySlug('Aaa Testris', 'Greek')}`,
       );
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testrix');
-      // Sweep gap: the page state reached in "an admin adds and renames a deity, is refused its delete while an entry holds it", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Deity' }).click();
       await expect(editing).toHaveCount(0);
       const renamed = rowOf(page, 'Deities', 'Aaa Testrix');
@@ -1058,7 +1032,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await deleteFrom(held, 'Deity');
       await expect(held.getByRole('alert')).toContainText(entry);
       await expect(held).toBeVisible();
-      // Sweep gap: the page state reached in "an admin adds and renames a deity, is refused its delete while an entry holds it", which no sweep route or modal opens.
+      // Sweep gap: the Edit Deity dialog showing the refusal alert for a deity that an entry still holds.
       await assertNoAccessibilityViolations(page);
       await held.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(held).toHaveCount(0);

@@ -116,8 +116,6 @@ test(
         page.getByRole('button', { name: 'Add Ingredient', disabled: false }),
       ).toHaveCount(0);
       await expect(rowOf(ingredientList(page), 'Rosemary')).toBeVisible();
-      // Sweep gap: the page state reached in "a viewer reads the ingredients and the grimoire a member reads, and is offered n", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
 
       const grimoire = await page.goto(grimoirePath);
       expect(grimoire?.status()).toBe(200);
@@ -126,8 +124,6 @@ test(
       await expect(writeControls(page)).toHaveCount(0);
       await expect(editingFields(page)).toHaveCount(0);
       await expect(rowOf(grimoireList(page, 'Spells'), 'Fixture Working')).toBeVisible();
-      // Sweep gap: the page state reached in "a viewer reads the ingredients and the grimoire a member reads, and is offered n", which no sweep route or modal opens.
-      await assertNoAccessibilityViolations(page);
 
       await page.goto(`/coven/${coven.slug}`);
       await expect(page.getByRole('button', { name: 'Leave Coven' })).toBeVisible();
@@ -306,7 +302,7 @@ test(
       const stamp = await jarStamp();
       expect(stamp).toMatchObject({ updated_by: B, quantity: 2 });
       await expectEditedAt(row, stamp.updated_at);
-      // Sweep gap: the page state reached in "a member", which no sweep route or modal opens.
+      // Sweep gap: the ingredients list with a jar edited by Fixture B, showing its edited-by and edited-at stamp.
       await assertNoAccessibilityViolations(page);
     });
 
