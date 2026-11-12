@@ -36,8 +36,8 @@ function RangeText({ from, to, placeholder }: DayRange & { placeholder: string }
   if (from && to)
     return (
       <>
-        {/* The drawn dash stays in the name, so the name holds the visible text (WCAG 2.5.3). */}
-        {shortWords(from)} – {shortWords(to)}
+        {/* "to" is shown, not a dash, so the name holds the visible text and is read in words (WCAG 2.5.3). */}
+        {shortWords(from)} to {shortWords(to)}
       </>
     );
   if (from) return <>From {shortWords(from)}</>;
