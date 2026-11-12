@@ -9,6 +9,7 @@ paths:
   - 'scripts/db-seed.ts'
   - 'scripts/check-destructive-ddl.ts'
   - 'scripts/db-generate.ts'
+  - 'scripts/migrate.ts'
   - 'drizzle.config.ts'
 ---
 
