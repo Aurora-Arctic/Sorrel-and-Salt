@@ -36,11 +36,8 @@ function RangeText({ from, to, placeholder }: DayRange & { placeholder: string }
   if (from && to)
     return (
       <>
-        {shortWords(from)}
-        {/* The dash is drawn and "to" is read, so a screen reader says the range in words. */}
-        <span aria-hidden="true"> – </span>
-        <span className="visually-hidden"> to </span>
-        {shortWords(to)}
+        {/* The drawn dash stays in the name, so the name holds the visible text (WCAG 2.5.3). */}
+        {shortWords(from)} – {shortWords(to)}
       </>
     );
   if (from) return <>From {shortWords(from)}</>;
