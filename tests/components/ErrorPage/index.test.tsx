@@ -17,6 +17,16 @@ describe('ErrorPage', () => {
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/');
   });
 
+  it('titles the tab by its own heading', () => {
+    render(
+      <ErrorPage title="Gone" reason="Nothing here.">
+        <a href="/">Home</a>
+      </ErrorPage>,
+    );
+
+    expect(document.title).toBe(screen.getByRole('heading', { level: 1 }).textContent);
+  });
+
   it('shows a reference only when given one', () => {
     const { rerender } = render(
       <ErrorPage title="Gone" reason="Nothing here.">

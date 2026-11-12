@@ -1,5 +1,4 @@
 import { test, expect } from '../fixtures';
-import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { HELP, PUBLIC_WORD, STAFF_WORD, seedHelpArticles } from '../help-articles';
 
@@ -31,7 +30,6 @@ test.describe('Story 92: A Visitor Reads the Help Pages', { tag: '@story-92' }, 
       await expect(page.getByRole('link', { name: new RegExp(HELP.curation.title) })).toHaveCount(
         0,
       );
-      await assertNoAccessibilityViolations(page);
     });
 
     await test.step('the visitor opens an article, which lists its public sub page only', async () => {
@@ -44,7 +42,6 @@ test.describe('Story 92: A Visitor Reads the Help Pages', { tag: '@story-92' }, 
       await expect(
         page.getByRole('link', { name: new RegExp(HELP.staffKindling.title) }),
       ).toHaveCount(0);
-      await assertNoAccessibilityViolations(page);
     });
 
     await test.step('the visitor opens the sub page, nested under its parent', async () => {
@@ -53,7 +50,6 @@ test.describe('Story 92: A Visitor Reads the Help Pages', { tag: '@story-92' }, 
       await expect(
         page.getByRole('heading', { level: 2, name: HELP.kindling.title }),
       ).toBeVisible();
-      await assertNoAccessibilityViolations(page);
     });
 
     await test.step('the visitor follows a link to a glossary term, which lands on its entry', async () => {
@@ -62,7 +58,6 @@ test.describe('Story 92: A Visitor Reads the Help Pages', { tag: '@story-92' }, 
       await expect(page).toHaveURL(new RegExp(`/help/glossary#${HELP.term.slug}$`));
       await expect(page.getByRole('term').filter({ hasText: HELP.term.title })).toBeVisible();
       await expect(page.locator(`[id="${HELP.term.slug}"]`)).toBeInViewport();
-      await assertNoAccessibilityViolations(page);
     });
 
     await test.step('the visitor searches and finds public rows, and no staff one', async () => {
@@ -79,7 +74,6 @@ test.describe('Story 92: A Visitor Reads the Help Pages', { tag: '@story-92' }, 
       ).toHaveAttribute('href', `/help/${HELP.guide.slug}/${HELP.kindling.slug}`);
       // The deleted page holds the word too and is not found.
       await expect(page.getByRole('link', { name: new RegExp(HELP.gone.title) })).toHaveCount(0);
-      await assertNoAccessibilityViolations(page);
 
       await page.goto(`/help/search?q=${STAFF_WORD}`);
       // Why the absence means something: the search ran with the staff word in its box.

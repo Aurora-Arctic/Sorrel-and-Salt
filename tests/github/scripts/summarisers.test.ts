@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { FLAKY_NOTE } from '../../../.github/scripts/lib/failure-list.mjs';
 import { mergedPlaywrightReport, runScript } from '../../support/github-scripts';
 
 // The summarisers are scripts, so each runs as its own process against fixture
@@ -207,6 +208,7 @@ describe('the failing-test list', () => {
         '<details><summary>Failing tests</summary>',
         '',
         '- `tests/e2e/a.spec.ts` › Testwort › breaks — boom',
+        `- \`tests/e2e/a.spec.ts\` › Testwort › wobbles${FLAKY_NOTE} — once`,
         '',
         '</details>',
       ].join('\n'),
@@ -258,6 +260,86 @@ describe('the flaky note', () => {
     );
     expect(lines).toContain(`- [ ] Story 7: Testwort walk${NOTE}`);
     expect(outputs.flaky).toBe('true');
+  });
+});
+
+describe('a flaky test in the Playwright gate', () => {
+  const FILE = 'tests/e2e/testwort.spec.ts';
+  // Two tests failed and then passed on retry, one passed, one failed outright.
+  const report = playwrightReport(
+    FILE,
+    [
+      { title: 'Testwort steeps', ok: true, status: 'flaky', message: 'first try' },
+      { title: 'Testwort boils', ok: true, status: 'flaky', message: 'first try' },
+      { title: 'Testwort cools', ok: true, status: 'expected' },
+      { title: 'Testwort burns', ok: false, status: 'unexpected', message: 'scorched' },
+    ],
+    { expected: 1, unexpected: 1, skipped: 0, flaky: 2 },
+  );
+  const onlyFlaky = playwrightReport(
+    FILE,
+    [
+      { title: 'Testwort steeps', ok: true, status: 'flaky', message: 'first try' },
+      { title: 'Testwort cools', ok: true, status: 'expected' },
+    ],
+    { expected: 1, unexpected: 0, skipped: 0, flaky: 1 },
+  );
+  const summarise = (data: unknown) =>
+    run('summarize-playwright.mjs', {
+      PLAYWRIGHT_JSON_OUTPUT_NAME: write('playwright.json', data),
+    });
+  const annotationsIn = (stdout: string) =>
+    stdout.split('\n').filter((line) => line.startsWith('::warning'));
+  const lineFor = (lines: string[], title: string) =>
+    lines.filter((line) => line.includes(`\`${FILE}\` › Testwort › ${title}`));
+
+  it('is named in the comment with the flaky note, as the stories summary names one', () => {
+    const lines = summarise(report).outputs.details.split('\n');
+
+    expect(lineFor(lines, 'Testwort steeps')).toHaveLength(1);
+    expect(lineFor(lines, 'Testwort steeps')[0]).toContain(FLAKY_NOTE);
+    expect(lineFor(lines, 'Testwort boils')).toHaveLength(1);
+    expect(lineFor(lines, 'Testwort boils')[0]).toContain(FLAKY_NOTE);
+    // The outright failure is listed too, without the note, and the passing test is not listed.
+    expect(lineFor(lines, 'Testwort burns')).toHaveLength(1);
+    expect(lineFor(lines, 'Testwort burns')[0]).not.toContain(FLAKY_NOTE);
+    expect(lineFor(lines, 'Testwort cools')).toEqual([]);
+  });
+
+  it('writes one ::warning annotation per flaky test, and none for any other', () => {
+    const annotations = annotationsIn(summarise(report).stdout);
+    const naming = (title: string) =>
+      annotations.filter((line) => line.includes(FILE) && line.includes(title));
+
+    expect(annotations).toHaveLength(2);
+    expect(naming('Testwort steeps')).toHaveLength(1);
+    expect(naming('Testwort boils')).toHaveLength(1);
+    expect(naming('Testwort cools')).toEqual([]);
+    expect(naming('Testwort burns')).toEqual([]);
+  });
+
+  it('writes no ::warning annotation when nothing was flaky', () => {
+    const steady = playwrightReport(
+      FILE,
+      [{ title: 'Testwort cools', ok: true, status: 'expected' }],
+      { expected: 1 },
+    );
+    const { stdout, outputs } = summarise(steady);
+
+    // Precondition: the run was summarised.
+    expect(outputs.summary).toMatch(/^1 passed, 0 failed/);
+    expect(annotationsIn(stdout)).toEqual([]);
+  });
+
+  it('does not make a run whose only problem is a flaky test a failure', () => {
+    // runScript throws on a non-zero exit, so reaching the outputs means the step passed.
+    const { outputs, stdout } = summarise(onlyFlaky);
+
+    // Precondition: the flaky test was seen, named and annotated.
+    expect(outputs.flaky).toBe('true');
+    expect(outputs.details).toContain(FLAKY_NOTE);
+    expect(annotationsIn(stdout)).toHaveLength(1);
+    expect(outputs.summary).toMatch(/^1 passed, 0 failed\b/);
   });
 });
 

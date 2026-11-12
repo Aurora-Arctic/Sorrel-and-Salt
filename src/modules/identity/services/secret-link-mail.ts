@@ -38,6 +38,7 @@ export async function secretLinkMessage(link: SecretLink): Promise<Message | nul
     if (!pending || (await isEmailHeldByVerifiedAccount(pending))) return null;
     return changeLinkMessage(
       link.authBase,
+      user.id,
       user.email,
       pending,
       link.next,

@@ -52,15 +52,20 @@ cited by number in the PR table of the task that applies it.
    which of two lock reasons won (`UserList`'s "keeps the primary keeper's
    Revoke on its own reason while paused") — the words are the state and
    stay. Locators keep their exact names.
-3. **A regression test needs a shipped bug.** Only a bug that reached a PR or
+3. **A regression test needs a shipped bug.** Only a bug that reached `staging` or
    production earns one, and its comment cites the PR or the incident. A bug
-   caught while building earns none, and neither does "X stays removed": the
+   caught while building, including one found in an open PR, earns none, and neither does "X stays removed": the
    exact-column test already fails if a column comes back.
 4. **No presentation in happy-dom.** No class name, CSS custom property, z-index,
    compiled-Sass value or faked layout (a `getBoundingClientRect` mock). The
    workshop story and the Playwright axe scan own presentation. A real browser
    measuring a layout requirement (the 375 px scroll width) and a
    one-assertion token-contrast check per theme are functional, and allowed.
+   A Playwright spec takes its window width from `tests/e2e/breakpoints.ts`: `PHONE_WIDTH`
+   (375) and `DESKTOP_WIDTH` (1280, Playwright's desktop device), a stylesheet edge, or an
+   edge ±1. A width that is no edge is named in `PURPOSE_WIDTHS` in that file, and the entry's
+   comment gives a bug id (`MB.<n>`) or one of three reasons: WCAG reflow, a text-fit band, a
+   screenshot size. `tests/guards/viewport-widths.test.ts` refuses a bare number.
 5. **One row per shared path.** A `describe.each` or `it.each` over a
    component's or module's own config table (`KINDS`, `VOCABULARY_COPY`,
    `VARIANTS`, `UNITS`, the vocabulary registry) runs the shared behaviour on
@@ -113,12 +118,24 @@ cited by number in the PR table of the task that applies it.
    story suite in `tests/e2e/stories/` walks each story as a user would and
    tags it `@story-N`. The gate suite (`tests/e2e/*.spec.ts`) keeps only what
    no story walks and only a real server can prove: cookies, mail, the cache,
-   the production build's config, the GraphQL route, and one axe scan per
-   page state (a dialog or an open menu adds markup the plain page scan never
-   sees). A gate spec a story flow proves is deleted. A service rule keeps its
+   the production build's config, the GraphQL route, and the axe scans of
+   states the sweep cannot reach (below). A gate spec a story flow proves is deleted. A service rule keeps its
    own Vitest test, with its direct-id refusal; a story flow does not replace
    it, because a flow shows the control is absent and the rule shows the
    service refuses.
+   Each axe check runs once per distinct markup and colour state:
+   1. The axe sweep (`tests/e2e/axe.spec.ts`) scans every route and modal
+      once with the full rule set, in light, at desktop width.
+   2. In dark it runs only the colour rules (`color-contrast` and
+      `link-in-text-block`), because a theme switch changes colour tokens and
+      no markup. The dark scan stays because it checks colours in context;
+      `tests/scss/tokens.test.ts` checks only the token pairs.
+   3. A phone layout whose markup differs is its own state: the shell's tab
+      bar and each phone sheet are scanned once, in full, at 375 px.
+   4. Any other spec or story scans only a state the sweep cannot reach (an
+      open menu, an error, a status), and a one-line `// Sweep gap:` comment
+      names that state. A scan that repeats a sweep state is cut.
+   5. No manual or keyboard check is cut: axe finds only part of the issues.
 10. **SQL text appears only as the precondition of an EXPLAIN plan test**, and
     a plan test keeps its row counts.
 

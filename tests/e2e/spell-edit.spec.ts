@@ -1,8 +1,8 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { grimoireList, insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
+import { assertNoAccessibilityViolations } from './axe';
 
 // Editing a saved spell from its card's pencil and from its recipe page. A viewer has no pencil and no dialog,
 // and the dialog over the recipe page passes axe and closes back to it.
@@ -56,6 +56,7 @@ test('a member edits a saved spell from its card and its recipe page, and a view
   await expect(
     page.getByRole('dialog', { name: 'Edit Spell, Fixture Working Renamed' }),
   ).toBeVisible();
+  // Sweep gap: the Edit Spell dialog over a recipe page (?edit=); the sweep's spell-builder is New Spell.
   await assertNoAccessibilityViolations(page);
   await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page).toHaveURL(recipe);

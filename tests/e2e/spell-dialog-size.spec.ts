@@ -3,6 +3,7 @@ import { test } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
 
 test.use({ reducedMotion: 'no-preference' });
 test.beforeAll(async () => {
@@ -10,8 +11,8 @@ test.beforeAll(async () => {
 });
 
 for (const viewport of [
-  { width: 1280, height: 800 },
-  { width: 390, height: 844 },
+  { width: DESKTOP_WIDTH, height: 800 },
+  { width: PHONE_WIDTH, height: 844 },
 ]) {
   test(`New Spell opens at its full size, the form in its first frame, at ${viewport.width}px`, async ({
     page,
@@ -33,8 +34,13 @@ for (const viewport of [
     // Every frame from the press on: the modal dialog's height, and whether it holds the form.
     // `:modal` matches only a dialog opened over the page, never the filter panel.
     await page.evaluate(() => {
-      const w = window as unknown as { frames: { height: number; form: boolean }[] };
+      const w = window as unknown as {
+        frames: { height: number; form: boolean }[];
+        recorded: Promise<void>;
+      };
       w.frames = [];
+      let finish = () => {};
+      w.recorded = new Promise<void>((resolve) => (finish = resolve));
       const start = performance.now();
       const tick = () => {
         const dialog = document.querySelector<HTMLDialogElement>('dialog:modal');
@@ -45,12 +51,13 @@ for (const viewport of [
           });
         }
         if (performance.now() - start < 2000) requestAnimationFrame(tick);
+        else finish();
       };
       requestAnimationFrame(tick);
     });
     await page.getByRole('link', { name: 'New Spell' }).click();
     await expect(page.getByRole('dialog', { name: 'New Spell' })).toBeVisible();
-    await page.waitForTimeout(2100);
+    await page.evaluate(() => (window as unknown as { recorded: Promise<void> }).recorded);
 
     const frames = await page.evaluate(
       () => (window as unknown as { frames: { height: number; form: boolean }[] }).frames,
@@ -65,7 +72,7 @@ for (const viewport of [
     const width = await page
       .getByRole('dialog', { name: 'New Spell' })
       .evaluate((dialog) => Math.round(dialog.getBoundingClientRect().width));
-    if (viewport.width >= 1280) expect(width).toBe(560);
+    if (viewport.width >= DESKTOP_WIDTH) expect(width).toBe(560);
     else expect(width).toBeLessThan(viewport.width);
 
     const details = await page.getByRole('group', { name: 'Jar Details' }).boundingBox();

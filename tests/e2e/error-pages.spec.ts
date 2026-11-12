@@ -18,7 +18,6 @@ test('a coven that is not yours is a 404 inside the shell, with a way home', asy
   expect(response?.status()).toBe(404);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await assertNoSidewaysScroll(page);
-  await assertNoAccessibilityViolations(page);
   await page.getByRole('link', { name: /back to sorrel/i }).click();
   await expect(page).toHaveURL('/');
 });
@@ -41,6 +40,7 @@ for (const [index, path] of [
     await expect(dialog.getByRole('textbox', { name: 'Page' })).toHaveAccessibleDescription(
       /Opened from the Error 404 page/,
     );
+    // Sweep gap: the Contact Support dialog opened from Report This, with its Page field described by the error page.
     await assertNoAccessibilityViolations(page);
   });
 }
@@ -79,21 +79,4 @@ test('a signed-out visitor at an unknown address gets a 404 in the public frame'
   expect(signIn.pathname).toBe('/sign-in');
   expect(signIn.searchParams.get('next')).toBe('/nothing-here');
   await expect(page.getByRole('navigation', { name: 'Site' })).toBeVisible();
-});
-
-// The page under the refusal keeps the title it would have had, so a tab of 404s and 403s reads like the
-// page refused. Each sets its own: the tab's title opens with the page's own heading.
-test('the 404 and the 403 each title the tab by their own heading', async ({ page }) => {
-  await signInAs(page, 'titles@error-pages.test');
-
-  for (const [path, status] of [
-    ['/nothing-here', 404],
-    ['/keepers/users', 403],
-    ['/curator', 403],
-  ] as const) {
-    expect((await page.goto(path))?.status(), path).toBe(status);
-    const heading = (await page.getByRole('heading', { level: 1 }).textContent())?.trim() ?? '';
-    expect(heading, path).not.toBe('');
-    await expect.poll(async () => (await page.title()).split(' | ')[0], path).toBe(heading);
-  }
 });

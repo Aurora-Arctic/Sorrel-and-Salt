@@ -9,7 +9,7 @@ export default defineConfig({
   testDir: './tests/e2e/workshop',
   fullyParallel: true,
   forbidOnly: baseConfig.forbidOnly,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI
     ? [['list'], ['json'], ['html', HTML_REPORT]]
     : process.env.CLAUDECODE

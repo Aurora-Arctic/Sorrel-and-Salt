@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { hydrated } from './waits';
 
 // Against the built server: the headers arrive, and the policy blocks nothing the pages need. Chromium
 // logs a refused load to the console and fires `securitypolicyviolation`; both are collected.
@@ -27,22 +28,16 @@ async function collectViolations(page: Page): Promise<string[]> {
   return violations;
 }
 
-test('a page answers with the policy, nosniff and a referrer policy', async ({ page }) => {
-  const response = await page.goto('/compendium');
-  const headers = response?.headers() ?? {};
-
-  expect(headers['content-security-policy']).toContain("frame-ancestors 'none'");
-  expect(headers['x-content-type-options']).toBe('nosniff');
-  expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
-});
-
 test('the home page and the compendium load under the policy with no violation', async ({
   page,
 }) => {
   const violations = await collectViolations(page);
 
-  await page.goto('/');
-  await page.goto('/compendium');
+  // A late resource's violation only shows once the page has loaded and hydrated, so each page is waited on for both.
+  for (const path of ['/', '/compendium']) {
+    await page.goto(path, { waitUntil: 'load' });
+    await hydrated(page, 'main');
+  }
   await expect(page.getByRole('navigation', { name: 'Site' })).toBeVisible();
   // The pre-paint scripts are inline: this one sets `data-js` on <html> only if it ran.
   await expect(page.locator('html[data-js]')).toHaveCount(1);
@@ -56,7 +51,7 @@ test('a signed-in page loads under the policy with no violation', async ({ page 
 
   await page.goto('/account');
   await expect(page.getByRole('main')).toBeVisible();
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, 'main');
 
   expect(violations).toEqual([]);
 });

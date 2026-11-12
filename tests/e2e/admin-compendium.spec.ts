@@ -9,6 +9,8 @@ import { applyFilters, openFilters, seedCoven } from './stories/coven-ingredient
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 import { deitySlug, ingredientSlug } from '@/lib/slugify';
+import { hydrated, settledBox } from './waits';
+import { BAND_WIDTHS, PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
 
 // claude-docs/components/ingredient-form.md, "Stories and tests".
 test.beforeAll(async () => {
@@ -25,7 +27,7 @@ async function expectInsideViewport(page: Page, dialog: Locator) {
 
 test('the page behind an open modal does not scroll', async ({ page, isMobile }) => {
   test.skip(isMobile, 'Mouse wheel is not supported in mobile WebKit');
-  await page.setViewportSize({ width: 1280, height: 600 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 600 });
   await signInAs(page, 'scroll-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium');
   // The precondition: the list is taller than the window, so the page can scroll.
@@ -65,12 +67,13 @@ test('the page behind an open modal does not scroll', async ({ page, isMobile })
 });
 
 test('the compendium form stands inside the viewport on a phone', async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   await signInAs(page, 'phone-admin@admin-compendium.test', ['discord'], 'admin');
 
   await page.goto('/curator/compendium?new=ingredient-compendium');
 
   await expectInsideViewport(page, page.getByRole('dialog', { name: 'Add Ingredient' }));
+  // Sweep gap: the add form's dialog at a phone width
   await assertNoAccessibilityViolations(page);
 });
 
@@ -99,6 +102,7 @@ test('the compendium form stands inside the viewport and keeps its pickers insid
   await adding.getByRole('combobox', { name: 'Celestial Body' }).click();
   await adding.getByRole('combobox', { name: 'Celestial Body' }).fill('M');
   await expect(adding.getByRole('listbox', { name: 'Celestial Body suggestions' })).toBeVisible();
+  // Sweep gap: the add form with a picker's suggestions open
   await assertNoAccessibilityViolations(page);
 });
 
@@ -125,6 +129,7 @@ test('Enter turns the No Refs switch, as Space does, and Apply Filters applies i
 
   await applyFilters(page, panel);
   await expect(page).toHaveURL(/withoutReferences=1/);
+  // Sweep gap: the list filtered by No Refs
   await assertNoAccessibilityViolations(page);
 });
 
@@ -153,7 +158,7 @@ test('the Form box keeps only the entries holding the form chosen', async ({ pag
 test('the edit source panel leaves the dialog in place and closes from its top by keyboard', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
   await signInAs(page, 'source-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium?new=ingredient-compendium');
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
@@ -185,6 +190,7 @@ test('the edit source panel leaves the dialog in place and closes from its top b
   expect(await body.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   expect(await adding.evaluate((element) => element.scrollTop)).toBe(0);
   await expect(adding.getByRole('button', { name: 'Close', exact: true })).toBeInViewport();
+  // Sweep gap: the edit source panel open over the dialog
   await assertNoAccessibilityViolations(page);
 
   await editing.getByRole('textbox', { name: /^Title/ }).fill('Fixtureleaf Herbal');
@@ -222,6 +228,7 @@ test('the toxic toggle starts off, saves, and reads back on reopening', async ({
   await expect(toggle).toBeFocused();
   await page.keyboard.press('Space');
   await expect(toggle).toBeChecked();
+  // Sweep gap: the toxic switch on
   await assertNoAccessibilityViolations(page);
   // Save Ingredient is shut once nothing is left to save, which is when the autosave has stored the
   // toggle; clicking it instead would race the autosave.
@@ -244,7 +251,7 @@ test('a name typed shows matching rows, and a pick opens its Quick Look over the
   await signInAs(page, 'search-pick-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium?withoutReferences=1');
   // Hydrated first: before it, the box is a plain text field with no dropdown.
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, '[role="combobox"]');
 
   const name = page.getByRole('combobox', { name: 'Name' });
   await name.fill('cats claw');
@@ -252,6 +259,7 @@ test('a name typed shows matching rows, and a pick opens its Quick Look over the
   await expect(rows.first()).toBeVisible();
   // Why the URL below could have carried the typed text: it was not applied while typing.
   await expect(page).not.toHaveURL(/query=/);
+  // Sweep gap: the typed query's suggestions over the list
   await assertNoAccessibilityViolations(page);
 
   await rows.first().click();
@@ -281,7 +289,7 @@ test('arrowing down the Name box keeps the highlighted row inside the dropdown',
     }
   });
   await page.goto('/curator/compendium');
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, '[role="combobox"]');
 
   const name = page.getByRole('combobox', { name: 'Name' });
   await name.fill('scrollwort');
@@ -317,7 +325,7 @@ test('arrowing down the Name box keeps the highlighted row inside the dropdown',
 test('Enter in the Name box applies the name, keeping No Refs', async ({ page }) => {
   await signInAs(page, 'search-enter-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium');
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, '[role="combobox"]');
 
   await openFilters(page);
   await page.getByRole('switch', { name: /^No Refs/ }).click();
@@ -501,7 +509,7 @@ test('the Categories picker filters by AND, writes repeated slugs, restores on r
 test('the Categories picker is usable at 375px and has no accessibility violations', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 800 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
   await signInAs(page, 'category-axe-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium?categories=protection');
   await openFilters(page);
@@ -516,6 +524,7 @@ test('the Categories picker is usable at 375px and has no accessibility violatio
 
   await box.fill('cl');
   await expect(page.getByRole('option').first()).toBeVisible();
+  // Sweep gap: the Categories picker's options open at a phone width
   await assertNoAccessibilityViolations(page);
 });
 
@@ -561,6 +570,7 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   await expect(edit('Modewort One')).toBeVisible();
   await expect(edit('Modewort Both')).toBeVisible();
   await expect(edit('Modewort None')).toHaveCount(0);
+  // Sweep gap: the match mode applied to two categories
   await assertNoAccessibilityViolations(page);
 
   await page.reload();
@@ -585,7 +595,7 @@ test('the match mode widens two categories to Any, is kept in the address, and g
 test('a curator sees the covens holding an entry, then promotes a folk name and the list shows it as the name', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 800 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
   // seedCoven signs each owner in on this page, so it runs before the curator signs in.
   const covens = [
     await seedCoven(page, 'Fixture Coven Count One', 'count-one.test', { A: 'owner' }),
@@ -615,6 +625,7 @@ test('a curator sees the covens holding an entry, then promotes a folk name and 
   await dialog.getByRole('button', { name: 'Delete Ingredient' }).click();
   const deleting = dialog.getByRole('group', { name: /Delete/ });
   await expect(deleting.getByRole('status')).toContainText('2');
+  // Sweep gap: the delete group with the covens that hold the entry
   await assertNoAccessibilityViolations(page);
 
   await page.goto(editUrl);
@@ -634,6 +645,7 @@ test('a curator sees the covens holding an entry, then promotes a folk name and 
 
   const question = page.getByRole('button', { name: 'Promote', exact: true });
   await expect(question).toBeVisible();
+  // Sweep gap: the Promote question for a folk name
   await assertNoAccessibilityViolations(page);
   await question.click();
 
@@ -849,7 +861,7 @@ test('the panel takes focus in, gives it back on Escape, and a reload and Back b
 test('at 375px the panel is a modal sheet that closes on Escape, with no accessibility violations', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   const { userId } = await signInAs(
     page,
     'facet-phone@admin-compendium.test',
@@ -867,6 +879,7 @@ test('at 375px the panel is a modal sheet that closes on Escape, with no accessi
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
   );
   expect(overflow).toBe(false);
+  // Sweep gap: the Filters panel as a modal sheet at a phone width
   await assertNoAccessibilityViolations(page);
 
   await page.keyboard.press('Escape');
@@ -915,10 +928,10 @@ test('the panel opens with its top at its final place from the first frame', asy
 });
 
 for (const [label, width, height] of [
-  ['1280', 1280, 900],
-  ['390', 390, 800],
+  ['desktop', DESKTOP_WIDTH, 900],
+  ['phone', PHONE_WIDTH, 800],
 ] as const) {
-  test(`the Match menu opens whole inside the panel at ${label}px`, async ({ page }) => {
+  test(`the Match menu opens whole inside the panel at the ${label} width`, async ({ page }) => {
     await signInAs(page, `match-menu-${label}@admin-compendium.test`, ['discord'], 'admin');
     await page.setViewportSize({ width, height });
     // Two categories chosen, so Match can open; it ends its row on every panel, which is
@@ -947,10 +960,10 @@ for (const [label, width, height] of [
 }
 
 for (const [label, width, height] of [
-  ['1280', 1280, 900],
-  ['375', 375, 800],
+  ['desktop', DESKTOP_WIDTH, 900],
+  ['phone', PHONE_WIDTH, 800],
 ] as const) {
-  test(`the Match tip opens whole inside the panel at ${label}px`, async ({ page }) => {
+  test(`the Match tip opens whole inside the panel at the ${label} width`, async ({ page }) => {
     await signInAs(page, `match-tip-${label}@admin-compendium.test`, ['discord'], 'admin');
     await page.setViewportSize({ width, height });
     await page.goto('/curator/compendium?categories=protection&categories=cleansing');
@@ -962,7 +975,7 @@ for (const [label, width, height] of [
     await expect(tip).toBeVisible();
     // Why it could have been cut: the panel clips to its own box, so a tip opening past the
     // top edge would lie outside it. Whole means every edge of the tip is inside the panel's.
-    const tipBox = (await tip.boundingBox())!;
+    const tipBox = (await settledBox(tip))!;
     const panelBox = (await panel.boundingBox())!;
     expect(tipBox.y).toBeGreaterThanOrEqual(panelBox.y);
     expect(tipBox.x).toBeGreaterThanOrEqual(panelBox.x);
@@ -999,8 +1012,8 @@ async function seedChipwort(userId: string) {
 }
 
 for (const [name, viewport] of [
-  ['a desktop table', { width: 1280, height: 900 }],
-  ['a phone card', { width: 375, height: 800 }],
+  ['a desktop table', { width: DESKTOP_WIDTH, height: 900 }],
+  ['a phone card', { width: PHONE_WIDTH, height: 800 }],
 ] as const) {
   test(`the +N panel in the Categories column floats over the rows beneath on ${name}, and the row keeps its height`, async ({
     page,
@@ -1047,7 +1060,8 @@ for (const [name, viewport] of [
 test('the Edit column stays pinned at the frame edge while the table scrolls sideways, and its link still opens', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 700, height: 900 });
+  // A table, not stacked cards: the frame is wider than the table stacks at (40rem), so the tablet band.
+  await page.setViewportSize({ width: BAND_WIDTHS.tablet, height: 900 });
   await signInAs(page, 'pinned-edit@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium');
   const frame = page.locator('.data-table-frame');
@@ -1124,6 +1138,7 @@ test('No Form lists the entries with no form, counts them, and lives in the addr
   await expect.poll(shownNames).toBe('AB');
   await openFilters(page);
   await expect(page.getByRole('switch', { name: /^No Form/ })).toBeChecked();
+  // Sweep gap: the list filtered by No Form
   await assertNoAccessibilityViolations(page);
   await page.goBack();
   await expect(page).not.toHaveURL(/withoutForms/);
@@ -1177,5 +1192,6 @@ test('the Sourcing Score heading sorts lowest first, then highest first, and eac
   await expect(page).toHaveURL(/[?&]order=desc(&|$)/);
   await expect(scoreHead).toHaveAttribute('aria-sort', 'descending');
   expect(await cellScore(1)).toBeGreaterThanOrEqual(await cellScore(2));
+  // Sweep gap: the list sorted by Sourcing Score
   await assertNoAccessibilityViolations(page);
 });

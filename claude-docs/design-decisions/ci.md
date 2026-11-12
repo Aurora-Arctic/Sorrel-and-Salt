@@ -288,7 +288,7 @@ Playwright is kept to what only a real server can prove; what was missing was tr
 - **Each speed lever is one task and one PR**, measured before and after on the same tree: three runs, the median, wall time from `time` around `flock /tmp/sorrel-e2e.lock npx playwright test`, with per-file sums from the report. A measurement says whether the servers were warm, because local runs reuse servers already up.
 - **Not pursued, and why:**
   - **Postgres `fsync=off` and friends** for the test instance: clones take tens of milliseconds and each test writes a handful of rows, so the saving is estimated at 1–3 s of summed test time, under a second of wall. Revisit only if a profile shows database waits.
-  - **Trimming the double-theme and double-width axe scans:** they are the accessibility gate. A quarter fewer scans would save about 2 s of wall at 6 workers (estimate), not worth the coverage.
+  - **Cutting the double-theme and double-width axe scans outright:** reassessed. A theme switch changes colour tokens and no markup, so the dark pass runs only the colour rules; a scan that repeats a state the sweep already covers adds time and no finding. A phone layout whose markup differs is scanned once, in full, at 375 px. The rule is in `testing/layer-ownership.md`, rule 9.
   - **Splitting the 12.9 s compendium flow:** the longest test plus startup is the floor of any run, and 12.9 s is under the 27.5 s ideal span, so it is off the critical path.
   - **`--only-changed`, project dependencies:** `--only-changed` does not fit a gate that must run everything; seeding already lives in `globalSetup`.
   - **CI sharding:** rejected at 56 tests, because the pulls cost more than it saved. Reversed at 563 tests: each extra shard costs about 3 minutes of repeated work and removes about 4 minutes of test time (`claude-docs/ci/runner-budget.md`, "Playwright shards").
@@ -300,7 +300,7 @@ A lever not measured against a stated baseline cannot be told from noise.
 
 ### Rules out
 
-- Cutting accessibility scans for speed.
+- Cutting an accessibility scan of a state the sweep cannot reach, or any manual or keyboard check, for speed.
 
 ## Pre-commit on changed files only: lint-staged
 
@@ -989,7 +989,7 @@ A test proves a behaviour a user, admin or operator depends on, by the state it 
 
 1. Functional requirements only. No tests of the harness, CI YAML, docs, scripts, the Dockerfile or `package.json` wiring, and none for code only Claude agents run (`scripts/task-board.mjs`, the doc and citation tools, the CI summarisers).
 2. State, never copy. Assert the status, alert, row or chip, not a heading, label, placeholder, empty-state sentence, email subject or the sentence of an error whose kind (`Forbidden`, `extensions.code`, zod `path`, `reason`) is already asserted. The one exception: the words are the state when nothing else tells two outcomes apart, such as which of two lock reasons won. Locators keep exact names.
-3. A regression test needs a bug that reached a PR or production, and cites it. A bug caught while building gets none, and neither does "X stays removed".
+3. A regression test needs a bug that reached `staging` or production, and cites it. A bug caught while building, including one found in an open PR, gets none, and neither does "X stays removed".
 4. No presentation in jsdom: no class name, custom property, z-index, compiled-Sass value or faked layout. The workshop story and the Playwright axe scan own presentation. A real browser measuring a layout requirement, and one token-contrast check per theme, are allowed.
 5. One row per shared path. A `describe.each` over a component's or module's own config table runs the shared behaviour on one row; every other row gets only what it changes. A fixed list is proven by one accepted value, one refused, and one equality check of the database's list against the code's.
 6. Each layer proves only what it adds. A service refusal is asserted once, as one non-keeper fixture with its precondition, when the check reads only the site role. A GraphQL file never re-tests the service, the scope sweep or signed-out callers. A module validation test asserts only what its schema adds over `src/lib/validation.ts`. A page test holds the guard, its search params reaching the service, and its modal close href; Pager owns paging.

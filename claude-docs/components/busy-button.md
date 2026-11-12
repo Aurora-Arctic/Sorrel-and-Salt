@@ -7,6 +7,7 @@ Name". That is the rule for every Save ([`styling.md`](../styling.md), "Buttons"
 
 ## Contracts
 
+- **A button with an `aria-label` passes `busyAriaLabel` too**, since the visible busy label ("Adding") must be part of the accessible name (WCAG 2.5.3, "Adding Google"); left out, the name while busy is the busy label alone.
 - **Busy is three things at once**: `aria-busy="true"`, the spinner, and the
   busy label. The spinner is `aria-hidden`, so a screen reader hears the
   label and the busy state.

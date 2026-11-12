@@ -6,6 +6,7 @@ import { seedCoven, withSql } from './stories/coven-ingredients';
 import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
+import { PHONE_WIDTH } from './breakpoints';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -111,9 +112,11 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(page.getByRole('button', { name: 'Annotated' })).toHaveCount(0);
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
 
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
+  // Sweep gap: the compendium entry held in the cupboard, with its Annotated label, at 375 px.
   await assertNoAccessibilityViolations(page);
   await choose('Annotate');
+  // Sweep gap: the Annotate dialog at 375 px.
   await assertNoAccessibilityViolations(page);
   await dialog.getByRole('button', { name: 'Close' }).click();
   await expect(dialog).toBeHidden();
@@ -127,5 +130,6 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
   await expect(question).toBeHidden();
   await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
+  // Sweep gap: the compendium entry page with the plus back after the entry is removed from the cupboard.
   await assertNoAccessibilityViolations(page);
 });

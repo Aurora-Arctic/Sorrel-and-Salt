@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
+import { DESKTOP_WIDTH } from './breakpoints';
 
 // What no story walks: a subject of 120 unbroken characters wraps inside its cell, so the table stays inside the 1280px window,
 // and a filter change is announced with the result count.
@@ -12,7 +13,7 @@ test.beforeAll(async () => {
 test('a long unbroken subject does not push the columns off screen, and a filter announces its count', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 800 });
   const { userId } = await signInAs(page, 'admin@support-layout.test', ['discord'], 'admin');
   await withE2eSql(async (sql) => {
     await sql`

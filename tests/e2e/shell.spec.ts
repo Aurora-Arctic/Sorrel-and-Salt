@@ -1,22 +1,31 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
+import { BREAKPOINTS, DESKTOP_WIDTH, PHONE_WIDTH, PURPOSE_WIDTHS } from './breakpoints';
+import {
+  assertNoAccessibilityViolations,
+  assertNoSidewaysScroll,
+  scanBothThemes,
+  settleTransitions,
+} from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
+import { holdPageScripts } from './hold-server-answers';
 import { slotUrl } from './slots';
+import { settled } from './waits';
 import { insertWorkspace } from '../support/db/insert-workspace';
 
 // What a component test cannot prove: where the browser lays the bottom bar, which element takes the focus after a key, and the scans over the whole frame.
 
 const ALPHA = { name: 'Shell Alpha', slug: 'shell-alpha' };
 const BETA = { name: 'Shell Beta', slug: 'shell-beta' };
-const PHONE = { width: 375, height: 812 };
-const DESKTOP = { width: 1280, height: 800 };
+const PHONE = { width: PHONE_WIDTH, height: 812 };
+const DESKTOP = { width: DESKTOP_WIDTH, height: 800 };
 
 const users = {
   member: { id: '' }, // a member of Alpha alone
   multi: { id: '' }, // a member of both, holding the right to create
   admin: { id: '' },
+  stewardKeeper: { id: '' }, // a keeper, so a steward of the demo coven, who also owns Gamma
 };
 
 test.beforeAll(async ({ browser, slot }) => {
@@ -35,7 +44,12 @@ async function seedFixtures(page: Page): Promise<void> {
   for (const key of Object.keys(users) as (keyof typeof users)[]) {
     users[key] = {
       id: (
-        await signInAs(page, `${key}@shell.test`, ['discord'], key === 'admin' ? 'admin' : 'user')
+        await signInAs(
+          page,
+          `${key.toLowerCase()}@shell.test`,
+          ['discord'],
+          key === 'admin' || key === 'stewardKeeper' ? 'admin' : 'user',
+        )
       ).userId,
     };
   }
@@ -56,20 +70,14 @@ async function seedFixtures(page: Page): Promise<void> {
           : [[owner, 'owner']];
       await insertWorkspace(sql, coven.name, members, { slug: coven.slug, author: owner });
     }
+    const keeper = users.stewardKeeper.id;
+    await insertWorkspace(sql, 'Shell Gamma', [[keeper, 'owner']], { author: keeper });
     const rows = await sql`
       select count(*)::int as n from workspace_members m
       join workspaces w on w.id = m.workspace_id
       where m.deleted_at is null and w.slug in ${sql([ALPHA.slug, BETA.slug])}`;
     expect(rows[0].n).toBe(3);
   });
-}
-
-async function toggleTheme(page: Page): Promise<void> {
-  const toggle = page.getByRole('button', { name: 'Toggle light and dark mode' });
-  const before = await toggle.getAttribute('aria-pressed');
-  await toggle.click();
-  await expect(toggle).not.toHaveAttribute('aria-pressed', before!);
-  await settleTransitions(page);
 }
 
 test('a member on the coven page sees the bar, the coven nav and the account panel', async ({
@@ -119,6 +127,7 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
   await expect(signOut).toBeFocused();
   await expect(banner.getByRole('button', { name: 'Show the error for Sign Out' })).toBeVisible();
   await settleTransitions(page);
+  // Sweep gap: the banner with the Sign Out failure alert shown.
   await assertNoAccessibilityViolations(page);
   await page.unroute('**/api/auth/sign-out');
 
@@ -218,74 +227,73 @@ const PAGES = [
 ] as const;
 
 for (const [name, who, path, nav] of PAGES) {
-  // The account page at a desktop width is account.spec.ts's scan.
-  for (const viewport of path === '/account' ? [PHONE] : [DESKTOP, PHONE]) {
-    test(`${name} passes the scans at ${viewport.width}px in both themes`, async ({ page }) => {
-      await signInAgainAs(page, users[who].id);
-      await page.setViewportSize(viewport);
-      await page.goto(path);
-      await expect(page.getByRole('banner')).toBeVisible();
-      await expect(page.getByRole('main')).toBeVisible();
-      if (nav) await expect(page.getByRole('navigation', { name: nav })).toBeVisible();
+  test(`${name} does not scroll sideways at ${PHONE.width}px`, async ({ page }) => {
+    await signInAgainAs(page, users[who].id);
+    await page.setViewportSize(PHONE);
+    await page.goto(path);
+    await expect(page.getByRole('banner')).toBeVisible();
+    await expect(page.getByRole('main')).toBeVisible();
+    if (nav) await expect(page.getByRole('navigation', { name: nav })).toBeVisible();
 
-      await assertNoAccessibilityViolations(page);
-      await toggleTheme(page);
-      await assertNoAccessibilityViolations(page);
-      if (viewport === PHONE) await assertNoSidewaysScroll(page);
+    // Sweep gap: a coven page, the curator categories page and the account page at PHONE_WIDTH; the sweep scans them at desktop width.
+    await scanBothThemes(page);
+    await assertNoSidewaysScroll(page);
+  });
+}
+
+// The bar's end group, the add button with its menu through the theme toggle, once ran past the window
+// at 420px while 375px held. The brand is its initials up to the brand edge and the full name past it,
+// so the tightest window with each is checked. The menu shows for a viewer with two places to add to:
+// a keeper with a coven seat, as every keeper holds in the demo coven, and the owner of two covens on a coven page, since the bar is every signed-in page's.
+for (const [edge, width] of [
+  ['the widest window with the brand as initials', BREAKPOINTS.brandInitialsTo],
+  ['the narrowest window with the full brand', BREAKPOINTS.brandInitialsTo + 1],
+] as const) {
+  for (const [name, path] of [
+    ['the curator compendium', '/curator/compendium'],
+    ['a coven page', `/coven/${ALPHA.slug}`],
+  ] as const) {
+    test(`${name} does not scroll sideways at ${width}px, ${edge}`, async ({ page }) => {
+      await signInAgainAs(
+        page,
+        path === '/curator/compendium' ? users.stewardKeeper.id : users.multi.id,
+      );
+      await page.setViewportSize({ width, height: 812 });
+      await page.goto(path);
+
+      // Why it could overflow: every control of the end group is in the bar.
+      const bar = page.getByRole('banner');
+      await expect(bar.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeVisible();
+      await expect(bar.getByRole('button', { name: 'Choose Where to Add' })).toBeVisible();
+      await expect(bar.getByRole('button', { name: 'Toggle light and dark mode' })).toBeVisible();
+      await assertNoSidewaysScroll(page, { width });
     });
   }
 }
 
-// The bar's end group, the add button with its menu through the theme toggle, ran past the window at
-// 420px while 375px and 700px held, so a width between a phone and a tablet is checked too. The menu
-// shows for a viewer with two places to add to: a keeper with a coven seat, as every keeper holds in
-// the demo coven, and the owner of two covens on a coven page, since the bar is every signed-in page's.
-for (const [name, path] of [
-  ['the curator compendium', '/curator/compendium'],
-  ['a coven page', `/coven/${ALPHA.slug}`],
-] as const) {
-  test(`${name} does not scroll sideways at 420px`, async ({ page }) => {
-    if (path === '/curator/compendium') {
-      const { userId } = await signInAs(page, 'steward-keeper@shell.test', ['discord'], 'admin');
-      await withE2eSql((sql) =>
-        insertWorkspace(sql, 'Shell Gamma', [[userId, 'owner']], { author: userId }),
-      );
-    } else {
-      await signInAgainAs(page, users.multi.id);
-    }
-    await page.setViewportSize({ width: 420, height: 812 });
-    await page.goto(path);
-
-    // Why it could overflow: every control of the end group is in the bar.
-    const bar = page.getByRole('banner');
-    await expect(bar.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeVisible();
-    await expect(bar.getByRole('button', { name: 'Choose Where to Add' })).toBeVisible();
-    await expect(bar.getByRole('button', { name: 'Toggle light and dark mode' })).toBeVisible();
-    await assertNoSidewaysScroll(page, { width: 420 });
-  });
-}
-
-// The row wider than the phone fits the window: four labelled tabs and More outran it from 642px up, so
-// tabs that do not fit sit behind More. 768px is the tablet tests' below and a desktop width the last two tests'.
-test('the curator row fits the window at 642px, without overflowing', async ({ page }) => {
+// The row wider than the phone fits the window: four labelled tabs and More outran it from just past the phone edge up, so
+// tabs that do not fit sit behind More.
+test('the curator row fits the window just past the phone edge, without overflowing', async ({
+  page,
+}) => {
   await signInAgainAs(page, users.admin.id);
-  await page.setViewportSize({ width: 642, height: 800 });
+  await page.setViewportSize({ width: BREAKPOINTS.phone + 1, height: 800 });
   await page.goto('/curator');
 
-  // The stylesheet draws every tab until the fit script runs, so the branch
-  // below waits for the fit: read before it, the test could take the all-tabs
-  // branch and then see the script hide a tab (the gate's one flaky test).
   const nav = await fittedAdminNav(page);
   await expect(nav).toBeVisible();
   const more = nav.getByRole('button', { name: 'More', exact: true });
-  if ((await more.count()) > 0) {
-    await expect(more).toBeVisible();
-  } else {
-    for (const link of await nav.getByRole('link').all()) await expect(link).toBeVisible();
-  }
+  // Every tab is in the row, or More is drawn for the ones that are not.
+  await expect
+    .poll(async () => {
+      const hidden = (await nav.getByRole('link').count()) - (await rowLinks(nav).count());
+      return hidden === 0 || (await more.isVisible());
+    })
+    .toBe(true);
   await expect(nav.getByRole('link').first()).toBeVisible();
-  const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
-  expect(fits).toBe(true);
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+    .toBe(true);
 });
 
 // A hidden tab is drawn but not visible.
@@ -295,6 +303,12 @@ async function fittedAdminNav(page: Page): Promise<Locator> {
   const nav = page.getByRole('navigation', { name: 'Curator' });
   await expect(nav).toHaveAttribute('data-fit', '');
   return nav;
+}
+
+// The count once the fonts have loaded and the row has stopped refitting to them.
+async function settledLinkCount(page: Page, nav: Locator): Promise<number> {
+  await page.evaluate(() => document.fonts.ready);
+  return settled(() => rowLinks(nav).count());
 }
 
 const rowOverflows = (nav: Locator) =>
@@ -307,7 +321,7 @@ test('at a tablet width, More stays More and carries the current page when its t
   page,
 }) => {
   await signInAgainAs(page, users.admin.id);
-  await page.setViewportSize({ width: 700, height: 800 });
+  await page.setViewportSize({ width: BREAKPOINTS.phone + 1, height: 800 });
 
   // Why More could carry it: on a page whose tab is in the row it does not.
   await page.goto('/curator');
@@ -333,14 +347,14 @@ test('at a tablet width, a navigation fits the row afresh for the new current ta
 }) => {
   await signInAgainAs(page, users.admin.id);
   // From about 774px to 780px in Chromium, the bolder current tab tips the count.
-  await page.setViewportSize({ width: 777, height: 800 });
+  await page.setViewportSize({ width: PURPOSE_WIDTHS.shellTabs, height: 800 });
   await page.goto('/curator/compendium');
-  const fresh = await rowLinks(await fittedAdminNav(page)).count();
+  const fresh = await settledLinkCount(page, await fittedAdminNav(page));
 
   await page.goto('/curator/forms');
   const nav = await fittedAdminNav(page);
   // Why it could have kept the old count: the forms page fits a different one.
-  expect(await rowLinks(nav).count()).not.toBe(fresh);
+  expect(await settledLinkCount(page, nav)).not.toBe(fresh);
   const compendium = rowLinks(nav).filter({ hasText: 'Compendium' });
   await expect(compendium).toHaveCount(1);
 
@@ -351,7 +365,7 @@ test('at a tablet width, a navigation fits the row afresh for the new current ta
     'page',
   );
   await expect.poll(() => rowLinks(nav).count()).toBe(fresh);
-  expect(await rowOverflows(nav)).toBe(false);
+  await expect.poll(() => rowOverflows(nav)).toBe(false);
   await assertNoSidewaysScroll(page);
 });
 
@@ -365,7 +379,7 @@ test('at a desktop width, once fitted, the curator row shows every tab and draws
   const nav = await fittedAdminNav(page);
   await expect(rowLinks(nav)).toHaveCount(6);
   await expect(nav.getByRole('button')).toHaveCount(0);
-  expect(await rowOverflows(nav)).toBe(false);
+  await expect.poll(() => rowOverflows(nav)).toBe(false);
 });
 
 // The server cannot know the window's width, so it draws the phone's four tabs and More; wider, the stylesheet
@@ -377,14 +391,7 @@ test('before the script runs, a desktop curator row shows every tab and no More'
   await signInAgainAs(page, users.admin.id);
   await page.setViewportSize(DESKTOP);
 
-  let release: () => void = () => undefined;
-  const held = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route('**/_next/static/chunks/**/*.js', async (route) => {
-    await held;
-    await route.continue().catch(() => undefined);
-  });
+  const scripts = await holdPageScripts(page);
   await page.goto('/curator', { waitUntil: 'commit' });
 
   const admin = page.getByRole('navigation', { name: 'Curator' });
@@ -397,7 +404,7 @@ test('before the script runs, a desktop curator row shows every tab and no More'
     .getByRole('link')
     .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
   expect(new Set(hrefs).size).toBe(6);
-  release();
+  scripts.release();
 });
 
 // More was once reserved as wide as the widest tab it hid, so at 680px the coven row showed Overview alone. Swept across the tablet band, as fonts move the edge.
@@ -431,15 +438,26 @@ for (const [who, label, path] of [
     page,
   }) => {
     await signInAgainAs(page, users[who].id);
+    await page.goto(path);
+    const nav = page.getByRole('navigation', { name: label });
     let tucked = 0;
-    for (let width = 660; width <= 900; width += 20) {
+    // From the phone edge to the tablet edge, in steps, resizing the one page.
+    for (let width = BREAKPOINTS.phone + 1; width <= BREAKPOINTS.tablet + 1; width += 20) {
       await page.setViewportSize({ width, height: 800 });
-      await page.goto(path);
-      const nav = page.getByRole('navigation', { name: label });
       await expect(nav).toHaveAttribute('data-fit', '');
+      // Polled: data-fit stays set from the last width, so only the settled row shows the refit.
+      await expect
+        .poll(
+          async () => ({
+            tuckedWithRoom: await tuckedWithRoom(nav),
+            overflows: await rowOverflows(nav),
+          }),
+          {
+            message: `the row at ${width}px leaves a tab hidden with room for it, or overflows`,
+          },
+        )
+        .toEqual({ tuckedWithRoom: false, overflows: false });
       if ((await nav.getByRole('button', { name: /More/ }).count()) > 0) tucked += 1;
-      expect(await tuckedWithRoom(nav), `a tab hidden with room for it at ${width}px`).toBe(false);
-      expect(await rowOverflows(nav)).toBe(false);
     }
     // Why it could have failed: some width in the sweep does put a tab behind More.
     expect(tucked).toBeGreaterThan(0);

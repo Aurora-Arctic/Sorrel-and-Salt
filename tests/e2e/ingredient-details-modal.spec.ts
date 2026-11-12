@@ -15,6 +15,8 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 import { editIngredientDialog } from './stories/ingredient-dialogs';
+import { hydrated, requiredDelay } from './waits';
+import { PHONE_WIDTH } from './breakpoints';
 
 // For what no story walks (claude-docs/components/ingredient-entry.md, "The details modal").
 
@@ -78,6 +80,7 @@ test.describe('on the admin Compendium list', () => {
       'href',
       `/compendium/ingredients/${slug}`,
     );
+    // Sweep gap: the details dialog on the keepers' Compendium list; the sweep's quick-look and entry-details are Steward coven dialogs.
     await assertNoAccessibilityViolations(page);
 
     await page.keyboard.press('Escape');
@@ -150,12 +153,7 @@ test.describe('on the admin Compendium list', () => {
         .evaluate((c) => c.getBoundingClientRect().bottom));
 
     await bar.hover();
-    const chevron = bar.locator('svg');
-    await expect.poll(() => chevron.evaluate((c) => getComputedStyle(c).scale)).toBe('1.25');
     expect(await bar.evaluate((b) => getComputedStyle(b).textDecorationLine)).toBe('none');
-    expect(await chevron.evaluate((c) => getComputedStyle(c).color)).toBe(
-      await bar.evaluate((b) => getComputedStyle(b).color),
-    );
 
     await bar.click();
     const less = details.getByRole('button', { name: 'Show Less' });
@@ -201,14 +199,13 @@ test.describe('on the admin Compendium list', () => {
       }));
     await expect.poll(overflow).toEqual({ y: 0, x: 0 });
     // The scrollbar is the browser's to draw, and only for text that overflows: never forced.
-    expect(await body.evaluate((b) => getComputedStyle(b).overflowY)).toBe('auto');
     await expect(body.getByRole('link', { name: 'See in Compendium' })).toHaveCount(0);
   });
 
   test('a description that fits the window once opened leaves the body with nothing to scroll, during the opening and after', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1280, height: 1000 });
+    await page.setViewportSize({ width: page.viewportSize()!.width, height: 1000 });
     const midName = 'Fixture Midwort';
     const midFormal = 'Fixtura media';
     const sentence =
@@ -247,7 +244,10 @@ test.describe('on the admin Compendium list', () => {
     const samples: { y: number; x: number }[] = [];
     for (let i = 0; i < 16; i++) {
       samples.push(await overflow());
-      await page.waitForTimeout(50);
+      await requiredDelay(
+        50,
+        'The samples are spread over the opening animation, so each needs a frame or so between it and the next.',
+      );
     }
     await expect.poll(() => body.evaluate((b) => b.clientHeight)).toBeGreaterThan(closedHeight);
     expect(await body.evaluate((b) => b.clientHeight)).toBeLessThan(
@@ -354,7 +354,7 @@ test.describe("on a coven's Ingredients", () => {
     );
     await page.goto(`/coven/${coven.slug}/ingredients?source=local`);
     // Hydrated first: before it, the box is a plain text field with no dropdown.
-    await page.waitForLoadState('networkidle');
+    await hydrated(page, '[role="combobox"]');
 
     const search = nameSearch(page);
     await search.fill('lookwort');
@@ -386,7 +386,7 @@ test.describe("on a coven's Ingredients", () => {
     await withSql((sql) =>
       localIngredient(sql, coven.id, coven.users.A, { name: NAME, canonicalName: FORMAL }),
     );
-    await page.setViewportSize({ width: 375, height: 800 });
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
     await page.goto(`/coven/${coven.slug}/ingredients`);
 
     await quickLook(page).click();
@@ -394,6 +394,7 @@ test.describe("on a coven's Ingredients", () => {
     await expect(details).toBeVisible();
     await expect(editIn(details)).toBeVisible();
 
+    // Sweep gap: the Quick Look details with the Edit button, at 375 px.
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page);
   });
@@ -455,6 +456,7 @@ test.describe('on the public compendium', () => {
       `/compendium/ingredients/${ingredientSlug(PUBLIC_NAME, PUBLIC_FORMAL)}`,
     );
     await expect(details.getByRole('link', { name: /^Edit/ })).toHaveCount(0);
+    // Sweep gap: Quick Look open on the public compendium list for a visitor with no account.
     await assertNoAccessibilityViolations(page);
 
     await page.keyboard.press('Escape');

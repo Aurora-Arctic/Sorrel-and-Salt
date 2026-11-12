@@ -193,7 +193,6 @@ test(
     await expect(dialog.getByRole('radio', { name: 'Observer' })).toBeVisible();
     await expect(dialog.getByRole('radio', { name: 'Practitioner' })).toBeVisible();
     await expect(dialog.getByRole('radio', { name: /Steward/ })).toHaveCount(0);
-    await assertNoAccessibilityViolations(page);
 
     const invited = address('invited-by-dialog');
     await dialog.getByRole('textbox', { name: 'Email Address' }).fill(invited);
@@ -216,6 +215,7 @@ test(
     await expect(
       row.getByRole('button', { name: `Revoke the invitation to ${invited}` }),
     ).toBeVisible();
+    // Sweep gap: the Invitations page listing a pending Practitioner invitation with its Revoke button.
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
 
@@ -257,7 +257,6 @@ test(
     await expect(rollRow(page, people.member.name)).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Members' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Invite', exact: true })).toHaveCount(0);
-    await assertNoAccessibilityViolations(page);
 
     await signInAgainAs(page, people.viewer.id);
     expect((await page.goto(`/coven/${COVEN_SLUG}`))?.status()).toBe(200);
@@ -312,6 +311,7 @@ test(
     expect(await countMessagesTo(stranger.email)).toBe(0);
 
     await refusalAt(page, invitedPath);
+    // Sweep gap: the invitation page refusing a signed-in account whose verified address differs from the invited one.
     await assertNoAccessibilityViolations(page);
 
     await directAcceptRefused(page, invitedPath);
@@ -350,7 +350,6 @@ test(
     await page.goto(invitedPath);
     const accept = page.getByRole('button', { name: 'Accept Invitation', exact: true });
     await expect(accept).toBeVisible();
-    await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
     await accept.click();
 
@@ -360,7 +359,6 @@ test(
     await expect(switcher).toHaveText(COVEN_NAME);
     // A client-side landing sets the document title after the page draws.
     await expect(page).toHaveTitle(/\S/);
-    await assertNoAccessibilityViolations(page);
 
     await page.goto(`/coven/${COVEN_SLUG}/members`);
     await expect(
@@ -409,7 +407,6 @@ test(
 
     await signInAgainAs(page, invited.id);
     const usedRefusal = await refusalAt(page, invitedPath);
-    await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
 
     await signInAgainAs(page, people.owner.id);
@@ -439,6 +436,7 @@ test(
       .click();
     const confirm = page.getByRole('dialog');
     await expect(confirm.getByRole('button', { name: 'Revoke', exact: true })).toBeVisible();
+    // Sweep gap: the Revoke Invitation confirmation dialog on the coven's Invitations page.
     await assertNoAccessibilityViolations(page);
     await confirm.getByRole('button', { name: 'Revoke', exact: true }).click();
     await expect(confirm).toHaveCount(0);
@@ -453,7 +451,6 @@ test(
     const holder = await signInNamed(page, gone, 'Fixture Revoked');
     const revokedRefusal = await refusalAt(page, path);
     expect(revokedRefusal).not.toBe(await deadLinkRefusal(page, holder.email, 'accepted'));
-    await assertNoAccessibilityViolations(page);
     await directAcceptRefused(page, path);
 
     expect(await ownerReadsRoll(page, holder.name)).toBe(before);
@@ -485,6 +482,7 @@ test(
     await expect(accept).toBeFocused();
     const pressedRefusal = ((await callout.textContent()) ?? '').trim();
     await expect(accept).toHaveAccessibleDescription(`Last try failed: ${pressedRefusal}`);
+    // Sweep gap: the invitation page after Accept Invitation is pressed on an expired link, with the alert and the failed-try description on the button.
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
     await page.keyboard.press('Escape');
@@ -498,7 +496,6 @@ test(
     const revokedRefusal = await deadLinkRefusal(page, holder.email, 'revoked');
     const usedRefusal = await deadLinkRefusal(page, holder.email, 'accepted');
     expect(new Set([expiredRefusal, revokedRefusal, usedRefusal]).size).toBe(3);
-    await assertNoAccessibilityViolations(page);
     await directAcceptRefused(page, path);
 
     expect(await ownerReadsRoll(page, holder.name)).toBe(before);
@@ -530,6 +527,7 @@ test(
       .getByRole('table', { name: 'Your Invitations' })
       .getByRole('button', { name: `Accept the invitation to ${COVEN_NAME}` });
     await expect(accept).toBeVisible();
+    // Sweep gap: the account page listing a pending invitation with its Accept button.
     await assertNoAccessibilityViolations(page);
     expect(await page.content()).not.toContain(tokenOf(path));
     await accept.click();
@@ -545,6 +543,5 @@ test(
 
     await ownerReadsRoll(page);
     await expect(rollRow(page, holder.name).getByRole('cell', { name: /^Observer/ })).toBeVisible();
-    await assertNoAccessibilityViolations(page);
   },
 );
