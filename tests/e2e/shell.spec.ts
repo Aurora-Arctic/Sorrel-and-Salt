@@ -438,9 +438,19 @@ for (const [who, label, path] of [
     for (let width = BREAKPOINTS.phone + 1; width <= BREAKPOINTS.tablet + 1; width += 20) {
       await page.setViewportSize({ width, height: 800 });
       await expect(nav).toHaveAttribute('data-fit', '');
+      // Polled: data-fit stays set from the last width, so only the settled row shows the refit.
+      await expect
+        .poll(
+          async () => ({
+            tuckedWithRoom: await tuckedWithRoom(nav),
+            overflows: await rowOverflows(nav),
+          }),
+          {
+            message: `the row at ${width}px leaves a tab hidden with room for it, or overflows`,
+          },
+        )
+        .toEqual({ tuckedWithRoom: false, overflows: false });
       if ((await nav.getByRole('button', { name: /More/ }).count()) > 0) tucked += 1;
-      expect(await tuckedWithRoom(nav), `a tab hidden with room for it at ${width}px`).toBe(false);
-      expect(await rowOverflows(nav)).toBe(false);
     }
     // Why it could have failed: some width in the sweep does put a tab behind More.
     expect(tucked).toBeGreaterThan(0);
