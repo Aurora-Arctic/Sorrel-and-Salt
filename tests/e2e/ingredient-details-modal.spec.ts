@@ -15,6 +15,7 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 import { editIngredientDialog } from './stories/ingredient-dialogs';
+import { hydrated, requiredDelay } from './waits';
 
 // For what no story walks (claude-docs/components/ingredient-entry.md, "The details modal").
 
@@ -247,7 +248,10 @@ test.describe('on the admin Compendium list', () => {
     const samples: { y: number; x: number }[] = [];
     for (let i = 0; i < 16; i++) {
       samples.push(await overflow());
-      await page.waitForTimeout(50);
+      await requiredDelay(
+        50,
+        'The samples are spread over the opening animation, so each needs a frame or so between it and the next.',
+      );
     }
     await expect.poll(() => body.evaluate((b) => b.clientHeight)).toBeGreaterThan(closedHeight);
     expect(await body.evaluate((b) => b.clientHeight)).toBeLessThan(
@@ -354,7 +358,7 @@ test.describe("on a coven's Ingredients", () => {
     );
     await page.goto(`/coven/${coven.slug}/ingredients?source=local`);
     // Hydrated first: before it, the box is a plain text field with no dropdown.
-    await page.waitForLoadState('networkidle');
+    await hydrated(page, '[role="combobox"]');
 
     const search = nameSearch(page);
     await search.fill('lookwort');

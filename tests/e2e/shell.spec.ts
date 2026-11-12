@@ -3,6 +3,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
+import { holdPageScripts } from './hold-server-answers';
 import { slotUrl } from './slots';
 import { insertWorkspace } from '../support/db/insert-workspace';
 
@@ -377,14 +378,7 @@ test('before the script runs, a desktop curator row shows every tab and no More'
   await signInAgainAs(page, users.admin.id);
   await page.setViewportSize(DESKTOP);
 
-  let release: () => void = () => undefined;
-  const held = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route('**/_next/static/chunks/**/*.js', async (route) => {
-    await held;
-    await route.continue().catch(() => undefined);
-  });
+  const scripts = await holdPageScripts(page);
   await page.goto('/curator', { waitUntil: 'commit' });
 
   const admin = page.getByRole('navigation', { name: 'Curator' });
@@ -397,7 +391,7 @@ test('before the script runs, a desktop curator row shows every tab and no More'
     .getByRole('link')
     .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
   expect(new Set(hrefs).size).toBe(6);
-  release();
+  scripts.release();
 });
 
 // More was once reserved as wide as the widest tab it hid, so at 680px the coven row showed Overview alone. Swept across the tablet band, as fonts move the edge.

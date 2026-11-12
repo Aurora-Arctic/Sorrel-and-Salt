@@ -50,7 +50,18 @@ for (const { viewport, hangs } of [
     await toggle.click();
     await expect(choices).toHaveCount(2);
     // Let the fade and the first placement settle before measuring.
-    await page.waitForTimeout(300);
+    let placed: string | undefined;
+    await expect
+      .poll(
+        async () => {
+          const now = JSON.stringify(await menu.boundingBox());
+          const held = now === placed;
+          placed = now;
+          return held;
+        },
+        { intervals: [50] },
+      )
+      .toBe(true);
 
     const button = (await toggle.boundingBox())!;
     const box = (await menu.boundingBox())!;

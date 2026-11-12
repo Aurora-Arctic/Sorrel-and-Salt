@@ -9,6 +9,7 @@ import { applyFilters, openFilters, seedCoven } from './stories/coven-ingredient
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 import { deitySlug, ingredientSlug } from '@/lib/slugify';
+import { hydrated } from './waits';
 
 // claude-docs/components/ingredient-form.md, "Stories and tests".
 test.beforeAll(async () => {
@@ -244,7 +245,7 @@ test('a name typed shows matching rows, and a pick opens its Quick Look over the
   await signInAs(page, 'search-pick-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium?withoutReferences=1');
   // Hydrated first: before it, the box is a plain text field with no dropdown.
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, '[role="combobox"]');
 
   const name = page.getByRole('combobox', { name: 'Name' });
   await name.fill('cats claw');
@@ -281,7 +282,7 @@ test('arrowing down the Name box keeps the highlighted row inside the dropdown',
     }
   });
   await page.goto('/curator/compendium');
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, '[role="combobox"]');
 
   const name = page.getByRole('combobox', { name: 'Name' });
   await name.fill('scrollwort');
@@ -317,7 +318,7 @@ test('arrowing down the Name box keeps the highlighted row inside the dropdown',
 test('Enter in the Name box applies the name, keeping No Refs', async ({ page }) => {
   await signInAs(page, 'search-enter-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium');
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, '[role="combobox"]');
 
   await openFilters(page);
   await page.getByRole('switch', { name: /^No Refs/ }).click();

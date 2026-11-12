@@ -33,8 +33,13 @@ for (const viewport of [
     // Every frame from the press on: the modal dialog's height, and whether it holds the form.
     // `:modal` matches only a dialog opened over the page, never the filter panel.
     await page.evaluate(() => {
-      const w = window as unknown as { frames: { height: number; form: boolean }[] };
+      const w = window as unknown as {
+        frames: { height: number; form: boolean }[];
+        recorded: Promise<void>;
+      };
       w.frames = [];
+      let finish = () => {};
+      w.recorded = new Promise<void>((resolve) => (finish = resolve));
       const start = performance.now();
       const tick = () => {
         const dialog = document.querySelector<HTMLDialogElement>('dialog:modal');
@@ -45,12 +50,13 @@ for (const viewport of [
           });
         }
         if (performance.now() - start < 2000) requestAnimationFrame(tick);
+        else finish();
       };
       requestAnimationFrame(tick);
     });
     await page.getByRole('link', { name: 'New Spell' }).click();
     await expect(page.getByRole('dialog', { name: 'New Spell' })).toBeVisible();
-    await page.waitForTimeout(2100);
+    await page.evaluate(() => (window as unknown as { recorded: Promise<void> }).recorded);
 
     const frames = await page.evaluate(
       () => (window as unknown as { frames: { height: number; form: boolean }[] }).frames,

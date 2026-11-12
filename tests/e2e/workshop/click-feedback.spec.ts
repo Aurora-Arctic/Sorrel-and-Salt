@@ -290,7 +290,16 @@ async function holdPlacement(page: Page, frames: number): Promise<void> {
 
 const midway = (frame: Frame) => frame.visible && frame.opacity > 0.05 && frame.opacity < 0.95;
 
-const settle = (page: Page) => page.waitForTimeout(500);
+/** Waits for the fades that have an end; a fade cut short rejects `finished`, which is also settled. */
+const settle = (page: Page) =>
+  page.evaluate(() =>
+    Promise.allSettled(
+      document
+        .getAnimations()
+        .filter((run) => Number.isFinite(run.effect?.getComputedTiming().endTime))
+        .map((run) => run.finished),
+    ).then(() => undefined),
+  );
 
 test.describe('motion', () => {
   test('the callout and the badge fade in once placed, and out as they go', async ({ page }) => {

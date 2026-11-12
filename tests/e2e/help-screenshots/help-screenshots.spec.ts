@@ -27,14 +27,15 @@ test.beforeAll(async () => {
 });
 
 /**
- * Waits for the page's fonts and any running fade, so no picture is taken in a fallback face or mid-change. A looping
+ * Waits for the page's fonts, its images and any running fade, so no picture is taken in a fallback face or mid-change. A looping
  * animation never finishes, so only those with an end are awaited.
  */
 async function settled(page: Page): Promise<void> {
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
   await page.evaluate(() =>
     Promise.all([
       document.fonts.ready,
+      ...Array.from(document.images).map((image) => image.decode().catch(() => undefined)),
       ...document
         .getAnimations()
         .filter((run) => Number.isFinite(run.effect?.getComputedTiming().endTime))
@@ -133,6 +134,11 @@ test('the spell builder, open on a draft', async ({ page }) => {
   const builder = page.getByRole('dialog', { name: `Edit Spell, ${title}` });
   await expect(builder).toBeVisible();
   await builder.getByRole('button', { name: 'Open All' }).click();
+  // The three steps are what the picture shows, so they are drawn before it is taken.
+  await expect(builder.getByRole('list', { name: 'Steps' }).getByRole('listitem')).toHaveCount(3);
+  await expect(builder.getByRole('textbox', { name: 'Intent' })).toHaveValue(
+    'To keep the hearth calm and the house warded.',
+  );
   await settled(page);
   // No focus ring in the picture: the reader has pressed nothing.
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());

@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
+import { hydrated } from './waits';
 import { signInAs } from './session';
 import { holdServerAnswers } from './hold-server-answers';
 
@@ -11,13 +12,6 @@ import { holdServerAnswers } from './hold-server-answers';
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-/** Waits until React has hydrated the element, so a click is the app's navigation and not a full page load. */
-const hydrated = (page: Page, selector: string) =>
-  page.waitForFunction((target) => {
-    const element = document.querySelector(target);
-    return !!element && Object.keys(element).some((key) => key.startsWith('__reactProps$'));
-  }, selector);
 
 const scrollY = (page: Page) => page.evaluate(() => window.scrollY);
 

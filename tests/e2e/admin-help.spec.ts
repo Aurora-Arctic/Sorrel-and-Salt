@@ -1,9 +1,12 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import { recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
+import { insertHelpArticle } from '../support/db/insert-help-article';
+import { slugify } from '@/lib/slugify';
 import { signInAgainAs, signInAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
+import { hydrated } from './waits';
 
 // The keepers' help outline and its full-page form: every help row at every audience, written by a keeper alone
 // (claude-docs/design-decisions/support.md, "Audiences, staff routes and search"; claude-docs/design/graphql.md, "Help articles").
@@ -14,7 +17,12 @@ test.beforeAll(async () => {
 
 const PATH = '/keepers/help';
 const PARENT = 'Fixturewort Parent Guide';
-const CHILD = 'Fixturewort Staff Sub Page';
+const SUB_PARENT = 'Fixturewort Sub Page Guide';
+const SUB_CHILD = 'Fixturewort Staff Sub Page';
+const HELD_PARENT = 'Fixturewort Held Guide';
+const HELD_CHILD = 'Fixturewort Held Sub Page';
+const GONE_PARENT = 'Fixturewort Gone Guide';
+const GONE_CHILD = 'Fixturewort Gone Sub Page';
 
 const notAuthorized = (page: Page) =>
   page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' });
@@ -71,28 +79,51 @@ const expectBackAtOutline = (page: Page) => expect(page).toHaveURL(/\/keepers\/h
 async function openEdit(page: Page, name: string): Promise<void> {
   await expectListed(page, name);
   await editLink(page, name).click();
+  await hydrated(page, FORM_TITLE);
   await expect(title(page)).toHaveValue(name);
 }
 
-test('a keeper writes a parent and a narrower sub page, meets a refusal at its field, and deletes both', async ({
-  page,
-}) => {
-  // Writes two rows and scans each form with axe, which outlasts the default budget under CI coverage.
-  test.setTimeout(60_000);
-  await signInAs(page, 'a-keeper@admin-help.test', ['discord'], 'admin');
+const FORM_TITLE = '.help-article-form input[name="title"]';
+
+/** Writes a public guide, and under it a staff sub page when `child` is named, as the keeper `author`. */
+async function seedGuide(author: string, parent: string, child?: string): Promise<void> {
+  await withE2eSql(async (sql) => {
+    const parentId = await insertHelpArticle(
+      sql,
+      { kind: 'guide', audience: 'public', title: parent, slug: slugify(parent) },
+      author,
+    );
+    if (child)
+      await insertHelpArticle(
+        sql,
+        {
+          kind: 'article',
+          audience: 'staff',
+          title: child,
+          slug: slugify(child),
+          parent_id: parentId,
+        },
+        author,
+      );
+  });
+}
+
+test('a keeper writes a guide on the form’s own page', async ({ page }) => {
+  await signInAs(page, 'a-keeper-writes@admin-help.test', ['discord'], 'admin');
 
   const response = await page.goto(PATH);
   expect(response?.status()).toBe(200);
   await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible();
-  // Precondition: no search finds the rows yet, so each row below is one this test wrote.
+  // Precondition: no search finds the row yet, so the row below is one this test wrote.
   await expectNotListed(page, PARENT);
-  await expectNotListed(page, CHILD);
   await page.goto(PATH);
   await assertNoAccessibilityViolations(page);
 
-  // The parent: a public guide, written on the form's own page, as only a guide holds sub pages.
+  // A public guide, as only a guide holds sub pages.
+  await hydrated(page, 'a[href$="/keepers/help/new"]');
   await addLink(page).click();
   await expect(page).toHaveURL(`${PATH}/new`);
+  await hydrated(page, FORM_TITLE);
   await choose(page, /^Kind/, 'Guide');
   await title(page).fill(PARENT);
   await page
@@ -104,29 +135,39 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   await page.getByRole('button', { name: 'Save Guide' }).click();
   await expectBackAtOutline(page);
   await expectListed(page, PARENT);
+});
 
-  // The sub page: added from the guide's pane, so it starts under the guide, at the narrower staff audience.
+test('a keeper adds a staff sub page from a guide’s pane, and a reserved title is refused at its field', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(page, 'a-keeper-subpage@admin-help.test', ['discord'], 'admin');
+  await seedGuide(userId, SUB_PARENT);
+  await expectNotListed(page, SUB_CHILD);
+
+  // Added from the guide's pane, so it starts under the guide, at the narrower staff audience.
   await page.goto(PATH);
+  await hydrated(page, `a[href^="${PATH}"]`);
   await page
     .getByRole('navigation', { name: 'Help Outline' })
-    .getByRole('link', { name: PARENT })
+    .getByRole('link', { name: SUB_PARENT })
     .click();
   // The pane redraws after the press, and until then its Add Sub Page belongs to the first guide.
   await expect(
-    page.getByRole('main').getByRole('heading', { level: 2, name: PARENT }),
+    page.getByRole('main').getByRole('heading', { level: 2, name: SUB_PARENT }),
   ).toBeVisible();
   await page.getByRole('main').getByRole('link', { name: 'Add Sub Page' }).click();
+  await hydrated(page, FORM_TITLE);
   await expect(page.getByRole('main').getByRole('combobox', { name: /^Parent/ })).toHaveText(
-    new RegExp(PARENT),
+    new RegExp(SUB_PARENT),
   );
-  await title(page).fill(CHILD);
+  await title(page).fill(SUB_CHILD);
   await writeBody(page, 'A sub page the test writes.');
   await choose(page, /^Audience/, 'Staff');
   await page.getByRole('button', { name: 'Save Article' }).click();
   await expectBackAtOutline(page);
   await expect(
-    page.getByRole('table', { name: `Sub Pages of ${PARENT}` }).getByRole('link', {
-      name: `Edit ${CHILD}`,
+    page.getByRole('table', { name: `Sub Pages of ${SUB_PARENT}` }).getByRole('link', {
+      name: `Edit ${SUB_CHILD}`,
       exact: true,
     }),
   ).toBeVisible();
@@ -134,7 +175,7 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   // A title that makes a reserved address is refused beside Title, and the form stays.
   await page.goto(`${PATH}/new`);
   // Hydrated first: a title typed into the server HTML never reaches the form, which then keeps Save disabled.
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, FORM_TITLE);
   await title(page).fill('Glossary');
   await writeBody(page, 'A row the service refuses.');
   await page.getByRole('button', { name: 'Save Article' }).click();
@@ -144,9 +185,16 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.getByRole('button', { name: 'Discard Changes' }).click();
   await expectBackAtOutline(page);
+});
+
+test('a parent keeps its staff audience and is not deleted while a live sub page stands under it', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(page, 'a-keeper-held@admin-help.test', ['discord'], 'admin');
+  await seedGuide(userId, HELD_PARENT, HELD_CHILD);
 
   // The parent cannot be made narrower than its staff sub page: Keeper is held.
-  await openEdit(page, PARENT);
+  await openEdit(page, HELD_PARENT);
   await expect(audience(page, 'Keeper')).toBeDisabled();
   await expect(audience(page, 'Staff')).toBeEnabled();
 
@@ -155,23 +203,29 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   await assertNoAccessibilityViolations(page);
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
-  await expect(title(page)).toHaveValue(PARENT);
+  await expect(title(page)).toHaveValue(HELD_PARENT);
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expectBackAtOutline(page);
-  await expectListed(page, PARENT);
+  await expectListed(page, HELD_PARENT);
+});
 
-  // The sub page, then the parent, each after its confirmation.
-  await openEdit(page, CHILD);
+test('a keeper deletes a sub page, then its parent, each after its confirmation', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(page, 'a-keeper-deletes@admin-help.test', ['discord'], 'admin');
+  await seedGuide(userId, GONE_PARENT, GONE_CHILD);
+
+  await openEdit(page, GONE_CHILD);
   await page.getByRole('button', { name: 'Delete Article' }).click();
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await expectBackAtOutline(page);
-  await expectNotListed(page, CHILD);
+  await expectNotListed(page, GONE_CHILD);
 
-  await openEdit(page, PARENT);
+  await openEdit(page, GONE_PARENT);
   await page.getByRole('button', { name: 'Delete Guide' }).click();
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await expectBackAtOutline(page);
-  await expectNotListed(page, PARENT);
+  await expectNotListed(page, GONE_PARENT);
 });
 
 // Why each could have reached it: the curator opens Support under the same Keepers layout, the practitioner opens

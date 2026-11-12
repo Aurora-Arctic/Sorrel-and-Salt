@@ -6,6 +6,7 @@ import { recreateE2eDatabase, withE2eSql } from '../database';
 import { graphqlFromPage } from '../graphql';
 import { VERIFY_LINK, latestMessageTo } from '../mailpit';
 import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
+import { hydrated, pauseBetweenPolls } from '../waits';
 
 // claude-docs/auth/admin-bootstrap.md, "The email page"; claude-docs/design-decisions/auth.md, "First-party email verification and email delivery".
 test.beforeAll(async () => {
@@ -57,7 +58,7 @@ async function mailedPath(
       }
     }
     if (Date.now() > deadline) throw new Error(`no new ${pattern} link mailed to ${to}`);
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await pauseBetweenPolls(250, 'Mailpit has no event to wait on, so the inbox is asked again');
   }
 }
 
@@ -598,7 +599,7 @@ test(
     expect(times).toEqual([...times].sort((a, b) => b - a));
     await assertNoAccessibilityViolations(page);
 
-    await page.waitForLoadState('networkidle');
+    await hydrated(page, 'search input, [role="search"] input');
     const filter = page.getByRole('search', { name: 'Filter Privilege Changes' });
     const search = filter.getByLabel('Name or Email');
     const part = subjectEmail.split('@')[0].toUpperCase();

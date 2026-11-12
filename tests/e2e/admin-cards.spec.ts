@@ -1,21 +1,51 @@
+import { randomBytes, randomUUID } from 'node:crypto';
+import type postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { mintedLinks } from './cards';
-import { recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
+
+// A sheet of ten cards minted today (live, or revoked), written straight to the slot database so a test that only reads the tab
+// need not mint through the dialog. Only the hash is stored, so these cards cannot be redeemed.
+async function insertCardBatch(
+  sql: postgres.Sql,
+  author: string,
+  revoked = false,
+): Promise<string> {
+  const batchId = randomUUID();
+  await sql.begin(async (tx) => {
+    await tx`select set_config('app.current_user_id', ${author}, true)`;
+    for (let position = 1; position <= 10; position += 1) {
+      await tx`
+        insert into invitations ${tx({
+          kind: 'card',
+          batch_id: batchId,
+          position,
+          token_hash: randomBytes(32).toString('hex'),
+          expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+          revoked_at: revoked ? new Date() : null,
+          created_by: author,
+          updated_by: author,
+        })}
+      `;
+    }
+  });
+  return batchId;
+}
 
 // Who may mint is tests/modules/identity's. Each test signs in as its own address: a worker keeps one database across the file's tests.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('an admin mints a sheet of cards and the Invitation Cards tab lists the batch without violations', async ({
+test('an admin mints a sheet of cards, downloads the PDF, and the Invitation Cards tab lists the batch', async ({
   page,
 }) => {
-  // Minting a sheet and drawing its cards runs past the default 30 seconds on CI under coverage.
-  test.setTimeout(90_000);
   await signInAs(page, 'cards-admin-mint@admin-cards.test', ['discord'], 'admin');
   await page.goto('/keepers/invitation-cards');
+  const batches = page.getByRole('button', { name: /^Revoke Batch / });
+  const before = await batches.count();
 
   await page.getByRole('link', { name: 'Mint Cards' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
@@ -35,8 +65,27 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await dialog.getByRole('button', { name: 'Done' }).click();
 
   await expect(dialog).toBeHidden();
-  await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(1);
+  await expect(batches).toHaveCount(before + 1);
   await assertNoAccessibilityViolations(page);
+});
+
+test('the Invitation Cards tab filters batches by status and Minted day without violations', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'cards-admin-filter@admin-cards.test',
+    ['discord'],
+    'admin',
+  );
+  const [live, revoked] = await withE2eSql(async (sql) => [
+    await insertCardBatch(sql, userId),
+    await insertCardBatch(sql, userId, true),
+  ]);
+  // A batch is named by the first block of its id.
+  const liveName = live.slice(0, 8);
+  const revokedName = revoked.slice(0, 8);
+  await page.goto('/keepers/invitation-cards');
 
   await page.getByRole('button', { name: /^Filters/ }).click();
   const drawer = page.getByRole('dialog', { name: 'Filters' });
@@ -56,9 +105,17 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
     /status=live&mintedFrom=\d{4}-\d{2}-\d{2}&mintedTo=\d{4}-\d{2}-\d{2}/,
   );
   await expect(page.getByRole('button', { name: /^Filters\D*2/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(1);
+  // Other tests in this file leave live batches of their own in the worker's database, so this test's batches are found by name:
+  // the live one is listed with exactly one Revoke Batch button, and the revoked one, which the Live filter drops, is not listed.
+  await expect(page.getByRole('button', { name: `Revoke Batch ${liveName}` })).toHaveCount(1);
+  await expect(page.getByText(revokedName)).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
+});
 
+test('the Card Sign-Ups tab is empty until a card is accepted, downloads as CSV and searches', async ({
+  page,
+}) => {
+  await signInAs(page, 'cards-admin-signups@admin-cards.test', ['discord'], 'admin');
   await page.goto('/keepers/card-sign-ups');
   await expect(page.getByText('No one has accepted a card yet.')).toBeVisible();
   await assertNoAccessibilityViolations(page);
