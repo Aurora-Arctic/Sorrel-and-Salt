@@ -20,8 +20,8 @@ export const BREAKPOINTS = {
   tablet: 896,
   // The width a page with a menu stands three columns from (`page-with-nav-wide` in _mixins.scss).
   pageWithNavWide: 928,
-  // The window a page header turns its wide layout on from (`width-from(75rem)` in PageHeader/index.scss).
-  pageHeaderWide: 1200,
+  // The widest window with the brand as initials (`width-to($shell-brand-width)` in _frame-bar.scss).
+  brandInitialsTo: 448,
 };
 
 // A width inside a band, away from its edges.

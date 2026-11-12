@@ -226,32 +226,37 @@ for (const [name, who, path, nav] of PAGES) {
 }
 
 // The bar's end group, the add button with its menu through the theme toggle, once ran past the window
-// on a phone wider than the narrowest, so it is checked at the phone width. The menu
-// shows for a viewer with two places to add to: a keeper with a coven seat, as every keeper holds in
-// the demo coven, and the owner of two covens on a coven page, since the bar is every signed-in page's.
-for (const [name, path] of [
-  ['the curator compendium', '/curator/compendium'],
-  ['a coven page', `/coven/${ALPHA.slug}`],
+// at 420px while 375px held. The brand is its initials up to the brand edge and the full name past it,
+// so the tightest window with each is checked. The menu shows for a viewer with two places to add to:
+// a keeper with a coven seat, as every keeper holds in the demo coven, and the owner of two covens on a coven page, since the bar is every signed-in page's.
+for (const [edge, width] of [
+  ['the widest window with the brand as initials', BREAKPOINTS.brandInitialsTo],
+  ['the narrowest window with the full brand', BREAKPOINTS.brandInitialsTo + 1],
 ] as const) {
-  test(`${name} does not scroll sideways at the phone width`, async ({ page }) => {
-    if (path === '/curator/compendium') {
-      const { userId } = await signInAs(page, 'steward-keeper@shell.test', ['discord'], 'admin');
-      await withE2eSql((sql) =>
-        insertWorkspace(sql, 'Shell Gamma', [[userId, 'owner']], { author: userId }),
-      );
-    } else {
-      await signInAgainAs(page, users.multi.id);
-    }
-    await page.setViewportSize(PHONE);
-    await page.goto(path);
+  for (const [name, path] of [
+    ['the curator compendium', '/curator/compendium'],
+    ['a coven page', `/coven/${ALPHA.slug}`],
+  ] as const) {
+    test(`${name} does not scroll sideways at ${width}px, ${edge}`, async ({ page }) => {
+      if (path === '/curator/compendium') {
+        const { userId } = await signInAs(page, 'steward-keeper@shell.test', ['discord'], 'admin');
+        await withE2eSql((sql) =>
+          insertWorkspace(sql, 'Shell Gamma', [[userId, 'owner']], { author: userId }),
+        );
+      } else {
+        await signInAgainAs(page, users.multi.id);
+      }
+      await page.setViewportSize({ width, height: 812 });
+      await page.goto(path);
 
-    // Why it could overflow: every control of the end group is in the bar.
-    const bar = page.getByRole('banner');
-    await expect(bar.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeVisible();
-    await expect(bar.getByRole('button', { name: 'Choose Where to Add' })).toBeVisible();
-    await expect(bar.getByRole('button', { name: 'Toggle light and dark mode' })).toBeVisible();
-    await assertNoSidewaysScroll(page, { width: PHONE_WIDTH });
-  });
+      // Why it could overflow: every control of the end group is in the bar.
+      const bar = page.getByRole('banner');
+      await expect(bar.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeVisible();
+      await expect(bar.getByRole('button', { name: 'Choose Where to Add' })).toBeVisible();
+      await expect(bar.getByRole('button', { name: 'Toggle light and dark mode' })).toBeVisible();
+      await assertNoSidewaysScroll(page, { width });
+    });
+  }
 }
 
 // The row wider than the phone fits the window: four labelled tabs and More outran it from just past the phone edge up, so
