@@ -3,6 +3,7 @@ import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
+import { runClockUntil } from '../waits';
 import {
   applyFilters,
   chooseChip,
@@ -28,19 +29,6 @@ import { makeVariant } from '../../support/fixtures/ingredient';
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-// Autosave waits 3 s after a keystroke and retries a failed save after 2, 5 and 15 s. The page's clock is faked and run on in
-// steps until the assertion holds, so the test does not sit through those waits. The retries chain, each set once the last request fails.
-async function runClockUntil(
-  page: Page,
-  assertion: () => Promise<void>,
-  step = 3_000,
-): Promise<void> {
-  await expect(async () => {
-    await page.clock.runFor(step);
-    await assertion();
-  }).toPass({ timeout: 20_000 });
-}
 
 async function openBuilder(page: Page, slug: string): Promise<Locator> {
   await page.goto(`/coven/${slug}/grimoire`);
@@ -955,7 +943,7 @@ test(
     await runClockUntil(
       page,
       () => expect(reopened.getByText(/Could not save/)).toBeVisible({ timeout: 500 }),
-      5_000,
+      { step: 5_000 },
     );
     await page.context().setOffline(false);
     await reopened.getByRole('button', { name: 'Retry' }).click();

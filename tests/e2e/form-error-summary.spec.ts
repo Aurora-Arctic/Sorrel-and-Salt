@@ -18,7 +18,7 @@ test('a failed Save puts focus on the error summary, which links to the field an
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
   await expect(adding).toBeVisible();
   // Hydrated first, or the press lands on server HTML that no form owns.
-  await hydrated(page, 'dialog button, [role="dialog"] button');
+  await hydrated(page, 'dialog form, [role="dialog"] form');
 
   // Save stays shut until something is typed; a Description alone leaves the required Name empty.
   await adding.getByRole('textbox', { name: 'Description' }).fill('A fixture description.');

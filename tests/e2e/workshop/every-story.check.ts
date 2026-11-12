@@ -67,7 +67,8 @@ async function checkStory(browser: Browser, entry: IndexEntry, theme: string) {
       problems.push(`story error: ${(await page.locator('#error-message').innerText()).trim()}`);
     await page.evaluate(async () => document.fonts.ready);
     await page.evaluate(() =>
-      Promise.all(
+      // allSettled: a cancelled animation rejects `finished`.
+      Promise.allSettled(
         document
           .getAnimations()
           .filter((run) => Number.isFinite(run.effect?.getComputedTiming().endTime))

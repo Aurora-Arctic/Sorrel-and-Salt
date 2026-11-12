@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Page, Request } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
@@ -27,20 +27,32 @@ test.beforeEach(async ({ page }) => {
   await signInAgainAs(page, coven.users.A);
 });
 
-/** Every script the page asks for from now on. */
-function scriptsFrom(page: Page): string[] {
+/** Every script the page asks for from now on, and how many requests of any kind are still in flight. */
+function requestsFrom(page: Page): { asked: string[]; inFlight: Set<Request> } {
   const asked: string[] = [];
+  const inFlight = new Set<Request>();
   page.on('request', (request) => {
+    inFlight.add(request);
     if (request.resourceType() === 'script') asked.push(request.url());
   });
-  return asked;
+  page.on('requestfinished', (request) => inFlight.delete(request));
+  page.on('requestfailed', (request) => inFlight.delete(request));
+  return { asked, inFlight };
 }
 
-/** The page loaded and quiet: hydrated, and done fetching what it fetches by itself. */
+/** The page loaded and quiet: hydrated, and with no request in flight once the browser has had an idle moment to start its own prefetches. */
 async function settled(page: Page, path: string, control: string): Promise<string[]> {
-  const asked = scriptsFrom(page);
+  const { asked, inFlight } = requestsFrom(page);
   await page.goto(path);
   await hydrated(page, control);
+  // Idle prefetches start in the browser's first idle moment; any not yet started would land in `asked` after the reset below.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        'requestIdleCallback' in window ? window.requestIdleCallback(() => resolve()) : resolve(),
+      ),
+  );
+  await expect.poll(() => inFlight.size, 'no request is still in flight').toBe(0);
   // Only what the opening asks for counts.
   asked.length = 0;
   return asked;

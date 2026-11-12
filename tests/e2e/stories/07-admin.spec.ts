@@ -25,8 +25,7 @@ async function expectNotAuthorized(page: Page, path: string) {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
-// Every page under `/curator` and `/keepers` (claude-docs/auth/admin-guard.md), in groups that run as tests of their own (a test per
-// route group loads about a fifth of the pages, where one test loading all of them ran past 28s in CI). A page added there joins a group.
+// Every page under `/curator` and `/keepers` (claude-docs/auth/admin-guard.md), in groups that run as tests of their own. A page added there joins a group.
 const ADMIN_ROUTE_GROUPS: Record<string, readonly string[]> = {
   'the landing pages': ['/curator', '/keepers', '/keepers/support'],
   'the keepers’ people and cards': [

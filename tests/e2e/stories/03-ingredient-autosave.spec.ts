@@ -1,24 +1,12 @@
-import type { Page, Route } from '@playwright/test';
+import type { Route } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { signInAgainAs } from '../session';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { localIngredient, seedCoven, withSql } from './coven-ingredients';
+import { runClockUntil } from '../waits';
 
 // The ingredient half of @story-81: typing in a coven's ingredient form is saved without a press.
-
-// Autosave waits 3 s after a keystroke and retries a failed save after 2, 5 and 15 s. The page's clock is faked and run on in
-// steps until the assertion holds, so the test does not sit through those waits. The retries chain, each set once the last request fails.
-async function runClockUntil(
-  page: Page,
-  assertion: () => Promise<void>,
-  step = 3_000,
-): Promise<void> {
-  await expect(async () => {
-    await page.clock.runFor(step);
-    await assertion();
-  }).toPass({ timeout: 20_000 });
-}
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -63,7 +51,7 @@ test(
     await runClockUntil(
       page,
       () => expect(reopened.getByText(/Could not save/)).toBeVisible({ timeout: 500 }),
-      5_000,
+      { step: 5_000 },
     );
     await assertNoAccessibilityViolations(page);
     await page.unroute('**/api/graphql', dropSaves);

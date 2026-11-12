@@ -49,7 +49,7 @@ export async function latestMessageTo(
     }
     if (Date.now() > deadline)
       throw new Error(`No message to ${address} reached Mailpit in ${timeout}ms`);
-    await pauseBetweenPolls(250);
+    await pauseBetweenPolls(250, 'Mailpit has no event to wait on, so the inbox is asked again');
   }
 }
 

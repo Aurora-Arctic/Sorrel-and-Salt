@@ -3,6 +3,7 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
+import { requiredDelay } from './waits';
 
 // An open step is closed by a click or focus outside it, never by a click on a label, a gap or the
 // padding inside it: those cannot take focus, so the browser drops it on the dialog around the row
@@ -38,19 +39,12 @@ test('an open step stays open for a click on anything inside its fields', async 
   const closed: string[] = [];
   const probe = async (label: string, act: () => Promise<unknown>) => {
     await act();
-    // A close, if the action causes one, lands within a few frames; the state is read once it holds.
-    let state: string | null = null;
-    await expect
-      .poll(
-        async () => {
-          const now = await pencil.getAttribute('aria-expanded');
-          const held = now === state;
-          state = now;
-          return held;
-        },
-        { intervals: [50] },
-      )
-      .toBe(true);
+    // That a row stays open is shown only by time passing: a close, if the action causes one, lands within a few frames.
+    await requiredDelay(
+      150,
+      'a row that stays open has no state to wait on, only a window in which a close could have landed',
+    );
+    const state = await pencil.getAttribute('aria-expanded');
     if (state !== 'true') {
       closed.push(label);
       await pencil.click();

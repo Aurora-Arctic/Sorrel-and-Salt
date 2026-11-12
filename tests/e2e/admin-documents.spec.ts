@@ -3,7 +3,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
-import { hydrated } from './waits';
+import { hydrated, requiredDelay, runClockUntil } from './waits';
 
 // Publishing the terms, or the disclaimer or code of ethics they include, asks every account to agree again (claude-docs/design-decisions/support.md, "A keeper editor for the site's documents").
 // The Email Updates tab mails one email per change (claude-docs/design-decisions/support.md, "One joint email about every changed document").
@@ -439,12 +439,8 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
     return route.continue();
   });
 
-  async function runClockUntil(assertion: () => void): Promise<void> {
-    await expect(async () => {
-      await page.clock.runFor(1_000);
-      assertion();
-    }).toPass({ timeout: 10_000 });
-  }
+  // Each step is shorter than the 3 s debounce and only one edit is pending at a time, so one step cannot send a save and the next one together.
+  const STEP = { step: 500, timeout: 10_000 };
 
   async function editInFlight(
     change: () => Promise<void>,
@@ -454,11 +450,11 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
     await heading.click();
     await page.keyboard.press('End');
     await change();
-    await runClockUntil(() => expect(bodies.length).toBe(sent + 1));
+    await runClockUntil(page, () => expect(bodies.length).toBe(sent + 1), STEP);
     await expect(save).toHaveAttribute('aria-busy', 'true');
     await revert();
     release();
-    await runClockUntil(() => expect(bodies.length).toBe(sent + 2));
+    await runClockUntil(page, () => expect(bodies.length).toBe(sent + 2), STEP);
     expect(bodies[bodies.length - 2]).not.toContain(SAVED_HEADING);
     expect(bodies[bodies.length - 1]).toContain(SAVED_HEADING);
     release();
@@ -649,22 +645,10 @@ test('Add Link with the caret placed and nothing selected inserts the address as
   await hydrated(page, EDITOR_TOOLBAR_BUTTON);
 
   await appendTo(page, 'Changes to This Policy', ' ');
-  // The editor copies the browser's caret into its own on a throttle, so the caret must hold across it before Link reads it.
-  let caret: string | undefined;
-  await expect
-    .poll(
-      async () => {
-        const now = await page.evaluate(() => {
-          const selection = window.getSelection();
-          return `${selection?.anchorNode?.textContent ?? ''}:${selection?.anchorOffset ?? -1}`;
-        });
-        const held = now === caret;
-        caret = now;
-        return held;
-      },
-      { intervals: [300] },
-    )
-    .toBe(true);
+  await requiredDelay(
+    300,
+    'slate-react copies the browser caret into the editor on a 100 ms lodash throttle, and the copy is in no DOM state the page shows',
+  );
   await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
   const dialog = page.getByRole('dialog', { name: 'Add Link' });
   const address = dialog.getByRole('textbox', { name: 'Address' });

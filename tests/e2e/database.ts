@@ -54,7 +54,12 @@ export async function recreateE2eDatabase(): Promise<void> {
 
 const REAL_CLOCK: WarmUpClock = {
   now: () => Date.now(),
-  sleep: pauseBetweenPolls,
+  sleep: (ms) => {
+    return pauseBetweenPolls(
+      ms,
+      'the database connection has no event to wait on while it reconnects',
+    );
+  },
 };
 
 // Past postgres's reconnect backoff, which caps at 20 s; the pause lets the backoff run out rather than spend it in bursts.

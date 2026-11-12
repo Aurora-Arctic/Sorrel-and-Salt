@@ -42,8 +42,11 @@ test('the home page and the compendium load under the policy with no violation',
 }) => {
   const violations = await collectViolations(page);
 
-  await page.goto('/');
-  await page.goto('/compendium');
+  // A late resource's violation only shows once the page has loaded and hydrated, so each page is waited on for both.
+  for (const path of ['/', '/compendium']) {
+    await page.goto(path, { waitUntil: 'load' });
+    await hydrated(page, 'main');
+  }
   await expect(page.getByRole('navigation', { name: 'Site' })).toBeVisible();
   // The pre-paint scripts are inline: this one sets `data-js` on <html> only if it ran.
   await expect(page.locator('html[data-js]')).toHaveCount(1);

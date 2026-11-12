@@ -58,7 +58,7 @@ async function mailedPath(
       }
     }
     if (Date.now() > deadline) throw new Error(`no new ${pattern} link mailed to ${to}`);
-    await pauseBetweenPolls(250);
+    await pauseBetweenPolls(250, 'Mailpit has no event to wait on, so the inbox is asked again');
   }
 }
 
