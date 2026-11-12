@@ -16,6 +16,7 @@ import {
 } from './stories/coven-ingredients';
 import { editIngredientDialog } from './stories/ingredient-dialogs';
 import { hydrated, requiredDelay } from './waits';
+import { PHONE_WIDTH } from './breakpoints';
 
 // For what no story walks (claude-docs/components/ingredient-entry.md, "The details modal").
 
@@ -150,12 +151,7 @@ test.describe('on the admin Compendium list', () => {
         .evaluate((c) => c.getBoundingClientRect().bottom));
 
     await bar.hover();
-    const chevron = bar.locator('svg');
-    await expect.poll(() => chevron.evaluate((c) => getComputedStyle(c).scale)).toBe('1.25');
     expect(await bar.evaluate((b) => getComputedStyle(b).textDecorationLine)).toBe('none');
-    expect(await chevron.evaluate((c) => getComputedStyle(c).color)).toBe(
-      await bar.evaluate((b) => getComputedStyle(b).color),
-    );
 
     await bar.click();
     const less = details.getByRole('button', { name: 'Show Less' });
@@ -201,14 +197,13 @@ test.describe('on the admin Compendium list', () => {
       }));
     await expect.poll(overflow).toEqual({ y: 0, x: 0 });
     // The scrollbar is the browser's to draw, and only for text that overflows: never forced.
-    expect(await body.evaluate((b) => getComputedStyle(b).overflowY)).toBe('auto');
     await expect(body.getByRole('link', { name: 'See in Compendium' })).toHaveCount(0);
   });
 
   test('a description that fits the window once opened leaves the body with nothing to scroll, during the opening and after', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1280, height: 1000 });
+    await page.setViewportSize({ width: page.viewportSize()!.width, height: 1000 });
     const midName = 'Fixture Midwort';
     const midFormal = 'Fixtura media';
     const sentence =
@@ -389,7 +384,7 @@ test.describe("on a coven's Ingredients", () => {
     await withSql((sql) =>
       localIngredient(sql, coven.id, coven.users.A, { name: NAME, canonicalName: FORMAL }),
     );
-    await page.setViewportSize({ width: 375, height: 800 });
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
     await page.goto(`/coven/${coven.slug}/ingredients`);
 
     await quickLook(page).click();

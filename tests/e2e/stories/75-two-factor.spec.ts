@@ -7,6 +7,7 @@ import { totpCode } from '../../support/two-factor';
 import { agreedInForceSql } from '../../support/db/agreement-in-force';
 import { PASSWORD, field } from '../session';
 import { withSql } from './accounts-setup';
+import { PHONE_WIDTH } from '../breakpoints';
 
 // Two-factor for password sign-ins (claude-docs/auth/two-factor.md). The code is computed from the key the account
 // page shows, as an authenticator app computes it from the QR code.
@@ -87,11 +88,11 @@ test(
     // Sweep gap: the sign-in page asking for a two-factor code after the password.
     await assertNoAccessibilityViolations(page);
 
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 844 });
     const verifyBox = await main.getByRole('button', { name: 'Verify' }).boundingBox();
     expect(verifyBox).not.toBeNull();
     expect(verifyBox!.x).toBeGreaterThanOrEqual(0);
-    expect(verifyBox!.x + verifyBox!.width).toBeLessThanOrEqual(390);
+    expect(verifyBox!.x + verifyBox!.width).toBeLessThanOrEqual(PHONE_WIDTH);
 
     await field(main, 'Code From Your App').fill(await totpCode(appUri));
     await main.getByRole('button', { name: 'Verify' }).click();

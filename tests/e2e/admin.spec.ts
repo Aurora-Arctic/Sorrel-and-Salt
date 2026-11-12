@@ -4,6 +4,7 @@ import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 import { asTouch } from '../support/db/touch-row';
 import { slugify } from '@/lib/slugify';
+import { DESKTOP_WIDTH } from './breakpoints';
 
 // For what the story suite (stories/07-admin.spec.ts, 08-email-and-admin.spec.ts) does not walk. A signed-out redirect is route-protection.spec.ts's.
 test.beforeAll(async () => {
@@ -24,7 +25,7 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
 }) => {
   // A desktop window: a phone folds the later tabs behind More (shell.spec.ts),
   // and this test counts every link.
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 800 });
   await signInAs(page, 'an-admin@admin-guard.test', ['discord'], 'admin');
 
   const curator = await page.goto('/curator');
@@ -205,7 +206,7 @@ test('an admin narrows the users to those timed out of support, and to those who
 test('a curator reaches /curator, the curation pages and /keepers with Support alone, and is refused People, Invitations, the documents and a coven', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 800 });
   await signInAs(page, 'a-curator@admin-curator.test', ['discord'], 'curator');
 
   const curator = await page.goto('/curator');

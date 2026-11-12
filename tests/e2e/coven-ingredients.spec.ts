@@ -18,6 +18,7 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
+import { PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
 
 // For what no story walks.
 
@@ -373,7 +374,7 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await expect(menu).toHaveCount(0);
 
   const wide = page.viewportSize()!;
-  await page.setViewportSize({ width: 375, height: 800 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
   await moreButton.scrollIntoViewIfNeeded();
   await moreButton.click();
   await expectMenuInsideDialog();
@@ -436,7 +437,7 @@ test("a card's More opened near the window's foot opens above it, inside the win
   });
   const menu = page.getByRole('menu', { name: /^More for Fixture Footwort/ });
 
-  for (const width of [1280, 375]) {
+  for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
     await page.setViewportSize({ width, height: 800 });
     // The window is cut off just beneath More, with the bottom bar's room when it is drawn.
     const bar = await page.evaluate(() => {

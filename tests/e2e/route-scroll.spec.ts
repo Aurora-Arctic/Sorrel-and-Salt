@@ -2,6 +2,7 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { requiredDelay } from './waits';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
 
 // A move to another page lands at the top. With `scroll-behavior: smooth` (src/app/globals.scss), Next's own
 // jump glides and stops 40-62px short unless <html> carries `data-scroll-behavior="smooth"`; only a real
@@ -12,8 +13,8 @@ import { requiredDelay } from './waits';
 test.use({ reducedMotion: 'no-preference' });
 
 const VIEWPORTS = [
-  { name: 'desktop', width: 1280, height: 800 },
-  { name: 'phone', width: 390, height: 844 },
+  { name: 'desktop', width: DESKTOP_WIDTH, height: 800 },
+  { name: 'phone', width: PHONE_WIDTH, height: 844 },
 ];
 
 test.beforeAll(async () => {

@@ -7,6 +7,7 @@ import { PASSWORD, field, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Locator, Page } from '@playwright/test';
 import { insertWorkspace } from '../support/db/insert-workspace';
+import { PHONE_WIDTH } from './breakpoints';
 
 // Sign In and Create Account opened over the page they are on: from the public bar, and as the two
 // equal choices on a signed-out invitation (claude-docs/components/sign-in-dialog.md).
@@ -226,7 +227,7 @@ test.describe('the sign-in dialog', () => {
   });
 
   test('stacks the two choices on a phone', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
     await page.goto(INVITATION);
     const main = page.getByRole('main');
     // An address invitation leads with Sign In.
@@ -244,8 +245,8 @@ test.describe('the sign-in dialog', () => {
       parseFloat(getComputedStyle(document.documentElement).fontSize),
     );
     expect(box.x).toBeCloseTo(rem, -1);
-    expect(375 - (box.x + box.width)).toBeCloseTo(rem, -1);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
+    expect(PHONE_WIDTH - (box.x + box.width)).toBeCloseTo(rem, -1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(PHONE_WIDTH);
   });
 });
 

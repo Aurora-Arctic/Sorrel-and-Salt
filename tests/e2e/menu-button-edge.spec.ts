@@ -4,6 +4,7 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
 import { destinationMenu } from './stories/ingredient-dialogs';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
 
 // A MenuButton's menu hangs from its button's end edge and stays on screen (claude-docs/components/menu-button.md,
 // "Contracts"), measured on the bar's Add Ingredient chevron at a desktop width and the narrowest phone.
@@ -17,8 +18,8 @@ test.beforeAll(async () => {
 // menu is wider than the room before the chevron's end, so it is shifted back
 // onto the screen instead (Floating UI's shift, MenuButton/index.tsx).
 for (const { viewport, hangs } of [
-  { viewport: { width: 1280, height: 800 }, hangs: true },
-  { viewport: { width: 320, height: 640 }, hangs: false },
+  { viewport: { width: DESKTOP_WIDTH, height: 800 }, hangs: true },
+  { viewport: { width: PHONE_WIDTH, height: 640 }, hangs: false },
 ]) {
   test(`the Add Ingredient menu opens under the chevron, inside a ${viewport.width}px window`, async ({
     page,

@@ -10,6 +10,7 @@ import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 import { deitySlug, ingredientSlug } from '@/lib/slugify';
 import { hydrated } from './waits';
+import { BAND_WIDTHS, PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
 
 // claude-docs/components/ingredient-form.md, "Stories and tests".
 test.beforeAll(async () => {
@@ -26,7 +27,7 @@ async function expectInsideViewport(page: Page, dialog: Locator) {
 
 test('the page behind an open modal does not scroll', async ({ page, isMobile }) => {
   test.skip(isMobile, 'Mouse wheel is not supported in mobile WebKit');
-  await page.setViewportSize({ width: 1280, height: 600 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 600 });
   await signInAs(page, 'scroll-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium');
   // The precondition: the list is taller than the window, so the page can scroll.
@@ -66,7 +67,7 @@ test('the page behind an open modal does not scroll', async ({ page, isMobile })
 });
 
 test('the compendium form stands inside the viewport on a phone', async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   await signInAs(page, 'phone-admin@admin-compendium.test', ['discord'], 'admin');
 
   await page.goto('/curator/compendium?new=ingredient-compendium');
@@ -157,7 +158,7 @@ test('the Form box keeps only the entries holding the form chosen', async ({ pag
 test('the edit source panel leaves the dialog in place and closes from its top by keyboard', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
   await signInAs(page, 'source-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium?new=ingredient-compendium');
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
@@ -508,7 +509,7 @@ test('the Categories picker filters by AND, writes repeated slugs, restores on r
 test('the Categories picker is usable at 375px and has no accessibility violations', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 800 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
   await signInAs(page, 'category-axe-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium?categories=protection');
   await openFilters(page);
@@ -594,7 +595,7 @@ test('the match mode widens two categories to Any, is kept in the address, and g
 test('a curator sees the covens holding an entry, then promotes a folk name and the list shows it as the name', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 800 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
   // seedCoven signs each owner in on this page, so it runs before the curator signs in.
   const covens = [
     await seedCoven(page, 'Fixture Coven Count One', 'count-one.test', { A: 'owner' }),
@@ -860,7 +861,7 @@ test('the panel takes focus in, gives it back on Escape, and a reload and Back b
 test('at 375px the panel is a modal sheet that closes on Escape, with no accessibility violations', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   const { userId } = await signInAs(
     page,
     'facet-phone@admin-compendium.test',
@@ -927,10 +928,10 @@ test('the panel opens with its top at its final place from the first frame', asy
 });
 
 for (const [label, width, height] of [
-  ['1280', 1280, 900],
-  ['390', 390, 800],
+  ['desktop', DESKTOP_WIDTH, 900],
+  ['phone', PHONE_WIDTH, 800],
 ] as const) {
-  test(`the Match menu opens whole inside the panel at ${label}px`, async ({ page }) => {
+  test(`the Match menu opens whole inside the panel at the ${label} width`, async ({ page }) => {
     await signInAs(page, `match-menu-${label}@admin-compendium.test`, ['discord'], 'admin');
     await page.setViewportSize({ width, height });
     // Two categories chosen, so Match can open; it ends its row on every panel, which is
@@ -959,10 +960,10 @@ for (const [label, width, height] of [
 }
 
 for (const [label, width, height] of [
-  ['1280', 1280, 900],
-  ['375', 375, 800],
+  ['desktop', DESKTOP_WIDTH, 900],
+  ['phone', PHONE_WIDTH, 800],
 ] as const) {
-  test(`the Match tip opens whole inside the panel at ${label}px`, async ({ page }) => {
+  test(`the Match tip opens whole inside the panel at the ${label} width`, async ({ page }) => {
     await signInAs(page, `match-tip-${label}@admin-compendium.test`, ['discord'], 'admin');
     await page.setViewportSize({ width, height });
     await page.goto('/curator/compendium?categories=protection&categories=cleansing');
@@ -1011,8 +1012,8 @@ async function seedChipwort(userId: string) {
 }
 
 for (const [name, viewport] of [
-  ['a desktop table', { width: 1280, height: 900 }],
-  ['a phone card', { width: 375, height: 800 }],
+  ['a desktop table', { width: DESKTOP_WIDTH, height: 900 }],
+  ['a phone card', { width: PHONE_WIDTH, height: 800 }],
 ] as const) {
   test(`the +N panel in the Categories column floats over the rows beneath on ${name}, and the row keeps its height`, async ({
     page,
@@ -1059,7 +1060,8 @@ for (const [name, viewport] of [
 test('the Edit column stays pinned at the frame edge while the table scrolls sideways, and its link still opens', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 700, height: 900 });
+  // A table, not stacked cards: the frame is wider than the table stacks at (40rem), so the tablet band.
+  await page.setViewportSize({ width: BAND_WIDTHS.tablet, height: 900 });
   await signInAs(page, 'pinned-edit@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium');
   const frame = page.locator('.data-table-frame');

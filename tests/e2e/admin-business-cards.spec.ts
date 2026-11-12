@@ -5,6 +5,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { DESKTOP_WIDTH } from './breakpoints';
 
 // (claude-docs/components/business-cards.md)
 test.beforeAll(async () => {
@@ -25,7 +26,7 @@ const notAuthorized = (page: Page) =>
 test('a keeper opens Business Cards from the Keepers index and from the Keepers nav', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 800 });
   await signInAs(page, 'a-keeper@business-cards.test', ['discord'], 'admin');
 
   await page.goto('/keepers');

@@ -24,6 +24,7 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
+import { PHONE_WIDTH } from './breakpoints';
 
 test('a seeded violation fails the scan', async ({ page }) => {
   await page.setContent(
@@ -244,7 +245,7 @@ test.describe('the grimoire', () => {
 // The phone layout is its own markup state the sweep, at desktop width, cannot reach: the shell's tab bar and the
 // Filters sheet, each scanned in full once at 375, with the colour rules again in dark.
 // 375 is the phone width every e2e spec shares (assertNoSidewaysScroll defaults to it).
-const PHONE = { width: 375, height: 812 };
+const PHONE = { width: PHONE_WIDTH, height: 812 };
 
 test.describe('the phone layout', () => {
   test.beforeAll(async () => {

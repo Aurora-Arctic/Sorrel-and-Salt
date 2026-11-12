@@ -3,6 +3,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { hydrated } from './waits';
+import { DESKTOP_WIDTH } from './breakpoints';
 
 // (claude-docs/components/field.md, "Announcing errors")
 test.beforeAll(async () => {
@@ -12,7 +13,7 @@ test.beforeAll(async () => {
 test('a failed Save puts focus on the error summary, which links to the field and prefixes the page title', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
   await signInAs(page, 'a-keeper@error-summary.test', ['discord'], 'admin');
   await page.goto('/curator/compendium?new=ingredient-compendium');
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });

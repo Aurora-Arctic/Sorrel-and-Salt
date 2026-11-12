@@ -4,6 +4,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe'
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
 import { expectRoll, makeCoven, makeUser, seatsOf, withSql } from './accounts-setup';
+import { PHONE_WIDTH } from '../breakpoints';
 
 // Each test builds its own coven by SQL (accounts-setup.ts). A refusal shows twice: the control is absent where the page knows better, and where a stale page still offers it the server refuses and the page says so.
 
@@ -174,7 +175,7 @@ test.describe('removing a member, and leaving', () => {
       await expect(dialog).toHaveCount(0);
       await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/members$`));
       await expectRoll(page, { [ASH]: 'Steward', [CEDAR]: 'Observer' }, NAMES);
-      await page.setViewportSize({ width: 375, height: 812 });
+      await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
       await assertNoSidewaysScroll(page);
 
       const seats = await withSql(

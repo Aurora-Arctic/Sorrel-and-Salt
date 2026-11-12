@@ -2,10 +2,11 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
+import { PHONE_WIDTH } from './breakpoints';
 
 // At phone width a step's controls stay inside its card, its handle is a 24 by 24 target at
 // least, and a closed instruction shows two lines: real layout jsdom does not draw.
-test.use({ viewport: { width: 375, height: 812 } });
+test.use({ viewport: { width: PHONE_WIDTH, height: 812 } });
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

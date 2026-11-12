@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
+import { PHONE_WIDTH } from './breakpoints';
 
 /** One failed axe rule on one element, named so a report can say where. */
 export interface AxeFinding {
@@ -56,7 +57,10 @@ export async function assertNoAccessibilityViolations(
 // A page holds at a phone's width when the document is no wider than the window. Measured in a real
 // browser, since happy-dom lays nothing out; 375px is the narrowest width a section signs off at
 // (claude-docs/styling.md, "Designing a section"), and `width` checks a wider one. `restore` puts the window back to its width afterwards.
-export async function assertNoSidewaysScroll(page: Page, { restore = false, width = 375 } = {}) {
+export async function assertNoSidewaysScroll(
+  page: Page,
+  { restore = false, width = PHONE_WIDTH } = {},
+) {
   const size = restore ? page.viewportSize() : null;
   await page.setViewportSize({ width, height: 812 });
   // Two frames for what follows the window by itself: a callout or badge placed by Floating UI moves

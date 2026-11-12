@@ -5,6 +5,7 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { variantIdOf } from '../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
+import { PHONE_WIDTH } from './breakpoints';
 
 // Make It Ours: a member turns a compendium entry the coven holds into the coven's own, lands on the own
 // entry's page, and the coven's jar goes with it. The jar is read from the database by the id the page's
@@ -47,7 +48,7 @@ test('a member makes a held compendium entry the coven’s own and lands on it, 
     return { compendiumId: id, jarId: jar };
   });
 
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   // Why the button could be refused or absent: the entry is the compendium's,
   // the coven holds it, and the jar is on the compendium entry's form.
   await page.goto(`/coven/${coven.slug}/ingredients/${compendiumId}`);

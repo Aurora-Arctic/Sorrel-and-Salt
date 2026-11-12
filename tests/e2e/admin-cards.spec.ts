@@ -5,6 +5,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { mintedLinks } from './cards';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
+import { PHONE_WIDTH } from './breakpoints';
 
 // A sheet of ten cards minted today (live, or revoked), written straight to the slot database so a test that only reads the tab
 // need not mint through the dialog. Only the hash is stored, so these cards cannot be redeemed.
@@ -110,7 +111,7 @@ test('the Card Sign-Ups tab is empty until a card is accepted, downloads as CSV 
 test('on a phone, Escape shuts the range calendar and the status list and leaves the Filters sheet open', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 844 });
   await signInAs(page, 'cards-admin-phone@admin-cards.test', ['discord'], 'admin');
   await page.goto('/keepers/invitation-cards');
   await page.getByRole('button', { name: /^Filters/ }).click();

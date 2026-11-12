@@ -12,6 +12,7 @@ import {
   stockEditor,
   withSql,
 } from './stories/coven-ingredients';
+import { PHONE_WIDTH } from './breakpoints';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -114,7 +115,7 @@ test('a coven’s entry pages list its jars under Stock, and Edit Stock in the h
   });
 
   await test.step('at a phone’s width the section is axe-clean and scrolls nowhere sideways', async () => {
-    await page.setViewportSize({ width: 375, height: 812 });
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
     await assertNoSidewaysScroll(page, { restore: true });
     // Sweep gap: the ingredient page with its Stock section at 375 px.
     await assertNoAccessibilityViolations(page);

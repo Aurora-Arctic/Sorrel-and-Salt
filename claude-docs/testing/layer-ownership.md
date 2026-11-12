@@ -61,6 +61,9 @@ cited by number in the PR table of the task that applies it.
    workshop story and the Playwright axe scan own presentation. A real browser
    measuring a layout requirement (the 375 px scroll width) and a
    one-assertion token-contrast check per theme are functional, and allowed.
+   A Playwright spec takes its window width from `tests/e2e/breakpoints.ts`: `PHONE_WIDTH`
+   (375) and `DESKTOP_WIDTH` (1280, Playwright's desktop device), a stylesheet edge, or an
+   edge ±1. `tests/guards/viewport-widths.test.ts` refuses a bare number.
 5. **One row per shared path.** A `describe.each` or `it.each` over a
    component's or module's own config table (`KINDS`, `VOCABULARY_COPY`,
    `VARIANTS`, `UNITS`, the vocabulary registry) runs the shared behaviour on

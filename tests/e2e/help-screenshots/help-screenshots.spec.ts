@@ -9,6 +9,7 @@ import {
   seedCoven,
   withSql,
 } from '../stories/coven-ingredients';
+import { DESKTOP_WIDTH } from '../breakpoints';
 import { ingredientSlug } from '@/lib/slugify';
 
 // Writes the help articles' screenshots into public/help/screens/, from the seeded compendium and a coven made here,
@@ -20,7 +21,11 @@ const SCREENS = join(process.cwd(), 'public', 'help', 'screens');
 /** The standard seed's site curator, fixture F. */
 const CURATOR = '00000000-0000-0000-0000-000000000008';
 
-test.use({ viewport: { width: 1024, height: 768 }, colorScheme: 'light', deviceScaleFactor: 1 });
+test.use({
+  viewport: { width: DESKTOP_WIDTH, height: 768 },
+  colorScheme: 'light',
+  deviceScaleFactor: 1,
+});
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -76,7 +81,7 @@ test('the compendium entry page, read signed out', async ({ page }) => {
   });
 
   // Tall enough that the whole entry is in frame; the picture ends with the page's main.
-  await page.setViewportSize({ width: 1024, height: 2400 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 2400 });
   await page.goto(`/compendium/ingredients/${slug}`);
   await expect(page.getByRole('heading', { level: 1, name: 'Rosemary' })).toBeVisible();
   await expect(page.getByText('Needs Review')).toHaveCount(0);
@@ -84,7 +89,7 @@ test('the compendium entry page, read signed out', async ({ page }) => {
   const main = await page.locator('main').first().boundingBox();
   if (!main) throw new Error('the entry page drew no main');
 
-  const clip = { x: 0, y: 0, width: 1024, height: Math.ceil(main.y + main.height) };
+  const clip = { x: 0, y: 0, width: DESKTOP_WIDTH, height: Math.ceil(main.y + main.height) };
 
   await bothThemes(page, 'compendium-entry', (path) => page.screenshot({ path, clip }));
 });
@@ -129,7 +134,7 @@ test('the spell builder, open on a draft', async ({ page }) => {
   });
 
   // Tall enough that the builder, every section open, needs no scrolling.
-  await page.setViewportSize({ width: 1024, height: 2400 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 2400 });
   await page.goto(`/coven/${coven.slug}/grimoire/drafts?edit=${spellId}`);
   const builder = page.getByRole('dialog', { name: `Edit Spell, ${title}` });
   await expect(builder).toBeVisible();

@@ -1,9 +1,10 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { assertNoAccessibilityViolations } from '../axe';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from '../breakpoints';
 
 // Layout facts (claude-docs/components/click-feedback.md) measured in its Storybook stories; what it says and where the focus goes are tests/components/ClickFeedback's.
 
-const WIDTHS = [1280, 375] as const;
+const WIDTHS = [DESKTOP_WIDTH, PHONE_WIDTH] as const;
 const THEMES = ['dark', 'light'] as const;
 
 const STATE_OF: Record<string, string> = {
@@ -80,26 +81,26 @@ async function expectUnder(alert: Locator, control: Locator) {
 
 test.describe('the callout’s place', () => {
   test('below the control', async ({ page }) => {
-    await openStory(page, 'bordered', 'dark', 1280);
+    await openStory(page, 'bordered', 'dark', DESKTOP_WIDTH);
     const alert = await placed(page);
     await expectUnder(alert, page.getByRole('button', { name: 'Remove', exact: true }));
   });
 
   test('near the right edge, inside the window', async ({ page }) => {
-    await openStory(page, 'near-right-edge', 'dark', 1280);
+    await openStory(page, 'near-right-edge', 'dark', DESKTOP_WIDTH);
     const alert = await placed(page);
     const control = page.getByRole('button', { name: 'Annotate', exact: true });
     const at = await box(control);
     const under = await box(alert);
 
     // Why it could leave: hung from the control's start it would run past the window's edge.
-    expect(at.left + (under.right - under.left)).toBeGreaterThan(1280);
-    expect(under.right).toBeLessThanOrEqual(1280);
+    expect(at.left + (under.right - under.left)).toBeGreaterThan(DESKTOP_WIDTH);
+    expect(under.right).toBeLessThanOrEqual(DESKTOP_WIDTH);
     await expectUnder(alert, control);
   });
 
   test('with room for neither alignment, inside its box', async ({ page }) => {
-    await openStory(page, 'pinned', 'dark', 1280);
+    await openStory(page, 'pinned', 'dark', DESKTOP_WIDTH);
     const alert = await placed(page);
     const control = page.getByRole('button', { name: 'Remove', exact: true });
     const bounds = await box(page.locator('[data-tip-boundary]'));
@@ -119,7 +120,7 @@ test.describe('the callout’s place', () => {
     test(`in ${story}, refused as it mounts, the badge stands beside the borderless control`, async ({
       page,
     }) => {
-      await openStory(page, story, 'dark', 1280);
+      await openStory(page, story, 'dark', DESKTOP_WIDTH);
       await placed(page);
       const control = page.getByRole('button', { name: 'Annotate', exact: true });
       const mark = badge(page, 'Annotate');
@@ -132,13 +133,13 @@ test.describe('the callout’s place', () => {
   }
 
   for (const theme of THEMES) {
-    test(`at 375px in ${theme}, inside the window`, async ({ page }) => {
-      await openStory(page, 'bordered', theme, 375);
+    test(`at the phone width in ${theme}, inside the window`, async ({ page }) => {
+      await openStory(page, 'bordered', theme, PHONE_WIDTH);
       const alert = await placed(page);
       const under = await box(alert);
 
       expect(under.left).toBeGreaterThanOrEqual(0);
-      expect(under.right).toBeLessThanOrEqual(375);
+      expect(under.right).toBeLessThanOrEqual(PHONE_WIDTH);
       await expectUnder(alert, page.getByRole('button', { name: 'Remove', exact: true }));
     });
   }
@@ -305,7 +306,7 @@ const settle = (page: Page) =>
 test.describe('motion', () => {
   test('the callout and the badge fade in once placed, and out as they go', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await openStory(page, 'then-succeeds', 'dark', 1280);
+    await openStory(page, 'then-succeeds', 'dark', DESKTOP_WIDTH);
     // Longer than the fade: placed late, a fade started at the mount is over.
     await holdPlacement(page, 15);
 
@@ -347,7 +348,7 @@ test.describe('motion', () => {
 
   test('the callout fades out once dismissed, and again on Escape', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await openStory(page, 'default', 'dark', 1280);
+    await openStory(page, 'default', 'dark', DESKTOP_WIDTH);
     const remove = page.getByRole('button', { name: 'Remove', exact: true });
 
     await remove.click();
@@ -369,7 +370,7 @@ test.describe('motion', () => {
 
   test('under reduced motion neither fades: each shows in full at once', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await openStory(page, 'then-succeeds', 'dark', 1280);
+    await openStory(page, 'then-succeeds', 'dark', DESKTOP_WIDTH);
 
     await sampleFrames(page);
     await page.getByRole('button', { name: 'Remove', exact: true }).click();

@@ -6,6 +6,7 @@ import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 import { slugify } from '@/lib/slugify';
 import { insertWorkspace } from '../support/db/insert-workspace';
+import { PHONE_WIDTH } from './breakpoints';
 
 // The coven page and its section nav against the built server. A stranger's 404 (claude-docs/auth/coven-guard.md, "The coven guard") is coven-ingredients.spec.ts's.
 
@@ -103,7 +104,7 @@ test("a refused deletion in the only owner's exit keeps Cancel inside the dialog
   page,
 }) => {
   await signInAgainAs(page, users.owner.id);
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   await page.goto(`/coven/${COVEN_SLUG}`);
   await page.getByRole('main').getByRole('button', { name: 'Leave Coven', exact: true }).click();
   const dialog = page.getByRole('dialog');

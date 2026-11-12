@@ -5,6 +5,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, scanBothThemes } from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
+import { PHONE_WIDTH } from './breakpoints';
 
 // Ordering on Keepers › Help: Reorder Mode moves a guide among its own audience's and saves the whole order at each move;
 // a guide's sub pages and the FAQ save each drop at once (claude-docs/components/help-outline.md, "Reorder Mode" and
@@ -170,7 +171,7 @@ test('a keeper reorders the guides within their audience, and each move saves at
 // in full once at 375 (375 is the phone width the other specs share).
 test('at a phone, Reorder Mode as a sheet passes the scans', async ({ page }) => {
   await signInAs(page, 'e4@admin-help-order.test', ['discord'], 'admin');
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   await page.goto(PATH);
   await page.getByRole('button', { name: 'Reorder' }).click();
   await expect(said(page, 'Reorder mode.')).toBeAttached();

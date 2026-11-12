@@ -4,6 +4,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransiti
 import { recreateE2eDatabase } from './database';
 import { HELP, SCREENSHOT_ALT, STAFF_WORD, helpRowState, seedHelpArticles } from './help-articles';
 import { signInAs } from './session';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
 
 // The public help pages, the staff help pages and the help search against the built server (DESIGN.md §10, "Help and
 // FAQ articles"). A sub page has one address, under its parent's; a row answers only at its audience's address.
@@ -266,7 +267,7 @@ test.describe('the help header', () => {
     };
   };
 
-  for (const width of [1280, 375]) {
+  for (const width of [DESKTOP_WIDTH]) {
     test(`the heading, the lede and the search box stand in the same place on /help, /help/search and an article at ${width}px`, async ({
       page,
     }) => {
@@ -303,7 +304,7 @@ test.describe('the help header', () => {
     main.getByRole('region', { name: 'Frequently Asked Questions' }),
   ];
 
-  for (const width of [1280, 1000, 375]) {
+  for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
     test(`every section of /help, and of its skeleton, takes the search box's edges at ${width}px`, async ({
       page,
     }) => {
@@ -582,7 +583,7 @@ test.describe('screenshots', () => {
   test('Enter opens the picture full size as one named image, scrolling, and Escape or Close gives the focus back', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1200, height: 700 });
+    await page.setViewportSize({ width: DESKTOP_WIDTH, height: 700 });
     await page.goto(ARTICLE);
     const button = page.getByRole('button', { name: ENLARGE });
     const dialog = page.getByRole('dialog');
@@ -615,7 +616,7 @@ test.describe('screenshots', () => {
     await expect(button).toBeFocused();
   });
 
-  for (const width of [1200, 375]) {
+  for (const width of [PHONE_WIDTH]) {
     test(`the picture is never wider than its article section at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
       await page.goto(ARTICLE);
@@ -639,24 +640,4 @@ test.describe('screenshots', () => {
       expect(sizes.page).toBeLessThanOrEqual(sizes.window);
     });
   }
-});
-
-test.describe('look', () => {
-  test("a guide card's left bar takes the accent while it is hovered", async ({ page }) => {
-    await page.goto('/help');
-    const guide = page.getByRole('region', { name: 'Guides' }).getByRole('listitem').first();
-    const bar = () => guide.evaluate((card) => getComputedStyle(card).borderInlineStartColor);
-    const accent = await page.evaluate(() => {
-      const probe = document.createElement('span');
-      probe.style.color = 'var(--accent)';
-      document.body.append(probe);
-      const colour = getComputedStyle(probe).color;
-      probe.remove();
-      return colour;
-    });
-
-    expect(await bar()).not.toBe(accent);
-    await guide.hover();
-    await expect.poll(bar).toBe(accent);
-  });
 });

@@ -7,6 +7,7 @@ import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients';
+import { PHONE_WIDTH } from './breakpoints';
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
 const PAGE_SIZE = 24;
@@ -140,10 +141,10 @@ test('signed in, the search row sticks under the top bar and its tray stays in v
   await expectStuckRow(page, () => barBottom(page));
 });
 
-test('the stuck row holds at 375px without a sideways scroll or an axe violation', async ({
+test('at 375px the stuck row holds without a sideways scroll, and a control focused below the fold lands under it', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 700 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 700 });
   await page.goto('/compendium');
   await expect(cardsOf(page).first()).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 1500));
@@ -156,21 +157,14 @@ test('the stuck row holds at 375px without a sideways scroll or an axe violation
   expect(filters!.y + filters!.height).toBeLessThanOrEqual(row!.y + row!.height + 1);
   expect(filters!.y + filters!.height).toBeLessThanOrEqual(700);
   await assertNoSidewaysScroll(page);
-});
 
-test('at 375px a control focused below the fold lands under the stuck search row, not behind it', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 375, height: 700 });
-  await page.goto('/compendium');
-  await expect(cardsOf(page).first()).toBeVisible();
-  await page.evaluate(() => window.scrollTo(0, 1500));
-  // Tab walks from the top of the page, so focus a card's link far below the row directly:
-  // the browser scrolls it into view, and `scroll-padding-top` keeps it clear of both lines.
+  // A control focused below the fold lands under the stuck search row, not behind it. Tab walks from the
+  // top of the page, so focus a card's link far below the row directly: the browser scrolls it into view,
+  // and `scroll-padding-top` keeps it clear of both lines.
   const link = cardsOf(page).nth(2).getByRole('link').first();
   await link.focus();
-  const [box, focused] = await Promise.all([searchRow(page).boundingBox(), link.boundingBox()]);
-  expect(focused!.y).toBeGreaterThanOrEqual(box!.y + box!.height - 1);
+  const [stuck, focused] = await Promise.all([searchRow(page).boundingBox(), link.boundingBox()]);
+  expect(focused!.y).toBeGreaterThanOrEqual(stuck!.y + stuck!.height - 1);
 });
 
 test('the search row is marked stuck once scrolled past, and unmarked back at the top', async ({

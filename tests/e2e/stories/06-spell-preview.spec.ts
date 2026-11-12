@@ -4,6 +4,7 @@ import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 import { insertSpell, insertStep, localIngredient, seedCoven, withSql } from './coven-ingredients';
+import { BAND_WIDTHS, DESKTOP_WIDTH, PHONE_WIDTH } from '../breakpoints';
 import { makeVariant } from '../../support/fixtures/ingredient';
 
 test.beforeAll(async () => {
@@ -170,8 +171,8 @@ test(
   async ({ page }) => {
     await seedLongSpell(page, 'story-85-foot');
     for (const [width, height] of [
-      [1440, 900],
-      [390, 844],
+      [DESKTOP_WIDTH, 900],
+      [PHONE_WIDTH, 844],
     ] as const) {
       await page.setViewportSize({ width, height });
       const pane = await openLongPane(page);
@@ -179,9 +180,6 @@ test(
       const foot =
         (await rect(pane)).bottom - (await rect(pane.locator('.spell-preview__content'))).bottom;
       expect(Math.abs(foot - 40), `${width}px`).toBeLessThanOrEqual(1);
-      await pane.screenshot({
-        path: `${process.env.SHOTS ?? 'test-results'}/preview-scroll-foot-${width}.png`,
-      });
       await closePane(page, pane);
     }
   },
@@ -191,7 +189,7 @@ test(
   'only the pane scrolls while it is open, and its Close scrolls away with the content',
   { tag: '@story-85' },
   async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 844 });
     const pane = await longSpell(page, 'story-85-lock');
     const close = pane.getByRole('button', { name: 'Close' });
     // The page behind is long enough to scroll, which is what the pane must not let happen.
@@ -203,9 +201,6 @@ test(
     await expect.poll(() => pane.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
     expect(await page.evaluate(() => window.scrollY)).toBe(scrolled);
     expect((await rect(close)).bottom).toBeLessThan(paneTop);
-    await pane.screenshot({
-      path: `${process.env.SHOTS ?? 'test-results'}/preview-scroll-lock-390.png`,
-    });
     await page.keyboard.press('Escape');
     await expect(pane).toHaveCount(0);
   },
@@ -344,7 +339,7 @@ test(
       return id;
     });
     await signInAgainAs(page, A);
-    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.setViewportSize({ width: DESKTOP_WIDTH, height: 1000 });
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
     // In rem so paper's smaller type does not count: the gaps between the parts, and the lines the intent and the note break into, which match only when the two columns hold the same characters.
@@ -419,7 +414,7 @@ test(
     // A phone: Ingredients above the steps. The window cannot be resized while the pane holds it
     // full screen, so each width closes the pane, resizes, and opens it again.
     await closePane(page, pane);
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 844 });
     await page.getByRole('button', { name: /^Preview Spell/ }).click();
     await expect(pane).toBeVisible();
     expect((await box(ingredients)).bottom).toBeLessThanOrEqual((await box(steps)).top);
@@ -428,7 +423,7 @@ test(
     // spread: it must reach past the pane's top-left corner, or a dark cut shows there. A window not
     // much taller than wide is where a short spread fell short.
     await closePane(page, pane);
-    await page.setViewportSize({ width: 862, height: 755 });
+    await page.setViewportSize({ width: BAND_WIDTHS.tablet, height: 755 });
     await page.getByRole('button', { name: /^Preview Spell/ }).click();
     await expect(pane).toBeVisible();
     const paper = await pane.locator('.spell-preview__face-hole').evaluate((hole) => {
@@ -465,7 +460,7 @@ test(
         },
       });
     });
-    await page.setViewportSize({ width: 390, height: 780 });
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 780 });
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
     await page.getByRole('button', { name: /^Preview Spell/ }).click();

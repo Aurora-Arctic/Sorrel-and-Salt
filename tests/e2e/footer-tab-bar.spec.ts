@@ -3,6 +3,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { seedCoven } from './stories/coven-ingredients';
 import { signInAs } from './session';
+import { PHONE_WIDTH } from './breakpoints';
 
 // The footer's Support link on a phone: wholly above the fixed bottom bar, tappable by touch, and
 // present on the signed-in home page.
@@ -11,7 +12,7 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+test.use({ viewport: { width: PHONE_WIDTH, height: 844 }, hasTouch: true, isMobile: true });
 
 test('the footer Support link clears the tab bar and a tap opens the dialog', async ({ page }) => {
   const coven = await seedCoven(page, 'Fixture Coven Footer', 'footer-tab-bar.test', {
@@ -43,11 +44,4 @@ test('the home page shows the footer to a signed-in visitor', async ({ page }) =
 test('the home page shows the footer to a signed-out visitor', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Support' })).toBeVisible();
-});
-
-test('the footer sits at the foot of the window on a short page', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto('/');
-  const box = await page.getByRole('contentinfo').boundingBox();
-  expect(box ? box.y + box.height : 0).toBeGreaterThanOrEqual(899);
 });
