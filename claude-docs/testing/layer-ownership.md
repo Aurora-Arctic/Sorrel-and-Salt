@@ -52,9 +52,9 @@ cited by number in the PR table of the task that applies it.
    which of two lock reasons won (`UserList`'s "keeps the primary keeper's
    Revoke on its own reason while paused") — the words are the state and
    stay. Locators keep their exact names.
-3. **A regression test needs a shipped bug.** Only a bug that reached a PR or
+3. **A regression test needs a shipped bug.** Only a bug that reached `staging` or
    production earns one, and its comment cites the PR or the incident. A bug
-   caught while building earns none, and neither does "X stays removed": the
+   caught while building, including one found in an open PR, earns none, and neither does "X stays removed": the
    exact-column test already fails if a column comes back.
 4. **No presentation in happy-dom.** No class name, CSS custom property, z-index,
    compiled-Sass value or faked layout (a `getBoundingClientRect` mock). The

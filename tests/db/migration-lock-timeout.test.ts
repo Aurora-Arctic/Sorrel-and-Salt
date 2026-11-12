@@ -1,23 +1,25 @@
-import { execFile } from 'node:child_process';
-import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { rm } from 'node:fs/promises';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { useTestDatabase } from '../support/db/database';
+import {
+  journalEntries,
+  migrationsWith,
+  runMigrate,
+  type MigrateRun,
+} from '../support/db/migrate-command';
 
-// `drizzle-kit migrate`, run as `npm run db:migrate` runs it, against this file's migrated clone with one
-// pending probe migration that alters `users` while another connection holds a read transaction open on it.
-// Without a lock timeout the ALTER queues behind that reader for as long as it stays open.
+// `npm run db:migrate` against this file's migrated clone with one pending probe migration that alters `users` while
+// another connection holds a read transaction open on it. Without a lock timeout the ALTER queues behind that reader
+// for as long as it stays open.
 
-const MIGRATIONS = join(process.cwd(), 'src/db/migrations');
-const PROBE_CONFIG = join(process.cwd(), 'tests/support/db/lock-probe.drizzle.config.ts');
 const PROBE_TAG = '9999_lock_probe';
 const PROBE_COLUMN = 'lock_probe';
+const LOCK_TIMEOUT_MS = 5_000;
 // The run is killed past this, so a migration that queues fails the test rather than hanging the suite.
 const KILL_AFTER_MS = 30_000;
-// The lock timeout plus drizzle-kit's start-up, with room for a loaded machine.
-const FAILS_WITHIN_MS = 20_000;
+// The lock timeout plus npm's and the script's start-up, with room for a loaded machine.
+const FAILS_WITHIN_MS = 12_000;
 
 let sql: postgres.Sql;
 let folder: string;
@@ -26,31 +28,7 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-type Run = { code: number | null; killed: boolean; output: string; elapsedMs: number };
-
-function migrate(): Promise<Run> {
-  const started = Date.now();
-  return new Promise((resolve) => {
-    execFile(
-      process.execPath,
-      ['node_modules/drizzle-kit/bin.cjs', 'migrate', '--config', PROBE_CONFIG],
-      {
-        env: { ...process.env, LOCK_PROBE_MIGRATIONS: folder },
-        timeout: KILL_AFTER_MS,
-        encoding: 'utf8',
-      },
-      (error, stdout, stderr) => {
-        const failed = error as (Error & { code?: number; killed?: boolean }) | null;
-        resolve({
-          code: failed ? (typeof failed.code === 'number' ? failed.code : null) : 0,
-          killed: failed?.killed ?? false,
-          output: `${stdout}\n${stderr}`,
-          elapsedMs: Date.now() - started,
-        });
-      },
-    );
-  });
-}
+const migrate = () => runMigrate(process.env.DATABASE_URL as string, folder, KILL_AFTER_MS);
 
 async function probeColumnExists(): Promise<boolean> {
   const rows = await sql`
@@ -66,19 +44,9 @@ async function appliedCount(): Promise<number> {
 }
 
 beforeAll(async () => {
-  folder = await mkdtemp(join(tmpdir(), 'lock-probe-'));
-  await cp(MIGRATIONS, folder, { recursive: true });
-  const journalPath = join(folder, 'meta/_journal.json');
-  const journal = JSON.parse(await readFile(journalPath, 'utf8')) as {
-    entries: { idx: number; version: string; when: number; tag: string; breakpoints: boolean }[];
-  };
-  const last = journal.entries[journal.entries.length - 1];
-  journal.entries.push({ ...last, idx: last.idx + 1, when: last.when + 1, tag: PROBE_TAG });
-  await writeFile(journalPath, JSON.stringify(journal));
-  await writeFile(
-    join(folder, `${PROBE_TAG}.sql`),
-    `ALTER TABLE "users" ADD COLUMN "${PROBE_COLUMN}" text;`,
-  );
+  folder = await migrationsWith([
+    { tag: PROBE_TAG, sql: `ALTER TABLE "users" ADD COLUMN "${PROBE_COLUMN}" text;` },
+  ]);
 });
 
 afterAll(async () => {
@@ -86,16 +54,10 @@ afterAll(async () => {
 });
 
 describe('a migration that meets a busy table', () => {
-  it('fails within the lock timeout, rolls back whole, and applies cleanly on a rerun', async () => {
+  it('gives up within the lock timeout naming the lock and its file, rolls back whole, and applies cleanly on a rerun', async () => {
     // Preconditions: the clone is at the head of the real migrations, so the probe is the only pending one.
     const before = await appliedCount();
-    expect(before).toBe(
-      (
-        JSON.parse(await readFile(join(MIGRATIONS, 'meta/_journal.json'), 'utf8')) as {
-          entries: unknown[];
-        }
-      ).entries.length,
-    );
+    expect(before).toBe((await journalEntries()).length);
     expect(await probeColumnExists()).toBe(false);
 
     // A reader's open transaction holds ACCESS SHARE on `users`, which the ALTER's ACCESS EXCLUSIVE waits for.
@@ -110,7 +72,7 @@ describe('a migration that meets a busy table', () => {
     });
     await lockTaken;
 
-    let busy: Run;
+    let busy: MigrateRun;
     try {
       busy = await migrate();
     } finally {
@@ -118,9 +80,14 @@ describe('a migration that meets a busy table', () => {
       await reader;
     }
 
-    expect(busy.killed, `drizzle-kit migrate queued past ${KILL_AFTER_MS}ms`).toBe(false);
+    expect(busy.killed, `npm run db:migrate queued past ${KILL_AFTER_MS}ms`).toBe(false);
     expect(busy.code).not.toBe(0);
+    // At least the timeout: the run waited on the lock rather than failing for some other reason first.
+    expect(busy.elapsedMs).toBeGreaterThanOrEqual(LOCK_TIMEOUT_MS);
     expect(busy.elapsedMs).toBeLessThan(FAILS_WITHIN_MS);
+    expect(busy.output).toContain('55P03');
+    expect(busy.output).toContain('lock timeout');
+    expect(busy.output).toContain(`${PROBE_TAG}.sql`);
     expect(await probeColumnExists()).toBe(false);
     expect(await appliedCount()).toBe(before);
 
