@@ -3,7 +3,6 @@ import { expect } from '../fixtures';
 import { recreateE2eDatabase } from '../database';
 import { wsEndpoint } from '../slots';
 import { withSql } from './accounts-setup';
-import { scanBothThemes } from '../axe';
 import { signInWithPasskey, test } from './passkeys-setup';
 
 // Signing in with a passkey, held by Chromium's virtual authenticator, at the slot server's localhost address
@@ -26,7 +25,6 @@ test.describe('signing in with a passkey', () => {
     { tag: '@story-73' },
     async ({ page, context }) => {
       const { userId } = await signInWithPasskey(page, 'holder@passkey-story.test');
-      await scanBothThemes(page);
       await page.getByRole('button', { name: 'Sign In with a Passkey' }).click();
 
       // An account in no coven lands on the coven landing, which a signed-out visitor is sent away from.
@@ -39,7 +37,6 @@ test.describe('signing in with a passkey', () => {
         (sql) => sql`select count(*)::int as sessions from sessions where user_id = ${userId}`,
       );
       expect(sessions).toBe(1);
-      await scanBothThemes(page);
     },
   );
 });

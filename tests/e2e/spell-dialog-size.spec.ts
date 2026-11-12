@@ -3,6 +3,7 @@ import { test } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
 
 test.use({ reducedMotion: 'no-preference' });
 test.beforeAll(async () => {
@@ -10,8 +11,8 @@ test.beforeAll(async () => {
 });
 
 for (const viewport of [
-  { width: 1280, height: 800 },
-  { width: 390, height: 844 },
+  { width: DESKTOP_WIDTH, height: 800 },
+  { width: PHONE_WIDTH, height: 844 },
 ]) {
   test(`New Spell opens at its full size, the form in its first frame, at ${viewport.width}px`, async ({
     page,
@@ -71,7 +72,7 @@ for (const viewport of [
     const width = await page
       .getByRole('dialog', { name: 'New Spell' })
       .evaluate((dialog) => Math.round(dialog.getBoundingClientRect().width));
-    if (viewport.width >= 1280) expect(width).toBe(560);
+    if (viewport.width >= DESKTOP_WIDTH) expect(width).toBe(560);
     else expect(width).toBeLessThan(viewport.width);
 
     const details = await page.getByRole('group', { name: 'Jar Details' }).boundingBox();

@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { DESKTOP_WIDTH } from './breakpoints';
 
 // The chrome round the public compendium, for what no story walks: it is in the HTML with no script, a
 // signed-in request gets the shell from the same layout, and the sticky bar leaves a scrolled-to control in
@@ -52,7 +53,7 @@ test('a signed-in request gets the application shell from the same layout', asyn
 test('the signed-out page keeps a scrolled-to control clear of the sticky bar', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 700 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 700 });
   await page.goto('/compendium');
   const bar = page.getByRole('banner');
   await expect(bar).toBeVisible();

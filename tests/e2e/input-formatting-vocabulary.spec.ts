@@ -6,6 +6,7 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { hydrated } from './waits';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
 
 // (claude-docs/components/chip-color-field.md, "Tidying"; claude-docs/components/cupboard-entry-form.md)
 test.beforeAll(async () => {
@@ -15,7 +16,7 @@ test.beforeAll(async () => {
 test('a chip colour typed loosely is tidied to a six-digit lower-case hex when the box is left', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
   await signInAs(page, 'a-keeper@input-formatting.test', ['discord'], 'admin');
   await page.goto('/curator/category-groups?new');
   const adding = page.getByRole('dialog', { name: 'Add Category Group' });
@@ -36,7 +37,7 @@ test('a chip colour typed loosely is tidied to a six-digit lower-case hex when t
 test('a chip colour gains its # as it is typed, keeps a pasted one single, and Backspace clears the box', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
   await signInAs(page, 'a-hexer@input-formatting.test', ['discord'], 'admin');
   await page.goto('/curator/category-groups?new');
   const adding = page.getByRole('dialog', { name: 'Add Category Group' });
@@ -107,7 +108,7 @@ test('a refused Save on the Cupboard entry form puts focus on the error summary'
   await expect(dialog.getByRole('group', { name: /problem/i })).toBeFocused();
 });
 
-for (const width of [375, 1280]) {
+for (const width of [PHONE_WIDTH, DESKTOP_WIDTH]) {
   test(`at ${width}px the hex box shows the widest chip colour whole`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await signInAs(page, `a-wide-hex-${width}@input-formatting.test`, ['discord'], 'admin');

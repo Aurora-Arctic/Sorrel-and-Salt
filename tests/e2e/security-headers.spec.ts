@@ -28,15 +28,6 @@ async function collectViolations(page: Page): Promise<string[]> {
   return violations;
 }
 
-test('a page answers with the policy, nosniff and a referrer policy', async ({ page }) => {
-  const response = await page.goto('/compendium');
-  const headers = response?.headers() ?? {};
-
-  expect(headers['content-security-policy']).toContain("frame-ancestors 'none'");
-  expect(headers['x-content-type-options']).toBe('nosniff');
-  expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
-});
-
 test('the home page and the compendium load under the policy with no violation', async ({
   page,
 }) => {

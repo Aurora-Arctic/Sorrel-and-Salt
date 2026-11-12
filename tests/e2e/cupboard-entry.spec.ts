@@ -6,6 +6,7 @@ import { localIngredient, seedCoven, withSql } from './stories/coven-ingredients
 import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
+import { PHONE_WIDTH } from './breakpoints';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -70,7 +71,8 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Read the Disclaimer' }).first()).toBeVisible();
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
+  // Sweep gap: the held compendium entry in the ingredient list at 375 px.
   await assertNoAccessibilityViolations(page);
 
   await page.goto(`/compendium/ingredients/${slug}`);
@@ -99,5 +101,6 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   );
   await page.goto(`/coven/${coven.slug}/ingredients/${own.ingredientId}`);
   await expect(page.getByRole('heading', { name: 'Similar in the Compendium' })).toBeVisible();
+  // Sweep gap: an own ingredient's page with its Similar in the Compendium section.
   await assertNoAccessibilityViolations(page);
 });

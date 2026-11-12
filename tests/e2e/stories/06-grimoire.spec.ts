@@ -479,7 +479,6 @@ test(
     await test.step('the Delete asks first, naming the spell, and Cancel changes nothing', async () => {
       await askToDelete();
       await expect(question).toContainText('Doomed Working');
-      await assertNoAccessibilityViolations(page);
       await question.getByRole('button', { name: 'Cancel', exact: true }).click();
 
       await expect(question).toHaveCount(0);
@@ -496,6 +495,7 @@ test(
       await expect(page.getByRole('heading', { level: 1, name: 'Grimoire' })).toBeFocused();
       await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
       await expect(grimoireList(page).getByText('Kept Working', { exact: true })).toBeVisible();
+      // Sweep gap: the grimoire list with the deleted-spell status line above it.
       await assertNoAccessibilityViolations(page);
       expect(await deletedAt('spells', gone)).not.toBeNull();
       expect(await deletedAt('spell_steps', step)).not.toBeNull();
@@ -560,7 +560,6 @@ test(
     await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     const question = page.getByRole('alertdialog', { name: 'Delete Spell', exact: true });
     await expect(question).toContainText('Card Doomed Working');
-    await assertNoAccessibilityViolations(page);
     await question.getByRole('button', { name: 'Delete', exact: true }).click();
 
     await expect(page).toHaveURL(/\/grimoire\?query=Card&deleted=/);
@@ -569,7 +568,6 @@ test(
     );
     await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
     await expect(grimoireList(page).getByText('Card Kept Working', { exact: true })).toBeVisible();
-    await assertNoAccessibilityViolations(page);
   },
 );
 
@@ -600,6 +598,7 @@ test(
       .getByRole('button', { name: 'Delete Spell Builder Doomed Working', exact: true })
       .click();
     await expect(page.getByText('Delete Builder Doomed Working?')).toBeVisible();
+    // Sweep gap: the Edit Spell dialog asking to confirm a delete.
     await assertNoAccessibilityViolations(page);
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
 
@@ -611,7 +610,6 @@ test(
     await expect(
       grimoireList(page).getByText('Builder Kept Working', { exact: true }),
     ).toBeVisible();
-    await assertNoAccessibilityViolations(page);
   },
 );
 
@@ -668,6 +666,7 @@ test(
     // The row is read from the database, not the Workings list.
     await expect(dialog).toBeHidden();
     await expect(recordButton).toBeFocused();
+    // Sweep gap: the spell page with a recorded working listed and focus back on Record a Working.
     await assertNoAccessibilityViolations(page);
     const kept = await withSql(
       (sql) => sql`
@@ -751,7 +750,6 @@ test(
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
     await dialog.getByRole('button', { name: 'Complete' }).click();
     await expect(dialog.getByRole('list', { name: 'Deductions' })).toContainText('2 g');
-    await assertNoAccessibilityViolations(page);
     await dialog.getByRole('button', { name: 'Mark Complete' }).click();
     await expect(dialog.getByText('Done')).toBeVisible();
     await page.goto(`/coven/${coven.slug}/ingredients`);
@@ -838,6 +836,7 @@ test(
     await expect(
       first.getByRole('list', { name: 'Taken From the Jars' }).getByRole('listitem'),
     ).toContainText('Rosemary');
+    // Sweep gap: the spell page with a completed working listing the jars it took from.
     await assertNoAccessibilityViolations(page);
     await page.goto(`/coven/${coven.slug}/grimoire`);
     const card = grimoireList(page).getByRole('article', { name: /Fixture Working/ });
@@ -988,6 +987,7 @@ test(
     await second.getByRole('textbox', { name: 'Intent' }).fill('Seen by A');
     await second.getByRole('button', { name: 'Save Spell' }).click();
     await expect(second.getByText(conflict)).toBeVisible();
+    // Sweep gap: the Edit Spell dialog showing the changed-elsewhere conflict with Reload Latest.
     await assertNoAccessibilityViolations(otherPage);
 
     await second.getByRole('button', { name: 'Reload Latest' }).click();

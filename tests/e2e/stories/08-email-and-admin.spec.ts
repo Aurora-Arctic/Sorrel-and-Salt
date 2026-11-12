@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Browser, Page, Response } from '@playwright/test';
 import { test, expect } from '../fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll, scanBothThemes } from '../axe';
 import { recreateE2eDatabase, withE2eSql } from '../database';
 import { graphqlFromPage } from '../graphql';
 import { VERIFY_LINK, latestMessageTo } from '../mailpit';
@@ -185,7 +185,6 @@ test(
       await expect(page.getByRole('textbox', { name: 'Email Address' })).toHaveValue(email);
     }
     await expect(page.getByRole('link', { name: 'Continue to Account' })).toHaveCount(0);
-    await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
 
     await page.getByRole('button', { name: 'Send Confirmation' }).click();
@@ -196,6 +195,7 @@ test(
     await stranger.goto(link);
     await expect(stranger).toHaveURL('/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify');
     await expect(stranger.getByRole('main').getByRole('alert')).toBeVisible();
+    // Sweep gap: the sign-in page showing the sign-in-to-verify alert, reached by a signed-out visitor from a verification link.
     await assertNoAccessibilityViolations(stranger);
     await stranger.context().close();
 
@@ -208,6 +208,7 @@ test(
     await expect(page.getByRole('main')).toContainText(email);
     const onward = page.getByRole('link', { name: 'Continue', exact: true });
     await expect(onward).toBeVisible();
+    // Sweep gap: the email page of an account that has just verified, with the verified notice and the Continue link.
     await assertNoAccessibilityViolations(page);
     await onward.click();
     await expect(page).toHaveURL('/coven');
@@ -239,6 +240,7 @@ test(
     await expect(send).toBeEnabled();
     await send.click();
     await expect(page.getByRole('main').getByRole('status')).toContainText(after);
+    // Sweep gap: the email page of a verified account once a change link is sent, with the status naming the new address.
     await assertNoAccessibilityViolations(page);
     const link = await mailedPath(after, VERIFY_LINK);
     const requested = await latestMessageTo(before);
@@ -266,7 +268,6 @@ test(
     await expect(page).toHaveURL(/^[^?]+\/account\/email\?verified$/);
     await expect(page.getByRole('main')).toContainText(after);
     await expect(page.getByRole('link', { name: 'Continue', exact: true })).toBeVisible();
-    await assertNoAccessibilityViolations(page);
     await expect
       .poll(async () => (await latestMessageTo(before)).subject)
       .toBe('Your Email Address Was Changed');
@@ -296,6 +297,7 @@ test(
     const granting = await chooseRole(page, row, 'Fixture Person', 'Keeper');
     await expect(granting).toContainText('Fixture Person');
     await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the celestial bodies');
+    // Sweep gap: the Change Role dialog with the Keeper role chosen and a Reason filled, ready to Promote; the sweep opens the Approve confirm.
     await assertNoAccessibilityViolations(page);
     await granting.getByRole('button', { name: 'Promote' }).click();
     await expect(granting).toHaveCount(0);
@@ -310,6 +312,7 @@ test(
     const again = await userRow(page, granteeEmail);
     const revoking = await chooseRole(page, again, 'Fixture Person', 'User');
     await expect(revoking).toContainText('Fixture Person');
+    // Sweep gap: the Change Role dialog with the User role chosen for a keeper, ready to Demote; the sweep opens the Approve confirm.
     await assertNoAccessibilityViolations(page);
     await revoking.getByRole('button', { name: 'Demote' }).click();
     await expect(revoking).toHaveCount(0);
@@ -356,6 +359,7 @@ test.describe('the primary admin', () => {
       await page.keyboard.press('Enter');
       await expect(modal.getByRole('alert')).toBeVisible();
       await expect(modal.getByRole('radio')).toHaveCount(0);
+      // Sweep gap: the Change Role dialog refusing a change to the primary keeper, with its alert and no role choices.
       await assertNoAccessibilityViolations(page);
 
       const result = await graphqlFromPage(page, SET_USER_ROLE, { userId: primary, role: 'user' });
@@ -396,6 +400,7 @@ test.describe('the primary admin', () => {
       await expect(pausing).toHaveCount(0);
       await expect(status).toBeVisible();
       await expect(page.getByRole('button', { name: 'Resume Keeper Changes' })).toBeEnabled();
+      // Sweep gap: the users page with Keeper Changes paused, showing the paused status and an enabled Resume button.
       await assertNoAccessibilityViolations(page);
 
       await signInAgainAs(page, other);
@@ -409,6 +414,7 @@ test.describe('the primary admin', () => {
       await grant.focus();
       await page.keyboard.press('Enter');
       await expect(modal.getByRole('alert')).toBeVisible();
+      // Sweep gap: the Change Role dialog refused while keeper changes are paused, with its alert and no role choices.
       await assertNoAccessibilityViolations(page);
       await expect(modal.getByRole('radio')).toHaveCount(0);
       const approve = modal.getByRole('button', { name: 'Approve Fixture Person' });
@@ -479,6 +485,7 @@ test.describe('the primary admin', () => {
       await expect(
         modal.getByRole('button', { name: 'Change Role for Fixture Person', exact: true }),
       ).toBeFocused();
+      // Sweep gap: the Change Role dialog refusing the last keeper's demotion, with its alert.
       await assertNoAccessibilityViolations(page);
 
       const reread = await userRow(page, loneEmail);
@@ -539,19 +546,13 @@ test(
     expect(await rows.count()).toBeGreaterThan(3);
     await expect(rows.first().getByRole('cell').nth(0)).toHaveText('Ledger Fixturewort');
     await expect(rows.first().getByRole('cell').nth(3)).toHaveText('Manual fix');
-    for (const colorScheme of ['dark', 'light'] as const) {
-      await page.emulateMedia({ colorScheme });
-      await assertNoAccessibilityViolations(page);
-    }
 
     const listed = await userRow(page, subjectEmail);
     const history = listed.getByRole('link', { name: 'Privilege changes for Ledger Fixturewort' });
     await history.hover();
     await expect(page.getByRole('tooltip')).toBeVisible();
-    for (const colorScheme of ['dark', 'light'] as const) {
-      await page.emulateMedia({ colorScheme });
-      await assertNoAccessibilityViolations(page);
-    }
+    // Sweep gap: the privilege-changes tooltip open over a user's history link, in each theme.
+    await scanBothThemes(page);
     await history.click();
     await expect(page).toHaveURL(
       `/keepers/privilege-changes?query=${encodeURIComponent(subjectEmail)}`,
@@ -597,7 +598,6 @@ test(
     );
     for (const time of times) expect(time).toBeGreaterThanOrEqual(started);
     expect(times).toEqual([...times].sort((a, b) => b - a));
-    await assertNoAccessibilityViolations(page);
 
     await hydrated(page, 'search input, [role="search"] input');
     const filter = page.getByRole('search', { name: 'Filter Privilege Changes' });
@@ -624,6 +624,7 @@ test(
     await choices.getByRole('option', { name: 'Coven Creation', exact: true }).click();
     await expect(page).toHaveURL(/query=nobody-by-this-name&privilege=create_workspace$/);
     await expect(page.getByRole('table')).toHaveCount(0);
+    // Sweep gap: the privilege-changes page for a filter that matches nobody, showing the empty message.
     await assertNoAccessibilityViolations(page);
 
     await signInAgainAs(page, subject);
@@ -655,7 +656,6 @@ test(
     await dialog.getByRole('textbox', { name: 'Reason' }).fill('Curates the resins');
     await dialog.getByRole('radio', { name: /^Curator\b/ }).check();
     await expect(send).toBeEnabled();
-    await assertNoAccessibilityViolations(page);
     await send.click();
 
     await expect(section.getByRole('status').filter({ hasText: invited })).toBeVisible();
@@ -666,6 +666,7 @@ test(
     const path = await mailedPath(invited, INVITE_LINK);
     const token = path.split('/').pop()!;
     expect(await page.content()).not.toContain(token);
+    // Sweep gap: the keepers' invitations page listing a pending Curator invitation.
     await assertNoAccessibilityViolations(page);
     await visit(page, '/keepers/invitations');
     await expect(row).toBeVisible();
@@ -714,6 +715,7 @@ test(
     await expect(visitor.getByRole('main')).not.toContainText(invited);
     await expect(visitor.getByRole('main')).not.toContainText('Curates the resins');
     await expect(visitor.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
+    // Sweep gap: the signed-out invitation page, offering only Sign In and Create an Account.
     await assertNoAccessibilityViolations(visitor);
     await assertNoSidewaysScroll(visitor);
     await visitor.context().close();
@@ -721,7 +723,6 @@ test(
     await signInAs(page, address('stranger'), ['google']);
     const different = await expectInvitationRefused(page, path);
     await expect(page.getByRole('link', { name: 'Confirm Your Email' })).toHaveCount(0);
-    await assertNoAccessibilityViolations(page);
     const token = path.split('/').pop()!;
     const refused = await graphqlFromPage(page, ACCEPT_INVITATION, { token });
     expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
@@ -738,6 +739,7 @@ test(
     expect(different).not.toContain(invited);
     const confirm = page.getByRole('link', { name: 'Confirm Your Email' });
     await expect(confirm).toBeVisible();
+    // Sweep gap: the invitation page for an account whose address is unverified, with the Confirm Your Email link.
     await assertNoAccessibilityViolations(page);
     await confirm.click();
     await expect(page).toHaveURL(`/account/email?next=${encodeURIComponent(path)}`);
@@ -751,7 +753,6 @@ test(
 
     const accept = page.getByRole('button', { name: 'Accept Invitation' });
     await expect(accept).toBeVisible();
-    await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
     await accept.click();
     await expect(page).toHaveURL(/\/keepers$/);
@@ -871,6 +872,7 @@ test(
       .click();
     const confirm = page.getByRole('dialog', { name: 'Revoke Invitation' });
     await expect(confirm).toContainText(withdrawnEmail);
+    // Sweep gap: the Revoke Invitation dialog naming the invited address.
     await assertNoAccessibilityViolations(page);
     await confirm.getByRole('button', { name: 'Revoke' }).click();
     await expect(confirm).toHaveCount(0);
@@ -884,6 +886,7 @@ test(
 
     await signInAgainAs(page, accounts[withdrawnEmail]);
     const withdrawnReason = await expectInvitationRefused(page, withdrawn);
+    // Sweep gap: the keepers' invitations page listing a revoked and a lapsed invitation.
     await assertNoAccessibilityViolations(page);
     const refused = await graphqlFromPage(page, ACCEPT_INVITATION, {
       token: withdrawn.split('/').pop(),

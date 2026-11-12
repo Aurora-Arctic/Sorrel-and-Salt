@@ -6,6 +6,7 @@ import { seedCoven, withSql } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
 import { holdServerAnswers } from './hold-server-answers';
 import { hydrated } from './waits';
+import { PHONE_WIDTH } from './breakpoints';
 
 // At phone width a table's rows are cards, and a table on its way draws each row as one block in the
 // card's frame, as tall as that list's real stacked row (claude-docs/loading.md).
@@ -119,7 +120,7 @@ for (const theme of ['light', 'dark'] as const) {
     }) => {
       const at = (address: string) => address.replace('{coven}', coven.slug);
       const list = { ...entry, path: at(entry.path), hub: entry.hub && at(entry.hub) };
-      await page.setViewportSize({ width: 375, height: 900 });
+      await page.setViewportSize({ width: PHONE_WIDTH, height: 900 });
       await page.emulateMedia({ colorScheme: theme });
       const server = await holdServerAnswers(page, { prefetch: 'pass', alsoGraphql: true });
       await signInAgainAs(page, list.keeper ? keeperId : coven.users.A);

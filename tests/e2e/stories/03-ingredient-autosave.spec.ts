@@ -32,6 +32,7 @@ test(
     // Nothing is pressed: the ingredient is created once it has a name, and the address names it.
     await expect(page).toHaveURL(/\?edit=[0-9a-f-]{36}$/, { timeout: 20_000 });
     await expect(dialog.getByRole('status').filter({ hasText: /saved/i })).toBeVisible();
+    // Sweep gap: the Add Ingredient dialog showing the saved status after an autosave.
     await assertNoAccessibilityViolations(page);
 
     await page.reload();
@@ -53,6 +54,7 @@ test(
       () => expect(reopened.getByText(/Could not save/)).toBeVisible({ timeout: 500 }),
       { step: 5_000 },
     );
+    // Sweep gap: the ingredient dialog showing Could not save with its Retry button.
     await assertNoAccessibilityViolations(page);
     await page.unroute('**/api/graphql', dropSaves);
     await reopened.getByRole('button', { name: 'Retry' }).click();
@@ -105,6 +107,7 @@ test(
     await runClockUntil(otherPage, () =>
       expect(second.getByText(conflict)).toBeVisible({ timeout: 500 }),
     );
+    // Sweep gap: the ingredient dialog showing the changed-elsewhere conflict with Reload Latest.
     await assertNoAccessibilityViolations(otherPage);
 
     await second.getByRole('button', { name: 'Reload Latest' }).click();

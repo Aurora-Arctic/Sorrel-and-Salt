@@ -1,6 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 
 // Each document page's sections and sources as the reader meets them (claude-docs/design-decisions/support.md, "A keeper editor for the site's documents").
@@ -193,8 +192,6 @@ for (const { path, sections, sources, cites } of DOCUMENTS) {
       await expect(target).toHaveRole('heading');
       await expect(target).toHaveAccessibleName(entry);
     }
-
-    await assertNoAccessibilityViolations(page);
   });
 
   test(`${path} links every source mark to its source, and every source back to its marks`, async ({

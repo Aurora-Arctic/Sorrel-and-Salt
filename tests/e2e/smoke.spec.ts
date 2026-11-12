@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
+import { assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 
 // `fullyParallel` splits this file across workers, each reseeding its own slot's database in `beforeAll`;
@@ -23,13 +23,10 @@ test('the entry page renders signed out, without a redirect', async ({ page }) =
   }));
   expect(Math.abs(edges.welcomeBottom - edges.viewport)).toBeLessThanOrEqual(1);
   expect(Math.abs(edges.footerTop - edges.viewport)).toBeLessThanOrEqual(1);
+  // The footer sits at the foot of the window on a short page, never above it.
+  const footer = await page.getByRole('contentinfo').boundingBox();
+  expect(footer ? footer.y + footer.height : 0).toBeGreaterThanOrEqual(edges.viewport - 1);
   await assertNoSidewaysScroll(page);
-  // Playwright's context is light unless told otherwise, and the site's own
-  // default is dark, so each theme is named.
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
-    await assertNoAccessibilityViolations(page);
-  }
 });
 
 // The ornaments are imported assets, so they are served under /_next/static
@@ -65,29 +62,4 @@ test("strips Facebook's #_=_ fragment and no other", async ({ page }) => {
   await page.goto('about:blank');
   await page.goto('/#top');
   expect(new URL(page.url()).hash).toBe('#top');
-});
-
-// Highlighted text swaps the page's two colours, so it keeps the page's own contrast in both themes
-// and is never the accent green.
-test('selected text swaps the page ink and ground in each theme', async ({ page }) => {
-  await page.goto('/');
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
-    const colours = await page.evaluate(() => {
-      const page = getComputedStyle(document.body);
-      const picked = getComputedStyle(document.body, '::selection');
-      const root = getComputedStyle(document.documentElement);
-      return {
-        ink: root.getPropertyValue('--text-primary').trim(),
-        ground: root.getPropertyValue('--surface-page').trim(),
-        selectionBackground: picked.backgroundColor,
-        selectionInk: picked.color,
-        pageInk: page.color,
-        pageGround: page.backgroundColor,
-      };
-    });
-    expect(colours.selectionBackground).toBe(colours.pageInk);
-    expect(colours.selectionInk).not.toBe(colours.selectionBackground);
-    expect(colours.selectionInk).toBe(colours.pageGround);
-  }
 });

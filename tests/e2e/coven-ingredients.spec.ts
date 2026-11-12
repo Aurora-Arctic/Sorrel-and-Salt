@@ -18,6 +18,8 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
+import { PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
+import { settledBox } from './waits';
 
 // For what no story walks.
 
@@ -284,10 +286,10 @@ test('the page passes axe at both densities and holds at a phone width', async (
 
   await page.goto(listPath(coven));
   await expect(cardsIn(ingredientList(page))).toHaveCount(3);
-  await assertNoAccessibilityViolations(page);
 
   await compactSwitch(page).click();
   await expect(page.locator('html')).toHaveAttribute('data-card-density', 'regular');
+  // Sweep gap: the ingredient list in regular card density, which the sweep reaches only in the default compact one.
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
@@ -358,7 +360,7 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   const menu = dialog.getByRole('menu', { name: 'More' });
   const expectMenuInsideDialog = async () => {
     const outer = (await dialog.boundingBox())!;
-    const inner = (await menu.boundingBox())!;
+    const inner = (await settledBox(menu))!;
     expect(inner.y).toBeGreaterThanOrEqual(outer.y);
     expect(inner.x).toBeGreaterThanOrEqual(outer.x);
     expect(inner.y + inner.height).toBeLessThanOrEqual(outer.y + outer.height);
@@ -367,12 +369,13 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await moreButton.click();
   await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
   await expectMenuInsideDialog();
+  // Sweep gap: the three-dots menu open on a held compendium entry's card.
   await assertNoAccessibilityViolations(page);
   await page.keyboard.press('Escape');
   await expect(menu).toHaveCount(0);
 
   const wide = page.viewportSize()!;
-  await page.setViewportSize({ width: 375, height: 800 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
   await moreButton.scrollIntoViewIfNeeded();
   await moreButton.click();
   await expectMenuInsideDialog();
@@ -435,7 +438,7 @@ test("a card's More opened near the window's foot opens above it, inside the win
   });
   const menu = page.getByRole('menu', { name: /^More for Fixture Footwort/ });
 
-  for (const width of [1280, 375]) {
+  for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
     await page.setViewportSize({ width, height: 800 });
     // The window is cut off just beneath More, with the bottom bar's room when it is drawn.
     const bar = await page.evaluate(() => {
@@ -452,7 +455,7 @@ test("a card's More opened near the window's foot opens above it, inside the win
     await more.click();
     await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
     const at = (await more.boundingBox())!;
-    const box = (await menu.boundingBox())!;
+    const box = (await settledBox(menu))!;
     // Why it could have opened below: the room under More is less than the menu.
     expect(height - bar - (at.y + at.height)).toBeLessThan(box.height);
     expect(box.y + box.height).toBeLessThanOrEqual(at.y);

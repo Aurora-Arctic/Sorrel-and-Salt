@@ -1,5 +1,4 @@
 import { test, expect } from '../fixtures';
-import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase, withE2eSql } from '../database';
 import { signInAs } from '../session';
 import { sendAs } from '../send-as';
@@ -56,7 +55,6 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
       const row = page.getByRole('row').filter({ hasText: 'Wobbling Cauldron' });
       await expect(row).toContainText('Fixture Person');
       await expect(row).toContainText('500');
-      await assertNoAccessibilityViolations(page);
       await row.getByRole('link', { name: 'Wobbling Cauldron' }).click();
       await expect(page.getByRole('dialog', { name: 'Wobbling Cauldron' })).toBeVisible();
     });
@@ -142,10 +140,6 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
       const response = await send();
       const body = (await response.json()) as { errors?: unknown[] };
       expect(body.errors).toBeUndefined();
-    });
-
-    await test.step('with requests showing, the page passes the accessibility check', async () => {
-      await assertNoAccessibilityViolations(page);
     });
   });
 
