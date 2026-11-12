@@ -5,6 +5,7 @@ import { signInAgainAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
 import { destinationMenu } from './stories/ingredient-dialogs';
 import { DESKTOP_WIDTH, PURPOSE_WIDTHS } from './breakpoints';
+import { settledBox } from './waits';
 
 // A MenuButton's menu hangs from its button's end edge and stays on screen (claude-docs/components/menu-button.md,
 // "Contracts"), measured on the bar's Add Ingredient chevron at a desktop width and the narrowest phone.
@@ -50,22 +51,8 @@ for (const { viewport, hangs } of [
     const { toggle, menu, choices } = destinationMenu(page);
     await toggle.click();
     await expect(choices).toHaveCount(2);
-    // Let the fade and the first placement settle before measuring.
-    let placed: string | undefined;
-    await expect
-      .poll(
-        async () => {
-          const now = JSON.stringify(await menu.boundingBox());
-          const held = now === placed;
-          placed = now;
-          return held;
-        },
-        { intervals: [50] },
-      )
-      .toBe(true);
-
     const button = (await toggle.boundingBox())!;
-    const box = (await menu.boundingBox())!;
+    const box = (await settledBox(menu))!;
     // Why it could fail: the menu is wider than the chevron, so a menu hung
     // from the chevron's start edge would run off the window's end.
     expect(box.width).toBeGreaterThan(button.width);

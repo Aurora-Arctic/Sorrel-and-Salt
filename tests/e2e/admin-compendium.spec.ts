@@ -9,7 +9,7 @@ import { applyFilters, openFilters, seedCoven } from './stories/coven-ingredient
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 import { deitySlug, ingredientSlug } from '@/lib/slugify';
-import { hydrated } from './waits';
+import { hydrated, settledBox } from './waits';
 import { BAND_WIDTHS, PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
 
 // claude-docs/components/ingredient-form.md, "Stories and tests".
@@ -975,7 +975,7 @@ for (const [label, width, height] of [
     await expect(tip).toBeVisible();
     // Why it could have been cut: the panel clips to its own box, so a tip opening past the
     // top edge would lie outside it. Whole means every edge of the tip is inside the panel's.
-    const tipBox = (await tip.boundingBox())!;
+    const tipBox = (await settledBox(tip))!;
     const panelBox = (await panel.boundingBox())!;
     expect(tipBox.y).toBeGreaterThanOrEqual(panelBox.y);
     expect(tipBox.x).toBeGreaterThanOrEqual(panelBox.x);

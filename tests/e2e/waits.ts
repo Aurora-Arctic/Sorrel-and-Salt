@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 /** Waits until React has hydrated the element, so a click is the app's navigation and not a full page load. */
 export async function hydrated(page: Page, selector: string): Promise<void> {
@@ -30,4 +30,21 @@ export async function runClockUntil(
     await page.clock.runFor(step);
     await assertion();
   }).toPass({ timeout });
+}
+
+type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
+
+/** A floating element's box once two polled reads in a row agree, since Floating UI places it a moment after it is visible. */
+export async function settledBox(element: Locator): Promise<Box | null> {
+  const read: { last: string; box: Box | null } = { last: '', box: null };
+  await expect
+    .poll(async () => {
+      read.box = await element.boundingBox();
+      const now = JSON.stringify(read.box);
+      const same = read.box !== null && now === read.last;
+      read.last = now;
+      return same;
+    })
+    .toBe(true);
+  return read.box;
 }

@@ -19,6 +19,7 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 import { PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
+import { settledBox } from './waits';
 
 // For what no story walks.
 
@@ -359,7 +360,7 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   const menu = dialog.getByRole('menu', { name: 'More' });
   const expectMenuInsideDialog = async () => {
     const outer = (await dialog.boundingBox())!;
-    const inner = (await menu.boundingBox())!;
+    const inner = (await settledBox(menu))!;
     expect(inner.y).toBeGreaterThanOrEqual(outer.y);
     expect(inner.x).toBeGreaterThanOrEqual(outer.x);
     expect(inner.y + inner.height).toBeLessThanOrEqual(outer.y + outer.height);
@@ -454,7 +455,7 @@ test("a card's More opened near the window's foot opens above it, inside the win
     await more.click();
     await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
     const at = (await more.boundingBox())!;
-    const box = (await menu.boundingBox())!;
+    const box = (await settledBox(menu))!;
     // Why it could have opened below: the room under More is less than the menu.
     expect(height - bar - (at.y + at.height)).toBeLessThan(box.height);
     expect(box.y + box.height).toBeLessThanOrEqual(at.y);

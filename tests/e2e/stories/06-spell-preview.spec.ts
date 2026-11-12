@@ -5,6 +5,7 @@ import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 import { insertSpell, insertStep, localIngredient, seedCoven, withSql } from './coven-ingredients';
 import { BAND_WIDTHS, DESKTOP_WIDTH, PHONE_WIDTH } from '../breakpoints';
+import { settledBox } from '../waits';
 import { makeVariant } from '../../support/fixtures/ingredient';
 
 test.beforeAll(async () => {
@@ -470,7 +471,7 @@ test(
     const tip = pane.getByRole('tooltip', { includeHidden: true });
     await expect(tip).toBeVisible();
     const button = await awake.boundingBox();
-    const bubble = await tip.boundingBox();
+    const bubble = await settledBox(tip);
     const viewport = page.viewportSize();
     if (!button || !bubble || !viewport) throw new Error('nothing to measure');
     expect(bubble.y).toBeGreaterThanOrEqual(button.y + button.height);

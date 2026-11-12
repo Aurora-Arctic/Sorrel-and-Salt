@@ -1,4 +1,3 @@
-import type { Locator } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { seedCoven, withSql } from './stories/coven-ingredients';
@@ -8,29 +7,13 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 import { DESKTOP_WIDTH, PHONE_WIDTH, PURPOSE_WIDTHS } from './breakpoints';
+import { settledBox } from './waits';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
 test.use({ viewport: { width: PURPOSE_WIDTHS.reflow, height: 640 } });
-
-type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
-
-/** The tip's box once two polled reads in a row agree, rather than a fixed sleep. */
-async function settledBox(tip: Locator): Promise<Box | null> {
-  const read: { last: string; box: Box | null } = { last: '', box: null };
-  await expect
-    .poll(async () => {
-      read.box = await tip.boundingBox();
-      const now = JSON.stringify(read.box);
-      const same = read.box !== null && now === read.last;
-      read.last = now;
-      return same;
-    })
-    .toBe(true);
-  return read.box;
-}
 
 test('every tip in the Add Ingredient dialog opens inside a 320px-wide viewport', async ({
   page,
