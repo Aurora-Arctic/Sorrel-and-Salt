@@ -24,6 +24,11 @@ const REFUSED_TAG = '9999_refused_probe';
 // `users` exists only once the real migrations have applied, so this refusal also proves the run reached them. Not a
 // duplicate table: its code, 42P07, is also on the NOTICE the migrator's own CREATE TABLE IF NOT EXISTS prints.
 const REFUSED = { tag: REFUSED_TAG, sql: 'ALTER TABLE "users" ADD COLUMN "id" text;' };
+// Two files holding one statement, so a lookup by statement alone finds the applied file first. Neither tag is part
+// of the other, so the output can be checked for each.
+const DUPLICATE_STATEMENT = 'ALTER TABLE "users" ADD COLUMN "probe_dup" text;';
+const DUPLICATE_APPLIED = { tag: '9998_duplicate_applied_probe', sql: DUPLICATE_STATEMENT };
+const DUPLICATE_REFUSED = { tag: '9999_duplicate_refused_probe', sql: DUPLICATE_STATEMENT };
 const AFTER_KIT = {
   tag: '9999_after_kit_probe',
   sql: 'CREATE TABLE "migrate_command_probe" ("id" text);',
@@ -130,6 +135,32 @@ describe('npm run db:migrate on a fresh database', () => {
       expect(refused.output).toContain('column "id" of relation "users" already exists');
       // Nothing of the refused migration is recorded, so the next attempt tries it again.
       expect(await recorded(database.sql)).toHaveLength(real.length);
+    },
+    RUN_TIMEOUT_MS,
+  );
+
+  it(
+    'names the refused migration, not an applied one holding the same statement',
+    async () => {
+      const applied = await runMigrate(database.url, await folderWith(DUPLICATE_APPLIED));
+      // Preconditions: the first probe applied, so the second's identical statement is refused with 42701.
+      expect(applied.code, applied.output).toBe(0);
+      expect(await recorded(database.sql)).toHaveLength(real.length + 1);
+      const [column] = await database.sql`
+        select 1 from information_schema.columns
+        where table_name = 'users' and column_name = 'probe_dup'`;
+      expect(column).toBeDefined();
+
+      const refused = await runMigrate(
+        database.url,
+        await folderWith(DUPLICATE_APPLIED, DUPLICATE_REFUSED),
+      );
+
+      expect(refused.code).not.toBe(0);
+      expect(refused.output).toContain('42701');
+      expect(refused.output).toContain(`${DUPLICATE_REFUSED.tag}.sql`);
+      expect(refused.output).not.toContain(DUPLICATE_APPLIED.tag);
+      expect(await recorded(database.sql)).toHaveLength(real.length + 1);
     },
     RUN_TIMEOUT_MS,
   );
