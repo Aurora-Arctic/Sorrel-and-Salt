@@ -1,4 +1,14 @@
-import type { InputHTMLAttributes, ReactElement, ReactNode, TextareaHTMLAttributes } from 'react';
+import {
+  type ChangeEvent,
+  type InputHTMLAttributes,
+  type ReactElement,
+  type ReactNode,
+  type Ref,
+  type TextareaHTMLAttributes,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 import { type FieldFormat, tidy, trimEnds } from '../../lib/formats';
 import Spinner from '../Spinner';
 import type { TextControlProps } from './types';
@@ -73,6 +83,34 @@ export function afterCount(count: ReactNode, after: ReactNode): ReactElement | u
   ) : undefined;
 }
 
+/**
+ * Merges the caller's ref with one that hands the form text typed into the server HTML before hydration, which fires no
+ * change event React sees; without it the form stays clean and Save stays shut.
+ */
+function useEarlyTypedText(
+  control: ControlAttributes,
+): Ref<HTMLInputElement & HTMLTextAreaElement> {
+  const latest = useRef(control);
+  useLayoutEffect(() => {
+    latest.current = control;
+  });
+  return useCallback((node: (HTMLInputElement & HTMLTextAreaElement) | null) => {
+    const { ref, value, onChange } = latest.current as ControlAttributes & {
+      ref?: Ref<HTMLInputElement & HTMLTextAreaElement>;
+    };
+    const typed = node?.value ?? '';
+    if (typeof ref === 'function') ref(node);
+    else if (ref) ref.current = node;
+    if (!node || typed === '') return;
+    // A controlled field was rendered with `value`, so only a different text was typed; a registered one has none, and any text is typed.
+    if (value !== undefined && typed === String(value)) return;
+    node.value = typed;
+    onChange?.({ target: node, currentTarget: node, type: 'change' } as unknown as ChangeEvent<
+      HTMLInputElement & HTMLTextAreaElement
+    >);
+  }, []);
+}
+
 /** The textarea or input a text field draws, with the spinner of a field that looks its text up. */
 export function TextControl({
   multiline,
@@ -83,12 +121,14 @@ export function TextControl({
 }: Pick<TextControlProps, 'multiline' | 'rows' | 'type' | 'busy'> & {
   control: ControlAttributes;
 }): ReactElement {
-  if (multiline) return <textarea className="textarea" rows={rows} {...control} />;
-  if (busy === undefined) return <input className="input" type={type} {...control} />;
+  const ref = useEarlyTypedText(control);
+  const attributes = { ...control, ref };
+  if (multiline) return <textarea className="textarea" rows={rows} {...attributes} />;
+  if (busy === undefined) return <input className="input" type={type} {...attributes} />;
   // Wrapped only when the caller says, so other fields keep a bare input.
   return (
     <span className="field__control">
-      <input className="input" type={type} aria-busy={busy || undefined} {...control} />
+      <input className="input" type={type} aria-busy={busy || undefined} {...attributes} />
       {busy && <Spinner className="field__busy" />}
     </span>
   );
