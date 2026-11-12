@@ -1,5 +1,6 @@
 import 'server-only';
 import type { Metadata } from 'next';
+import { HELP_WIDGET_ELEMENTS } from '@/components/HelpWidget';
 import type { HelpArticleWithChildren } from '@/modules/help';
 import { readGlossaryTerms } from './help-glossary';
 import { guideSteps, linkTo } from './help-pages';
@@ -20,6 +21,7 @@ export async function helpArticleProps(
   const guide = parent ?? found;
   return {
     terms: await readGlossaryTerms(),
+    widgets: HELP_WIDGET_ELEMENTS,
     title: found.title,
     body: found.body,
     // A sub page keeps the component's default name, 'Article'.

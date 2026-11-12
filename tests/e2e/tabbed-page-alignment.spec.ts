@@ -1,11 +1,12 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
+import { BAND_WIDTHS, DESKTOP_WIDTH, PAGE_HEADER, PAGE_HEADER_GUTTER } from './breakpoints';
 import { signInAgainAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
 
 // The tab row of a tabbed page stays at the start of the heading's line (or of the line beneath it) at every width, never
-// pushed to the end beside the action. 712px is where the heading once grew to fill the line.
+// pushed to the end beside the action. The window that puts the header on the tabbed-plus edge (712px) is where the heading once grew to fill the line.
 
 /** The largest gap the row may keep from the heading it sits beside, in pixels: the header's own column gap and a margin of error. */
 const BESIDE_GAP = 28;
@@ -24,8 +25,18 @@ test.beforeAll(async ({ browser }) => {
   }
 });
 
-for (const width of [400, 500, 560, 600, 680, 700, 712, 720, 800, 1000, 1280]) {
-  test(`at ${width}px the Grimoire's tab row is left aligned`, async ({ page }) => {
+// One width per layout the header has: each side of the tabbed-plus edge, the edges under it, a tablet and a desktop window.
+const WIDTHS = [
+  ['the action-below edge', PAGE_HEADER.actionBelow + PAGE_HEADER_GUTTER],
+  ['the tabbed reflow edge', PAGE_HEADER.tabbedReflow + PAGE_HEADER_GUTTER],
+  ['the tabbed plus edge', PAGE_HEADER.tabbedPlus + PAGE_HEADER_GUTTER],
+  ['one pixel past the tabbed plus edge', PAGE_HEADER.tabbedPlus + PAGE_HEADER_GUTTER + 1],
+  ['the tablet band', BAND_WIDTHS.tablet],
+  ['a desktop window', DESKTOP_WIDTH],
+] as const;
+
+for (const [edge, width] of WIDTHS) {
+  test(`at ${width}px, ${edge}, the Grimoire's tab row is left aligned`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await signInAgainAs(page, coven.users.A);
     await page.goto(`/coven/${coven.slug}/grimoire`);

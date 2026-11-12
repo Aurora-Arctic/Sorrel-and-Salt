@@ -5,7 +5,7 @@ import postgres from 'postgres';
 // Migrate and seed run the npm scripts compose's `db-init` runs, so local and CI run the same ones.
 
 /** The baked-in base: extensions only, no schema. Never written to. */
-const BASE_TEMPLATE = 'sorrel_template';
+export const BASE_TEMPLATE = 'sorrel_template';
 
 export function databaseUrl(name: string, base = process.env.DATABASE_URL): string {
   if (!base) throw new Error('DATABASE_URL is not set');

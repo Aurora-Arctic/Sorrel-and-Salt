@@ -68,6 +68,7 @@ test('a member sees a coven’s own entry link the compendium entry it replaces,
   await why.focus();
   // Open, the tip shows; Playwright's role queries skip it while it is hidden.
   await expect(page.getByRole('tooltip')).toBeVisible();
+  // Sweep gap: the tip that explains why a coven's own entry replaces the compendium one, open.
   await assertNoAccessibilityViolations(page);
 });
 

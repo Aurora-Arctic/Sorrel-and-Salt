@@ -44,6 +44,7 @@ test.describe('Story 87: A New Account Lands in the Demo Coven', { tag: '@story-
       await expect(heading).toContainText('Demo');
       await expect(page.getByText(VIEWER_NOTICE)).toBeVisible();
       await expect(page.getByText(OWNER_NOTICE)).toHaveCount(0);
+      // Sweep gap: the demo coven page of an Observer, with the Observer notice and the Sorrel & Salt Demo heading; the sweep coven is not the demo coven.
       await assertNoAccessibilityViolations(page);
     });
 
@@ -115,7 +116,6 @@ test.describe('Story 87: A New Account Lands in the Demo Coven', { tag: '@story-
     await page.goto('/coven');
     await expect(page).toHaveURL(new RegExp(`/coven/${own.slug}$`));
     await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(/Testwort Coven/);
-    await assertNoAccessibilityViolations(page);
   });
 
   test('a site keeper owns the demo coven', async ({ page }) => {

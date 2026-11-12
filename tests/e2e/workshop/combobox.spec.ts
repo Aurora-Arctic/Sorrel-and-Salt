@@ -1,4 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { requiredDelay } from '../waits';
+import { DESKTOP_WIDTH } from '../breakpoints';
 
 // Layout facts measured in Storybook stories, since happy-dom draws no layout (claude-docs/components/combobox.md).
 
@@ -6,7 +8,7 @@ const LONG = 'Fixturawortiamtestalisfixturawortiamtestalisfixturawortiamtestalis
 
 /** The story in Storybook's bare preview, with `css` in the page before it mounts, so a list opened on mount is placed as `css` lays it out. */
 async function openStory(page: Page, story: string, css = '') {
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 800 });
   if (css) {
     await page.addInitScript((rules) => {
       document.addEventListener('DOMContentLoaded', () => {
@@ -135,7 +137,10 @@ test.describe('an entry’s tooltip', () => {
     await page.getByRole('button', { name: 'Remove Hedge Fixture' }).focus();
     // Why the wait could pass too soon: past the hover's 300ms rest, the
     // long entry's tooltip has opened by now, in the test above.
-    await page.waitForTimeout(500);
+    await requiredDelay(
+      500,
+      'A tooltip that must not open is shown absent only by letting its rest time pass.',
+    );
     await expect(tooltip(page)).toHaveCount(0);
   });
 });

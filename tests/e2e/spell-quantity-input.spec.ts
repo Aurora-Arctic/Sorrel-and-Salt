@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
+import { holdServerAnswers } from './hold-server-answers';
 import { seedCoven } from './stories/coven-ingredients';
 
 // A step's Quantity takes digits and one point, tidies to the plain number on blur, reads a comma as a thousands
@@ -34,12 +35,25 @@ test('a step quantity tidies to a plain number on blur, a comma is dropped, and 
   await quantity.blur();
   await expect(quantity).toHaveValue('2.5');
 
+  // The first save has landed; the next one is held, as a slow server holds it.
+  const status = page.getByRole('status').filter({ hasText: /Draft saved/ });
+  await expect(status).toBeVisible();
+  const answers = await holdServerAnswers(page, { prefetch: 'pass', alsoGraphql: true });
+  answers.hold();
+  const saved = page.waitForResponse(
+    (response) =>
+      response.request().postDataJSON()?.operationName === 'UpdateSpell' &&
+      JSON.stringify(response.request().postDataJSON().variables).includes('1000'),
+  );
   await quantity.fill('1000');
   await quantity.blur();
   await expect(quantity).toHaveValue('1,000');
+  await expect.poll(answers.held, 'the save of 1000 is on its way').toBeGreaterThan(0);
 
-  // Saved as 1000 and shown again with the separator once the saved spell is reopened.
-  await expect(page.getByRole('status').filter({ hasText: /Draft saved/ })).toBeVisible();
+  // Saved as 1000 and shown again with the separator once the saved spell is reopened. The status
+  // still announces the first save, so it says nothing about this one: the test waits for the save's own answer.
+  await answers.release();
+  await saved;
   await page.reload();
   await page.getByRole('button', { name: 'Jar', exact: true }).click();
   await page.getByRole('button', { name: /^Edit Rosemary/ }).click();

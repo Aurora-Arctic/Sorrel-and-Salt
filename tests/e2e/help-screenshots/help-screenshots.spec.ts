@@ -9,6 +9,7 @@ import {
   seedCoven,
   withSql,
 } from '../stories/coven-ingredients';
+import { PURPOSE_WIDTHS } from '../breakpoints';
 import { ingredientSlug } from '@/lib/slugify';
 
 // Writes the help articles' screenshots into public/help/screens/, from the seeded compendium and a coven made here,
@@ -20,21 +21,26 @@ const SCREENS = join(process.cwd(), 'public', 'help', 'screens');
 /** The standard seed's site curator, fixture F. */
 const CURATOR = '00000000-0000-0000-0000-000000000008';
 
-test.use({ viewport: { width: 1024, height: 768 }, colorScheme: 'light', deviceScaleFactor: 1 });
+test.use({
+  viewport: { width: PURPOSE_WIDTHS.helpScreenshot, height: 768 },
+  colorScheme: 'light',
+  deviceScaleFactor: 1,
+});
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
 /**
- * Waits for the page's fonts and any running fade, so no picture is taken in a fallback face or mid-change. A looping
+ * Waits for the page's fonts, its images and any running fade, so no picture is taken in a fallback face or mid-change. A looping
  * animation never finishes, so only those with an end are awaited.
  */
 async function settled(page: Page): Promise<void> {
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
   await page.evaluate(() =>
     Promise.all([
       document.fonts.ready,
+      ...Array.from(document.images).map((image) => image.decode().catch(() => undefined)),
       ...document
         .getAnimations()
         .filter((run) => Number.isFinite(run.effect?.getComputedTiming().endTime))
@@ -75,7 +81,7 @@ test('the compendium entry page, read signed out', async ({ page }) => {
   });
 
   // Tall enough that the whole entry is in frame; the picture ends with the page's main.
-  await page.setViewportSize({ width: 1024, height: 2400 });
+  await page.setViewportSize({ width: PURPOSE_WIDTHS.helpScreenshot, height: 2400 });
   await page.goto(`/compendium/ingredients/${slug}`);
   await expect(page.getByRole('heading', { level: 1, name: 'Rosemary' })).toBeVisible();
   await expect(page.getByText('Needs Review')).toHaveCount(0);
@@ -83,7 +89,12 @@ test('the compendium entry page, read signed out', async ({ page }) => {
   const main = await page.locator('main').first().boundingBox();
   if (!main) throw new Error('the entry page drew no main');
 
-  const clip = { x: 0, y: 0, width: 1024, height: Math.ceil(main.y + main.height) };
+  const clip = {
+    x: 0,
+    y: 0,
+    width: PURPOSE_WIDTHS.helpScreenshot,
+    height: Math.ceil(main.y + main.height),
+  };
 
   await bothThemes(page, 'compendium-entry', (path) => page.screenshot({ path, clip }));
 });
@@ -128,11 +139,16 @@ test('the spell builder, open on a draft', async ({ page }) => {
   });
 
   // Tall enough that the builder, every section open, needs no scrolling.
-  await page.setViewportSize({ width: 1024, height: 2400 });
+  await page.setViewportSize({ width: PURPOSE_WIDTHS.helpScreenshot, height: 2400 });
   await page.goto(`/coven/${coven.slug}/grimoire/drafts?edit=${spellId}`);
   const builder = page.getByRole('dialog', { name: `Edit Spell, ${title}` });
   await expect(builder).toBeVisible();
   await builder.getByRole('button', { name: 'Open All' }).click();
+  // The three steps are what the picture shows, so they are drawn before it is taken.
+  await expect(builder.getByRole('list', { name: 'Steps' }).getByRole('listitem')).toHaveCount(3);
+  await expect(builder.getByRole('textbox', { name: 'Intent' })).toHaveValue(
+    'To keep the hearth calm and the house warded.',
+  );
   await settled(page);
   // No focus ring in the picture: the reader has pressed nothing.
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());

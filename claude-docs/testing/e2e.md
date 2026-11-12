@@ -483,6 +483,23 @@ already holds it, so wrapping one of them in `flock` by mistake runs instead of
 deadlocking. A direct `npx vitest run …` takes no lock and still needs the
 wrapper: `scripts/with-lock.sh /tmp/sorrel-vitest.lock npx vitest run …`.
 
+### Waiting, and flaky tests
+
+**Playwright code never sleeps for a fixed time and never waits for
+`networkidle`.** It waits on the page's state with web-first assertions
+(`expect(locator).toBeVisible()`, `toHaveURL`), or with
+`hydrated(page, selector)` from `tests/e2e/waits.ts` where a control must
+have hydrated before it is used. A delay that is itself the requirement goes
+through `requiredDelay(ms, reason)` in the same file. The guard
+`tests/guards/playwright-waits.test.ts` refuses anything else.
+
+**A flake never blocks a PR**, so `failOnFlakyTests` is not set. CI retries a
+failed test once, for the gate and for the stories; local runs retry 0, so a
+flake already fails locally. A test that fails twice in a row is red. The gate
+comment names each flaky test and writes a `::warning` annotation for it. A
+flaky test seen later gets a bug task through `/create-bug-task` and is never
+skipped to make it go away.
+
 ### Where a run's time goes
 
 The gate suite (`npm run e2e`, about 60 tests on 6 workers) takes about 27 s

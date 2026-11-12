@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures';
+import { BAND_WIDTHS, BREAKPOINTS } from './breakpoints';
 import { recreateE2eDatabase } from './database';
 
 // Between the phone breakpoint and the width that fits a menu column each side, the jump menu gives up width to the
@@ -11,8 +12,15 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-for (const width of [700, 768, 820, 900, 1000, 1100, 1300]) {
-  test(`at ${width}px the menu on the About Us page leaves most of the width to the text`, async ({
+// The middle of the band where the menu gives up width, and each side of the edge where it becomes a side track of three.
+const WIDTHS = [
+  ['the tablet band', BAND_WIDTHS.tablet],
+  ['one pixel under the three-column edge', BREAKPOINTS.pageWithNavWide - 1],
+  ['one pixel past the three-column edge', BREAKPOINTS.pageWithNavWide + 1],
+] as const;
+
+for (const [edge, width] of WIDTHS) {
+  test(`at ${width}px, ${edge}, the menu on the About Us page leaves most of the width to the text`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -42,7 +50,8 @@ for (const width of [700, 768, 820, 900, 1000, 1100, 1300]) {
     // Why the comparison means something: the menu stands beside the text, not above it.
     expect(menu.right).toBeLessThanOrEqual(text.left + 1);
     // From the width that fits a menu column each side the menu is a side track of three, so its share is of the whole row only below that.
-    if (width < 1200) expect(menu.width / root.width).toBeLessThanOrEqual(MENU_SHARE);
+    if (width < BREAKPOINTS.pageWithNavWide)
+      expect(menu.width / root.width).toBeLessThanOrEqual(MENU_SHARE);
     expect(text.width).toBeGreaterThan(menu.width);
   });
 }

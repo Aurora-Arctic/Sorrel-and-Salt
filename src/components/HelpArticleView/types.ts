@@ -1,4 +1,5 @@
 import type { HelpTermSource } from '../../lib/help-marks';
+import type { HelpWidgets } from '../DocumentPage/markdown';
 
 export interface HelpSubpageLink {
   title: string;
@@ -22,6 +23,8 @@ export interface HelpArticleViewProps {
   parent?: HelpGuideStep;
   /** The pages either side of this one in its guide (`guideSteps`), linked at the page's foot. */
   steps?: { previous?: HelpGuideStep; next?: HelpGuideStep };
+  /** What a body's `::widget[name]` paragraph draws. The page hands them over, since two read server-only services the workshop cannot load; a tag with none stays text. */
+  widgets?: HelpWidgets;
   /** The article's edit page, handed only to a keeper (`helpViewerOffers`), drawn as the Edit Article pencil beside the article title. */
   editHref?: string;
   /** The kind the pencil is named for: Article, or Guide on a guide. */

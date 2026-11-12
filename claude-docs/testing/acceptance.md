@@ -40,8 +40,8 @@ decisions make it hold:
 - **A story's status is the state of every test tagged with it.** Any failure
   is _failing_; otherwise any skip is _skipped_; otherwise _passing_. An
   interrupted test reads as failing, so it can never look green.
-- **A flaky story is not a passing story.** Retries stay on in CI (one) so the
-  run completes, but a test that passed only on its retry counts as failed: its
+- **A flaky story is not a passing story.** CI retries a failed test once (`retries` is 1 in
+  every Playwright config that runs there, 0 locally) so the run completes, but a test that passed only on its retry counts as failed: its
   box stays unticked, the tally counts it among the failing, and its line ends
   ` — FLAKY (failed, then passed on retry)`, or in the PR comment's Stories section
   ` — **flaky** (failed, then passed on retry)`. A flake is a bug to fix, not

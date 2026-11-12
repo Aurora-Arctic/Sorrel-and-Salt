@@ -6,6 +6,7 @@ import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 import { slugify } from '@/lib/slugify';
 import { insertWorkspace } from '../support/db/insert-workspace';
+import { PHONE_WIDTH } from './breakpoints';
 
 // The coven page and its section nav against the built server. A stranger's 404 (claude-docs/auth/coven-guard.md, "The coven guard") is coven-ingredients.spec.ts's.
 
@@ -94,7 +95,6 @@ test('real Tab presses reach the Overview link, and the page passes the scans', 
   }
   expect(reached).toBe(true);
 
-  await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
 
@@ -104,7 +104,7 @@ test("a refused deletion in the only owner's exit keeps Cancel inside the dialog
   page,
 }) => {
   await signInAgainAs(page, users.owner.id);
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   await page.goto(`/coven/${COVEN_SLUG}`);
   await page.getByRole('main').getByRole('button', { name: 'Leave Coven', exact: true }).click();
   const dialog = page.getByRole('dialog');
@@ -127,7 +127,8 @@ test("a refused deletion in the only owner's exit keeps Cancel inside the dialog
   const box = (await cancel.boundingBox())!;
   const frame = (await dialog.boundingBox())!;
   expect(box.x + box.width).toBeLessThanOrEqual(frame.x + frame.width);
-  await assertNoSidewaysScroll(page);
+  // Sweep gap: the Leave Coven dialog at PHONE_WIDTH holding the only Steward's refusal alert; the sweep opens it at desktop width with no refusal.
   await assertNoAccessibilityViolations(page);
+  await assertNoSidewaysScroll(page);
   await page.unrouteAll();
 });

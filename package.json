@@ -37,7 +37,7 @@
     "help:screenshots": "playwright test --config playwright.help-screenshots.config.ts",
     "workshop:check": "playwright test --config playwright.workshop-check.config.ts",
     "db:generate": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/db-generate.ts",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/db-seed.ts",
     "db:seed:categories": "tsx scripts/db-seed.ts categories",
     "db:seed:forms": "tsx scripts/db-seed.ts forms",

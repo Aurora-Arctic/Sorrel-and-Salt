@@ -1,6 +1,7 @@
 import type { BrowserContext, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
+import { hydrated } from './waits';
 import { signInAs, signInAgainAs } from './session';
 import {
   compendiumVariant,
@@ -13,6 +14,7 @@ import {
 } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
 import { holdServerAnswers } from './hold-server-answers';
+import { PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
 
 // A page's skeleton stands where the page will: every static part the skeleton draws (the header and its
 // action, the tabs, the side menu, the toolbar, the filter row, the list's frame, its first card and the table's
@@ -567,27 +569,17 @@ const markLink = (page: Page, to: string | RegExp) =>
     typeof to === 'string' ? { exact: to, pattern: null } : { exact: null, pattern: to.source },
   );
 
-const VARIANTS = [
-  { width: 1280, theme: 'light' },
-  { width: 375, theme: 'light' },
-] as const;
-
-/** Waits until React has hydrated the element, so a click is the app's navigation and not a full page load. */
-const hydrated = (page: Page, selector: string) =>
-  page.waitForFunction((target) => {
-    const element = document.querySelector(target);
-    return !!element && Object.keys(element).some((key) => key.startsWith('__reactProps$'));
-  }, selector);
-
+// A page is run at the phone width as well only where its parts stack there (stackedParts); the others lay out alike at both.
 for (const as of ['steward', 'keeper'] as const) {
   test.describe(`as the ${as}`, () => {
     for (const navigation of navigations.filter((each) => each.as === as)) {
-      for (const { width, theme } of VARIANTS) {
-        test(`${navigation.name} at ${width}px ${theme}: the skeleton's static parts stand where the page's do`, async ({
+      for (const width of navigation.stackedParts
+        ? [DESKTOP_WIDTH, PHONE_WIDTH]
+        : [DESKTOP_WIDTH]) {
+        test(`${navigation.name} at ${width}px: the skeleton's static parts stand where the page's do`, async ({
           page,
         }) => {
-          await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
-          await page.emulateMedia({ colorScheme: theme });
+          await page.setViewportSize({ width, height: width === PHONE_WIDTH ? 812 : 900 });
           const session = sessions[as];
           if (!session) throw new Error(`no session was built for the ${as}`);
           await page.context().addCookies(session.cookies);
@@ -657,7 +649,7 @@ for (const as of ['steward', 'keeper'] as const) {
           const found = [
             ...frameMoves('old page to skeleton:', frameBefore, frameWaiting),
             ...frameMoves('skeleton to page:', frameWaiting, frameArrived),
-            ...differences(navigation, skeleton, arrived, width === 375),
+            ...differences(navigation, skeleton, arrived, width === PHONE_WIDTH),
             ...strayDecorations(skeletonDrawn, arrivedDrawn),
           ];
           expect(found, found.join('\n')).toEqual([]);
@@ -690,15 +682,15 @@ const dialogLayoutOf = (page: Page) =>
 
 // The Edit Spell dialog opens at once over a skeleton of its form: the header's Open All and Undo and Redo,
 // the four shut sections, the Shared switch and the actions stand where the form puts them.
-test('the Edit Spell dialog at 1280px and 375px: its skeleton stands where the form does', async ({
+test('the Edit Spell dialog at the desktop and phone widths: its skeleton stands where the form does', async ({
   page,
 }) => {
   const session = sessions.steward;
   if (!session) throw new Error('no session was built for the steward');
   await page.context().addCookies(session.cookies);
   const server = await holdServerAnswers(page);
-  for (const width of [1280, 375]) {
-    await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+  for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
+    await page.setViewportSize({ width, height: width === PHONE_WIDTH ? 812 : 900 });
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
     const edit = page.getByRole('link', { name: `Edit ${SPELL_TITLE}` });
     await expect(edit).toBeVisible();
