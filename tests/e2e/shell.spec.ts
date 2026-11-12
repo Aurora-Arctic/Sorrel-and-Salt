@@ -279,20 +279,20 @@ test('the curator row fits the window just past the phone edge, without overflow
   await page.setViewportSize({ width: BREAKPOINTS.phone + 1, height: 800 });
   await page.goto('/curator');
 
-  // The stylesheet draws every tab until the fit script runs, so the branch
-  // below waits for the fit: read before it, the test could take the all-tabs
-  // branch and then see the script hide a tab (the gate's one flaky test).
   const nav = await fittedAdminNav(page);
   await expect(nav).toBeVisible();
   const more = nav.getByRole('button', { name: 'More', exact: true });
-  if ((await more.count()) > 0) {
-    await expect(more).toBeVisible();
-  } else {
-    for (const link of await nav.getByRole('link').all()) await expect(link).toBeVisible();
-  }
+  // Every tab is in the row, or More is drawn for the ones that are not.
+  await expect
+    .poll(async () => {
+      const hidden = (await nav.getByRole('link').count()) - (await rowLinks(nav).count());
+      return hidden === 0 || (await more.isVisible());
+    })
+    .toBe(true);
   await expect(nav.getByRole('link').first()).toBeVisible();
-  const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
-  expect(fits).toBe(true);
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+    .toBe(true);
 });
 
 // A hidden tab is drawn but not visible.
@@ -302,6 +302,25 @@ async function fittedAdminNav(page: Page): Promise<Locator> {
   const nav = page.getByRole('navigation', { name: 'Curator' });
   await expect(nav).toHaveAttribute('data-fit', '');
   return nav;
+}
+
+// The count once the fonts have loaded and the row has stopped refitting to them.
+async function settledLinkCount(page: Page, nav: Locator): Promise<number> {
+  await page.evaluate(() => document.fonts.ready);
+  let last = -1;
+  let steady = 0;
+  await expect
+    .poll(
+      async () => {
+        const count = await rowLinks(nav).count();
+        steady = count === last ? steady + 1 : 0;
+        last = count;
+        return steady;
+      },
+      { intervals: [100] },
+    )
+    .toBeGreaterThanOrEqual(3);
+  return last;
 }
 
 const rowOverflows = (nav: Locator) =>
@@ -342,12 +361,12 @@ test('at a tablet width, a navigation fits the row afresh for the new current ta
   // From about 774px to 780px in Chromium, the bolder current tab tips the count.
   await page.setViewportSize({ width: PURPOSE_WIDTHS.shellTabs, height: 800 });
   await page.goto('/curator/compendium');
-  const fresh = await rowLinks(await fittedAdminNav(page)).count();
+  const fresh = await settledLinkCount(page, await fittedAdminNav(page));
 
   await page.goto('/curator/forms');
   const nav = await fittedAdminNav(page);
   // Why it could have kept the old count: the forms page fits a different one.
-  expect(await rowLinks(nav).count()).not.toBe(fresh);
+  expect(await settledLinkCount(page, nav)).not.toBe(fresh);
   const compendium = rowLinks(nav).filter({ hasText: 'Compendium' });
   await expect(compendium).toHaveCount(1);
 
@@ -358,7 +377,7 @@ test('at a tablet width, a navigation fits the row afresh for the new current ta
     'page',
   );
   await expect.poll(() => rowLinks(nav).count()).toBe(fresh);
-  expect(await rowOverflows(nav)).toBe(false);
+  await expect.poll(() => rowOverflows(nav)).toBe(false);
   await assertNoSidewaysScroll(page);
 });
 
@@ -372,7 +391,7 @@ test('at a desktop width, once fitted, the curator row shows every tab and draws
   const nav = await fittedAdminNav(page);
   await expect(rowLinks(nav)).toHaveCount(6);
   await expect(nav.getByRole('button')).toHaveCount(0);
-  expect(await rowOverflows(nav)).toBe(false);
+  await expect.poll(() => rowOverflows(nav)).toBe(false);
 });
 
 // The server cannot know the window's width, so it draws the phone's four tabs and More; wider, the stylesheet
