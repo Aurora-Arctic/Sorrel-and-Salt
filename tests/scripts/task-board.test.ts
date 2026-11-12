@@ -675,3 +675,66 @@ describe('the Project writes', () => {
     });
   });
 });
+
+describe('main: link-pr', () => {
+  let linked: number[];
+  let mutation: string[] | undefined;
+  beforeEach(() => {
+    const base = answer;
+    linked = [];
+    mutation = undefined;
+    answer = (args) => {
+      const query = args.find((arg) => arg.startsWith('query=')) ?? '';
+      if (query.includes('addCloseIssueReferences')) {
+        mutation = args;
+        linked = [21];
+        return { data: {} };
+      }
+      if (query.includes('closedByPullRequestsReferences')) {
+        return {
+          data: {
+            repository: {
+              issue: {
+                closedByPullRequestsReferences: { nodes: linked.map((number) => ({ number })) },
+              },
+            },
+          },
+        };
+      }
+      if (query.includes('pullRequest(number')) {
+        return {
+          data: { repository: { issue: { id: 'ISSUE_NODE' }, pullRequest: { id: 'PR_NODE' } } },
+        };
+      }
+      return base(args);
+    };
+  });
+
+  it('links the PR to the issue by their node ids, then confirms it shows', async () => {
+    await main(['link-pr', 'mb.78', '21']);
+    expect(mutation).toEqual(
+      expect.arrayContaining(['issueId=ISSUE_NODE', 'pullRequestId=PR_NODE']),
+    );
+    expect(calls[calls.length - 1]?.join(' ')).toContain('closedByPullRequestsReferences');
+  });
+
+  it('writes nothing when the id matches no task', async () => {
+    await expect(main(['link-pr', 'MB.7', '21'])).rejects.toThrow(/No tracked issue/);
+    expect(mutation).toBeUndefined();
+  });
+
+  it('fails plainly when the PR is absent from the issue after the write', async () => {
+    const linkThenDrop = answer;
+    answer = (args) => {
+      const result = linkThenDrop(args);
+      linked = [];
+      return result;
+    };
+    await expect(main(['link-pr', 'MB.78', '21'])).rejects.toThrow(/do not show/);
+  });
+
+  it('refuses missing or non-numeric arguments with the usage', async () => {
+    await expect(main(['link-pr', 'MB.78'])).rejects.toThrow(/usage:/);
+    await expect(main(['link-pr', 'MB.78', 'abc'])).rejects.toThrow(/usage:/);
+  });
+});
