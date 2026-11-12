@@ -91,24 +91,33 @@ function useEarlyTypedText(
   control: ControlAttributes,
 ): Ref<HTMLInputElement & HTMLTextAreaElement> {
   const latest = useRef(control);
+  const seen = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   useLayoutEffect(() => {
     latest.current = control;
   });
-  return useCallback((node: (HTMLInputElement & HTMLTextAreaElement) | null) => {
-    const { ref, value, onChange } = latest.current as ControlAttributes & {
-      ref?: Ref<HTMLInputElement & HTMLTextAreaElement>;
-    };
-    const typed = node?.value ?? '';
-    if (typeof ref === 'function') ref(node);
-    else if (ref) ref.current = node;
-    if (!node || typed === '') return;
-    // A controlled field was rendered with `value`, so only a different text was typed; a registered one has none, and any text is typed.
-    if (value !== undefined && typed === String(value)) return;
-    node.value = typed;
-    onChange?.({ target: node, currentTarget: node, type: 'change' } as unknown as ChangeEvent<
-      HTMLInputElement & HTMLTextAreaElement
-    >);
-  }, []);
+  const { ref } = control as ControlAttributes & {
+    ref?: Ref<HTMLInputElement & HTMLTextAreaElement>;
+  };
+  // Follows the caller's ref: react-hook-form hands a new one each render and relies on React calling it again.
+  return useCallback(
+    (node: (HTMLInputElement & HTMLTextAreaElement) | null) => {
+      const { value, onChange } = latest.current;
+      const typed = node?.value ?? '';
+      if (typeof ref === 'function') ref(node);
+      else if (ref) ref.current = node;
+      // The ref is called again for the same element on every render; only the first call can see pre-hydration text.
+      if (!node || node === seen.current) return;
+      seen.current = node;
+      if (typed === '') return;
+      // A controlled field was rendered with `value`, so only a different text was typed; a registered one has none, and any text is typed.
+      if (value !== undefined && typed === String(value)) return;
+      node.value = typed;
+      onChange?.({ target: node, currentTarget: node, type: 'change' } as unknown as ChangeEvent<
+        HTMLInputElement & HTMLTextAreaElement
+      >);
+    },
+    [ref],
+  );
 }
 
 /** The textarea or input a text field draws, with the spinner of a field that looks its text up. */
