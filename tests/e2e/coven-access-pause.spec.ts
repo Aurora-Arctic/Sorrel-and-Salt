@@ -158,6 +158,8 @@ test('a member paused in the coven they would land in is taken to their next cov
   await page.goto(`/coven/${alder.slug}`);
   await expect(page).toHaveURL(`/coven-paused/${alder.slug}`);
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(/Fixture Alder Coven/);
+  // Sweep gap: the paused page of a member with a second coven, which lists Your Other Covens; the swept member has one.
+  await assertNoAccessibilityViolations(page);
   await page
     .getByRole('list', { name: 'Your Other Covens' })
     .getByRole('link', { name: 'Fixture Birch Coven' })

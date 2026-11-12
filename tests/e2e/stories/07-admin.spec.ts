@@ -474,6 +474,8 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await page.unrouteAll();
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft Renamed');
       await editing.getByRole('textbox', { name: 'Description' }).fill('Rewritten by the story');
+      // Sweep gap: the Edit Category dialog with the name and description rewritten and Save Category enabled; the sweep opens only Add.
+      await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Category' }).click();
       await expect(editing).toHaveCount(0);
       const renamed = rowOf(page, 'Categories', 'Aaa Testcraft Renamed');
@@ -711,6 +713,8 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       await adding.getByRole('combobox', { name: 'Group' }).click();
       await adding.getByRole('option', { name: 'Mineral', exact: true }).click();
+      // Sweep gap: the Add Form dialog with the Group picker having chosen Mineral and the Name and Description filled; the sweep opens the dialog empty.
+      await assertNoAccessibilityViolations(page);
       await adding.getByRole('button', { name: 'Save Form' }).click();
       await expect(adding).toHaveCount(0);
       const row = rowOf(page, 'Forms', 'Aaa Testwort Shard');
@@ -732,6 +736,8 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(save).toHaveAccessibleDescription(/\S/);
       await editing.getByRole('combobox', { name: 'Group' }).click();
       await editing.getByRole('option', { name: 'Substance', exact: true }).click();
+      // Sweep gap: the Edit Form dialog with a new name and the Group picker having chosen Substance; the sweep opens only Add.
+      await assertNoAccessibilityViolations(page);
       await save.click();
       await expect(editing).toHaveCount(0);
       await expect(rowOf(page, 'Forms', 'Aaa Testwort Shard')).toHaveCount(0);
@@ -793,6 +799,8 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       });
       await expect(editing).toBeVisible();
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Fixture Stuff');
+      // Sweep gap: the Edit Form Group dialog with a new name filled; the sweep opens only Add.
+      await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Group' }).click();
       await expect(editing).toHaveCount(0);
       await expect(rowOf(page, 'Form Groups', 'Aaa Fixture Stuff')).toBeVisible();
@@ -904,6 +912,8 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       const saveNew = adding.getByRole('button', { name: 'Save Tradition' });
       await expect(saveNew).toBeEnabled();
+      // Sweep gap: the Add Tradition dialog filled with Save Tradition enabled; the sweep opens the dialog empty.
+      await assertNoAccessibilityViolations(page);
       await saveNew.click();
       await expect(adding).toHaveCount(0);
       const row = rowOf(page, 'Deity Traditions', 'Aaa Fixtural');
@@ -924,6 +934,8 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       });
       await expect(editing).toBeVisible();
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Mockish');
+      // Sweep gap: the Edit Tradition dialog with a new name filled; the sweep opens only Add.
+      await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Tradition' }).click();
       await expect(editing).toHaveCount(0);
       await expect(rowOf(page, 'Deity Traditions', 'Aaa Mockish')).toBeVisible();
@@ -981,6 +993,8 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await tradition.click();
       await adding.getByRole('option', { name: 'Greek', exact: true }).click();
       await expect(tradition).toHaveValue('Greek');
+      // Sweep gap: the Add Deity dialog with the Tradition picker having chosen Greek; the sweep opens the dialog empty.
+      await assertNoAccessibilityViolations(page);
       await adding.getByRole('button', { name: 'Save Deity' }).click();
       await expect(adding).toHaveCount(0);
       const row = rowOf(page, 'Deities', 'Aaa Testris');
@@ -997,6 +1011,8 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
         `/curator/deities?query=Aaa+Testri&edit=${deitySlug('Aaa Testris', 'Greek')}`,
       );
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testrix');
+      // Sweep gap: the Edit Deity dialog with a new name filled; the sweep opens only Add.
+      await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Deity' }).click();
       await expect(editing).toHaveCount(0);
       const renamed = rowOf(page, 'Deities', 'Aaa Testrix');

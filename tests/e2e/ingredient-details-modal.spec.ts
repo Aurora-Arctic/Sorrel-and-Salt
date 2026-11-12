@@ -80,6 +80,8 @@ test.describe('on the admin Compendium list', () => {
       'href',
       `/compendium/ingredients/${slug}`,
     );
+    // Sweep gap: the details dialog on the keepers' Compendium list; the sweep's quick-look and entry-details are Steward coven dialogs.
+    await assertNoAccessibilityViolations(page);
 
     await page.keyboard.press('Escape');
     await expect(details).toHaveCount(0);

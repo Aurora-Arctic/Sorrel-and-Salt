@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoSidewaysScroll } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
@@ -127,6 +127,8 @@ test("a refused deletion in the only owner's exit keeps Cancel inside the dialog
   const box = (await cancel.boundingBox())!;
   const frame = (await dialog.boundingBox())!;
   expect(box.x + box.width).toBeLessThanOrEqual(frame.x + frame.width);
+  // Sweep gap: the Leave Coven dialog at PHONE_WIDTH holding the only Steward's refusal alert; the sweep opens it at desktop width with no refusal.
+  await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
   await page.unrouteAll();
 });

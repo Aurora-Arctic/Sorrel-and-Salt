@@ -1,7 +1,12 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { BREAKPOINTS, DESKTOP_WIDTH, PHONE_WIDTH, PURPOSE_WIDTHS } from './breakpoints';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
+import {
+  assertNoAccessibilityViolations,
+  assertNoSidewaysScroll,
+  scanBothThemes,
+  settleTransitions,
+} from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { holdPageScripts } from './hold-server-answers';
@@ -221,6 +226,8 @@ for (const [name, who, path, nav] of PAGES) {
     await expect(page.getByRole('main')).toBeVisible();
     if (nav) await expect(page.getByRole('navigation', { name: nav })).toBeVisible();
 
+    // Sweep gap: a coven page, the curator categories page and the account page at PHONE_WIDTH; the sweep scans them at desktop width.
+    await scanBothThemes(page);
     await assertNoSidewaysScroll(page);
   });
 }

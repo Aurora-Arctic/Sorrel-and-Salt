@@ -40,6 +40,27 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
+test('minting a sheet adds a batch to the Invitation Cards list once Done is pressed', async ({
+  page,
+}) => {
+  await signInAs(page, 'cards-admin-mint@admin-cards.test', ['discord'], 'admin');
+  await page.goto('/keepers/invitation-cards');
+  const batches = page.getByRole('button', { name: /^Revoke Batch / });
+  const before = await batches.count();
+
+  await page.getByRole('link', { name: 'Mint Cards' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
+  await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
+  await dialog.getByRole('button', { name: 'Mint Cards' }).click();
+  await expect(dialog.getByText(/10 cards minted/)).toBeVisible();
+
+  // Done asks first when the PDF was not downloaded; the revoke test downloads it.
+  await dialog.getByRole('button', { name: 'Done' }).click();
+  await dialog.getByRole('button', { name: 'Close Anyway' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(batches).toHaveCount(before + 1);
+});
+
 test('the Invitation Cards tab filters batches by status and Minted day without violations', async ({
   page,
 }) => {

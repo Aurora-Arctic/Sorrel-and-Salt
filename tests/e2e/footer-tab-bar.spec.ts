@@ -31,6 +31,8 @@ test('the footer Support link clears the tab bar and a tap opens the dialog', as
 
   await link.tap();
   await expect(page.getByRole('dialog')).toBeVisible();
+  // Sweep gap: the Support dialog at PHONE_WIDTH, opened by a tap on the footer link; the sweep opens it at desktop width.
+  await assertNoAccessibilityViolations(page);
 });
 
 test('the home page shows the footer to a signed-in visitor', async ({ page }) => {

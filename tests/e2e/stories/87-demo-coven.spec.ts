@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures';
+import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 import { withSql } from './accounts-setup';
@@ -43,6 +44,8 @@ test.describe('Story 87: A New Account Lands in the Demo Coven', { tag: '@story-
       await expect(heading).toContainText('Demo');
       await expect(page.getByText(VIEWER_NOTICE)).toBeVisible();
       await expect(page.getByText(OWNER_NOTICE)).toHaveCount(0);
+      // Sweep gap: the demo coven page of an Observer, with the Observer notice and the Sorrel & Salt Demo heading; the sweep coven is not the demo coven.
+      await assertNoAccessibilityViolations(page);
     });
 
     await test.step('Ingredients and Grimoire open with the notice and offer no way to add', async () => {

@@ -513,8 +513,8 @@ test.describe('sideways scroll', () => {
 
       await signInAs(page, `reader-${name.replace(/ /g, '-')}@help-pages-axe.test`);
       await page.goto(path!);
-      // Sweep gap: the help search that matches nothing, and the help page for an article never written.
-      if (SCANNED_HERE.has(name)) await assertNoAccessibilityViolations(page);
+      // Sweep gap: the glossary, an article, a sub page and the search signed in; the sweep scans only /help signed in.
+      if (name !== 'the help index') await assertNoAccessibilityViolations(page);
     });
   }
 

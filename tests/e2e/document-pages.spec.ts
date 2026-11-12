@@ -51,6 +51,8 @@ for (const { path, title, link } of DOCUMENTS) {
     await expect(page).toHaveURL(new RegExp(`${path}$`));
     await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign In', exact: true })).toHaveCount(0);
+    // Sweep gap: a document page inside the signed-in shell, which the sweep scans only signed out.
+    await assertNoAccessibilityViolations(page);
   });
 
   test(`the compendium search finds nothing for "${title}"`, async ({ page }) => {

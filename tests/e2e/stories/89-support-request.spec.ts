@@ -76,6 +76,8 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       await expect(thread).toContainText('You');
       await expect(thread).toContainText('Staff');
       await expect(request.getByLabel(/^Your Reply/)).toBeEnabled();
+      // Sweep gap: the sender's request dialog with a staff reply in the thread and an enabled reply box; the sweep's request has no reply.
+      await assertNoAccessibilityViolations(page);
       await request.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(request).toBeHidden();
       await expect(page).not.toHaveURL(/request=/);

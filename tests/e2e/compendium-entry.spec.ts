@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoSidewaysScroll } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInKeeperOnSidePage } from './session';
 import { withSql } from './stories/coven-ingredients';
@@ -104,5 +104,7 @@ test('a visitor reads an entry with its details and each form on a phone, a long
     'href',
     url,
   );
+  // Sweep gap: a compendium entry at PHONE_WIDTH, which the sweep scans only at desktop width.
+  await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });

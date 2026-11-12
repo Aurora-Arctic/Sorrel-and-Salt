@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoSidewaysScroll } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
@@ -156,6 +156,8 @@ test('at 375px the stuck row holds without a sideways scroll, and a control focu
   expect(filters!.y).toBeGreaterThanOrEqual(box!.y + box!.height - 1);
   expect(filters!.y + filters!.height).toBeLessThanOrEqual(row!.y + row!.height + 1);
   expect(filters!.y + filters!.height).toBeLessThanOrEqual(700);
+  // Sweep gap: the compendium list at PHONE_WIDTH scrolled past the fold with its search row stuck; the sweep scans it at desktop width.
+  await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 
   // A control focused below the fold lands under the stuck search row, not behind it. Tab walks from the

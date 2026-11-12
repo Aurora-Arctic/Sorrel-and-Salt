@@ -176,6 +176,8 @@ test.describe('removing a member, and leaving', () => {
       await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/members$`));
       await expectRoll(page, { [ASH]: 'Steward', [CEDAR]: 'Observer' }, NAMES);
       await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
+      // Sweep gap: the roll after a removal at PHONE_WIDTH; the sweep scans the roll at desktop width.
+      await assertNoAccessibilityViolations(page);
       await assertNoSidewaysScroll(page);
 
       const seats = await withSql(
@@ -449,6 +451,8 @@ test.describe('the last owner', () => {
       await dialog.getByRole('button', { name: `Change Role for ${BIRCH}` }).click();
       await dialog.getByRole('radio', { name: /^Steward/ }).check();
       await expect(dialog.getByRole('button', { name: 'Promote', exact: true })).toBeEnabled();
+      // Sweep gap: the member dialog's Change Role view with the Steward radio checked; the sweep opens only its first view.
+      await assertNoAccessibilityViolations(page);
       await dialog.getByRole('button', { name: 'Promote', exact: true }).click();
       await expect(dialog.getByRole('region', { name: 'Membership' })).toContainText('Steward');
       await expectRoll(page, { [ASH]: 'Steward', [BIRCH]: 'Steward', [CEDAR]: 'Observer' }, NAMES);

@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
+import { assertNoAccessibilityViolations } from './axe';
 
 // What no story walks: a sender resolves a request waiting on them, the account menu's dot and count go out with it, and an
 // admin's list says the sender resolved it.
@@ -33,6 +34,8 @@ test('a sender resolves a waiting request, the menu count goes out and the admin
 
   await page.getByRole('link', { name: subject }).click();
   const dialog = page.getByRole('dialog', { name: subject });
+  // Sweep gap: the request dialog in the Waiting for You state, with its Resolve button; the swept my-request is not waiting on the sender.
+  await assertNoAccessibilityViolations(page);
   await dialog.getByRole('button', { name: 'Resolve' }).click();
   await expect(dialog.getByRole('button', { name: 'Resolve' })).toBeHidden();
   await expect(page.getByRole('button', { name: /waiting on you/ })).toHaveCount(0);

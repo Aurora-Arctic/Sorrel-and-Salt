@@ -297,6 +297,8 @@ test(
     const granting = await chooseRole(page, row, 'Fixture Person', 'Keeper');
     await expect(granting).toContainText('Fixture Person');
     await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the celestial bodies');
+    // Sweep gap: the Change Role dialog with the Keeper role chosen and a Reason filled, ready to Promote; the sweep opens the Approve confirm.
+    await assertNoAccessibilityViolations(page);
     await granting.getByRole('button', { name: 'Promote' }).click();
     await expect(granting).toHaveCount(0);
 
@@ -310,6 +312,8 @@ test(
     const again = await userRow(page, granteeEmail);
     const revoking = await chooseRole(page, again, 'Fixture Person', 'User');
     await expect(revoking).toContainText('Fixture Person');
+    // Sweep gap: the Change Role dialog with the User role chosen for a keeper, ready to Demote; the sweep opens the Approve confirm.
+    await assertNoAccessibilityViolations(page);
     await revoking.getByRole('button', { name: 'Demote' }).click();
     await expect(revoking).toHaveCount(0);
     await expect(roleCell(again)).toHaveText(/^User/);

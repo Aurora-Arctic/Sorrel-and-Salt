@@ -1,5 +1,4 @@
 import { test, expect } from '../fixtures';
-import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase, withE2eSql } from '../database';
 import { signInAs } from '../session';
 import { sendAs } from '../send-as';
@@ -141,11 +140,6 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
       const response = await send();
       const body = (await response.json()) as { errors?: unknown[] };
       expect(body.errors).toBeUndefined();
-    });
-
-    await test.step('with requests showing, the page passes the accessibility check', async () => {
-      // Sweep gap: the keepers' Support page with requests listed.
-      await assertNoAccessibilityViolations(page);
     });
   });
 
