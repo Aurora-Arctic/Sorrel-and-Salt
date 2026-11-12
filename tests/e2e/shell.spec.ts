@@ -11,6 +11,7 @@ import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { holdPageScripts } from './hold-server-answers';
 import { slotUrl } from './slots';
+import { settled } from './waits';
 import { insertWorkspace } from '../support/db/insert-workspace';
 
 // What a component test cannot prove: where the browser lays the bottom bar, which element takes the focus after a key, and the scans over the whole frame.
@@ -307,20 +308,7 @@ async function fittedAdminNav(page: Page): Promise<Locator> {
 // The count once the fonts have loaded and the row has stopped refitting to them.
 async function settledLinkCount(page: Page, nav: Locator): Promise<number> {
   await page.evaluate(() => document.fonts.ready);
-  let last = -1;
-  let steady = 0;
-  await expect
-    .poll(
-      async () => {
-        const count = await rowLinks(nav).count();
-        steady = count === last ? steady + 1 : 0;
-        last = count;
-        return steady;
-      },
-      { intervals: [100] },
-    )
-    .toBeGreaterThanOrEqual(3);
-  return last;
+  return settled(() => rowLinks(nav).count());
 }
 
 const rowOverflows = (nav: Locator) =>

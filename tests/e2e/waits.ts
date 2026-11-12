@@ -32,19 +32,23 @@ export async function runClockUntil(
   }).toPass({ timeout });
 }
 
-type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
-
-/** A floating element's box once two polled reads in a row agree, since Floating UI places it a moment after it is visible. */
-export async function settledBox(element: Locator): Promise<Box | null> {
-  const read: { last: string; box: Box | null } = { last: '', box: null };
+/** Polls a reading until two reads in a row are equal and not null, and returns it, for values that move for a moment after the page looks ready. */
+export async function settled<T>(read: () => Promise<T>): Promise<T> {
+  const state: { last: string; value: T | undefined } = { last: '', value: undefined };
   await expect
     .poll(async () => {
-      read.box = await element.boundingBox();
-      const now = JSON.stringify(read.box);
-      const same = read.box !== null && now === read.last;
-      read.last = now;
+      state.value = await read();
+      const now = JSON.stringify(state.value);
+      const same = state.value != null && now === state.last;
+      state.last = now;
       return same;
     })
     .toBe(true);
-  return read.box;
+  return state.value as T;
 }
+
+type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
+
+/** A floating element's box once it holds still, since Floating UI places it a moment after it is visible. */
+export const settledBox = (element: Locator): Promise<Box | null> =>
+  settled(() => element.boundingBox());
