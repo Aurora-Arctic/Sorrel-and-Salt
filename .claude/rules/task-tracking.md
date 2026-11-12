@@ -52,7 +52,7 @@ The objects (repo, Projects, fields, milestones, issue types, labels, sub-issues
 
 ## PR bodies and comments
 
-- **A PR body opens with a single `Closes #N` line**, then a blank line — or `Refs #N` for a PR that does not finish the task. That line is what the Action reads on merge, and on a PR into `staging` it is the only link from the PR to the task.
+- **A PR body opens with a single `Closes #N` line**, then a blank line — or `Refs #N` for a PR that does not finish the task. That line is what the Action reads on merge, and on a PR into `staging` it only closes the task on merge: a PR into `staging` is listed under the issue's Development section by `node scripts/task-board.mjs link-pr <ID> <PR number>`, which `/create-pr` runs after it creates or updates the PR.
 - **`node scripts/task-board.mjs comment <ID> "<text>"` posts, under `CLAUDE.md`'s names-never-values line**, because the repo is public and a comment is indexed before anyone reads it; the script refuses text that looks like a value (claude-docs/task-tracking.md, "Comments"). Comment as work proceeds; the status field summarises the comments, not replaces them.
 
 ## Minting a task

@@ -84,8 +84,8 @@ is set to `Done` by hand — the one direction the script refuses anyway.
 _Item reopened_ acts on a closed issue that is reopened, which no skill does.
 _Pull request linked to issue_ and _Pull request merged_ are on but cannot act
 on a task: GitHub links a `Closes #N` only on a pull request into the default
-branch, so a feature PR into `staging` links nothing — #294 and #295, both
-merged there, carry no linked PR — and pull requests are not on the Project.
+branch, so the keyword on a feature PR into `staging` links nothing, and pull
+requests are not on the Project. `link-pr` makes that link instead.
 `In Progress` and `In Review` are therefore the script's, and stay so (MB.102).
 
 The closing is what
@@ -189,6 +189,7 @@ A `gh` failure prints gh's own stderr on one line, never a stack.
 | `status <ID> "<Status>"`                       | Moves `Status` forward; a no-op when already there, a refusal for a step back, for `Done`, or for an issue the auto-add has not placed on the Project yet.                                                                                                                                                        |
 | `estimate <ID> <hours>`                        | Sets `Estimate`; the same refusal for an issue not yet on the Project.                                                                                                                                                                                                                                            |
 | `comment <ID> "<text>"`                        | Posts the comment, after the secret scan.                                                                                                                                                                                                                                                                         |
+| `link-pr <ID> <PR number>`                     | Lists the PR under the issue's Development section (`addCloseIssueReferences`, as the sidebar does), then reads the issue's `closedByPullRequestsReferences` and fails if the PR is missing. It closes nothing: closing on merge is the Action's.                                                                 |
 | `sync <ID> [<ID> …]`                           | Brings each issue's title, body and `Estimate` to its entry (**Sync**), editing only what differs; refused for an entry that looks like it carries a value.                                                                                                                                                       |
 | `list`                                         | Every tracked issue, open and closed, as a JSON array.                                                                                                                                                                                                                                                            |
 | `reorder [--project N] [--apply] [--limit N]`  | The moves that put each Project's open waves in execution order, as a dry run, one Project after another; `--project` picks one; `--apply` makes them and prints the recomputed plan; `--limit` caps a run (**Order**).                                                                                           |
