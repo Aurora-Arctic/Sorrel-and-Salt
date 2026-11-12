@@ -3,7 +3,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
-import { hydrated, requiredDelay } from './waits';
+import { hydrated } from './waits';
 
 // Publishing the terms, or the disclaimer or code of ethics they include, asks every account to agree again (claude-docs/design-decisions/support.md, "A keeper editor for the site's documents").
 // The Email Updates tab mails one email per change (claude-docs/design-decisions/support.md, "One joint email about every changed document").
@@ -406,6 +406,8 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
   page,
 }) => {
   await signInAs(page, 'in-flight-admin@admin-documents.test', ['discord'], 'admin');
+  // The editor saves 3 seconds after the last keystroke; the page's clock is faked and run on in steps, so the test does not sit through it.
+  await page.clock.install();
   await page.goto('/keepers/documents/privacy');
   await hydrated(page, EDITOR_TOOLBAR_BUTTON);
   const save = page.getByRole('main').getByRole('button', { name: /^Sav(e|ing) Draft$/ });
@@ -434,13 +436,15 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
     await new Promise<void>((resolve) => {
       release = resolve;
     });
-    // A released save takes a moment to reach the server, so the test has to wait for it to land, not for the button.
-    await requiredDelay(
-      1_000,
-      'A released save reaches the server after a moment, and nothing in the page shows it landing.',
-    );
     return route.continue();
   });
+
+  async function runClockUntil(assertion: () => void): Promise<void> {
+    await expect(async () => {
+      await page.clock.runFor(1_000);
+      assertion();
+    }).toPass({ timeout: 10_000 });
+  }
 
   async function editInFlight(
     change: () => Promise<void>,
@@ -450,11 +454,11 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
     await heading.click();
     await page.keyboard.press('End');
     await change();
-    await expect.poll(() => bodies.length, { timeout: 10_000 }).toBe(sent + 1);
+    await runClockUntil(() => expect(bodies.length).toBe(sent + 1));
     await expect(save).toHaveAttribute('aria-busy', 'true');
     await revert();
     release();
-    await expect.poll(() => bodies.length, { timeout: 10_000 }).toBe(sent + 2);
+    await runClockUntil(() => expect(bodies.length).toBe(sent + 2));
     expect(bodies[bodies.length - 2]).not.toContain(SAVED_HEADING);
     expect(bodies[bodies.length - 1]).toContain(SAVED_HEADING);
     release();
