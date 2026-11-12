@@ -31,7 +31,7 @@ test.beforeAll(async () => {
  * animation never finishes, so only those with an end are awaited.
  */
 async function settled(page: Page): Promise<void> {
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
   await page.evaluate(() =>
     Promise.all([
       document.fonts.ready,

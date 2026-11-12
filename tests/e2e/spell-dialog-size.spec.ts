@@ -3,6 +3,7 @@ import { test } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
+import { requiredDelay } from './waits';
 
 test.use({ reducedMotion: 'no-preference' });
 test.beforeAll(async () => {
@@ -50,7 +51,10 @@ for (const viewport of [
     });
     await page.getByRole('link', { name: 'New Spell' }).click();
     await expect(page.getByRole('dialog', { name: 'New Spell' })).toBeVisible();
-    await page.waitForTimeout(2100);
+    await requiredDelay(
+      2_100,
+      'The in-page recorder samples frames for two seconds from its start and the test reads them after it stops.',
+    );
 
     const frames = await page.evaluate(
       () => (window as unknown as { frames: { height: number; form: boolean }[] }).frames,

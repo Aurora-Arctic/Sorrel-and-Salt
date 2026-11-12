@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { requiredDelay } from '../waits';
 
 // Layout facts measured in Storybook stories, since happy-dom draws no layout (claude-docs/components/combobox.md).
 
@@ -135,7 +136,10 @@ test.describe('an entry’s tooltip', () => {
     await page.getByRole('button', { name: 'Remove Hedge Fixture' }).focus();
     // Why the wait could pass too soon: past the hover's 300ms rest, the
     // long entry's tooltip has opened by now, in the test above.
-    await page.waitForTimeout(500);
+    await requiredDelay(
+      500,
+      'A tooltip that must not open is shown absent only by letting its rest time pass.',
+    );
     await expect(tooltip(page)).toHaveCount(0);
   });
 });

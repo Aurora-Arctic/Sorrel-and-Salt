@@ -25,61 +25,77 @@ async function expectNotAuthorized(page: Page, path: string) {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
-// Every page under `/curator` and `/keepers` (claude-docs/auth/admin-guard.md). A page added there joins this list.
-const ADMIN_ROUTES = [
-  '/curator',
-  '/keepers',
-  '/keepers/support',
-  '/curator/compendium',
-  '/keepers/users',
-  '/keepers/privilege-changes',
-  '/keepers/invitations',
-  '/keepers/invitation-cards',
-  '/keepers/card-sign-ups',
-  '/curator/categories',
-  '/curator/category-groups',
-  '/curator/forms',
-  '/curator/form-groups',
-  '/curator/deities',
-  '/curator/deity-traditions',
-  '/curator/celestial-bodies',
-  '/curator/zodiac-signs',
-];
+// Every page under `/curator` and `/keepers` (claude-docs/auth/admin-guard.md), in groups that run as tests of their own (a test per
+// route group loads about a fifth of the pages, where one test loading all of them ran past 28s in CI). A page added there joins a group.
+const ADMIN_ROUTE_GROUPS: Record<string, readonly string[]> = {
+  'the landing pages': ['/curator', '/keepers', '/keepers/support'],
+  'the keepers’ people and cards': [
+    '/keepers/users',
+    '/keepers/privilege-changes',
+    '/keepers/invitations',
+    '/keepers/invitation-cards',
+    '/keepers/card-sign-ups',
+  ],
+  'the compendium and its categories': [
+    '/curator/compendium',
+    '/curator/categories',
+    '/curator/category-groups',
+  ],
+  'the vocabularies': [
+    '/curator/forms',
+    '/curator/form-groups',
+    '/curator/deities',
+    '/curator/deity-traditions',
+    '/curator/celestial-bodies',
+    '/curator/zodiac-signs',
+  ],
+};
 
 test.describe('story 17: everyone but a keeper is kept from editing the compendium', () => {
-  test(
-    'a coven owner who is not a keeper meets the 403 page on every admin page a keeper opens',
-    { tag: '@story-17' },
-    async ({ page }) => {
-      // 27 loads ran 28.5s to 32.2s in CI against the default 30s.
-      test.setTimeout(60_000);
-      // Why each refusal below is the guard's: the same addresses answer a keeper.
-      await signInAs(page, 'admin@story-17.test', ['discord'], 'admin');
-      for (const path of ADMIN_ROUTES) {
-        const response = await page.goto(path);
-        expect(response?.status(), path).toBe(200);
-        const area = path.startsWith('/curator') ? 'Curator' : 'Keepers';
-        await expect(page.getByRole('navigation', { name: area })).toBeVisible();
-      }
+  for (const [group, routes] of Object.entries(ADMIN_ROUTE_GROUPS)) {
+    const groupSlug = slugify(group);
+    test(
+      `a coven owner who is not a keeper meets the 403 page on ${group}, which a keeper opens`,
+      { tag: '@story-17' },
+      async ({ page }) => {
+        // Why each refusal below is the guard's: the same addresses answer a keeper.
+        await signInAs(page, `admin-${groupSlug}@story-17.test`, ['discord'], 'admin');
+        for (const path of routes) {
+          const response = await page.goto(path);
+          expect(response?.status(), path).toBe(200);
+          const area = path.startsWith('/curator') ? 'Curator' : 'Keepers';
+          await expect(page.getByRole('navigation', { name: area })).toBeVisible();
+        }
 
-      // The highest seat a coven has, so nothing but the site role is left to refuse it.
-      const { userId } = await signInAs(page, 'owner@story-17.test');
-      const { slug } = await makeCoven('Fixture Story Seventeen Coven', [[userId, 'owner']]);
-      expect((await page.goto(`/coven/${slug}`))?.status()).toBe(200);
-      await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
-      await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
+        // The highest seat a coven has, so nothing but the site role is left to refuse it.
+        const { userId } = await signInAs(page, `owner-${groupSlug}@story-17.test`);
+        const { slug } = await makeCoven(`Fixture Story Seventeen ${group} Coven`, [
+          [userId, 'owner'],
+        ]);
+        expect((await page.goto(`/coven/${slug}`))?.status()).toBe(200);
+        await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(
+          0,
+        );
+        await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(
+          0,
+        );
 
-      for (const path of ADMIN_ROUTES) await expectNotAuthorized(page, path);
-      await expect(page.getByRole('banner')).toBeVisible();
-      await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
-      await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
-      await expect(
-        page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
-      ).toBeVisible();
-      await assertNoSidewaysScroll(page, { restore: true });
-      await assertNoAccessibilityViolations(page);
-    },
-  );
+        for (const path of routes) await expectNotAuthorized(page, path);
+        await expect(page.getByRole('banner')).toBeVisible();
+        await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(
+          0,
+        );
+        await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(
+          0,
+        );
+        await expect(
+          page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
+        ).toBeVisible();
+        await assertNoSidewaysScroll(page, { restore: true });
+        await assertNoAccessibilityViolations(page);
+      },
+    );
+  }
 
   test(
     'a coven owner who is not a keeper finds no way to edit a compendium entry a keeper edits',

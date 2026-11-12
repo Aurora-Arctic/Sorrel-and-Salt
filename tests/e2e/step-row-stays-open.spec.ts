@@ -38,8 +38,19 @@ test('an open step stays open for a click on anything inside its fields', async 
   const closed: string[] = [];
   const probe = async (label: string, act: () => Promise<unknown>) => {
     await act();
-    await page.waitForTimeout(150);
-    const state = await pencil.getAttribute('aria-expanded');
+    // A close, if the action causes one, lands within a few frames; the state is read once it holds.
+    let state: string | null = null;
+    await expect
+      .poll(
+        async () => {
+          const now = await pencil.getAttribute('aria-expanded');
+          const held = now === state;
+          state = now;
+          return held;
+        },
+        { intervals: [50] },
+      )
+      .toBe(true);
     if (state !== 'true') {
       closed.push(label);
       await pencil.click();

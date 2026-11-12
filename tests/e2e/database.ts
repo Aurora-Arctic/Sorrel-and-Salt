@@ -1,6 +1,7 @@
 import postgres from 'postgres';
 import { cloneDatabase, databaseUrl, dropDatabase, seedTemplate } from '../support/seeded-database';
 import { SESSION_COOKIE, signed } from './session-cookie';
+import { pauseBetweenPolls } from './waits';
 import { E2E_SLOTS, currentSlot, serverUrl, slotPort } from './slots';
 import type { WarmUpClock } from './types';
 
@@ -53,7 +54,7 @@ export async function recreateE2eDatabase(): Promise<void> {
 
 const REAL_CLOCK: WarmUpClock = {
   now: () => Date.now(),
-  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  sleep: pauseBetweenPolls,
 };
 
 // Past postgres's reconnect backoff, which caps at 20 s; the pause lets the backoff run out rather than spend it in bursts.

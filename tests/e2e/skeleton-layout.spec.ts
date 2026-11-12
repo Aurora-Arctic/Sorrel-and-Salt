@@ -1,6 +1,7 @@
 import type { BrowserContext, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
+import { hydrated } from './waits';
 import { signInAs, signInAgainAs } from './session';
 import {
   compendiumVariant,
@@ -571,13 +572,6 @@ const VARIANTS = [
   { width: 1280, theme: 'light' },
   { width: 375, theme: 'light' },
 ] as const;
-
-/** Waits until React has hydrated the element, so a click is the app's navigation and not a full page load. */
-const hydrated = (page: Page, selector: string) =>
-  page.waitForFunction((target) => {
-    const element = document.querySelector(target);
-    return !!element && Object.keys(element).some((key) => key.startsWith('__reactProps$'));
-  }, selector);
 
 for (const as of ['steward', 'keeper'] as const) {
   test.describe(`as the ${as}`, () => {

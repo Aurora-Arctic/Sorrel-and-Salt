@@ -17,6 +17,7 @@ import {
 } from './stories/coven-ingredients';
 import { holdServerAnswers } from './hold-server-answers';
 import { insertWorkspace } from '../support/db/insert-workspace';
+import { requiredDelay } from './waits';
 
 // Every loading wait looks the same (claude-docs/design-decisions/ui.md, "One Loading Standard for the Site"), held open through a coven switch, a section link and a site link. A non-member's 404 is coven.spec.ts's.
 
@@ -235,7 +236,10 @@ test("a curator nav link keeps the curator page's wait until the server answers,
 
   await expect(statuses(page)).toHaveCount(1);
   await expect(pills).toHaveCount(0);
-  await page.waitForTimeout(500);
+  await requiredDelay(
+    500,
+    'The skeleton must still stand after a quiet interval, and only elapsed time shows that nothing replaced it.',
+  );
   await expect(statuses(page)).toHaveCount(1);
   await expect(pills).toHaveCount(0);
   expect(new URL(page.url()).pathname).toBe(href);

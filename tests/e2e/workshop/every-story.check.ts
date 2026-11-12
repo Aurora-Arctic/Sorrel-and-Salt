@@ -66,7 +66,14 @@ async function checkStory(browser: Browser, entry: IndexEntry, theme: string) {
     if (await page.evaluate(() => document.body.classList.contains('sb-show-errordisplay')))
       problems.push(`story error: ${(await page.locator('#error-message').innerText()).trim()}`);
     await page.evaluate(async () => document.fonts.ready);
-    await page.waitForTimeout(400);
+    await page.evaluate(() =>
+      Promise.all(
+        document
+          .getAnimations()
+          .filter((run) => Number.isFinite(run.effect?.getComputedTiming().endTime))
+          .map((run) => run.finished),
+      ),
+    );
     const { violations } = await new AxeBuilder({ page })
       .disableRules(lowContrast ? [...PAGE_RULES, 'color-contrast'] : PAGE_RULES)
       .analyze();

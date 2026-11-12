@@ -5,6 +5,7 @@ import { seedCoven, withSql } from './stories/coven-ingredients';
 import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
+import { hydrated } from './waits';
 
 // (claude-docs/components/chip-color-field.md, "Tidying"; claude-docs/components/cupboard-entry-form.md)
 test.beforeAll(async () => {
@@ -20,7 +21,7 @@ test('a chip colour typed loosely is tidied to a six-digit lower-case hex when t
   const adding = page.getByRole('dialog', { name: 'Add Category Group' });
   await expect(adding).toBeVisible();
   // Hydrated first, or the typing lands on server HTML that no form owns.
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, '.chip-color-field__hex');
 
   const dark = adding.getByRole('textbox', { name: 'Dark Theme Colour' });
   await dark.fill(' 4E8BC2');
@@ -40,7 +41,7 @@ test('a chip colour gains its # as it is typed, keeps a pasted one single, and B
   await page.goto('/curator/category-groups?new');
   const adding = page.getByRole('dialog', { name: 'Add Category Group' });
   await expect(adding).toBeVisible();
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, '.chip-color-field__hex');
 
   const dark = adding.getByRole('textbox', { name: 'Dark Theme Colour' });
   const caret = () => dark.evaluate((input: HTMLInputElement) => input.selectionStart);
@@ -98,7 +99,7 @@ test('a refused Save on the Cupboard entry form puts focus on the error summary'
   await page.getByRole('link', { name: /^Annotate Fixture Secondwort/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Annotate This Entry' });
   await expect(dialog).toBeVisible();
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, '.cupboard-form');
 
   await dialog.getByRole('textbox', { name: 'Label' }).fill('Fixture Shared Label');
   await dialog.getByRole('button', { name: /^Save/ }).click();
@@ -113,7 +114,7 @@ for (const width of [375, 1280]) {
     await page.goto('/curator/category-groups?new');
     const adding = page.getByRole('dialog', { name: 'Add Category Group' });
     await expect(adding).toBeVisible();
-    await page.waitForLoadState('networkidle');
+    await hydrated(page, '.chip-color-field__hex');
 
     const overrun: string[] = [];
     for (const name of ['Dark Theme Colour', 'Light Theme Colour']) {

@@ -3,6 +3,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { hydrated, requiredDelay } from './waits';
 
 // Publishing the terms, or the disclaimer or code of ethics they include, asks every account to agree again (claude-docs/design-decisions/support.md, "A keeper editor for the site's documents").
 // The Email Updates tab mails one email per change (claude-docs/design-decisions/support.md, "One joint email about every changed document").
@@ -15,6 +16,9 @@ const DOCUMENT_KEYS = ['terms', 'disclaimer', 'code-of-ethics', 'privacy', 'abou
 
 const editorOf = (page: Page) =>
   page.getByRole('main').getByRole('textbox', { name: 'Document Text' });
+
+// The toolbar's buttons stand in server HTML until the editor's chunk loads and hydrates them.
+const EDITOR_TOOLBAR_BUTTON = 'main [role="toolbar"] button';
 
 const toolbarOf = (page: Page) =>
   page.getByRole('main').getByRole('toolbar', { name: 'Document Text Formatting' });
@@ -182,7 +186,7 @@ test('the editor’s toolbar takes one tab stop, and the arrow keys move between
   expect(await buttons.count()).toBeGreaterThan(2);
   // Hydrated first: the editor loads as a separate chunk, and before it hydrates the toolbar is server HTML whose
   // arrow keys do nothing.
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, EDITOR_TOOLBAR_BUTTON);
   const focusInToolbar = () =>
     toolbarOf(page).evaluate((toolbar) => toolbar.contains(document.activeElement));
 
@@ -348,7 +352,7 @@ test('markdown pasted from a code editor is read as markdown, not as its highlig
 }) => {
   await signInAs(page, 'paste-code-admin@admin-documents.test', ['discord'], 'admin');
   await page.goto('/keepers/documents/privacy');
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, EDITOR_TOOLBAR_BUTTON);
 
   await newLineAfter(page, 'Changes to This Policy');
   const highlighted = PASTED_MARKDOWN.split('\n')
@@ -374,7 +378,7 @@ test('a monospace rendering of markdown is read as markdown, and a web page’s 
 }) => {
   await signInAs(page, 'paste-html-admin@admin-documents.test', ['discord'], 'admin');
   await page.goto('/keepers/documents/privacy');
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, EDITOR_TOOLBAR_BUTTON);
 
   await newLineAfter(page, 'Changes to This Policy');
   await paste(page, {
@@ -403,7 +407,7 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
 }) => {
   await signInAs(page, 'in-flight-admin@admin-documents.test', ['discord'], 'admin');
   await page.goto('/keepers/documents/privacy');
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, EDITOR_TOOLBAR_BUTTON);
   const save = page.getByRole('main').getByRole('button', { name: /^Sav(e|ing) Draft$/ });
   const heading = editorOf(page).getByRole('heading', { name: /^Changes to This Polic/ });
   const SAVED_HEADING = '## Changes to This Policy\n';
@@ -431,7 +435,10 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
       release = resolve;
     });
     // A released save takes a moment to reach the server, so the test has to wait for it to land, not for the button.
-    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await requiredDelay(
+      1_000,
+      'A released save reaches the server after a moment, and nothing in the page shows it landing.',
+    );
     return route.continue();
   });
 
@@ -477,7 +484,7 @@ test('a bare address typed into the link dialog becomes an https link, and stays
 }) => {
   await signInAs(page, 'link-admin@admin-documents.test', ['discord'], 'admin');
   await page.goto('/keepers/documents/privacy');
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, EDITOR_TOOLBAR_BUTTON);
 
   await appendTo(page, 'Changes to This Policy', ' Fixturelink');
   await expect(editorOf(page).getByRole('heading', { name: /Fixturelink$/ })).toBeVisible();
@@ -590,7 +597,7 @@ test('the editor link dialog spaces its field and buttons as every other form mo
 }) => {
   await signInAs(page, 'link-layout@admin-documents.test', ['discord'], 'admin');
   await page.goto('/keepers/documents/privacy');
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, EDITOR_TOOLBAR_BUTTON);
   await appendTo(page, 'Changes to This Policy', ' Fixturelink');
   await expect(editorOf(page).getByRole('heading', { name: /Fixturelink$/ })).toBeVisible();
   await selectBack(page, 'Fixturelink');
@@ -635,10 +642,25 @@ test('Add Link with the caret placed and nothing selected inserts the address as
 }) => {
   await signInAs(page, 'caret-link-admin@admin-documents.test', ['discord'], 'admin');
   await page.goto('/keepers/documents/privacy');
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, EDITOR_TOOLBAR_BUTTON);
 
   await appendTo(page, 'Changes to This Policy', ' ');
-  await page.waitForTimeout(300);
+  // The editor copies the browser's caret into its own on a throttle, so the caret must hold across it before Link reads it.
+  let caret: string | undefined;
+  await expect
+    .poll(
+      async () => {
+        const now = await page.evaluate(() => {
+          const selection = window.getSelection();
+          return `${selection?.anchorNode?.textContent ?? ''}:${selection?.anchorOffset ?? -1}`;
+        });
+        const held = now === caret;
+        caret = now;
+        return held;
+      },
+      { intervals: [300] },
+    )
+    .toBe(true);
   await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
   const dialog = page.getByRole('dialog', { name: 'Add Link' });
   const address = dialog.getByRole('textbox', { name: 'Address' });
@@ -658,7 +680,7 @@ test('Add Link before the editor has ever been clicked into still adds the addre
 }) => {
   await signInAs(page, 'unfocused-link-admin@admin-documents.test', ['discord'], 'admin');
   await page.goto('/keepers/documents/privacy');
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, EDITOR_TOOLBAR_BUTTON);
 
   await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
   const dialog = page.getByRole('dialog', { name: 'Add Link' });

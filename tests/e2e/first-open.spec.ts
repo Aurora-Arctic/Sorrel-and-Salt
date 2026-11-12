@@ -4,6 +4,7 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { slotUrl } from './slots';
 import { seedCoven, type Coven } from './stories/coven-ingredients';
+import { hydrated } from './waits';
 
 // Quick Look and Add Ingredient load their code on first open, not with the page. Each is opened once on a
 // settled page: the browser fetches a script it had not, and the dialog then works
@@ -36,17 +37,17 @@ function scriptsFrom(page: Page): string[] {
 }
 
 /** The page loaded and quiet: hydrated, and done fetching what it fetches by itself. */
-async function settled(page: Page, path: string): Promise<string[]> {
+async function settled(page: Page, path: string, control: string): Promise<string[]> {
   const asked = scriptsFrom(page);
   await page.goto(path);
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, control);
   // Only what the opening asks for counts.
   asked.length = 0;
   return asked;
 }
 
 test('Quick Look loads its code on first open, and opens over the list', async ({ page }) => {
-  const asked = await settled(page, '/compendium');
+  const asked = await settled(page, '/compendium', 'a[href^="/compendium/ingredients/"]');
   const eye = page.getByRole('link', { name: /^Quick Look / }).first();
   await expect(eye).toBeVisible();
 
@@ -63,7 +64,7 @@ test('Quick Look loads its code on first open, and opens over the list', async (
 });
 
 test('Add Ingredient loads its code on first open, its form ready for a name', async ({ page }) => {
-  const asked = await settled(page, `/coven/${coven.slug}/ingredients`);
+  const asked = await settled(page, `/coven/${coven.slug}/ingredients`, 'header button');
   const add = page.getByRole('banner').getByRole('button', { name: 'Add Ingredient' });
   await expect(add).toBeVisible();
 

@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { assertNoAccessibilityViolations } from '../axe';
+import { requiredDelay } from '../waits';
 
 // Layout facts (claude-docs/components/click-feedback.md) measured in its Storybook stories; what it says and where the focus goes are tests/components/ClickFeedback's.
 
@@ -290,7 +291,11 @@ async function holdPlacement(page: Page, frames: number): Promise<void> {
 
 const midway = (frame: Frame) => frame.visible && frame.opacity > 0.05 && frame.opacity < 0.95;
 
-const settle = (page: Page) => page.waitForTimeout(500);
+const settle = (_page: Page) =>
+  requiredDelay(
+    500,
+    'The callout and badge fade over a few hundred milliseconds, and only elapsed time lets the fade finish.',
+  );
 
 test.describe('motion', () => {
   test('the callout and the badge fade in once placed, and out as they go', async ({ page }) => {

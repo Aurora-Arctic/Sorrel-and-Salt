@@ -4,6 +4,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
+import { hydrated } from './waits';
 
 // The keepers' help outline and its full-page form: every help row at every audience, written by a keeper alone
 // (claude-docs/design-decisions/support.md, "Audiences, staff routes and search"; claude-docs/design/graphql.md, "Help articles").
@@ -134,7 +135,7 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   // A title that makes a reserved address is refused beside Title, and the form stays.
   await page.goto(`${PATH}/new`);
   // Hydrated first: a title typed into the server HTML never reaches the form, which then keeps Save disabled.
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, '.help-article-form input[name="title"]');
   await title(page).fill('Glossary');
   await writeBody(page, 'A row the service refuses.');
   await page.getByRole('button', { name: 'Save Article' }).click();
