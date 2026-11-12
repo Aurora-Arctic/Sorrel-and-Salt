@@ -29,6 +29,8 @@ interface BreakpointFile {
   PAGE_HEADER: Record<string, number>;
   // What a page column takes off the window before the page header: its inline padding, both sides.
   PAGE_HEADER_GUTTER: number;
+  // Widths that are not an edge: a shipped bug's width, or one a fixed reason names.
+  PURPOSE_WIDTHS: Record<string, number>;
 }
 
 const loadBreakpoints = () =>
@@ -685,7 +687,7 @@ describe('the width a spec sets the window to', () => {
       new WidthTracer(
         {
           'tests/e2e/probe.spec.ts': `import { test } from '@playwright/test';
-import { BAND_WIDTHS, BREAKPOINTS, PAGE_HEADER, PAGE_HEADER_GUTTER, PHONE_WIDTH } from './breakpoints';
+import { BAND_WIDTHS, BREAKPOINTS, PAGE_HEADER, PAGE_HEADER_GUTTER, PHONE_WIDTH, PURPOSE_WIDTHS } from './breakpoints';
 import { openAt } from './probe-helpers';
 ${code}`,
           'tests/e2e/probe-helpers.ts': `import type { Page } from '@playwright/test';
@@ -717,7 +719,9 @@ test('t', async ({ page }) => {
   if (before) await page.setViewportSize(before);
 });
 test.use({ viewport: { width: BREAKPOINTS.tablet + 1, height: 900 }, hasTouch: true });
-test.use({ locale: 'en-GB' });`),
+test.use({ locale: 'en-GB' });
+test.use({ viewport: { width: PURPOSE_WIDTHS.reflow, height: 640 } });
+test('u', async ({ page }) => openAt(page, PURPOSE_WIDTHS.shellTabs));`),
     ).toEqual([]);
   });
 
@@ -765,5 +769,164 @@ test.use({ viewport: PHONE, isMobile: true });`),
     );
 
     expect(offenders(tracer)).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------
+// The purpose widths: a width no edge gives, each kept for a purpose its comment names.
+
+// The reasons a purpose width may give besides a shipped bug's id (`MB.<n>`), matched without case.
+const PURPOSE_REASONS = ['WCAG reflow', 'text-fit band', 'screenshot size'] as const;
+const BUG_ID = /\bMB\.\d+\b/;
+
+// Reads `export const PURPOSE_WIDTHS = { … }` from the breakpoint file's source, without running it, and
+// lists each entry that breaks the rule: not a named number, no comment directly above it naming a bug
+// id or a reason, or a width `taken` already holds (an edge, the phone width or the desktop width).
+function purposeWidths(code: string, taken: number[]) {
+  const source = parseSource(BREAKPOINT_FILE, code);
+  const widths: Record<string, number> = {};
+  const problems: string[] = [];
+  let init: Node | undefined;
+  for (const statement of source.program.body as Node[]) {
+    const declaration = statement.declaration as Node | undefined;
+    if (statement.type !== 'ExportNamedDeclaration' || declaration?.type !== 'VariableDeclaration')
+      continue;
+    for (const declarator of declaration.declarations as Node[]) {
+      if (nameOf(declarator.id) === 'PURPOSE_WIDTHS') init = declarator.init as Node;
+    }
+  }
+  if (!init) return { widths, problems: ['PURPOSE_WIDTHS: not exported'] };
+  while (WRAPPERS.has(init.type)) init = init.expression as Node;
+  if (init.type !== 'ObjectExpression') {
+    return { widths, problems: ['PURPOSE_WIDTHS: not an object of named numbers'] };
+  }
+
+  const lines = code.split('\n');
+  for (const property of init.properties as Node[]) {
+    const line = lineOf(source, property);
+    const key =
+      property.type === 'Property' && !property.computed ? nameOf(property.key) : undefined;
+    let value = property.value as Node | undefined;
+    while (value && WRAPPERS.has(value.type)) value = value.expression as Node;
+    if (key === undefined || value?.type !== 'Literal' || typeof value.value !== 'number') {
+      problems.push(`breakpoints.ts:${line} ${textOf(source, property)}: not a named number`);
+      continue;
+    }
+    widths[key] = value.value;
+    const entry = `PURPOSE_WIDTHS.${key} (${value.value})`;
+
+    // The comment directly above: the run of `//` lines that ends on the line before the entry.
+    const comment: string[] = [];
+    for (let at = line - 2; at >= 0 && /^\s*\/\//.test(lines[at]); at--) comment.unshift(lines[at]);
+    const text = comment.join(' ').toLowerCase();
+    if (comment.length === 0) problems.push(`${entry}: no comment above it`);
+    else if (
+      !BUG_ID.test(comment.join(' ')) &&
+      !PURPOSE_REASONS.some((reason) => text.includes(reason.toLowerCase()))
+    ) {
+      problems.push(`${entry}: its comment names neither a bug id nor a reason`);
+    }
+    if (taken.includes(value.value)) {
+      problems.push(`${entry}: the same width as an edge, the phone width or the desktop width`);
+    }
+  }
+  return { widths, problems };
+}
+
+describe('the purpose widths in the breakpoint file', () => {
+  // The rule held to files of its own, so a reader that passes everything fails here.
+  const TAKEN = [375, 640, 1280];
+  const probe = (body: string) =>
+    purposeWidths(
+      `import { BREAKPOINTS } from './x';\nexport const PURPOSE_WIDTHS = {\n${body}\n} as const;`,
+      TAKEN,
+    );
+
+  it('accepts a named number with a bug id or a fixed reason directly above it', () => {
+    expect(
+      probe(`  // MB.212: the shell's tabs overflowed at this width.
+  shellTabs: 420,
+  // WCAG reflow: content fits 320 CSS pixels without a sideways scroll.
+  reflow: 320,
+  // The tabs' text-fit band,
+  // where the last label wraps.
+  tabFit: 777,
+  // Screenshot size of the help articles.
+  helpShot: 1024,`),
+    ).toEqual({
+      widths: { shellTabs: 420, reflow: 320, tabFit: 777, helpShot: 1024 },
+      problems: [],
+    });
+  });
+
+  it('refuses an entry with no comment directly above it, or one that names no purpose', () => {
+    expect(
+      probe(`  shellTabs: 420,
+  // A width that looked right.
+  reflow: 320,
+  // MB.212
+
+  spaced: 862,`).problems,
+    ).toEqual([
+      'PURPOSE_WIDTHS.shellTabs (420): no comment above it',
+      'PURPOSE_WIDTHS.reflow (320): its comment names neither a bug id nor a reason',
+      'PURPOSE_WIDTHS.spaced (862): no comment above it',
+    ]);
+  });
+
+  it('refuses an entry that is already an edge, the phone width or the desktop width', () => {
+    expect(
+      probe(`  // MB.212
+  phone: 640,
+  // WCAG reflow
+  small: 375,
+  // Screenshot size
+  desktop: 1280,`).problems,
+    ).toEqual([
+      'PURPOSE_WIDTHS.phone (640): the same width as an edge, the phone width or the desktop width',
+      'PURPOSE_WIDTHS.small (375): the same width as an edge, the phone width or the desktop width',
+      'PURPOSE_WIDTHS.desktop (1280): the same width as an edge, the phone width or the desktop width',
+    ]);
+  });
+
+  it('refuses a group the guard cannot read without running it', () => {
+    expect(
+      probe(`  // MB.212
+  wide: BREAKPOINTS.phone + 1,
+  // MB.212
+  ['computed']: 420,
+  ...BREAKPOINTS,`).problems,
+    ).toEqual([
+      'breakpoints.ts:4 wide: BREAKPOINTS.phone + 1: not a named number',
+      "breakpoints.ts:6 ['computed']: 420: not a named number",
+      'breakpoints.ts:7 ...BREAKPOINTS: not a named number',
+    ]);
+    expect(purposeWidths('export const PURPOSE_WIDTHS = makeWidths();', TAKEN).problems).toEqual([
+      'PURPOSE_WIDTHS: not an object of named numbers',
+    ]);
+    expect(purposeWidths('export const PHONE_WIDTH = 375;', TAKEN).problems).toEqual([
+      'PURPOSE_WIDTHS: not exported',
+    ]);
+  });
+
+  it('gives each purpose width a named purpose, and none an edge, the phone or the desktop width already gives', async () => {
+    const file = await loadBreakpoints();
+    const taken = sorted([
+      ...compiledStylesheets().flatMap((css) => preludes(css, MEDIA).flatMap(edgesIn)),
+      ...Object.values(file.BREAKPOINTS),
+      ...Object.values(file.BAND_WIDTHS),
+      ...Object.values(file.PAGE_HEADER).map((edge) => edge + file.PAGE_HEADER_GUTTER),
+      file.PHONE_WIDTH,
+      file.DESKTOP_WIDTH,
+    ]);
+    // Precondition: the widths an entry may not repeat include the edges and both fixed widths.
+    expect(taken).toEqual(expect.arrayContaining([375, 1280, file.BREAKPOINTS.phone]));
+
+    const { widths, problems } = purposeWidths(readSource(BREAKPOINT_FILE), taken);
+    expect(problems).toEqual([]);
+    // Precondition: the group has entries, so a clean read is not an empty one.
+    expect(Object.keys(widths).length).toBeGreaterThan(0);
+    // The group the specs import is the one read here.
+    expect(file.PURPOSE_WIDTHS).toEqual(widths);
   });
 });
