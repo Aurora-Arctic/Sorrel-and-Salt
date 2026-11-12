@@ -24,6 +24,7 @@ const users = {
   member: { id: '' }, // a member of Alpha alone
   multi: { id: '' }, // a member of both, holding the right to create
   admin: { id: '' },
+  stewardKeeper: { id: '' }, // a keeper, so a steward of the demo coven, who also owns Gamma
 };
 
 test.beforeAll(async ({ browser, slot }) => {
@@ -42,7 +43,12 @@ async function seedFixtures(page: Page): Promise<void> {
   for (const key of Object.keys(users) as (keyof typeof users)[]) {
     users[key] = {
       id: (
-        await signInAs(page, `${key}@shell.test`, ['discord'], key === 'admin' ? 'admin' : 'user')
+        await signInAs(
+          page,
+          `${key.toLowerCase()}@shell.test`,
+          ['discord'],
+          key === 'admin' || key === 'stewardKeeper' ? 'admin' : 'user',
+        )
       ).userId,
     };
   }
@@ -63,6 +69,8 @@ async function seedFixtures(page: Page): Promise<void> {
           : [[owner, 'owner']];
       await insertWorkspace(sql, coven.name, members, { slug: coven.slug, author: owner });
     }
+    const keeper = users.stewardKeeper.id;
+    await insertWorkspace(sql, 'Shell Gamma', [[keeper, 'owner']], { author: keeper });
     const rows = await sql`
       select count(*)::int as n from workspace_members m
       join workspaces w on w.id = m.workspace_id
@@ -245,14 +253,10 @@ for (const [edge, width] of [
     ['a coven page', `/coven/${ALPHA.slug}`],
   ] as const) {
     test(`${name} does not scroll sideways at ${width}px, ${edge}`, async ({ page }) => {
-      if (path === '/curator/compendium') {
-        const { userId } = await signInAs(page, 'steward-keeper@shell.test', ['discord'], 'admin');
-        await withE2eSql((sql) =>
-          insertWorkspace(sql, 'Shell Gamma', [[userId, 'owner']], { author: userId }),
-        );
-      } else {
-        await signInAgainAs(page, users.multi.id);
-      }
+      await signInAgainAs(
+        page,
+        path === '/curator/compendium' ? users.stewardKeeper.id : users.multi.id,
+      );
       await page.setViewportSize({ width, height: 812 });
       await page.goto(path);
 
