@@ -33,6 +33,7 @@ export async function verificationLinkMessage(
 /** `updateTo` plus this `requestType` is the branch of /verify-email that swaps the address and verifies it in one write. */
 export async function changeLinkMessage(
   authBase: string,
+  userId: string,
   current: string,
   pending: string,
   next: string | null,
@@ -44,7 +45,7 @@ export async function changeLinkMessage(
     current,
     pending,
     lifetimeSeconds,
-    { requestType: 'change-email-verification' },
+    { requestType: 'change-email-verification', userId },
   );
   const url = `${authBase}/verify-email?token=${token}&callbackURL=${encodeURIComponent(verifiedLanding(next ?? undefined))}`;
   return verifyEmailMessage({ to: pending, url, purpose: 'change', providers });
