@@ -7,13 +7,13 @@ import { signInAs } from './session';
 import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
-import { DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
+import { DESKTOP_WIDTH, PHONE_WIDTH, PURPOSE_WIDTHS } from './breakpoints';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test.use({ viewport: { width: PHONE_WIDTH, height: 640 } });
+test.use({ viewport: { width: PURPOSE_WIDTHS.reflow, height: 640 } });
 
 type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
 
@@ -32,7 +32,7 @@ async function settledBox(tip: Locator): Promise<Box | null> {
   return read.box;
 }
 
-test('every tip in the Add Ingredient dialog opens inside a phone-width viewport', async ({
+test('every tip in the Add Ingredient dialog opens inside a 320px-wide viewport', async ({
   page,
 }) => {
   await seedCoven(page, 'Fixture Coven Tips', 'tip-placement.test', { A: 'owner' });
@@ -66,7 +66,7 @@ test('every tip in the Add Ingredient dialog opens inside a phone-width viewport
       description: `button x=${Math.round(at.x)} tip x=${Math.round(box.x)} right=${Math.round(box.x + box.width)}`,
     });
     expect(box.x).toBeGreaterThanOrEqual(0);
-    expect(box.x + box.width).toBeLessThanOrEqual(PHONE_WIDTH);
+    expect(box.x + box.width).toBeLessThanOrEqual(PURPOSE_WIDTHS.reflow);
     expect(box.y).toBeGreaterThanOrEqual(0);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('tooltip')).toHaveCount(0);

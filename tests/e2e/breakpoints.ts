@@ -20,6 +20,8 @@ export const BREAKPOINTS = {
   tablet: 896,
   // The width a page with a menu stands three columns from (`page-with-nav-wide` in _mixins.scss).
   pageWithNavWide: 928,
+  // The window a page header turns its wide layout on from (`width-from(75rem)` in PageHeader/index.scss).
+  pageHeaderWide: 1200,
 };
 
 // A width inside a band, away from its edges.
@@ -41,3 +43,14 @@ export const PAGE_HEADER = {
 
 // What a page column takes off the window before the page header: its inline padding on both sides.
 export const PAGE_HEADER_GUTTER = 32;
+
+// Widths that are no edge: each is kept for a shipped bug (its id, MB.<n>) or for one of the reasons the
+// guard names (WCAG reflow, text-fit band, screenshot size), written in the comment above it.
+export const PURPOSE_WIDTHS = {
+  // WCAG reflow: the narrowest window a page must reflow to without a sideways scroll.
+  reflow: 320,
+  // Text-fit band: from about 774px to 780px in Chromium the bolder current tab tips the curator row's count.
+  shellTabs: 777,
+  // Screenshot size: the help articles' pictures are captured at this width, so the product images depend on it.
+  helpScreenshot: 1024,
+};

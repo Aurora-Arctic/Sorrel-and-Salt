@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { BAND_WIDTHS, BREAKPOINTS, DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
+import { BREAKPOINTS, DESKTOP_WIDTH, PHONE_WIDTH, PURPOSE_WIDTHS } from './breakpoints';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
@@ -324,7 +324,7 @@ test('at a tablet width, a navigation fits the row afresh for the new current ta
 }) => {
   await signInAgainAs(page, users.admin.id);
   // From about 774px to 780px in Chromium, the bolder current tab tips the count.
-  await page.setViewportSize({ width: BAND_WIDTHS.tablet, height: 800 });
+  await page.setViewportSize({ width: PURPOSE_WIDTHS.shellTabs, height: 800 });
   await page.goto('/curator/compendium');
   const fresh = await rowLinks(await fittedAdminNav(page)).count();
 

@@ -63,7 +63,9 @@ cited by number in the PR table of the task that applies it.
    one-assertion token-contrast check per theme are functional, and allowed.
    A Playwright spec takes its window width from `tests/e2e/breakpoints.ts`: `PHONE_WIDTH`
    (375) and `DESKTOP_WIDTH` (1280, Playwright's desktop device), a stylesheet edge, or an
-   edge ±1. `tests/guards/viewport-widths.test.ts` refuses a bare number.
+   edge ±1. A width that is no edge is named in `PURPOSE_WIDTHS` in that file, and the entry's
+   comment gives a bug id (`MB.<n>`) or one of three reasons: WCAG reflow, a text-fit band, a
+   screenshot size. `tests/guards/viewport-widths.test.ts` refuses a bare number.
 5. **One row per shared path.** A `describe.each` or `it.each` over a
    component's or module's own config table (`KINDS`, `VOCABULARY_COPY`,
    `VARIANTS`, `UNITS`, the vocabulary registry) runs the shared behaviour on

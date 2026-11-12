@@ -267,7 +267,7 @@ test.describe('the help header', () => {
     };
   };
 
-  for (const width of [DESKTOP_WIDTH]) {
+  for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
     test(`the heading, the lede and the search box stand in the same place on /help, /help/search and an article at ${width}px`, async ({
       page,
     }) => {

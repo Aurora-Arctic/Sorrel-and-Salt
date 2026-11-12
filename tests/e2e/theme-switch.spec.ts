@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { DESKTOP_WIDTH } from './breakpoints';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
 
 // A theme change is one cross-fade of the whole page, so no element runs a colour transition of its own on
 // the swap. It reads the browser's list of running transitions, so a hover fade that would also run on the
@@ -8,7 +8,7 @@ import { DESKTOP_WIDTH } from './breakpoints';
 /** A transition of a colour: a colour property, a shadow, an SVG paint, or `all`. */
 const COLOUR = /color|shadow|^fill$|^stroke$|^all$/;
 
-for (const width of [DESKTOP_WIDTH]) {
+for (const width of [PHONE_WIDTH, DESKTOP_WIDTH]) {
   test(`switching theme at ${width}px starts no colour transition on any element`, async ({
     page,
   }) => {

@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
 import { insertSpell, localIngredient, seedCoven, withSql } from './stories/coven-ingredients';
 
 test.beforeAll(async () => {
@@ -71,6 +72,14 @@ test('the eye opens a spell in a modal over the list, keeps the filter, stacks i
   await page.keyboard.press('Escape');
   await expect(page).toHaveURL(`${grimoire}?query=fixture`);
   await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
+  await eye.click();
+  const phone = page.getByRole('dialog', { name: 'Fixture Working' });
+  await expect(phone.getByRole('link', { name: 'See Full Spell' })).toBeVisible();
+  await phone.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 800 });
 
   // Another member's private spell: its author opens it (the precondition), B gets no modal.
   await signInAgainAs(page, coven.users.A);
