@@ -17,23 +17,58 @@ import { describeConnectionError } from './probe-database.ts';
 
 const DEFAULT_FOLDER = 'src/db/migrations';
 
-/** The `.sql` file holding a statement, found by the journal's order, which is the order the migrator reads in. */
-function fileOfStatement(folder: string, statement: string): string | undefined {
+/**
+ * The newest recorded `created_at`, which the migrator compares each journal `when` against: later is pending. `null` when no migration is recorded or the journal table
+ * does not exist yet, so all are pending; `undefined` when it cannot be read.
+ */
+async function newestApplied(client: postgres.Sql): Promise<number | null | undefined> {
+  try {
+    const [row] = await client<
+      { created_at: string }[]
+    >`select created_at from drizzle.__drizzle_migrations order by created_at desc limit 1`;
+    return row ? Number(row.created_at) : null;
+  } catch (error) {
+    return (error as { code?: string }).code === '42P01' ? null : undefined;
+  }
+}
+
+/**
+ * The `.sql` file holding a statement, by the journal's order, which is the order the migrator reads in. Only a migration this run had pending can have failed, and an applied one
+ * may hold the same statement; when the journal cannot be read, the newest match is the likelier.
+ */
+async function fileOfStatement(
+  client: postgres.Sql,
+  folder: string,
+  statement: string,
+): Promise<string | undefined> {
   const journal = JSON.parse(readFileSync(join(folder, 'meta/_journal.json'), 'utf8')) as {
     entries: { tag: string }[];
   };
-  const migrations = readMigrationFiles({ migrationsFolder: folder });
-  const index = migrations.findIndex((migration) => migration.sql.includes(statement));
-  return index === -1 ? undefined : `${journal.entries[index].tag}.sql`;
+  const applied = await newestApplied(client);
+  const candidates = readMigrationFiles({ migrationsFolder: folder })
+    .map((migration, index) => ({ migration, tag: journal.entries[index].tag }))
+    .filter(
+      ({ migration }) =>
+        applied === undefined || applied === null || migration.folderMillis > applied,
+    );
+  if (applied === undefined) candidates.reverse();
+  const match = candidates.find(({ migration }) => migration.sql.includes(statement));
+  return match ? `${match.tag}.sql` : undefined;
 }
 
 /** drizzle wraps the driver's error and carries the failed statement beside it. */
-function describeMigrationFailure(error: unknown, folder: string, url: string | undefined): string {
+async function describeMigrationFailure(
+  error: unknown,
+  client: postgres.Sql,
+  folder: string,
+  url: string,
+): Promise<string> {
   const statement = (error as { query?: unknown } | null)?.query;
   const cause = (error as { cause?: unknown } | null)?.cause;
-  const file = typeof statement === 'string' ? fileOfStatement(folder, statement) : undefined;
+  const file =
+    typeof statement === 'string' ? await fileOfStatement(client, folder, statement) : undefined;
   const reason = describeConnectionError(cause ?? error, url);
-  return file ? `${file} failed: ${reason}` : reason;
+  return file ? `${file}: ${reason}` : reason;
 }
 
 async function main(): Promise<void> {
@@ -55,7 +90,9 @@ async function main(): Promise<void> {
     await migrate(drizzle(client), { migrationsFolder: folder });
     console.log('Migrations applied.');
   } catch (error) {
-    console.error(`Migration failed: ${describeMigrationFailure(error, folder, url)}`);
+    console.error(
+      `Migration failed: ${await describeMigrationFailure(error, client, folder, url)}`,
+    );
     process.exitCode = 1;
   } finally {
     await client.end({ timeout: 5 });
