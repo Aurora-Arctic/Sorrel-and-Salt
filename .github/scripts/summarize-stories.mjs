@@ -54,10 +54,10 @@ const counts = SHARD
   : checklist.counts;
 const total = SHARD ? stories.length : checklist.total;
 
-const parts = [`${counts.passed} of ${total} stories passing`];
-// A story that failed and then passed on retry is noted as flaky, never as failing: the run passed.
+// A story that failed and then passed on retry counts as passing and is noted as flaky, never as failing: the run passed.
 const flakyCount = stories.filter((story) => story.status === 'failed' && story.flaky).length;
 const failing = counts.failed - flakyCount;
+const parts = [`${counts.passed + flakyCount} of ${total} stories passing`];
 if (failing) parts.push(`${failing} failing`);
 if (flakyCount) parts.push(`${flakyCount} flaky`);
 if (counts.skipped) parts.push(`${counts.skipped} skipped`);
