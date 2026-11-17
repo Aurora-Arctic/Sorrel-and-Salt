@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { COMPENDIUM_CACHE_DATABASE, withE2eSql } from './database';
 import { signInAs } from './session';
+import { pauseBetweenPolls } from './waits';
 
 // The compendium read answered from Next's data cache, not Postgres, until a keeper's write expires it. Runs
 // only in the `chromium-compendium-cache` project, against the one server that keeps its cache over a database
@@ -121,4 +122,42 @@ test("an entry's share card is drawn once, until a keeper edit draws it again", 
   const redrawn = await draw();
   expect(redrawn).not.toEqual(first);
   expect(await draw()).toEqual(redrawn);
+});
+
+// A crawler's request, with no cookie, reaches Postgres only when the page's own data is cold (MB.300). Counted
+// as transactions on the server's database (`pg_stat_database`), which the server's connections alone write
+// to: nothing else uses this database. Postgres publishes a backend's counts a moment after it goes idle, so each
+// reading waits first, and the observer's own reads are priced in by an idle reading taken beforehand.
+const STATS_SETTLE_MS = 2_000;
+
+const transactions = async () => {
+  await pauseBetweenPolls(
+    STATS_SETTLE_MS,
+    'Postgres publishes a backend’s counts shortly after it idles',
+  );
+  const [row] = await inDatabase(
+    (sql) => sql<{ total: string }[]>`
+      select (xact_commit + xact_rollback)::text as total
+      from pg_stat_database where datname = current_database()`,
+  );
+  return Number(row.total);
+};
+
+test('a crawler with no cookie costs no query on sign-in or a warm compendium', async ({
+  request,
+}) => {
+  const before = await transactions();
+  const idle = (await transactions()) - before;
+
+  // The precondition: the same kind of request does reach Postgres when the data is cold, and the count sees it.
+  const coldStart = await transactions();
+  expect((await request.get('/compendium')).status()).toBe(200);
+  const cold = (await transactions()) - coldStart;
+  expect(cold).toBeGreaterThan(idle);
+
+  const warmStart = await transactions();
+  expect((await request.get('/sign-in')).status()).toBe(200);
+  expect((await request.get('/compendium')).status()).toBe(200);
+  const warm = (await transactions()) - warmStart;
+  expect(warm).toBe(idle);
 });

@@ -394,4 +394,24 @@ describe('the Playwright summary, from the merged report of every shard', () => 
     expect(warnings.filter((line) => line.includes('Testwort steeps'))).toEqual([]);
     expect(warnings.filter((line) => /Testwort (boils|cools)/.test(line))).toEqual([]);
   });
+
+  it('puts the over-budget warnings inside the slowest-files block, after its table, and counts them in its summary', () => {
+    const lines = summarise().details.split('\n');
+    const close = lines.lastIndexOf('</details>');
+    const open = lines.findIndex((line) => line.startsWith('<details>'));
+    const warned = lines.findIndex(
+      (line) => line.includes('⚠') && line.includes('Testwort simmers'),
+    );
+    const lastRow = lines.map((line) => line.startsWith('|')).lastIndexOf(true);
+
+    // Preconditions: the block exists and the warning is in the output at all.
+    expect(open).toBeGreaterThan(-1);
+    expect(warned).toBeGreaterThan(-1);
+    // Nothing is printed after the block closes, and the warning sits between the table and the close.
+    expect(lines.slice(close + 1).filter(Boolean)).toEqual([]);
+    expect(warned).toBeGreaterThan(lastRow);
+    expect(warned).toBeLessThan(close);
+    // The collapsed line says one test is over.
+    expect(lines[open]).toMatch(/\b1 test\b/);
+  });
 });

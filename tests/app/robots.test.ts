@@ -65,8 +65,9 @@ describe('robots', () => {
     ['/', true],
     ['/compendium', true],
     ['/compendium/ingredients/testwort', true],
-    // Out of the sitemap, but still crawlable.
+    // Fetchable so a crawler reads the page's own noindex; it is not in the sitemap.
     ['/sign-in', true],
+    ['/sign-in?next=/coven/fixture-coven', true],
     // The build's CSS, JavaScript and images, which a crawler needs to render a page.
     ['/_next/static/chunks/main.js', true],
     ['/_next/image?url=%2Fbackdrop.webp&w=640&q=75', true],

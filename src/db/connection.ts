@@ -16,11 +16,14 @@ function databaseUrl(): string {
 const registry = globalThis as typeof globalThis & ClientRegistry;
 const clients = (registry.__sorrelPostgresClients ??= new Map());
 
+const IDLE_TIMEOUT_SECONDS = 30;
+
 function client(url: string): postgres.Sql {
   let existing = clients.get(url);
   if (!existing) {
     // `onread: false` keeps one read path everywhere: Neon over TLS never uses that mode, and msw in tests breaks it.
-    existing = postgres(url, { onread: false });
+    // `idle_timeout` closes a connection nothing has used for that many seconds, so an idle instance holds none open against the host.
+    existing = postgres(url, { onread: false, idle_timeout: IDLE_TIMEOUT_SECONDS });
     clients.set(url, existing);
   }
   return existing;

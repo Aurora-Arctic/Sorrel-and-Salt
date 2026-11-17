@@ -7,11 +7,13 @@ import type {
 import { cardCategoryReader } from '@/components/CategoryChips/card-categories';
 import type { CardCategory } from '@/components/IngredientCard/types';
 import type { SafetyVariant } from '@/components/SafetyNote/types';
+import { cachedCompendiumRead } from '@/lib/compendium-cache';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { orMissing } from '@/lib/or-not-found';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { DEFAULT_PAGE_SIZE, allPages } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/types';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 import {
@@ -22,6 +24,7 @@ import {
   countCompendiumHeldIn,
   getIngredient,
   listCompendium,
+  listCompendiumCards,
   listCompendiumHeldIn,
   readCompendiumEntry,
   readCompendiumReview,
@@ -42,9 +45,8 @@ import type { IngredientDetail, IngredientKey } from '@/modules/ingredients';
 import type { CovenMembership } from '@/modules/coven';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
-// The reads the admin's compendium table and the public cards share: sessionless service reads held in
-// the data cache under the `compendium` tag, wrapped in React's `cache` for one read per request. Only
-// the review filter takes the viewer, which the service lets a curator alone ask for.
+// Sessionless service reads held in the data cache under the `compendium` tag, wrapped in React's `cache`
+// for one read per request.
 
 // The page and GraphQL's `compendium` end at the same service, paged by the same helper (rules 1 and
 // 8). Keyed by primitives rather than a filter object: the filter as the parameter table's variables
@@ -55,18 +57,73 @@ export const readCompendium = cache(
     after: string | undefined,
     before: string | undefined,
     size: number = DEFAULT_PAGE_SIZE,
-    viewer: Session | null = null,
-  ) => {
-    // Written by the page from its parameter table, and checked again by the service.
-    const filter: Parameters<typeof listCompendium>[0] = JSON.parse(variables);
-    const page = await readNumberedPage(
+  ) => cachedCards(variables, after, before, size),
+);
+
+/**
+ * The same page for a curator, whole rows: the table reads what the cards do not (who last edited), and a curator's
+ * read can differ from everyone's (the review filter), so it is never held.
+ */
+export const readCompendiumAsCurator = cache(
+  async (
+    variables: string,
+    after: string | undefined,
+    before: string | undefined,
+    size: number,
+    viewer: Session,
+  ) =>
+    readFilteredPage(
+      variables,
       { after, before },
-      (request) => listCompendium(filter, request, viewer),
-      (start) => countCompendium(filter, start, viewer),
       size,
-    );
-    return withForms(page);
-  },
+      (filter, request) => listCompendium(filter, request, viewer),
+      (filter, start) => countCompendium(filter, start, viewer),
+    ),
+);
+
+// The page with each entry's forms and icons: the services' own caches hold the list and its count, and
+// this holds the form and group batches that complete a card, which the page would otherwise read from
+// Postgres on every render (claude-docs/db/compendium-cache.md, "What is cached").
+async function readCards(
+  variables: string,
+  after: string | undefined,
+  before: string | undefined,
+  size: number,
+) {
+  return readFilteredPage(
+    variables,
+    { after, before },
+    size,
+    (filter, request) => listCompendiumCards(filter, request),
+    (filter, start) => countCompendium(filter, start),
+  );
+}
+
+type CompendiumFilter = Parameters<typeof listCompendium>[0];
+
+// The numbered page of one filter, with its forms. The filter is written by the page from its parameter
+// table, and checked again by the service.
+async function readFilteredPage<T extends { id: string }, Edge extends object = {}>(
+  variables: string,
+  request: { after: string | undefined; before: string | undefined },
+  size: number,
+  list: (filter: CompendiumFilter, request: PageRequest) => Promise<PageEntry<T, Edge>[]>,
+  count: (filter: CompendiumFilter, start: Cursor | undefined) => Promise<PageCount>,
+) {
+  const filter: CompendiumFilter = JSON.parse(variables);
+  const page = await readNumberedPage(
+    request,
+    (r) => list(filter, r),
+    (start) => count(filter, start),
+    size,
+  );
+  return withForms(page);
+}
+
+const cachedCards = cachedCompendiumRead(
+  'compendium-cards',
+  (variables: string, after: string | undefined, before: string | undefined, size: number) =>
+    readCards(variables, after, before, size),
 );
 
 /**
@@ -151,24 +208,29 @@ async function withForms<Page extends { edges: readonly { node: { id: string } }
  * page, as 84 seeded forms exceed `MAX_PAGE_SIZE`; where two forms share a name, the first's icon
  * stands. A form with no icon or a retired group draws the generic.
  */
-export const readFormIcons = cache(async (): Promise<Map<string, FormGroupIcon>> => {
-  const forms = await allPages((page) => listIngredientFormValues({}, page));
-  const groups = await formGroupsOf([...new Set(forms.map(({ groupId }) => groupId))]);
-  const iconOfGroup = new Map(
-    groups.flatMap((group) =>
-      group instanceof Error || !group.icon ? [] : [[group.id, group.icon]],
-    ),
-  );
-  const icons = new Map<string, FormGroupIcon>();
-  for (const { name, groupId } of forms) {
-    const icon = iconOfGroup.get(groupId);
-    const folded = name.toLocaleLowerCase();
-    if (icon && !icons.has(folded)) icons.set(folded, icon);
-  }
-  return icons;
-});
+const cachedFormIcons = cachedCompendiumRead(
+  'compendium-form-icons',
+  async (): Promise<Map<string, FormGroupIcon>> => {
+    const forms = await allPages((page) => listIngredientFormValues({}, page));
+    const groups = await formGroupsOf([...new Set(forms.map(({ groupId }) => groupId))]);
+    const iconOfGroup = new Map(
+      groups.flatMap((group) =>
+        group instanceof Error || !group.icon ? [] : [[group.id, group.icon]],
+      ),
+    );
+    const icons = new Map<string, FormGroupIcon>();
+    for (const { name, groupId } of forms) {
+      const icon = iconOfGroup.get(groupId);
+      const folded = name.toLocaleLowerCase();
+      if (icon && !icons.has(folded)) icons.set(folded, icon);
+    }
+    return icons;
+  },
+);
 
-export const readDeities = cache(async () => {
+export const readFormIcons = cache(() => cachedFormIcons());
+
+const cachedDeities = cachedCompendiumRead('compendium-deity-choices', async () => {
   const [rows, traditions] = await Promise.all([
     allPages((page) => listDeities({}, page)),
     allPages((page) => listDeityTraditions(page)),
@@ -181,28 +243,35 @@ export const readDeities = cache(async () => {
   });
 });
 
-export const readCategories = cache(async (): Promise<CompendiumCategoryChoice[]> => {
-  const rows = await allPages((page) => listCategories({}, page));
-  const groups = await categoryGroupsOf([...new Set(rows.map(({ groupId }) => groupId))]);
-  const byId = new Map(
-    groups.flatMap((group) => (group instanceof Error ? [] : [[group.id, group]])),
-  );
-  return rows.flatMap(({ id, slug, name, description, groupId }) => {
-    const group = byId.get(groupId);
-    // A category lists only under a live group, so this is a race with a delete.
-    if (!group) return [];
-    const { colorDark, colorLight } = group;
-    return [
-      {
-        id,
-        slug,
-        name,
-        description,
-        group: { id: group.id, name: group.name, colorDark, colorLight },
-      },
-    ];
-  });
-});
+export const readDeities = cache(() => cachedDeities());
+
+const cachedCategories = cachedCompendiumRead(
+  'compendium-category-choices',
+  async (): Promise<CompendiumCategoryChoice[]> => {
+    const rows = await allPages((page) => listCategories({}, page));
+    const groups = await categoryGroupsOf([...new Set(rows.map(({ groupId }) => groupId))]);
+    const byId = new Map(
+      groups.flatMap((group) => (group instanceof Error ? [] : [[group.id, group]])),
+    );
+    return rows.flatMap(({ id, slug, name, description, groupId }) => {
+      const group = byId.get(groupId);
+      // A category lists only under a live group, so this is a race with a delete.
+      if (!group) return [];
+      const { colorDark, colorLight } = group;
+      return [
+        {
+          id,
+          slug,
+          name,
+          description,
+          group: { id: group.id, name: group.name, colorDark, colorLight },
+        },
+      ];
+    });
+  },
+);
+
+export const readCategories = cache(() => cachedCategories());
 
 // How many entries each filter's choices would list, for the filter as the address holds it:
 // public, like the list, and keyed by the same JSON of variables so a second render in the request
@@ -218,6 +287,18 @@ export const readFacetsHeldIn = cache(async (session: Session, variables: string
   return compendiumFacetsHeldIn(session, covens, filter);
 });
 
+// A compendium page's card chips, by entry. An error answer is thrown inside so a refusal is never held.
+const cachedCardCategories = cachedCompendiumRead(
+  'compendium-card-categories',
+  async (refs: readonly IngredientKey[]) => {
+    const answers = await cardCategoriesOf(null, refs);
+    return answers.map((answer) => {
+      if (answer instanceof Error) throw answer;
+      return answer;
+    });
+  },
+);
+
 /**
  * The categories each of a page's entries shows as a card's chips, with group colours: its own, then those only its live
  * forms carry, each beside those forms as the screen names them. One batch for the page. A category whose group is gone is left out. A ref naming a coven the session
@@ -229,7 +310,8 @@ export async function readCardCategoriesOf(
   heldBy?: CovenMembership['membership'],
 ): Promise<CardCategory[][]> {
   const [answers, known] = await Promise.all([
-    cardCategoriesOf(session, refs, heldBy),
+    // Held only for the public cards: no viewer and no coven's cupboard in the read.
+    session || heldBy ? cardCategoriesOf(session, refs, heldBy) : cachedCardCategories(refs),
     readCategories(),
   ]);
   const read = cardCategoryReader(known);
