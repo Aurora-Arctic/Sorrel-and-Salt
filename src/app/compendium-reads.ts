@@ -23,6 +23,7 @@ import {
   countCompendiumHeldIn,
   getIngredient,
   listCompendium,
+  listCompendiumCards,
   listCompendiumHeldIn,
   readCompendiumEntry,
   readCompendiumReview,
@@ -56,39 +57,57 @@ export const readCompendium = cache(
     after: string | undefined,
     before: string | undefined,
     size: number = DEFAULT_PAGE_SIZE,
-    viewer: Session | null = null,
+  ) => cachedCards(variables, after, before, size),
+);
+
+/**
+ * The same page for a curator, whole rows: the table reads what the cards do not (who last edited), and a curator's
+ * read can differ from everyone's (the review filter), so it is never held.
+ */
+export const readCompendiumAsCurator = cache(
+  async (
+    variables: string,
+    after: string | undefined,
+    before: string | undefined,
+    size: number,
+    viewer: Session,
   ) => {
-    // A curator's read can differ from everyone's (the review filter), so only the viewerless read is held.
-    if (!viewer) return cachedCards(variables, after, before, size);
-    return readCards(variables, after, before, size, viewer);
+    // Written by the page from its parameter table, and checked again by the service.
+    const filter: Parameters<typeof listCompendium>[0] = JSON.parse(variables);
+    const page = await readNumberedPage(
+      { after, before },
+      (request) => listCompendium(filter, request, viewer),
+      (start) => countCompendium(filter, start, viewer),
+      size,
+    );
+    return withForms(page);
   },
 );
 
+// The page with each entry's forms and icons: the services' own caches hold the list and its count, and
+// this holds the form and group batches that complete a card, which the page would otherwise read from
+// Postgres on every render (claude-docs/db/compendium-cache.md, "What is cached").
 async function readCards(
   variables: string,
   after: string | undefined,
   before: string | undefined,
   size: number,
-  viewer: Session | null,
 ) {
   // Written by the page from its parameter table, and checked again by the service.
-  const filter: Parameters<typeof listCompendium>[0] = JSON.parse(variables);
+  const filter: Parameters<typeof listCompendiumCards>[0] = JSON.parse(variables);
   const page = await readNumberedPage(
     { after, before },
-    (request) => listCompendium(filter, request, viewer),
-    (start) => countCompendium(filter, start, viewer),
+    (request) => listCompendiumCards(filter, request),
+    (start) => countCompendium(filter, start),
     size,
   );
   return withForms(page);
 }
 
-// The page with each entry's forms and icons: the services' own caches hold the list and its count, and
-// this holds the form and group batches that complete a card, which the page would otherwise read from
-// Postgres on every render (claude-docs/db/compendium-cache.md, "What is cached").
 const cachedCards = cachedCompendiumRead(
   'compendium-cards',
   (variables: string, after: string | undefined, before: string | undefined, size: number) =>
-    readCards(variables, after, before, size, null),
+    readCards(variables, after, before, size),
 );
 
 /**

@@ -31,7 +31,7 @@ import { requireCuratorSession } from '@/lib/request-session';
 import {
   readCardCategories,
   readCategories,
-  readCompendium,
+  readCompendiumAsCurator,
   readDeities,
   readFacets,
   readFormIcons,
@@ -73,7 +73,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
 
   const entrySlug = single(params.entry);
   const [page, counts, formIcons, { edited, missing }, shown] = await Promise.all([
-    readCompendium(pageVariables, after, before, DEFAULT_PAGE_SIZE, session),
+    readCompendiumAsCurator(pageVariables, after, before, DEFAULT_PAGE_SIZE, session),
     readFacets(variables, session),
     readFormIcons(),
     readEditPlace(place, (slug) => readCompendiumEntry(slug, session)),

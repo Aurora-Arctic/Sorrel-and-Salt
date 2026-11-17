@@ -21,3 +21,15 @@ export function readColumns(table: PgTable): Record<string, PgColumn> {
   if (!unread) return columns;
   return Object.fromEntries(Object.entries(columns).filter(([name]) => !unread.has(name)));
 }
+
+/** `table`’s read columns, only those `names` lists. A name that is not a read column throws, so a rename cannot quietly drop a field. */
+export function pickColumns(table: PgTable, names: readonly string[]): Record<string, PgColumn> {
+  const read = readColumns(table);
+  return Object.fromEntries(
+    names.map((name) => {
+      const column = read[name];
+      if (!column) throw new Error(`No readable column '${name}' to project`);
+      return [name, column];
+    }),
+  );
+}

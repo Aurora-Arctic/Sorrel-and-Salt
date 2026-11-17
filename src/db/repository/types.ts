@@ -124,7 +124,17 @@ export interface Keyset<Carried extends object = {}> extends KeyOrder {
   request: PageRequest;
   /** Each is read as the driver returns it: a `mapWith` on one is dropped. */
   carry?: { [K in keyof Carried]: SQL<Carried[K]> };
+  /** The row’s columns to read, by property name; none reads every column a finder reads (`unread-columns.ts`). */
+  columns?: readonly string[];
 }
+
+/** A read of a table’s named columns alone, for a caller whose rows are wide and whose use of them is narrow. */
+export interface Projected<Column extends string> {
+  columns: readonly Column[];
+}
+
+/** A column of `TTable`’s row, by property name. */
+export type ColumnOf<TTable extends PgTable> = keyof ReadRow<TTable> & string;
 
 export type ListOrder<Carried extends object = {}> = Omit<Keyset<Carried>, 'id' | 'request'>;
 

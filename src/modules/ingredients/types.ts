@@ -1,3 +1,4 @@
+import type { COMPENDIUM_CARD_COLUMNS } from './services/compendium';
 import type { z } from 'zod';
 import type {
   CompendiumFacets,
@@ -40,6 +41,9 @@ export type {
 export type { CategoryRow };
 
 /** An ingredient as its children's loaders key it; `workspaceId` picks the proof to ask for and is never the scope, so a key claiming the wrong tier gets nothing. */
+/** An entry as the public list’s cards read it: `COMPENDIUM_CARD_COLUMNS` of the row. */
+export type CompendiumCardRow = Pick<IngredientRow, (typeof COMPENDIUM_CARD_COLUMNS)[number]>;
+
 export type IngredientKey = Pick<IngredientRow, 'id' | 'workspaceId'>;
 
 /** One live form of an ingredient as `Ingredient.variants` reads it: the row and the tier it was read under, which its children's loaders need to pick a proof. */

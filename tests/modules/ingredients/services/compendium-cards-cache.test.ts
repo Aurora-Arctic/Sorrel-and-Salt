@@ -3,6 +3,7 @@ import type postgres from 'postgres';
 import { revalidateTag } from 'next/cache';
 import { readCardCategories, readCategories, readCompendium } from '@/app/compendium-reads';
 import { COMPENDIUM_TAG } from '@/lib/compendium-cache';
+import { COMPENDIUM_CARD_COLUMNS } from '@/modules/ingredients';
 import { A } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -71,5 +72,19 @@ describe('the compendium page reads around its list are cached under the compend
 
     expect((await readCategories())[0].group.name).toBe(first.group.name);
     expect(await readCardCategories([id])).toEqual(chips);
+  });
+});
+
+describe('the cards page holds only the columns a card reads', () => {
+  it('reads each entry as the card columns alone, not the whole row', async () => {
+    await seed();
+
+    const page = await readCompendium('{}', undefined, undefined, 26);
+
+    // The precondition: the whole row has far more columns than the card's.
+    const [{ count }] = await sql<{ count: number }[]>`
+      select count(*)::int as count from information_schema.columns where table_name = 'ingredients'`;
+    expect(count).toBeGreaterThan(COMPENDIUM_CARD_COLUMNS.length);
+    expect(Object.keys(page.edges[0].node).sort()).toEqual([...COMPENDIUM_CARD_COLUMNS].sort());
   });
 });

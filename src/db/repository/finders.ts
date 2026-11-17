@@ -7,12 +7,15 @@ import { notSoftDeleted, readableInTiers, scopedTo } from './predicates';
 import { pageBounds, selectFrom, whenIds } from './select';
 import { inReadableSpell, readableSpells } from './spells';
 import type {
+  ColumnOf,
   Identified,
   Keyset,
   NotIngredientScoped,
   NotSpellScoped,
   NotVisibilityScoped,
   PageOrder,
+  Projected,
+  ListOrder,
   Slugged,
   SortPart,
   SpellScoped,
@@ -123,6 +126,27 @@ export function findPageInWorkspace<
  * The same across the tiers `memberships` may read; no proofs pages the compendium alone. Inside the folder only: a
  * two-tier list is the repository's to build, so its finders call this and a service calls them.
  */
+export function findPageInTiers<
+  TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
+  Carried extends object,
+  Column extends ColumnOf<TTable>,
+>(
+  memberships: readonly Membership[],
+  table: TTable,
+  order: ListOrder<Carried> & Projected<Column>,
+  page: PageRequest,
+  where?: SQL,
+): Promise<PageEntry<Pick<ReadRow<TTable>, Column>, Carried>[]>;
+export function findPageInTiers<
+  TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
+  Carried extends object,
+>(
+  memberships: readonly Membership[],
+  table: TTable,
+  order: PageOrder<Carried>,
+  page: PageRequest,
+  where?: SQL,
+): Promise<PageEntry<ReadRow<TTable>, Carried>[]>;
 export function findPageInTiers<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
   Carried extends object,

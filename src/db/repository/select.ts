@@ -20,7 +20,7 @@ import { InvalidCursor } from '../../lib/errors';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { notSoftDeleted } from './predicates';
 import { currentWriteTransaction } from './unit-of-work';
-import { hidesColumns, readColumns } from './unread-columns';
+import { hidesColumns, pickColumns, readColumns } from './unread-columns';
 import type {
   Aggregate,
   Derived,
@@ -28,8 +28,10 @@ import type {
   KeyOrder,
   Keyset,
   KeysetCount,
+  ColumnOf,
   LeftJoin,
   Locked,
+  Projected,
   Similarity,
   SortColumn,
   SortPart,
@@ -64,6 +66,20 @@ export function selectFrom<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
 ): Promise<ReadRow<TTable>[]>;
+export function selectFrom<TTable extends PgTable, Column extends ColumnOf<TTable>>(
+  table: TTable,
+  where: SQL | undefined,
+  projection: Projected<Column>,
+): Promise<Pick<ReadRow<TTable>, Column>[]>;
+export function selectFrom<
+  TTable extends PgTable,
+  Carried extends object,
+  Column extends ColumnOf<TTable>,
+>(
+  table: TTable,
+  where: SQL | undefined,
+  keyset: Keyset<Carried> & Projected<Column>,
+): Promise<PageEntry<Pick<ReadRow<TTable>, Column>, Carried>[]>;
 export function selectFrom<TTable extends PgTable, Carried extends object>(
   table: TTable,
   where: SQL | undefined,
@@ -104,6 +120,7 @@ export async function selectFrom(
   where: SQL | undefined,
   order?:
     | Keyset<object>
+    | Projected<string>
     | Similarity
     | KeysetCount
     | LeftJoin<PgTable>
@@ -114,6 +131,7 @@ export async function selectFrom(
   const tally = order && 'count' in order ? order : undefined;
   const joined = order && 'leftJoin' in order ? order : undefined;
   const aggregated = order && 'aggregate' in order ? order : undefined;
+  const projected = order && !keyset && 'columns' in order ? order.columns : undefined;
   const keyed = keyset ?? tally?.count ?? aggregated?.over;
   // A table is read whole, and a page adds its key, each part as Postgres prints it: a `timestamptz` read into a Date
   // loses microseconds and its cursor would replay rows. A count, tally, left join, derived relation and a table with
@@ -128,7 +146,9 @@ export async function selectFrom(
             : keyset
               ? {
                   ...carried(keyset.carry),
-                  row: readColumns(relation),
+                  row: keyset.columns
+                    ? pickColumns(relation, keyset.columns)
+                    : readColumns(relation),
                   key: sql<string[]>`array[${sql.join(
                     keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
                     sql`, `,
@@ -141,9 +161,11 @@ export async function selectFrom(
                 }
               : joined
                 ? { row: readColumns(relation), joined: readColumns(joined.leftJoin) }
-                : hidesColumns(relation)
-                  ? readColumns(relation)
-                  : undefined,
+                : projected
+                  ? pickColumns(relation, projected)
+                  : hidesColumns(relation)
+                    ? readColumns(relation)
+                    : undefined,
       ]
     : [relation.source, relation.fields];
   // Same cast as `write.ts`'s `writerFor`: `.from()` is typed against the table's own
