@@ -160,7 +160,7 @@ describe('every staff help page runs the curation guard before it reads', () => 
 });
 
 describe('/help/staff', () => {
-  it("lists the reader's top-level staff and keeper articles under /help/staff and their FAQ entries, and no public row", async () => {
+  it("lists the reader's top-level staff and keeper articles under /help/staff and their FAQ entries", async () => {
     requireCuratorSession.mockResolvedValue(KEEPER);
     listStaffHelpArticles.mockResolvedValue(
       entries([
@@ -168,10 +168,8 @@ describe('/help/staff', () => {
         row('testwort-keeper-duties', { audience: 'keeper' }),
         row('testwort-staff-grove', { kind: 'guide' }),
         row('testwort-forms', { parentSlug: 'testwort-vocabularies' }),
-        row('testwort-public-guide', { audience: 'public' }),
         row('testwort-staff-question', { kind: 'faq', body: 'The **staff** answer.' }),
         row('testwort-keeper-question', { kind: 'faq', audience: 'keeper' }),
-        row('testwort-public-question', { kind: 'faq', audience: 'public' }),
         row('testwort-staff-word', { kind: 'term' }),
       ]),
     );
@@ -179,10 +177,6 @@ describe('/help/staff', () => {
 
     render((await Page()) as React.ReactElement);
 
-    expect(listStaffHelpArticles).toHaveBeenCalledWith(
-      KEEPER,
-      expect.objectContaining({ limit: expect.any(Number) }),
-    );
     const links = linkHrefs();
     expect(links).toEqual(
       expect.arrayContaining([
@@ -191,19 +185,43 @@ describe('/help/staff', () => {
         '/help/staff/testwort-staff-grove',
       ]),
     );
-    // A public row is linked only at its public address, so the staff index leaves it out; a sub page is reached
-    // from its parent.
-    expect(links).not.toContain('/help/staff/testwort-public-guide');
-    expect(links).not.toContain('/help/testwort-public-guide');
+    // A sub page is reached from its parent.
     expect(links).not.toContain('/help/staff/testwort-forms');
     expect(links).not.toContain('/help/staff/testwort-vocabularies/testwort-forms');
     // A staff FAQ entry's address is /help/staff#slug (src/lib/help-paths.ts), so the index anchors each one the
-    // reader reaches, with its answer as Markdown; a public entry lives on /help.
+    // reader reaches, with its answer as Markdown.
     expect(document.getElementById('testwort-staff-question')).not.toBeNull();
     expect(document.getElementById('testwort-keeper-question')).not.toBeNull();
-    expect(document.getElementById('testwort-public-question')).toBeNull();
     expect(screen.getByText('staff', { selector: 'strong' })).toBeInTheDocument();
     expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveAttribute('name', 'q');
+  });
+
+  // The read leaves the public rows out in SQL, so the row cap counts staff and keeper rows only; a filter in the
+  // page would apply after the cap, where public rows ranked first could crowd them out.
+  it('asks for the read without public rows, and draws every row that read answers', async () => {
+    requireCuratorSession.mockResolvedValue(KEEPER);
+    listStaffHelpArticles.mockResolvedValue(
+      entries([
+        row('testwort-vocabularies'),
+        row('testwort-public-guide', { audience: 'public' }),
+        row('testwort-public-question', { kind: 'faq', audience: 'public' }),
+      ]),
+    );
+    const { default: Page } = await loadIndex();
+
+    render((await Page()) as React.ReactElement);
+
+    expect(listStaffHelpArticles).toHaveBeenCalledTimes(1);
+    expect(listStaffHelpArticles).toHaveBeenCalledWith(
+      KEEPER,
+      expect.objectContaining({ limit: expect.any(Number), inverted: false }),
+      { withPublic: false },
+    );
+    // Nothing the read answers is dropped by the page: a row's audience is the read's business.
+    expect(linkHrefs()).toEqual(
+      expect.arrayContaining(['/help/staff/testwort-vocabularies', '/help/testwort-public-guide']),
+    );
+    expect(document.getElementById('testwort-public-question')).not.toBeNull();
   });
 });
 
