@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
@@ -15,7 +15,6 @@ import { seedSources } from '@/db/seed/sources';
 import { seedCompendium } from '@/db/seed/compendium';
 import { seedDocuments } from '@/db/seed/documents';
 import { seedHelp } from '@/db/seed/help';
-import { loadCompendium } from '@/db/seed/compendium/load';
 import type { SeedDatabase } from '@/db/seed/types';
 import { fixtureFiles } from './compendium/files-fixture';
 import type { SeedEntry, UserRow } from './types';
@@ -77,13 +76,13 @@ beforeAll(async () => {
     ).map((row) => row.table_name),
   );
 
-  // Records, per inserted row, what `app.current_user_id` held inside the inserting transaction; it is transaction-local and gone by the time a test could read it.
-  await sql`create table ${sql(PROBE)} (table_name text not null, acting_user text)`;
+  // Records, per inserted row in order, its id and what `app.current_user_id` held inside the inserting transaction; it is transaction-local and gone by the time a test could read it.
+  await sql`create table ${sql(PROBE)} (seq bigserial, table_name text not null, row_id text, acting_user text)`;
   await sql.unsafe(`
     create function ${PROBE}() returns trigger language plpgsql as $$
     begin
-      insert into ${PROBE} (table_name, acting_user)
-      values (tg_table_name, current_setting('app.current_user_id', true));
+      insert into ${PROBE} (table_name, row_id, acting_user)
+      values (tg_table_name, to_jsonb(new) ->> 'id', current_setting('app.current_user_id', true));
       return new;
     end
     $$
@@ -212,123 +211,107 @@ const SEED_ENTRIES: SeedEntry[] = (
   },
 }));
 
-describe('the shape every seed shares', () => {
-  beforeEach(async () => {
+// One truncate per seed; its four steps run in order on what the step before left: a dry run, the real run and fill, a second run, then a second run over a tombstone.
+describe.each(SEED_ENTRIES)('the shape every seed shares: $name', (entry) => {
+  const { prepare, seed: seedOf, fillSeed, run, tables: own } = entry;
+  let beforeDryRun: Record<string, string[]>;
+
+  beforeAll(async () => {
     await truncateAllTables(sql);
   });
 
-  // Precondition of the compendium entry: an empty list would pass every sweep below by writing nothing.
-  it('runs the compendium seed over files that hold approved entries', () => {
-    const { files } = loadCompendium();
-    expect(files.filter((file) => file.status === 'approved').length).toBeGreaterThan(0);
+  it('writes nothing on a dry run, anywhere', async () => {
+    // Precondition: the truncated clone really starts empty, so the rows the next step reads are its own.
+    for (const table of ['users', ...own]) expect(await countOf(table), table).toBe(0);
+    await prepare?.(db);
+    beforeDryRun = await snapshot();
+    const inserts = await countOf(PROBE);
+
+    await seedOf(db, { dryRun: true });
+
+    expect(await snapshot()).toEqual(beforeDryRun);
+    expect(await countOf(PROBE), 'no insert outlived the dry run').toBe(inserts);
   });
 
-  it.each(SEED_ENTRIES)(
-    '$name fills its tables from empty as the bootstrap user: a plain user, the stamp on every row, the acting user of every insert',
-    async ({ prepare, seed: seedOf, fillSeed, tables: own }) => {
-      // Precondition: the truncated clone really starts empty, so these rows are this run's.
-      for (const table of ['users', ...own]) expect(await countOf(table), table).toBe(0);
+  it('fills its tables from empty as the bootstrap user: a plain user, the stamp on every row, the acting user of every insert', async () => {
+    await seedOf(db);
+    // Precondition of the dry run: the same run without --dry-run writes, so an unchanged
+    // database was the dry run's doing and not an empty seed's.
+    expect(await snapshot()).not.toEqual(beforeDryRun);
+    await fillSeed?.(db);
 
-      await prepare?.(db);
-      await (fillSeed ?? seedOf)(db);
+    const [system] = (await allUsers()).filter((u) => u.id === BOOTSTRAP_USER_ID);
+    expect(system).toMatchObject({ email: 'admin@seed.sorrelandsalt.com', role: 'user' });
 
-      const [system] = (await allUsers()).filter((u) => u.id === BOOTSTRAP_USER_ID);
-      expect(system).toMatchObject({ email: 'admin@seed.sorrelandsalt.com', role: 'user' });
-
-      for (const table of own) {
-        const rows = await sql.unsafe<{ row: Record<string, unknown> }[]>(
-          `select to_jsonb(t) as row from "${table}" t`,
-        );
-        expect(rows.length, table).toBeGreaterThan(0);
-        for (const { row } of rows) {
-          expect(row.created_by, table).toBe(BOOTSTRAP_USER_ID);
-          expect(row.updated_by, table).toBe(BOOTSTRAP_USER_ID);
-          expect(row.deleted_at ?? null, table).toBeNull();
-        }
+    for (const table of own) {
+      const rows = await sql.unsafe<{ row: Record<string, unknown> }[]>(
+        `select to_jsonb(t) as row from "${table}" t`,
+      );
+      expect(rows.length, table).toBeGreaterThan(0);
+      for (const { row } of rows) {
+        expect(row.created_by, table).toBe(BOOTSTRAP_USER_ID);
+        expect(row.updated_by, table).toBe(BOOTSTRAP_USER_ID);
+        expect(row.deleted_at ?? null, table).toBeNull();
       }
+    }
 
-      const inserts = await sql<{ table_name: string; acting_user: string | null }[]>`
-        select table_name, acting_user from ${sql(PROBE)}
-      `;
-      // Precondition: the probe saw this seed's own rows, not only the bootstrap user's.
-      const seen = new Set(inserts.map((row) => row.table_name));
-      for (const table of ['users', ...own]) expect(seen.has(table), table).toBe(true);
-      expect(inserts.filter((row) => row.acting_user !== BOOTSTRAP_USER_ID)).toEqual([]);
-    },
-  );
+    const inserts = await sql<{ table_name: string; acting_user: string | null }[]>`
+      select table_name, acting_user from ${sql(PROBE)}
+    `;
+    // Precondition: the probe saw this seed's own rows, not only the bootstrap user's.
+    const seen = new Set(inserts.map((row) => row.table_name));
+    for (const table of ['users', ...own]) expect(seen.has(table), table).toBe(true);
+    expect(inserts.filter((row) => row.acting_user !== BOOTSTRAP_USER_ID)).toEqual([]);
+  });
 
   // Idempotent rather than truncate-first: every table byte for byte, and no
   // trip on a unique index.
-  it.each(SEED_ENTRIES)(
-    '$name is idempotent: a second run adds nothing and moves nothing, anywhere',
-    async ({ run }) => {
-      await run(db);
-      const before = await snapshot();
-      const inserts = await countOf(PROBE);
-      // Precondition: the first run wrote rows for the second to leave alone.
-      expect(inserts).toBeGreaterThan(0);
+  it('is idempotent: a second run adds nothing and moves nothing, anywhere', async () => {
+    const before = await snapshot();
+    const inserts = await countOf(PROBE);
+    // Precondition: the first run wrote rows for the second to leave alone.
+    expect(inserts).toBeGreaterThan(0);
 
-      await expect(run(db)).resolves.toBeUndefined();
+    await expect(run(db)).resolves.toBeUndefined();
 
-      expect(await snapshot()).toEqual(before);
-      expect(await countOf(PROBE), 'no second insert reached any table').toBe(inserts);
-    },
-  );
+    expect(await snapshot()).toEqual(before);
+    expect(await countOf(PROBE), 'no second insert reached any table').toBe(inserts);
+  });
 
   // Keyed on identity, ignoring `deleted_at`: the partial unique indexes stop
   // only a second live row, and would let the tombstoned one's twin through.
-  it.each(SEED_ENTRIES)(
-    '$name does not resurrect a row a keeper has since deleted, in any of its tables',
-    async ({ run, tables: own }) => {
-      await run(db);
+  it('does not resurrect a row a keeper has since deleted, in any of its tables', async () => {
+    const deletable = own.filter((table) => tombstoned.has(table));
+    // Precondition: there is a tombstone to leave, so an empty loop proves nothing.
+    expect(deletable.length).toBeGreaterThan(0);
+    // A seed revives a row its own identity deleted (the help seed retires and revives its own rows), so the
+    // deleter is a person, a different user from the seed's own.
+    const keeper = '00000000-0000-4000-8000-0000000000a1';
+    await sql`
+      insert into users (id, name, email, created_by, updated_by)
+      values (${keeper}, 'Testwort Keeper', 'keeper@example.test', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})`;
+    for (const table of deletable) {
+      // The victim is the first row the table received, which `run` writes again; a row only the fill wrote
+      // would never be offered back. The bootstrap user is every seed's own identity, written back by design.
+      const [victim] = await sql<{ row_id: string }[]>`
+        select row_id from ${sql(PROBE)}
+        where table_name = ${table} and row_id not in (${BOOTSTRAP_USER_ID}, ${keeper})
+        order by seq limit 1
+      `;
+      const deleted = await sql.unsafe(
+        `update "${table}" set deleted_at = now(), deleted_by = $1 where id::text = $2`,
+        [keeper, victim.row_id],
+      );
+      expect(deleted.count, table).toBe(1);
+    }
+    const before = new Map<string, number>();
+    for (const table of deletable) before.set(table, await countOf(table));
 
-      const deletable = own.filter((table) => tombstoned.has(table));
-      // Precondition: there is a tombstone to leave, so an empty loop proves nothing.
-      expect(deletable.length).toBeGreaterThan(0);
-      // A seed revives a row its own identity deleted (the help seed retires and revives its own rows), so the
-      // deleter is a person, a different user from the seed's own.
-      const keeper = '00000000-0000-4000-8000-0000000000a1';
-      await sql`
-        insert into users (id, name, email, created_by, updated_by)
-        values (${keeper}, 'Testwort Keeper', 'keeper@example.test', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})`;
-      for (const table of deletable) {
-        // The bootstrap user is every seed's own identity, written back by
-        // design; the victim is any other row, bar the keeper just added.
-        const victim =
-          table === 'users' ? `where id not in ('${BOOTSTRAP_USER_ID}', '${keeper}')` : '';
-        const deleted = await sql.unsafe(`
-          update "${table}" set deleted_at = now(), deleted_by = '${keeper}'
-          where ctid = (select ctid from "${table}" ${victim} limit 1)
-        `);
-        expect(deleted.count, table).toBe(1);
-      }
-      const before = new Map<string, number>();
-      for (const table of deletable) before.set(table, await countOf(table));
+    await run(db);
 
-      await run(db);
-
-      for (const table of deletable) {
-        expect(await countOf(table), `${table} gained a row`).toBe(before.get(table));
-        expect(await countOf(table, 'where deleted_at is not null'), table).toBe(1);
-      }
-    },
-  );
-  it.each(SEED_ENTRIES)(
-    '$name writes nothing on a dry run, anywhere',
-    async ({ prepare, seed: seedOf }) => {
-      await prepare?.(db);
-      const before = await snapshot();
-      const inserts = await countOf(PROBE);
-
-      await seedOf(db, { dryRun: true });
-
-      expect(await snapshot()).toEqual(before);
-      expect(await countOf(PROBE), 'no insert outlived the dry run').toBe(inserts);
-
-      // Precondition: the same run without --dry-run writes, so an unchanged
-      // database is the dry run's doing and not an empty seed's.
-      await seedOf(db);
-      expect(await snapshot()).not.toEqual(before);
-    },
-  );
+    for (const table of deletable) {
+      expect(await countOf(table), `${table} gained a row`).toBe(before.get(table));
+      expect(await countOf(table, 'where deleted_at is not null'), table).toBe(1);
+    }
+  });
 });

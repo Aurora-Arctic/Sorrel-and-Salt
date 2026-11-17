@@ -58,6 +58,8 @@ jobs:
     permissions:
       contents: read
       packages: read
+      # Asked by playwright.yml for its shards' rows; the build-only run writes none.
+      pull-requests: write
     uses: ./.github/workflows/playwright.yml
     with:
       image: ${{ needs.e2e-image.outputs.image }}

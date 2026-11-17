@@ -74,6 +74,13 @@ inputs:
       other sections are left as the comment has them.
     required: false
     default: ''
+  shard:
+    description: >-
+      With `section`, `<index>/<total>` (e.g. `2/3`): the call writes one shard's
+      sub-row beneath the section's row, with `outcome` and `summary`, and leaves
+      the section's own row, details and log to the end job.
+    required: false
+    default: ''
   reset:
     description: >-
       'true' to start a sectioned comment for this run: every section shows as
@@ -104,6 +111,7 @@ runs:
         DURATION: ${{ inputs.duration }}
         PR_NUMBER: ${{ inputs.pr-number }}
         SECTION: ${{ inputs.section }}
+        SHARD: ${{ inputs.shard }}
         RESET: ${{ inputs.reset }}
         SKIPPED_SECTIONS: ${{ inputs.skipped-sections }}
       with:

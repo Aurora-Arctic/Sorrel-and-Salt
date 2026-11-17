@@ -37,23 +37,30 @@ beforeAll(async () => {
   auth = await importAuth({ ...PROVIDER_CREDENTIALS, BETTER_AUTH_SECRET: OLD_SECRET });
 });
 
+// One account is signed up and enrolled per file, since each sign-up and enrolment pays the real password hash.
+// Its enrolled two-factor row is kept, and each test puts the account back into the state it needs.
+let enrolment: { totpURI: string; backupCodes: string[] };
+let enrolledRow: Record<string, unknown>;
+beforeAll(async () => {
+  const shown = await enrolled(await signedInAccount());
+  enrolment = { totpURI: shown.totpURI, backupCodes: shown.backupCodes };
+  [enrolledRow] = await sql`select * from two_factors where user_id = ${await userId()}`;
+});
+
 beforeEach(async () => {
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
-  await sql`delete from workspace_members where user_id in (${mine})`;
   await sql`delete from sessions where user_id in (${mine})`;
-  await sql`delete from accounts where user_id in (${mine})`;
   await sql`delete from sign_in_failures where user_id in (${mine})`;
-  await sql`delete from users where email like ${`%${DOMAIN}`}`;
   send.mockReset();
 });
 
-async function userId(): Promise<string> {
-  const [row] = await sql`select id from users where email = ${OWNER}`;
+async function userId(email = OWNER): Promise<string> {
+  const [row] = await sql`select id from users where email = ${email}`;
   return (row as { id: string }).id;
 }
 
-async function twoFactorEnabled(): Promise<boolean> {
-  const [row] = await sql`select two_factor_enabled from users where email = ${OWNER}`;
+async function twoFactorEnabled(email = OWNER): Promise<boolean> {
+  const [row] = await sql`select two_factor_enabled from users where email = ${email}`;
   return (row as { two_factor_enabled: boolean }).two_factor_enabled;
 }
 
@@ -63,25 +70,33 @@ async function sessionCount(): Promise<number> {
   return (row as { n: number }).n;
 }
 
-async function signedInAccount(on: AuthInstance = auth): Promise<string> {
-  const signUp = await post(on, '/sign-up/email', {
+async function signUp(email: string) {
+  const response = await post(auth, '/sign-up/email', {
     name: 'Fixture Person',
-    email: OWNER,
+    email,
     password: PASSWORD,
   });
-  expect(signUp.status, await signUp.clone().text()).toBe(200);
-  await asTouch(sql, (tx) => tx`update users set email_verified = true where email = ${OWNER}`);
-  const signIn = await post(on, '/sign-in/email', { email: OWNER, password: PASSWORD });
+  expect(response.status, await response.clone().text()).toBe(200);
+  await asTouch(sql, (tx) => tx`update users set email_verified = true where email = ${email}`);
+}
+
+async function signedInSession(email = OWNER): Promise<string> {
+  const signIn = await post(auth, '/sign-in/email', { email, password: PASSWORD });
   expect(signIn.status).toBe(200);
   return cookieHeader(signIn);
 }
 
-async function enrolled(cookie: string, on: AuthInstance = auth) {
-  const enable = await post(on, '/two-factor/enable', { password: PASSWORD }, cookie);
+async function signedInAccount(): Promise<string> {
+  await signUp(OWNER);
+  return signedInSession();
+}
+
+async function enrolled(cookie: string) {
+  const enable = await post(auth, '/two-factor/enable', { password: PASSWORD }, cookie);
   expect(enable.status, await enable.clone().text()).toBe(200);
   const shown = (await enable.json()) as { totpURI: string; backupCodes: string[] };
   const verify = await post(
-    on,
+    auth,
     '/two-factor/verify-totp',
     { code: await totpCode(shown.totpURI) },
     cookie,
@@ -89,6 +104,22 @@ async function enrolled(cookie: string, on: AuthInstance = auth) {
   expect(verify.status, await verify.clone().text()).toBe(200);
   expect(await twoFactorEnabled()).toBe(true);
   return { ...shown, cookie: cookieHeader(verify) || cookie };
+}
+
+/** The shared account with two-factor off and no two-factor row, signed in. */
+async function notEnrolled(): Promise<string> {
+  await sql`delete from two_factors where user_id = ${await userId()}`;
+  await sql`update users set two_factor_enabled = false where email = ${OWNER}`;
+  return signedInSession();
+}
+
+/** The shared account with its enrolment as made in `beforeAll`: same secret, unspent backup codes, no code lock. */
+async function asEnrolled() {
+  // Signed in before two-factor is back on, as an owner who enrolled from a session would be.
+  const cookie = await notEnrolled();
+  await sql`insert into two_factors ${sql(enrolledRow)}`;
+  await sql`update users set two_factor_enabled = true where email = ${OWNER}`;
+  return { ...enrolment, cookie };
 }
 
 async function passwordStep(on: AuthInstance = auth, device = '') {
@@ -105,7 +136,7 @@ async function signedInAs(cookie: string, on: AuthInstance = auth) {
 
 describe('Story 75: turning two-factor on and off', () => {
   it('refuses to start without the right password', async () => {
-    const cookie = await signedInAccount();
+    const cookie = await notEnrolled();
     const wrong = await post(
       auth,
       '/two-factor/enable',
@@ -119,17 +150,20 @@ describe('Story 75: turning two-factor on and off', () => {
   });
 
   it('refuses an account with no password, so no account with two-factor on is ever without one', async () => {
-    const cookie = await signedInAccount();
-    await sql`delete from accounts where user_id = ${await userId()} and provider_id = 'credential'`;
+    // Its own account, since the test removes the password the shared one keeps.
+    const email = `passwordless${DOMAIN}`;
+    await signUp(email);
+    const cookie = await signedInSession(email);
+    await sql`delete from accounts where user_id = ${await userId(email)} and provider_id = 'credential'`;
     // Precondition: the session still answers, so the refusal is the missing password's.
-    expect(await signedInAs(cookie)).toBe(OWNER);
+    expect(await signedInAs(cookie)).toBe(email);
     const enable = await post(auth, '/two-factor/enable', { password: PASSWORD }, cookie);
     expect(enable.status).toBe(400);
-    expect(await twoFactorEnabled()).toBe(false);
+    expect(await twoFactorEnabled(email)).toBe(false);
   });
 
   it('turns on only once a code from the app is entered, and shows ten backup codes once', async () => {
-    const cookie = await signedInAccount();
+    const cookie = await notEnrolled();
     const enable = await post(auth, '/two-factor/enable', { password: PASSWORD }, cookie);
     expect(enable.status).toBe(200);
     const { totpURI, backupCodes } = (await enable.json()) as {
@@ -165,7 +199,7 @@ describe('Story 75: turning two-factor on and off', () => {
   });
 
   it('turns off only with the right password', async () => {
-    const { cookie } = await enrolled(await signedInAccount());
+    const { cookie } = await asEnrolled();
     const wrong = await post(
       auth,
       '/two-factor/disable',
@@ -183,7 +217,7 @@ describe('Story 75: turning two-factor on and off', () => {
   });
 
   it('turns off only on a fresh session, saying why, even with the right password', async () => {
-    const { cookie } = await enrolled(await signedInAccount());
+    const { cookie } = await asEnrolled();
     await sql`
       update sessions set created_at = now() - interval '25 hours' where user_id = ${await userId()}
     `;
@@ -213,9 +247,8 @@ describe('Story 72: a wrong password at a two-factor endpoint counts as a failed
   }
 
   async function readyFor(path: string): Promise<string> {
-    const cookie = await signedInAccount();
-    if (path === '/two-factor/enable') return cookie;
-    return (await enrolled(cookie)).cookie;
+    if (path === '/two-factor/enable') return notEnrolled();
+    return (await asEnrolled()).cookie;
   }
 
   it.each([
@@ -252,7 +285,7 @@ describe('Story 72: a wrong password at a two-factor endpoint counts as a failed
 
 describe('Story 75: signing in with two-factor on', () => {
   it('does not sign in on the right password alone, and does on the right code', async () => {
-    const { totpURI } = await enrolled(await signedInAccount());
+    const { totpURI } = await asEnrolled();
     await sql`delete from sessions where user_id = ${await userId()}`;
 
     const { body, challenge } = await passwordStep();
@@ -271,7 +304,7 @@ describe('Story 75: signing in with two-factor on', () => {
   });
 
   it('does not sign in on a wrong code', async () => {
-    const { totpURI } = await enrolled(await signedInAccount());
+    const { totpURI } = await asEnrolled();
     await sql`delete from sessions where user_id = ${await userId()}`;
     const { challenge } = await passwordStep();
 
@@ -287,7 +320,7 @@ describe('Story 75: signing in with two-factor on', () => {
   });
 
   it('takes a backup code once', async () => {
-    const { backupCodes } = await enrolled(await signedInAccount());
+    const { backupCodes } = await asEnrolled();
     const first = await passwordStep();
     const used = await post(
       auth,
@@ -317,7 +350,7 @@ describe('Story 75: signing in with two-factor on', () => {
   });
 
   it('skips the code on a trusted device for the trust period, and asks on any other', async () => {
-    const { totpURI } = await enrolled(await signedInAccount());
+    const { totpURI } = await asEnrolled();
     const { challenge } = await passwordStep();
     const trusting = await post(
       auth,
@@ -343,7 +376,7 @@ describe('Story 75: signing in with two-factor on', () => {
   });
 
   it('counts wrong codes towards a lock of their own, which leaves the password count alone', async () => {
-    const { totpURI } = await enrolled(await signedInAccount());
+    const { totpURI } = await asEnrolled();
     await sql`delete from sessions where user_id = ${await userId()}`;
     const wrong = await wrongTotpCode(totpURI);
     // Five tries per challenge, ten a lock: two challenges spend the budget.
@@ -378,8 +411,25 @@ describe('Story 75: signing in with two-factor on', () => {
 });
 
 describe('the secret the two-factor rows are encrypted under', () => {
-  it('still verifies an enrolment made under the old secret once a new one is added', async () => {
-    const { totpURI } = await enrolled(await signedInAccount());
+  it('still verifies an enrolment made under the old secret once a new one is added, and cannot without it', async () => {
+    const { totpURI } = await asEnrolled();
+
+    // Precondition: with the old secret gone the enrolment cannot be read, so the success below is the old key's.
+    const replaced = await importAuth({
+      ...PROVIDER_CREDENTIALS,
+      BETTER_AUTH_SECRET: NEW_SECRET,
+      BETTER_AUTH_SECRETS: `2:${NEW_SECRET}`,
+    });
+    const without = await passwordStep(replaced);
+    const unread = await post(
+      replaced,
+      '/two-factor/verify-totp',
+      { code: await totpCode(totpURI) },
+      without.challenge,
+    );
+    expect(unread.status).not.toBe(200);
+    expect(await signedInAs(cookieHeader(unread) || without.challenge, replaced)).toBeUndefined();
+
     const rotated = await importAuth({
       ...PROVIDER_CREDENTIALS,
       // The old key stays as `BETTER_AUTH_SECRET` too, which still reads any value written before versions existed.
@@ -413,24 +463,6 @@ describe('the secret the two-factor rows are encrypted under', () => {
     expect(enable.status, await enable.clone().text()).toBe(200);
     const [row] = await sql`select secret from two_factors where user_id = ${await userId()}`;
     expect((row as { secret: string }).secret).toMatch(/^\$ba\$2\$/);
-  });
-
-  it('cannot read it once the old secret is gone, so the test above proves the old key was used', async () => {
-    const { totpURI } = await enrolled(await signedInAccount());
-    const replaced = await importAuth({
-      ...PROVIDER_CREDENTIALS,
-      BETTER_AUTH_SECRET: NEW_SECRET,
-      BETTER_AUTH_SECRETS: `2:${NEW_SECRET}`,
-    });
-    const { challenge } = await passwordStep(replaced);
-    const verify = await post(
-      replaced,
-      '/two-factor/verify-totp',
-      { code: await totpCode(totpURI) },
-      challenge,
-    );
-    expect(verify.status).not.toBe(200);
-    expect(await signedInAs(cookieHeader(verify) || challenge, replaced)).toBeUndefined();
   });
 });
 

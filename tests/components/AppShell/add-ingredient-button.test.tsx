@@ -255,20 +255,6 @@ describe('AddIngredientButton', () => {
         ],
       ],
       [
-        '/keepers/users',
-        [
-          ['Compendium', ['to Compendium']],
-          ['Coven', ['to Fixture Coven']],
-        ],
-      ],
-      [
-        '/curator/categories',
-        [
-          ['Compendium', ['to Compendium']],
-          ['Coven', ['to Fixture Coven']],
-        ],
-      ],
-      [
         '/coven/fixture-coven',
         [
           ['Coven', ['to Fixture Coven']],

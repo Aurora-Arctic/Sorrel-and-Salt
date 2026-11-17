@@ -168,7 +168,7 @@
   only its own share of `src/`. A part that crashed before writing the file
   shows that instead. For the merged run the script also writes a "Slowest
   files" block — the ten slowest files from the JSON reporter's per-file times, a
-  ⚠ on any over the 10 s budget and the count in the stat line — as a warning
+  ⚠ on any over the 10 s file budget and the count in the stat line — as a warning
   only; it never fails the job, and the file is split along its owning layer
   rather than the budget raised
   ([`testing/layer-ownership.md`](../testing/layer-ownership.md)). `should-run`
@@ -221,8 +221,9 @@
   either suite failed: a shard job's result (`suites-failed`, from
   `needs.<suite>.result`), or what the job finds itself in the joined reports.
 - **`playwright.yml`** — one job, `playwright`, which runs `npm run e2e` (or
-  `test:stories`) on one shard of a matrix: three shards for the gate suite, two
-  for stories and one for `build-only`, passed as `--shard i/n`. Each check reads
+  `test:stories`) on one shard of a matrix: three shards and a job for the accessibility
+  sweep for the gate suite, two shards for stories and one job for `build-only`; a shard
+  is passed `--shard i/n`, the sweep job none. Each check reads
   `playwright / playwright (n)`. The shards are joined in `playwright-coverage.yml`,
   not here: it downloads the blob reports, runs `playwright merge-reports` with
   the suite's config, summarises, writes the suite's comment section and fails

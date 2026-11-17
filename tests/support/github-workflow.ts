@@ -47,6 +47,7 @@ export interface Job {
   env?: Record<string, Value>;
   defaults?: { run?: { shell?: string; 'working-directory'?: string } };
   'continue-on-error'?: Value;
+  permissions?: Record<string, string>;
   steps?: Step[];
 }
 
@@ -63,6 +64,7 @@ export interface Workflow {
       outputs?: Record<string, { value: string }>;
     };
   };
+  permissions?: Record<string, string>;
   jobs: Record<string, Job>;
 }
 

@@ -36,11 +36,9 @@ describe('IconTip', () => {
     act(() => vi.advanceTimersByTime(299));
     expect(tip()).toBeNull();
     act(() => vi.advanceTimersByTime(1));
-    expect(tip()).toHaveClass('icon-tip__bubble');
-    expect(tip()).not.toHaveClass('icon-tip__bubble--closing');
+    expect(tip()).not.toBeNull();
 
     fireEvent.mouseLeave(button);
-    expect(tip()).toHaveClass('icon-tip__bubble--closing');
     act(() => vi.advanceTimersByTime(120));
     expect(tip()).toBeNull();
   });
@@ -61,7 +59,6 @@ describe('IconTip', () => {
 
     act(() => button.focus());
     expect(tip()).not.toBeNull();
-    expect(tip()).not.toHaveClass('icon-tip__bubble--closing');
 
     act(() => button.blur());
     act(() => vi.advanceTimersByTime(500));

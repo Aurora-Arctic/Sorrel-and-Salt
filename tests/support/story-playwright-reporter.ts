@@ -44,7 +44,8 @@ export default class StoryPlaywrightReporter implements Reporter {
     process.stdout.write(`\n${formatChecklist(checklist)}\n`);
     for (const name of untagged) process.stdout.write(`No story tag: ${name}\n`);
 
-    const { outputFile } = this.options;
+    // Playwright hands a reporter named on the command line no options, so the env names the file there.
+    const outputFile = this.options.outputFile ?? process.env.STORIES_JSON;
     if (outputFile) {
       const path = resolve(process.cwd(), outputFile);
       mkdirSync(dirname(path), { recursive: true });

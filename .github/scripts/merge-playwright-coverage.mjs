@@ -2,7 +2,10 @@
 // shard's of each, into one report, and writes the `summary` and `details`
 // outputs job-summary and pr-comment consume, plus `ran` ('true' when any
 // suite left raw data). The story suite's own figure leads the details, since
-// the merged one hides how much of it the stories reach alone.
+// the merged one hides how much of it the stories reach alone. The details end
+// with both suites' slowest files, from each suite's merged JSON report
+// (GATE_RESULTS and STORIES_RESULTS; a missing file is a suite that did not
+// run), and that block is written whether or not any coverage was.
 // playwright-coverage.yml downloads each suite's shard artifacts into a folder
 // per suite under DOWNLOAD_DIR, a subfolder per shard artifact (or none, when
 // one artifact alone was fetched); a suite that did not run has no folder and
@@ -13,6 +16,14 @@ import MCR from 'monocart-coverage-reports';
 import coverageOptions from '../../tests/e2e/coverage.config.ts';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
 import { setOutput } from './lib/github-output.mjs';
+import {
+  TEST_BUDGET_MS,
+  collectTimings,
+  overBudgetWarnings,
+  perFileRows,
+} from './lib/playwright-timings.mjs';
+import { resultLine } from './lib/result-line.mjs';
+import { buildSlowestFilesSection } from './lib/slowest-files.mjs';
 
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR ?? '/app/.reports/coverage-downloads';
 const OUTPUT_DIR = process.env.MERGED_OUTPUT_DIR ?? '/app/.reports/coverage-e2e-merged';
@@ -23,6 +34,23 @@ const SUITES = [
   { name: 'Gate', folder: 'gate' },
   { name: 'Story', folder: 'stories' },
 ];
+
+/** The timings of each suite's merged JSON report that was written. */
+function timingsOfRun() {
+  return [process.env.GATE_RESULTS, process.env.STORIES_RESULTS]
+    .filter((file) => file && fs.existsSync(file))
+    .flatMap((file) => collectTimings(JSON.parse(fs.readFileSync(file, 'utf8'))));
+}
+
+const timings = timingsOfRun();
+const warnings = overBudgetWarnings(timings);
+const slowest = buildSlowestFilesSection(perFileRows(timings), REPO_ROOT, {
+  budgetMs: TEST_BUDGET_MS,
+  budget: 'test',
+  fileBudget: false,
+  over: warnings.length,
+  notes: [warnings.join('\n\n')].filter(Boolean),
+});
 
 const hasFiles = (dir) => fs.existsSync(dir) && fs.readdirSync(dir).length > 0;
 
@@ -56,7 +84,7 @@ if (fs.existsSync(DOWNLOAD_DIR)) {
 if (included.length === 0) {
   setOutput('ran', 'false');
   setOutput('summary', '');
-  setOutput('details', '');
+  setOutput('details', slowest?.block ?? '');
   process.exit(0);
 }
 
@@ -91,5 +119,15 @@ if (stories && included.length > 1) {
 }
 
 setOutput('ran', 'true');
-setOutput('summary', section ? `${label} — ${section.stat}` : `${label} — no coverage report`);
-setOutput('details', `${storyLine}${section?.table ?? ''}`);
+setOutput(
+  'summary',
+  resultLine({
+    counts: section ? `${label} — ${section.stat}` : `${label} — no coverage report`,
+    over: warnings.length,
+    budget: 'test',
+  }),
+);
+setOutput(
+  'details',
+  [`${storyLine}${section?.table ?? ''}`.trim(), slowest?.block].filter(Boolean).join('\n\n'),
+);
