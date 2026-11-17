@@ -55,7 +55,11 @@ const counts = SHARD
 const total = SHARD ? stories.length : checklist.total;
 
 const parts = [`${counts.passed} of ${total} stories passing`];
-if (counts.failed) parts.push(`${counts.failed} failing`);
+// A story that failed and then passed on retry is noted as flaky, never as failing: the run passed.
+const flakyCount = stories.filter((story) => story.status === 'failed' && story.flaky).length;
+const failing = counts.failed - flakyCount;
+if (failing) parts.push(`${failing} failing`);
+if (flakyCount) parts.push(`${flakyCount} flaky`);
 if (counts.skipped) parts.push(`${counts.skipped} skipped`);
 if (counts.untested) parts.push(`${counts.untested} without a test`);
 // The merged coverage of both suites is the Coverage section's alone.
@@ -64,7 +68,7 @@ const summary = resultLine({
   ms: runMs,
   over: overBudget,
   budget: 'test',
-  unexplained: OUTCOME === 'failure' && counts.failed === 0,
+  unexplained: OUTCOME === 'failure' && failing === 0,
 });
 
 const SUFFIX = {

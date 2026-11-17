@@ -273,6 +273,9 @@ describe('the flaky note', () => {
     );
     expect(lines).toContain(`- [ ] Story 7: Testwort walk${NOTE}`);
     expect(outputs.flaky).toBe('true');
+    // A story that passed on retry is noted as flaky in the Result, never as failing.
+    expect(outputs.summary).toContain('0 of 1 stories passing, 1 flaky');
+    expect(outputs.summary).not.toContain('failing');
   });
 });
 
