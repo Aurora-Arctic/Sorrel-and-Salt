@@ -865,3 +865,31 @@ _Acceptance criteria:_
 - The postgres.js client in `src/db/connection.ts` sets an `idle_timeout`
 - The PR body reports the before and after measurements, which assumptions were confirmed and which were wrong, whether production's `DATABASE_URL` names the pooled host (the name only, never the value), and every anonymous request that still queries Postgres, with the reason
 - The docs the change makes wrong are corrected in the same PR, under `claude-docs/`
+
+**MB.301 — Help Search Shows Every Match a Page at a Time** · 3h
+
+_Story:_ As a reader searching the help centre, I want the results a page at a time with a pager, so that I can reach every match however many there are.
+
+The help search page, `src/app/(public)/help/search/page.tsx`, asks the search service `searchHelp` for one batch of at most `HELP_PAGE_LIMIT` results (200, in `src/lib/help-pages.ts`) and draws them all. It shows no pager and reads no page from the address. A search with more than 200 matches drops the rest, and nothing on screen says so.
+
+Found on 2026-11-17, during the M17.7 design audit, on a local production build, signed out. It happens on every search. Steps to reproduce:
+
+1. Start signed out, on a site whose help centre has more than 200 entries matching one word (assumed: the audit's seed has 43 matches for "coven")
+2. Open `/help/search?q=coven`
+3. Scroll to the end of the results
+
+Actual: every match up to 200 is drawn on one page, there is no pager, and matches past 200 are not shown.
+
+Expected: results come a page at a time with a pager, and every match can be reached.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: with more matches seeded than one page holds, a match past the first page cannot be reached from `/help/search`
+- The search page reads its results through the numbered-page helpers the other pages use, and draws the shared `Pager` component; no new pager is written
+- With more matches than one page holds, the pager's next page shows the following matches, and the last page shows the last match
+- With one page of matches or fewer, no pager is drawn
+- The page number and the search words are in the address, so a page of results can be reloaded, and paging works without script
+- A reader sees only the help entries their audience allows on every page: a signed-out reader paging through never reaches a staff or Keeper entry, asserted with such an entry seeded
+- The search page stays uncached and unindexed
+- `tests/guards/pagination.test.ts` covers the page, with no exemption for it
+- The help doc under `claude-docs/` that describes the search page's bounded read is corrected in the same PR
