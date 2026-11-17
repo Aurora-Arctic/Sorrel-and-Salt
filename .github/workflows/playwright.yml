@@ -221,8 +221,9 @@ jobs:
         env:
           PLAYWRIGHT_SHARD: true
           PLAYWRIGHT_OUTCOME: ${{ steps.run.outcome }}
+          SUITE: ${{ inputs.suite }}
         run: |
-          if [ "${{ inputs.suite }}" = stories ]; then
+          if [ "$SUITE" = stories ]; then
             node .github/scripts/summarize-stories.mjs
           else
             node .github/scripts/summarize-playwright.mjs
@@ -231,8 +232,11 @@ jobs:
       # The row's status is the run step's outcome, not the job's: the story
       # run step has `continue-on-error`, which hides a failed story from the
       # job. No log and no details, so the suite's block stays the end job's.
+      # `continue-on-error` because the row only informs: a comment that could
+      # not be written must not fail a gate shard, which would fail the gate.
       - name: Comment the shard's row on PR
-        if: ${{ !cancelled() && !inputs.build-only }}
+        if: ${{ !cancelled() && !inputs.build-only && inputs.pr-number }}
+        continue-on-error: true
         uses: ./.github/actions/pr-comment
         with:
           check-name: Playwright
