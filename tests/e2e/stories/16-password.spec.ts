@@ -111,6 +111,7 @@ test(
 
     await page.getByRole('link', { name: 'Sign In', exact: true }).click();
     await expect(page).toHaveURL('/sign-in');
+    await hydrated(page, 'main button');
     await page.getByRole('button', { name: 'Continue with Email' }).click();
     await field(page.getByRole('main'), 'Email Address').fill(email);
     await field(page.getByRole('main'), 'Password').fill(PASSWORD);
