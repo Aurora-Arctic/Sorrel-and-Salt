@@ -20,6 +20,8 @@
 
 **M17.27 → M17.30 follow M17.23 and come before M17.24 and the other audits**, minted on the owner's call of 2026-11-09 so the audits see them: an About Us page (M17.27), keeper invitations that turn on coven creation (M17.28), invitations and a sign-in dialog that do not assume an account (M17.29), and icons for email & password and passkey logins in the user list (M17.30, minted 2026-11-10). M17.29's design is approved before it is built.
 
+**M17.31 → M17.33 follow M17.20 and come before M11.14**, minted on the owner's call of 2026-11-17: three discovery tasks for a local code review proof of concept, a review loop that calls no model. M17.31 checks the brief's assumptions about the review tools against the repo, M17.32 surveys the Graphify setup and M17.33 works out how stacked pull requests through `gh stack` fit `/create-pr` and the task board. Each writes its record to `claude-docs/review-poc/` and drafts the implementation tasks, which are minted only after the owner approves them. Gitflow stays: on the owner's call, the POC does not move the repo to one trunk branch, and stacks start from `staging`.
+
 **M11.14 and M7.A.1 close the row**, moved here from Wave 15 on the owner's call of 2026-11-08. M11.14 promotes `release/1.0.0` to `main` once the wave's other work is done. M7.A.1 turns on the merge queue; it is unscheduled by design, its trigger is in [`tasks/v1/m7a.md`](../../tasks/v1/m7a.md), and it sits last only so it has a place.
 
 **M17.10 also proves the coverage gates before release**, the work M11.11 held until it was merged into M17.10 on the owner's call of 2026-11-08.
