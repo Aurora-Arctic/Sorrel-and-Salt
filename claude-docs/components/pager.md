@@ -8,7 +8,7 @@ cursor helper (rule 8), so every list that shows its pages shows them here. `sof
 ## Contracts
 
 - **An end with no page is disabled, not hidden**, so Prev stays first and Next second and neither
-  moves from one page to the next. **A list of one page has no pager**, since both ends would be off.
+  moves from one page to the next. **A list of one page has no pager** unless the caller passes `drawOnOnePage`, which draws it with both ends disabled.
 - **A disabled end is a link with no address**: an `<a>` with
   `role="link"`, `aria-disabled="true"` and no `href`. An anchor takes no
   `disabled`, and `.btn` draws `aria-disabled` as off: dashed and faded.

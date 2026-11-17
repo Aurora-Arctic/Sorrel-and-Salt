@@ -10,6 +10,8 @@ export interface PagerProps {
    */
   soft?: boolean;
   position?: PagePosition;
+  /** Draws the pager, both ends disabled, for a list of one page; it is left out otherwise. */
+  drawOnOnePage?: boolean;
 }
 
 type PagerLabel = 'Prev' | 'Next';

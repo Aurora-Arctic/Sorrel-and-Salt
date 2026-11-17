@@ -45,12 +45,13 @@ export default async function Page({
             ...linkTo(node),
           }))}
         >
-          {page && (page.pageInfo.hasPreviousPage || page.pageInfo.hasNextPage) && (
+          {page && (
             <Pager
               {...pagerHrefs(page.pageInfo, (cursor) =>
                 listHref('/help/search', { q: query, ...cursor }),
               )}
               position={page.position}
+              drawOnOnePage
             />
           )}
         </HelpSearchResults>

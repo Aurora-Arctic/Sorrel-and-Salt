@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import type { ComponentProps, ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ListFrame, { ListBody } from '@/components/ListFrame';
 import Pager from '@/components/Pager';
@@ -8,11 +8,6 @@ import { stubLocationAssign } from '../../support/location';
 import { router } from '../../support/next-navigation';
 
 // claude-docs/components/pager.md
-
-// Typed with the opt-in until Pager takes it, so this file type-checks before the change.
-const PagerOnOnePage = Pager as unknown as (
-  props: ComponentProps<typeof Pager> & { drawOnOnePage?: boolean },
-) => ReturnType<typeof Pager>;
 
 const paged = (pager: ReactElement) => (
   <ListFrame>
@@ -72,7 +67,7 @@ describe('Pager', () => {
   });
 
   it('draws a list of one page with both ends disabled when told to draw it on one page', () => {
-    render(paged(<PagerOnOnePage drawOnOnePage position={{ page: 1, pages: 1 }} />));
+    render(paged(<Pager drawOnOnePage position={{ page: 1, pages: 1 }} />));
 
     for (const name of ['Prev', 'Next'] as const) {
       expect(end(name)).toHaveAttribute('aria-disabled', 'true');
@@ -84,11 +79,7 @@ describe('Pager', () => {
   });
 
   it('still links both ends when told to draw on one page and both have a page', () => {
-    render(
-      paged(
-        <PagerOnOnePage drawOnOnePage previousHref="/list?before=b" nextHref="/list?after=a" />,
-      ),
-    );
+    render(paged(<Pager drawOnOnePage previousHref="/list?before=b" nextHref="/list?after=a" />));
 
     expect(end('Prev')).toHaveAttribute('href', '/list?before=b');
     expect(end('Next')).toHaveAttribute('href', '/list?after=a');
