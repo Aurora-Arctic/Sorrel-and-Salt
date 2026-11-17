@@ -647,15 +647,34 @@ describe('/help/search', () => {
       expect(countHelpSearch).toHaveBeenCalledWith(CURATOR, QUERY, cursorAt(0));
     });
 
-    it('draws no pager when the matches fit one page', async () => {
+    it('draws the pager with both ends disabled, page 1 of 1, when the matches fit one page', async () => {
       searchHelp.mockResolvedValue([0, 1, 2].map(matchAt));
       countHelpSearch.mockResolvedValue({ totalCount: 3, countBefore: 0 });
       const { default: Page } = await load();
 
       render((await Page(search(QUERY))) as React.ReactElement);
 
-      // Precondition: the matches are drawn, so the missing pager is not a missing list.
+      // Precondition: the matches are drawn.
       expect(resultIndexes()).toEqual([0, 1, 2]);
+      for (const name of ['Prev', 'Next'] as const) {
+        const end = within(pager()).getByRole('link', { name });
+        expect(end).toHaveAttribute('aria-disabled', 'true');
+        expect(end).not.toHaveAttribute('href');
+      }
+      expect((position().textContent?.match(/\d+/g) ?? []).map(Number)).toEqual([1, 1]);
+    });
+
+    it('draws no pager when nothing matches', async () => {
+      searchHelp.mockResolvedValue([]);
+      countHelpSearch.mockResolvedValue({ totalCount: 0, countBefore: null });
+      const { default: Page } = await load();
+
+      render((await Page(search(QUERY))) as React.ReactElement);
+
+      // Precondition: the page answered the search, with its status and no result.
+      expect(searchHelp).toHaveBeenCalled();
+      expect(screen.getAllByRole('status').length).toBeGreaterThan(0);
+      expect(resultIndexes()).toEqual([]);
       expect(screen.queryByRole('navigation', { name: 'Pages' })).toBeNull();
     });
   });

@@ -211,14 +211,18 @@ test('a later page of results stays unindexed and uncached', async ({ page }) =>
   expect(cacheControl).not.toMatch(/max-age=[1-9]|s-maxage/);
 });
 
-test('one page of matches draws no pager', async ({ page }) => {
+test('one page of matches draws the pager with both ends disabled', async ({ page }) => {
   await page.goto(`/help/search?q=${PUBLIC_WORD}`);
 
-  // Precondition: the words match, so the missing pager is not a missing list.
+  // Precondition: the words match.
   await expect(
     page.getByRole('main').getByRole('link', { name: /Testwort Hearth Guide/ }),
   ).toBeVisible();
-  await expect(page.getByRole('main').getByRole('navigation', { name: 'Pages' })).toHaveCount(0);
+  for (const name of ['Prev', 'Next'] as const) {
+    await expect(pagerEnd(page, name)).toHaveAttribute('aria-disabled', 'true');
+    await expect(pagerEnd(page, name)).not.toHaveAttribute('href');
+  }
+  expect(await pagerPosition(page)).toEqual([1, 1]);
 });
 
 test.describe('without JavaScript', () => {
