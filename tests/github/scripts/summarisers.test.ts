@@ -329,7 +329,7 @@ describe('a flaky test in the Playwright gate', () => {
     const { stdout, outputs } = summarise(steady);
 
     // Precondition: the run was summarised.
-    expect(outputs.summary).toMatch(/^1 passed, 0 failed/);
+    expect(resultFacts(outputs.summary)).toMatchObject({ passed: 1, failed: null });
     expect(annotationsIn(stdout)).toEqual([]);
   });
 
@@ -341,7 +341,7 @@ describe('a flaky test in the Playwright gate', () => {
     expect(outputs.flaky).toBe('true');
     expect(outputs.details).toContain(FLAKY_NOTE);
     expect(annotationsIn(stdout)).toHaveLength(1);
-    expect(outputs.summary).toMatch(/^1 passed, 0 failed\b/);
+    expect(resultFacts(outputs.summary)).toMatchObject({ passed: 1, failed: null });
   });
 });
 

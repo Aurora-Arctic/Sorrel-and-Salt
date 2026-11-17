@@ -308,13 +308,24 @@ describe("the Playwright comment's shard rows", () => {
       return made;
     };
 
+    // Two written shards; their unwritten siblings show as Running up to each known total.
+    const before = [
+      ['gate', 'Running'],
+      [1, 'Passed'],
+      [2, 'Running'],
+      [3, 'Running'],
+      ['stories', 'Running'],
+      [1, 'Running'],
+      [2, 'Passed'],
+    ];
     const late = await written();
-    expect(subRows(late.comments[0].body)).toHaveLength(2);
+    expect(table(late.comments[0].body)).toEqual(before);
     await write(late.github, reset());
-    expect(table(late.comments[0].body)).toContainEqual([1, 'Passed']);
-    expect(subRows(late.comments[0].body)).toHaveLength(2);
+    expect(table(late.comments[0].body)).toEqual(before);
+    expect(Object.keys(shardsOf(late.comments[0].body).gate)).toEqual(['1']);
 
     const retried = await written();
+    expect(table(retried.comments[0].body)).toEqual(before);
     await write(retried.github, reset(), { attempt: 2 });
     expect(subRows(retried.comments[0].body)).toEqual([]);
 
