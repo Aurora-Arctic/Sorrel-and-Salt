@@ -1020,7 +1020,7 @@ A copy, class or memorial test adds no coverage of behaviour and costs a CI-minu
 - **Not taken:**
   - **Builds or Playwright on Blacksmith** (`claude-docs/ci/runner-budget.md`, "Why Blacksmith was dropped"). Revisit only if the free tier is raised or Playwright grows past about 5 minutes.
   - **Merging the seven small `checks` legs into one runner:** saves about 150 s of free GitHub minutes per run and changes every check name, with no gate-time gain because they run beside Playwright.
-  - **Sharding Playwright across runners:** rejected at 56 tests, where the pull and build were fixed costs each shard would repeat. **Taken once the gate suite reached 563 tests** (three shards, stories two): an extra shard repeats about 3 minutes (about 94 s outside the test step and about 81 s of server start inside it) and removes about 4 minutes of test time, and the runners are free. See `claude-docs/ci/runner-budget.md`, "Playwright shards".
+  - **Sharding Playwright across runners:** rejected at 56 tests, where the pull and build were fixed costs each shard would repeat. **Taken once the gate suite reached 563 tests** (three shards and an accessibility sweep job, stories two shards): an extra shard repeats about 3 minutes (about 94 s outside the test step and about 81 s of server start inside it) and removes about 4 minutes of test time, and the runners are free. See `claude-docs/ci/runner-budget.md`, "Playwright shards".
 
 ### Why
 

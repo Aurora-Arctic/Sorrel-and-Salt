@@ -119,6 +119,7 @@ Twenty-seven findings, T-1 to T-27, in the order of the areas they sit in. Each 
 - **Found:** the sweep covers 68 routes and 43 modals in both themes, as 29 tests, one per persona. The longest ("Every modal, as steward") takes 114 s. A test is never split across shards, so that one test sets a floor under its shard. High confidence.
 - **Fix:** generate one test per route group or modal group from `ROUTE_SCANS` and `MODAL_SCANS`, so `fullyParallel` sharding can spread them.
 - **Keeper:** the guard `tests/guards/axe-scans.test.ts` stays, and so does every scan; only the grouping into tests changes.
+- **Decided in MC.14:** the sweep runs as a gate job of its own, beside three shards of the rest of the gate.
 
 #### T-3. The Edits Sharding Needs
 

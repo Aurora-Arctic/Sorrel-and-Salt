@@ -52,6 +52,14 @@ on:
         required: false
         type: string
         default: e2e
+      sweep:
+        description: >-
+          Set true to make the gate's last job run only the accessibility sweep
+          (tests/e2e/axe.spec.ts) and the others share the rest of the gate. Only
+          pr-gate's gate call passes it; the stories and the build-only run have no sweep.
+        required: false
+        type: boolean
+        default: false
       pr-number:
         description: >-
           Pull request number the shards write their sub-rows on. Empty for
@@ -86,7 +94,7 @@ jobs:
       fail-fast: false
       matrix:
         # The build-only run builds once and runs no spec, so it takes one shard.
-        shard: ${{ fromJSON(inputs.build-only && '[1]' || inputs.suite == 'stories' && '[1,2]' || '[1,2,3]') }}
+        shard: ${{ fromJSON(inputs.build-only && '[1]' || inputs.suite == 'stories' && '[1,2]' || inputs.sweep && '[1,2,3,4]' || '[1,2,3]') }}
     container:
       image: ${{ inputs.image }}
       credentials:
@@ -200,14 +208,21 @@ jobs:
         env:
           E2E_ARGS: ${{ inputs.build-only && '--grep-invert . --pass-with-no-tests' || '' }}
           SUITE: ${{ inputs.suite }}
-          SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
+          INDEX: ${{ matrix.shard }}
+          TOTAL: ${{ strategy.job-total }}
+          SWEEP: ${{ inputs.sweep }}
         run: |
           set -o pipefail
           if [ "$SUITE" = stories ]; then
-            npm run test:stories -- --shard "$SHARD" --reporter=list,blob,json,./tests/support/story-playwright-reporter.ts 2>&1 | tee /app/output.log
+            npm run test:stories -- --shard "$INDEX/$TOTAL" --reporter=list,blob,json,./tests/support/story-playwright-reporter.ts 2>&1 | tee /app/output.log
+          elif [ "$SWEEP" = true ] && [ "$INDEX" = "$TOTAL" ]; then
+            # --shard cuts by test count, so the sweep's 49 tests would land in one shard.
+            npm run e2e -- tests/e2e/axe.spec.ts --reporter=list,blob,json 2>&1 | tee /app/output.log
           else
-            # Unquoted on purpose: two flags, or nothing.
-            npm run e2e -- --shard "$SHARD" --reporter=list,blob,json $E2E_ARGS 2>&1 | tee /app/output.log
+            # The last job of a sweep run takes the sweep, so the others share the rest.
+            if [ "$SWEEP" = true ]; then TOTAL=$((TOTAL - 1)); SWEEP_OUT='--grep-invert axe\.spec\.ts'; fi
+            # Unquoted on purpose: flags, or nothing.
+            npm run e2e -- --shard "$INDEX/$TOTAL" --reporter=list,blob,json $E2E_ARGS $SWEEP_OUT 2>&1 | tee /app/output.log
           fi
 
       # The shard's one line for the comment: its counts, duration and tests over

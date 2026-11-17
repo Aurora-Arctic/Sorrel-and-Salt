@@ -221,8 +221,9 @@
   either suite failed: a shard job's result (`suites-failed`, from
   `needs.<suite>.result`), or what the job finds itself in the joined reports.
 - **`playwright.yml`** — one job, `playwright`, which runs `npm run e2e` (or
-  `test:stories`) on one shard of a matrix: three shards for the gate suite, two
-  for stories and one for `build-only`, passed as `--shard i/n`. Each check reads
+  `test:stories`) on one shard of a matrix: three shards and a job for the accessibility
+  sweep for the gate suite, two shards for stories and one job for `build-only`; a shard
+  is passed `--shard i/n`, the sweep job none. Each check reads
   `playwright / playwright (n)`. The shards are joined in `playwright-coverage.yml`,
   not here: it downloads the blob reports, runs `playwright merge-reports` with
   the suite's config, summarises, writes the suite's comment section and fails

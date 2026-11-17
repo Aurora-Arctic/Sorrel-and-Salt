@@ -36,7 +36,8 @@ const LAYOUTS = {
     title: 'Playwright',
     column: 'Suite',
     sections: [
-      { key: 'gate', label: 'Gate Specs' },
+      // `lastShardLabel`: the gate's last job runs the accessibility sweep, not a share of the specs.
+      { key: 'gate', label: 'Gate Specs', lastShardLabel: 'Accessibility Sweep' },
       { key: 'stories', label: 'Stories' },
       { key: 'coverage', label: 'Coverage and Slowest Files', final: true },
     ],
@@ -172,14 +173,18 @@ function effectiveSection(state, key) {
   };
 }
 
-function shardRows(shards) {
+function shardRows(shards, lastShardLabel) {
   if (!shards) return [];
   const total = shardTotal(shards);
+  // The numbered rows count only the jobs that share the specs.
+  const numbered = lastShardLabel ? total - 1 : total;
   return Array.from({ length: total }, (_, offset) => {
     const index = offset + 1;
     const { status, summary } = shards[index] ?? { status: 'running', summary: '' };
     const { mark, word } = STATUSES[status];
-    return `| ↳ Shard ${index} of ${total} | ${mark} ${word} | ${cell(summary)} |`;
+    const label =
+      lastShardLabel && index === total ? lastShardLabel : `Shard ${index} of ${numbered}`;
+    return `| ↳ ${label} | ${mark} ${word} | ${cell(summary)} |`;
   });
 }
 
@@ -190,12 +195,12 @@ function renderSectioned({ marker, layout, title, state, blocks }) {
   const table = [
     `| ${layout.column} | Status | Result |`,
     '| --- | --- | --- |',
-    ...rows.flatMap(({ key, label }) => {
+    ...rows.flatMap(({ key, label, lastShardLabel }) => {
       const { status, summary } = effectiveSection(state, key);
       const { mark, word } = STATUSES[status];
       return [
         `| ${label} | ${mark} ${word} | ${cell(summary)} |`,
-        ...shardRows(state.shards?.[key]),
+        ...shardRows(state.shards?.[key], lastShardLabel),
       ];
     }),
   ].join('\n');
