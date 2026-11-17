@@ -404,6 +404,7 @@ An **estimate** of about 13.4 s summed.
 - **`two-factor`:** share one enrolled account and merge the rotation pair.
 - **Do not add a test hasher.** `src/lib/auth.ts:451-473` sets no `password.hash`, and the real hash is what is under test.
 - **Keeper:** every lockout and enrolment path is still exercised.
+- **Decided in MC.14:** `two-factor` restores the enrolled account per test by re-inserting its `two_factors` row, and its no-password test signs up an account of its own, since it deletes the credential.
 
 #### T-25. Seed Tests Re-Truncate and Re-Seed per Test
 
@@ -415,11 +416,13 @@ An **estimate** of about 13.4 s summed.
 - **`seed/index.test.ts`:**
   - One `describe.each(SEED_ENTRIES)` with one `beforeAll`. The steps run in order: dry run, then seed and fill, then idempotent, then no-resurrect. This cuts 32 truncates to 8.
   - Cut `:221` (kept by `compendium-files.test.ts:26`).
+  - **Decided in MC.14:** the dry run's "the same run writes" precondition moves into the seed step, which follows it. The no-resurrect step deletes the first row each table's seed inserted, read from the probe table in insert order, because a row only the fill wrote is one the re-run never offers back, so deleting it would prove nothing.
   - **Estimated** saving: about 4-6 s.
 - **`modules/ingredients/services/stock.test.ts`:**
   - Create the three ingredients in `beforeAll`.
   - Reset only `inventory_items` and `workspace_compendium_entries` per test.
   - Move the about 12 fixture-mutating tests into their own describe: `:196`, `:198`, `:351`, `:406`, `:444`, `:450`, `:465`, `:480`, `:606-625`, `:781`, `:837`, and `:842`.
+  - **Decided in MC.14:** eight tests write to the ingredients; the other cited lines are their writes or the `saveStock` form inserts, which now run once with the ingredients.
   - **Estimated** saving: about 1.5-2.5 s, low confidence.
 
 #### T-26. Cross-Layer and In-File Repeats
@@ -431,15 +434,18 @@ An **estimate** of about 13.4 s summed.
   - Trim `:387` to its unique half.
   - In `:987-1041`, keep one SQL-mechanism row (kept by `invitation-acceptance-by-token:591, 640, 654`).
   - Cut `:959`, `:1041`, and `:1076` (kept by `invitation-cards.test.ts:81, 230, 283`).
+  - **Decided in MC.14:** the card row kept is the unverified account's, as `verifiedBySession` is the one card predicate no other repository test reaches. `:1076` is trimmed to the address invitation it leaves out of the batch page and count, which no keeper has. `:387` keeps the owner's revoke as the precondition and drops the row read it implies.
 - **`invitation-acceptance-by-token`:** cut `:336` (kept by `:304`). Merge `:654` into `:666`, moving its `roleOf` check.
 - **`identity/graphql/admin-invitations:143`:** cut to one row.
 - **`tests/db/repository/sourcing-score.test.ts:372`:** this is a service authorization loop in the repository folder. Keep the "repository answers unguarded" half (the loop is kept by `compendium-sourcing.test.ts:56, 74`).
+  - **Decided in MC.14:** kept whole. The cited keepers guard `readSourcingScore` and the GraphQL field; this loop is the only test that `listCompendium` refuses `withSourcingScore`.
 - **`HelpWidget/unit-converter:60-71`:** drop the `unitConvert` refusal repeat (kept by `convert.test.ts:166, 177`).
 - **`grimoire/services/workings:215`:** drop the conversion arithmetic (kept by `plan-deductions:41, 73`).
 - **`password-lockout:173`:** cut (kept by `stories/16-password:135`).
 - **`user-list.test.ts`:** merge `:140`, `:150`, and `:160` into `:111`.
 - **`help-reads.test.ts:519-545`:** add positive staff reads (glossary, index, sitemap) beside the absence checks (R-12). This adds tests and cuts none.
 - **Presentation:** cut the style and class checks in `LinkHint/held-page:20-45`, `LinkHint/index`, and `IconTip/index:35-70`; cut `toHaveClass('chip')` in `comparison-panel:165-178`. Keep all four `tests/scss` files.
+  - **Decided in MC.14:** `LinkHint/held-page` held only computed-style checks, so the file is gone.
 - **`add-ingredient-button:249`:** cut 2 of 4 rows. `Modal:704` stays.
 
 #### T-27. Checked and Not Duplicates
