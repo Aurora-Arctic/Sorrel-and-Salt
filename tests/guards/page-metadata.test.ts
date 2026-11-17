@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, inject, it } from 'vitest';
 
 // A page's head is made by src/lib/page-metadata.ts, so every public page carries the same canonical, Open Graph and
-// Twitter tags and every noindex page the same robots tag. Four pages add a tag beside a helper's output, for a reason
+// Twitter tags and every noindex page the same robots tag. Three pages add a tag beside a helper's output, for a reason
 // each: a filtered or hidden view that must stay out of search, and a signed-in page that points at its public twin.
 
 const PAGE = /^src\/app\/.*page\.tsx$/;
@@ -12,7 +12,6 @@ const MAY_ADD_A_TAG = new Set([
   'src/app/(public)/compendium/page.tsx',
   'src/app/(public)/compendium/ingredients/[slug]/page.tsx',
   'src/app/(shell)/coven/[slug]/ingredients/[id]/page.tsx',
-  'src/app/sign-in/page.tsx',
 ]);
 
 describe('page metadata', () => {

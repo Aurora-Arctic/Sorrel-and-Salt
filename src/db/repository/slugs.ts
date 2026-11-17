@@ -89,6 +89,8 @@ export async function findCompendiumSlugs(): Promise<CompendiumSlugEntry[]> {
   const rows = await selectFrom(
     ingredients,
     and(inCompendium(ingredients), notSoftDeleted(ingredients), eq(ingredients.shown, true)),
+    // The five fields below and no others: the rest of a row is every other column of the table, unused here.
+    { columns: ['slug', 'name', 'canonicalName', 'description', 'updatedAt'] },
   );
   return rows
     .map(({ slug, name, canonicalName, description, updatedAt }) => ({

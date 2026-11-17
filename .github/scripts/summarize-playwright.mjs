@@ -72,7 +72,6 @@ if (typeof duration === 'number') {
     row.assertionResults.push(ms);
     perFile.set(file, row);
   }
-  const slowest = buildSlowestFilesSection([...perFile.values()], '/app', { budgetMs: null });
   const warnings = timed
     .filter(({ ms }) => ms > TEST_BUDGET_MS)
     .sort((a, b) => b.ms - a.ms)
@@ -80,8 +79,14 @@ if (typeof duration === 'number') {
       ({ file, title, ms }) =>
         `⚠ \`${file}\` › ${title} took ${(ms / 1000).toFixed(1)} s, over the ${TEST_BUDGET_MS / 1000} s test budget`,
     );
+  const slowest = buildSlowestFilesSection([...perFile.values()], '/app', {
+    budgetMs: null,
+    notes: [warnings.join('\n\n')].filter(Boolean),
+    notesHeading: `${warnings.length} ${warnings.length === 1 ? 'test' : 'tests'} over the ${TEST_BUDGET_MS / 1000} s test budget`,
+  });
   summary += ` in ${formatRun(duration)}`;
-  details = [failures, slowest?.block, warnings.join('\n\n')].filter(Boolean).join('\n\n');
+  // Without a block to hold them, the warnings still show.
+  details = [failures, slowest?.block ?? warnings.join('\n\n')].filter(Boolean).join('\n\n');
   setOutput('duration', formatRun(duration));
 }
 

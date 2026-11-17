@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import IconTip, { CheckIcon, EditLink } from '@/components/IconTip';
+import IconTip, { CheckIcon, EditLink, QuickLookLink } from '@/components/IconTip';
 import MenuButton from '@/components/MenuButton';
 import Modal from '@/components/Modal';
 
@@ -240,5 +240,21 @@ describe('CheckIcon', () => {
     const glyph = container.querySelector('svg');
     expect(glyph).toHaveAttribute('aria-hidden', 'true');
     expect(glyph).toHaveAttribute('focusable', 'false');
+  });
+});
+
+describe('QuickLookLink', () => {
+  it('asks crawlers not to follow its dialog address, while Edit stays followable', () => {
+    render(
+      <>
+        <QuickLookLink href="/compendium?entry=1" name="Testwort" />
+        <EditLink href="/compendium" name="Testwort" />
+      </>,
+    );
+    expect(screen.getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
+      'rel',
+      'nofollow',
+    );
+    expect(screen.getByRole('link', { name: 'Edit Testwort' })).not.toHaveAttribute('rel');
   });
 });

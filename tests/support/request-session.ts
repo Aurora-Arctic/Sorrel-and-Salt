@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 export const sessionStateFromHeaders = vi.fn();
 export const sessionFromHeaders = vi.fn();
 export const getSession = vi.fn();
+export const hasSessionCookie = vi.fn();
 export const getShellSession = vi.fn();
 export const sessionIsVerified = vi.fn();
 export const sessionIsFresh = vi.fn();

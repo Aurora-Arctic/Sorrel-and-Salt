@@ -1,13 +1,12 @@
 import 'server-only';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import superjson from 'superjson';
+import { COMPENDIUM_REVALIDATE_SECONDS } from './compendium-revalidate';
 
 // The compendium's data cache (CLAUDE.md rule 6): the curated reads every viewer sees alike, held across requests under one tag that a keeper write
 // expires through `expireCompendium`. The only file using `next/cache`, so the tag has one spelling. `unstable_cache`, not `use cache` (claude-docs/db/compendium-cache.md).
 
 export const COMPENDIUM_TAG = 'compendium';
-
-export const COMPENDIUM_REVALIDATE_SECONDS = 3600;
 
 /** So a new deployment reads fresh keys: the seed cannot expire the tag and Vercel keeps the data cache across deployments (claude-docs/db/compendium-cache.md, "The deployment key part"). */
 function deploymentKeyPart(): string[] {

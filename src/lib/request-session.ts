@@ -1,3 +1,4 @@
+import { getSessionCookie } from 'better-auth/cookies';
 import type { Route } from 'next';
 import { headers } from 'next/headers';
 import { forbidden, notFound, redirect } from 'next/navigation';
@@ -81,6 +82,11 @@ export async function sessionFromHeaders(requestHeaders: Headers): Promise<Sessi
 const getSessionState = cache(async (): Promise<SessionState> =>
   sessionStateFromHeaders(await headers()),
 );
+
+/** Whether the request carries a session cookie, the check `src/proxy.ts` makes: a page that asks first runs no lookup for a request with none, a crawler's. */
+export async function hasSessionCookie(): Promise<boolean> {
+  return getSessionCookie(new Headers(await headers())) !== null;
+}
 
 /** The signed-in user, or `null`, as a paused session is too on every page but support's. */
 export async function getSession(): Promise<Session | null> {
