@@ -1584,6 +1584,11 @@ describe('the Playwright comment, from the sharded suites', () => {
         duration: 120_000,
       },
       gateShard(3),
+      // The accessibility sweep's job: shorter than the slowest shard, and no test over 30 s.
+      {
+        files: [{ file: SWEEP, tests: [{ title: 'Testwort sweep', ms: 1_000 }] }],
+        duration: 60_000,
+      },
     ];
 
     const run = await runJoin({ shards: { playwright: (index) => shards[index] } });
@@ -1616,13 +1621,14 @@ describe('the Playwright comment, from the sharded suites', () => {
     });
     const context: Context = { ...base, inputs, needs: {}, steps: {} };
 
-    expect(gate).toHaveLength(3);
+    expect(gate).toHaveLength(4);
     expect(stories).toHaveLength(2);
     // The gate's shards each call a function of their own; both story shards call the same one; none calls D.
     const called: Record<string, string[]> = {
       [gate[0]]: ['A'],
       [gate[1]]: ['B'],
       [gate[2]]: [],
+      [gate[3]]: [],
       [stories[0]]: ['C'],
       [stories[1]]: ['C'],
     };
