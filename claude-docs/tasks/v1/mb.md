@@ -844,3 +844,35 @@ _Acceptance criteria:_
 - Migrations still give up a lock they cannot take within 5 seconds
 - The step still makes three attempts, and `tests/github/workflows/migrate.test.ts` still passes
 - `claude-docs/db/migrations-and-scripts.md` ("A failed migration names its cause") and `claude-docs/db/expand-contract.md` ("The retry") say what prints the cause
+
+**MB.300 — Anonymous Crawler Requests Run No Postgres Queries** · 12h
+
+_Story:_ As the site's owner, I want a request with no session cookie to pull no data from Postgres, so that crawler traffic cannot use up the database host's monthly network transfer allowance and take the site down.
+
+Crawlers request public pages that are never cached. Each render queries Postgres, and the result rows travel from the database host to the web host over the public internet, which the database host meters as network transfer. The routes carrying the traffic are `/sign-in`, `/compendium`, and `/compendium/ingredients/[slug]`.
+
+Found on 2026-11-17, in production, signed out. It happens on every request. Steps to reproduce:
+
+1. Make a production build and start it against local Postgres with `DEBUG_SQL=1`
+2. With no cookie, request `/sign-in`
+3. With no cookie, request `/compendium` twice
+4. With no cookie, request one `/compendium/ingredients/[slug]` page twice
+
+Actual: every one of these requests runs Postgres queries (assumed until the first measurement confirms it). In production all three routes are served 0% cached, and the project's monthly network transfer allowance is used up.
+
+Expected: the `/sign-in` request runs no query, and the second request to each compendium page runs no query.
+
+All traces run against local Postgres. No test traffic goes to production. Auth rate limiting, the hosts' dashboard settings, environment variables, and plans are not changed.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: a request to `/sign-in` with no session cookie runs no query, and a request to `/compendium` on a warm cache runs no query
+- The query count and approximate row size are recorded, before and after, for `/sign-in`, `/sign-in?next=/coven/x`, `/compendium`, one `/compendium/ingredients/[slug]`, `/robots.txt`, `/sitemap.xml`, and `/llms.txt`, each requested with no cookie against a production build on local Postgres
+- `src/app/sign-in/page.tsx` skips the session lookup when the session cookie is absent
+- An anonymous render of `/compendium` and of `/compendium/ingredients/[slug]` runs no query on a warm cache; the compendium read is cached under the `compendium` tag, and every keeper or curator edit invalidates it on save
+- Nothing that depends on the viewer (the user menu, Add Ingredient, per-user counts) is inside the cached render
+- The `/compendium` list query selects only the columns its cards show, and pages through the cursor helper
+- `src/app/robots.ts` disallows `/sign-in` and no longer lists it in `CRAWLABLE_PATHS`; the sign-in page carries `noindex`; `robots.ts` and `sitemap.ts` are cached, not `force-dynamic`
+- The postgres.js client in `src/db/connection.ts` sets an `idle_timeout`
+- The PR body reports the before and after measurements, which assumptions were confirmed and which were wrong, whether production's `DATABASE_URL` names the pooled host (the name only, never the value), and every anonymous request that still queries Postgres, with the reason
+- The docs the change makes wrong are corrected in the same PR, under `claude-docs/`
