@@ -216,7 +216,7 @@ jobs:
           if [ "$SUITE" = stories ]; then
             npm run test:stories -- --shard "$INDEX/$TOTAL" --reporter=list,blob,json,./tests/support/story-playwright-reporter.ts 2>&1 | tee /app/output.log
           elif [ "$SWEEP" = true ] && [ "$INDEX" = "$TOTAL" ]; then
-            # --shard cuts by test count, so the sweep's 49 tests would land in one shard.
+            # --shard cuts by test count in file order, so the sweep's tests would all land in one shard.
             npm run e2e -- tests/e2e/axe.spec.ts --reporter=list,blob,json 2>&1 | tee /app/output.log
           else
             # The last job of a sweep run takes the sweep, so the others share the rest.
