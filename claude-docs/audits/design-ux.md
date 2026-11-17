@@ -8,11 +8,9 @@ Accessibility was not the job here; that is M17.9. Every accessibility observati
 
 ### What The Owner Needs To Do
 
-The owner has recorded a choice on every finding except the eleven still open. Each finding's Owner's Choice line shows it.
+The owner has recorded a choice on every finding. Each finding's Owner's Choice line shows it. Nothing is waiting on you.
 
-I need you to answer these open findings: F-2, F-5, F-28, F-41, F-46, F-52, F-58, F-64, F-66, F-71 and F-75. Nothing else needs your action.
-
-Your decision of 2026-11-17, that the shell bar's solid Add Ingredient may sit beside a page's solid button, is applied: that finding is withdrawn, and the wording correction is on the proposed-rules list. F-39, F-67 and F-69 are withdrawn after your notes and are listed under Left As It Is. Proposed Tasks are not yet regrouped for your choices.
+Your decision of 2026-11-17, that the shell bar's solid Add Ingredient may sit beside a page's solid button, is applied: that finding is withdrawn, and the wording correction is on the proposed-rules list. F-39, F-67 and F-69 are withdrawn after your notes and are listed under Left As It Is.
 
 ## Scope
 
@@ -46,95 +44,95 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 
 ## Summary
 
-| Id   | Lane ids                     | Title                                           | Severity | Area          | Proposed task                                                           | Owner's Choice                                             |
-| ---- | ---------------------------- | ----------------------------------------------- | -------- | ------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------- |
-| F-1  | CP-2, S-2, A-3, P-11         | Dates And Times In Mixed Formats                | Medium   | Cross-cutting | Route Every Date Through utc.ts                                         | Fix, Long In Detail, Short In Tables                       |
-| F-2  | P-1                          | 404 Page Offers Help Four Ways                  | Medium   | Public        | Give Error And Gate Pages One Layout                                    | Open: awaiting the owner's answer                          |
-| F-3  | S-1, C-4, CD-8               | Non-Literal Placeholders Escape The Length Lint | Medium   | Cross-cutting | Make The Placeholder Lint Refuse Non-Literal Values                     | Skip                                                       |
-| F-4  | S-29                         | Staff Help Drops The Keepers Frame              | Medium   | Keepers       | Draw Staff Help Inside The Keepers Frame                                | Fix, Staff Help Inside The Keepers Frame                   |
-| F-5  | A-7, P-9                     | Support Hint Drawn In Error Red                 | Medium   | Public        | Fix The Support Form Hint, Radio Cards And Messages                     | Open: awaiting the owner's answer                          |
-| F-6  | A-9                          | Site Role Written As Lower-Case Keeper          | Medium   | Account       | Write Keeper With A Capital                                             | Fix                                                        |
-| F-7  | CD-4                         | Delete Control Differs Between Edit Dialogs     | Medium   | Dialogs       | Give Every Edit Dialog One Footer                                       | Fix, Icon Delete With Tooltip                              |
-| F-8  | A-14                         | Group Error Ends In A Full Stop                 | Medium   | Public        | Fix The Support Form Hint, Radio Cards And Messages                     | Fix                                                        |
-| F-9  | CP-8, S-17                   | Page Delete Buttons Drawn Red                   | Medium   | Cross-cutting | Bring Red Controls Into The Rule                                        | Fix, Split                                                 |
-| F-10 | C-2                          | Decline Invitation Drawn Red                    | Medium   | Account       | Bring Red Controls Into The Rule                                        | Answer, Add Decline To The Named Red Controls              |
-| F-11 | CD-1                         | Leave Dialog Disables Its Primary Button        | Medium   | Dialogs       | Flag New Steward On Submit In The Leave Dialog                          | Fix                                                        |
-| F-12 | P-6, T-1                     | Compendium Entry Leaves A Blank Gap             | Medium   | Compendium    | Fix The Compendium Entry Layout                                         | Skip                                                       |
-| F-13 | S-16                         | Keepers Hub Says Admin Invitations              | Medium   | Keepers       | Write Keeper With A Capital                                             | Fix                                                        |
-| F-14 | MB.301                       | Help Search Shows No Pager                      | Medium   | Public        | MB.301, Help Search Shows Every Match a Page at a Time (already minted) | Skip                                                       |
-| F-15 | A-16, P-15, S-11, S-14, S-30 | Decorative Art Overlaps Text                    | Low      | Cross-cutting | Stop Decorative Art Covering Text                                       | Skip                                                       |
-| F-16 | CP-3, CP-4, S-10, S-27       | Empty Table Cells And Card Labels               | Low      | Cross-cutting | Show One Mark In Empty Cells                                            | Fix, Dash In The Cell                                      |
-| F-17 | P-16, S-11, S-31             | Straight And Curly Quotes Mixed                 | Low      | Public        | Tidy Copy On Account, Public And Keeper Screens                         | Fix, Bold Field Names Instead Of Quotes                    |
-| F-18 | CD-8, S-3                    | Two Close Buttons In The Filters Sheet          | Low      | Dialogs       | Fix 375 Layout Faults In Sheets And Dialogs                             | Fix, An X Button In The Sheet Header                       |
-| F-19 | P-5, CP-7                    | Safety Note Repeated On One Entry               | Low      | Compendium    | Fix The Compendium Entry Layout                                         | Fix, Once Per Page                                         |
-| F-20 | CP-7, T-2                    | Empty Value Lines Repeat                        | Low      | Compendium    | Fix The Compendium Entry Layout                                         | Fix, Hide Empty Groups                                     |
-| F-21 | A-17                         | Small Buttons Under 24px At 375                 | Low      | Account       | Fix 375 Layout Faults In Sheets And Dialogs                             | Fix, Padding Grows The Hit Area                            |
-| F-22 | CP-1                         | Coven Switcher Chevron Wraps                    | Low      | Coven         | Fix 375 Layout Faults In Sheets And Dialogs                             | Fix, Truncate The Name                                     |
-| F-23 | A-11, P-10                   | Support Radio Cards Laid Out Differently        | Low      | Public        | Fix The Support Form Hint, Radio Cards And Messages                     | Fix, Always Stacked                                        |
-| F-24 | A-14                         | Every Radio Card Turns Red For One Error        | Low      | Public        | Fix The Support Form Hint, Radio Cards And Messages                     | Skip                                                       |
-| F-25 | A-18                         | Radio Card Looks Selected When Empty            | Low      | Public        | None                                                                    | Fix                                                        |
-| F-26 | S-13, S-22                   | Keeper Form Pages Differ In Width               | Low      | Keepers       | Align The Keeper Pages                                                  | Fix, One Narrow Width For Form Pages                       |
-| F-27 | S-15                         | Tab Strips Start Clipped                        | Low      | Keepers       | Align The Keeper Pages                                                  | Fix, Start At The First Tab And Add A Fade Cue At The Clip |
-| F-28 | S-12, S-33                   | Support Status Filters Hidden At 375            | Low      | Keepers       | Fix 375 Layout Faults In Sheets And Dialogs                             | Open: awaiting the owner's answer                          |
-| F-29 | S-21, S-32                   | Download CSV Solid On Empty List                | Low      | Keepers       | Align The Keeper Pages                                                  | Fix, Disabled While The List Is Empty                      |
-| F-30 | S-7                          | Uneven Gaps In Dialogs                          | Low      | Dialogs       | Even Out Dialog Gaps And Eyebrows                                       | Fix                                                        |
-| F-31 | A-13, CD-13                  | Confirm Buttons Wrap At 375                     | Low      | Dialogs       | Fix 375 Layout Faults In Sheets And Dialogs                             | Fix                                                        |
-| F-32 | CD-10                        | Dialog Eyebrow Halo In Dark                     | Low      | Dialogs       | Even Out Dialog Gaps And Eyebrows                                       | Fix                                                        |
-| F-33 | CD-11                        | Builder Eyebrow Wraps At 375                    | Low      | Dialogs       | Even Out Dialog Gaps And Eyebrows                                       | Fix, Align The Wrapped Lines                               |
-| F-34 | CD-6                         | Complete Action Has Two Names                   | Low      | Dialogs       | Give Every Edit Dialog One Footer                                       | Fix, Name It Complete                                      |
-| F-35 | CD-7                         | Confirm Title Misnames The Action               | Low      | Dialogs       | Give Every Edit Dialog One Footer                                       | Fix                                                        |
-| F-36 | CD-9                         | Share Toggle Sits Under Its Label               | Low      | Dialogs       | Even Out Dialog Gaps And Eyebrows                                       | Fix, Keep Under The Label And Close The Gap                |
-| F-37 | CD-12                        | Member Dialog Date Wraps Mid-Date               | Low      | Dialogs       | Even Out Dialog Gaps And Eyebrows                                       | Fix                                                        |
-| F-38 | CD-12                        | Stray Dot Before None                           | Low      | Cross-cutting | Tidy Copy On Account, Public And Keeper Screens                         | Fix                                                        |
-| F-39 | CD-13                        | Delete Coven Radio Carries No Warning           | Low      | Dialogs       | Bring Red Controls Into The Rule                                        | Withdrawn                                                  |
-| F-40 | CD-14                        | Spell Preview Repeats Ingredients               | Low      | Dialogs       | Tidy Copy On Account, Public And Keeper Screens                         | Skip                                                       |
-| F-41 | CD-14                        | Entry Details Has An Empty Header Band          | Low      | Dialogs       | Even Out Dialog Gaps And Eyebrows                                       | Open: awaiting the owner's answer                          |
-| F-42 | CD-14                        | Invite Dialog Copy Is Wordy                     | Low      | Dialogs       | Tidy Copy On Account, Public And Keeper Screens                         | Fix                                                        |
-| F-43 | CD-2                         | Footers Out Of View At 375                      | Low      | Dialogs       | None                                                                    | Skip                                                       |
-| F-44 | A-1                          | Document Mail Has Two Solid Buttons             | Low      | Mail          | Tidy The Mail Calls To Action And Headings                              | Skip                                                       |
-| F-45 | A-2                          | Sign-In Instruction Has No Link                 | Low      | Mail          | Tidy The Mail Calls To Action And Headings                              | Fix, Link "account page" To The Account Page               |
-| F-46 | A-4                          | Reset Button Has Two Labels                     | Low      | Mail          | Tidy The Mail Calls To Action And Headings                              | Open: awaiting the owner's answer                          |
-| F-47 | A-5                          | Support Mail Headings In Sentence Case          | Low      | Mail          | Tidy The Mail Calls To Action And Headings                              | Fix, Title Case The Lead-In                                |
-| F-48 | P-2                          | Error Pages Share No Layout                     | Low      | Public        | Give Error And Gate Pages One Layout                                    | Fix, One Shared Body                                       |
-| F-49 | P-4                          | Gate Cards Align Differently                    | Low      | Public        | Give Error And Gate Pages One Layout                                    | Fix                                                        |
-| F-50 | P-18                         | Reset Password Spacing Uneven                   | Low      | Public        | Give Error And Gate Pages One Layout                                    | Fix, Make The Spacing Consistent                           |
-| F-51 | P-3                          | Disabled Provider Message Repeats               | Low      | Public        | None                                                                    | Skip                                                       |
-| F-52 | A-10, A-12, P-19             | Blocked States Give No Next Step                | Low      | Account       | Tidy Copy On Account, Public And Keeper Screens                         | Open: awaiting the owner's answer                          |
-| F-53 | CP-6                         | Refused Invitations Page Drops The Shell        | Low      | Coven         | None                                                                    | Answer, Show Not Authorized Inside The Shell               |
-| F-54 | A-8                          | Request Thread Shows You Twice                  | Low      | Public        | Fix The Support Form Hint, Radio Cards And Messages                     | Fix                                                        |
-| F-55 | P-12                         | Compendium No-Match Says It Twice               | Low      | Compendium    | Tidy Copy On Account, Public And Keeper Screens                         | Fix                                                        |
-| F-56 | P-17                         | Terms Offered Three Ways                        | Low      | Account       | Tidy Copy On Account, Public And Keeper Screens                         | Skip                                                       |
-| F-57 | A-15                         | Sign-In Methods Repeats Sections                | Low      | Account       | None                                                                    | Skip                                                       |
-| F-58 | CP-5                         | Overview Contents Repeats Navigation            | Low      | Coven         | None                                                                    | Open: awaiting the owner's answer                          |
-| F-59 | S-13                         | Keepers Hub Repeats Its Own Navigation          | Low      | Keepers       | Align The Keeper Pages                                                  | Skip                                                       |
-| F-60 | P-7                          | Heading Level Skips After Details               | Low      | Compendium    | Fix The Compendium Entry Layout                                         | Fix, Correct The Level Without Making The Headings Larger  |
-| F-61 | P-14                         | FAQ Link Doubles Heading Name                   | Low      | Public        | None                                                                    | Fix                                                        |
-| F-62 | S-20                         | Add Ingredient Twice On Curator Compendium      | Low      | Keepers       | Align The Keeper Pages                                                  | Fix, Correct The Doc To Add Ingredient                     |
-| F-63 | S-4                          | Date Popover Covers Top Bar                     | Low      | Dialogs       | Even Out Dialog Gaps And Eyebrows                                       | Fix                                                        |
-| F-64 | S-5                          | Colour Hint Says Under The Veil                 | Low      | Keepers       | Tidy Copy On Account, Public And Keeper Screens                         | Open: awaiting the owner's answer                          |
-| F-65 | S-6                          | Refused Opens Intro Hard To Read                | Low      | Keepers       | Tidy Copy On Account, Public And Keeper Screens                         | Fix                                                        |
-| F-66 | S-9                          | Sourcing Score Heading Clipped                  | Low      | Keepers       | Align The Keeper Pages                                                  | Open: awaiting the owner's answer                          |
-| F-67 | S-19                         | People Page Has A Users Toggle                  | Low      | Keepers       | None                                                                    | Withdrawn                                                  |
-| F-68 | none                         | People Cards Very Tall At 375                   | Low      | Keepers       | Align The Keeper Pages                                                  | Fix                                                        |
-| F-69 | none                         | Support Status Is An Icon Only                  | Low      | Keepers       | Align The Keeper Pages                                                  | Withdrawn                                                  |
-| F-70 | none                         | Staff Help Card Eyebrows Repeat Guide           | Low      | Keepers       | Draw Staff Help Inside The Keepers Frame                                | Skip                                                       |
-| F-71 | S-24                         | Group Shown Two Ways                            | Low      | Keepers       | Align The Keeper Pages                                                  | Open: awaiting the owner's answer                          |
-| F-72 | S-25                         | Toggle Label Repeats As Shown                   | Low      | Keepers       | Align The Keeper Pages                                                  | Fix, Label Above Only                                      |
-| F-73 | S-26                         | Help Guide Counts Blank                         | Low      | Keepers       | Align The Keeper Pages                                                  | Skip                                                       |
-| F-74 | S-28                         | Sort Icon May Lack A Name                       | Low      | Keepers       | None                                                                    | Fix                                                        |
-| F-75 | T-3                          | Footnote Marker Is Small Plain Text             | Low      | Public        | None                                                                    | Open: awaiting the owner's answer                          |
-| F-76 | T-4                          | Signed-In Help Hides Compendium Link            | Low      | Public        | None                                                                    | Fix                                                        |
-| F-77 | T-5                          | Gap Between Intro And First Heading             | Low      | Public        | Even Out Dialog Gaps And Eyebrows                                       | Fix                                                        |
-| F-78 | C-7                          | Auth Error Messages End In Full Stop            | Low      | Account       | Tidy Copy On Account, Public And Keeper Screens                         | Fix                                                        |
-| F-79 | C-6                          | Aria-Labels Mix Title And Sentence Case         | Low      | Cross-cutting | None                                                                    | Answer, Title Case                                         |
-| F-80 | C-5                          | Placeholder Casing Differs From Siblings        | Low      | Cross-cutting | Make The Placeholder Lint Refuse Non-Literal Values                     | Answer, Title Case                                         |
-| F-81 | C-12                         | Raw Spacing Literals                            | Low      | Code          | D-194's task (MC.9)                                                     | Fix                                                        |
-| F-82 | C-13                         | fieldsRefused Written Twice                     | Low      | Code          | Share fieldsRefused And Move The Users Page Assembly                    | Fix                                                        |
-| F-83 | C-10                         | Hand-Built Tables Skip DataTable                | Low      | Code          | Share fieldsRefused And Move The Users Page Assembly                    | Fix                                                        |
-| F-84 | C-9                          | Users Page Assembles Its Own Data               | Low      | Code          | Share fieldsRefused And Move The Users Page Assembly                    | Fix, Module Service                                        |
-| F-85 | C-14                         | Mixed-Job Components Over 300 Lines             | Low      | Code          | None                                                                    | Answer, Split By Job                                       |
-| F-86 | none                         | Colour Sliders Show Single Letters At 375       | Low      | Keepers       | None                                                                    | Fix                                                        |
-| F-87 | none                         | Save Address Sits Under GitHub Issue            | Low      | Keepers       | None                                                                    | Fix, The Button Reads "Save Issue"                         |
+| Id   | Lane ids                     | Title                                           | Severity | Area          | Proposed task                                               | Owner's Choice                                             |
+| ---- | ---------------------------- | ----------------------------------------------- | -------- | ------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
+| F-1  | CP-2, S-2, A-3, P-11         | Dates And Times In Mixed Formats                | Medium   | Cross-cutting | T-1 Route Every Date Through utc.ts                         | Fix, Long In Detail, Short In Tables                       |
+| F-2  | P-1                          | 404 Question Mark Button Wraps Alone            | Medium   | Public        | T-2 Give Error And Gate Pages One Layout                    | Fix                                                        |
+| F-3  | S-1, C-4, CD-8               | Non-Literal Placeholders Escape The Length Lint | Medium   | Cross-cutting | None                                                        | Skip                                                       |
+| F-4  | S-29                         | Staff Help Drops The Keepers Frame              | Medium   | Keepers       | T-3 Draw Staff Help Inside The Keepers Frame                | Fix, Staff Help Inside The Keepers Frame                   |
+| F-5  | A-7, P-9                     | Support Hint Drawn In Error Red                 | Medium   | Public        | T-4 Fix The Support Form Hint, Radio Cards And Messages     | Fix, Warning Style                                         |
+| F-6  | A-9                          | Site Role Written As Lower-Case Keeper          | Medium   | Account       | T-5 Write Keeper With A Capital                             | Fix                                                        |
+| F-7  | CD-4                         | Delete Control Differs Between Edit Dialogs     | Medium   | Dialogs       | T-6 Bring Red Controls And Delete Icons Into The Rule       | Fix, Icon Delete With Tooltip                              |
+| F-8  | A-14                         | Group Error Ends In A Full Stop                 | Medium   | Public        | T-4 Fix The Support Form Hint, Radio Cards And Messages     | Fix                                                        |
+| F-9  | CP-8, S-17                   | Page Delete Buttons Drawn Red                   | Medium   | Cross-cutting | T-6 Bring Red Controls And Delete Icons Into The Rule       | Fix, Split                                                 |
+| F-10 | C-2                          | Decline Invitation Drawn Red                    | Medium   | Account       | T-6 Bring Red Controls And Delete Icons Into The Rule       | Answer, Add Decline To The Named Red Controls              |
+| F-11 | CD-1                         | Leave Dialog Disables Its Primary Button        | Medium   | Dialogs       | T-7 Fix The Leave And Record A Working Dialogs              | Fix                                                        |
+| F-12 | P-6, T-1                     | Compendium Entry Leaves A Blank Gap             | Medium   | Compendium    | None                                                        | Skip                                                       |
+| F-13 | S-16                         | Keepers Hub Says Admin Invitations              | Medium   | Keepers       | T-5 Write Keeper With A Capital                             | Fix                                                        |
+| F-14 | MB.301                       | Help Search Shows No Pager                      | Medium   | Public        | MB.301                                                      | Skip                                                       |
+| F-15 | A-16, P-15, S-11, S-14, S-30 | Decorative Art Overlaps Text                    | Low      | Cross-cutting | None                                                        | Skip                                                       |
+| F-16 | CP-3, CP-4, S-10, S-27       | Empty Table Cells And Card Labels               | Low      | Cross-cutting | T-8 Show One Mark In Empty Cells                            | Fix, Dash In The Cell                                      |
+| F-17 | P-16, S-11, S-31             | Straight And Curly Quotes Mixed                 | Low      | Public        | T-9 Tidy Help And Public Page Copy                          | Fix, Bold Field Names Instead Of Quotes                    |
+| F-18 | CD-8, S-3                    | Two Close Buttons In The Filters Sheet          | Low      | Dialogs       | T-10 Fix 375 Layout Faults In Sheets And Dialogs            | Fix, An X Button In The Sheet Header                       |
+| F-19 | P-5, CP-7                    | Safety Note Repeated On One Entry               | Low      | Compendium    | T-11 Fix The Compendium Pages                               | Fix, Once Per Page                                         |
+| F-20 | CP-7, T-2                    | Empty Value Lines Repeat                        | Low      | Compendium    | T-11 Fix The Compendium Pages                               | Fix, Hide Empty Groups                                     |
+| F-21 | A-17                         | Small Buttons Under 24px At 375                 | Low      | Account       | T-12 Grow Small Buttons To A 24 Pixel Hit Area              | Fix, Padding Grows The Hit Area                            |
+| F-22 | CP-1                         | Coven Switcher Chevron Wraps                    | Low      | Coven         | T-10 Fix 375 Layout Faults In Sheets And Dialogs            | Fix, Truncate The Name                                     |
+| F-23 | A-11, P-10                   | Support Radio Cards Laid Out Differently        | Low      | Public        | T-4 Fix The Support Form Hint, Radio Cards And Messages     | Fix, Always Stacked                                        |
+| F-24 | A-14                         | Every Radio Card Turns Red For One Error        | Low      | Public        | None                                                        | Skip                                                       |
+| F-25 | A-18                         | Radio Card Looks Selected When Empty            | Low      | Public        | T-4 Fix The Support Form Hint, Radio Cards And Messages     | Fix                                                        |
+| F-26 | S-13, S-22                   | Keeper Form Pages Differ In Width               | Low      | Keepers       | T-13 Align Keeper Form Pages And Tab Strips                 | Fix, One Narrow Width For Form Pages                       |
+| F-27 | S-15                         | Tab Strips Start Clipped                        | Low      | Keepers       | T-13 Align Keeper Form Pages And Tab Strips                 | Fix, Start At The First Tab And Add A Fade Cue At The Clip |
+| F-28 | S-12, S-33                   | Support Status Filters Hidden At 375            | Low      | Keepers       | T-13 Align Keeper Form Pages And Tab Strips                 | Fix, Merged Into F-27                                      |
+| F-29 | S-21, S-32                   | Download CSV Solid On Empty List                | Low      | Keepers       | T-13 Align Keeper Form Pages And Tab Strips                 | Fix, Disabled While The List Is Empty                      |
+| F-30 | S-7                          | Uneven Gaps In Dialogs                          | Low      | Dialogs       | T-14 Even Out Dialog And Page Spacing                       | Fix                                                        |
+| F-31 | A-13, CD-13                  | Confirm Buttons Wrap At 375                     | Low      | Dialogs       | T-10 Fix 375 Layout Faults In Sheets And Dialogs            | Fix                                                        |
+| F-32 | CD-10                        | Dialog Eyebrow Halo In Dark                     | Low      | Dialogs       | T-14 Even Out Dialog And Page Spacing                       | Fix                                                        |
+| F-33 | CD-11                        | Builder Eyebrow Wraps At 375                    | Low      | Dialogs       | T-10 Fix 375 Layout Faults In Sheets And Dialogs            | Fix, Align The Wrapped Lines                               |
+| F-34 | CD-6                         | Complete Action Has Two Names                   | Low      | Dialogs       | T-7 Fix The Leave And Record A Working Dialogs              | Fix, Name It Complete                                      |
+| F-35 | CD-7                         | Confirm Title Misnames The Action               | Low      | Dialogs       | T-7 Fix The Leave And Record A Working Dialogs              | Fix                                                        |
+| F-36 | CD-9                         | Share Toggle Sits Under Its Label               | Low      | Dialogs       | T-14 Even Out Dialog And Page Spacing                       | Fix, Keep Under The Label And Close The Gap                |
+| F-37 | CD-12                        | Member Dialog Date Wraps Mid-Date               | Low      | Dialogs       | T-14 Even Out Dialog And Page Spacing                       | Fix                                                        |
+| F-38 | CD-12                        | Stray Dot Before None                           | Low      | Cross-cutting | T-15 Tidy Coven And Auth Copy                               | Fix                                                        |
+| F-39 | CD-13                        | Delete Coven Radio Carries No Warning           | Low      | Dialogs       | None                                                        | Withdrawn                                                  |
+| F-40 | CD-14                        | Spell Preview Repeats Ingredients               | Low      | Dialogs       | None                                                        | Skip                                                       |
+| F-41 | CD-14                        | Entry Details Has An Empty Header Band          | Low      | Dialogs       | None                                                        | Skip                                                       |
+| F-42 | CD-14                        | Invite Dialog Copy Is Wordy                     | Low      | Dialogs       | T-15 Tidy Coven And Auth Copy                               | Fix                                                        |
+| F-43 | CD-2                         | Footers Out Of View At 375                      | Low      | Dialogs       | None                                                        | Skip                                                       |
+| F-44 | A-1                          | Document Mail Has Two Solid Buttons             | Low      | Mail          | None                                                        | Skip                                                       |
+| F-45 | A-2                          | Sign-In Instruction Has No Link                 | Low      | Mail          | T-16 Tidy The Mail Links And Headings                       | Fix, Link "account page" To The Account Page               |
+| F-46 | A-4                          | Reset Button Has Two Labels                     | Low      | Mail          | None                                                        | Skip                                                       |
+| F-47 | A-5                          | Support Mail Headings In Sentence Case          | Low      | Mail          | T-16 Tidy The Mail Links And Headings                       | Fix, Title Case The Lead-In                                |
+| F-48 | P-2                          | Error Pages Share No Layout                     | Low      | Public        | T-2 Give Error And Gate Pages One Layout                    | Fix, One Shared Body                                       |
+| F-49 | P-4                          | Gate Cards Align Differently                    | Low      | Public        | T-2 Give Error And Gate Pages One Layout                    | Fix                                                        |
+| F-50 | P-18                         | Reset Password Spacing Uneven                   | Low      | Public        | T-2 Give Error And Gate Pages One Layout                    | Fix, Make The Spacing Consistent                           |
+| F-51 | P-3                          | Disabled Provider Message Repeats               | Low      | Public        | None                                                        | Skip                                                       |
+| F-52 | A-10, A-12, P-19             | Waiting Page Offers No Next Step                | Low      | Account       | T-17 Show Next Steps On Blocked Coven Pages                 | Fix                                                        |
+| F-53 | CP-6                         | Refused Invitations Page Drops The Shell        | Low      | Coven         | T-17 Show Next Steps On Blocked Coven Pages                 | Answer, Show Not Authorized Inside The Shell               |
+| F-54 | A-8                          | Request Thread Shows You Twice                  | Low      | Public        | T-4 Fix The Support Form Hint, Radio Cards And Messages     | Fix                                                        |
+| F-55 | P-12                         | Compendium No-Match Says It Twice               | Low      | Compendium    | T-11 Fix The Compendium Pages                               | Fix                                                        |
+| F-56 | P-17                         | Terms Offered Three Ways                        | Low      | Account       | None                                                        | Skip                                                       |
+| F-57 | A-15                         | Sign-In Methods Repeats Sections                | Low      | Account       | None                                                        | Skip                                                       |
+| F-58 | CP-5                         | Overview Contents Repeats Navigation            | Low      | Coven         | None                                                        | Skip                                                       |
+| F-59 | S-13                         | Keepers Hub Repeats Its Own Navigation          | Low      | Keepers       | None                                                        | Skip                                                       |
+| F-60 | P-7                          | Heading Level Skips After Details               | Low      | Compendium    | T-11 Fix The Compendium Pages                               | Fix, Correct The Level Without Making The Headings Larger  |
+| F-61 | P-14                         | FAQ Link Doubles Heading Name                   | Low      | Public        | T-9 Tidy Help And Public Page Copy                          | Fix                                                        |
+| F-62 | S-20                         | Add Ingredient Twice On Curator Compendium      | Low      | Keepers       | T-18 Tidy The Keeper Screens                                | Fix, Correct The Doc To Add Ingredient                     |
+| F-63 | S-4                          | Date Popover Covers Top Bar                     | Low      | Dialogs       | T-14 Even Out Dialog And Page Spacing                       | Fix                                                        |
+| F-64 | S-5                          | Colour Hint Says Under The Veil                 | Low      | Keepers       | None                                                        | Skip                                                       |
+| F-65 | S-6                          | Refused Opens Intro Hard To Read                | Low      | Keepers       | T-18 Tidy The Keeper Screens                                | Fix                                                        |
+| F-66 | S-9                          | Sourcing Score Heading Clipped                  | Low      | Keepers       | T-18 Tidy The Keeper Screens                                | Fix, Edge Shading                                          |
+| F-67 | S-19                         | People Page Has A Users Toggle                  | Low      | Keepers       | None                                                        | Withdrawn                                                  |
+| F-68 | none                         | People Cards Very Tall At 375                   | Low      | Keepers       | T-18 Tidy The Keeper Screens                                | Fix                                                        |
+| F-69 | none                         | Support Status Is An Icon Only                  | Low      | Keepers       | None                                                        | Withdrawn                                                  |
+| F-70 | none                         | Staff Help Card Eyebrows Repeat Guide           | Low      | Keepers       | None                                                        | Skip                                                       |
+| F-71 | S-24                         | Group Shown Two Ways                            | Low      | Keepers       | None                                                        | Skip                                                       |
+| F-72 | S-25                         | Toggle Label Repeats As Shown                   | Low      | Keepers       | T-18 Tidy The Keeper Screens                                | Fix, Label Above Only                                      |
+| F-73 | S-26                         | Help Guide Counts Blank                         | Low      | Keepers       | None                                                        | Skip                                                       |
+| F-74 | S-28                         | Sort Icon May Lack A Name                       | Low      | Keepers       | T-18 Tidy The Keeper Screens                                | Fix                                                        |
+| F-75 | T-3                          | Footnote Marker Is Small Plain Text             | Low      | Public        | T-9 Tidy Help And Public Page Copy                          | Fix                                                        |
+| F-76 | T-4                          | Signed-In Help Hides Compendium Link            | Low      | Public        | T-9 Tidy Help And Public Page Copy                          | Fix                                                        |
+| F-77 | T-5                          | Gap Between Intro And First Heading             | Low      | Public        | T-14 Even Out Dialog And Page Spacing                       | Fix                                                        |
+| F-78 | C-7                          | Auth Error Messages End In Full Stop            | Low      | Account       | T-15 Tidy Coven And Auth Copy                               | Fix                                                        |
+| F-79 | C-6                          | Aria-Labels Mix Title And Sentence Case         | Low      | Cross-cutting | T-19 Set aria-label And Placeholder Casing                  | Answer, Title Case                                         |
+| F-80 | C-5                          | Placeholder Casing Differs From Siblings        | Low      | Cross-cutting | T-19 Set aria-label And Placeholder Casing                  | Answer, Title Case                                         |
+| F-81 | C-12                         | Raw Spacing Literals                            | Low      | Code          | D-194's existing task                                       | Fix                                                        |
+| F-82 | C-13                         | fieldsRefused Written Twice                     | Low      | Code          | T-20 Share fieldsRefused And Move The Users Page Assembly   | Fix                                                        |
+| F-83 | C-10                         | Hand-Built Tables Skip DataTable                | Low      | Code          | T-20 Share fieldsRefused And Move The Users Page Assembly   | Fix                                                        |
+| F-84 | C-9                          | Users Page Assembles Its Own Data               | Low      | Code          | T-20 Share fieldsRefused And Move The Users Page Assembly   | Fix, Module Service                                        |
+| F-85 | C-14                         | Mixed-Job Components Over 300 Lines             | Low      | Code          | T-21 Split The Large Ingredient And Spell Components By Job | Answer, Split By Job                                       |
+| F-86 | none                         | Colour Sliders Show Single Letters At 375       | Low      | Keepers       | T-18 Tidy The Keeper Screens                                | Fix                                                        |
+| F-87 | none                         | Save Address Sits Under GitHub Issue            | Low      | Keepers       | T-4 Fix The Support Form Hint, Radio Cards And Messages     | Fix, The Button Reads "Save Issue"                         |
 
 ## Findings
 
@@ -152,23 +150,19 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - ISO Everywhere (2026-11-17 21:07)
   - Long In Prose, ISO In Tables
 - **Owner's Choice:** Fix, Long In Detail, Short In Tables
-- **Follow-up Task:** Route Every Date Through utc.ts
+- **Follow-up Task:** T-1 Route Every Date Through utc.ts
 
-### F-2 404 Page Offers Help Four Ways
+### F-2 404 Question Mark Button Wraps Alone
 
 - **Severity:** Medium
 - **Lens:** Layout at 375, Bloat
 - **Lane ids:** P-1
 - **Where:** `/missing` and the 404 pages for a missing compendium entry, a missing help article and a nested missing page (signed out, 375 and desktop, light and dark); the signed-in 404 pages for a coven the viewer is not in, a missing coven, a missing page and a bad ingredient id (user role). The signed-in pages were read from screen text only.
-- **Found:** Seen in the picture and the screen text, sure. The body offers "Back to Sorrel & Salt", "Help" and "Report This". The shell adds a Help button and a "?" icon button, and the footer adds a Help link and a "?" icon. At 375 the "?" icon button wraps alone onto its own row.
-- **Why It Matters:** A page with one way forward is easier to use, and an orphaned control on its own row is a 375 layout fault. No external source; this repo's rule is "One solid button per view" (`claude-docs/styling.md:357`) and the 375 layout check. I rate it Medium because it appears on every error page; I am not sure it breaks a written rule, so the rating is the owner's to confirm.
-- **Recommended Fix:** Keep the body links and one Help entry in the shell, and drop the duplicate "?" icon controls where a text link sits beside them. Shared piece: `ErrorPage`.
-- **Options:**
-  - Drop The Body Help Link
-  - Drop The Question Mark Icons
-  - Keep Both And Make The Wrap Deliberate
-- **Owner's Choice:** Open: awaiting the owner's answer
-- **Follow-up Task:** Give Error And Gate Pages One Layout
+- **Found:** Seen in the picture and the screen text, sure. The body offers "Back to Sorrel & Salt", "Help" and "Report This"; Help and Report This are different jobs and both stay. The shell adds a "?" icon button, and at 375 that button wraps alone onto its own row.
+- **Why It Matters:** An orphaned control on its own row is a 375 layout fault. No external source; this repo's 375 layout check. I kept the rating Medium so the finding ids stay stable; Low would fit the narrower scope.
+- **Recommended Fix:** Keep the "?" icon button on the same row as its neighbours at 375. Shared piece: `ErrorPage`.
+- **Owner's Choice:** Fix. Only the "?" icon button wrapping alone at 375 changes. Help and Report This are different jobs, so both stay.
+- **Follow-up Task:** T-2 Give Error And Gate Pages One Layout
 
 ### F-3 Non-Literal Placeholders Escape The Length Lint
 
@@ -183,7 +177,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Empty Placeholder With The Limit In The Hint
   - Keep "1 to 50" As A Hint Only
 - **Owner's Choice:** Skip. Acceptable: these placeholders are built from the field's name.
-- **Follow-up Task:** Make The Placeholder Lint Refuse Non-Literal Values
+- **Follow-up Task:** None
 
 ### F-4 Staff Help Drops The Keepers Frame
 
@@ -198,7 +192,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Put The Keepers Frame Around Staff Help
   - Keep It A Help Page And Remove The Staff Help Link From The Keepers Sub-Nav And Hub
 - **Owner's Choice:** Fix, Staff Help Inside The Keepers Frame
-- **Follow-up Task:** Draw Staff Help Inside The Keepers Frame
+- **Follow-up Task:** T-3 Draw Staff Help Inside The Keepers Frame
 
 ### F-5 Support Hint Drawn In Error Red
 
@@ -207,10 +201,10 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Lane ids:** A-7, P-9
 - **Where:** the Message field on `/support` and `/support/request` (signed out and signed in, 375 and desktop, light and dark), the Feedback dialog, and both empty-submit states of each.
 - **Found:** Seen in the pictures, sure. The hint "Don't include passwords, payment details or other private information." above the Message box is drawn in the error style.
-- **Why It Matters:** R7 (`.claude/rules/components.md:77`) reserves error red for errors, and colour alone should not carry "problem" [S1].
-- **Recommended Fix:** Use the Field set's hint style, not `.field__error`. Shared piece: Field set hint.
-- **Owner's Choice:** Open: awaiting the owner's answer
-- **Follow-up Task:** Fix The Support Form Hint, Radio Cards And Messages
+- **Why It Matters:** R7 (`.claude/rules/components.md:77`) reserves error red for errors, and colour alone should not carry "problem" [S1]. The owner wants a warning here because people really should not include private details.
+- **Recommended Fix:** Draw the hint in the warning style: not the error style and not the plain hint style. Shared piece: `Notice` or the Field set, whichever holds the warning style; if neither does, add a caution variant there.
+- **Owner's Choice:** Fix, Warning Style. Drawn in the warning style, not the error style and not the plain hint style. The owner's reason: people really should not include private details, and they are to be warned.
+- **Follow-up Task:** T-4 Fix The Support Form Hint, Radio Cards And Messages
 
 ### F-6 Site Role Written As Lower-Case Keeper
 
@@ -222,7 +216,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** CLAUDE.md, Vocabulary: the site role `admin` shows as Keeper. A role name is a proper name on screen.
 - **Recommended Fix:** Write "Keeper" and "Keepers" with a capital in these three screens. Copy only.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Write Keeper With A Capital
+- **Follow-up Task:** T-5 Write Keeper With A Capital
 
 ### F-7 Delete Control Differs Between Edit Dialogs
 
@@ -238,7 +232,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Tooltip Only
   - Label And Tooltip
 - **Owner's Choice:** Fix, Icon Delete With Tooltip. The icon sits at the footer end, not the start.
-- **Follow-up Task:** Give Every Edit Dialog One Footer
+- **Follow-up Task:** T-6 Bring Red Controls And Delete Icons Into The Rule
 
 ### F-8 Group Error Ends In A Full Stop
 
@@ -250,7 +244,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** R7 (`.claude/rules/components.md:77`): a one-sentence message has no full stop. [S7] does not address full stops, so this rests on the repo rule alone.
 - **Recommended Fix:** Drop the full stop. Shared piece: Field set messages (`tests/guards/field-message.test.ts` already guards the shared ones; this string escapes it).
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Fix The Support Form Hint, Radio Cards And Messages
+- **Follow-up Task:** T-4 Fix The Support Form Hint, Radio Cards And Messages
 
 ### F-9 Page Delete Buttons Drawn Red
 
@@ -265,7 +259,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Draw Them Quiet
   - Name The Page Delete In The Rule
 - **Owner's Choice:** Fix, Split. Delete Coven stays red. Delete Guide becomes a delete icon like the edit dialogs (F-7).
-- **Follow-up Task:** Bring Red Controls Into The Rule
+- **Follow-up Task:** T-6 Bring Red Controls And Delete Icons Into The Rule
 
 ### F-10 Decline Invitation Drawn Red
 
@@ -280,7 +274,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Draw It Quiet
   - Add Decline To The Named Red Controls
 - **Owner's Choice:** Answer, Add Decline To The Named Red Controls
-- **Follow-up Task:** Bring Red Controls Into The Rule
+- **Follow-up Task:** T-6 Bring Red Controls And Delete Icons Into The Rule
 
 ### F-11 Leave Dialog Disables Its Primary Button
 
@@ -292,7 +286,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** The owner's Save rule: never disable Save for empty required fields; disabled only when there is nothing to save. R6 (`.claude/rules/components.md:76`) flags an empty required field on Save. A disabled button also has poor contrast and gives no reason [S6].
 - **Recommended Fix:** Keep the button enabled and flag New Steward on submit with `FormErrorSummary`. Shared piece: `FormActions`, `FormErrorSummary`.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Flag New Steward On Submit In The Leave Dialog
+- **Follow-up Task:** T-7 Fix The Leave And Record A Working Dialogs
 
 ### F-12 Compendium Entry Leaves A Blank Gap
 
@@ -306,8 +300,8 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Options:**
   - Forms Flows Up Under Details
   - Side Column Moves Below On Short Pages
-- **Owner's Choice:** Skip. The owner's reason: a form can have its own side-column items.
-- **Follow-up Task:** Fix The Compendium Entry Layout
+- **Owner's Choice:** Skip. The owner confirmed the reason: a form can have its own side-column items.
+- **Follow-up Task:** None
 
 ### F-13 Keepers Hub Says Admin Invitations
 
@@ -319,7 +313,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** CLAUDE.md, Vocabulary: the site role `admin` shows as Keeper; `admin` stays in code, schema and GraphQL only.
 - **Recommended Fix:** "Keeper invitations". Copy only.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Write Keeper With A Capital
+- **Follow-up Task:** T-5 Write Keeper With A Capital
 
 ### F-14 Help Search Shows No Pager
 
@@ -331,7 +325,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** CLAUDE.md rule 8: every list paginates through the cursor helper. A reader cannot reach a match past 200.
 - **Recommended Fix:** Read through the numbered-page helpers and draw `Pager`. Already minted at the owner's request; no owner choice is needed.
 - **Owner's Choice:** Skip. Already minted as MB.301; nothing to choose.
-- **Follow-up Task:** MB.301, Help Search Shows Every Match a Page at a Time (already minted)
+- **Follow-up Task:** MB.301
 
 ### F-15 Decorative Art Overlaps Text
 
@@ -347,7 +341,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Fade It Behind Text
   - Hide It At 375
 - **Owner's Choice:** Skip
-- **Follow-up Task:** Stop Decorative Art Covering Text
+- **Follow-up Task:** None
 
 ### F-16 Empty Table Cells And Card Labels
 
@@ -363,7 +357,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Words Such As Not Invited
   - Hide Empty Columns
 - **Owner's Choice:** Fix, Dash In The Cell
-- **Follow-up Task:** Show One Mark In Empty Cells
+- **Follow-up Task:** T-8 Show One Mark In Empty Cells
 
 ### F-17 Straight And Curly Quotes Mixed
 
@@ -378,7 +372,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Curly Quotes In The Content
   - Bold Field Names Instead Of Quotes
 - **Owner's Choice:** Fix, Bold Field Names Instead Of Quotes
-- **Follow-up Task:** Tidy Copy On Account, Public And Keeper Screens
+- **Follow-up Task:** T-9 Tidy Help And Public Page Copy
 
 ### F-18 Two Close Buttons In The Filters Sheet
 
@@ -393,7 +387,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Keep The Header Close
   - Keep The Footer Close
 - **Owner's Choice:** Fix, An X Button In The Sheet Header. Keep Close at the bottom.
-- **Follow-up Task:** Fix 375 Layout Faults In Sheets And Dialogs
+- **Follow-up Task:** T-10 Fix 375 Layout Faults In Sheets And Dialogs
 
 ### F-19 Safety Note Repeated On One Entry
 
@@ -408,7 +402,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Once Per Page
   - Keep It Per Block And Shorten It
 - **Owner's Choice:** Fix, Once Per Page. Also show it whenever there is a caution block.
-- **Follow-up Task:** Fix The Compendium Entry Layout
+- **Follow-up Task:** T-11 Fix The Compendium Pages
 
 ### F-20 Empty Value Lines Repeat
 
@@ -423,7 +417,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Hide Empty Groups
   - One Joined Line
 - **Owner's Choice:** Fix, Hide Empty Groups
-- **Follow-up Task:** Fix The Compendium Entry Layout
+- **Follow-up Task:** T-11 Fix The Compendium Pages
 
 ### F-21 Small Buttons Under 24px At 375
 
@@ -438,7 +432,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Padding Grows The Hit Area
   - Raise The Small Button Height
 - **Owner's Choice:** Fix, Padding Grows The Hit Area. Fix the wrapping too.
-- **Follow-up Task:** Fix 375 Layout Faults In Sheets And Dialogs
+- **Follow-up Task:** T-12 Grow Small Buttons To A 24 Pixel Hit Area
 
 ### F-22 Coven Switcher Chevron Wraps
 
@@ -453,7 +447,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Truncate The Name
   - Wrap And Align The Chevron To The First Line
 - **Owner's Choice:** Fix, Truncate The Name
-- **Follow-up Task:** Fix 375 Layout Faults In Sheets And Dialogs
+- **Follow-up Task:** T-10 Fix 375 Layout Faults In Sheets And Dialogs
 
 ### F-23 Support Radio Cards Laid Out Differently
 
@@ -468,7 +462,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Always Stacked
   - Inline At Desktop When It Fits
 - **Owner's Choice:** Fix, Always Stacked
-- **Follow-up Task:** Fix The Support Form Hint, Radio Cards And Messages
+- **Follow-up Task:** T-4 Fix The Support Form Hint, Radio Cards And Messages
 
 ### F-24 Every Radio Card Turns Red For One Error
 
@@ -483,7 +477,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - One Outline Around The Group
   - Error Text Only
 - **Owner's Choice:** Skip
-- **Follow-up Task:** Fix The Support Form Hint, Radio Cards And Messages
+- **Follow-up Task:** None
 
 ### F-25 Radio Card Looks Selected When Empty
 
@@ -495,7 +489,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A card that looks chosen when nothing is chosen misleads. No external source; this repo's rule is that focus and selected must differ (`.claude/rules/components.md`).
 - **Recommended Fix:** Check in a browser. If it is focus, make focus and selected look different.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** None
+- **Follow-up Task:** T-4 Fix The Support Form Hint, Radio Cards And Messages
 
 ### F-26 Keeper Form Pages Differ In Width
 
@@ -510,7 +504,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - One Narrow Width For Form Pages
   - Full Width For All
 - **Owner's Choice:** Fix, One Narrow Width For Form Pages
-- **Follow-up Task:** Align The Keeper Pages
+- **Follow-up Task:** T-13 Align Keeper Form Pages And Tab Strips
 
 ### F-27 Tab Strips Start Clipped
 
@@ -521,11 +515,8 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Found:** Seen in the pictures, sure. `TabbedPage/index.scss:173-188` holds the strip's scroll behaviour; why the strip lands scrolled to the end was not traced.
 - **Why It Matters:** A clipped first tab hides what the strip is. No external source; this repo's rule is "Share, never copy", since `TabbedPage` is the one tab strip.
 - **Recommended Fix:** Do not scroll the strip to the end on load, size it to fit, and give a scroll cue where it does clip. Shared piece: `TabbedPage`.
-- **Options:**
-  - Start At The First Tab
-  - Add A Fade Cue At The Clip
 - **Owner's Choice:** Fix, Start At The First Tab And Add A Fade Cue At The Clip. The owner believes the strip already starts at Terms of Use, so the task first checks that in a browser.
-- **Follow-up Task:** Align The Keeper Pages
+- **Follow-up Task:** T-13 Align Keeper Form Pages And Tab Strips
 
 ### F-28 Support Status Filters Hidden At 375
 
@@ -533,14 +524,11 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Lens:** Layout at 375
 - **Lane ids:** S-12, S-33
 - **Where:** `/keepers/support` (curator and keeper, 375, light and dark). Needs Staff, Mine and Unassigned show; Waiting on Sender, Resolved and Closed do not. The Invitations strip at 375 visibly clips, a cue this strip lacks.
-- **Found:** Seen in the pictures. Whether the strip scrolls sideways is not settled; needs a look in a browser.
+- **Found:** Seen in the pictures, and settled from code. The support views are `TabbedPage` tabs; `.tabbed-page__row` scrolls sideways with its scrollbar hidden (`src/components/TabbedPage/index.scss:173-190`), so the other three filters are reachable by swiping and nothing cues it.
 - **Why It Matters:** Three of six filters with no cue hides what exists. No external source; this repo's 375 layout check.
-- **Recommended Fix:** Add a clip or fade cue, or wrap the chips. Shared piece: `FilterForm`.
-- **Options:**
-  - Fade Cue At The Clip
-  - Wrap The Chips
-- **Owner's Choice:** Open: awaiting the owner's answer
-- **Follow-up Task:** Fix 375 Layout Faults In Sheets And Dialogs
+- **Recommended Fix:** Merged into the fix for F-27: a fade cue on the shared tab strip covers both. Shared piece: `TabbedPage`.
+- **Owner's Choice:** Fix, Merged Into F-27. The fade cue on the shared tab strip covers both.
+- **Follow-up Task:** T-13 Align Keeper Form Pages And Tab Strips
 
 ### F-29 Download CSV Solid On Empty List
 
@@ -555,7 +543,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Quiet While Empty
   - Hidden While Empty
 - **Owner's Choice:** Fix, Disabled While The List Is Empty
-- **Follow-up Task:** Align The Keeper Pages
+- **Follow-up Task:** T-13 Align Keeper Form Pages And Tab Strips
 
 ### F-30 Uneven Gaps In Dialogs
 
@@ -567,7 +555,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A layout gap is the sum of every stacked margin and gap. No external source; this repo's rule is the spacing scale (`claude-docs/styling.md:205-212`).
 - **Recommended Fix:** Remove the empty row from the Field when there is no message. Shared piece: Field set.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Even Out Dialog Gaps And Eyebrows
+- **Follow-up Task:** T-14 Even Out Dialog And Page Spacing
 
 ### F-31 Confirm Buttons Wrap At 375
 
@@ -579,7 +567,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** Wrapped button text looks cramped and breaks the one-line button rule. No external source; this repo's 375 layout check.
 - **Recommended Fix:** Stack the buttons at 375, as the rename-passkey dialog does. Shared piece: `FormActions`, `ConfirmedAction`.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Fix 375 Layout Faults In Sheets And Dialogs
+- **Follow-up Task:** T-10 Fix 375 Layout Faults In Sheets And Dialogs
 
 ### F-32 Dialog Eyebrow Halo In Dark
 
@@ -591,7 +579,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** Both themes should look the same in structure. No external source; this repo's rule is two themes, one structure (`claude-docs/styling.md`).
 - **Recommended Fix:** Remove the patch in dark. Shared piece: `Modal`.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Even Out Dialog Gaps And Eyebrows
+- **Follow-up Task:** T-14 Even Out Dialog And Page Spacing
 
 ### F-33 Builder Eyebrow Wraps At 375
 
@@ -606,7 +594,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Truncate The Name
   - Align The Wrapped Lines
 - **Owner's Choice:** Fix, Align The Wrapped Lines
-- **Follow-up Task:** Even Out Dialog Gaps And Eyebrows
+- **Follow-up Task:** T-10 Fix 375 Layout Faults In Sheets And Dialogs
 
 ### F-34 Complete Action Has Two Names
 
@@ -621,7 +609,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Complete
   - Mark Complete
 - **Owner's Choice:** Fix, Name It Complete. Make clear to the user what completing does.
-- **Follow-up Task:** Give Every Edit Dialog One Footer
+- **Follow-up Task:** T-7 Fix The Leave And Record A Working Dialogs
 
 ### F-35 Confirm Title Misnames The Action
 
@@ -633,7 +621,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** The title should name the action. This repo's rule is the dialog titles in `claude-docs/components/modal.md`.
 - **Recommended Fix:** Title the confirm step "Complete Working". Shared piece: `RecordWorking`.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Give Every Edit Dialog One Footer
+- **Follow-up Task:** T-7 Fix The Leave And Record A Working Dialogs
 
 ### F-36 Share Toggle Sits Under Its Label
 
@@ -648,7 +636,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Toggle On The Label Row
   - Keep Under The Label And Close The Gap
 - **Owner's Choice:** Fix, Keep Under The Label And Close The Gap
-- **Follow-up Task:** Even Out Dialog Gaps And Eyebrows
+- **Follow-up Task:** T-14 Even Out Dialog And Page Spacing
 
 ### F-37 Member Dialog Date Wraps Mid-Date
 
@@ -660,7 +648,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A date split across lines is hard to read. This repo's rule: a row's Remove is `btn btn--quiet btn--small` (`.claude/rules/components.md:58`).
 - **Recommended Fix:** Keep the date on one line, and check the Remove class. Shared piece: `LocalTime`.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Even Out Dialog Gaps And Eyebrows
+- **Follow-up Task:** T-14 Even Out Dialog And Page Spacing
 
 ### F-38 Stray Dot Before None
 
@@ -672,7 +660,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A dot with nothing before it reads as a fault. No external source; this repo's plain-writing rule.
 - **Recommended Fix:** Drop the leading dot when the value is empty.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Tidy Copy On Account, Public And Keeper Screens
+- **Follow-up Task:** T-15 Tidy Coven And Auth Copy
 
 ### F-39 Delete Coven Radio Carries No Warning
 
@@ -687,7 +675,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Hint Text Names The Outcome
   - Red Radio Label
 - **Owner's Choice:** Withdrawn. The dialog already says below the radio what happens. See Left As It Is.
-- **Follow-up Task:** Bring Red Controls Into The Rule
+- **Follow-up Task:** None
 
 ### F-40 Spell Preview Repeats Ingredients
 
@@ -699,7 +687,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** Say a thing once. No external source; this repo's plain-writing rule.
 - **Recommended Fix:** Check the seed; if the app draws it twice, draw it once.
 - **Owner's Choice:** Skip. Not a repeat: one is the list of ingredients and the other is the order of the steps, which can carry more detail.
-- **Follow-up Task:** Tidy Copy On Account, Public And Keeper Screens
+- **Follow-up Task:** None
 
 ### F-41 Entry Details Has An Empty Header Band
 
@@ -710,8 +698,8 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Found:** Seen in the pictures, sure.
 - **Why It Matters:** An empty band spends space and hides nothing useful. No external source; this repo's rule is "Share, never copy", since `Modal` already draws a title row.
 - **Recommended Fix:** Put the X in the title row. Shared piece: `Modal`.
-- **Owner's Choice:** Open: awaiting the owner's answer
-- **Follow-up Task:** Even Out Dialog Gaps And Eyebrows
+- **Owner's Choice:** Skip. The band holds the Edit and Edit Stock buttons.
+- **Follow-up Task:** None
 
 ### F-42 Invite Dialog Copy Is Wordy
 
@@ -723,7 +711,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** Short sentences are easier to read. This repo's plain-writing rule.
 - **Recommended Fix:** Shorten both lines.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Tidy Copy On Account, Public And Keeper Screens
+- **Follow-up Task:** T-15 Tidy Coven And Auth Copy
 
 ### F-43 Footers Out Of View At 375
 
@@ -753,7 +741,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - One Button To A List Page
   - Keep Two Buttons And Bold The Names
 - **Owner's Choice:** Skip
-- **Follow-up Task:** Tidy The Mail Calls To Action And Headings
+- **Follow-up Task:** None
 
 ### F-45 Sign-In Instruction Has No Link
 
@@ -765,7 +753,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** The password-changed mails give a button for the same kind of instruction. No external source; this repo's rule is "Share, never copy".
 - **Recommended Fix:** Add a Sign In button, or reword the verify-email line. Shared piece: `src/emails/parts/layout.ts`.
 - **Owner's Choice:** Fix, Link "account page" To The Account Page. The person can request a new link there.
-- **Follow-up Task:** Tidy The Mail Calls To Action And Headings
+- **Follow-up Task:** T-16 Tidy The Mail Links And Headings
 
 ### F-46 Reset Button Has Two Labels
 
@@ -779,8 +767,8 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Options:**
   - Reset My Password
   - Choose a New Password
-- **Owner's Choice:** Open: awaiting the owner's answer
-- **Follow-up Task:** Tidy The Mail Calls To Action And Headings
+- **Owner's Choice:** Skip. The two wordings are distinct on purpose, one per situation.
+- **Follow-up Task:** None
 
 ### F-47 Support Mail Headings In Sentence Case
 
@@ -795,7 +783,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Title Case The Lead-In
   - Record Sentence Case As Deliberate
 - **Owner's Choice:** Fix, Title Case The Lead-In
-- **Follow-up Task:** Tidy The Mail Calls To Action And Headings
+- **Follow-up Task:** T-16 Tidy The Mail Links And Headings
 
 ### F-48 Error Pages Share No Layout
 
@@ -810,7 +798,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - One Shared Body
   - Keep Them Different And Record Why
 - **Owner's Choice:** Fix, One Shared Body
-- **Follow-up Task:** Give Error And Gate Pages One Layout
+- **Follow-up Task:** T-2 Give Error And Gate Pages One Layout
 
 ### F-49 Gate Cards Align Differently
 
@@ -822,7 +810,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** Gate cards read as one family when they match. No external source; this repo's rule is "Share, never copy".
 - **Recommended Fix:** Build all three on one card layout. Shared piece: `NarrowPanelPage`.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Give Error And Gate Pages One Layout
+- **Follow-up Task:** T-2 Give Error And Gate Pages One Layout
 
 ### F-50 Reset Password Spacing Uneven
 
@@ -834,7 +822,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A gap is the sum of every stacked margin; two sibling pages should space alike. No external source; this repo's rule is the spacing scale (`claude-docs/styling.md:205-212`).
 - **Recommended Fix:** Use the same subtitle gap as `/forgot-password`, and draw the strength bar only once there is input. Shared piece: `NarrowPanelPage`.
 - **Owner's Choice:** Fix, Make The Spacing Consistent. Allow for the content that appears under the password field once something is typed.
-- **Follow-up Task:** Give Error And Gate Pages One Layout
+- **Follow-up Task:** T-2 Give Error And Gate Pages One Layout
 
 ### F-51 Disabled Provider Message Repeats
 
@@ -848,17 +836,17 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Owner's Choice:** Skip
 - **Follow-up Task:** None
 
-### F-52 Blocked States Give No Next Step
+### F-52 Waiting Page Offers No Next Step
 
 - **Severity:** Low
 - **Lens:** Says what to do
 - **Lane ids:** A-10, A-12, P-19
-- **Where:** the waiting page on `/coven` and `/coven/new` (user, no contact or link to `/account` or Support; moderate confidence); the two-factor warning "Your backup codes won't be shown again." (no next step); the paused coven page, which names the steward as plain text with no contact.
+- **Where:** the waiting page on `/coven` and `/coven/new` (user): no link to Support. The backup-codes line and the paused coven page were reported with it and are not part of this finding.
 - **Found:** Seen in the pictures and the screen text, sure of the text.
 - **Why It Matters:** This repo's rule (`.claude/rules/components.md:60-65` and `claude-docs/styling.md:363`): a message says what happened in one sentence and what to do in the next.
-- **Recommended Fix:** Add the next step to each: a link to Support, "Save them before you continue", and a way to contact the steward. Shared piece: `Notice`, `EmptyState`.
-- **Owner's Choice:** Open: awaiting the owner's answer
-- **Follow-up Task:** Tidy Copy On Account, Public And Keeper Screens
+- **Recommended Fix:** Add a Support link on the waiting page only. Shared piece: `Notice`, `EmptyState`.
+- **Owner's Choice:** Fix. A Support link on the waiting page only. No contact route to a steward, and the backup-codes line stays as it is.
+- **Follow-up Task:** T-17 Show Next Steps On Blocked Coven Pages
 
 ### F-53 Refused Invitations Page Drops The Shell
 
@@ -868,12 +856,12 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Where:** `/coven/[slug]/invitations` for a practitioner or observer. `src/app/(shell)/coven/[slug]/(people)/invitations/page.tsx:25` calls `notFound()`, and `claude-docs/auth/coven-guard.md` documents it.
 - **Found:** Sure, from code. This is the documented behaviour, so it is not a defect by the repo's own rule. Whether a member should see a 404 inside the shell is a design question.
 - **Why It Matters:** A member who follows a link to a page that exists is told it does not.
-- **Recommended Fix:** I need the owner to choose. I recommend keeping the 404 and recording the reason.
+- **Recommended Fix:** The owner chose to show the Not Authorized page inside the shell for a practitioner or observer who opens the invitations page. Update `coven-guard.md` in the same task.
 - **Options:**
   - Keep The 404
   - Show Not Authorized Inside The Shell
 - **Owner's Choice:** Answer, Show Not Authorized Inside The Shell
-- **Follow-up Task:** None
+- **Follow-up Task:** T-17 Show Next Steps On Blocked Coven Pages
 
 ### F-54 Request Thread Shows You Twice
 
@@ -885,7 +873,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A repeated word reads as a fault. No external source; this repo's plain-writing rule.
 - **Recommended Fix:** Show the badge only when the name is not already "You". Shared piece: the support thread component.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Fix The Support Form Hint, Radio Cards And Messages
+- **Follow-up Task:** T-4 Fix The Support Form Hint, Radio Cards And Messages
 
 ### F-55 Compendium No-Match Says It Twice
 
@@ -897,7 +885,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** Say a thing once, with one noun. No external source; this repo's plain-writing rule.
 - **Recommended Fix:** Keep the second sentence and drop the first. Shared piece: `EmptyState`.
 - **Owner's Choice:** Fix. The owner believes a shared empty state with an action button already handles this, so the task uses it.
-- **Follow-up Task:** Tidy Copy On Account, Public And Keeper Screens
+- **Follow-up Task:** T-11 Fix The Compendium Pages
 
 ### F-56 Terms Offered Three Ways
 
@@ -912,7 +900,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Keep The List Links
   - Keep The Intro Links
 - **Owner's Choice:** Skip. Each serves a different purpose.
-- **Follow-up Task:** Tidy Copy On Account, Public And Keeper Screens
+- **Follow-up Task:** None
 
 ### F-57 Sign-In Methods Repeats Sections
 
@@ -941,7 +929,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Options:**
   - Remove It
   - Make It Show Counts
-- **Owner's Choice:** Open: awaiting the owner's answer
+- **Owner's Choice:** Skip. The Contents section stays as a landing summary, without counts.
 - **Follow-up Task:** None
 
 ### F-59 Keepers Hub Repeats Its Own Navigation
@@ -954,7 +942,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** Say a thing once. No external source; this repo's plain-writing rule.
 - **Recommended Fix:** Shorten the intro and let the hub list each area once with a one-line description. Shared piece: `AdminNav`.
 - **Owner's Choice:** Skip
-- **Follow-up Task:** Align The Keeper Pages
+- **Follow-up Task:** None
 
 ### F-60 Heading Level Skips After Details
 
@@ -966,7 +954,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** Headings should show the page's structure [S3]. This source does not mention skipped levels, so the finding rests on structure, not on a stated rule.
 - **Recommended Fix:** Make them h2 or add an h2 above. Shared piece: `IngredientEntry`.
 - **Owner's Choice:** Fix, Correct The Level Without Making The Headings Larger
-- **Follow-up Task:** Fix The Compendium Entry Layout
+- **Follow-up Task:** T-11 Fix The Compendium Pages
 
 ### F-61 FAQ Link Doubles Heading Name
 
@@ -978,7 +966,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A spoken name that repeats the question is noise, and a visible label should be inside the accessible name [S4].
 - **Recommended Fix:** Name the link "Link to this answer" or hide it from the heading's name.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** None
+- **Follow-up Task:** T-9 Tidy Help And Public Page Copy
 
 ### F-62 Add Ingredient Twice On Curator Compendium
 
@@ -993,7 +981,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Rename The Page Button To New Entry
   - Correct The Doc To Add Ingredient
 - **Owner's Choice:** Fix, Correct The Doc To Add Ingredient
-- **Follow-up Task:** Align The Keeper Pages
+- **Follow-up Task:** T-18 Tidy The Keeper Screens
 
 ### F-63 Date Popover Covers Top Bar
 
@@ -1005,7 +993,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A popover should stay inside the view. No external source; this repo's 375 and desktop layout check.
 - **Recommended Fix:** Open the popover downward when there is room, or flip by space. Shared piece: `DateField`.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Even Out Dialog Gaps And Eyebrows
+- **Follow-up Task:** T-14 Even Out Dialog And Page Spacing
 
 ### F-64 Colour Hint Says Under The Veil
 
@@ -1016,8 +1004,8 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Found:** Seen in the picture, sure.
 - **Why It Matters:** The hint uses a figure and a phrase the reader may not know. This repo's plain-writing rule. The 4.5:1 figure matches [S5].
 - **Recommended Fix:** "This colour is too faint to read on the dark card".
-- **Owner's Choice:** Open: awaiting the owner's answer
-- **Follow-up Task:** Tidy Copy On Account, Public And Keeper Screens
+- **Owner's Choice:** Skip. The hint means colours under the shaded region are too faint on dark cards.
+- **Follow-up Task:** None
 
 ### F-65 Refused Opens Intro Hard To Read
 
@@ -1029,7 +1017,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** The sentence is hard to parse. This repo's plain-writing rule.
 - **Recommended Fix:** "These cards no longer admit anyone. Further tries are refused and counted below", and align the table with the text.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Tidy Copy On Account, Public And Keeper Screens
+- **Follow-up Task:** T-18 Tidy The Keeper Screens
 
 ### F-66 Sourcing Score Heading Clipped
 
@@ -1039,9 +1027,9 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Where:** `/curator/compendium` (curator, desktop): the "Sourcing Score" column heading shows as "Sourcin", cut by the fixed action column.
 - **Found:** Seen in the picture, sure.
 - **Why It Matters:** A clipped heading hides what the column is. No external source; this repo's layout check.
-- **Recommended Fix:** Give the column its width or shorten the heading. Shared piece: `DataTable`.
-- **Owner's Choice:** Open: awaiting the owner's answer
-- **Follow-up Task:** Align The Keeper Pages
+- **Recommended Fix:** Shade the edge where the table scrolls under the action column, so it is clear the table scrolls there. Shared piece: `DataTable`.
+- **Owner's Choice:** Fix, Edge Shading. Shade the edge where the table scrolls under the action column, so it is clear the table scrolls there.
+- **Follow-up Task:** T-18 Tidy The Keeper Screens
 
 ### F-67 People Page Has A Users Toggle
 
@@ -1065,7 +1053,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A long card hides the next row. No external source; this repo's 375 layout check.
 - **Recommended Fix:** Collapse secondary values behind the card.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Align The Keeper Pages
+- **Follow-up Task:** T-18 Tidy The Keeper Screens
 
 ### F-69 Support Status Is An Icon Only
 
@@ -1077,7 +1065,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** Colour and shape alone carry the state [S1].
 - **Recommended Fix:** Add the status as text beside the icon. Shared piece: `DataTable`.
 - **Owner's Choice:** Withdrawn. The status mark has a tooltip and an accessible name (`src/components/SupportRequests/status-mark.tsx:14-15`). See Left As It Is.
-- **Follow-up Task:** Align The Keeper Pages
+- **Follow-up Task:** None
 
 ### F-70 Staff Help Card Eyebrows Repeat Guide
 
@@ -1089,7 +1077,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** An eyebrow that repeats the heading adds nothing. No external source; this repo's plain-writing rule.
 - **Recommended Fix:** Drop the repeated eyebrow.
 - **Owner's Choice:** Skip
-- **Follow-up Task:** Draw Staff Help Inside The Keepers Frame
+- **Follow-up Task:** None
 
 ### F-71 Group Shown Two Ways
 
@@ -1103,8 +1091,8 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Options:**
   - Chip
   - Icon And Text
-- **Owner's Choice:** Open: awaiting the owner's answer
-- **Follow-up Task:** Align The Keeper Pages
+- **Owner's Choice:** Skip. The two Group cells are different things.
+- **Follow-up Task:** None
 
 ### F-72 Toggle Label Repeats As Shown
 
@@ -1119,7 +1107,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Label Above Only
   - Switch Text Only
 - **Owner's Choice:** Fix, Label Above Only
-- **Follow-up Task:** Align The Keeper Pages
+- **Follow-up Task:** T-18 Tidy The Keeper Screens
 
 ### F-73 Help Guide Counts Blank
 
@@ -1134,7 +1122,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Show Zero
   - Hide Counts
 - **Owner's Choice:** Skip
-- **Follow-up Task:** Align The Keeper Pages
+- **Follow-up Task:** None
 
 ### F-74 Sort Icon May Lack A Name
 
@@ -1146,7 +1134,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A control with no name cannot be used by a screen reader. No external source is named here; this repo's rule is the unnamed-icon sweep.
 - **Recommended Fix:** Check the name.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** None
+- **Follow-up Task:** T-18 Tidy The Keeper Screens
 
 ### F-75 Footnote Marker Is Small Plain Text
 
@@ -1156,9 +1144,9 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Where:** `/code-of-ethics` and `/terms` (signed out, desktop, light): the marker "#1" is small underlined text.
 - **Found:** Seen in the picture. The target size at 375 was not measured.
 - **Why It Matters:** A pointer target should be at least 24 by 24 CSS pixels, or spaced from its neighbours [S2].
-- **Recommended Fix:** A superscript number with a larger hit area.
-- **Owner's Choice:** Open: awaiting the owner's answer
-- **Follow-up Task:** None
+- **Recommended Fix:** Keep "#" in front of the number, keep or make it a superscript, and give it a tap area of at least 24 by 24 CSS pixels.
+- **Owner's Choice:** Fix. Keep "#" in front of the number, keep or make it superscript, and give it a tap area of at least 24 by 24.
+- **Follow-up Task:** T-9 Tidy Help And Public Page Copy
 
 ### F-76 Signed-In Help Hides Compendium Link
 
@@ -1170,7 +1158,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** One nav should carry the same links at one width. No external source; this repo's rule is "Share, never copy".
 - **Recommended Fix:** Check the nav at 375 for a signed-in viewer.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** None
+- **Follow-up Task:** T-9 Tidy Help And Public Page Copy
 
 ### F-77 Gap Between Intro And First Heading
 
@@ -1182,7 +1170,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A gap is the sum of every stacked margin. No external source; this repo's rule is the spacing scale (`claude-docs/styling.md:205-212`).
 - **Recommended Fix:** Use the gap `/help` uses. Shared piece: `DocumentPage`.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Even Out Dialog Gaps And Eyebrows
+- **Follow-up Task:** T-14 Even Out Dialog And Page Spacing
 
 ### F-78 Auth Error Messages End In Full Stop
 
@@ -1194,7 +1182,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** R7 (`.claude/rules/components.md:77`): a one-sentence message has no full stop.
 - **Recommended Fix:** Drop the stop and add a next step to `:279`.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Tidy Copy On Account, Public And Keeper Screens
+- **Follow-up Task:** T-15 Tidy Coven And Auth Copy
 
 ### F-79 Aria-Labels Mix Title And Sentence Case
 
@@ -1210,7 +1198,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Sentence Case
   - Leave As Is
 - **Owner's Choice:** Answer, Title Case
-- **Follow-up Task:** None
+- **Follow-up Task:** T-19 Set aria-label And Placeholder Casing
 
 ### F-80 Placeholder Casing Differs From Siblings
 
@@ -1225,7 +1213,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Title Case
   - Sentence Case
 - **Owner's Choice:** Answer, Title Case
-- **Follow-up Task:** Make The Placeholder Lint Refuse Non-Literal Values
+- **Follow-up Task:** T-19 Set aria-label And Placeholder Casing
 
 ### F-81 Raw Spacing Literals
 
@@ -1237,7 +1225,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** Every margin, padding and gap takes a step from `space()` (`claude-docs/styling.md:205-212`). D-194 (Moved to MC.9) already records literal spacing; these sites join it.
 - **Recommended Fix:** Add the sites to the D-194 task.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** D-194's task (MC.9)
+- **Follow-up Task:** D-194's existing task
 
 ### F-82 fieldsRefused Written Twice
 
@@ -1249,7 +1237,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** "Share, never copy" (CLAUDE.md, Conventions): a block written twice becomes a shared piece.
 - **Recommended Fix:** One export in `src/lib/` beside the other client error helpers. Check `tests/guards/lib-names.test.ts` for a name clash first.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Share fieldsRefused And Move The Users Page Assembly
+- **Follow-up Task:** T-20 Share fieldsRefused And Move The Users Page Assembly
 
 ### F-83 Hand-Built Tables Skip DataTable
 
@@ -1261,7 +1249,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** `DataTable` is the shared table (`.claude/rules/components.md`).
 - **Recommended Fix:** Move `role-permission-table.tsx` to `DataTable` if it can show a static matrix.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** Share fieldsRefused And Move The Users Page Assembly
+- **Follow-up Task:** T-20 Share fieldsRefused And Move The Users Page Assembly
 
 ### F-84 Users Page Assembles Its Own Data
 
@@ -1276,7 +1264,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Module Service
   - Reader Beside The Page
 - **Owner's Choice:** Fix, Module Service
-- **Follow-up Task:** Share fieldsRefused And Move The Users Page Assembly
+- **Follow-up Task:** T-20 Share fieldsRefused And Move The Users Page Assembly
 
 ### F-85 Mixed-Job Components Over 300 Lines
 
@@ -1291,7 +1279,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
   - Split By Job
   - Leave As It Is
 - **Owner's Choice:** Answer, Split By Job
-- **Follow-up Task:** None
+- **Follow-up Task:** T-21 Split The Large Ingredient And Spell Components By Job
 
 ### F-86 Colour Sliders Show Single Letters At 375
 
@@ -1303,7 +1291,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A single letter is easy to misread. No external source; this repo's plain-writing rule.
 - **Recommended Fix:** Show the words at 375 if there is room.
 - **Owner's Choice:** Fix
-- **Follow-up Task:** None
+- **Follow-up Task:** T-18 Tidy The Keeper Screens
 
 ### F-87 Save Address Sits Under GitHub Issue
 
@@ -1315,7 +1303,7 @@ Within a severity, the finding on more screens ranks first. No finding is High. 
 - **Why It Matters:** A button name should match its field. No external source; this repo's plain-writing rule.
 - **Recommended Fix:** Check the pairing and rename the button.
 - **Owner's Choice:** Fix, The Button Reads "Save Issue"
-- **Follow-up Task:** None
+- **Follow-up Task:** T-4 Fix The Support Form Hint, Radio Cards And Messages
 
 ## Flows With Extra Steps
 
@@ -1335,242 +1323,338 @@ Flows with no extra steps: sign-in methods, passkey, two-factor, accept an invit
 
 ## Proposed Tasks
 
-Each is one PR. Hours are estimates. MB.301 is already minted and is not repeated here.
+The owner has approved these. They are minted into the milestone "Z. Cleanup" with MC ids; the T- ids below are placeholders until then. Each is one PR. Hours are estimates, each set from finished tasks of the same kind; no task document records actual time, so the estimates in the task headings were used. Only Fix and Answer findings are placed, each in one task. F-81 joins the existing task that D-194 moved to, so it has no new task. F-14 is already minted as MB.301.
 
-**Route Every Date Through utc.ts** · 4h
+**T-1 — Route Every Date Through utc.ts** · 4h
 
-_Story:_ As a person reading dates across screens, I want one long form and one short form everywhere, so that I never compare two formats.
+_Story:_ As a person reading dates across screens, I want long dates in detail views and short dates in tables, so that I never compare two formats.
 
-From F-1.
-
-_Acceptance criteria:_
-
-- Every date and time on a screen and in a mail comes from a formatter in `src/lib/utc.ts`.
-- The hand-written formats in the five components are gone.
-- A guard refuses a hand-written date format outside `src/lib/utc.ts`.
-
-**Give Error And Gate Pages One Layout** · 3h
-
-_Story:_ As a person who lands on a blocked page, I want the page to look like its siblings and say what to do, so that I am not left guessing.
-
-From F-2, F-48, F-49, F-50.
+Minted from F-1, R-3.
 
 _Acceptance criteria:_
 
-- The 403 and 404 pages share one body and each says what to do.
-- The three gate cards align alike.
-- The reset password page spaces its subtitle like the forgot password page and shows no empty strength bar.
+- Every date and time shown on a screen or in a mail comes from a formatter in `src/lib/utc.ts`: the long form in detail views and the short form in tables.
+- The hand-written date formats in components and in the one mail that formats its own are gone.
+- A guard fails the build on a hand-written date format outside `src/lib/utc.ts`, and `.claude/rules/components.md` gains the sentence "Dates and times format only through `src/lib/utc.ts`."
 
-**Make The Placeholder Lint Refuse Non-Literal Values** · 3h
+Estimate based on: MB.184 (1.5h), M12.51 (6h). Both are estimates; this is a formatter sweep plus a guard.
 
-_Story:_ As a developer, I want the placeholder lint to read every placeholder, so that a template string cannot carry a limit or a long phrase into a field.
+**T-2 — Give Error And Gate Pages One Layout** · 4h
 
-From F-3, F-80.
+_Story:_ As a person who lands on a blocked page, I want it to look like its siblings and say what to do, so that I am not left guessing.
+
+Minted from F-2, F-48, F-49, F-50.
 
 _Acceptance criteria:_
 
-- A placeholder built from a template or a variable is refused by the lint, or resolved to its text and checked.
-- The Filters combobox and the Mint Cards sheet count field show an empty or one-to-two-word placeholder, and the sheet limit sits in the hint.
-- The placeholder casing rule is recorded in the placeholder rule once the owner has chosen.
+- On the 404 pages at 375 the "?" icon button no longer wraps alone onto its own row; the Help and Report This links both stay.
+- The 403 and 404 pages share one body and each offers a next step.
+- The invite-token, access-paused and coven-paused cards align the same way.
+- The reset-password page spaces its subtitle like the forgot-password page, with room for the content that appears under the password field once something is typed.
 
-**Draw Staff Help Inside The Keepers Frame** · 3h
+Estimate based on: M11.10 (2h), M15.35 (4h).
+
+**T-3 — Draw Staff Help Inside The Keepers Frame** · 3h
 
 _Story:_ As a keeper or curator, I want Staff Help to keep the Keepers frame, so that I can see where I am.
 
-From F-4, F-70.
+Minted from F-4.
 
 _Acceptance criteria:_
 
-- Staff Help pages show the Keepers context bar and the active top-nav tab, and the index links back to the hub.
-- The staff guide cards carry no repeated eyebrow.
+- Staff Help pages show the Keepers context bar and the active top-nav tab.
+- The Staff Help index links back to the Keepers hub.
 
-**Fix The Support Form Hint, Radio Cards And Messages** · 3h
+Estimate based on: MB.264 (2h), M17.15 (4h).
 
-_Story:_ As a person asking for support, I want the form to mark only real errors, so that a hint never looks like a fault.
+**T-4 — Fix The Support Form Hint, Radio Cards And Messages** · 4h
 
-From F-5, F-8, F-23, F-24, F-54.
+_Story:_ As a person asking for support, I want the form to warn me only where it matters and to read the same everywhere, so that I trust what it says.
+
+Minted from F-5, F-8, F-23, F-25, F-54, F-87, R-4.
 
 _Acceptance criteria:_
 
-- The Message hint uses the hint style, not the error style.
+- The Message hint on the support page, the support-request page and the Feedback dialog is drawn in the warning style, not the error style and not the plain hint style.
+- `.claude/rules/components.md` R7 reads "a hint is never drawn in the error style; a caution uses the warning style".
 - The group error has no full stop.
-- Every radio card lays out the same way at 375 and at desktop.
-- One group error outlines the group once, not each card.
-- The request thread shows the author once.
+- The Question radio cards lay out the same way on the support page, the support-request page and the Feedback dialog at 375 and at desktop.
+- An empty radio group does not look selected; focus and selected look different.
+- The request thread names its author once.
+- The keeper button beside the GitHub Issue field reads "Save Issue".
 
-**Write Keeper With A Capital** · 1h
+Estimate based on: M15.35 (4h), M15.32 (1h), M15.36 (4h).
 
-_Story:_ As a person using the site, I want the site role named the same on every screen, so that I know who a Keeper is.
+**T-5 — Write Keeper With A Capital** · 1h
 
-From F-6, F-13.
+_Story:_ As a person using the site, I want the site role named the same everywhere, so that I know who a Keeper is.
 
-_Acceptance criteria:_
-
-- The three account screens and the Keepers hub write Keeper and Keepers with a capital and never "admin".
-
-**Give Every Edit Dialog One Footer** · 3h
-
-_Story:_ As a person editing, I want every edit dialog to put Save, Cancel and Delete in the same places, so that I find them without looking.
-
-From F-7, F-34, F-35.
+Minted from F-6, F-13.
 
 _Acceptance criteria:_
 
-- Every edit dialog has a quiet Cancel and a Delete in the same place, with a visible label.
-- The complete action has one name in both steps of Record a Working.
+- The coven list, new coven and account support screens write Keeper and Keepers with a capital.
+- The Keepers hub reads "Keeper invitations" and never "admin".
+
+Estimate based on: M15.38 (1h), M15.34 (1h).
+
+**T-6 — Bring Red Controls And Delete Icons Into The Rule** · 4h
+
+_Story:_ As a person using edit dialogs, I want Delete to look and sit the same everywhere, so that I find it and know when it is dangerous.
+
+Minted from F-7, F-9, F-10, R-5.
+
+_Acceptance criteria:_
+
+- The edit-ingredient and record-a-working dialogs show Delete as an icon with a tooltip and a visible or accessible name, at the footer end.
+- Delete Guide on the keeper help page uses the same icon control; Delete Coven stays red.
+- Decline Invitation stays red.
+- `.claude/rules/components.md` lists the named red controls as Impersonate, Pause Admin Changes, Revoke Batch, Email Every Account, Delete Coven and Decline Invitation, and says a page's other deletes use the delete icon.
+
+Estimate based on: M12.25 (3h), M13.11 (2h).
+
+**T-7 — Fix The Leave And Record A Working Dialogs** · 3h
+
+_Story:_ As a steward, I want the Leave and Record a Working dialogs to name actions clearly, so that I know what each button does.
+
+Minted from F-11, F-34, F-35.
+
+_Acceptance criteria:_
+
+- Promote and Leave stays enabled with New Steward empty; pressing it flags that field and moves focus to it.
+- The complete action is named Complete in both steps of Record a Working, and the dialog tells the user what completing does.
 - The confirm step is titled for the action it confirms.
 
-**Bring Red Controls Into The Rule** · 2h
+Estimate based on: MB.258 (2h), M15.35 (4h).
 
-_Story:_ As a developer, I want every red control to be one the rule names, so that red keeps meaning the same thing.
+**T-8 — Show One Mark In Empty Cells** · 2h
 
-From F-9, F-10, F-39.
+_Story:_ As a steward or keeper reading a table, I want an empty cell to say it is empty, so that a gap is not read as a fault.
 
-_Acceptance criteria:_
-
-- Each page-level Delete, Decline, and the Delete Coven radio follows the rule the owner has chosen.
-- The rule in the components rules names every red control.
-
-**Flag New Steward On Submit In The Leave Dialog** · 1h
-
-_Story:_ As a steward leaving a coven, I want to press Promote and Leave and be told what is missing, so that the button never sits dead.
-
-From F-11.
+Minted from F-16.
 
 _Acceptance criteria:_
 
-- Promote and Leave stays enabled with New Steward empty.
-- Pressing it with New Steward empty flags that field and moves focus to it.
+- An empty table cell shows a dash, and a card label with no value shows a dash.
 
-**Fix The Compendium Entry Layout** · 3h
+Estimate based on: M15.64 (1h), M12.13 (3h).
 
-_Story:_ As a reader of an ingredient, I want the page to flow without gaps or repeats, so that I find facts quickly.
+**T-9 — Tidy Help And Public Page Copy** · 3h
 
-From F-12, F-19, F-20, F-60.
+_Story:_ As a reader, I want clean help pages, so that I read each name and link as meant.
 
-_Acceptance criteria:_
-
-- The Forms section starts under Details with no blank band.
-- The safety note shows once per page.
-- Empty groups do not each print a "No ... recorded." line on the public view.
-- The Correspondences headings follow the heading order.
-
-**Stop Decorative Art Covering Text** · 2h
-
-_Story:_ As a reader on a phone, I want decorative pictures to stay behind or beside text, so that nothing is hard to read.
-
-From F-15.
+Minted from F-17, F-61, F-75, F-76.
 
 _Acceptance criteria:_
 
-- No decorative picture overlaps heading or body text at 375 or at desktop in either theme.
+- Field and button names in help copy, staff help and the document pages are set in bold, not straight quotes.
+- Each FAQ link is named "Link to this answer" or hidden from the heading name.
+- The footnote marker keeps "#" in front of the number as a superscript, with a tap area of at least 24 by 24 CSS pixels.
+- The signed-in help page at 375 shows the Compendium link.
 
-**Show One Mark In Empty Cells** · 2h
+Estimate based on: M17.13 (2h), M17.15 (4h).
 
-_Story:_ As a keeper or steward reading a table, I want an empty cell to say it is empty, so that a missing value is not read as a fault.
-
-From F-16.
-
-_Acceptance criteria:_
-
-- An empty cell shows one shared mark, or a column empty in every row is hidden.
-
-**Tidy Copy On Account, Public And Keeper Screens** · 3h
-
-_Story:_ As a reader, I want short and consistent copy, so that I read each fact once.
-
-From F-17, F-38, F-40, F-42, F-52, F-55, F-56, F-64, F-65, F-78.
-
-_Acceptance criteria:_
-
-- Quotes in visible copy are curly or removed.
-- Blocked states give a next step.
-- Documents are linked once on the terms page.
-- The listed wordy lines are shortened.
-- The four auth messages carry no full stop.
-
-**Fix 375 Layout Faults In Sheets And Dialogs** · 3h
+**T-10 — Fix 375 Layout Faults In Sheets And Dialogs** · 3h
 
 _Story:_ As a person on a phone, I want sheets and dialogs to fit, so that I can reach every control.
 
-From F-18, F-21, F-22, F-28, F-31.
+Minted from F-18, F-22, F-31, F-33.
 
 _Acceptance criteria:_
 
-- The Filters sheet has one Close.
-- Small buttons have a hit area of at least 24 by 24 CSS pixels.
-- The coven switcher keeps its chevron on the name line.
-- The support status strip shows a cue where it clips.
-- Confirm buttons stack instead of wrapping.
+- The Filters sheet has an X button in its header and keeps Close at the bottom.
+- A long coven name is truncated in the coven switcher and the chevron stays on the name line.
+- The confirm buttons of the Discard Changes dialog stack instead of wrapping.
+- The wrapped lines of the builder eyebrow are aligned.
 
-**Align The Keeper Pages** · 4h
+Estimate based on: MB.258 (2h), MB.273 (3h).
 
-_Story:_ As a keeper or curator, I want the keeper pages to share a frame, so that nothing jumps between them.
+**T-11 — Fix The Compendium Pages** · 4h
 
-From F-26, F-27, F-29, F-59, F-62, F-66, F-68, F-69, F-71, F-72, F-73.
+_Story:_ As a reader of the compendium, I want pages that say each thing once, so that I find facts quickly.
 
-_Acceptance criteria:_
-
-- Form pages share one width.
-- Tab strips do not start clipped and show a cue where they clip.
-- Empty lists do not offer a solid Download CSV.
-- The hub lists each area once.
-- The Group cell looks the same on every table.
-- Staff list labels and counts follow one pattern.
-
-**Even Out Dialog Gaps And Eyebrows** · 3h
-
-_Story:_ As a person using dialogs, I want even spacing and aligned headers, so that the screen looks finished.
-
-From F-30, F-32, F-33, F-36, F-37, F-41, F-63, F-77.
+Minted from F-19, F-20, F-55, F-60.
 
 _Acceptance criteria:_
 
-- No dialog shows an empty message row, a stray band or a misaligned eyebrow.
-- The dark eyebrow patch is gone.
-- The date popover stays inside the view.
-- The member dialog date stays on one line.
+- The safety note shows once per entry page, and again whenever the page has a caution block.
+- Correspondences shows no empty "No ... recorded" line for a group with no values.
+- The compendium list with no match shows one message and the shared empty state with an action, if the shared empty state offers one.
+- The Correspondences headings use the correct level without any heading becoming larger.
 
-**Tidy The Mail Calls To Action And Headings** · 2h
+Estimate based on: M12.47 (3h), MB.288 (6.5h).
 
-_Story:_ As a mail recipient, I want one clear next step, so that I know what to do.
+**T-12 — Grow Small Buttons To A 24 Pixel Hit Area** · 2h
 
-From F-44, F-45, F-46, F-47.
+_Story:_ As a person on a phone, I want small buttons to be easy to press, so that I do not miss.
+
+Minted from F-21.
 
 _Acceptance criteria:_
 
-- Every mail has one button, or the owner has recorded why not.
-- The sign-in instruction mails carry a link or say why not.
-- The reset button has one label in every mail.
-- Support mail lead-ins follow the heading case or the exception is recorded.
+- Small buttons on the sign-in methods page and the other screens listed have a hit area of at least 24 by 24 CSS pixels, grown by padding.
+- Button labels no longer wrap at 375.
 
-**Share fieldsRefused And Move The Users Page Assembly** · 3h
+Estimate based on: MB.264 (2h), M12.56 (1.5h).
+
+**T-13 — Align Keeper Form Pages And Tab Strips** · 4h
+
+_Story:_ As a keeper, I want form pages to share one width and tab strips to show what is hidden, so that nothing jumps or hides.
+
+Minted from F-26, F-27, F-28, F-29, R-9.
+
+_Acceptance criteria:_
+
+- First check in a browser whether the Documents tab strip already starts at Terms of Use; the owner believes it does.
+- Every tab strip starts at its first tab and shows a fade cue where it clips, so the three hidden support filters at 375 are cued.
+- Keeper form pages use one narrow width, and `.claude/rules/components.md` gains the sentence "Keeper form pages share one narrow width."
+- Download CSV is disabled while the list is empty.
+
+Estimate based on: MB.264 (2h), M12.13 (3h).
+
+**T-14 — Even Out Dialog And Page Spacing** · 4h
+
+_Story:_ As a person using dialogs and long pages, I want even spacing, so that the screen looks finished.
+
+Minted from F-30, F-32, F-36, F-37, F-63, F-77.
+
+_Acceptance criteria:_
+
+- The Mint Cards dialog has no blank band and no uneven gaps at desktop and 375.
+- The dark eyebrow halo is gone from every dialog.
+- The Share With the Coven switch sits under its label with the gap closed.
+- The member dialog date stays on one line at 375.
+- The date popover stays inside the view and does not cover the top bar.
+- The gap between the intro and the first heading on the terms and privacy pages matches the other document pages.
+
+Estimate based on: MB.258 (2h), MB.273 (3h), MB.288 (6.5h).
+
+**T-15 — Tidy Coven And Auth Copy** · 2h
+
+_Story:_ As a reader, I want short, clean messages, so that I read each fact once.
+
+Minted from F-38, F-42, F-78.
+
+_Acceptance criteria:_
+
+- The member dialog shows no stray dot before "none".
+- The invite dialog copy is shortened.
+- The four auth messages end without a full stop.
+
+Estimate based on: M15.38 (1h), M15.64 (1h).
+
+**T-16 — Tidy The Mail Links And Headings** · 3h
+
+_Story:_ As a mail recipient, I want a link where the mail tells me to sign in, so that I know the next step.
+
+Minted from F-45, F-47.
+
+_Acceptance criteria:_
+
+- The email-change and verify-email mails that say to sign in carry a link, or say why not.
+- The support mail lead-ins use Title Case.
+
+Estimate based on: MB.262 (3h), MB.296 (2h).
+
+**T-17 — Show Next Steps On Blocked Coven Pages** · 2h
+
+_Story:_ As a person who cannot use a coven page yet, I want to be told where to go next, so that I am not stuck.
+
+Minted from F-52, F-53.
+
+_Acceptance criteria:_
+
+- The waiting page on the coven list and on new coven shows a link to Support.
+- The two-factor backup-codes line and the paused-coven steward line are unchanged.
+- A practitioner or observer who opens the coven invitations page sees a Not Authorized page inside the shell.
+
+Estimate based on: M15.37 (1h), M11.10 (2h).
+
+**T-18 — Tidy The Keeper Screens** · 5h
+
+_Story:_ As a keeper or curator, I want the keeper screens to be compact and clearly labelled, so that I read each fact once.
+
+Minted from F-62, F-65, F-66, F-68, F-72, F-74, F-86, R-1.
+
+_Acceptance criteria:_
+
+- `claude-docs/styling.md` and `claude-docs/components/app-shell.md` name the shell bar's Add Ingredient as the exception to "one solid button per view".
+- The Refused Opens intro reads easily at desktop and 375.
+- Each People card is much shorter at 375.
+- The Shown to Readers toggle shows its label once.
+- The sort icon on the keeper help page has an accessible name.
+- The colour sliders show the full words where there is room at 375.
+- The curator compendium table shows a shaded edge where it scrolls under the action column, and the Sourcing Score heading is not clipped.
+
+Estimate based on: M15.36 (4h), MB.288 (6.5h).
+
+**T-19 — Set aria-label And Placeholder Casing** · 2h
+
+_Story:_ As a developer, I want one casing for aria-labels and placeholders, so that they match their siblings.
+
+Minted from F-79, F-80, R-6.
+
+_Acceptance criteria:_
+
+- Every aria-label and every placeholder named in the findings is in Title Case.
+- `.claude/rules/components.md` gains the sentence "aria-labels and placeholders are Title Case."
+
+Estimate based on: M12.56 (1.5h), MB.184 (1.5h).
+
+**T-20 — Share fieldsRefused And Move The Users Page Assembly** · 4h
 
 _Story:_ As a developer, I want one copy of each helper, so that a change lands once.
 
-From F-82, F-83, F-84.
+Minted from F-82, F-83, F-84.
 
 _Acceptance criteria:_
 
-- One `fieldsRefused` export serves both forms.
-- The Users page file does frame work only.
-- The role table uses `DataTable` or carries a comment saying why not.
+- One `fieldsRefused` export serves the ingredient form and the spell builder.
+- The role and order tables use `DataTable` or carry a comment saying why not.
+- The keeper Users page file does frame work only.
 
-The raw spacing literals (F-81) join the task that D-194 moved to MC.9; they need no new task.
+Estimate based on: MB.87 (2h), M12.51 (6h).
+
+**T-21 — Split The Large Ingredient And Spell Components By Job** · 6h
+
+_Story:_ As a developer, I want each large component to hold one job, so that a change touches one file.
+
+Minted from F-85.
+
+_Acceptance criteria:_
+
+- The row-sliding hook and the GraphQL documents move out of the two ingredient-form files, and the spell builder and reference panel split by job.
+- No file in the list stays over 300 lines with mixed jobs.
+
+Estimate based on: MB.87 (2h), M12.51 (6h). No finished task splits four components; this is the weakest basis.
+
+**T-22 — Extend The Pagination Guard To Page-Level Reads** · 3h
+
+_Story:_ As a developer, I want the guard to see fixed limits on pages, so that no page lists without a pager unnoticed.
+
+Minted from R-7.
+
+_Acceptance criteria:_
+
+- The pagination guard fails a page that passes `HELP_PAGE_LIMIT` or a literal `limit:` to a service read.
+- The help glossary, the help front page and the staff help index each have a recorded exemption in the guard, with the reason.
+- The guard fails once with a fixed limit put back on the search page, after help search has its pager.
+
+Estimate based on: MB.184 (1.5h), MB.275 (6h).
 
 ## Proposed Rules
 
-| Id  | Rule                                                                                                                                                                                                                                                                 | Findings prevented | Target file                                                               | Enforcement | Add or Skip |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------- | ----------- | ----------- |
-| R-1 | Name the shell bar's Add Ingredient as the one exception to "one solid button per view".                                                                                                                                                                             | withdrawn finding  | `claude-docs/styling.md:357` and `claude-docs/components/app-shell.md:22` | review-only | Add         |
-| R-2 | A placeholder that is not a string literal is refused, or resolved and checked.                                                                                                                                                                                      | F-3                | `.claude/rules/components.md` R8 and `lint/source-sweeps.js`              | lint        | Skip        |
-| R-3 | Dates and times format only through `src/lib/utc.ts`.                                                                                                                                                                                                                | F-1                | `.claude/rules/components.md`                                             | guard       | Add         |
-| R-4 | A hint is never drawn in the error style.                                                                                                                                                                                                                            | F-5                | `.claude/rules/components.md` R7                                          | review-only | Add         |
-| R-5 | Where a page-level red control may sit. Settled: Delete Coven is a named red page control, Decline Invitation is a named red control, and a page's other deletes use the delete icon.                                                                                | F-9, F-10, F-39    | `.claude/rules/components.md`                                             | review-only | Add         |
-| R-6 | aria-labels and placeholders are Title Case.                                                                                                                                                                                                                         | F-79, F-80         | `.claude/rules/components.md`                                             | review-only | Add         |
-| R-7 | The pagination guard also refuses a page that passes `HELP_PAGE_LIMIT` or a literal `limit:` to a service read. I recommend yes; search goes first under MB.301, and the glossary, help front and staff index need the owner's answer (pager or recorded exemption). | F-14               | `tests/guards/pagination.test.ts`                                         | guard       | Add         |
-| R-8 | Visible copy uses curly quotes.                                                                                                                                                                                                                                      | F-17               | `.claude/rules/writing.md`                                                | guard       | Skip        |
-| R-9 | Keeper form pages share one width.                                                                                                                                                                                                                                   | F-26               | `.claude/rules/components.md`                                             | review-only | Add         |
+| Id  | Rule                                                                                                                                                                                                                                                                     | Findings prevented | Target file                                                               | Enforcement | Add or Skip |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ------------------------------------------------------------------------- | ----------- | ----------- |
+| R-1 | Name the shell bar's Add Ingredient as the one exception to "one solid button per view".                                                                                                                                                                                 | withdrawn finding  | `claude-docs/styling.md:357` and `claude-docs/components/app-shell.md:22` | review-only | Add         |
+| R-2 | A placeholder that is not a string literal is refused, or resolved and checked.                                                                                                                                                                                          | F-3                | `.claude/rules/components.md` R8 and `lint/source-sweeps.js`              | lint        | Skip        |
+| R-3 | Dates and times format only through `src/lib/utc.ts`.                                                                                                                                                                                                                    | F-1                | `.claude/rules/components.md`                                             | guard       | Add         |
+| R-4 | A hint is never drawn in the error style; a caution uses the warning style.                                                                                                                                                                                              | F-5                | `.claude/rules/components.md` R7                                          | review-only | Add         |
+| R-5 | Where a page-level red control may sit. Settled: Delete Coven is a named red page control, Decline Invitation is a named red control, and a page's other deletes use the delete icon.                                                                                    | F-9, F-10, F-39    | `.claude/rules/components.md`                                             | review-only | Add         |
+| R-6 | aria-labels and placeholders are Title Case.                                                                                                                                                                                                                             | F-79, F-80         | `.claude/rules/components.md`                                             | review-only | Add         |
+| R-7 | The pagination guard also refuses a page that passes `HELP_PAGE_LIMIT` or a literal `limit:` to a service read. The help glossary, the help front page and the staff help index each get a recorded exemption in the guard, not a pager. Search goes first under MB.301. | F-14               | `tests/guards/pagination.test.ts`                                         | guard       | Add         |
+| R-8 | Visible copy uses curly quotes.                                                                                                                                                                                                                                          | F-17               | `.claude/rules/writing.md`                                                | guard       | Skip        |
+| R-9 | Keeper form pages share one width.                                                                                                                                                                                                                                       | F-26               | `.claude/rules/components.md`                                             | review-only | Add         |
 
 ## Left As It Is
 
