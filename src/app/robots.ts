@@ -8,7 +8,6 @@ export const CRAWLABLE_PATHS = [
   '/$',
   '/compendium',
   '/compendium/',
-  '/sign-in',
   '/support',
   '/privacy',
   '/disclaimer',

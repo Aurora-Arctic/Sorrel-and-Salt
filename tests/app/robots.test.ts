@@ -34,7 +34,6 @@ describe('robots', () => {
       '/$',
       '/compendium',
       '/compendium/',
-      '/sign-in',
       '/support',
       '/privacy',
       '/disclaimer',
@@ -65,8 +64,9 @@ describe('robots', () => {
     ['/', true],
     ['/compendium', true],
     ['/compendium/ingredients/testwort', true],
-    // Out of the sitemap, but still crawlable.
-    ['/sign-in', true],
+    // Rendered per request and out of search results, so a crawler is not invited to it.
+    ['/sign-in', false],
+    ['/sign-in?next=/coven/fixture-coven', false],
     // The build's CSS, JavaScript and images, which a crawler needs to render a page.
     ['/_next/static/chunks/main.js', true],
     ['/_next/image?url=%2Fbackdrop.webp&w=640&q=75', true],
