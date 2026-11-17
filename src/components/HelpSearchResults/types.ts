@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { HelpArticleKind, HelpAudience } from '@/modules/help';
 
 interface HelpSearchResult {
@@ -12,4 +13,8 @@ interface HelpSearchResult {
 export interface HelpSearchResultsProps {
   query: string;
   results: HelpSearchResult[];
+  /** How many rows match in all, when the results are one page of them; the rows given when omitted. */
+  totalCount?: number;
+  /** Drawn beneath the list: the page's pager. */
+  children?: ReactNode;
 }

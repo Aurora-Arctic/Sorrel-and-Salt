@@ -6,6 +6,7 @@ import {
   findHelpArticlePathPage,
   findHelpArticleIndexPage,
   findHelpArticleKeeperPage,
+  findHelpArticleSearchCount,
   findHelpArticleSearchPage,
   findHelpArticleStaffPage,
   findHelpFaqPage,
@@ -16,7 +17,7 @@ import type { HelpArticleRow } from '@/db/repository';
 import { cachedHelpRead } from '@/lib/help-cache';
 import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
-import type { PageEntry, PageRequest } from '@/lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/types';
 import { trimmedOrUndefined } from '@/lib/text';
 import { isRowId } from '@/lib/validation';
 import { assertCurator, assertSiteAdmin } from '@/modules/identity';
@@ -161,6 +162,20 @@ export async function searchHelp(
     reach,
   );
   return entries.map(({ cursor, score }, index) => ({ node: nodes[index], cursor, score }));
+}
+
+/**
+ * How many rows `searchHelp` finds for the same reader, and how many come before `start` in its pages' order, null with no `start`.
+ * A blank query finds none. Never cached, as the search is not.
+ */
+export async function countHelpSearch(
+  session: Session | null,
+  query: string,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const text = trimmedOrUndefined(query);
+  if (text === undefined) return { totalCount: 0, countBefore: null };
+  return findHelpArticleSearchCount(reachOf(session), text, start);
 }
 
 /**

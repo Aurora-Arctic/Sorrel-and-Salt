@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import type { Session } from '@/lib/session';
-import type { Cursor, PageCount, PageRequest } from '@/lib/types';
-import * as help from '@/modules/help';
-import { searchHelp } from '@/modules/help';
+import type { Cursor, PageRequest } from '@/lib/types';
+import { countHelpSearch, searchHelp } from '@/modules/help';
 import { assertCurator } from '@/modules/identity';
 import { B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
@@ -18,15 +17,6 @@ useTestDatabase((client) => {
 });
 
 const PAGE: PageRequest = { limit: 101, inverted: false };
-
-// Read by name until the module exports it, so this file type-checks while the count is missing; a direct import replaces it.
-const { countHelpSearch } = help as unknown as {
-  countHelpSearch: (
-    session: Session | null,
-    query: string,
-    start: Cursor | undefined,
-  ) => Promise<PageCount>;
-};
 
 const slugsFor = async (session: Session | null, query: string) =>
   (await searchHelp(session, query, PAGE)).map((entry) => entry.node.slug);

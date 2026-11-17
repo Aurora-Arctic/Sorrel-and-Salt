@@ -210,6 +210,7 @@ export {
   findHelpArticleIndexPage,
   findHelpArticleKeeperPage,
   findHelpArticlesWhoseBodyHolds,
+  findHelpArticleSearchCount,
   findHelpArticleSearchPage,
   findHelpArticleStaffPage,
   findHelpFaqPage,
