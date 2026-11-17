@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SaveDocumentDraftMutation, SaveDocumentDraftMutationVariables } from '@/gql/graphql';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 import { warmImport } from '../../support/warm-import';
@@ -14,6 +14,14 @@ const { default: DocumentEditor } = await import('@/components/DocumentEditor');
 
 // The editor is a lazy chunk: its first import is slow under coverage and would overrun findByRole's 1 s wait.
 warmImport(() => import('@/components/DocumentEditor/editor'));
+
+beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 const BUTTONS = [
   'Heading 2',
@@ -61,7 +69,7 @@ const button = (name: string) => within(toolbar()).getByRole('button', { name })
 /** Waits out the editor's throttled selection handler, inside `act`, so its state update lands before the next step. */
 const settle = () =>
   act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await vi.advanceTimersByTimeAsync(150);
   });
 
 async function press(name: string): Promise<void> {
@@ -91,7 +99,7 @@ async function select(text: HTMLElement, words: string, { caret = false } = {}):
     selection.removeAllRanges();
     selection.addRange(range);
     document.dispatchEvent(new Event('selectionchange'));
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await vi.advanceTimersByTimeAsync(150);
   });
 }
 

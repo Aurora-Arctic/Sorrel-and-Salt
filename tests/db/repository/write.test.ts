@@ -29,6 +29,7 @@ import {
 } from '../../support/db/probe-tables';
 import { insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
+import { requiredDelay } from '../../support/waits';
 
 useProbeTables();
 
@@ -344,7 +345,10 @@ describe('a finder inside a withAudit callback', () => {
       reading = findMany(herbs);
       return Promise.race([
         reading.then(() => 'read'),
-        new Promise((resolve) => setTimeout(() => resolve('waited'), 2_000)),
+        requiredDelay(
+          2_000,
+          'a read blocked behind the queued exclusive lock settles only after this',
+        ).then(() => 'waited'),
       ]);
     });
     await locking;
@@ -453,7 +457,10 @@ async function queuedLockOn(table: string) {
       select count(*)::int as waiting from pg_locks
       where relation = ${table}::regclass and not granted`;
     if (waiting > 0) return;
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await requiredDelay(
+      20,
+      'the pause between two reads of pg_locks, which has no event to wait on',
+    );
   }
   throw new Error(`no lock request queued on ${table}`);
 }

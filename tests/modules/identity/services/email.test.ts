@@ -12,6 +12,7 @@ import { A, B, asUser } from '../../../support/as-user';
 import { asTouch } from '../../../support/db/touch-row';
 import type { EmailUserRow } from './types';
 import { useTestDatabase } from '../../../support/db/database';
+import { requiredDelay } from '../../../support/waits';
 
 // The service half: asking for an address writes nothing to `users.email`, since the address becomes the row's at verification, so an established account never re-enters the provisional sweep (claude-docs/auth/admin-bootstrap.md, "The email page").
 // What goes out is the sender's business, which is why it is a fake here.
@@ -141,7 +142,10 @@ describe('setEmail', () => {
       notifyChangeRequested: vi.fn(() => stuck),
     };
     const timedOut = Symbol('timed out');
-    const timeout = new Promise<symbol>((resolve) => setTimeout(() => resolve(timedOut), 1000));
+    const timeout = requiredDelay(
+      1000,
+      'an answer that waited on the stuck send would lose this race',
+    ).then(() => timedOut);
 
     const outcome = await Promise.race([setEmail(asUser(B), address, slow), timeout]);
 

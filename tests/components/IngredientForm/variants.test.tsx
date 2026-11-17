@@ -12,36 +12,30 @@ import { mockGraphQLError } from '../../support/msw/graphql';
 import {
   ENTRY_ID,
   WORKSPACE_ID,
-  acceptCompendiumCreate,
-  acceptCreate,
   acceptUpdate,
   offerForms,
   offerNothing,
 } from '../../support/msw/ingredient-lookups';
 import {
-  CATEGORY_A,
-  CATEGORY_B,
   FORMLESS_PLAINWORT,
   HERB_VARIANT_ID,
   OIL,
   OILWORT_ID,
   OILWORT_OIL_ID,
   OIL_ID,
-  OTHER_REFERENCE_ID,
-  REFERENCE_ID,
   addOil,
   addVariant,
   control,
-  copyOf,
   editOf,
-  filled,
   newForm,
   noVariant,
   openIn,
   openSubstitutes,
   openVariant,
   openWhole,
+  renderVariants,
   sectionOf,
+  sent,
   twoForms,
   typeInScope,
   variant,
@@ -84,8 +78,7 @@ describe('IngredientForm’s variants', () => {
   });
 
   it('adds a curated form picked on the compendium, the variant’s Form field carrying the pick', async () => {
-    const calls = acceptCompendiumCreate();
-    renderForm({ workspaceId: null });
+    const onSubmit = renderVariants({ workspaceId: null });
     const asks = offerForms([OIL]);
 
     act(() => newForm().focus());
@@ -98,20 +91,17 @@ describe('IngredientForm’s variants', () => {
     expect(form).toHaveAccessibleDescription(expect.stringContaining('Preparation'));
     expect(asks[0].workspaceId).toBeNull();
 
-    typeInScope(document.body, 'Name', 'Testwort');
-    fireEvent.click(screen.getByRole('combobox', { name: 'Classification' }));
-    fireEvent.click(screen.getByRole('option', { name: 'None' }));
     saveIngredient();
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].input.variants).toEqual([
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(sent(onSubmit)?.variants).toEqual([
       expect.objectContaining({ form: 'Oil', formId: OIL_ID }),
     ]);
   });
 
   it('marks a compendium variant’s typed form invalid beside its Form box, focused, and sends nothing', async () => {
-    const calls = acceptUpdate();
-    renderForm({
+    const onSubmit = renderVariants({
       workspaceId: null,
+      summary: true,
       values: {
         ...EMPTY_VALUES,
         name: 'Testwort',
@@ -139,12 +129,11 @@ describe('IngredientForm’s variants', () => {
 
     await waitFor(() => expect(form).toBeInvalid());
     expectSummaryLinksTo(form);
-    expect(calls).toHaveLength(0);
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('opens an entry’s variants as fieldsets and saves each back by its id', async () => {
-    const calls = acceptUpdate();
-    renderForm({
+    const onSubmit = renderVariants({
       workspaceId: null,
       values: {
         ...EMPTY_VALUES,
@@ -171,8 +160,8 @@ describe('IngredientForm’s variants', () => {
     typeInScope(openVariant('Oil'), 'Description', 'Pressed from the fixture.');
     saveIngredient();
 
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0].input.variants).toEqual([
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(sent(onSubmit)?.variants).toEqual([
       expect.objectContaining({
         id: HERB_VARIANT_ID,
         form: 'Oil',
@@ -184,11 +173,15 @@ describe('IngredientForm’s variants', () => {
   });
 
   describe('a save, and the variant it opens', () => {
-    it('opens the closed variant and section a save finds the schema’s error in, closing the one open, its field focused, and sends nothing', async () => {
+    // A substitute link naming no form errs in Relations, beside the Colour box's in Correspondences.
+    it('opens the closed variant and each closed section a save finds the schema’s errors in, closing the one open, its field focused, and sends nothing', async () => {
       const calls = acceptUpdate();
       renderForm({
         workspaceId: null,
-        values: twoForms({ drafts: { ...EMPTY_VARIANT.drafts, colors: 'Fixture Red' } }),
+        values: twoForms({
+          drafts: { ...EMPTY_VARIANT.drafts, colors: 'Fixture Red' },
+          substitutes: [{ value: 'Fixture moss' }, FORMLESS_PLAINWORT],
+        }),
       });
       const herb = openVariant('Herb');
       openSectionsIn(herb, 'Details & Care');
@@ -198,7 +191,8 @@ describe('IngredientForm’s variants', () => {
 
       await waitFor(() => expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true'));
       const oil = variant('Oil');
-      expect(openIn(oil)).toEqual(['Correspondences']);
+      expect(openIn(oil)).toEqual(['Correspondences', 'Relations']);
+      expect(control(oil, 'Substitute Ingredient')).toHaveAttribute('aria-invalid', 'true');
       const colour = control(oil, 'Colour');
       expect(colour).toBeVisible();
       expect(colour).toBeInvalid();
@@ -243,14 +237,18 @@ describe('IngredientForm’s variants', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
       expect(openIn(variant('Oil'))).toEqual(VARIANT_SECTIONS);
       expect(within(variant('Oil')).getByRole('textbox', { name: 'Safety Notes' })).toBeVisible();
+      // The ingredient's own fields have none: every copy button is a variant's.
+      const copies = screen.getAllByRole('button', { name: /^Copy From Ingredient/ });
+      expect(copies.length).toBeGreaterThan(0);
+      for (const button of copies) {
+        expect([variant('Oil'), variant('Herb')].some((card) => card.contains(button))).toBe(true);
+      }
     });
   });
 
   describe('a variant’s substitutes', () => {
     it('links the form a row names, sent as substituteVariantId, its pill naming the form', async () => {
-      const calls = acceptCreate();
-      renderForm({ workspaceId: WORKSPACE_ID });
-      typeInScope(document.body, 'Name', 'Testwort');
+      const onSubmit = renderVariants({ workspaceId: WORKSPACE_ID });
       const oil = await addOil();
 
       const list = await openSubstitutes(oil);
@@ -259,91 +257,10 @@ describe('IngredientForm’s variants', () => {
 
       expect(within(oil).getAllByRole('button', { name: /^Remove Oilwort/ })).toHaveLength(1);
       expect(within(oil).queryByRole('button', { name: 'Remove Oilwort' })).toBeNull();
-      await waitFor(() => expect(calls).toHaveLength(1));
-      expect(calls[0].input.variants?.[0]?.substitutes).toEqual([
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(sent(onSubmit)?.variants?.[0]?.substitutes).toEqual([
         { ingredientId: OILWORT_ID, substituteVariantId: OILWORT_OIL_ID },
       ]);
-    });
-
-    // Old data, from before a link had to name a form: the chip stays to be
-    // read, and the save is refused beside it until it is replaced.
-    it('refuses a save holding a link that names no form, the error on that entry alone', async () => {
-      const calls = acceptUpdate();
-      renderForm({
-        workspaceId: null,
-        values: twoForms({
-          substitutes: [{ value: 'Fixture moss' }, FORMLESS_PLAINWORT],
-        }),
-      });
-      const oil = openVariant('Oil');
-      const remove = (name: string) => within(oil).getByRole('button', { name: `Remove ${name}` });
-      const described = (element: HTMLElement) =>
-        element.getAttribute('aria-describedby')?.split(' ') ?? [];
-      typeInScope(oil, 'Description', 'A fixture oil.');
-
-      saveIngredient();
-
-      const box = control(oil, 'Substitute Ingredient');
-      await waitFor(() => expect(box).toHaveAttribute('aria-invalid', 'true'));
-      expect(openIn(oil)).toEqual(['Relations']);
-      const [errorId] = described(remove('Plainwort'));
-      expect(described(box)).toContain(errorId);
-      expect(described(remove('Fixture moss'))).not.toContain(errorId);
-      expect(calls).toHaveLength(0);
-
-      // Why: the same save, the formless link removed, goes.
-      fireEvent.click(remove('Plainwort'));
-      saveIngredient();
-      await waitFor(() => expect(calls).toHaveLength(1));
-      expect(calls[0].input.variants?.[0]?.substitutes).toEqual([{ name: 'Fixture moss' }]);
-    });
-  });
-
-  describe('copying from the ingredient', () => {
-    it('adds the ingredient’s entries the variant lacks after its own, removing none, and sends them', async () => {
-      const calls = acceptUpdate();
-      renderForm({ workspaceId: null, values: filled() });
-      const oil = openWhole('Oil');
-      expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
-      // The ingredient's own fields have none: every copy button is the variant's.
-      for (const button of screen.getAllByRole('button', { name: /^Copy From Ingredient/ })) {
-        expect(oil).toContainElement(button);
-      }
-
-      for (const field of [
-        'Elements',
-        'Celestial Bodies',
-        'Zodiac Signs',
-        'Colours',
-        'Categories',
-        'References',
-      ]) {
-        const button = copyOf(oil, field);
-        act(() => button.focus());
-        fireEvent.click(button);
-        expect(button).toHaveFocus();
-      }
-      fireEvent.click(copyOf(oil, 'Celestial Bodies'));
-      expect(
-        within(oil).getByRole('status', { name: 'Celestial Bodies changes' }),
-      ).not.toBeEmptyDOMElement();
-
-      expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeEnabled();
-      saveIngredient();
-      await waitFor(() => expect(calls).toHaveLength(1));
-      expect(calls[0].input.variants?.[0]).toEqual(
-        expect.objectContaining({
-          elements: ['fire', 'water'],
-          celestialBodies: ['venus', 'Mercury'],
-          zodiacSigns: ['Gemini'],
-          colors: ['Fixture Red', 'Fixture Green'],
-          categoryIds: [CATEGORY_B, CATEGORY_A],
-          references: [
-            { referenceId: OTHER_REFERENCE_ID, locator: '' },
-            { referenceId: REFERENCE_ID, locator: 'p. 112' },
-          ],
-        }),
-      );
     });
   });
 

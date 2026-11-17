@@ -20,6 +20,7 @@ import { insertIngredient, insertVariant } from '../../../support/db/insert-ingr
 import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
+import { requiredDelay } from '../../../support/waits';
 
 // The stock service: members and owners write a coven's stock, viewers read it, and nobody outside the coven reaches it, the site keeper included.
 // The ingredient tables are emptied per test and the cascade empties `inventory_items` with them, so every jar a result could come from is one this file wrote.
@@ -561,7 +562,10 @@ describe("a coven's stock lock", () => {
         () => (settled = true),
         () => (settled = true),
       );
-      await new Promise((resolve) => setTimeout(resolve, WAIT_MS));
+      await requiredDelay(
+        WAIT_MS,
+        'a call queued behind the held row lock must not settle in this time',
+      );
       expect(settled).toBe(false);
       await untouched();
     });
@@ -938,7 +942,7 @@ describe('saveStock', () => {
         () => (settled = true),
         () => (settled = true),
       );
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await requiredDelay(300, 'a save queued behind the held lock must not settle in this time');
       expect(settled).toBe(false);
       expect(await live()).toHaveLength(0);
     });

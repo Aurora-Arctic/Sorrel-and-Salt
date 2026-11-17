@@ -9,6 +9,7 @@ import { secretLinkMail } from '@/modules/identity/jobs/secret-link-mail';
 import type { SecretLink } from '@/modules/identity';
 import { useTestDatabase } from '../support/db/database';
 import { MAILPIT_URL, ORIGIN } from '../support/constants';
+import { requiredDelay } from '../support/waits';
 
 const DOMAIN = '@secret-link-run.test';
 const AUTH_BASE = `${ORIGIN}/api/auth`;
@@ -142,7 +143,7 @@ describe('the secret-link mail run', () => {
   it('sends the newest live reset token Better Auth holds, read when the step runs', async () => {
     const holder = await account(true);
     await resetRow(holder.id, 'testwort-older-token');
-    await new Promise((resolve) => setTimeout(resolve, 5));
+    await requiredDelay(5, 'the newer token must carry a later Postgres timestamp than the older');
     await resetRow(holder.id, 'testwort-newest-token');
     await resetRow(holder.id, 'testwort-expired-token', -1);
     const link: SecretLink = { kind: 'reset', userId: holder.id, authBase: AUTH_BASE };
@@ -258,7 +259,7 @@ describe('the secret-link mail run', () => {
     ]);
     await waitForSleep(run);
     const later = `second${made}${DOMAIN}`;
-    await new Promise((resolve) => setTimeout(resolve, 5));
+    await requiredDelay(5, 'the later change must carry a later Postgres timestamp than the first');
     await askForChange(holder.id, later);
 
     await wake(run);

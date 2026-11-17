@@ -7,7 +7,7 @@ import type {
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
-import type { CategoryNode } from '../IngredientForm/types';
+import { CATEGORIES, pickCategory } from '../CategoryPicker/field-harness';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 import { renderWithQuery } from '../../support/render-with-query';
@@ -17,23 +17,6 @@ const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
 // That the service writes exactly the set sent, and refuses a viewer and another coven's member, is tests/modules/grimoire/services/spells.test.ts's.
 
-// Invented categories, with uuid ids, as the shared schema refuses any other.
-const WARDS = { id: 'a3e1c9b2-0d4f-4a8e-9c71-5b2f6e8d0a11', name: 'Wards & Fixtures' };
-const colours = { colorDark: '#8fb8de', colorLight: '#2f5d86' };
-const CATEGORIES: CategoryNode[] = [
-  {
-    id: 'c1d3e5f7-2a4b-4c6d-8e9f-0a1b2c3d4e51',
-    name: 'Testward',
-    description: 'Keeps a fixture from harm.',
-    group: { ...WARDS, ...colours },
-  },
-  {
-    id: 'c1d3e5f7-2a4b-4c6d-8e9f-0a1b2c3d4e52',
-    name: 'Fixture Shield',
-    description: 'Turns a failing test aside.',
-    group: { ...WARDS, ...colours },
-  },
-];
 const [TESTWARD, SHIELD] = CATEGORIES;
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}, { shut = false } = {}) {
@@ -45,16 +28,6 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}, { shut = false } 
 
 const box = () => screen.getByRole('combobox', { name: 'Category' });
 const chip = (name: string) => screen.queryByRole('button', { name: `Remove ${name}` });
-
-const pick = async (name: string) => {
-  if (box().getAttribute('aria-expanded') !== 'true')
-    fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
-  // A longer wait than the default, as the ingredient form's tests give it:
-  // the options are the only sign the categories have loaded.
-  fireEvent.click(
-    await screen.findByRole('option', { name: new RegExp(`^${name}`) }, { timeout: 10_000 }),
-  );
-};
 
 function answer(id: string, revision: number, input: CreateSpellMutationVariables['input']) {
   return {
@@ -123,8 +96,8 @@ describe('the spell builder’s categories', () => {
     const calls = acceptCreate();
     renderBuilder();
 
-    await pick('Testward');
-    await pick('Fixture Shield');
+    await pickCategory('Testward');
+    await pickCategory('Fixture Shield');
     submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
@@ -138,7 +111,7 @@ describe('the spell builder’s categories', () => {
     renderBuilder();
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
-    await pick('Testward');
+    await pickCategory('Testward');
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
 
     fireEvent.click(chip('Testward') as HTMLElement);
@@ -201,8 +174,8 @@ describe('the spell builder’s categories', () => {
     });
     renderBuilder();
 
-    await pick('Testward');
-    await pick('Fixture Shield');
+    await pickCategory('Testward');
+    await pickCategory('Fixture Shield');
     submitForm();
 
     await waitFor(() => expect(box()).toBeInvalid());

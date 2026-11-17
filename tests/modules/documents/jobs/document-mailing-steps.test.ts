@@ -10,6 +10,7 @@ import {
   insertDocumentVersion,
 } from '../../../support/db/insert-document';
 import { MAILPIT_URL, ORIGIN } from '../../../support/constants';
+import { requiredDelay } from '../../../support/waits';
 
 // Mail goes through the real `deliver` to a stand-in Mailpit answering fetch in this process; the daily cap counts every mailing's sends today, so each test starts with none.
 
@@ -238,7 +239,8 @@ describe('the document mailing batch step', () => {
     const { versionId } = await publishedDocument();
     const mailingId = await mailing(versionId, await accounts(MAILING_BATCH_SIZE));
     // Each send takes a moment, so two steps started together are both partway through their batch at once.
-    beforeTake = () => new Promise((resolve) => setTimeout(resolve, 20));
+    beforeTake = () =>
+      requiredDelay(20, 'each send is slow enough that both steps are mid-batch at once');
 
     await Promise.all([mailBatchStep(mailingId, ORIGIN), mailBatchStep(mailingId, ORIGIN)]);
 

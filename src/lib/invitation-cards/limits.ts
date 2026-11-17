@@ -4,6 +4,10 @@ export const MAX_SHEETS_PER_BATCH = 50;
 
 export const DEFAULT_EXPIRY_DAYS = 90;
 
+export function sheetCount(cards: number): number {
+  return Math.ceil(cards / CARDS_PER_SHEET);
+}
+
 export function cardPlace(position: number): { sheet: number; card: number } {
   return {
     sheet: Math.floor((position - 1) / CARDS_PER_SHEET) + 1,

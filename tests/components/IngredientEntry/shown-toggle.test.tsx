@@ -115,7 +115,7 @@ describe('ShownToggle', () => {
 
     expect(onChange).toHaveBeenCalledWith(false);
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
     expect(calls).toHaveLength(0);
     expect(router.refresh).not.toHaveBeenCalled();

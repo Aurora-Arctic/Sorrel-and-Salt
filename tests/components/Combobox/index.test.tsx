@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import Combobox, {
   ComboboxEntry,
   ComboboxMultiSelect,
@@ -841,11 +841,15 @@ describe('Combobox', () => {
     });
 
     it('opens no tooltip for a text that fits and has no detail', async () => {
+      vi.useFakeTimers();
+      onTestFinished(() => {
+        vi.useRealTimers();
+      });
       renderEntries(['Hedge Fixture']);
 
       fireEvent.mouseEnter(entryText('Hedge Fixture'));
       // Past the hover's 300ms rest, when a tooltip would have opened.
-      await act(() => new Promise((resolve) => setTimeout(resolve, 350)));
+      await act(() => vi.advanceTimersByTimeAsync(350));
       expect(tooltip()).not.toBeInTheDocument();
     });
 

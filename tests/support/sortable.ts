@@ -1,5 +1,5 @@
 import { act, fireEvent } from '@testing-library/react';
-import { vi } from 'vitest';
+import { onTestFinished, vi } from 'vitest';
 
 // Moving a sortable list's chips in happy-dom, which lays nothing out: dnd-kit finds where a chip may go
 // from each chip's box, so the chips are given one, on one line, 100px apart and 80px wide, and their
@@ -40,6 +40,21 @@ export function wrapChips(rowWidth: number) {
 // and measures between moves, so each step waits one out.
 const tick = () => act(() => new Promise<void>((resolve) => setTimeout(resolve, 0)));
 
+// A gesture fakes the clock until the test ends, so its hold and its click swallow are advanced, not slept;
+// the clock still moves with real time, so the caller's own waits run as before.
+function fakeClock() {
+  if (vi.isFakeTimers()) return;
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  onTestFinished(() => {
+    vi.useRealTimers();
+  });
+}
+
+const advance = (ms: number) =>
+  act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
+
 export async function press(handle: HTMLElement, key: string) {
   const code = key === ' ' ? 'Space' : key;
   fireEvent.keyDown(handle, { key, code });
@@ -56,6 +71,7 @@ export async function moveByKeyboard(handle: HTMLElement, ...arrows: string[]) {
 export async function dragByPointer(handle: HTMLElement, x: number) {
   const { left, width } = handle.getBoundingClientRect();
   const from = { clientX: left + width / 2, clientY: 12, isPrimary: true, button: 0 };
+  fakeClock();
   fireEvent.pointerDown(handle, from);
   // Past the few pixels a press may wander before it counts as a drag.
   fireEvent.pointerMove(document, { ...from, clientX: from.clientX + 10 });
@@ -65,7 +81,7 @@ export async function dragByPointer(handle: HTMLElement, x: number) {
   fireEvent.pointerUp(document, { ...from, clientX: x });
   // The sensor swallows every click for 50ms after a drag, so that the drop
   // presses nothing; waited out, so that it swallows no later test's.
-  await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
+  await advance(60);
 }
 
 export function layOutRows() {
@@ -83,6 +99,7 @@ export function layOutRows() {
 export async function dragVertically(handle: HTMLElement, y: number) {
   const { top, height } = handle.getBoundingClientRect();
   const from = { clientX: 20, clientY: top + height / 2, isPrimary: true, button: 0 };
+  fakeClock();
   fireEvent.pointerDown(handle, from);
   fireEvent.pointerMove(document, { ...from, clientY: from.clientY + 10 });
   await tick();
@@ -90,13 +107,14 @@ export async function dragVertically(handle: HTMLElement, y: number) {
   await tick();
   fireEvent.pointerUp(document, { ...from, clientY: y });
   // The 50ms the sensor swallows clicks for, as `dragByPointer`.
-  await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
+  await advance(60);
 }
 
 export async function touchDragVertically(handle: HTMLElement, y: number, holdMs: number) {
   const { top, height } = handle.getBoundingClientRect();
   const at = (clientY: number) => ({ touches: [{ clientX: 20, clientY }] });
   const from = top + height / 2;
+  fakeClock();
   fireEvent.touchStart(handle, at(from));
   if (holdMs <= 0) {
     // A swipe is fired in one synchronous burst: awaiting between the touch and
@@ -107,14 +125,14 @@ export async function touchDragVertically(handle: HTMLElement, y: number, holdMs
       fireEvent.touchMove(document, at(y));
       fireEvent.touchEnd(document, { touches: [], changedTouches: [{ clientX: 20, clientY: y }] });
     });
-    await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
+    await advance(60);
     return;
   }
-  await act(() => new Promise<void>((resolve) => setTimeout(resolve, holdMs)));
+  await advance(holdMs);
   fireEvent.touchMove(document, at(from + 2));
   await tick();
   fireEvent.touchMove(document, at(y));
   await tick();
   fireEvent.touchEnd(document, { touches: [], changedTouches: [{ clientX: 20, clientY: y }] });
-  await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
+  await advance(60);
 }

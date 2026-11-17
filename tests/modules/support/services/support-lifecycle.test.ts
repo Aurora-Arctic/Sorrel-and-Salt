@@ -28,6 +28,7 @@ import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
 import { ORIGIN } from '../../../support/constants';
+import { requiredDelay } from '../../../support/waits';
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -475,7 +476,10 @@ describe('the sender’s latest message time on the list', () => {
   it('is the sender’s newest message, not a staff reply that came after it', async () => {
     const request = await send();
     const followUp = await sendSenderMessage(asUser(C), request.id, 'Still stuck.');
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await requiredDelay(
+      20,
+      'the staff reply must carry a later Postgres timestamp than the sender message',
+    );
     await replyToSupportRequest(asUser(E), request.id, 'Try again.', mail);
 
     const page = await listSupportRequests(asUser(E), {}, PAGE);

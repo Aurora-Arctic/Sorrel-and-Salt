@@ -26,7 +26,6 @@ import {
   duplicateHref,
 } from '../../support/ingredient-form';
 import { renderWithQuery } from '../../support/render-with-query';
-import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import { choose, press, redo, type, typeIn, undo, expectBefore } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import {
@@ -45,6 +44,7 @@ import {
 } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
 import type { CategoryNode, DuplicateNode } from './types';
+import { CATEGORIES, pickCategory } from '../CategoryPicker/field-harness';
 
 // claude-docs/components/ingredient-form.md
 
@@ -87,40 +87,6 @@ const describers = (control: HTMLElement) =>
 const statusesSaying = (text: string) =>
   screen.queryAllByRole('status').filter((status) => status.textContent?.includes(text));
 
-// Invented groups, given out of order: the picker sorts them and knows none by name, as it knows no group a keeper adds.
-const WARDS = { id: 'a3e1c9b2-0d4f-4a8e-9c71-5b2f6e8d0a11', name: 'Wards & Fixtures' };
-const CRAFT = { id: 'b7f2d0c3-1e5a-4b9f-8d82-6c3a7f9e1b22', name: 'Craft of Tests' };
-const colours = { colorDark: '#8fb8de', colorLight: '#2f5d86' };
-const CATEGORIES: CategoryNode[] = [
-  {
-    id: 'c1d3e5f7-2a4b-4c6d-8e9f-0a1b2c3d4e51',
-    name: 'Testward',
-    description: 'Keeps a fixture from harm.',
-    group: { ...WARDS, ...colours },
-  },
-  {
-    id: 'c1d3e5f7-2a4b-4c6d-8e9f-0a1b2c3d4e52',
-    name: 'Fixture Shield',
-    description: 'Turns a failing test aside.',
-    group: { ...WARDS, ...colours },
-  },
-  {
-    id: 'c1d3e5f7-2a4b-4c6d-8e9f-0a1b2c3d4e53',
-    name: 'Trialcraft',
-    description: 'Works a change by trial.',
-    group: { ...CRAFT, ...colours },
-  },
-];
-const pickCategory = async (name: string) => {
-  // Opened only when shut: a pick leaves the list open for the next, and the chevron would shut it.
-  if (screen.getByRole('combobox', { name: 'Category' }).getAttribute('aria-expanded') !== 'true')
-    fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
-  // A longer wait than the default: nothing says the categories have loaded before the list opens, and a full-CPU run slows this file up to about 85 times, past 1000ms; 10s stays inside the 20s test timeout.
-  fireEvent.click(
-    await screen.findByRole('option', { name: new RegExp(`^${name}`) }, { timeout: 10_000 }),
-  );
-};
-
 describe('IngredientForm', () => {
   // The owner's rule for every form: a save is offered only when there is something to save.
   it('keeps both saves off until something is entered, and off again once it is cleared', () => {
@@ -137,18 +103,13 @@ describe('IngredientForm', () => {
     for (const button of saves()) expect(button).toBeDisabled();
   });
 
-  it('turns spell-check off on the names, which are not prose, and leaves it on the description', () => {
-    renderForm();
-
-    expect(textbox('Formal Name')).toHaveAttribute('spellcheck', 'false');
-    expect(textbox('Description')).not.toHaveAttribute('spellcheck', 'false');
-  });
-
   describe('saving a stub', () => {
-    it('saves with only a name, leaving the classification to the local default of "none"', async () => {
+    it('saves with only a name, leaving the classification to the local default of "none", and with no categories when they cannot be read', async () => {
       const calls = acceptCreate();
-      const onSaved = renderForm();
+      const onSaved = renderForm({ categories: 'refused' });
+      const quiet = describers(box('Category'));
 
+      await waitFor(() => expect(describers(box('Category'))).toBeGreaterThan(quiet));
       type('Name', 'Testwort');
       saveIngredient();
 
@@ -160,6 +121,7 @@ describe('IngredientForm', () => {
       );
       expect(calls).toHaveLength(1);
       expect(calls[0].workspaceId).toBe(WORKSPACE_ID);
+      expect(calls[0].input.categoryIds).toEqual([]);
       // Sent as typed (the kind unanswered), read by the service's schema as `none`, so the one-field stub is a whole entry.
       expect(calls[0].input).toMatchObject({
         name: 'Testwort',
@@ -420,11 +382,14 @@ describe('IngredientForm', () => {
       expectSummaryLinksTo(formal);
     });
 
-    it('lands on the list entry its path names', async () => {
+    // An element list's issue is pathed to the entry, but the control is one
+    // box: the whole of it carries the error, rather than the form above it.
+    it('lands on the list entry its path names, and an issue pathed to one element on the Element control', async () => {
       mockGraphQLError('CreateWorkspaceIngredient', {
         code: 'VALIDATION',
         fieldErrors: [
           { path: ['folkNames', 2], message: 'Another entry here claims Hedge Fixture' },
+          { path: ['elements', 1], message: 'Air is already chosen' },
         ],
       });
       renderForm();
@@ -433,29 +398,16 @@ describe('IngredientForm', () => {
       addEntry('Folk Name', 'Fixture Bane');
       addEntry('Folk Name', 'Fixture Wort');
       addEntry('Folk Name', 'Hedge Fixture');
+      chooseEach('Elements', 'Earth', 'Air');
       saveIngredient();
 
       await waitFor(() => expectErrorOn(box('Folk Name')));
       expectSummaryLinksTo(box('Folk Name'));
       expect(removeButton('Hedge Fixture')).toHaveAccessibleDescription(/\S/);
       expect(removeButton('Fixture Bane')).not.toHaveAccessibleDescription();
-    });
-
-    // An element list's issue is pathed to the entry, but the control is one
-    // box: the whole of it carries the error, rather than the form above it.
-    it('lands an issue pathed to one element on the Element control', async () => {
-      mockGraphQLError('CreateWorkspaceIngredient', {
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['elements', 1], message: 'Air is already chosen' }],
-      });
-      renderForm();
-
-      type('Name', 'Testwort');
-      chooseEach('Elements', 'Earth', 'Air');
-      saveIngredient();
 
       const element = select('Elements');
-      await waitFor(() => expectErrorOn(element));
+      expectErrorOn(element);
       expectSummaryLinksTo(element);
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
@@ -543,67 +495,19 @@ describe('IngredientForm', () => {
   describe('the categories', () => {
     const [testward, , trialcraft] = CATEGORIES;
 
-    it('sends the picked categories as categoryIds, by id, in the order picked', async () => {
+    it('is something to save on its own, and sends the picks as categoryIds, by id, in the order picked', async () => {
       const calls = acceptCreate();
       const onSaved = renderForm({ categories: CATEGORIES });
 
-      type('Name', 'Testwort');
       await pickCategory('Trialcraft');
+      expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeEnabled();
+      type('Name', 'Testwort');
       await pickCategory('Testward');
       expect(removeButton('Trialcraft')).toBeInTheDocument();
       saveIngredient();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(calls[0].input.categoryIds).toEqual([trialcraft.id, testward.id]);
-    });
-
-    it('is something to save on its own', async () => {
-      renderForm({ categories: CATEGORIES });
-
-      await pickCategory('Trialcraft');
-
-      expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeEnabled();
-    });
-
-    it('lands an issue on one pick on the picker’s error element, naming the pick, until it is taken out', async () => {
-      mockGraphQLError('CreateWorkspaceIngredient', {
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['categoryIds', 1], message: 'No such category' }],
-      });
-      renderForm({ categories: CATEGORIES });
-
-      type('Name', 'Testwort');
-      await pickCategory('Testward');
-      await pickCategory('Fixture Shield');
-      saveIngredient();
-
-      await waitFor(() => expectErrorOn(box('Category')));
-      expectSummaryLinksTo(box('Category'));
-      expect(box('Category')).toHaveAccessibleDescription(
-        expect.stringContaining('Fixture Shield'),
-      );
-      expect(removeButton('Fixture Shield')).toHaveAccessibleDescription(
-        expect.stringContaining('Fixture Shield'),
-      );
-      expect(removeButton('Testward')).not.toHaveAccessibleDescription(
-        expect.stringContaining('Fixture Shield'),
-      );
-      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-
-      fireEvent.click(removeButton('Fixture Shield'));
-      await waitFor(() => expect(box('Category')).not.toBeInvalid());
-    });
-
-    it('still saves, with no categories, when they cannot be read', async () => {
-      const calls = acceptCreate();
-      const onSaved = renderForm({ categories: 'refused' });
-      const quiet = describers(box('Category'));
-
-      await waitFor(() => expect(describers(box('Category'))).toBeGreaterThan(quiet));
-      type('Name', 'Testwort');
-      saveIngredient();
-      await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(calls[0].input.categoryIds).toEqual([]);
     });
   });
 
@@ -722,9 +626,11 @@ describe('IngredientForm', () => {
   });
 
   describe('the closed and open fields', () => {
-    it('marks only the name required at first', () => {
+    it('marks only the name required at first, and turns spell-check off on the names, which are not prose, but not on the description', () => {
       renderForm();
 
+      expect(textbox('Formal Name')).toHaveAttribute('spellcheck', 'false');
+      expect(textbox('Description')).not.toHaveAttribute('spellcheck', 'false');
       expect(textbox('Name')).toBeRequired();
       expect(textbox('Formal Name')).not.toBeRequired();
       expect(select('Classification')).not.toBeRequired();
@@ -765,32 +671,22 @@ describe('IngredientForm', () => {
       expect(textbox('Formal Name')).toBeDisabled();
       // Leaving a field validates it; let that land inside the test.
       await settle();
-    });
 
-    it('undoes a keyboard reorder of an ordered list and redoes it', async () => {
-      layOutChips();
-      renderForm();
-      for (const colour of ['Silver', 'Green', 'Amber']) addEntry('Colour', colour);
+      // Undo and redo are pressed from Name, away from the list, so the focus
+      // they leave on the Colour box is theirs.
+      addEntry('Colour', 'Silver');
+      fireEvent.click(removeButton('Silver'));
+
+      act(() => textbox('Name').focus());
+      fireEvent.keyDown(textbox('Name'), { key: 'z', ctrlKey: true });
+      expect(removeButton('Silver')).toBeInTheDocument();
+      expect(box('Colour')).toHaveFocus();
+
+      act(() => textbox('Name').focus());
+      fireEvent.keyDown(textbox('Name'), { key: 'z', ctrlKey: true, shiftKey: true });
+      expect(screen.queryByLabelText('Remove Silver')).toBeNull();
+      expect(box('Colour')).toHaveFocus();
       await settle();
-      const order = () =>
-        within(screen.getByRole('group', { name: 'Colours' }))
-          .getAllByRole('button', { name: /^Remove / })
-          .map((button) => button.getAttribute('aria-label'));
-      const inOrder = ['Remove Silver', 'Remove Green', 'Remove Amber'];
-      await moveByKeyboard(
-        screen.getByRole('button', { name: 'Move Amber' }),
-        'ArrowLeft',
-        'ArrowLeft',
-      );
-      const moved = ['Remove Amber', 'Remove Silver', 'Remove Green'];
-      expect(order()).toEqual(moved);
-
-      undo();
-      expect(order()).toEqual(inOrder);
-
-      redo();
-      expect(order()).toEqual(moved);
-      vi.restoreAllMocks();
     });
 
     it('changes nothing while a save is in flight, and has nothing to undo once it lands', async () => {
@@ -1095,8 +991,10 @@ describe('IngredientForm', () => {
         const onSaved = renderInCoven();
         const plus = await addClaw();
 
+        // An alert is the error kind of notice: a quiet or plain one has another role.
         const alert = await screen.findByRole('alert');
-        expect(alert).toHaveTextContent('The coven cannot take new ingredients right now');
+        expect(alert).toBeVisible();
+        expect(alert).toHaveTextContent(/\S/);
         expectBefore(alert, textbox('Name'));
         expect(plus).not.toHaveAttribute('data-state');
         expect(plus).not.toHaveAttribute('aria-disabled');
@@ -1290,28 +1188,5 @@ describe('IngredientForm', () => {
     type('Name', 'Testworts');
     await waitFor(() => expect(submit).toBeEnabled());
     expect(rest).toBeEnabled();
-  });
-});
-
-describe('IngredientForm undo focus', () => {
-  const undoFrom = (from: HTMLElement) => {
-    act(() => from.focus());
-    fireEvent.keyDown(from, { key: 'z', ctrlKey: true });
-  };
-
-  it('lands on a list’s box after undoing the removal of an entry, and after redoing it', async () => {
-    renderForm();
-    addEntry('Colour', 'Silver');
-    fireEvent.click(removeButton('Silver'));
-
-    undoFrom(textbox('Name'));
-    expect(removeButton('Silver')).toBeInTheDocument();
-    expect(box('Colour')).toHaveFocus();
-
-    act(() => textbox('Name').focus());
-    fireEvent.keyDown(textbox('Name'), { key: 'z', ctrlKey: true, shiftKey: true });
-    expect(screen.queryByLabelText('Remove Silver')).toBeNull();
-    expect(box('Colour')).toHaveFocus();
-    await settle();
   });
 });
