@@ -129,7 +129,7 @@ The `## M… —` sections that followed the execution order live in [`tasks/`](
 | [`tasks/v1-next/n4.md`](tasks/v1-next/n4.md) | N4 — Billing and memberships · _20 tasks · 93 hours_               |
 | [`tasks/v1-next/n5.md`](tasks/v1-next/n5.md) | N5 — Email consent and notifications · _7 tasks · 25 hours_        |
 | [`tasks/v1-next/n6.md`](tasks/v1-next/n6.md) | N6 — Operations and vendor ethics · _17 tasks · 50.5 hours_        |
-| [`tasks/v1-next/n7.md`](tasks/v1-next/n7.md) | N7 — Hosting on Vercel Pro and Neon Launch · _11 tasks · 34 hours_ |
+| [`tasks/v1-next/n7.md`](tasks/v1-next/n7.md) | N7 — Hosting on Vercel Pro and Neon Launch · _10 tasks · 30 hours_ |
 | [`tasks/v1-next/nd.md`](tasks/v1-next/nd.md) | ND — Deferred · _3 tasks · 11 hours_                               |
 | [`tasks/v1-next/no.md`](tasks/v1-next/no.md) | NO — Outside the Website · _2 tasks · 5 hours_                     |
 | [`tasks/v1-next/nb.md`](tasks/v1-next/nb.md) | NB — Bugfixes · _no tasks yet_                                     |

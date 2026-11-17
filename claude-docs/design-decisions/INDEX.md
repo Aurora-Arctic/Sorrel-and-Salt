@@ -198,6 +198,7 @@ Read [ci.md](ci.md).
 - [mb.191-coverage-provider](ci.md#the-coverage-provider-chosen-by-measurement) — The coverage provider was chosen by measurement.
 - [mb.224-test-suite-cut](ci.md#cut-the-test-suite-to-functional-requirements) — The test suite is cut to functional requirements.
 - [mb.235-test-reduction-lanes](ci.md#gate-time-reductions-not-taken) — Gate-time reductions not taken.
+- [n7-hosting-pro-launch](ci.md#hosting-on-vercel-pro-and-neon-launch) — Hosting on Vercel Pro and Neon Launch: dashboard settings, code changes, hotfix setup, and sources.
 - [mb.275-oxlint-warnings](ci.md#oxlint-rules-that-are-errors) — Selected Oxlint rules are errors.
 
 ## UI
