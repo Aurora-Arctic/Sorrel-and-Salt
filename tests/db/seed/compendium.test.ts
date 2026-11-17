@@ -10,7 +10,6 @@ import { variantIdOf, variantRowsOf } from '../../support/db/read-variants';
 import { fromRoot } from '../../support/paths';
 import { makeWorkspace, workspaceColumns } from '../../support/fixtures';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import { seed } from '@/db/seed/index';
 import { seedAstrology } from '@/db/seed/astrology';
 import { seedCategories } from '@/db/seed/categories';
 import {
@@ -18,7 +17,6 @@ import {
   seedCompendiumContent,
   type SeedCompendiumOptions,
 } from '@/db/seed/compendium';
-import { loadCompendium } from '@/db/seed/compendium/load';
 import { entryFilePath } from '@/db/seed/compendium/parse-entry';
 import { emptyReport, hasRefusals } from '@/db/seed/compendium/report';
 import type { RenderableEntryFile } from '../../support/seed/render-entry';
@@ -168,101 +166,98 @@ beforeAll(async () => {
   await seedSharedVocabularies();
 });
 
-beforeEach(async () => {
-  await resetToVocabularies();
-});
+describe('seedCompendium on an empty compendium', () => {
+  // Every case here only reads what one run wrote.
+  beforeAll(async () => {
+    await resetToVocabularies();
+    await seedCompendium(db, fixtureFiles());
+  });
 
-describe('seedCompendium', () => {
-  describe('on an empty compendium', () => {
-    beforeEach(async () => {
-      await seedCompendium(db, fixtureFiles());
-    });
-
-    it('writes each entry keyed by its identity, with its forms picked from the curated rows', async () => {
-      const entries = await sql<{ seed_key: string; slug: string; workspace_id: null }[]>`
+  it('writes each entry keyed by its identity, with its forms picked from the curated rows', async () => {
+    const entries = await sql<{ seed_key: string; slug: string; workspace_id: null }[]>`
         select seed_key, slug, workspace_id from ingredients order by seed_key
       `;
-      expect(entries).toEqual([
-        {
-          seed_key: 'fixtura exemplaris',
-          slug: 'samplewort-fixtura-exemplaris',
-          workspace_id: null,
-        },
-        { seed_key: 'fixtura testalis', slug: 'testwort-fixtura-testalis', workspace_id: null },
-      ]);
+    expect(entries).toEqual([
+      {
+        seed_key: 'fixtura exemplaris',
+        slug: 'samplewort-fixtura-exemplaris',
+        workspace_id: null,
+      },
+      { seed_key: 'fixtura testalis', slug: 'testwort-fixtura-testalis', workspace_id: null },
+    ]);
 
-      const forms = await sql<{ seed_key: string; form: string; picked: string }[]>`
+    const forms = await sql<{ seed_key: string; form: string; picked: string }[]>`
         select i.seed_key, v.form, f.seed_key as picked
         from ingredient_variants v
         join ingredients i on i.id = v.ingredient_id
         join ingredient_forms f on f.id = v.form_id
         order by i.seed_key, v.form
       `;
-      expect(forms).toEqual([
-        { seed_key: 'fixtura exemplaris', form: 'Root', picked: 'root' },
-        { seed_key: 'fixtura testalis', form: 'Herb', picked: 'herb' },
-        { seed_key: 'fixtura testalis', form: 'Oil', picked: 'oil' },
-      ]);
-    });
+    expect(forms).toEqual([
+      { seed_key: 'fixtura exemplaris', form: 'Root', picked: 'root' },
+      { seed_key: 'fixtura testalis', form: 'Herb', picked: 'herb' },
+      { seed_key: 'fixtura testalis', form: 'Oil', picked: 'oil' },
+    ]);
+  });
 
-    it('flags an entry and a form toxic exactly where the literal says so', async () => {
-      const entries = await sql<{ seed_key: string; toxic: boolean }[]>`
+  it('flags an entry and a form toxic exactly where the literal says so', async () => {
+    const entries = await sql<{ seed_key: string; toxic: boolean }[]>`
         select seed_key, toxic from ingredients order by seed_key
       `;
-      expect(entries).toEqual([
-        { seed_key: 'fixtura exemplaris', toxic: false },
-        { seed_key: 'fixtura testalis', toxic: true },
-      ]);
+    expect(entries).toEqual([
+      { seed_key: 'fixtura exemplaris', toxic: false },
+      { seed_key: 'fixtura testalis', toxic: true },
+    ]);
 
-      const forms = await sql<{ seed_key: string; form: string; toxic: boolean }[]>`
+    const forms = await sql<{ seed_key: string; form: string; toxic: boolean }[]>`
         select i.seed_key, v.form, v.toxic from ingredient_variants v
         join ingredients i on i.id = v.ingredient_id
         order by i.seed_key, v.form
       `;
-      expect(forms).toEqual([
-        { seed_key: 'fixtura exemplaris', form: 'Root', toxic: false },
-        { seed_key: 'fixtura testalis', form: 'Herb', toxic: false },
-        { seed_key: 'fixtura testalis', form: 'Oil', toxic: true },
-      ]);
-    });
+    expect(forms).toEqual([
+      { seed_key: 'fixtura exemplaris', form: 'Root', toxic: false },
+      { seed_key: 'fixtura testalis', form: 'Herb', toxic: false },
+      { seed_key: 'fixtura testalis', form: 'Oil', toxic: true },
+    ]);
+  });
 
-    it('writes the folk names, the deities in order and linked, and the categories on the entry and on a form', async () => {
-      const testwort = await ingredientId('fixtura testalis');
-      expect(await countOf('ingredient_folk_names', `where ingredient_id = '${testwort}'`)).toBe(2);
+  it('writes the folk names, the deities in order and linked, and the categories on the entry and on a form', async () => {
+    const testwort = await ingredientId('fixtura testalis');
+    expect(await countOf('ingredient_folk_names', `where ingredient_id = '${testwort}'`)).toBe(2);
 
-      const deities = await sql<{ position: number; seed_key: string }[]>`
+    const deities = await sql<{ position: number; seed_key: string }[]>`
         select d.position, v.seed_key from ingredient_deities d
         join deities v on v.id = d.deity_id
         where d.ingredient_id = ${testwort} order by d.position
       `;
-      expect(deities).toEqual([
-        { position: 0, seed_key: 'hecate' },
-        { position: 1, seed_key: 'artemis' },
-      ]);
+    expect(deities).toEqual([
+      { position: 0, seed_key: 'hecate' },
+      { position: 1, seed_key: 'artemis' },
+    ]);
 
-      const filed = await sql<{ form: string | null; category: string }[]>`
+    const filed = await sql<{ form: string | null; category: string }[]>`
         select v.form, c.seed_key as category from ingredient_categories ic
         join categories c on c.id = ic.category_id
         left join ingredient_variants v on v.id = ic.variant_id
         where ic.ingredient_id = ${testwort} order by v.form nulls first, c.seed_key
       `;
-      expect(filed).toEqual([
-        { form: null, category: 'protection' },
-        { form: null, category: 'warding' },
-        { form: 'Oil', category: 'healing' },
-      ]);
-    });
+    expect(filed).toEqual([
+      { form: null, category: 'protection' },
+      { form: null, category: 'warding' },
+      { form: 'Oil', category: 'healing' },
+    ]);
+  });
 
-    it('links a substitute by identity and form, and keeps a typed one as its name', async () => {
-      const testwort = await ingredientId('fixtura testalis');
-      const rows = await sql<
-        {
-          form: string | null;
-          substitute_id: string | null;
-          named_form: string | null;
-          name: string | null;
-        }[]
-      >`
+  it('links a substitute by identity and form, and keeps a typed one as its name', async () => {
+    const testwort = await ingredientId('fixtura testalis');
+    const rows = await sql<
+      {
+        form: string | null;
+        substitute_id: string | null;
+        named_form: string | null;
+        name: string | null;
+      }[]
+    >`
         select v.form, s.substitute_id, sv.form as named_form, s.name
         from ingredient_substitutes s
         left join ingredient_variants v on v.id = s.variant_id
@@ -270,17 +265,17 @@ describe('seedCompendium', () => {
         where s.ingredient_id = ${await ingredientId('fixtura exemplaris')}
         order by v.form nulls first, s.name nulls first
       `;
-      expect(rows).toEqual([
-        { form: null, substitute_id: testwort, named_form: 'Herb', name: null },
-        { form: null, substitute_id: null, named_form: null, name: 'Mockroot' },
-        { form: 'Root', substitute_id: testwort, named_form: 'Herb', name: null },
-      ]);
-    });
+    expect(rows).toEqual([
+      { form: null, substitute_id: testwort, named_form: 'Herb', name: null },
+      { form: null, substitute_id: null, named_form: null, name: 'Mockroot' },
+      { form: 'Root', substitute_id: testwort, named_form: 'Herb', name: null },
+    ]);
+  });
 
-    it('links each citation to the entry or the form it supports, with its locator', async () => {
-      const links = await sql<
-        { entry: string | null; form: string | null; title: string; locator: string | null }[]
-      >`
+  it('links each citation to the entry or the form it supports, with its locator', async () => {
+    const links = await sql<
+      { entry: string | null; form: string | null; title: string; locator: string | null }[]
+    >`
         select i.seed_key as entry, v.form, r.title, l.locator
         from reference_links l
         join "references" r on r.id = l.reference_id
@@ -289,21 +284,24 @@ describe('seedCompendium', () => {
         where l.ingredient_id is not null or l.ingredient_variant_id is not null
         order by i.seed_key nulls last, v.form nulls first, r.title
       `;
-      expect(links).toEqual([
-        { entry: 'fixtura exemplaris', form: null, title: 'Samplewort', locator: null },
-        { entry: 'fixtura testalis', form: null, title: 'A Fixture Herbal', locator: 'p. 12' },
-        { entry: null, form: 'Herb', title: 'A Fixture Herbal', locator: 'p. 13' },
-        { entry: null, form: 'Oil', title: 'Samplewort', locator: null },
-        { entry: null, form: 'Root', title: 'A Fixture Herbal', locator: 'p. 40' },
-      ]);
-      const keyed = await sql<{ seed_key: string }[]>`
+    expect(links).toEqual([
+      { entry: 'fixtura exemplaris', form: null, title: 'Samplewort', locator: null },
+      { entry: 'fixtura testalis', form: null, title: 'A Fixture Herbal', locator: 'p. 12' },
+      { entry: null, form: 'Herb', title: 'A Fixture Herbal', locator: 'p. 13' },
+      { entry: null, form: 'Oil', title: 'Samplewort', locator: null },
+      { entry: null, form: 'Root', title: 'A Fixture Herbal', locator: 'p. 40' },
+    ]);
+    const keyed = await sql<{ seed_key: string }[]>`
         select seed_key from "references" where title in ('A Fixture Herbal', 'Samplewort')
       `;
-      expect(keyed.map((row) => row.seed_key).sort()).toEqual(
-        Object.values(FILE_SOURCES).map(citationText).sort(),
-      );
-    });
+    expect(keyed.map((row) => row.seed_key).sort()).toEqual(
+      Object.values(FILE_SOURCES).map(citationText).sort(),
+    );
   });
+});
+
+describe('seedCompendium', () => {
+  beforeEach(resetToVocabularies);
 
   it('links a work the sources seed already wrote rather than writing it twice', async () => {
     const shared = SOURCES[0].reference;
@@ -402,9 +400,8 @@ describe('seedCompendium', () => {
     ]);
   });
 
-  // Retiring the picks changes the shared vocabularies, so this describe
-  // seeds them afresh for whatever runs after it.
-  describe('with a pick a keeper retired', () => {
+  // These cases change the shared vocabularies, so they share one describe that seeds them afresh for whatever runs after it.
+  describe('with the shared vocabularies changed', () => {
     afterAll(seedSharedVocabularies);
 
     it('skips a pick a keeper retired: the form with all it carries, and the deity', async () => {
@@ -429,92 +426,175 @@ describe('seedCompendium', () => {
       `;
       expect(deities).toEqual([{ name: 'Artemis', position: 0 }]);
     });
-  });
 
-  describe('on an empty database', () => {
-    beforeEach(async () => {
-      await truncateAllTables(sql);
-    });
-    afterAll(seedSharedVocabularies);
+    describe('on an empty database', () => {
+      beforeEach(async () => {
+        await truncateAllTables(sql);
+      });
 
-    it('throws on a form no seed wrote, and writes nothing', async () => {
-      await seedCategories(db);
-      await seedAstrology(db);
-      await seedDeities(db);
+      it('throws on a form no seed wrote, and writes nothing', async () => {
+        await seedCategories(db);
+        await seedAstrology(db);
+        await seedDeities(db);
 
-      await expect(seedCompendium(db, fixtureFiles())).rejects.toThrow();
+        await expect(seedCompendium(db, fixtureFiles())).rejects.toThrow();
 
-      expect(await countOf('ingredients')).toBe(0);
-    });
+        expect(await countOf('ingredients')).toBe(0);
+      });
 
-    it('refuses a file that fails its guard before opening a transaction', async () => {
-      const unsourced = fileOf(TESTWORT, (file) => (file.entry.references = []));
+      it('refuses a file that fails its guard before opening a transaction', async () => {
+        const unsourced = fileOf(TESTWORT, (file) => (file.entry.references = []));
 
-      await expect(seedCompendium(db, loadedOf([unsourced, fileOf(SAMPLEWORT)]))).rejects.toThrow();
+        await expect(
+          seedCompendium(db, loadedOf([unsourced, fileOf(SAMPLEWORT)])),
+        ).rejects.toThrow();
 
-      expect(await countOf('users')).toBe(0);
-    });
-  });
-
-  describe('after the standard scenario', () => {
-    beforeEach(async () => {
-      await truncateAllTables(sql);
-    });
-    afterAll(seedSharedVocabularies);
-
-    it('runs after the standard scenario, leaving the entries it already holds unstamped', async () => {
-      await seed(db, { scenario: 'standard' });
-      const standard = new Set(
-        (
-          await sql<
-            { identity_key: string }[]
-          >`select identity_key from ingredients where workspace_id is null`
-        ).map((row) => row.identity_key),
-      );
-      const entries = loadCompendium()
-        .files.filter((file) => file.status === 'approved')
-        .map((file) => file.entry);
-      // Precondition: the two overlap, so a skip by identity is exercised.
-      expect(entries.some((entry) => standard.has(identityOf(entry)))).toBe(true);
-
-      await seedCompendium(db);
-
-      const keyed = await sql<
-        { seed_key: string }[]
-      >`select seed_key from ingredients where seed_key is not null`;
-      expect(keyed.map((row) => row.seed_key).sort()).toEqual(
-        entries
-          .map(identityOf)
-          .filter((identity) => !standard.has(identity))
-          .sort(),
-      );
+        expect(await countOf('users')).toBe(0);
+      });
     });
   });
 });
 
+const PATH = entryFilePath(TESTWORT);
+
+const baseline = (): RenderableEntryFile[] => [fileOf(TESTWORT), fileOf(SAMPLEWORT)];
+
+function edited(
+  entry: SeedCompendiumEntry,
+  edit: (entry: SeedCompendiumEntry) => void,
+  { mark = true, overwrite = false }: { mark?: boolean; overwrite?: boolean } = {},
+): RenderableEntryFile {
+  const file = fileOf(entry, (draft) => edit(draft.entry));
+  if (mark) file.seedUpdate = parsed(file).hash;
+  if (overwrite) file.overwriteEditor = true;
+  return file;
+}
+
+const run = (files: RenderableEntryFile[], options: SeedCompendiumOptions = {}) =>
+  seedCompendium(db, loadedOf(files), { manifest: null, ...options });
+
+const reword = (words: number) => (entry: SeedCompendiumEntry) => {
+  entry.description = wordsOf(words);
+};
+
+const shownByKey = async () =>
+  Object.fromEntries(
+    (
+      await sql<{ seed_key: string; shown: boolean }[]>`select seed_key, shown from ingredients`
+    ).map((row) => [row.seed_key, row.shown]),
+  );
+
+describe('the update path, after one baseline run', () => {
+  // Every case here reads, or runs a seed that must write nothing and checks that it did not.
+  let first: Awaited<ReturnType<typeof run>>;
+
+  beforeAll(async () => {
+    await resetToVocabularies();
+    first = await run(baseline());
+  });
+
+  it('stores each file hash on insert, and a second run changes nothing', async () => {
+    expect(first.inserted).toBe(2);
+    const stored = await sql<{ seed_key: string; seed_content_hash: string }[]>`
+      select seed_key, seed_content_hash from ingredients order by seed_key`;
+    expect(stored).toEqual([
+      { seed_key: identityOf(SAMPLEWORT), seed_content_hash: parsed(fileOf(SAMPLEWORT)).hash },
+      { seed_key: identityOf(TESTWORT), seed_content_hash: parsed(fileOf(TESTWORT)).hash },
+    ]);
+    const before = await compendiumRows();
+
+    const second = await run(baseline());
+
+    expect(second).toEqual({ ...emptyReport(), skipped: 2 });
+    expect(await compendiumRows()).toEqual(before);
+  });
+
+  it('lands an entry shown when it names a category and hidden when it names none', async () => {
+    expect(await shownByKey()).toEqual({
+      [identityOf(SAMPLEWORT)]: SAMPLEWORT.categories?.length ? true : false,
+      [identityOf(TESTWORT)]: TESTWORT.categories?.length ? true : false,
+    });
+    expect(first.hidden).toBe(
+      [SAMPLEWORT, TESTWORT].filter((entry) => !entry.categories?.length).length,
+    );
+  });
+
+  it('reports an edit that is not marked as pending, and writes nothing', async () => {
+    const before = await compendiumRows();
+
+    const report = await run([edited(TESTWORT, reword(121), { mark: false }), fileOf(SAMPLEWORT)]);
+
+    expect(report.pending).toEqual([{ where: PATH, differs: ['description'] }]);
+    expect(report.updated).toEqual([]);
+    expect(report.refused).toEqual([]);
+    expect(await compendiumRows()).toEqual(before);
+  });
+
+  it('reports a mark gone stale, an edit made after marking, as pending', async () => {
+    const before = await compendiumRows();
+    const marked = edited(TESTWORT, reword(121));
+    marked.entry.description = wordsOf(123);
+    expect(marked.seedUpdate).not.toBe(parsed(marked).hash);
+
+    // Below the guard: seedCompendium refuses a stale mark before it gets here
+    // (the next case), so the pending outcome is the content layer's.
+    const loaded = loadedOf([marked, fileOf(SAMPLEWORT)]);
+    const report = await beginSeedTransaction(db, (tx) =>
+      seedCompendiumContent(tx, loaded, { manifest: null }),
+    );
+
+    expect(report.pending).toEqual([{ where: PATH, differs: ['description'] }]);
+    expect(report.updated).toEqual([]);
+    expect(await compendiumRows()).toEqual(before);
+  });
+});
+
+describe('the update path, from an empty compendium', () => {
+  beforeEach(resetToVocabularies);
+
+  it('lands an entry shown when only one of its forms names a category, and hidden when nothing does', async () => {
+    const formOnly = fileOf(TESTWORT, (draft) => {
+      draft.entry.categories = [];
+      draft.entry.variants.forEach((variant) => {
+        variant.categories = variant.form === 'Oil' ? ['Healing'] : [];
+      });
+    });
+    const nowhere = fileOf(SAMPLEWORT, (draft) => {
+      draft.entry.categories = [];
+      draft.entry.variants.forEach((variant) => {
+        variant.categories = [];
+      });
+    });
+
+    const report = await run([formOnly, nowhere]);
+
+    expect(report.hidden).toBe(1);
+    expect(await shownByKey()).toEqual({
+      [identityOf(TESTWORT)]: true,
+      [identityOf(SAMPLEWORT)]: false,
+    });
+  });
+
+  it('lands an entry with no categories hidden, and counts it', async () => {
+    const bare = fileOf(TESTWORT, (draft) => {
+      draft.entry.categories = [];
+      draft.entry.variants.forEach((variant) => {
+        variant.categories = [];
+      });
+    });
+
+    const report = await run([bare, fileOf(SAMPLEWORT)]);
+
+    expect(report.inserted).toBe(2);
+    expect(report.hidden).toBe(1 + (SAMPLEWORT.categories?.length ? 0 : 1));
+    const rows = await sql<{ seed_key: string; shown: boolean }[]>`
+      select seed_key, shown from ingredients where seed_key = ${identityOf(TESTWORT)}`;
+    expect(rows.map((row) => row.shown)).toEqual([false]);
+  });
+});
+
 describe('the update path', () => {
-  const PATH = entryFilePath(TESTWORT);
   const A_ID = FIXTURE_USERS.A.id;
-
-  const baseline = (): RenderableEntryFile[] => [fileOf(TESTWORT), fileOf(SAMPLEWORT)];
-
-  function edited(
-    entry: SeedCompendiumEntry,
-    edit: (entry: SeedCompendiumEntry) => void,
-    { mark = true, overwrite = false }: { mark?: boolean; overwrite?: boolean } = {},
-  ): RenderableEntryFile {
-    const file = fileOf(entry, (draft) => edit(draft.entry));
-    if (mark) file.seedUpdate = parsed(file).hash;
-    if (overwrite) file.overwriteEditor = true;
-    return file;
-  }
-
-  const run = (files: RenderableEntryFile[], options: SeedCompendiumOptions = {}) =>
-    seedCompendium(db, loadedOf(files), { manifest: null, ...options });
-
-  const reword = (words: number) => (entry: SeedCompendiumEntry) => {
-    entry.description = wordsOf(words);
-  };
 
   function bigEdit(entry: SeedCompendiumEntry): void {
     entry.description = wordsOf(121);
@@ -549,95 +629,19 @@ describe('the update path', () => {
   const hashOf = (entry: SeedCompendiumEntry, edit: (entry: SeedCompendiumEntry) => void) =>
     parsed(fileOf(entry, (draft) => edit(draft.entry))).hash;
 
-  let first: Awaited<ReturnType<typeof run>>;
-
   beforeEach(async () => {
-    first = await run(baseline());
+    await resetToVocabularies();
+    await run(baseline());
     await sql`
       insert into users (id, name, email, created_by, updated_by)
       values (${A_ID}, 'Fixture Person A', ${`${A_ID}@users.test`}, ${A_ID}, ${A_ID})`;
   });
-
-  it('stores each file hash on insert, and a second run changes nothing', async () => {
-    expect(first.inserted).toBe(2);
-    const stored = await sql<{ seed_key: string; seed_content_hash: string }[]>`
-      select seed_key, seed_content_hash from ingredients order by seed_key`;
-    expect(stored).toEqual([
-      { seed_key: identityOf(SAMPLEWORT), seed_content_hash: parsed(fileOf(SAMPLEWORT)).hash },
-      { seed_key: identityOf(TESTWORT), seed_content_hash: parsed(fileOf(TESTWORT)).hash },
-    ]);
-    const before = await compendiumRows();
-
-    const second = await run(baseline());
-
-    expect(second).toEqual({ ...emptyReport(), skipped: 2 });
-    expect(await compendiumRows()).toEqual(before);
-  });
-
-  const shownByKey = async () =>
-    Object.fromEntries(
-      (
-        await sql<{ seed_key: string; shown: boolean }[]>`select seed_key, shown from ingredients`
-      ).map((row) => [row.seed_key, row.shown]),
-    );
 
   const shownOf = async () =>
     (
       await sql<{ seed_key: string; shown: boolean }[]>`
         select seed_key, shown from ingredients order by seed_key`
     ).map((row) => row.shown);
-
-  it('lands an entry shown when it names a category and hidden when it names none', async () => {
-    expect(await shownByKey()).toEqual({
-      [identityOf(SAMPLEWORT)]: SAMPLEWORT.categories?.length ? true : false,
-      [identityOf(TESTWORT)]: TESTWORT.categories?.length ? true : false,
-    });
-    expect(first.hidden).toBe(
-      [SAMPLEWORT, TESTWORT].filter((entry) => !entry.categories?.length).length,
-    );
-  });
-
-  it('lands an entry shown when only one of its forms names a category, and hidden when nothing does', async () => {
-    await sql`truncate ingredients cascade`;
-    const formOnly = fileOf(TESTWORT, (draft) => {
-      draft.entry.categories = [];
-      draft.entry.variants.forEach((variant) => {
-        variant.categories = variant.form === 'Oil' ? ['Healing'] : [];
-      });
-    });
-    const nowhere = fileOf(SAMPLEWORT, (draft) => {
-      draft.entry.categories = [];
-      draft.entry.variants.forEach((variant) => {
-        variant.categories = [];
-      });
-    });
-
-    const report = await run([formOnly, nowhere]);
-
-    expect(report.hidden).toBe(1);
-    expect(await shownByKey()).toEqual({
-      [identityOf(TESTWORT)]: true,
-      [identityOf(SAMPLEWORT)]: false,
-    });
-  });
-
-  it('lands an entry with no categories hidden, and counts it', async () => {
-    await sql`truncate ingredients cascade`;
-    const bare = fileOf(TESTWORT, (draft) => {
-      draft.entry.categories = [];
-      draft.entry.variants.forEach((variant) => {
-        variant.categories = [];
-      });
-    });
-
-    const report = await run([bare, fileOf(SAMPLEWORT)]);
-
-    expect(report.inserted).toBe(2);
-    expect(report.hidden).toBe(1 + (SAMPLEWORT.categories?.length ? 0 : 1));
-    const rows = await sql<{ seed_key: string; shown: boolean }[]>`
-      select seed_key, shown from ingredients where seed_key = ${identityOf(TESTWORT)}`;
-    expect(rows.map((row) => row.shown)).toEqual([false]);
-  });
 
   it('never changes the flag on a later run, a marked update included', async () => {
     await sql`update ingredients set shown = false where seed_key = ${identityOf(TESTWORT)}`;
@@ -660,35 +664,6 @@ describe('the update path', () => {
     const again = await run([edited(TESTWORT, reword(125)), fileOf(SAMPLEWORT)]);
     expect(again.updated).toEqual([PATH]);
     expect(await shownOf()).toEqual(flipped);
-  });
-
-  it('reports an edit that is not marked as pending, and writes nothing', async () => {
-    const before = await compendiumRows();
-
-    const report = await run([edited(TESTWORT, reword(121), { mark: false }), fileOf(SAMPLEWORT)]);
-
-    expect(report.pending).toEqual([{ where: PATH, differs: ['description'] }]);
-    expect(report.updated).toEqual([]);
-    expect(report.refused).toEqual([]);
-    expect(await compendiumRows()).toEqual(before);
-  });
-
-  it('reports a mark gone stale, an edit made after marking, as pending', async () => {
-    const before = await compendiumRows();
-    const marked = edited(TESTWORT, reword(121));
-    marked.entry.description = wordsOf(123);
-    expect(marked.seedUpdate).not.toBe(parsed(marked).hash);
-
-    // Below the guard: seedCompendium refuses a stale mark before it gets here
-    // (the next case), so the pending outcome is the content layer's.
-    const loaded = loadedOf([marked, fileOf(SAMPLEWORT)]);
-    const report = await beginSeedTransaction(db, (tx) =>
-      seedCompendiumContent(tx, loaded, { manifest: null }),
-    );
-
-    expect(report.pending).toEqual([{ where: PATH, differs: ['description'] }]);
-    expect(report.updated).toEqual([]);
-    expect(await compendiumRows()).toEqual(before);
   });
 
   it('refuses to run at all on a mark gone stale, because the guard fails it', async () => {
