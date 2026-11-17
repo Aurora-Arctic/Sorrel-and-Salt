@@ -244,7 +244,7 @@ describe('a navigation whose caller is taken off the page', () => {
     expect(state).toEqual({ busy: true, href: '/curator/forms' });
 
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
     expect(screen.getByRole('status')).toBeInTheDocument();
 

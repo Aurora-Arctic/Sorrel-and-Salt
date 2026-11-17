@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import CupboardActions from '@/components/IngredientEntry/cupboard-actions';
 import type { CupboardPlace, PublicCupboardActionsProps } from '@/components/IngredientEntry/types';
 import type { StockData } from '@/components/StockDialog/types';
@@ -317,6 +317,10 @@ describe('CupboardActions on the public page', () => {
   });
 
   it('asks again unbusy after a remove from one coven, for the other still holding it', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
     mockWrite<RemoveCupboardEntryMutation>('RemoveCupboardEntry', {
       removeCupboardEntry: INGREDIENT,
     });
@@ -337,7 +341,7 @@ describe('CupboardActions on the public page', () => {
     ).toBeEnabled();
     // The dots' tip fades out as the dialog takes focus: its fade timer ends inside an act, not after the test.
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await vi.advanceTimersByTimeAsync(200);
     });
   });
 

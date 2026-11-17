@@ -359,26 +359,28 @@ Rule 9 of `layer-ownership.md`: a gate spec that a story flow proves is deleted.
 An **estimate** of about 33 s summed.
 
 - **`IngredientForm/index`:**
-  - Move `:140` to a `FormProvider` harness.
-  - Move `:568` and `:597` to the `MultiSelectField` describe (`list-field.test.tsx:649`).
+  - Merge `:140` into the whole-form test "marks only the name required at first", because the form sets `spellCheck={false}` in its own markup.
+  - Move `:568` to the `CategoriesField` harness in `tests/components/CategoryPicker/field.test.tsx`, because it proves the categories field, not `MultiSelectField`.
+  - Merge `:597` into the whole-form stub-save test, because it needs the form's save.
   - Cut `:770` (kept by `list-field:542` and `reorder:260`).
   - Merge `:1302` into `:746`, `:560` into `:546`, and `:446` into `:423`.
   - Assert role and kind, not the sentence, at `:1099`.
   - About 45 tests genuinely need the whole tree, so the file stays at about 29 s, over budget by decision.
 - **`variants`:**
-  - Move `:86`, `:111`, `:145`, `:250`, and `:270` to `renderVariants()` (`tests/components/IngredientForm/variants-harness.tsx:255`).
-  - Cut `:303` (kept by `copy.test.tsx:58, 71`).
+  - Move `:86`, `:111`, `:145`, and `:250` to `renderVariants()` (`tests/components/IngredientForm/variants-harness.tsx`).
+  - Split `:270`: move the per-entry error and the save after removal to `renderVariants()` in `substitutes.test.tsx`, and merge the check that Relations opens into the whole-form test "opens the closed variant and each closed section", because only the whole form opens a section a save finds errors in.
+  - Move `:303` to `copy.test.tsx` on `renderVariants()`, because no other test covers the list copies. Its Save-state lines are dropped (kept by `index:126` and compendium "makes the form changed when flipped"), and its check that every copy button is a variant's merges into the whole-form "Close All / Open All" test.
 - **`SpellBuilder/steps`:**
-  - About 38 tests move to a new `SpellSteps` harness on the `list-field.test.tsx:128` model.
+  - 34 tests move to `renderSpellSteps` in `tests/components/SpellBuilder/steps-harness.tsx`, on the `list-field.test.tsx:128` model; 14 stay on the whole builder, because they need its resolver, Save or the Jar Details drawing.
   - Cut `:462` and `:485` (kept by `reorder:271, 282, 260`) and `:1336` (copy).
   - Replace the class checks at `:366`, `:946`, and `:949` with `aria-expanded` or an accessible name.
   - Drop the `:299` copy line.
 - **`compendium`:**
-  - Cut `:266` and `:297` (kept by `list-field:350, 255, 322`).
-  - Move `:308` to `substitutes.test.tsx:73`.
-  - Merge `:368`, `:505`, and `:520`.
-  - Cut one row of `:655` (kept by `:636`).
-- **Found:** each moved or cut test proves one field or one step, which a harness of that field proves with far less rendering (rule 6). Medium confidence on the saving.
+  - Keep `:266` and `:297` on their pick-only harness, because `:266` proves the form field's `curatedOnly` path, which differs from `ListField`'s, and `:297` is the only test of the deities refusing an unpicked name.
+  - Merge `:308` into the whole-form test "says that it edits the compendium", because it proves the form passes its own id as `omit`, which `substitutes.test.tsx:73` does not.
+  - Merge `:368`, `:505`, and `:520` into one test.
+  - Cut the admin-list row of `:655` and keep the entry-page row (kept by `:636` and `tests/e2e/ingredient-classification-none.spec.ts:158`).
+- **Found:** each moved, merged or cut test proves one field or one step, which a harness of that field proves with far less rendering (rule 6). Medium confidence on the saving.
 
 #### T-23. Real Sleeps in Vitest
 
@@ -392,7 +394,8 @@ An **estimate** of about 13.4 s summed.
   - `TermsAgreement:140`, `shown-toggle:118`, and `pending-navigation:247`: 50 ms each; an `act` flush is enough.
   - `tests/support/sortable.ts:68-119`: 60 ms each.
 - **Cut:** `tests/lib/watch-loads.test.ts` (750 ms). It tests a test helper, which rule 1 says is not tested (R-14).
-- **Keep:** the lock and race guards (`stock:564, 941`, `write:347, 456`, `email:144`); the 20 ms database polls; the `pg_sleep` calls in `last-edits` and `connection-under-msw:27`; the `setTimeout(0)` flushes.
+- **Keep, through `requiredDelay` in `tests/support/waits.ts`:** the lock and race guards (`stock:564, 941`, `write:347, 456`, `email:144`, `document-mailing-steps:243`); the 20 ms database polls; the timestamp gaps (`secret-link-mail:146, 262`, `support-lifecycle:479`). `tests/guards/vitest-waits.test.ts` refuses a real sleep outside the helper.
+- **Not sleeps, and stay as they are:** the `pg_sleep` calls inside SQL in `last-edits` and `connection-under-msw:27`, and the `setTimeout(0)` flushes.
 - **Keeper:** each test's assertions stay.
 
 #### T-24. Password Hashing Paid per Test

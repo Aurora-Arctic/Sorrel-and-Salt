@@ -8,6 +8,7 @@ import { enrol } from '../support/passkey';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
 import { ORIGIN } from '../support/constants';
+import { requiredDelay } from '../support/waits';
 
 // Passkey management (@story-74) through Better Auth's real endpoints: an account renames and removes its own passkeys, no other's, and
 // never the last way it has to sign in (claude-docs/auth/plugins.md, "Passkeys").
@@ -88,7 +89,10 @@ async function waitingOnLocks(count: number): Promise<void> {
     `;
     if (waiting >= count) return;
     if (Date.now() > deadline) throw new Error(`${waiting} of ${count} connections reached a lock`);
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await requiredDelay(
+      20,
+      'the pause between two reads of pg_stat_activity, which has no event to wait on',
+    );
   }
 }
 

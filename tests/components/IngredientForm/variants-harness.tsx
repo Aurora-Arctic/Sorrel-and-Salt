@@ -2,6 +2,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { expect, vi } from 'vitest';
+import { FormErrorSummary } from '@/components/Field';
 import type { IngredientFormInput, IngredientFormValues } from '@/components/IngredientForm/types';
 import { VariantsField, useVariantFolds } from '@/components/IngredientForm/variants';
 import {
@@ -255,9 +256,12 @@ export async function openSubstitutes(oil: HTMLElement) {
 export function renderVariants({
   workspaceId,
   values,
+  summary = false,
 }: {
   workspaceId: string | null;
   values?: IngredientFormValues;
+  /** Lists the errors at the form's top on a failed save, as the whole form does. */
+  summary?: boolean;
 }) {
   offerNothing();
   const onSubmit = vi.fn<(input: IngredientFormInput) => void>();
@@ -269,12 +273,14 @@ export function renderVariants({
       resolver: workspaceId === null ? compendiumResolver : ingredientResolver,
       mode: 'onTouched',
       reValidateMode: 'onChange',
+      shouldFocusError: !summary,
     });
     const folds = useVariantFolds();
     const [open, setOpen] = useState(true);
     return (
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit((input) => onSubmit(input))}>
+          {summary && <FormErrorSummary />}
           <textarea aria-label="Ingredient Description" {...methods.register('description')} />
           <VariantsField
             workspaceId={workspaceId}

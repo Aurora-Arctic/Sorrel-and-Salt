@@ -117,6 +117,8 @@ cannot:
   a modal, and nothing that has gone ("Accessibility — axe-core", below).
 - `pulled-env-assertion.test.ts` — no value of a pulled Vercel environment
   reaches a CI log.
+- `vitest-waits.test.ts` — no Vitest code sleeps outside `requiredDelay` in
+  `tests/support/waits.ts` ("Waiting", below).
 - `daily-job-starts.test.ts` — a daily job starts from its Vercel Cron route alone; the set of callers is pinned.
 - `lint-job-boundary.test.ts` — only the adapter in `src/lib/jobs/` imports the Workflow SDK at runtime, and the ban still fires.
 - `no-admin-addresses.test.ts` — nothing in `src/` names an `/admin` address but Better Auth's own endpoints.
@@ -456,6 +458,32 @@ artifact on every run. `vitest.config.mts`'s coverage `reporter` also gained
 can show a coverage table (`.github/scripts/summarize-vitest.mjs`), and since
 MB.180 a slowest-files block ([`layer-ownership.md`](layer-ownership.md), "The
 file budget").
+
+### Waiting
+
+A Vitest test never sleeps, because a sleep makes the suite slower and still
+races a loaded machine. A timer the code under test sets runs on a fake clock:
+install it with `vi.useFakeTimers()` (with `shouldAdvanceTime: true` when the
+test also uses `waitFor`, which polls on the timers it fakes, or `typingClock()`
+from `tests/support/compendium-list.tsx` around `userEvent` typing), move it on
+with `vi.advanceTimersByTimeAsync(ms)`, and put real timers back when the test
+ends. A wait for React to settle is an `act` flush, never a timed pause.
+
+A wait that is itself the requirement goes through `requiredDelay(ms, reason)`
+from `tests/support/waits.ts`, whose reason says why: a lock or race that must
+hold for a stretch of wall time, the pause between two polls of `pg_locks` or
+`pg_stat_activity`, or a gap that gives two Postgres timestamps different
+values. No fake clock reaches Postgres or another connection, so these stay
+real. Three forms are not sleeps and need no helper: a zero-delay
+`setTimeout(resolve, 0)` or `setTimeout(resolve)`, which yields one task; MSW's
+`delay('infinite')`, a response that never answers; and `pg_sleep` inside SQL,
+which holds a database backend rather than the test.
+
+`tests/guards/vitest-waits.test.ts` refuses a timed `setTimeout` sleep, an
+import of `timers/promises`, and an MSW `delay` with a time anywhere under
+`tests/` outside `tests/e2e/` and the helper, and refuses a use of the helper
+without a reason in words. Its sleep scan is shared with the Playwright guard
+through `tests/support/repo-scan.ts`.
 
 ### Quiet under Claude Code
 

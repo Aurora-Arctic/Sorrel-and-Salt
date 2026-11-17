@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useEffect } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { router } from '../../support/next-navigation';
 import FormIcon from '@/components/FormIcon';
 import { compendiumHref } from '@/components/CompendiumList/href';
@@ -475,6 +475,8 @@ describe('the list while a filter is on its way', () => {
         fireEvent.click(screen.getByText('Show Search Details'));
         await waitFor(() => expect(details().hasAttribute('open')).toBe(true));
       }
+      // Faked only from here: `waitFor` above polls on the timers this fakes.
+      typingClock();
       const wasOpen = details().hasAttribute('open');
       const seen: boolean[] = [];
       const watch = new MutationObserver(() => seen.push(details().hasAttribute('open')));
@@ -490,7 +492,7 @@ describe('the list while a filter is on its way', () => {
       expect(screen.getByRole('table')).toBeInTheDocument();
       // Long enough for any slide, hold or net timer to have run.
       await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await vi.advanceTimersByTimeAsync(1000);
       });
       watch.disconnect();
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readSource, sourceFiles } from '../support/repo-scan';
+import { lineAt, readSource, sourceFiles, timedSleepsIn } from '../support/repo-scan';
 
 // A Playwright test waits on the state it needs, never on the clock or on a quiet network
 // (claude-docs/testing/e2e.md, "Waiting, and flaky tests"). A wait that is itself the requirement, and
@@ -13,34 +13,21 @@ const SCANNED = /^(tests\/e2e\/.*\.(?:ts|mts|tsx)|playwright[^/]*\.config\.ts)$/
 /** The helpers that sleep, each taking its reason as a required second parameter. */
 const TIMED_HELPERS = ['requiredDelay', 'pauseBetweenPolls'] as const;
 
-/** A callback that only resolves: a bare identifier, or an arrow calling one with no arguments, either cast with `as`. */
-const RESOLVER = String.raw`(?:[A-Za-z_$][\w$]*|\(\s*\)\s*=>\s*(?:\{\s*)?[A-Za-z_$][\w$]*\(\s*\)\s*;?\s*\}?)(?:\s+as\s+[^,]+?)?`;
-
-/** The global `setTimeout`, bare or read off `window`, `globalThis` or `self`, but not `test.setTimeout`. */
-const GLOBAL_SET_TIMEOUT = String.raw`(?:(?<![.\w$])|(?<=(?<![.\w$])(?:window|globalThis|self)\.))setTimeout`;
-
 const FORBIDDEN: readonly { form: string; pattern: RegExp }[] = [
   { form: 'networkidle', pattern: /['"`]networkidle['"`]/g },
   { form: 'waitForTimeout', pattern: /\bwaitForTimeout\b/g },
   // Its `setTimeout` is a promised sleep under any name, so the module is refused, not each call.
   { form: 'timers/promises', pattern: /['"`](?:node:)?timers\/promises['"`]/g },
-  {
-    form: 'a timed setTimeout sleep',
-    // A global `setTimeout` (not `test.setTimeout`) given a resolver and a delay other than 0.
-    pattern: new RegExp(
-      String.raw`${GLOBAL_SET_TIMEOUT}\(\s*${RESOLVER}\s*,\s*(?!0\s*[,)])[^\s)]`,
-      'g',
-    ),
-  },
 ];
 
 /** Each forbidden wait in `text`, as `line: form`. */
 function offences(text: string): string[] {
-  return FORBIDDEN.flatMap(({ form, pattern }) =>
-    [...text.matchAll(pattern)].map(
-      (match) => `${text.slice(0, match.index).split('\n').length}: ${form}`,
+  return [
+    ...FORBIDDEN.flatMap(({ form, pattern }) =>
+      [...text.matchAll(pattern)].map((match) => `${lineAt(text, match.index)}: ${form}`),
     ),
-  );
+    ...timedSleepsIn(text).map((index) => `${lineAt(text, index)}: a timed setTimeout sleep`),
+  ];
 }
 
 describe('the matcher', () => {
