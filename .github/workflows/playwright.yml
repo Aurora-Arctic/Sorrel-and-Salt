@@ -220,6 +220,7 @@ jobs:
         continue-on-error: true
         env:
           PLAYWRIGHT_SHARD: true
+          PLAYWRIGHT_OUTCOME: ${{ steps.run.outcome }}
         run: |
           if [ "${{ inputs.suite }}" = stories ]; then
             node .github/scripts/summarize-stories.mjs

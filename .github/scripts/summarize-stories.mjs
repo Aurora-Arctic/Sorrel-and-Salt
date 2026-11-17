@@ -15,6 +15,8 @@ const PLAYWRIGHT_RESULTS_PATH =
 
 // A shard ran some of the stories: its row counts those and leaves the rest to its siblings.
 const SHARD = process.env.PLAYWRIGHT_SHARD === 'true';
+// The run step's outcome: a run can fail with every story passing, for example on a crashed worker.
+const OUTCOME = process.env.PLAYWRIGHT_OUTCOME ?? '';
 
 const report = fs.existsSync(PLAYWRIGHT_RESULTS_PATH)
   ? JSON.parse(fs.readFileSync(PLAYWRIGHT_RESULTS_PATH, 'utf8'))
@@ -62,6 +64,7 @@ const summary = resultLine({
   ms: runMs,
   over: overBudget,
   budget: 'test',
+  unexplained: OUTCOME === 'failure' && counts.failed === 0,
 });
 
 const SUFFIX = {
@@ -104,5 +107,10 @@ const details = [failureBlock, lines.join('\n')].filter(Boolean).join('\n\n');
 
 setOutput('summary', summary);
 setOutput('details', details);
+// The heading's count of every v1 story, which a shard leaves to the end job.
+setOutput(
+  'heading_note',
+  SHARD ? '' : `${total.toLocaleString('en-GB')} ${total === 1 ? 'story' : 'stories'}`,
+);
 // Read by the report upload: a story that failed and then passed on retry has a trace worth keeping.
 setOutput('flaky', stories.some((story) => story.flaky) ? 'true' : 'false');

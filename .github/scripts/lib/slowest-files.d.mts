@@ -15,8 +15,20 @@ export interface VitestFileResult {
   assertionResults?: unknown[];
 }
 
+export function budgetLine(options: {
+  over: number;
+  budgetMs: number;
+  budget: 'file' | 'test';
+}): string;
+
 export function buildSlowestFilesSection(
   testResults: VitestFileResult[] | undefined,
   repoRoot: string,
-  options?: { budgetMs?: number | null; notes?: string[]; notesHeading?: string },
+  options?: {
+    budgetMs?: number;
+    budget?: 'file' | 'test';
+    fileBudget?: boolean;
+    over?: number;
+    notes?: string[];
+  },
 ): { over: SlowFile[]; block: string } | null;

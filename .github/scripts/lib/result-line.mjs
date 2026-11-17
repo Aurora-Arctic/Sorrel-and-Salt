@@ -8,8 +8,13 @@ export function formatRun(ms) {
   return seconds >= 60 ? `${Math.floor(seconds / 60)}m ${seconds % 60}s` : `${seconds}s`;
 }
 
-export function resultLine({ counts, ms, over = 0, budget }) {
+// The words of a run that failed with nothing failed to show for it, which the
+// Vitest merge's alert uses as well.
+export const NO_FAILED_TEST = 'failed with no failed test';
+
+export function resultLine({ counts, ms, over = 0, budget, unexplained = false }) {
   const duration = typeof ms === 'number' ? ` in ${formatRun(ms)}` : '';
   const overBudget = over > 0 ? `, ${over} over the ${budget} budget` : '';
-  return `${counts}${duration}${overBudget}`;
+  const note = unexplained ? `; run ${NO_FAILED_TEST}: see the log` : '';
+  return `${counts}${duration}${overBudget}${note}`;
 }

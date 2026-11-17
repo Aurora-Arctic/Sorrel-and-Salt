@@ -38,7 +38,7 @@ const LAYOUTS = {
     sections: [
       { key: 'gate', label: 'Gate Specs' },
       { key: 'stories', label: 'Stories' },
-      { key: 'coverage', label: 'Coverage', final: true },
+      { key: 'coverage', label: 'Coverage and Slowest Files', final: true },
     ],
   },
 };

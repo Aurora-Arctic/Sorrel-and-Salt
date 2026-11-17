@@ -8,4 +8,10 @@ export interface TestTiming {
   ms: number;
 }
 
+export function perFileRows(
+  timings: TestTiming[],
+): { name: string; startTime: number; endTime: number; assertionResults: number[] }[];
+
+export function overBudgetWarnings(timings: TestTiming[]): string[];
+
 export function collectTimings(report: unknown): TestTiming[];

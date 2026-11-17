@@ -10,13 +10,13 @@ import path from 'node:path';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
 import { formatFailures, stripAnsi } from './lib/failure-list.mjs';
 import { setOutput } from './lib/github-output.mjs';
-import { resultLine } from './lib/result-line.mjs';
+import { NO_FAILED_TEST, resultLine } from './lib/result-line.mjs';
 import { buildSlowestFilesSection } from './lib/slowest-files.mjs';
 
 const RESULTS_PATH = process.env.VITEST_RESULTS || '/app/vitest-results.json';
 const PART = process.env.VITEST_PART === 'true';
 // The run step's outcome. The JSON reporter drops Vitest's unhandled errors, so
-// a run that failed on one alone reports no failed test.
+// a run that failed on one alone lists no failure.
 const OUTCOME = process.env.VITEST_OUTCOME ?? '';
 const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage/coverage-summary.json';
 // The merged run's log: Vitest reports a missed threshold only there.
@@ -105,11 +105,14 @@ const violations = (
   .filter(Boolean);
 
 const runFailed = OUTCOME === 'failure';
-const unexplained =
-  runFailed && failures.length === 0 && violations.length === 0
-    ? '; run failed with no failed test: see the log'
-    : '';
-const summary = `${resultLine({ counts: testSummary, ms: PART ? runMs() : undefined, over: overBudget, budget: 'file' })}${unexplained}`;
+const unexplained = runFailed && failures.length === 0 && violations.length === 0;
+const summary = resultLine({
+  counts: testSummary,
+  ms: PART ? runMs() : undefined,
+  over: overBudget,
+  budget: 'file',
+  unexplained,
+});
 
 const details = formatFailures(failures, { heading: 'Failing tests' });
 
@@ -122,7 +125,7 @@ if (!PART) {
   if (missedByParts) {
     alert = `The merged run found ${failures.length} failed ${failures.length === 1 ? 'test' : 'tests'} that no part's row shows: see the log.`;
   } else if (unexplained) {
-    alert = 'The merged run failed with no failed test and no missed threshold: see the log.';
+    alert = `The merged run ${NO_FAILED_TEST} and no missed threshold: see the log.`;
   }
   let coverageSummary;
   let finalOutcome;
