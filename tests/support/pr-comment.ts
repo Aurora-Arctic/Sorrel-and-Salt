@@ -97,11 +97,18 @@ const STATUS_WORDS = ['Passed', 'Failed', 'Running', 'Skipped', 'Warning'] as co
 /** One row of a sectioned comment's table: a section's, or a shard's sub-row (`↳`) beneath it. */
 export type Row = {
   label: string;
-  /** The shard's index when the row is a sub-row, else null. */
-  shard: number | null;
+  /**
+   * The shard's index when the row is a numbered sub-row ("↳ Shard 2 of 3"), `'sweep'` for the gate's
+   * accessibility sweep sub-row ("↳ Accessibility Sweep"), else null.
+   */
+  shard: number | 'sweep' | null;
+  /** The count a numbered sub-row's label gives ("of 3"), else null. */
+  of: number | null;
   status: string;
   result: string;
 };
+
+const SWEEP_LABEL = '↳ Accessibility Sweep';
 
 /** A sectioned comment's table rows, top to bottom. */
 export function rowsOf(body: string): Row[] {
@@ -115,9 +122,11 @@ export function rowsOf(body: string): Row[] {
         .split(/(?<!\\)\|/)
         .map((cell) => cell.trim());
       const sub = label.startsWith('↳');
+      const numbered = /Shard (\d+) of (\d+)/.exec(label);
       return {
         label,
-        shard: sub ? Number(/\d+/.exec(label)?.[0]) : null,
+        shard: label === SWEEP_LABEL ? 'sweep' : sub ? Number(/\d+/.exec(label)?.[0]) : null,
+        of: numbered ? Number(numbered[2]) : null,
         status: STATUS_WORDS.find((word) => status.includes(word)) ?? status,
         result,
       };

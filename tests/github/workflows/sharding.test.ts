@@ -8,9 +8,9 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, matchesGlob } from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import MCR from 'monocart-coverage-reports';
 import {
@@ -151,40 +151,245 @@ const PASS = { success: true, failure: false };
 /** Where a shard's blob reporter writes, which tells its blob upload from its other uploads. */
 const BLOB = /blob-report/;
 
-describe('the Playwright suites, sharded', () => {
-  it.each([
-    ['playwright', 3, /\be2e\b/],
-    ['stories', 2, /\btest:stories\b/],
-  ] as const)(
-    'runs the %s suite as %i shards, each running its own share with --shard',
-    (caller, count, script) => {
-      const [, job] = shardJob();
-      const inputs = playwrightInputs(caller);
-      const runs = matrixRuns(job, { ...base, inputs });
+/** The accessibility sweep, the gate spec that runs in a job of its own. */
+const SWEEP = 'tests/e2e/axe.spec.ts';
+
+/** One shard job's call of its suite: the npm script, the arguments it hands Playwright, and its environment. */
+type SuiteCall = { script: string; args: string[]; env: Record<string, string> };
+
+// npm, recording each call's arguments and environment as one JSON line in $STUB_CALLS.
+const RECORDING_NPM = `#!${process.execPath}
+require('node:fs').appendFileSync(process.env.STUB_CALLS, JSON.stringify({ argv: process.argv.slice(2), env: process.env }) + '\\n');
+`;
+
+/** Each job of one caller of playwright.yml that runs, in matrix order, with the call its run step makes. */
+function suiteCalls(caller: 'playwright' | 'stories' | 'warm') {
+  const inputs = playwrightInputs(caller);
+  return jobRuns(PLAYWRIGHT, inputs)
+    .filter(({ job, context }) => job.strategy?.matrix && holds(job.if, context, PASS))
+    .map(({ job, context }, index) => {
       const runStep = (job.steps ?? []).find((step) => /\bnpm run\b/.test(step.run ?? ''));
       expect(runStep, 'the shard job has a step that runs the suite').toBeDefined();
-
-      const shards = runs.map(({ matrix, strategy }, index) => {
-        const calls = join(root, `calls-${index}`);
-        writeFileSync(calls, '');
-        const run = runStepScript(runStep as Step, {
-          context: { ...base, inputs, matrix, strategy, steps: {}, env: job.env ?? {} },
-          root,
-          stubs: { npm: RECORDING_STUB },
-          env: { STUB_CALLS: calls },
-        });
-        expect(run.status, run.log).toBe(0);
-        const [call = ''] = readFileSync(calls, 'utf8').split('\n').filter(Boolean);
-        expect(call).toMatch(script);
-        return /--shard[= ](\d+\/\d+)/.exec(call)?.[1];
+      const calls = join(root, `calls-${caller}-${index}`);
+      writeFileSync(calls, '');
+      const run = runStepScript(runStep as Step, {
+        context: { ...context, steps: {} },
+        root,
+        stubs: { npm: RECORDING_NPM },
+        baseEnv: Object.fromEntries(
+          Object.entries(evaluateMap(job.env, context)).map(([key, value]) => [
+            key,
+            stringify(value),
+          ]),
+        ),
+        env: { STUB_CALLS: calls },
       });
+      expect(run.status, run.log).toBe(0);
+      const lines = readFileSync(calls, 'utf8').split('\n').filter(Boolean);
+      expect(lines, 'the run step calls npm once').toHaveLength(1);
+      const { argv, env } = JSON.parse(lines[0]) as { argv: string[]; env: Record<string, string> };
+      expect(argv[0]).toBe('run');
+      const dashes = argv.indexOf('--');
+      const call: SuiteCall = {
+        script: argv[1],
+        args: dashes === -1 ? [] : argv.slice(dashes + 1),
+        env,
+      };
+      return { context, call, shard: flagValue(call.args, '--shard') };
+    });
+}
 
-      expect(runs).toHaveLength(count);
-      expect([...shards].sort()).toEqual(
-        Array.from({ length: count }, (_, index) => `${index + 1}/${count}`),
+/** A flag's value, from `--flag value` or `--flag=value`; undefined when the flag is not given. */
+function flagValue(args: string[], name: string): string | undefined {
+  const at = args.findIndex((arg) => arg === name || arg.startsWith(`${name}=`));
+  if (at === -1) return undefined;
+  return args[at].includes('=') ? args[at].slice(name.length + 1) : args[at + 1];
+}
+
+// Playwright CLI flags that take a value, so their value is not read as a file filter.
+const VALUE_FLAGS = new Set([
+  '--shard',
+  '--reporter',
+  '--grep',
+  '-g',
+  '--grep-invert',
+  '--project',
+  '--config',
+  '-c',
+  '--workers',
+  '-j',
+  '--retries',
+  '--repeat-each',
+  '--max-failures',
+  '--timeout',
+  '--output',
+  '--global-timeout',
+  '--trace',
+  '--tsconfig',
+]);
+
+const DEFAULT_TEST_MATCH = /\.(spec|test)\.[cm]?[jt]sx?$/;
+
+type Matcher = RegExp | string | (RegExp | string)[] | undefined;
+
+/** Whether a config's testMatch or testIgnore matches a file, as Playwright reads a RegExp or a glob. */
+function matcherHolds(matcher: Matcher, absolute: string, relative: string): boolean {
+  if (matcher === undefined) return false;
+  return [matcher]
+    .flat()
+    .some((one) =>
+      typeof one === 'string'
+        ? matchesGlob(relative, one) || matchesGlob(relative, `**/${one}`)
+        : one.test(absolute),
+    );
+}
+
+function filesUnder(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true, recursive: true })
+    .filter((entry) => entry.isFile() && !entry.parentPath.includes('node_modules'))
+    .map((entry) => join(entry.parentPath, entry.name));
+}
+
+/**
+ * The spec files a call of the e2e or story suite runs, as Playwright selects them: its config (the npm
+ * script's, loaded under the call's environment) by each project's testMatch and testIgnore, then the
+ * command line's file filters, `--project`, `--grep` and `--grep-invert`. A grep is matched against what
+ * Playwright matches it against that a whole file shares: the project name, the file's path and the tags the
+ * file writes. Sharding is left out: a `--shard` takes its share of whatever this selects.
+ */
+async function specsRun({ script, args, env }: SuiteCall): Promise<string[]> {
+  const scripts = JSON.parse(readFileSync(fromRoot('package.json'), 'utf8')).scripts as Record<
+    string,
+    string
+  >;
+  const scriptArgs = (scripts[script] ?? '').split(/\s+/);
+  const configFile =
+    flagValue(args, '--config') ??
+    flagValue(args, '-c') ??
+    flagValue(scriptArgs, '--config') ??
+    flagValue(scriptArgs, '-c') ??
+    'playwright.config.ts';
+  const allArgs = [...scriptArgs.slice(scriptArgs.indexOf('test') + 1), ...args];
+
+  // The variables the call set that this process does not hold alike, CI's own bookkeeping aside.
+  const set = Object.entries(env).filter(
+    ([key, value]) =>
+      process.env[key] !== value &&
+      !/^(GITHUB_|RUNNER_|STUB_|PATH$|PWD$|OLDPWD$|SHLVL$|_$)/.test(key),
+  );
+  vi.resetModules();
+  for (const [key, value] of set) vi.stubEnv(key, value);
+  let config: {
+    testDir?: string;
+    testMatch?: Matcher;
+    testIgnore?: Matcher;
+    projects?: { name?: string; testDir?: string; testMatch?: Matcher; testIgnore?: Matcher }[];
+  };
+  try {
+    config = ((await import(fromRoot(configFile))) as { default: typeof config }).default;
+  } finally {
+    vi.unstubAllEnvs();
+  }
+
+  const positional: string[] = [];
+  const greps: RegExp[] = [];
+  const inverts: RegExp[] = [];
+  const projectNames: string[] = [];
+  for (let i = 0; i < allArgs.length; i++) {
+    const arg = allArgs[i];
+    if (!arg) continue;
+    const [name, inline] = arg.startsWith('--') && arg.includes('=') ? arg.split(/=(.*)/s) : [arg];
+    if (VALUE_FLAGS.has(name)) {
+      const value = inline ?? allArgs[++i];
+      if (name === '--grep' || name === '-g') greps.push(new RegExp(value));
+      if (name === '--grep-invert') inverts.push(new RegExp(value));
+      if (name === '--project') projectNames.push(value);
+    } else if (!arg.startsWith('-')) positional.push(arg);
+  }
+
+  const run = new Set<string>();
+  for (const project of config.projects ?? [{}]) {
+    if (projectNames.length && !projectNames.includes(project.name ?? '')) continue;
+    const testDir = fromRoot(project.testDir ?? config.testDir ?? '.');
+    const testMatch = project.testMatch ?? config.testMatch ?? DEFAULT_TEST_MATCH;
+    const testIgnore = project.testIgnore ?? config.testIgnore;
+    for (const absolute of filesUnder(testDir)) {
+      const fromTestDir = absolute.slice(testDir.length + 1);
+      const fromRepo = absolute.slice(fromRoot('.').replace(/\/?$/, '/').length);
+      if (!matcherHolds(testMatch, absolute, fromTestDir)) continue;
+      if (matcherHolds(testIgnore, absolute, fromTestDir)) continue;
+      if (positional.length && !positional.some((filter) => new RegExp(filter).test(absolute)))
+        continue;
+      const tags = [...readFileSync(absolute, 'utf8').matchAll(/['"`](@[\w:-]+)['"`]/g)].map(
+        ([, tag]) => tag,
+      );
+      const titled = [project.name ?? '', fromTestDir, fromRepo, ...tags].join(' ');
+      if (greps.length && !greps.some((grep) => grep.test(titled))) continue;
+      if (inverts.some((grep) => grep.test(titled))) continue;
+      run.add(fromRepo);
+    }
+  }
+  return [...run].sort();
+}
+
+/** A suite's specs as a plain call of its npm script runs them, with no filter, on the shard job's own environment. */
+async function wholeSuite(caller: 'playwright' | 'stories') {
+  const [{ context }] = suiteCalls(caller);
+  const [, job] = shardJob();
+  const env = Object.fromEntries(
+    Object.entries(evaluateMap(job.env, context)).map(([key, value]) => [key, stringify(value)]),
+  );
+  return specsRun({ script: caller === 'playwright' ? 'e2e' : 'test:stories', args: [], env });
+}
+
+describe('the Playwright suites, sharded', () => {
+  it.each([
+    ['gate', 'playwright', 'e2e', ['1/3', '2/3', '3/3', undefined]],
+    ['story', 'stories', 'test:stories', ['1/2', '2/2']],
+  ] as const)(
+    'runs the %s suite as these jobs in matrix order, each with this --shard: %j',
+    (_, caller, script, shards) => {
+      const calls = suiteCalls(caller);
+
+      expect(calls.map(({ call }) => call.script)).toEqual(shards.map(() => script));
+      expect(calls.map(({ shard }) => shard)).toEqual(shards);
+      // Each job is one of the matrix's, so its artifacts and its comment row take their index from it.
+      expect(calls.map(({ context }) => context.strategy?.['job-index'])).toEqual(
+        shards.map((__, index) => index),
       );
     },
   );
+
+  it('runs the accessibility sweep alone in the last gate job, and every other gate spec in each of the three shard jobs alike', async () => {
+    const whole = await wholeSuite('playwright');
+    const calls = suiteCalls('playwright');
+    // Preconditions: a plain `npm run e2e` runs the sweep among many other specs, and the gate has four jobs.
+    expect(whole).toContain(SWEEP);
+    expect(whole.length).toBeGreaterThan(10);
+    expect(calls).toHaveLength(4);
+
+    const runs = await Promise.all(calls.map(({ call }) => specsRun(call)));
+    const rest = whole.filter((spec) => spec !== SWEEP);
+
+    expect(runs[3]).toEqual([SWEEP]);
+    expect(calls[3].shard).toBeUndefined();
+    for (const [index, specs] of runs.slice(0, 3).entries()) {
+      expect(specs, `gate job ${index + 1}`).toEqual(rest);
+      expect(calls[index].shard).toBe(`${index + 1}/3`);
+    }
+  });
+
+  it('leaves no story out of either story job, and runs no spec under build-only', async () => {
+    const stories = await wholeSuite('stories');
+    const storyRuns = await Promise.all(suiteCalls('stories').map(({ call }) => specsRun(call)));
+    const warm = suiteCalls('warm');
+    // Precondition: the story suite has specs to leave out.
+    expect(stories.length).toBeGreaterThan(0);
+
+    expect(storyRuns).toEqual([stories, stories]);
+    expect(warm).toHaveLength(1);
+    expect(await specsRun(warm[0].call)).toEqual([]);
+  });
 
   it('runs every shard to its end when another fails, so the merge has each one’s results', () => {
     const [, job] = shardJob();
@@ -231,7 +436,7 @@ describe('the Playwright suites, sharded', () => {
         callWith(PR_GATE.jobs[caller], PLAYWRIGHT, { ...base, needs: gateNeeds(filters) }),
       ).filter(({ job, context }) => holds(job.if, context, PASS));
 
-    expect(shards({}, 'playwright')).toHaveLength(3);
+    expect(shards({}, 'playwright')).toHaveLength(4);
     expect(shards({}, 'stories')).toHaveLength(2);
     expect(shards({ playwright: 'false' }, 'playwright')).toEqual([]);
     expect(shards({ stories: 'false' }, 'stories')).toEqual([]);
@@ -252,8 +457,29 @@ describe('the Playwright suites, sharded', () => {
       return { runs: runs.length, uploads: uploads.length };
     };
 
-    expect(left('playwright')).toEqual({ runs: 3, uploads: 6 });
+    expect(left('playwright')).toEqual({ runs: 4, uploads: 8 });
     expect(left('warm')).toEqual({ runs: 1, uploads: 0 });
+  });
+});
+
+describe("the accessibility sweep's gate job, to everything downstream", () => {
+  it('is the fourth of four gate shards: its blob and coverage carry index 4, and the join counts four', async () => {
+    const calls = suiteCalls('playwright');
+    const runs = await Promise.all(calls.map(({ call }) => specsRun(call)));
+    const at = runs.findIndex((specs) => specs.length === 1 && specs[0] === SWEEP);
+    expect(at, 'a gate job runs the sweep alone').toBeGreaterThanOrEqual(0);
+    const [, job] = shardJob();
+    const context = { ...calls[at].context, steps: {} };
+
+    const uploads = uploadsOf(job.steps, context)
+      .filter(({ step }) => holds(step.if, context, PASS))
+      .map(({ name }) => name);
+
+    expect(context.strategy?.['job-index']).toBe(3);
+    expect(context.strategy?.['job-total']).toBe(4);
+    expect(uploads).toContain('playwright-blob-e2e-4');
+    expect(uploads).toContain('playwright-coverage-gate-4');
+    expect(calledOutputs(PLAYWRIGHT, playwrightInputs('playwright'), base).shards).toBe('4');
   });
 });
 
@@ -280,7 +506,7 @@ describe('every artifact one pull request run uploads', () => {
     ].map(({ name }) => name);
 
     // Preconditions: the scan found each suite's shards and the Vitest parts.
-    expect(coverageOf('playwright')).toHaveLength(3);
+    expect(coverageOf('playwright')).toHaveLength(4);
     expect(coverageOf('stories')).toHaveLength(2);
     expect(names.filter((name) => name.startsWith('vitest-blob-')).length).toBeGreaterThanOrEqual(
       3,
@@ -312,7 +538,7 @@ describe('the merged Playwright coverage', () => {
     const landed = landings(downloadsOf(job.steps, { ...base, inputs, steps: {} }), artifacts);
     const folders = artifacts.flatMap((artifact) => landed.get(artifact) ?? []);
 
-    expect(artifacts).toHaveLength(5);
+    expect(artifacts).toHaveLength(6);
     expect(artifacts.filter((artifact) => !landed.has(artifact))).toEqual([]);
     expect(new Set(folders).size).toBe(artifacts.length);
     expect(folders.every((folder) => folder.startsWith('/app/.reports/coverage-downloads/'))).toBe(
@@ -1016,7 +1242,7 @@ describe('the Playwright shards, joined in playwright-coverage', () => {
 
     expect(run.merges.gate).toHaveLength(1);
     expect(run.merges.stories).toHaveLength(1);
-    expect(run.merges.gate[0].specs).toEqual(specsOf('playwright', 3));
+    expect(run.merges.gate[0].specs).toEqual(specsOf('playwright', 4));
     expect(run.merges.stories[0].specs).toEqual(specsOf('stories', 2));
     expect(run.written.filter((section) => section === 'gate')).toHaveLength(1);
     expect(run.written.filter((section) => section === 'stories')).toHaveLength(1);
@@ -1119,7 +1345,7 @@ describe('the Playwright shards, joined in playwright-coverage', () => {
 
       // The suite that did not run gives no shard count, and the one that ran gives its own.
       expect(run.needs[caller(dropped)].outputs?.shards).toBe('');
-      expect(run.needs[caller(kept)].outputs?.shards).toBe(String(kept === 'gate' ? 3 : 2));
+      expect(run.needs[caller(kept)].outputs?.shards).toBe(String(kept === 'gate' ? 4 : 2));
       expect(run.failed, run.log).toBe(false);
       expect(run.merges[kept]).toHaveLength(1);
       expect(run.merges[dropped]).toEqual([]);
@@ -1542,7 +1768,7 @@ describe("each suite's row in the Playwright comment, as the end job writes it",
     });
 
     expect(resultFacts(run.sections.gate?.summary ?? '')).toMatchObject({
-      passed: 3,
+      passed: 4,
       failed: null,
       duration: '1m 0s',
       over: 1,
@@ -1562,8 +1788,8 @@ describe("each suite's row in the Playwright comment, as the end job writes it",
 /** What one shard's run leaves: its Playwright JSON report, for a story shard its checklist, and whether it failed. */
 type ShardRun = { report: unknown; checklist?: unknown; failed?: boolean };
 
-// `npm run e2e` or `npm run test:stories` with `--shard i/n`, as Playwright behaves: the JSON reporter writes
-// shard i's report to PLAYWRIGHT_JSON_OUTPUT_NAME, and the story checklist reporter its checklist to
+// `npm run e2e` or `npm run test:stories` in the matrix job $STUB_JOB (1-based), as Playwright behaves: the JSON
+// reporter writes that job's report to PLAYWRIGHT_JSON_OUTPUT_NAME, and the story checklist reporter its checklist to
 // STORIES_JSON, each only when `--reporter` names it. It exits 1 when the shard failed.
 const STUB_SHARD_NPM = `#!${process.execPath}
 const fs = require('node:fs');
@@ -1575,7 +1801,7 @@ const flag = (name) => {
   return args[at].includes('=') ? args[at].slice(name.length + 1) : args[at + 1] ?? '';
 };
 const reporters = flag('--reporter').split(',');
-const index = Number(flag('--shard').split('/')[0]);
+const index = Number(process.env.STUB_JOB);
 const fixture = JSON.parse(fs.readFileSync(process.env.STUB_SHARDS, 'utf8'))[index - 1];
 if (!fixture) process.exit(0);
 const write = (to, value) => {
@@ -1628,7 +1854,10 @@ async function runShards(
       context,
       root: at,
       stubs: { npm: STUB_SHARD_NPM },
-      env: { STUB_SHARDS: fixtures },
+      env: {
+        STUB_SHARDS: fixtures,
+        STUB_JOB: String(Number(context.strategy?.['job-index'] ?? 0) + 1),
+      },
       uses,
     });
   }
@@ -1658,6 +1887,7 @@ const GATE_RUNS: ShardRun[] = [
       60_000,
     ),
   },
+  { report: shardReport(SWEEP, [{ title: 'sweep', ms: 1_000 }], 80_000) },
 ];
 
 // Each story shard's checklist lists every v1 story, as the reporter writes it: the ones it did not run untested.
@@ -1698,7 +1928,7 @@ describe("each shard's row in the Playwright comment", () => {
   it("is written by every shard of both suites, under !cancelled(), with its own result, beneath its suite's row", async () => {
     const { github, comments } = fakeGitHub([]);
 
-    expect((await runShards('playwright', GATE_RUNS, github)).shards).toBe(3);
+    expect((await runShards('playwright', GATE_RUNS, github)).shards).toBe(4);
     expect((await runShards('stories', STORY_RUNS, github)).shards).toBe(2);
 
     expect(comments).toHaveLength(1);
@@ -1714,6 +1944,7 @@ describe("each shard's row in the Playwright comment", () => {
       [1, 'Passed'],
       [2, 'Failed'],
       [3, 'Passed'],
+      ['sweep', 'Passed'],
       ['stories', 'Failed'],
       [1, 'Passed'],
       [2, 'Failed'],
@@ -1723,10 +1954,41 @@ describe("each shard's row in the Playwright comment", () => {
     expect(facts[2]).toMatchObject({ passed: 0, failed: 1, duration: '40s', over: null });
     expect(facts[3]).toMatchObject({ passed: 2, duration: '1m 0s', over: 1, inOrder: true });
     // A story shard counts the stories it ran, not the ones the other shard ran.
-    expect(facts[5]).toMatchObject({ stories: { passing: 1, of: 1 }, duration: '30s' });
-    expect(facts[6]).toMatchObject({ stories: { passing: 0, of: 1 }, duration: '50s' });
+    expect(facts[4]).toMatchObject({ passed: 1, failed: null, duration: '1m 20s', over: null });
+    expect(facts[6]).toMatchObject({ stories: { passing: 1, of: 1 }, duration: '30s' });
+    expect(facts[7]).toMatchObject({ stories: { passing: 0, of: 1 }, duration: '50s' });
     // A shard writes no log: the suite's block, from the end job, carries it.
     expect(body).not.toContain(SHARD_LOG);
+  });
+
+  it('is labelled Accessibility Sweep for the gate job that runs the sweep file, and Shard i of 3 for the three others', async () => {
+    const calls = suiteCalls('playwright');
+    const specs = await Promise.all(calls.map(({ call }) => specsRun(call)));
+    const sweepJob = specs.findIndex((run) => run.length === 1 && run[0] === SWEEP);
+    expect(sweepJob, 'a gate job runs the sweep alone').toBeGreaterThanOrEqual(0);
+    // Each job's run lasts its own whole number of minutes, so a row's duration names the job that wrote it.
+    const runs = calls.map((_, index) => ({
+      report: shardReport(
+        `tests/e2e/testwort-${index + 1}.spec.ts`,
+        [{ title: 'one', ms: 1_000 }],
+        (index + 1) * 60_000,
+      ),
+    }));
+    const { github, comments } = fakeGitHub([]);
+
+    await runShards('playwright', runs, github);
+
+    const rows = rowsOf(comments[0]?.body ?? '').filter(({ shard }) => shard !== null);
+    const minutes = (row: (typeof rows)[number]) => resultFacts(row.result).duration;
+    expect(rows.map(({ label }) => label)).toEqual([
+      '↳ Shard 1 of 3',
+      '↳ Shard 2 of 3',
+      '↳ Shard 3 of 3',
+      '↳ Accessibility Sweep',
+    ]);
+    expect(minutes(rows[3])).toBe(`${sweepJob + 1}m 0s`);
+    const shardJobs = calls.map((_, index) => index).filter((index) => index !== sweepJob);
+    expect(rows.slice(0, 3).map(minutes)).toEqual(shardJobs.map((index) => `${index + 1}m 0s`));
   });
 
   it('is written by no shard of the build-only run, which has no pull request', async () => {
@@ -1772,10 +2034,10 @@ describe("the Playwright comment's heading note, as the end job writes it", () =
     const notes = async (join: Join) => headingNotesOf((await runJoin(join)).body).map(countNote);
 
     expect(await notes({})).toEqual([
-      { count: 3, noun: 'tests' },
+      { count: 4, noun: 'tests' },
       { count: 2, noun: 'stories' },
     ]);
-    expect(await notes({ filters: { stories: 'false' } })).toEqual([{ count: 3, noun: 'tests' }]);
+    expect(await notes({ filters: { stories: 'false' } })).toEqual([{ count: 4, noun: 'tests' }]);
     expect(await notes({ filters: { playwright: 'false' } })).toEqual([
       { count: 2, noun: 'stories' },
     ]);
@@ -1823,7 +2085,7 @@ describe('a Playwright row that failed with no failed test', () => {
     const { github, comments } = fakeGitHub([]);
     await runShards(
       'playwright',
-      [GATE_RUNS[0], { ...GATE_RUNS[0], failed: true }, GATE_RUNS[1]],
+      [GATE_RUNS[0], { ...GATE_RUNS[0], failed: true }, GATE_RUNS[1], GATE_RUNS[3]],
       github,
     );
     // The story run step has continue-on-error, so the row's status and note come from its outcome.
@@ -1842,6 +2104,7 @@ describe('a Playwright row that failed with no failed test', () => {
       ['Passed', false],
       ['Failed', true],
       ['Failed', false],
+      ['Passed', false],
       ['Passed', false],
       ['Failed', true],
     ]);
