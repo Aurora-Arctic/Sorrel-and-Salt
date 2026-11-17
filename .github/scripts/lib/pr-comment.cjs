@@ -152,6 +152,37 @@ function wrapBlock(key, block) {
   return `<!-- ci-section:${key} -->\n\n${block}\n\n<!-- /ci-section:${key} -->`;
 }
 
+// A suite's shards write sub-rows as they finish; until the end job writes the
+// suite's own row, that row is derived from them.
+function shardTotal(shards) {
+  return Math.max(0, ...Object.values(shards).map(({ total }) => total));
+}
+
+function effectiveSection(state, key) {
+  const section = state.sections[key];
+  const shards = state.shards?.[key];
+  if (section.reported || section.status !== 'running' || !shards) return section;
+  const written = Object.values(shards);
+  if (!written.length) return section;
+  const failed = written.some(({ status }) => status === 'failed');
+  return {
+    ...section,
+    status: failed ? 'failed' : 'running',
+    summary: `${written.length} of ${shardTotal(shards)} shards finished`,
+  };
+}
+
+function shardRows(shards) {
+  if (!shards) return [];
+  const total = shardTotal(shards);
+  return Array.from({ length: total }, (_, offset) => {
+    const index = offset + 1;
+    const { status, summary } = shards[index] ?? { status: 'running', summary: '' };
+    const { mark, word } = STATUSES[status];
+    return `| ↳ Shard ${index} of ${total} | ${mark} ${word} | ${cell(summary)} |`;
+  });
+}
+
 function renderSectioned({ marker, layout, title, state, blocks }) {
   const present = layout.sections.filter(({ key }) => state.sections[key]);
   const rows = present.filter(({ final }) => !final);
@@ -159,10 +190,13 @@ function renderSectioned({ marker, layout, title, state, blocks }) {
   const table = [
     `| ${layout.column} | Status | Result |`,
     '| --- | --- | --- |',
-    ...rows.map(({ key, label }) => {
-      const { status, summary } = state.sections[key];
+    ...rows.flatMap(({ key, label }) => {
+      const { status, summary } = effectiveSection(state, key);
       const { mark, word } = STATUSES[status];
-      return `| ${label} | ${mark} ${word} | ${cell(summary)} |`;
+      return [
+        `| ${label} | ${mark} ${word} | ${cell(summary)} |`,
+        ...shardRows(state.shards?.[key]),
+      ];
     }),
   ].join('\n');
   return join([
@@ -171,7 +205,7 @@ function renderSectioned({ marker, layout, title, state, blocks }) {
       3,
       overallStatus(
         present.flatMap(({ key }) => {
-          const { status, alert } = state.sections[key];
+          const { status, alert } = effectiveSection(state, key);
           return alert ? [status, 'failed'] : [status];
         }),
       ),
@@ -214,7 +248,15 @@ function planSectionWrite(
 
   const keys = layout.sections.map(({ key }) => key);
   const fresh = (status) => ({ status, summary: '', token, attempt: run.attempt });
-  const state = { v: 1, run: run.id, sha: run.sha, url: run.url, reset: null, sections: {} };
+  const state = {
+    v: 1,
+    run: run.id,
+    sha: run.sha,
+    url: run.url,
+    reset: null,
+    sections: {},
+    shards: {},
+  };
   const blocks = {};
   const sameRun = prior?.run === run.id;
 
@@ -233,6 +275,10 @@ function planSectionWrite(
       } else {
         state.sections[key] = fresh(skipped.has(key) ? 'skipped' : 'running');
       }
+      const kept = Object.entries(sameRun ? (prior.shards?.[key] ?? {}) : {}).filter(
+        ([, child]) => child.attempt >= run.attempt,
+      );
+      if (kept.length) state.shards[key] = Object.fromEntries(kept);
     }
   } else {
     const section = layout.sections.find(({ key }) => key === write.key);
@@ -243,9 +289,25 @@ function planSectionWrite(
     if (sameRun) {
       state.reset = prior.reset;
       Object.assign(state.sections, prior.sections);
+      Object.assign(state.shards, prior.shards);
       Object.assign(blocks, parsed.blocks);
     } else if (!mergeQueue) {
       for (const key of keys) state.sections[key] = fresh('running');
+    }
+    if (write.shard) {
+      const { index, total } = write.shard;
+      state.sections[write.key] ??= fresh('running');
+      state.shards[write.key] = {
+        ...state.shards[write.key],
+        [index]: {
+          status: write.status,
+          summary: write.summary ?? '',
+          total,
+          token,
+          attempt: run.attempt,
+        },
+      };
+      return { action: 'write', body: renderSectioned({ marker, layout, title, state, blocks }) };
     }
     state.sections[write.key] = {
       status: write.status,
@@ -270,7 +332,10 @@ function sectionLanded(body, { layout, run, write, token }) {
   const state = body ? parseSectioned(body, layout)?.state : null;
   if (!state || state.run < run.id) return 'no';
   if (state.run > run.id) return 'stale';
-  const landed = write.reset ? state.reset === token : state.sections[write.key]?.token === token;
+  const held = write.shard
+    ? state.shards?.[write.key]?.[write.shard.index]
+    : state.sections[write.key];
+  const landed = write.reset ? state.reset === token : held?.token === token;
   return landed ? 'yes' : 'no';
 }
 
@@ -289,6 +354,7 @@ function inputsFromEnv(env) {
     alert: env.ALERT ?? '',
     duration: env.DURATION ?? '',
     section: env.SECTION ?? '',
+    shard: env.SHARD ?? '',
     reset: env.RESET === 'true',
     skippedSections: (env.SKIPPED_SECTIONS ?? '')
       .split(',')
@@ -399,17 +465,27 @@ async function postSectioned(options) {
   const layout = LAYOUTS[inputs.slug];
   if (!layout) throw new Error(`No sectioned comment is named "${inputs.slug}".`);
   const status = sectionStatus(inputs.outcome);
+  const shard = /^(\d+)\/(\d+)$/.exec(inputs.shard);
+  if (inputs.shard && !shard)
+    throw new Error(`The shard "${inputs.shard}" is not <index>/<total>.`);
   const write = inputs.reset
     ? { reset: true, skipped: inputs.skippedSections }
-    : {
-        key: inputs.section,
-        status,
-        summary: inputs.summary,
-        details: inputs.details,
-        note: inputs.headingNote,
-        alert: inputs.alert,
-        log: status === 'failed' || inputs.alert ? readLog(readFile, inputs.logFile) : '',
-      };
+    : shard
+      ? {
+          key: inputs.section,
+          status,
+          summary: inputs.summary,
+          shard: { index: Number(shard[1]), total: Number(shard[2]) },
+        }
+      : {
+          key: inputs.section,
+          status,
+          summary: inputs.summary,
+          details: inputs.details,
+          note: inputs.headingNote,
+          alert: inputs.alert,
+          log: status === 'failed' || inputs.alert ? readLog(readFile, inputs.logFile) : '',
+        };
   const token = crypto.randomUUID();
   const plan = (body) =>
     planSectionWrite(body, {

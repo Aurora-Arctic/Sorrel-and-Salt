@@ -10,6 +10,7 @@ import path from 'node:path';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
 import { formatFailures, stripAnsi } from './lib/failure-list.mjs';
 import { setOutput } from './lib/github-output.mjs';
+import { resultLine } from './lib/result-line.mjs';
 import { buildSlowestFilesSection } from './lib/slowest-files.mjs';
 
 const RESULTS_PATH = process.env.VITEST_RESULTS || '/app/vitest-results.json';
@@ -62,13 +63,12 @@ const coverage = PART ? null : buildCoverageSection(COVERAGE_SUMMARY_PATH, REPO_
 // A file over the budget is named in the stat line too, so the warning is
 // read without opening the block (MB.180); it never fails the job.
 const slowest = buildSlowestFilesSection(data.testResults, REPO_ROOT);
-const overBudget = slowest?.over.length ? `, ${slowest.over.length} over the file budget` : '';
+const overBudget = slowest?.over.length ?? 0;
 // The run's wall-clock time, from its start to the last file's end.
-function runDuration() {
+function runMs() {
   const ends = (data.testResults ?? []).map((r) => r.endTime).filter((t) => typeof t === 'number');
-  if (typeof data.startTime !== 'number' || ends.length === 0) return '';
-  const seconds = Math.round((Math.max(...ends) - data.startTime) / 1000);
-  return seconds >= 60 ? ` in ${Math.floor(seconds / 60)}m ${seconds % 60}s` : ` in ${seconds}s`;
+  if (typeof data.startTime !== 'number' || ends.length === 0) return undefined;
+  return Math.max(...ends) - data.startTime;
 }
 
 const failures = [];
@@ -109,7 +109,7 @@ const unexplained =
   runFailed && failures.length === 0 && violations.length === 0
     ? '; run failed with no failed test: see the log'
     : '';
-const summary = `${testSummary}${PART ? runDuration() : ''}${overBudget}${unexplained}`;
+const summary = `${resultLine({ counts: testSummary, ms: PART ? runMs() : undefined, over: overBudget, budget: 'file' })}${unexplained}`;
 
 const details = formatFailures(failures, { heading: 'Failing tests' });
 
@@ -142,7 +142,10 @@ if (!PART) {
   const total = data.numTotalTests ?? numPassedTests + numFailedTests;
   setOutput('heading_note', `${total.toLocaleString('en-GB')} ${total === 1 ? 'test' : 'tests'}`);
   setOutput('alert', alert);
-  setOutput('final_summary', `${coverageSummary}${overBudget}`);
+  setOutput(
+    'final_summary',
+    resultLine({ counts: coverageSummary, over: overBudget, budget: 'file' }),
+  );
   // The failing tests only when no part's row lists them.
   setOutput(
     'final_details',

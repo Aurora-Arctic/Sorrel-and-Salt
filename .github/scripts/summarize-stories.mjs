@@ -5,17 +5,25 @@ import fs from 'node:fs';
 import { FLAKY_NOTE, formatFailures } from './lib/failure-list.mjs';
 import { setOutput } from './lib/github-output.mjs';
 import { collectFailures } from './lib/playwright-failures.mjs';
+import { TEST_BUDGET_MS, collectTimings } from './lib/playwright-timings.mjs';
+import { resultLine } from './lib/result-line.mjs';
 
 const RESULTS_PATH = process.env.STORIES_JSON || '/app/stories.json';
 // Playwright's own report of the same run, for each failure's spec file and error.
 const PLAYWRIGHT_RESULTS_PATH =
   process.env.PLAYWRIGHT_JSON_OUTPUT_NAME || '/app/playwright-results.json';
 
-const failures = fs.existsSync(PLAYWRIGHT_RESULTS_PATH)
-  ? collectFailures(JSON.parse(fs.readFileSync(PLAYWRIGHT_RESULTS_PATH, 'utf8')), {
-      includeFlaky: true,
-    })
-  : [];
+// A shard ran some of the stories: its row counts those and leaves the rest to its siblings.
+const SHARD = process.env.PLAYWRIGHT_SHARD === 'true';
+
+const report = fs.existsSync(PLAYWRIGHT_RESULTS_PATH)
+  ? JSON.parse(fs.readFileSync(PLAYWRIGHT_RESULTS_PATH, 'utf8'))
+  : null;
+const failures = report ? collectFailures(report, { includeFlaky: true }) : [];
+const runMs = typeof report?.stats?.duration === 'number' ? report.stats.duration : undefined;
+const overBudget = report
+  ? collectTimings(report).filter(({ ms }) => ms > TEST_BUDGET_MS).length
+  : 0;
 const failureBlock = formatFailures(failures, {
   heading: 'Failing stories',
   tagPattern: /^@story-/,
@@ -29,20 +37,32 @@ if (!fs.existsSync(RESULTS_PATH)) {
   process.exit(0);
 }
 
-const {
-  stories,
-  unknown,
-  untagged = [],
-  counts,
-  total,
-} = JSON.parse(fs.readFileSync(RESULTS_PATH, 'utf8'));
+const checklist = JSON.parse(fs.readFileSync(RESULTS_PATH, 'utf8'));
+const { unknown, untagged = [] } = checklist;
+const stories = SHARD
+  ? checklist.stories.filter((story) => story.status !== 'untested')
+  : checklist.stories;
+const counts = SHARD
+  ? {
+      passed: stories.filter((story) => story.status === 'passed').length,
+      failed: stories.filter((story) => story.status === 'failed').length,
+      skipped: stories.filter((story) => story.status === 'skipped').length,
+      untested: 0,
+    }
+  : checklist.counts;
+const total = SHARD ? stories.length : checklist.total;
 
 const parts = [`${counts.passed} of ${total} stories passing`];
 if (counts.failed) parts.push(`${counts.failed} failing`);
 if (counts.skipped) parts.push(`${counts.skipped} skipped`);
 if (counts.untested) parts.push(`${counts.untested} without a test`);
 // The merged coverage of both suites is the Coverage section's alone.
-const summary = parts.join(', ');
+const summary = resultLine({
+  counts: parts.join(', '),
+  ms: runMs,
+  over: overBudget,
+  budget: 'test',
+});
 
 const SUFFIX = {
   passed: '',
