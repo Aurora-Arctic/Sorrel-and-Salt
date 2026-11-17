@@ -18,8 +18,14 @@ function formatDuration(ms) {
  * Vitest's JSON reporter gives each file its `startTime` and `endTime`, which
  * is what the summed worker time is made of. Returns the files over the budget
  * and the collapsible block, or null when the run wrote no file results.
+ * `notes` are Markdown pieces written inside the block after the table, and `notesHeading` is what its summary line
+ * says of them, so a collapsed block still tells the reader there is one.
  */
-export function buildSlowestFilesSection(testResults, repoRoot, { budgetMs = BUDGET_MS } = {}) {
+export function buildSlowestFilesSection(
+  testResults,
+  repoRoot,
+  { budgetMs = BUDGET_MS, notes = [], notesHeading = '' } = {},
+) {
   // `budgetMs: null` lists the files with no file budget: Playwright's budget is per test (R-3), so its list only ranks.
   const rows = (testResults ?? [])
     .filter((result) => typeof result.startTime === 'number' && typeof result.endTime === 'number')
@@ -40,6 +46,7 @@ export function buildSlowestFilesSection(testResults, repoRoot, { budgetMs = BUD
       over.length === 0
         ? ` — none over the ${budget} budget`
         : ` — ${over.length} over the ${budget} budget`;
+  if (notes.length > 0 && notesHeading) heading += ` — ${notesHeading}`;
 
   const lines = [
     `<details><summary>${heading}</summary>`,
@@ -59,6 +66,7 @@ export function buildSlowestFilesSection(testResults, repoRoot, { budgetMs = BUD
           '',
         ]
       : []),
+    ...notes.flatMap((note) => [note, '']),
     '</details>',
   ];
 
