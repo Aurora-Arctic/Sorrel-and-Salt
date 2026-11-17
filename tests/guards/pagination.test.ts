@@ -73,11 +73,11 @@ describe('a page reads its list through the numbered-page helpers', () => {
   });
 });
 
-// A search finds as many rows as its words match, so a page that reads one and sizes the read itself drops every match past that size.
-describe('a page reads a search through the numbered-page helpers', () => {
+// A search finds as many rows as its words match: a page that sizes the read itself drops every match past that size, and one that does not count them cannot say how many there are.
+describe('a page reads a search through readNumberedPage', () => {
   const APP_FILE = /^src\/app\/.*\.tsx?$/;
   const MODULE_IMPORT = /import\s*\{([^}]*)\}\s*from\s*'@\/modules\/[\w-]+'/g;
-  const HELPER = /\b(?:readNumberedPage|readCursorPage)\b/;
+  const HELPER = /\breadNumberedPage\b/;
   // A page request written out by hand: the size it names is the page's own, not the helper's.
   const HAND_BUILT_REQUEST = /\binverted\s*:/;
 
@@ -88,7 +88,7 @@ describe('a page reads a search through the numbered-page helpers', () => {
       .filter((name) => /^search[A-Z]\w*$/.test(name))
       .filter((name) => new RegExp(String.raw`\b${name}\s*\(`).test(text));
 
-  it('pages every search a page calls, and hands it no request it sized itself', () => {
+  it('counts and pages every search a page calls, and hands it no request it sized itself', () => {
     const searching = inject('repoFiles')
       .filter((file) => APP_FILE.test(file))
       .filter((file) => searchesCalled(readFileSync(file, 'utf8')).length > 0);

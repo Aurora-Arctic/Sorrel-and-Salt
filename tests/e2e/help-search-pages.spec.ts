@@ -88,12 +88,33 @@ async function nextHref(page: Page): Promise<string | null> {
   return (await next.count()) === 0 ? null : next.getAttribute('href');
 }
 
-/** Every page of the search, from the first, each as the hrefs it links. */
-async function walk(page: Page): Promise<string[][]> {
-  const pages: string[][] = [];
+/** The whole numbers the page's status regions hold: the results line's total among them. */
+const statusNumbers = async (page: Page): Promise<number[]> =>
+  (await page.getByRole('main').getByRole('status').allTextContents()).flatMap((text) =>
+    (text.match(/\d+/g) ?? []).map(Number),
+  );
+
+/** The page and the number of pages the pager's middle item holds, between its two ends. */
+const pagerPosition = async (page: Page): Promise<number[]> =>
+  (
+    (
+      await page
+        .getByRole('main')
+        .getByRole('navigation', { name: 'Pages' })
+        .getByRole('listitem')
+        .nth(1)
+        .textContent()
+    )?.match(/\d+/g) ?? []
+  ).map(Number);
+
+type ReadPage = { hrefs: string[]; numbers: number[] };
+
+/** Every page of the search, from the first, each as the hrefs it links and the numbers its status states. */
+async function walk(page: Page): Promise<ReadPage[]> {
+  const pages: ReadPage[] = [];
   await page.goto(`/help/search?q=${WORD}`);
   for (let read = 0; read < MOST_PAGES; read += 1) {
-    pages.push(await resultHrefs(page));
+    pages.push({ hrefs: await resultHrefs(page), numbers: await statusNumbers(page) });
     const href = await nextHref(page);
     if (!href) break;
     await page.goto(href);
@@ -113,22 +134,43 @@ test('a signed-out reader pages from the first match to the last, each once, and
   try {
     const keeperPage = await keeperContext.newPage();
     await signInAs(keeperPage, 'e@help-search-pages.test', ['discord'], 'admin');
-    const reached = (await walk(keeperPage)).flat();
-    expect(reached).toEqual(
+    const keeperPages = await walk(keeperPage);
+    expect(keeperPages.flatMap(({ hrefs }) => hrefs)).toEqual(
       expect.arrayContaining([`/help/staff/${STAFF}`, `/help/staff/${KEEPER}`]),
     );
+    // The keeper's total counts the two rows a signed-out reader is never shown.
+    expect(keeperPages[0].numbers).toContain(publicHrefs.length + 2);
+    expect(keeperPages[0].numbers).not.toContain(publicHrefs.length);
   } finally {
     await keeperContext.close();
   }
 
   const pages = await walk(page);
-  const walked = pages.flat();
+  const walked = pages.flatMap(({ hrefs }) => hrefs);
+  const last = pages[pages.length - 1];
 
   expect(pages.length).toBeGreaterThan(1);
   expect(walked.filter((href) => href.includes(STAFF) || href.includes(KEEPER))).toEqual([]);
   expect(new Set(walked).size).toBe(walked.length);
   expect([...walked].sort()).toEqual([...publicHrefs].sort());
-  expect(pages[pages.length - 1].slice(-1)[0]).toBe(`/help/${LAST}`);
+  expect(last.hrefs.slice(-1)[0]).toBe(`/help/${LAST}`);
+  // The true total, the same on the first page and the last, never the rows one page draws.
+  expect(pages[0].numbers).toContain(publicHrefs.length);
+  expect(pages[0].numbers).not.toContain(pages[0].hrefs.length);
+  expect(last.numbers).toContain(publicHrefs.length);
+  // The last page says it is the last of as many pages as the walk read.
+  expect(await pagerPosition(page)).toEqual([pages.length, pages.length]);
+});
+
+test('the first page says it is the first of as many pages as the matches fill', async ({
+  page,
+}) => {
+  await page.goto(`/help/search?q=${WORD}`);
+  const size = (await resultHrefs(page)).length;
+  // Precondition: a page of results is drawn.
+  expect(size).toBeGreaterThan(0);
+
+  expect(await pagerPosition(page)).toEqual([1, Math.ceil(publicHrefs.length / size)]);
 });
 
 test('the address holds the words and the page, so a reload shows the same page', async ({
