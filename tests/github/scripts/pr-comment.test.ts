@@ -5,6 +5,8 @@ import {
   context,
   core,
   fakeGitHub,
+  blockLabelOf,
+  headingNotesOf,
   headingStatusOf,
   lib,
   rowsOf,
@@ -353,5 +355,68 @@ describe("the Playwright comment's shard rows", () => {
     const before = comments[0].body;
     expect(await write(github, shard('gate', 2, 3, 'failure'), { id: 41 })).toBe('stale');
     expect(comments[0].body).toBe(before);
+  });
+});
+
+// What the Playwright end job writes beside the suites' rows: each suite's note in the heading, as the Vitest
+// merge writes its test count, and the final section that holds the coverage and the slowest files.
+describe("the Playwright comment's heading and final section, as the end job writes them", () => {
+  function write(slug: string, env: Record<string, string>, id = 42) {
+    return lib.postComment({
+      github: made.github,
+      context: { ...context, runId: id, runAttempt: 1 },
+      core,
+      inputs: lib.inputsFromEnv({
+        CHECK_NAME: slug === 'vitest' ? 'Vitest' : 'Playwright',
+        MARKER_SLUG: slug,
+        PR_NUMBER: String(PR),
+        LOG_FILE: 'ci.log',
+        ...env,
+      }),
+      readFile: () => LOG,
+      sleep: async () => {},
+      random: () => 0,
+    });
+  }
+  let made = fakeGitHub([]);
+  const body = (slug: string) =>
+    made.comments.find((comment) => comment.body.includes(`<!-- ci-${slug} -->`))?.body ?? '';
+  const final = {
+    SECTION: 'coverage',
+    OUTCOME: 'success',
+    SUMMARY: 'Testwort coverage',
+    DETAILS: 'Testwort table',
+  };
+
+  it("labels its final section as the Vitest comment labels its own, and carries each suite's note in suite order until a new run resets it", async () => {
+    made = fakeGitHub([]);
+    await write('vitest', { RESET: 'true' });
+    await write('vitest', final);
+    await write('playwright', { RESET: 'true' });
+    await write('playwright', {
+      SECTION: 'stories',
+      OUTCOME: 'success',
+      SUMMARY: 's',
+      HEADING_NOTE: '2 stories',
+    });
+    await write('playwright', {
+      SECTION: 'gate',
+      OUTCOME: 'success',
+      SUMMARY: 'g',
+      HEADING_NOTE: '3 tests',
+    });
+    await write('playwright', final);
+
+    const playwright = sectionsOf(body('playwright')).coverage.block;
+    const vitest = sectionsOf(body('vitest')).coverage.block;
+    // Preconditions: both final sections were written with their blocks.
+    expect(vitest).toContain('Testwort table');
+    expect(playwright).toContain('Testwort table');
+    expect(blockLabelOf(playwright)).toBe(blockLabelOf(vitest));
+
+    // The gate's note first, whichever suite wrote first; the final section adds none.
+    expect(headingNotesOf(body('playwright'))).toEqual(['3 tests', '2 stories']);
+    await write('playwright', { RESET: 'true' }, 43);
+    expect(headingNotesOf(body('playwright'))).toEqual([]);
   });
 });

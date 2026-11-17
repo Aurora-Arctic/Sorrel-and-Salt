@@ -46,8 +46,8 @@ export function runScript(script: string, env: Record<string, string>, dir: stri
 
 /**
  * The facts a row's Result line carries, in the shape a Vitest part's has: its counts, then its duration
- * (` in 1m 4s`), then how many are over the budget (`, 2 over the test budget`). Each is null when absent;
- * `inOrder` says the ones present come in that order.
+ * (` in 1m 4s`), then how many are over the budget (`, 2 over the test budget`), then whether the run failed
+ * with no failed test to show for it. Each is null when absent; `inOrder` says the ones present come in that order.
  */
 export function resultFacts(line: string) {
   const passed = /(\d+) passed/.exec(line);
@@ -55,11 +55,13 @@ export function resultFacts(line: string) {
   const stories = /(\d+) of (\d+) stories/.exec(line);
   const duration = / in ((?:\d+m )?\d+s)\b/.exec(line);
   const over = /(\d+) over the (file|test) budget/.exec(line);
+  const unexplained = /; run failed with no failed test\b/.exec(line);
   const counts = [passed, stories].flatMap((match) => (match ? [match.index] : []));
   const positions = [
     counts.length ? Math.min(...counts) : null,
     duration?.index ?? null,
     over?.index ?? null,
+    unexplained?.index ?? null,
   ].filter((position): position is number => position !== null);
   return {
     passed: passed ? Number(passed[1]) : null,
@@ -68,8 +70,15 @@ export function resultFacts(line: string) {
     duration: duration?.[1] ?? null,
     over: over ? Number(over[1]) : null,
     budget: over?.[2] ?? null,
+    unexplained: unexplained !== null,
     inOrder: positions.every((position, index) => index === 0 || position > positions[index - 1]),
   };
+}
+
+/** A heading note such as `2,800 tests` or `1 story`: its count and its noun, or null when it is not one. */
+export function countNote(note: string) {
+  const match = /^(\d{1,3}(?:,\d{3})*) (tests?|stor(?:y|ies))$/.exec(note);
+  return match ? { count: Number(match[1].replace(/,/g, '')), noun: match[2] } : null;
 }
 
 // One merged report, as `playwright merge-reports` writes it from every shard's blob: each file once,

@@ -131,6 +131,22 @@ export function headingStatusOf(body: string): string {
   return STATUS_WORDS.find((word) => heading.split(' · ').includes(word)) ?? '';
 }
 
+/** The notes a comment's heading carries after its status word, in order. */
+export function headingNotesOf(body: string): string[] {
+  const heading = body.split('\n').find((line) => line.startsWith('### '));
+  if (!heading) throw new Error('The comment has no heading');
+  const parts = heading.split(' · ');
+  return parts.slice(
+    parts.findIndex((part) => (STATUS_WORDS as readonly string[]).includes(part)) + 1,
+  );
+}
+
+/** The label of the heading that opens a section's block, without its status mark or word. */
+export function blockLabelOf(block: string): string {
+  const heading = block.split('\n').find((line) => line.startsWith('#### ')) ?? '';
+  return heading.slice(5).split(' · ')[0].replace(/^\S+ /, '');
+}
+
 /** A sectioned comment's shard entries, by section key and then shard index, as its hidden state holds them. */
 export function shardsOf(
   body: string,
