@@ -16,8 +16,7 @@ describe('the application database client', () => {
     vi.stubEnv('DATABASE_URL', 'postgres://fixture:fixture@127.0.0.1:1/fixture');
     (globalThis as { __sorrelPostgresClients?: unknown }).__sorrelPostgresClients = undefined;
 
-    // oxlint-disable-next-line no-restricted-imports
-    await import('@/db/connection');
+    await import('@/db/repository');
 
     // Precondition: the client was built by the mocked driver, so the options below are the ones it was given.
     expect(postgres).toHaveBeenCalledTimes(1);

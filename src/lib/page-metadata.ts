@@ -42,7 +42,7 @@ export function publicPageMetadata(
   title: string,
   description: string,
   path: string,
-  { absolute = false }: { absolute?: boolean } = {},
+  { absolute = false, noIndex = false }: { absolute?: boolean; noIndex?: boolean } = {},
 ): Metadata {
   const url = siteUrl(path);
   return {
@@ -50,6 +50,7 @@ export function publicPageMetadata(
     description,
     alternates: { canonical: url },
     ...social(absolute ? title : `${title}${TITLE_SEPARATOR}${SITE_NAME}`, description, url),
+    ...(noIndex && { robots: { index: false, follow: true } }),
   };
 }
 

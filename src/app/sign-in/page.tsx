@@ -20,10 +20,12 @@ import PageFrame from '@/components/PageFrame';
  * Out of search results at every address, links followed: the form is no use as a result, and a crawler that finds it
  * indexable keeps fetching a page that is rendered per request. Canonical stays `/sign-in`, so `?next=` and `?error=` name it.
  */
-export const metadata: Metadata = {
-  ...publicPageMetadata('Sign In', `Sign in to ${SITE_NAME}.`, '/sign-in'),
-  robots: { index: false, follow: true },
-};
+export const metadata: Metadata = publicPageMetadata(
+  'Sign In',
+  `Sign in to ${SITE_NAME}.`,
+  '/sign-in',
+  { noIndex: true },
+);
 
 /** Read from the address alone, as the invite page does signed out: reading the invitation would tell a visitor with no account whether its token is live. */
 function ledesFor(next: string | undefined): SignInLedes | undefined {
