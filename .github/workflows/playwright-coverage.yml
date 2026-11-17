@@ -6,8 +6,10 @@ name: Playwright Coverage
 # downloads whichever were uploaded and:
 #   - merges each suite's blobs with the suite's own config, and writes the
 #     suite's section of the one Playwright comment (`gate`, `stories`);
-#   - merges the coverage of both suites into the comment's Coverage section
+#   - merges the coverage of both suites into the comment's final Coverage and
+#     Slowest Files section, with the slowest files of both suites' reports
 #     (claude-docs/ci/pr-comments.md).
+# Each shard job has already written its own sub-row under its suite's row.
 # The job fails, through a step, when the gate suite failed: a failed test, a
 # shard that left no blob, or a shard job that failed. A story never fails it;
 # a failed story or a lost story blob marks the stories section failed. A
@@ -147,6 +149,7 @@ jobs:
         continue-on-error: true
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
+          PLAYWRIGHT_OUTCOME: ${{ (inputs.gate-failed || steps.gate.outputs.failed == 'true') && 'failure' || 'success' }}
         run: node .github/scripts/summarize-playwright.mjs
 
       # After the summary, which says whether a test failed and then passed on
@@ -185,6 +188,7 @@ jobs:
         continue-on-error: true
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: /app/stories-playwright-results.json
+          PLAYWRIGHT_OUTCOME: ${{ (inputs.stories-failed || steps.stories.outputs.failed == 'true') && 'failure' || 'success' }}
         run: node .github/scripts/summarize-stories.mjs
 
       - name: Upload the story report
@@ -232,6 +236,7 @@ jobs:
           check-name: Playwright
           marker-slug: playwright
           section: gate
+          heading-note: ${{ steps.gate-summary.outputs.heading_note }}
           pr-number: ${{ inputs.pr-number }}
           outcome: ${{ steps.verdict.outputs.gate == 'failed' && 'failure' || 'success' }}
           log-file: /app/gate.log
@@ -257,6 +262,7 @@ jobs:
           check-name: Playwright
           marker-slug: playwright
           section: stories
+          heading-note: ${{ steps.stories-summary.outputs.heading_note }}
           pr-number: ${{ inputs.pr-number }}
           outcome: ${{ steps.verdict.outputs.stories == 'failed' && 'failure' || 'success' }}
           log-file: /app/stories.log
@@ -303,10 +309,15 @@ jobs:
             {"name":"playwright-coverage-stories-*","outcome":"${{ steps.download-stories.outcome }}"}]
         run: node .github/scripts/check-coverage-downloads.mjs 2>&1 | tee /app/output.log
 
+      # The suites' merged reports, which the join steps above wrote, give the
+      # slowest files; a suite that did not run wrote none.
       - name: Merge coverage
         id: merge
         if: inputs.should-run && steps.check.outputs.missing == ''
         continue-on-error: true
+        env:
+          GATE_RESULTS: /app/playwright-results.json
+          STORIES_RESULTS: /app/stories-playwright-results.json
         run: node .github/scripts/merge-playwright-coverage.mjs 2>&1 | tee /app/output.log
 
       - name: Upload merged coverage artifact
@@ -354,6 +365,7 @@ jobs:
           outcome: failure
           log-file: /app/output.log
           summary: Neither suite left coverage to merge. The suites' own sections say why.
+          details: ${{ steps.merge.outputs.details }}
 
       # The same section, so it never keeps an earlier commit's figures. Written
       # as a failure whose output is the check's log.

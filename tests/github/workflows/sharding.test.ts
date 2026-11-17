@@ -8,7 +8,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -35,6 +35,7 @@ import {
   loadWorkflow,
   matrixRuns,
   needsOf,
+  runJob,
   runStepScript,
   runWorkflow,
   stringify,
@@ -42,13 +43,20 @@ import {
   uploadsOf,
   workflowResult,
 } from '../../support/github-workflow';
-import { type TimedTest, mergedPlaywrightReport } from '../../support/github-scripts';
+import {
+  type TimedTest,
+  countNote,
+  mergedPlaywrightReport,
+  resultFacts,
+} from '../../support/github-scripts';
 import { fromRoot } from '../../support/paths';
 import {
   context as commentContext,
   core,
   fakeGitHub,
+  headingNotesOf,
   lib,
+  rowsOf,
   sectionsOf,
 } from '../../support/pr-comment';
 
@@ -143,15 +151,6 @@ const PASS = { success: true, failure: false };
 /** Where a shard's blob reporter writes, which tells its blob upload from its other uploads. */
 const BLOB = /blob-report/;
 
-/** A job's steps with every local composite action's own steps in its place, the pr-comment action kept. */
-function flatSteps(steps: Step[] | undefined): Step[] {
-  return (steps ?? []).flatMap((step) =>
-    step.uses?.startsWith('./.github/actions/') && !usesComment(step)
-      ? flatSteps(loadAction(step.uses).runs.steps)
-      : [step],
-  );
-}
-
 describe('the Playwright suites, sharded', () => {
   it.each([
     ['playwright', 3, /\be2e\b/],
@@ -223,22 +222,6 @@ describe('the Playwright suites, sharded', () => {
     expect(
       evaluateValue(job.name ?? name, { ...base, inputs: playwrightInputs('playwright') }),
     ).toBe('playwright');
-  });
-
-  it('writes no comment section from playwright.yml for either suite: playwright-coverage writes them', () => {
-    for (const caller of ['playwright', 'stories'] as const) {
-      const runs = jobRuns(PLAYWRIGHT, playwrightInputs(caller)).filter(({ job, context }) =>
-        holds(job.if, context, PASS),
-      );
-      const writes = runs.flatMap(({ context, job }) =>
-        flatSteps(job.steps).filter(
-          (step) => usesComment(step) && holds(step.if, { ...context, steps: {} }, PASS),
-        ),
-      );
-
-      expect(runs.length).toBeGreaterThan(1);
-      expect(writes).toEqual([]);
-    }
   });
 
   it('runs no shard of a suite the path filter rules out', () => {
@@ -1020,6 +1003,7 @@ async function runJoin({
     ) as Record<'gate' | 'stories', typeof merged>,
     written,
     sections: comments.length ? sectionsOf(comments[0].body) : {},
+    body: comments[0]?.body ?? '',
   };
 }
 
@@ -1349,7 +1333,7 @@ async function writeRawCoverage(outputDir: string, called: readonly string[]) {
 }
 
 describe('the Playwright comment, from the sharded suites', () => {
-  it("shows the gate suite's duration, its slowest files and each test over 30 s, from every shard's report", async () => {
+  it("shows the gate suite's duration and its count of tests over 30 s, and leaves the slowest files to the final section", async () => {
     const SLOW = 'tests/e2e/testwort-slow.spec.ts';
     const shards: ShardReport[] = [
       {
@@ -1382,19 +1366,16 @@ describe('the Playwright comment, from the sharded suites', () => {
     const gate = run.sections.gate;
     const text = `${gate?.summary ?? ''}\n${gate?.block ?? ''}`;
     const lines = text.split('\n');
-    expect(text).toContain('4m 10s');
-    expect(lines.some((line) => line.includes(`\`${SLOW}\``) && line.includes('45.0 s'))).toBe(
-      true,
-    );
-    expect(lines.some((line) => line.includes('⚠') && line.includes('Testwort simmers'))).toBe(
-      true,
-    );
-    expect(lines.some((line) => line.includes('⚠') && /Testwort (boils|cools)/.test(line))).toBe(
-      false,
-    );
+    expect(resultFacts(gate?.summary ?? '')).toMatchObject({ duration: '4m 10s', over: 1 });
+    expect(lines.some((line) => line.includes(`\`${SLOW}\``))).toBe(false);
+    expect(lines.some((line) => line.includes('⚠'))).toBe(false);
   });
 
-  it("shows the gate and story coverage merged from every shard, and the stories' own figure on a line of its own", async () => {
+  /**
+   * playwright-coverage's real coverage merge over every shard's raw coverage, and the comment its one writing
+   * step makes. `reports` are the suites' merged Playwright reports, written where the join steps write them.
+   */
+  async function mergedCoverageComment(reports: { gate?: unknown; stories?: unknown } = {}) {
     const artifacts = coverageArtifacts();
     const gate = artifacts.filter(({ caller }) => caller === 'playwright').map(({ name }) => name);
     const stories = artifacts.filter(({ caller }) => caller === 'stories').map(({ name }) => name);
@@ -1425,6 +1406,16 @@ describe('the Playwright comment, from the sharded suites', () => {
         await writeRawCoverage(underRoot(folder, root), names);
     }
 
+    for (const [id, report] of Object.entries(reports)) {
+      const join = (job.steps ?? []).find((step) => step.id === id) as Step;
+      const to = underRoot(
+        stringify(evaluateValue(join.env?.PLAYWRIGHT_JSON_OUTPUT_NAME, context)),
+        root,
+      );
+      mkdirSync(dirname(to), { recursive: true });
+      writeFileSync(to, JSON.stringify(report));
+    }
+
     const merge = (job.steps ?? []).find((step) =>
       step.run?.includes('merge-playwright-coverage'),
     ) as Step;
@@ -1449,7 +1440,12 @@ describe('the Playwright comment, from the sharded suites', () => {
       .filter(usesComment)
       .filter((step) => holds(step.if, { ...context, steps }, PASS));
     expect(writing).toHaveLength(1);
-    const lines = (await commentFrom(writing[0], { ...context, steps })).split('\n');
+    return sectionsOf(await commentFrom(writing[0], { ...context, steps }));
+  }
+
+  it("shows the gate and story coverage merged from every shard, and the stories' own figure on a line of its own", async () => {
+    const { coverage } = await mergedCoverageComment();
+    const lines = `${coverage.summary}\n${coverage.block}`.split('\n');
 
     expect(lines.some((line) => line.includes('75% functions'))).toBe(true);
     const storyLines = lines.filter(
@@ -1458,5 +1454,396 @@ describe('the Playwright comment, from the sharded suites', () => {
     expect(storyLines.some((line) => line.includes('25% functions') && !line.includes('75%'))).toBe(
       true,
     );
+  });
+
+  it("lists both suites' slowest files in the final section, after the coverage, and counts their tests over 30 s in its summary", async () => {
+    const GATE_FILE = 'tests/e2e/testwort-gate.spec.ts';
+    const STORY_FILE = 'tests/e2e/stories/testwort-walk.spec.ts';
+    const { coverage } = await mergedCoverageComment({
+      gate: mergedPlaywrightReport(
+        [
+          {
+            file: GATE_FILE,
+            tests: [
+              { title: 'Testwort simmers', ms: 31_000 },
+              { title: 'Testwort steeps', ms: 2_000 },
+            ],
+          },
+        ],
+        40_000,
+      ),
+      stories: mergedPlaywrightReport(
+        [
+          {
+            file: STORY_FILE,
+            tests: [{ title: 'Testwort story walk', ms: 35_000, tags: ['story-91'] }],
+          },
+        ],
+        40_000,
+      ),
+    });
+    const lines = coverage.block.split('\n');
+    const at = (test: (line: string) => boolean) => lines.findIndex(test);
+
+    // Precondition: the coverage is there, as the test above proves it.
+    const covered = at((line) => line.includes('75% functions'));
+    expect(covered).toBeGreaterThan(-1);
+    expect(
+      at((line) => line.includes(`\`${STORY_FILE}\``) && line.includes('35.0 s')),
+    ).toBeGreaterThan(covered);
+    expect(
+      at((line) => line.includes(`\`${GATE_FILE}\``) && line.includes('33.0 s')),
+    ).toBeGreaterThan(covered);
+    expect(
+      lines.filter((line) => line.includes('⚠') && /Testwort (simmers|story walk)/.test(line)),
+    ).toHaveLength(2);
+    expect(resultFacts(coverage.summary)).toMatchObject({ over: 2, budget: 'test' });
+  });
+
+  it('writes the slowest files into the final section when neither suite left coverage', async () => {
+    const job = COVERAGE.jobs['playwright-coverage'];
+    const merge = (job.steps ?? []).find((step) =>
+      step.run?.includes('merge-playwright-coverage'),
+    ) as Step;
+    const context: Context = { ...base, inputs: { 'should-run': true }, needs: {}, steps: {} };
+    const steps = passedSteps(job, {
+      check: { missing: '' },
+      [merge.id as string]: { ran: 'false', summary: '', details: 'Testwort slowest files' },
+    });
+    const writing = (job.steps ?? [])
+      .filter(usesComment)
+      .filter((step) => holds(step.if, { ...context, steps }, PASS));
+
+    // Precondition: the one step that writes this case is the coverage section's.
+    expect(writing).toHaveLength(1);
+    expect(stringify(evaluateValue(writing[0].with?.section, context))).toBe('coverage');
+    const { coverage } = sectionsOf(await commentFrom(writing[0], { ...context, steps }));
+    expect(coverage.status).toBe('failed');
+    expect(coverage.block).toContain('Testwort slowest files');
+  });
+});
+
+describe("each suite's row in the Playwright comment, as the end job writes it", () => {
+  // Shard 1 of each suite ran a test over the 30 s test budget.
+  const slow = (report: ShardReport): ShardReport => ({
+    ...report,
+    files: report.files.map((file) => ({
+      ...file,
+      tests: file.tests.map((test) => ({ ...test, ms: 31_000 })),
+    })),
+  });
+
+  it("gives its counts, the suite's duration and its tests over 30 s, as a Vitest part's row does", async () => {
+    const run = await runJoin({
+      shards: {
+        playwright: (index) => (index === 0 ? slow(gateShard(1)) : gateShard(index + 1)),
+        stories: (index) => (index === 0 ? slow(storyShard(1)) : storyShard(index + 1)),
+      },
+    });
+
+    expect(resultFacts(run.sections.gate?.summary ?? '')).toMatchObject({
+      passed: 3,
+      failed: null,
+      duration: '1m 0s',
+      over: 1,
+      budget: 'test',
+      inOrder: true,
+    });
+    expect(resultFacts(run.sections.stories?.summary ?? '')).toMatchObject({
+      stories: { passing: 2, of: 2 },
+      duration: '1m 0s',
+      over: 1,
+      budget: 'test',
+      inOrder: true,
+    });
+  });
+});
+
+/** What one shard's run leaves: its Playwright JSON report, for a story shard its checklist, and whether it failed. */
+type ShardRun = { report: unknown; checklist?: unknown; failed?: boolean };
+
+// `npm run e2e` or `npm run test:stories` with `--shard i/n`, as Playwright behaves: the JSON reporter writes
+// shard i's report to PLAYWRIGHT_JSON_OUTPUT_NAME, and the story checklist reporter its checklist to
+// STORIES_JSON, each only when `--reporter` names it. It exits 1 when the shard failed.
+const STUB_SHARD_NPM = `#!${process.execPath}
+const fs = require('node:fs');
+const path = require('node:path');
+const args = process.argv.slice(2);
+const flag = (name) => {
+  const at = args.findIndex((arg) => arg === name || arg.startsWith(name + '='));
+  if (at === -1) return '';
+  return args[at].includes('=') ? args[at].slice(name.length + 1) : args[at + 1] ?? '';
+};
+const reporters = flag('--reporter').split(',');
+const index = Number(flag('--shard').split('/')[0]);
+const fixture = JSON.parse(fs.readFileSync(process.env.STUB_SHARDS, 'utf8'))[index - 1];
+if (!fixture) process.exit(0);
+const write = (to, value) => {
+  fs.mkdirSync(path.dirname(path.resolve(to)), { recursive: true });
+  fs.writeFileSync(path.resolve(to), JSON.stringify(value));
+};
+if (reporters.includes('json') && process.env.PLAYWRIGHT_JSON_OUTPUT_NAME)
+  write(process.env.PLAYWRIGHT_JSON_OUTPUT_NAME, fixture.report);
+if (reporters.some((reporter) => reporter.includes('story-playwright-reporter')) && process.env.STORIES_JSON && fixture.checklist)
+  write(process.env.STORIES_JSON, fixture.checklist);
+process.exit(fixture.failed ? 1 : 0);
+`;
+
+const SHARD_LOG = 'Testwort shard log line';
+
+/** Every shard job one caller of playwright.yml runs, each run step by step with its own `runs` entry, writing into `github`. */
+async function runShards(
+  caller: 'playwright' | 'stories' | 'warm',
+  runs: ShardRun[],
+  github: unknown,
+) {
+  const shards = jobRuns(PLAYWRIGHT, playwrightInputs(caller)).filter(({ job, context }) =>
+    holds(job.if, context, PASS),
+  );
+  const writes: Record<string, string>[] = [];
+  for (const { job, context } of shards) {
+    const at = mkdtempSync(join(root, 'shard-'));
+    symlinkSync(fromRoot('.github'), join(at, '.github'));
+    const fixtures = join(at, 'shard-runs.json');
+    writeFileSync(fixtures, JSON.stringify(runs));
+    const uses: UsesHandler = async (step, stepContext) => {
+      if (usesComment(step)) {
+        const env = actionEnv(step, stepContext);
+        writes.push(env);
+        const result = await lib.postComment({
+          github,
+          context: commentContext,
+          core,
+          inputs: lib.inputsFromEnv(env),
+          readFile: () => SHARD_LOG,
+          sleep: async () => {},
+          random: () => 0,
+        });
+        return { outcome: result === 'written' ? 'success' : 'failure' };
+      }
+      if (step.uses === './.github/actions/job-summary') return { outcome: 'success' };
+      return undefined;
+    };
+    await runJob(job, {
+      context,
+      root: at,
+      stubs: { npm: STUB_SHARD_NPM },
+      env: { STUB_SHARDS: fixtures },
+      uses,
+    });
+  }
+  return { shards: shards.length, writes };
+}
+
+const shardReport = (file: string, tests: TimedTest[], duration: number) =>
+  mergedPlaywrightReport([{ file, tests }], duration);
+
+const GATE_RUNS: ShardRun[] = [
+  { report: shardReport('tests/e2e/testwort-1.spec.ts', [{ title: 'one', ms: 1_000 }], 20_000) },
+  {
+    report: shardReport(
+      'tests/e2e/testwort-2.spec.ts',
+      [{ title: 'two', ms: 1_000, failed: FAILURE }],
+      40_000,
+    ),
+    failed: true,
+  },
+  {
+    report: shardReport(
+      'tests/e2e/testwort-3.spec.ts',
+      [
+        { title: 'three', ms: 1_000 },
+        { title: 'three slowly', ms: 31_000 },
+      ],
+      60_000,
+    ),
+  },
+];
+
+// Each story shard's checklist lists every v1 story, as the reporter writes it: the ones it did not run untested.
+const storyRun = (n: number, failed: boolean, duration: number): ShardRun => {
+  const stories = [91, 92].map((id) => ({
+    id,
+    title: `Testwort story ${id}`,
+    section: 'Testwort',
+    status: id !== 90 + n ? 'untested' : failed ? 'failed' : 'passed',
+  }));
+  const count = (status: string) => stories.filter((story) => story.status === status).length;
+  return {
+    report: shardReport(
+      `tests/e2e/stories/testwort-${n}.spec.ts`,
+      [
+        {
+          title: `Testwort story 9${n}`,
+          ms: 1_000,
+          tags: [`story-9${n}`],
+          ...(failed ? { failed: FAILURE } : {}),
+        },
+      ],
+      duration,
+    ),
+    checklist: {
+      stories,
+      unknown: [],
+      untagged: [],
+      counts: { passed: count('passed'), failed: count('failed'), skipped: 0, untested: 1 },
+      total: stories.length,
+    },
+    failed,
+  };
+};
+const STORY_RUNS = [storyRun(1, false, 30_000), storyRun(2, true, 50_000)];
+
+describe("each shard's row in the Playwright comment", () => {
+  it("is written by every shard of both suites, under !cancelled(), with its own result, beneath its suite's row", async () => {
+    const { github, comments } = fakeGitHub([]);
+
+    expect((await runShards('playwright', GATE_RUNS, github)).shards).toBe(3);
+    expect((await runShards('stories', STORY_RUNS, github)).shards).toBe(2);
+
+    expect(comments).toHaveLength(1);
+    const body = comments[0].body;
+    const rows = rowsOf(body);
+    expect(
+      rows.map(({ label, shard, status }) => [
+        shard ?? (/Gate/.test(label) ? 'gate' : /Stories/.test(label) ? 'stories' : label),
+        status,
+      ]),
+    ).toEqual([
+      ['gate', 'Failed'],
+      [1, 'Passed'],
+      [2, 'Failed'],
+      [3, 'Passed'],
+      ['stories', 'Failed'],
+      [1, 'Passed'],
+      [2, 'Failed'],
+    ]);
+    const facts = rows.map(({ result }) => resultFacts(result));
+    expect(facts[1]).toMatchObject({ passed: 1, failed: null, duration: '20s', over: null });
+    expect(facts[2]).toMatchObject({ passed: 0, failed: 1, duration: '40s', over: null });
+    expect(facts[3]).toMatchObject({ passed: 2, duration: '1m 0s', over: 1, inOrder: true });
+    // A story shard counts the stories it ran, not the ones the other shard ran.
+    expect(facts[5]).toMatchObject({ stories: { passing: 1, of: 1 }, duration: '30s' });
+    expect(facts[6]).toMatchObject({ stories: { passing: 0, of: 1 }, duration: '50s' });
+    // A shard writes no log: the suite's block, from the end job, carries it.
+    expect(body).not.toContain(SHARD_LOG);
+  });
+
+  it('is written by no shard of the build-only run, which has no pull request', async () => {
+    const { github, comments } = fakeGitHub([]);
+    const gate = await runShards('playwright', GATE_RUNS, fakeGitHub([]).github);
+
+    const warm = await runShards('warm', [], github);
+
+    // Precondition: a gate run's shards do write.
+    expect(gate.writes.length).toBeGreaterThan(0);
+    expect(warm.shards).toBe(1);
+    expect(warm.writes).toEqual([]);
+    expect(comments).toEqual([]);
+  });
+});
+
+describe("playwright.yml's permissions", () => {
+  const LEVEL: Record<string, number> = { none: 0, read: 1, write: 2 };
+
+  it('ask pull-requests: write, and every caller grants each permission it asks', () => {
+    const asked = PLAYWRIGHT.permissions ?? {};
+    expect(asked['pull-requests']).toBe('write');
+
+    const callers = [
+      ['pr-gate playwright', PR_GATE, PR_GATE.jobs.playwright],
+      ['pr-gate stories', PR_GATE, PR_GATE.jobs.stories],
+      ['e2e-cache warm', E2E_CACHE, E2E_CACHE.jobs.warm],
+    ] as const;
+    for (const [name, workflow, job] of callers) {
+      const granted = job.permissions ?? workflow.permissions ?? {};
+      for (const [scope, level] of Object.entries(asked)) {
+        expect(
+          LEVEL[granted[scope] ?? 'none'],
+          `${name} grants ${scope}: ${level}`,
+        ).toBeGreaterThanOrEqual(LEVEL[level]);
+      }
+    }
+  });
+});
+
+describe("the Playwright comment's heading note, as the end job writes it", () => {
+  it("names the gate suite's test count, then the story count, for the suites that ran", async () => {
+    const notes = async (join: Join) => headingNotesOf((await runJoin(join)).body).map(countNote);
+
+    expect(await notes({})).toEqual([
+      { count: 3, noun: 'tests' },
+      { count: 2, noun: 'stories' },
+    ]);
+    expect(await notes({ filters: { stories: 'false' } })).toEqual([{ count: 3, noun: 'tests' }]);
+    expect(await notes({ filters: { playwright: 'false' } })).toEqual([
+      { count: 2, noun: 'stories' },
+    ]);
+  });
+});
+
+// A Playwright row whose run failed with no failed test says so, as a Vitest part's row does.
+describe('a Playwright row that failed with no failed test', () => {
+  it("says so on the gate suite's row when a shard left no blob, and not when a test failed", async () => {
+    const lost = await runJoin({
+      results: { playwright: 'failure' },
+      shards: { playwright: (index) => (index === 1 ? null : gateShard(index + 1)) },
+    });
+    const failed = await runJoin({
+      results: { playwright: 'failure' },
+      shards: { playwright: (index) => gateShard(index + 1, index === 1) },
+    });
+
+    // Precondition: the suite failed both times.
+    expect(lost.sections.gate?.status).toBe('failed');
+    expect(failed.sections.gate?.status).toBe('failed');
+    expect(resultFacts(lost.sections.gate?.summary ?? '')).toMatchObject({
+      failed: null,
+      unexplained: true,
+    });
+    expect(resultFacts(failed.sections.gate?.summary ?? '')).toMatchObject({
+      failed: 1,
+      unexplained: false,
+    });
+  });
+
+  it("says so on the story suite's row when a story shard left no blob, and not when every story passed", async () => {
+    const lost = await runJoin({
+      shards: { stories: (index) => (index === 1 ? null : storyShard(index + 1)) },
+    });
+    const passed = await runJoin();
+
+    expect(lost.sections.stories?.status).toBe('failed');
+    expect(resultFacts(lost.sections.stories?.summary ?? '')).toMatchObject({ unexplained: true });
+    expect(passed.sections.stories?.status).toBe('passed');
+    expect(resultFacts(passed.sections.stories?.summary ?? '').unexplained).toBe(false);
+  });
+
+  it("says so on a gate or story shard's row whose run failed with every test passing", async () => {
+    const { github, comments } = fakeGitHub([]);
+    await runShards(
+      'playwright',
+      [GATE_RUNS[0], { ...GATE_RUNS[0], failed: true }, GATE_RUNS[1]],
+      github,
+    );
+    // The story run step has continue-on-error, so the row's status and note come from its outcome.
+    await runShards(
+      'stories',
+      [storyRun(1, false, 30_000), { ...storyRun(2, false, 50_000), failed: true }],
+      github,
+    );
+
+    expect(comments).toHaveLength(1);
+    expect(
+      rowsOf(comments[0].body)
+        .filter(({ shard }) => shard !== null)
+        .map(({ status, result }) => [status, resultFacts(result).unexplained]),
+    ).toEqual([
+      ['Passed', false],
+      ['Failed', true],
+      ['Failed', false],
+      ['Passed', false],
+      ['Failed', true],
+    ]);
   });
 });
