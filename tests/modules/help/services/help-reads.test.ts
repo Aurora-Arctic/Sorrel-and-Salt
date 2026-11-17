@@ -542,5 +542,22 @@ describe('a hidden row reaches no reader', () => {
     // Precondition: the lists answer shown rows of the same kinds.
     expect(titles(await readHelpFaq(PAGE))).toContain('Testwort Question One');
     expect(staff).toContain('Testwort Staff Guide');
+
+    // The same rows, once shown, are in every list, so the flag is what kept them out.
+    await sql`update help_articles set shown = true where title like 'Testwort Shy %'`;
+    clearDataCache();
+    expect(titles(await readHelpFaq(PAGE))).toContain('Testwort Shy Question');
+    expect(titles(await readHelpArticleIndex(PAGE))).toContain('Testwort Shy Guide');
+    expect(titles(await readHelpGlossary(PAGE))).toContain('Testwort Shy Term');
+    expect(titles(await listStaffHelpArticles(asUser(E), PAGE))).toEqual(
+      expect.arrayContaining([
+        'Testwort Shy Guide',
+        'Testwort Shy Staff Guide',
+        'Testwort Shy Keeper Guide',
+        'Testwort Shy Question',
+        'Testwort Shy Term',
+      ]),
+    );
+    expect(await listHelpArticlePaths()).toContain(`/help/${PUBLIC_SLUG}`);
   });
 });
