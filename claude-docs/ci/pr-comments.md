@@ -29,12 +29,20 @@ A **sectioned** comment is shared by several jobs. There are two, each with a ta
 
 Any section's write may also carry two things outside its own status, through the `pr-comment` action. A **heading note** (`heading-note`) is added to the comment's heading after the status, as `### ✅ Vitest · Passed · 2,800 tests`; a reset clears it, so the heading shows no note until a section writes one again. An **alert** (`alert`) is one plain line at the top of the section's block, shown with the log; it counts as Failed in the heading's status, whatever the section's own status. It is for a failure of the job writing the section that no section's status reports.
 
-| Comment    | Marker                   | Sections and the job that writes each                                                                                       |
-| ---------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| Vitest     | `<!-- ci-vitest -->`     | `dom`, `node`, `db`: the three part jobs in `vitest.yml`. The final `coverage` (Coverage and Slowest Files): the merge job. |
-| Playwright | `<!-- ci-playwright -->` | `gate`, `stories` and the final `coverage`: all `playwright-coverage.yml`, which joins the shards.                          |
+| Comment    | Marker                   | Sections and the job that writes each                                                                                            |
+| ---------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Vitest     | `<!-- ci-vitest -->`     | `dom`, `node`, `db`: the three part jobs in `vitest.yml`. The final `coverage` (Coverage and Slowest Files): the merge job.      |
+| Playwright | `<!-- ci-playwright -->` | `gate`, `stories` and the final `coverage`: `playwright-coverage.yml`, which joins the shards. Each shard also writes a sub-row. |
 
 A Vitest part's Result is its own counts and duration (`summarize-vitest.mjs` with `VITEST_PART=true`), and its section lists its failing tests, collapsed above the log, and a file that failed outside its tests (an import error or a failing hook) is listed too. Vitest's JSON reporter drops errors thrown outside any test file, so a part that failed with no failed test says so in its Result and points to the log.
+
+Every Result line has the same three parts, built by `.github/scripts/lib/result-line.mjs` for all three summarisers: the counts, then the duration (" in 1m 4s"), then the number of tests or files over the budget (", 2 over the 30 s budget"), which is left out when zero. A Playwright count leaves out the failed number when it is zero.
+
+### Shard sub-rows
+
+Each Playwright shard job writes one sub-row of its suite's row as it finishes, with no job of its own: the `pr-comment` action takes `shard` (`<index>/<total>`) beside `section`. A sub-row's first cell is "↳ Shard i of n", the second its status, the third its Result line, from `summarize-playwright.mjs` or `summarize-stories.mjs` with `PLAYWRIGHT_SHARD=true`, which counts only what that shard ran and prints no flaky annotation. A shard's status is its run step's outcome, not its job's, because the stories run step has `continue-on-error`. A shard writes its row under `!cancelled()`, never on the build-only run, and sends no log and no details. Sub-rows sit under their suite's row in index order, and an index not yet written, up to the known total, shows Running.
+
+Until `playwright-coverage.yml` writes the suite's own section, the suite's row is derived from its sub-rows: Failed if any shard failed, else Running, "N of T shards finished". The heading counts that derived status. Once the end job writes, its row replaces the derived one and the sub-rows stay. A suite's row stays Running if the end job never runs.
 
 The merge job has no row. It writes the final Coverage and Slowest Files section in one step (`summarize-vitest.mjs` merged mode, `final_*` outputs), with the merged run's total test count as the heading note. The section has the merged coverage figure and threshold verdict (each metric below its threshold, read from the run's log, which is the only place Vitest reports one), the per-file table, then the slowest files. Its status is the coverage verdict alone, since the parts' rows report the tests: when a test failed it shows Skipped, "Not measured, because a test failed.", because Vitest writes no coverage report for a failing run. A failure of the merge job itself comes as the section's alert, so it fails the heading:
 
@@ -55,10 +63,10 @@ The comments these replaced (`<!-- ci-stories -->` and `<!-- ci-playwright-cover
 
 GitHub's comment API has no conditional update, so two jobs that read the comment, change it and write it back at the same moment lose one of the two changes. The design keeps each change small and checks it landed:
 
-- **Each job writes only its own section.** The comment carries its state as hidden JSON (`<!-- ci-state … -->`): the run id, the attempt, and each section's status, summary and a random token for the write that set it. A job reads the comment, replaces its own section, and writes the whole comment back.
+- **Each job writes only its own section.** The comment carries its state as hidden JSON (`<!-- ci-state … -->`): the run id, the attempt, each section's status, summary and a random token for the write that set it, and each shard's status, summary, shard total, token and attempt under `shards`. A job reads the comment, replaces its own section, and writes the whole comment back.
 - **Then it checks.** It waits 3 seconds plus up to 2 seconds of random jitter, re-reads the comment, and looks for its own token. If another job's write replaced it, it writes again, up to five attempts. The jitter keeps two jobs that collided from colliding again.
 - **A duplicate comment is removed.** Two jobs that both find no comment both create one. Each lists every comment (paginated: a busy pull request has more than one page), keeps the oldest marked one, and deletes a duplicate it created itself, then writes its section into the one kept.
-- **An older run never overwrites a newer one.** A write from a run id lower than the comment's is dropped. A write from a higher run id starts the comment over for that run. A reset from a re-run (a later attempt of the same run) clears every section; a reset that arrives late in the same attempt keeps the sections already written.
+- **An older run never overwrites a newer one.** A write from a run id lower than the comment's is dropped. A write from a higher run id starts the comment over for that run. A reset from a re-run (a later attempt of the same run) clears every section and shard row; a reset that arrives late in the same attempt keeps the sections and shard rows already written, and a shard row from an earlier attempt is cleared.
 
 A write can still be lost when another job's write lands after the verification re-read: GitHub gives no way to rule it out, so the section then shows its earlier value until the next run. A job whose section is still missing after five attempts logs a warning.
 
