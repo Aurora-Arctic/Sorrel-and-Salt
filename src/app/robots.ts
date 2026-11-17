@@ -3,11 +3,13 @@ import { siteUrl } from '@/lib/site';
 
 // The only paths a crawler may fetch. `Allow` beats `Disallow: /` as the longer match (RFC 9309, 2.2.2); `/$` not `/`,
 // as a bare `/` allows every path by prefix (RFC 9309, 2.2.3). `/support` is fetchable only so a crawler reads its
-// noindex: a blocked page can still be listed from links.
+// noindex: a blocked page can still be listed from links. `/sign-in` is the same: it is in no sitemap and carries a
+// noindex, so it is fetchable and never reported as indexed though blocked.
 export const CRAWLABLE_PATHS = [
   '/$',
   '/compendium',
   '/compendium/',
+  '/sign-in',
   '/support',
   '/privacy',
   '/disclaimer',

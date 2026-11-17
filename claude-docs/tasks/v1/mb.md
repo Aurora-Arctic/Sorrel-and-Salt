@@ -872,7 +872,7 @@ _Acceptance criteria:_
 - An anonymous render of `/compendium` and of `/compendium/ingredients/[slug]` runs no query on a warm cache; the compendium read is cached under the `compendium` tag, and every keeper or curator edit invalidates it on save
 - Nothing that depends on the viewer (the user menu, Add Ingredient, per-user counts) is inside the cached render
 - The `/compendium` list query selects only the columns its cards show, and pages through the cursor helper
-- `src/app/robots.ts` disallows `/sign-in` and no longer lists it in `CRAWLABLE_PATHS`; the sign-in page carries `noindex`; `robots.ts` and `sitemap.ts` are cached, not `force-dynamic`
+- `src/app/robots.ts` does not disallow `/sign-in` (it stays fetchable, so a crawler reads the page's `noindex`); the sign-in page carries `noindex`; `src/app/sitemap.ts` does not list `/sign-in`; `robots.ts` and `sitemap.ts` are cached, not `force-dynamic`
 - The postgres.js client in `src/db/connection.ts` sets an `idle_timeout`
 - The PR body reports the before and after measurements, which assumptions were confirmed and which were wrong, whether production's `DATABASE_URL` names the pooled host (the name only, never the value), and every anonymous request that still queries Postgres, with the reason
 - The docs the change makes wrong are corrected in the same PR, under `claude-docs/`
