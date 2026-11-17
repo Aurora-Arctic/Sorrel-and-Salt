@@ -1,4 +1,3 @@
-import type { Locator } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { seedCoven, withSql } from './stories/coven-ingredients';
@@ -7,31 +6,18 @@ import { signInAs } from './session';
 import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
+import { DESKTOP_WIDTH, PHONE_WIDTH, PURPOSE_WIDTHS } from './breakpoints';
+import { settledBox } from './waits';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test.use({ viewport: { width: 320, height: 640 } });
+test.use({ viewport: { width: PURPOSE_WIDTHS.reflow, height: 640 } });
 
-type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
-
-/** The tip's box once two polled reads in a row agree, rather than a fixed sleep. */
-async function settledBox(tip: Locator): Promise<Box | null> {
-  const read: { last: string; box: Box | null } = { last: '', box: null };
-  await expect
-    .poll(async () => {
-      read.box = await tip.boundingBox();
-      const now = JSON.stringify(read.box);
-      const same = read.box !== null && now === read.last;
-      read.last = now;
-      return same;
-    })
-    .toBe(true);
-  return read.box;
-}
-
-test('every tip in the Add Ingredient dialog opens inside a 320px viewport', async ({ page }) => {
+test('every tip in the Add Ingredient dialog opens inside a 320px-wide viewport', async ({
+  page,
+}) => {
   await seedCoven(page, 'Fixture Coven Tips', 'tip-placement.test', { A: 'owner' });
   await page.goto('/account');
   const dialog = await openAddIngredient(page);
@@ -63,7 +49,7 @@ test('every tip in the Add Ingredient dialog opens inside a 320px viewport', asy
       description: `button x=${Math.round(at.x)} tip x=${Math.round(box.x)} right=${Math.round(box.x + box.width)}`,
     });
     expect(box.x).toBeGreaterThanOrEqual(0);
-    expect(box.x + box.width).toBeLessThanOrEqual(320);
+    expect(box.x + box.width).toBeLessThanOrEqual(PURPOSE_WIDTHS.reflow);
     expect(box.y).toBeGreaterThanOrEqual(0);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('tooltip')).toHaveCount(0);
@@ -74,12 +60,12 @@ test('every tip in the Add Ingredient dialog opens inside a 320px viewport', asy
 });
 
 // The formal name's ⓘ opens below on a phone, where the shell's sticky bar would cover a tip above (claude-docs/components/ingredient-entry.md, "Contracts").
-test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s page and the public page', async ({
+test('the formal name\u2019s tip opens inside a phone-width viewport on a coven\u2019s page and the public page', async ({
   page,
   browser,
   baseURL,
 }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 844 });
   const coven = await seedCoven(page, 'Fixture Coven Formal Tip', 'formal-tip.test', {
     A: 'owner',
   });
@@ -121,15 +107,15 @@ test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s
     const box = await settledBox(tip);
     if (!box) throw new Error(`The tip on ${address} has no box`);
     expect(box.x).toBeGreaterThanOrEqual(0);
-    expect(box.x + box.width).toBeLessThanOrEqual(390);
+    expect(box.x + box.width).toBeLessThanOrEqual(PHONE_WIDTH);
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.y + box.height).toBeLessThanOrEqual(844);
   }
 
   // The Quick Look window scrolls under a clipped dialog, so its tip needs the same check.
   for (const [width, height] of [
-    [390, 844],
-    [1280, 800],
+    [PHONE_WIDTH, 844],
+    [DESKTOP_WIDTH, 800],
   ]) {
     await page.setViewportSize({ width, height });
     await page.goto(`/compendium?entry=${ingredientId}`);

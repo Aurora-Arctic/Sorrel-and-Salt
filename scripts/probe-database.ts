@@ -1,5 +1,5 @@
 /**
- * Opens the connection itself, so a failure has a cause: `drizzle-kit migrate` swallows what postgres.js throws and exits 1 (claude-docs/ci/deploy.md, "Deploy").
+ * Opens the connection itself, so a failure has a cause and a hint beside it, before `npm run db:migrate` or a build consumes the URL (claude-docs/ci/deploy.md, "Deploy"). scripts/migrate.ts prints a migration failure itself.
  * The URL arrives as a FILE PATH, never on argv, and nothing printed carries the credentials, as with scripts/assert-pulled-env.ts; the hostname stays, since `ENOTFOUND` without it says nothing.
  */
 

@@ -25,10 +25,6 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// The card's face slides down under the pointer (the drawer). Without motion it stays
-// put, so a point measured on the card at rest is the same point on the card when it is pressed.
-test.use({ reducedMotion: 'reduce' });
-
 const FORMAL = 'Fixtura tactilis';
 
 const faceOf = (card: Locator) => card.locator('article');

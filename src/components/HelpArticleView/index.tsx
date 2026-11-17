@@ -4,7 +4,6 @@ import { helpTerms } from '../../lib/help-marks';
 import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import { HelpArticleTitle, HelpPageHead } from '../HelpChrome';
-import { HELP_WIDGET_ELEMENTS } from '../HelpWidget';
 import { BackChevron } from '../BackLink/chevron';
 import PageNav from '../PageNav';
 import { HelpBackLink } from './back-link';
@@ -24,17 +23,11 @@ const HelpArticleView = ({
   heading = 'Help',
   terms = [],
   steps = {},
+  widgets = {},
   editHref,
   editName = 'Article',
 }: HelpArticleViewProps): ReactElement => {
-  const { content, entries } = renderMarkdown(
-    body,
-    {},
-    [],
-    true,
-    helpTerms(terms),
-    HELP_WIDGET_ELEMENTS,
-  );
+  const { content, entries } = renderMarkdown(body, {}, [], true, helpTerms(terms), widgets);
   // The entries are read before the headings move down, so a top-level entry or a group is one `##` of the body.
   const sections =
     entries.filter((entry) => entry.group === undefined).length +

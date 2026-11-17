@@ -96,6 +96,7 @@ export function ProviderRow({
           aria-disabled={unavailable || undefined}
           aria-describedby={unavailable ? noteId : undefined}
           busy={busy}
+          busyAriaLabel={`Adding ${provider.label}`}
           busyLabel="Adding"
           onClick={busy ? undefined : () => void run(onAdd)}
         >

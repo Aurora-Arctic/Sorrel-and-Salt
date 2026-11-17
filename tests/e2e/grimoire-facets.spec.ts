@@ -1,8 +1,9 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
+import { assertNoSidewaysScroll } from './axe';
 import { signInAgainAs } from './session';
 import { insertSpell, openFilters, seedCoven, withSql } from './stories/coven-ingredients';
+import { PHONE_WIDTH } from './breakpoints';
 
 // The grimoire's Moon Phases, Days of the Week, Visibility and Coven Members facets and its Compact switch: the GET
 // form filters by address before hydration, the maker is read as created_by, and a hidden spell's phase is
@@ -108,13 +109,12 @@ test('the Compact switch sets the grimoire list density and the filter is access
   await compact.uncheck();
   await expect(page.locator('html')).toHaveAttribute('data-card-density', 'regular');
   await openFilters(page);
-  await assertNoAccessibilityViolations(page);
 });
 
 test('at 375px the grimoire filter panel opens, a facet can be picked, and the page does not scroll sideways', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 800 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
   const coven = await seedCoven(page, 'Fixture Coven Narrow', 'grimoire-narrow.test', {
     A: 'owner',
   });

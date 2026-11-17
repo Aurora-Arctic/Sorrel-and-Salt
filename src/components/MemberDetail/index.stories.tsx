@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { InModal } from '../../../.storybook/in-modal';
+import { answerOperations } from '../../../.storybook/mock-api';
 import { makeQueryClient } from '../../lib/graphql-client';
 import type { MemberListEntry } from '../MemberList/types';
 import '../MemberList/index.scss';
@@ -91,6 +92,15 @@ const STATES_STATES: Record<string, ReactNode> = {
 
 export const States: Story = {
   args: { state: 'Steward' },
+  // The Coven Access panel reads the member's earlier pauses, so the page's request has an answer.
+  beforeEach: ({ msw }) =>
+    msw.use(
+      answerOperations(({ operationName }) =>
+        operationName === 'MemberPauses'
+          ? { workspace: { id: 'w', memberPauses: { edges: [] } } }
+          : undefined,
+      ),
+    ),
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
   },

@@ -988,6 +988,220 @@ Things the draft is unsure of, or that are the owner's call:
 
 The policy makes no promise about analytics, because the owner plans to add them (2026-11-02). The owner's conditions: an ethical analytics setup, and one that never runs in the visitor's browser. The policy still says the site runs no tracking script. When analytics land, the policy names the provider in its table of services and says what each visit records.
 
+### Vendor check against the code of ethics and the operations wave
+
+On 2026-11-11 every vendor the site uses or plans to use was checked against `documents/code-of-ethics.md`, which promises that the site sells no data, that nothing anyone writes here trains anything, and that nothing runs in a visitor's browser. Every source below was accessed on 2026-11-11. A finding marked "(reading)" is an inference from the source, not its words. No vendor says it sells customer data for money.
+
+**The owner's choices (2026-11-11):**
+
+1. Paid items go in the same wave, after the free ones.
+2. The wave includes the site counting its own visits in its own database.
+3. The wave includes a task to ask Neon and Resend in writing about their data use.
+4. No error tracker: Vercel's logs and the existing error reference cover launch.
+
+**Outcome of the check.** Vercel Hobby was opted in to AI training by default, and the owner has since turned that off. The privacy policy's sentence "none is given it for any other purpose" promises more than Vercel's, Neon's, Resend's, and, later, Stripe's terms commit to. The M17.1 pricing work recommended an operations stack and minted no task to set it up. [N · Wave 06](../waves/v1-next/wave-06.md) holds the tasks.
+
+#### Vercel
+
+- AI training is covered by the March 2026 terms change. The covered data is code, Vercel agent chats, build and deployment telemetry, build errors, and aggregate traffic statistics, anonymised and redacted. Hobby, including a trial of Pro, is opted in by default; paid Pro is opted out; Enterprise is opted out with no opt-in. The switch is Team Settings, Data Preferences, with a per-project override, and it applies going forward only. Account information is not used for training. Pro and Hobby cannot opt out of non-training product improvement. Source: https://vercel.com/changelog/updates-to-terms-of-service-march-2026
+- The privacy notice has no blanket "no sale" statement. It says identifiers, commercial information, and internet activity may have been shared with ad networks, for Vercel's own website and marketing, and that de-identified data may go to AI business partners for Hobby and Pro depending on team preferences. Vercel is a controller for account-holder data and a processor for Customer Data. Source: https://vercel.com/legal/privacy-policy
+- The data processing agreement applies to Enterprise and Pro, with primary processing in the US and retention for the "minimum necessary period" without figures. Source: https://vercel.com/legal/dpa
+- Web Analytics needs a dashboard "Enable" click and the `@vercel/analytics` component; Speed Insights needs the `@vercel/speed-insights` package. Neither page says it is on by default. Keep both unused. Sources: https://vercel.com/docs/analytics/quickstart, https://vercel.com/docs/speed-insights/quickstart
+- Bot Protection is inactive by default, with Log or Challenge selectable; Challenge serves a JavaScript challenge. Source: https://vercel.com/docs/vercel-firewall/vercel-waf/managed-rulesets
+- `@vercel/otel` tracing is server-side and describes no browser script. Source: https://vercel.com/docs/tracing/instrumentation
+- An April 2026 security incident, through a third-party AI tool, exposed some customers' non-sensitive environment variables. Sources: https://vercel.com/kb/bulletin/vercel-april-2026-security-incident.md, https://siliconangle.com/2026/04/20/developer-tooling-provider-vercel-discloses-breach-exposed-users-data/
+- Not found: a log retention figure for the current plan, which N6.1 must establish.
+
+#### GitHub
+
+- From 24 April 2026, Copilot interaction data from Free, Pro, and Pro+ users trains GitHub models unless the user opts out. Business and Enterprise are not affected. Content from issues, discussions, and private repositories at rest is excluded; code from private repositories processed while Copilot is in use can be used unless the user opts out. The opt-out is a per-user setting at https://github.com/settings/copilot/features. Sources: https://github.blog/news-insights/company-news/updates-to-github-copilot-interaction-data-usage-policy/, https://www.theregister.com/2026/03/26/github_ai_training_policy_changes/
+- Not found from GitHub's own pages: a data processing agreement or sub-processor list for the Team plan.
+
+#### Stripe
+
+- "We do not transfer your personal data to third parties in exchange for payment", but some sharing "may be considered a data 'sale' or 'sharing' (for behavioral advertising)", opted out through cookie settings. Source: https://stripe.com/privacy
+- "Personal Data is required to train Stripe's fraud and loss prevention models", and Stripe trains AI models for several purposes; retention is typically five or more years from the end of the business relationship. Source: https://stripe.com/privacy-center/legal
+- Stripe is a processor for providing the service and a controller for fraud monitoring and other listed purposes. Source: https://stripe.com/legal/dpa
+- Stripe.js collects device characteristics and activity indicators and sends them to Stripe. The page says the data is never used for advertising and is not sold. Adding `advancedFraudSignals=false` to the script tag disables advanced signals. Source: https://docs.stripe.com/disputes/prevention/advanced-fraud-detection
+- (reading) Payment data feeds Stripe's own models. That is not a sale, but the privacy policy should disclose it. The decided exception for Stripe.js on the checkout page stands.
+
+#### Neon
+
+- The privacy policy redirects to Databricks's notice, which says it does not "sell" personal information in the traditional sense, offers opt-outs because some disclosures may count as a sale or targeted advertising, and does not address AI training on customer data. Sources: https://neon.com/privacy-policy, https://www.databricks.com/legal/privacynotice
+- Neon's AI page says the SQL Editor assistant shares the database schema and "no actual data", and does not say whether customer data trains models or how to turn the features off. Source: https://neon.com/docs/security/ai-use-in-neon
+- The data processing agreement states no region, retention period, or deletion procedure. Source: https://neon.com/dpa
+- Databricks announced the acquisition of Neon on 14 May 2025 for about $1 billion. Source: https://www.techtarget.com/data-technologies/news/366623864/Databricks-adds-Postgres-database-with-1B-Neon-acquisition
+- Not found: any statement on training on database contents. N6.2 asks Neon in writing.
+
+#### Resend
+
+- "We don't sell or rent your personal information to any third parties for any purpose." The policy does not mention AI. Source: https://resend.com/legal/privacy-policy
+- Resend is a processor and an independent controller for account and usage data; primary processing is in the US with no region choice; deletion is within 90 days of account termination. Source: https://resend.com/legal/dpa
+- Of 22 sub-processors, all in the USA, two are listed for "Artificial intelligence": Anthropic, PBC and TypeSafe AI, Inc. What they receive is not stated. Source: https://resend.com/legal/subprocessors
+- Open and click tracking is disabled by default for every domain, set per domain. Source: https://resend.com/docs/dashboard/domains/tracking
+- Not found: what data goes to the two AI sub-processors. N6.2 asks Resend in writing.
+
+#### Error trackers weighed, none adopted
+
+- Sentry: by default data is not used to train any generative AI model without permission, but Sentry trains its own grouping and notification models, and its support article says no single switch disables all AI features. Sources: https://docs.sentry.io/security-legal-pii/security/ai-ml-policy/, https://sentry.zendesk.com/hc/en-us/articles/40137265811867
+- Bugsink: hosted data is processed in the European Union and "Bugsink does not use Personal Data for its own purposes". Source: https://www.bugsink.com/dpa/
+- Better Stack: lists OpenAI as a sub-processor for "AI services". Source: https://betterstack.com/dpa/schedules
+- The owner chose no tracker (choice 4).
+
+#### The approved plan
+
+##### Context
+
+On 2026-11-11 every vendor the site uses or plans to use was checked against `documents/code-of-ethics.md`. The code promises three things a vendor could break: the site sells no data, nothing anyone writes here trains anything, and nothing runs in a visitor's browser. The check found three things:
+
+- Vercel Hobby was opted in to AI training by default. The owner has since turned that off.
+- The privacy policy's sentence "none is given it for any other purpose" (`documents/privacy.md:73`) promises more than Vercel's, Neon's, Resend's, and, later, Stripe's terms commit to.
+- The M17.1 pricing work recommended an operations stack but deliberately minted no task to set it up (`design-decisions/ingredients.md:2176`).
+
+The owner asked for a new wave on Project 4 (Sorrel & Salt V1.Next) to put the recommendations in place, **free tasks first, paid tasks after**. The owner's choices (2026-11-11):
+
+- Paid items go in the same wave, after the free ones.
+- The wave includes the site counting its own visits in its own database.
+- The wave includes a task to ask Neon and Resend in writing about their data use.
+- No error tracker: Vercel's logs and the existing error reference cover launch.
+
+The outcome is a minted wave: a task file, a wave file, `TASKS.md` rows, a decision record, a milestone, and issues. No code is written in this step.
+
+##### Already on the board, not re-minted
+
+- **N4.19, security.txt** (`tasks/v1-next/n4.md:273`) is free and has no billing dependency. It stays in Wave 04. The wave file names it as the free task that can run at any time.
+- **ND.1, hourly crons on Pro** (`tasks/v1-next/nd.md:7`). Its trigger is N6.15, which moves the site to Vercel Pro. The wave file says so.
+- **Stripe monitoring** (Radar Lite, dispute alerts) belongs to the N4 Stripe tasks and is not repeated here.
+
+##### The tasks
+
+**How the estimates were set.** Each estimate is compared against the board's estimates for tasks of the same shape, not against how long those tasks actually took:
+
+| Shape                               | Board examples       | Board estimate |
+| ----------------------------------- | -------------------- | -------------- |
+| Table                               | M17.13, N5.1, M15.26 | 1–2h           |
+| Daily cron                          | M15.68               | 2h             |
+| Webhook route with signature checks | N4.6                 | 5h             |
+| Keeper page                         | M17.15, N4.14        | 4h             |
+| Restore drill                       | M1.6                 | 2h             |
+
+The hours cover work only. Waiting for a vendor's reply (N6.2) or for DNS to propagate (N6.9) is calendar time and is not counted. Seven estimates were revised after this check: N6.2, N6.4, N6.5, N6.8, N6.13, N6.15, and N6.16. N6.5 is the least certain: a failing audit gate, CodeQL, or dependency review may surface findings in the current dependencies, and fixing those is not in the 4h. Any such finding becomes its own task.
+
+The ids are `N6.1`–`N6.17`, in execution order. Every heading is `**N6.n — Title** · Nh` with the story and acceptance criteria in the n4.md format. Every task that changes what the site stores or who handles it updates `documents/privacy.md` in the same PR (`code-of-ethics.md:109`). A wording-only change gets no tests, only `format:check` and `lint`. Each task's last criterion is "No test is skipped or flaky".
+
+###### Free ($0)
+
+1. **N6.1 — Make the Privacy Policy Promise Only What Its Processors Commit To** · 2h
+   - Rewrite `privacy.md:73` and the "Does Not Do" line about sharing (line ~110) so they match each processor's documented commitments.
+   - Add Vercel's log retention for the current plan to "How Long It Is Kept".
+   - The PR body carries the text the keeper publishes at `/keepers/documents/privacy`, because editing the file does not change production (the seed skips a document that already has a version).
+   - Doc only.
+2. **N6.2 — Ask Neon and Resend in Writing What They Do With the Site's Data** · 1.5h
+   - Draft the letters: training on database contents and mail, what Anthropic and TypeSafe AI receive from Resend, the data processing agreement, regions, and deletion on close.
+   - The owner sends them. The answers are recorded in the decision record.
+   - An answer that contradicts the policy mints a follow-up task.
+3. **N6.3 — Record and Guard the Vendor Settings the Code of Ethics Depends On** · 2h
+   - A new `claude-docs/ops/vendor-settings.md` records each setting and why it matters:
+     - Vercel Data Preferences opted out.
+     - Vercel Toolbar Off for production, team and project.
+     - Web Analytics and Speed Insights never enabled.
+     - Resend open and click tracking off.
+     - Copilot training opt-out for every committer.
+   - The owner makes the dashboard changes.
+   - Add a guard test that fails if `package.json` gains `@vercel/analytics`, `@vercel/speed-insights` or any browser analytics package. The test is seen failing once.
+   - Add a test that the content security policy (`src/lib/security-headers.ts`) allows no `vercel.live` origin.
+4. **N6.4 — Write SECURITY.md and the Secrets Rotation Runbook** · 3h
+   - Add a root `SECURITY.md` pointing to GitHub's private vulnerability reporting, which the owner turns on.
+   - Add `claude-docs/ops/secrets-rotation.md` with one section per vendor: Vercel, Better Auth, Stripe, Neon through a second role, and Resend. Rotation is yearly.
+   - Doc only.
+5. **N6.5 — Turn On GitHub's Free Security Checks** · 4h
+   - Turn on secret scanning with push protection, Dependabot security updates, and CodeQL default setup. All three are free while the repository is public, and paid under GitHub Team once it goes private, as already decided and priced.
+   - Add the dependency-review action to `pr-gate.yml`.
+   - Install the Socket Free GitHub app.
+   - Make the `audit` job in `checks.yml:372` fail on a high or critical finding, instead of `|| true`.
+6. **N6.6 — Send Operations Alerts by Email Through One Helper** · 3h
+   - Add `src/lib/ops-alert.ts`, which mails the address in an `OPS_ALERT_EMAIL` env var through the existing `src/lib/mail-transport.ts`.
+   - Add a test that an alert carries ids and counts only, never an email address or user text.
+   - This is the mechanism N6.7, N6.8, and N6.17 call. Its guard is that nothing else mails alerts.
+7. **N6.7 — Check the Database's Health Daily** · 3h
+   - Add a daily cron in `vercel.json` through `cronRoute` (`src/lib/cron-request.ts`).
+   - It calls a repository finder for `pg_stat_activity` and the database size, and sends an alert through N6.6 past set thresholds.
+   - A `tests/db/` test covers the finder.
+8. **N6.8 — Alert on Mail Bounces and Complaints From Resend** · 4h
+   - Add a signature-verified Resend webhook route that sends an alert through N6.6.
+   - This needs a new named exception in `.claude/rules/graphql.md`, "Access paths outside /api/graphql", and in CLAUDE.md rule 1, added in the same PR. The payload carries a recipient address, which the alert must not forward.
+9. **N6.9 — Require DMARC and Read the Free Mail Reports** · 1h
+   - The owner sets the DNS records: DMARC `p=quarantine` or stricter, with `rua=` to Postmark's free digest. The owner also registers the domain in Google Postmaster Tools.
+   - Update `claude-docs/secrets.md` (Resend setup) and `claude-docs/email.md`.
+   - Both receive aggregate reports about sending servers, not people, so neither joins the privacy policy's processors table.
+10. **N6.10 — Test a Database Restore Every Week** · 3h
+    - Add a weekly GitHub workflow beside `neon-snapshot-prune.yml`.
+    - It branches Neon from a point in time, runs a check query, deletes the branch, and fails loudly.
+    - The cost is cents of compute, within the free allowance.
+11. **N6.11 — Write the Incident Runbook** · 2h
+    - Add `claude-docs/ops/incidents.md`: who is told, a Resend mail to the affected accounts, and Google's postmortem headings.
+    - The status page arrives with N6.17.
+    - Doc only.
+12. **N6.12 — Add the Visit Counts Table** · 2h
+    - Add a counter per day and route pattern, such as `/coven/[slug]`, never the raw path. A raw path such as `/coven/hedge-witches` would show keepers a coven's name, and keepers have no access to workspace data. The counter holds no IP address, no user agent, and no visitor identifier, so it holds no personal data.
+    - The task records which module owns it in `claude-docs/modules.md`. The `rate_limits` table, which counts by route, is the nearest pattern.
+    - It is a table task only, per the "table task, then a behaviour task" rule.
+13. **N6.13 — Count Each Page Visit on the Server** · 6h
+    - Increment the counter after the response, through the existing `after()` wrapper in `src/lib/background-tasks.ts`, keyed by the route pattern.
+    - The task decides where the count is taken. `src/proxy.ts` sees every path but may not import the database (CLAUDE.md rule 2), so the choice is between a service the proxy calls and a call from each page. The decision is recorded in the task's PR.
+    - A test proves that two visits to different coven pages add to one `/coven/[slug]` row and that no row holds a slug. Bots are filtered out by user agent, and the user agent is never stored.
+    - A signed-out visit has no session, so this needs a named write outside `withAudit` in `.claude/rules/database.md` Rule 3.
+    - Add a "Visit Counts" section to `privacy.md` "What Is Stored". The "runs no tracking script" line stays true.
+14. **N6.14 — Show Keepers the Visit Counts** · 4h
+    - Add a keeper-only page under `/keepers` that reads through a service guarded by `assertSiteAdmin`, through the cursor pagination helper.
+    - A curator gets the styled not-authorised page.
+    - An e2e spec with axe covers the page.
+
+###### Paid (after the free tasks)
+
+15. **N6.15 — Move to Vercel Pro, Keep Logs 30 Days, and Set Spend Alerts** · 2h
+    - The owner upgrades. Taking payment counts as commercial use, which Hobby does not allow, so this must happen before N4 billing opens.
+    - Check that Data Preferences stays opted out.
+    - Keep Observability Plus, which is on by default for new Pro teams, at $1.20 per million events.
+    - Set a Vercel budget with email notices and Neon spending notifications. Pause-on-budget stays off (decided).
+    - Update `DESIGN.md` §4 and the privacy policy's log retention line (30 days).
+    - This triggers ND.1.
+16. **N6.16 — Trace Server Requests at 10% Sampling** · 4h
+    - Add `instrumentation.ts` with `@vercel/otel` at 10% sampling, following the instrumentation guide in `node_modules/next/dist/docs/`.
+    - Add a test, using an in-memory span exporter, that span attributes carry no email address and no request body.
+    - Vercel's tracing is $0.50 per million span units on Pro.
+17. **N6.17 — Watch Uptime, Cron Heartbeats, and Expiry With UptimeRobot Solo** · 4h
+    - The service costs $12 a month.
+    - The owner sets up monitors for the site, certificate expiry, and domain expiry.
+    - Each cron in `vercel.json` pings its heartbeat URL, held in an env var, when its job finishes. A test covers the ping.
+    - A status page goes on a `status.` subdomain, linked from the site and not embedded.
+    - Add UptimeRobot to `vendor-settings.md`. It receives no personal data, so it does not join the processors table.
+
+**Totals:** 14 free tasks, 40.5h; 3 paid tasks, 10h; 50.5h in all.
+
+##### The minting PR (after approval)
+
+One Sonnet agent does the hands-on work in a new worktree off `origin/staging`, at `/home/node/worktrees/n6-ops`, on branch `feature/n6-mint-operations-and-privacy-wave`. The main session reviews the diff.
+
+1. Recheck the board and the git log for a parallel session that has taken `N6` or `N · Wave 06` first (`grep -rho '^\*\*N6\.[0-9]* — ' claude-docs/tasks/` and `node scripts/task-board.mjs find N6.1`).
+2. Write `claude-docs/tasks/v1-next/n6.md`: the `## N6 — Operations and vendor ethics` heading, `_17 tasks · 50.5 hours_`, sequencing, the record link, the testing rules, and the 17 entries.
+3. Write `claude-docs/waves/v1-next/wave-06.md`: the row `N6.1 → N6.17`, why the wave exists, the dependency order, the note on N4.19 and ND.1, and the testing paragraph.
+4. In `claude-docs/TASKS.md`, add the execution-order row after line 77, `| **N · 06 — Operations and vendor ethics** | N6.1 → N6.17 | [wave-06.md](...) |`, and the file-table row near lines 120–131.
+5. Add a decision record to `claude-docs/design-decisions/support.md`, beside "### Analytics" (line 987). It holds the vendor-by-vendor findings, each with its source URL and the access date 2026-11-11, the owner's choices above, and this plan. Add an `INDEX.md` line.
+6. Create the milestone `N · Wave 06` with `gh api` POST to `repos/Aurora-Arctic/Sorrel-and-Salt/milestones`, because `task-board.mjs` has no create command. Line 1 of its description is the id list, and line 3 is the wave-file link.
+7. For each task, write the body to the scratchpad, then run `gh issue create --type Task --label tracked --label v1-next --milestone "N · Wave 06"`, `task-board.mjs place --apply`, and `task-board.mjs estimate`.
+8. Run `task-board.mjs reorder` as a dry run, then `--apply`, until it reports "0 moves needed".
+9. Commit in the worktree. Push and open the PR only when the owner asks.
+
+##### Verification
+
+- `npm run format:check` and `npm run lint` on the touched docs. This is a doc-only diff, so it runs no tests.
+- `node scripts/task-board.mjs find N6.n` returns exactly one issue for each of the 17 tasks.
+- `reorder` reports "0 moves needed".
+- The milestone's first description line matches the wave row.
+- The `TASKS.md` range `N6.1 → N6.17` resolves: every heading matches the `HEADING` regex in `scripts/tasks-md.mjs:42`.
+- The main session reads the full diff before it is committed.
+
 ## The disclaimer's working notes
 
 The disclaimer at `/disclaimer` (`src/app/(public)/disclaimer/page.tsx`) says what the site's information is and is not. This file is where each claim in it points to its source, so the owner can check the text and a later change knows which sentence it makes wrong. The page itself cites only the two examples, in a Sources list at its end, in Chicago form as the compendium's references are.

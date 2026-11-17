@@ -107,7 +107,7 @@ follows is what exists.
 **The migration adds `slug` nullable and then sets it `NOT NULL` with no
 backfill between** (`0025_ingredient-slugs.sql`, and its sidecar for the one
 destructive statement). A backfill in SQL would be a second slug rule, and one
-in TypeScript cannot run between two statements of one `drizzle-kit migrate`.
+in TypeScript cannot run between two statements of one `db:migrate`.
 The task settles it: while no deployed code writes an ingredient, the table is
 empty wherever the migration meets real data, and the seed is the backfill. A
 local database the `standard` or `demo` scenario has already filled refuses

@@ -227,3 +227,56 @@ export const MODAL_SCANS = [
 
 export type ScannedRoute = (typeof ROUTE_SCANS)[number]['route'];
 export type ScannedModal = (typeof MODAL_SCANS)[number]['id'];
+
+/** One test of the sweep: a run of scans signed in as one person. */
+export interface SweepTest {
+  title: string;
+  kind: 'pages' | 'modals';
+  as: Persona;
+  scans: readonly string[];
+}
+
+// Scans per test: small enough that `fullyParallel` can spread a person's scans over several workers and shards.
+const SWEEP_CHUNK = 6;
+
+function chunks<T>(items: readonly T[]): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += SWEEP_CHUNK) out.push(items.slice(i, i + SWEEP_CHUNK));
+  return out;
+}
+
+function planFor(
+  kind: 'pages' | 'modals',
+  persona: Persona,
+  scans: readonly string[],
+): SweepTest[] {
+  const parts = chunks(scans);
+  return parts.map((part, i) => ({
+    title: `${kind} as ${persona}, part ${i + 1} of ${parts.length}`,
+    kind,
+    as: persona,
+    scans: part,
+  }));
+}
+
+/** The sweep's tests: one per run of pages or modals per person. Two-factor signs in an account of its own, so it sorts last. */
+export const SWEEP_TESTS: readonly SweepTest[] = [
+  ...[...new Set(ROUTE_SCANS.flatMap(({ as }) => as as readonly Persona[]))].flatMap((persona) =>
+    planFor(
+      'pages',
+      persona,
+      ROUTE_SCANS.filter(({ as }) => (as as readonly Persona[]).includes(persona)).map(
+        ({ route }) => route,
+      ),
+    ),
+  ),
+  ...[...new Set(MODAL_SCANS.map(({ as }) => as as Persona))].flatMap((persona) =>
+    planFor(
+      'modals',
+      persona,
+      MODAL_SCANS.filter(({ as }) => as === persona)
+        .map(({ id }) => id)
+        .sort((a, b) => Number(a === 'two-factor-warning') - Number(b === 'two-factor-warning')),
+    ),
+  ),
+];

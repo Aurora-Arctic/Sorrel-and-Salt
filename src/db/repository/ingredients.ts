@@ -68,6 +68,7 @@ import type {
   IngredientFilter,
   IngredientIdentity,
   IngredientRow,
+  ColumnOf,
   ReadRow,
   IngredientScoped,
   JoinedRow,
@@ -289,12 +290,25 @@ export function findSimilarIngredients(
 export function findCompendiumPage(
   filter: IngredientFilter,
   page: PageRequest,
-): Promise<PageEntry<IngredientRow, CompendiumListEdge>[]> {
+): Promise<PageEntry<IngredientRow, CompendiumListEdge>[]>;
+/** With `columns`, each entry holds those columns alone: a list whose cards show a few of a wide row’s fields reads only them. */
+export function findCompendiumPage<Column extends ColumnOf<typeof ingredients>>(
+  filter: IngredientFilter,
+  page: PageRequest,
+  columns: readonly Column[],
+): Promise<PageEntry<Pick<IngredientRow, Column>, CompendiumListEdge>[]>;
+export function findCompendiumPage(
+  filter: IngredientFilter,
+  page: PageRequest,
+  columns?: readonly ColumnOf<typeof ingredients>[],
+): Promise<PageEntry<Partial<IngredientRow>, CompendiumListEdge>[]> {
   const list = compendiumList(filter);
   const order: ListOrder<CompendiumListEdge> = filter.withSourcingScore
     ? { ...list.order, carry: { ...list.order.carry!, sourcingScore: sourcingScoreExpression } }
     : list.order;
-  return findPageInTiers([], ingredients, order, page, list.arms);
+  return columns
+    ? findPageInTiers([], ingredients, { ...order, columns }, page, list.arms)
+    : findPageInTiers([], ingredients, order, page, list.arms);
 }
 
 /**

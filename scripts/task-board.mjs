@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // The board's calls in one file, each a `gh` argument list, never a shell string; it never adds an item
 // (claude-docs/task-tracking.md, "Status").
-// Usage: node scripts/task-board.mjs <find|status|estimate|comment|sync|list|reorder|move|milestone|retire|place> ...
+// Usage: node scripts/task-board.mjs <find|status|estimate|comment|link-pr|sync|list|reorder|move|milestone|retire|place> ...
 
 import { execFileSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
@@ -884,6 +884,53 @@ export function postComment(issue, text) {
   });
 }
 
+/**
+ * Lists a PR under the issue's Development section. A closing keyword links
+ * only a PR into the default branch, and feature PRs target `staging`, so the
+ * link is made as GitHub's sidebar makes it; the read afterwards proves it shows.
+ */
+export function linkPullRequest(issue, prNumber) {
+  const [owner, name] = REPO.split('/');
+  const { data } = ghJson(
+    graphqlArgs(
+      `query($owner: String!, $name: String!, $issue: Int!, $pr: Int!) {
+        repository(owner: $owner, name: $name) {
+          issue(number: $issue) { id }
+          pullRequest(number: $pr) { id }
+        }
+      }`,
+      { owner, name, issue: issue.number, pr: prNumber },
+    ),
+  );
+  const { issue: issueNode, pullRequest } = data.repository;
+  if (!issueNode || !pullRequest) {
+    throw new BoardError(`#${issue.number} or PR #${prNumber} was not found in ${REPO}.`);
+  }
+  gh(
+    graphqlArgs(
+      `mutation($issueId: ID!, $pullRequestId: ID!) {
+        addCloseIssueReferences(input: { issueId: $issueId, pullRequestIds: [$pullRequestId] }) { clientMutationId }
+      }`,
+      { issueId: issueNode.id, pullRequestId: pullRequest.id },
+    ),
+  );
+  const shown = ghJson(
+    graphqlArgs(
+      `query($owner: String!, $name: String!, $issue: Int!) {
+        repository(owner: $owner, name: $name) {
+          issue(number: $issue) { closedByPullRequestsReferences(first: 50, includeClosedPrs: true) { nodes { number } } }
+        }
+      }`,
+      { owner, name, issue: issue.number },
+    ),
+  ).data.repository.issue.closedByPullRequestsReferences.nodes;
+  if (!shown.some((node) => node.number === prNumber)) {
+    throw new BoardError(
+      `Linked PR #${prNumber} to #${issue.number}, but the issue's linked pull requests do not show it.`,
+    );
+  }
+}
+
 // Sync — an issue's title and body are its entry's heading and text, and its Estimate the heading's hours (claude-docs/task-tracking.md, "Sync").
 
 const BLOB = `https://github.com/${REPO}/blob/staging/`;
@@ -944,6 +991,7 @@ const USAGE = `usage: node scripts/task-board.mjs <command> …
   status <ID> "<Status>"     move the Project Status forward (${STATUSES.join(' → ')})
   estimate <ID> <hours>      set the Project Estimate
   comment <ID> "<text>"      comment on the issue; refused if the text looks like a value
+  link-pr <ID> <PR number>   list the PR under the issue's Development section, then check it shows
   sync <ID> [<ID> …]         bring each issue's title, body and Estimate to its entry
   list                       every tracked issue, as a JSON array
   renumber <OLD> <NEW> [<OLD> <NEW> …]
@@ -983,6 +1031,14 @@ const COMMANDS = {
     const issue = findIssue(id);
     postComment(issue, text);
     console.log(`${id.toUpperCase()}: commented on #${issue.number}`);
+  },
+  'link-pr'([id, pr, ...rest]) {
+    if (!id || !/^\d+$/.test(pr ?? '') || rest.length) throw new BoardError(USAGE);
+    const issue = findIssue(id);
+    linkPullRequest(issue, Number(pr));
+    console.log(
+      `${id.toUpperCase()}: PR #${pr} shows under #${issue.number}'s linked pull requests`,
+    );
   },
   sync(ids) {
     if (ids.length === 0) throw new BoardError(USAGE);

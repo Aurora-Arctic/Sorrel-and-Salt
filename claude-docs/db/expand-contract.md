@@ -229,24 +229,23 @@ same two secrets, so they connect directly too; the running app reads `DATABASE_
 from Vercel's own environment and keeps the pooler. A pooled URL fails at connect, on
 every attempt, rather than migrating without the timeout.
 
-**A failed attempt leaves nothing behind.** drizzle-kit, with the `postgres` driver
-this repo installs, applies through drizzle-orm's migrator
-(`drizzle-orm/pg-core/dialect.js`, `migrate`), which runs every pending migration and
+**A failed attempt leaves nothing behind.** `npm run db:migrate` applies through drizzle-orm's migrator
+(`drizzle-orm/postgres-js/migrator`, from `scripts/migrate.ts`), which runs every pending migration and
 its row in `drizzle.__drizzle_migrations` inside one transaction. A lock timeout
 aborts that transaction, so the whole batch rolls back and the next attempt starts
-from the same place. `tests/db/migration-lock-timeout.test.ts` asserts this: a probe
+from the same place. `tests/db/migration-lock-timeout.test.ts` asserts this by running `npm run db:migrate`: a probe
 migration that alters `users`, run while another connection holds a read transaction
-open on it, fails within the timeout, leaves no column and no migration row, and
+open on it, fails within the timeout naming the lock and its file, leaves no column and no migration row, and
 applies on a rerun once the reader has finished. A statement Postgres refuses inside a
 transaction, such as `CREATE INDEX CONCURRENTLY`, cannot ride this migrator; none
 exists today, and the first one needs its own plan.
 
-**The retry.** `drizzle-kit migrate` has no retry of its own, so the "Apply pending
+**The retry.** `npm run db:migrate` has no retry of its own, so the "Apply pending
 migrations" step in `.github/workflows/migrate.yml` makes three attempts, waiting 30
 seconds after the first failure and 60 after the second. The third failure fails the
 job, and `deploy.yml`'s `deploy` job, which `needs: migrate`, does not run: the result
-is a failed deploy to rerun, not a hang. drizzle-kit prints no cause for a failed run,
-so a migration that fails for any other reason is also tried three times, which costs
+is a failed deploy to rerun, not a hang. A failed run prints the failing file and Postgres's error, so the log says why, but a
+migration that fails for a reason a retry cannot fix is also tried three times, which costs
 about a minute and a half. `tests/github/workflows/migrate.test.ts` runs the step's own
 script with a stub `npm` and asserts the attempts and the waits.
 

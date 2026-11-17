@@ -1959,3 +1959,33 @@ describe('write.carryFormRename', () => {
     );
   });
 });
+
+describe('findCompendiumPage columns', () => {
+  it('reads the named columns alone, in the same order and with the same cursors as the whole row', async () => {
+    await add('Fixture Nettle', { description: 'A long text a card never shows.' });
+    await add('Fixture Mugwort');
+    const request = { limit: 10, inverted: false };
+
+    const whole = await findCompendiumPage({}, request);
+    const narrow = await findCompendiumPage({}, request, ['id', 'name']);
+
+    // The precondition: the whole row holds a column the narrow one leaves out.
+    expect(whole[0].node).toHaveProperty('description');
+    expect(narrow).toHaveLength(2);
+    expect(narrow.map(({ node }) => Object.keys(node).sort())).toEqual([
+      ['id', 'name'],
+      ['id', 'name'],
+    ]);
+    expect(narrow.map(({ node, cursor }) => [node.id, node.name, cursor])).toEqual(
+      whole.map(({ node, cursor }) => [node.id, node.name, cursor]),
+    );
+  });
+
+  it('refuses a column no finder reads, so the reviewer name cannot be projected', async () => {
+    await add('Fixture Nettle');
+
+    await expect(
+      findCompendiumPage({}, { limit: 10, inverted: false }, ['curatorReviewedBy' as 'id']),
+    ).rejects.toThrow(/No readable column/);
+  });
+});

@@ -3889,10 +3889,10 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Why it matters:** Knip reports this config file as unused, so a developer who trusts the report may delete it and break the migration lock-timeout test, and the real unused-file list stays noisy enough that genuine dead files go unnoticed.
 - **Where:**
   - `tests/support/db/lock-probe.drizzle.config.ts` (knip "Unused files").
-- **Verdict:** false positive. `tests/db/migration-lock-timeout.test.ts:13` names it by path (`join(process.cwd(), 'tests/support/db/lock-probe.drizzle.config.ts')`), for drizzle-kit to load. Same pattern as `tests/support/db-runner.ts`, already an `entry`.
+- **Verdict:** moot. `tests/support/db/lock-probe.drizzle.config.ts` is deleted: `tests/db/migration-lock-timeout.test.ts` runs `npm run db:migrate` against a migrations folder instead of loading a drizzle-kit config by path.
 - **Shared piece:** none.
 - **Guard:** knip itself, once green.
-- **Fix:** add `"tests/support/db/lock-probe.drizzle.config.ts"` to `entry` in `knip.jsonc` with a one-line comment ("Loaded by path by drizzle-kit in migration-lock-timeout.test.ts"). Do not delete the file.
+- **Fix:** none; the file no longer exists.
 - **Tests covering the callers:** `tests/db/migration-lock-timeout.test.ts`.
 
 - **Estimate:** 0.25 hours
@@ -5607,7 +5607,6 @@ These ideas were looked at and not recorded as findings, because the code shows 
 - Repeated `vi.mock` of `@/lib/mail`, `@/lib/jobs`, `@/lib/request-session`, `@/lib/auth-client` and `@/db/repository`: each file stubs a different set of exports and asserts on them; a shared factory would add options as long as the mocks it replaces. Not surveyed in depth.
 - Unused-export survey of `tests/support/` and `tests/e2e/` was not done; the knip setup (knip) covers it repo-wide.
 
-- Deleting `tests/support/db/lock-probe.drizzle.config.ts`: used by path (D-157).
 - Treating the missing `server-only` dependency as a finding: it is by design (D-195).
 - Reporting the 51 "unused dependencies" from `knip --production`: a false signal from the config, not dead dependencies.
 - Un-exporting the `*Document` codegen consts, email functions and Pothos Refs in bulk: needs per-class checks (D-86).

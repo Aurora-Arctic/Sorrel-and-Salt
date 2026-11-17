@@ -26,7 +26,6 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       await page.getByRole('contentinfo').getByRole('link', { name: 'Support' }).click();
       await expect(page.getByRole('dialog')).toBeVisible();
       await expect(page).toHaveURL(/\/account\?support=/);
-      await assertNoAccessibilityViolations(page);
     });
 
     const dialog = page.getByRole('dialog');
@@ -36,6 +35,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       await dialog.getByRole('button', { name: 'Send Request' }).click();
       await expect(dialog.getByLabel('Subject')).toBeFocused();
       await expect(dialog.getByText('Write a subject')).toBeVisible();
+      // Sweep gap: the Support dialog with the Subject field's error and focus on it.
       await assertNoAccessibilityViolations(page);
       await dialog.getByLabel('Subject').fill('Where is the moon table?');
       await dialog.getByLabel('Message').fill('I cannot find the moon table in my coven.');
@@ -45,6 +45,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
         '/account/support',
       );
       await expect(dialog.getByRole('link', { name: 'Your Support Requests' })).toBeVisible();
+      // Sweep gap: the Support dialog after the request is received, linking to Your Support Requests.
       await assertNoAccessibilityViolations(page);
       await dialog.getByRole('button', { name: 'Done' }).click();
       await expect(dialog).toBeHidden();
@@ -75,6 +76,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       await expect(thread).toContainText('You');
       await expect(thread).toContainText('Staff');
       await expect(request.getByLabel(/^Your Reply/)).toBeEnabled();
+      // Sweep gap: the sender's request dialog with a staff reply in the thread and an enabled reply box; the sweep's request has no reply.
       await assertNoAccessibilityViolations(page);
       await request.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(request).toBeHidden();

@@ -167,6 +167,9 @@ const signInProfile = defineRequestState<SignInProfile | undefined>(() => undefi
 // row. Read by the update hook, which sees only the patch.
 const actingUser = defineRequestState<string | undefined>(() => undefined);
 
+// Set by the update hook when it writes a change link's swap, so the hooks that follow know the swap verified the row.
+const addressSwapped = defineRequestState<boolean>(() => false);
+
 // Refusals are logged by user id, never address: a sign-in page must not
 // reveal that an address is special.
 const UNQUALIFIED = new Set<PrimaryAdminOutcome>([
@@ -534,6 +537,19 @@ async function noticeCompletedChange(userId: string, request: Request | undefine
   await scheduleAccountNotice({ kind: 'change-completed', userId, origin: endpointOrigin() });
 }
 
+async function finishVerifiedAddress(
+  user: { id: string; email: string },
+  request: Request | undefined,
+): Promise<void> {
+  await noticeCompletedChange(user.id, request);
+  // The adapter returns the whole row; the hook's type omits additionalFields.
+  const role = toUserRole(Reflect.get(user, 'role'));
+  await promotePrimaryAdminAtVerification(
+    { userId: user.id, role },
+    { accountEmail: user.email, primaryAdminEmail: primaryAdminEmail() },
+  );
+}
+
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
 /** A failure is logged, as the sign-in stands either way. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Better Auth's logger takes any
@@ -668,13 +684,9 @@ export const auth = betterAuth({
     // a change link, which Better Auth calls it on without the check above.
     afterEmailVerification: async (user, request) => {
       if (!(await hasRequestState()) || (await actingUser.get()) !== user.id) return;
-      await noticeCompletedChange(user.id, request);
-      // The adapter returns the whole row; the hook's type omits additionalFields.
-      const role = toUserRole(Reflect.get(user, 'role'));
-      await promotePrimaryAdminAtVerification(
-        { userId: user.id, role },
-        { accountEmail: user.email, primaryAdminEmail: primaryAdminEmail() },
-      );
+      // A swap on an unverified row reaches here with the row read before it, so the update hook finishes it instead.
+      if (await addressSwapped.get()) return;
+      await finishVerifiedAddress(user, request);
     },
   },
   account: {
@@ -860,6 +872,9 @@ export const auth = betterAuth({
         after: async (user, ctx) => {
           if (!user || !user.emailVerified) return;
           await claimForVerifiedAccount(user, ctx);
+          if ((await hasRequestState()) && (await addressSwapped.get())) {
+            await finishVerifiedAddress(user, ctx?.request);
+          }
         },
         // The same self-stamp as the create hook, outside `withAudit` for the
         // same reason: the verify write is the identity completing. Merged into
@@ -871,6 +886,7 @@ export const auth = betterAuth({
           const data: {
             updatedBy?: string;
             verificationSentAt?: null;
+            emailVerified?: true;
             pendingEmail?: null;
             formerEmail?: string;
           } = {};
@@ -878,7 +894,13 @@ export const auth = betterAuth({
           // The mail was answered: the clock that spaces mails to the row starts over.
           if (patch.emailVerified === true) data.verificationSentAt = null;
           // The change link's swap: the pending address is now the row's, cleared in the same write.
-          if (typeof patch.email === 'string') data.pendingEmail = null;
+          if (typeof patch.email === 'string') {
+            data.pendingEmail = null;
+            // The link was followed from the new address's inbox, so the swap verifies it, as the row it replaces was before.
+            data.emailVerified = true;
+            data.verificationSentAt = null;
+            await addressSwapped.set(true);
+          }
           // And the address being left is held for its notice, which reads it from the row.
           const leaving =
             typeof patch.email === 'string' && actor

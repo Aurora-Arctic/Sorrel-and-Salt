@@ -26,7 +26,6 @@ test('the views are links that open each view, and every view is accessible', as
   await expect(views).toHaveCount(6);
   await expect(views.first()).toHaveAttribute('aria-current', 'page');
   await expect(views.first()).toContainText('Needs Staff');
-  await assertNoAccessibilityViolations(page);
 
   for (const [at, view] of VIEWS.slice(1).entries()) {
     await views.nth(at + 1).click();
@@ -35,6 +34,7 @@ test('the views are links that open each view, and every view is accessible', as
     );
     await expect(views.nth(at + 1)).toHaveAttribute('aria-current', 'page');
     await expect(views.nth(at + 1)).toContainText(view);
+    // Sweep gap: each saved view of the request list
     await assertNoAccessibilityViolations(page);
   }
   await views.first().click();

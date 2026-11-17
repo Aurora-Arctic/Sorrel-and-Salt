@@ -57,7 +57,7 @@ export const auditProjects = (testIgnore?: RegExp[]) =>
 export default defineConfig({
   ...baseConfig,
   testDir: './tests/e2e',
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   // Under Claude Code the html report alone prints no failure text, so a dot
   // line is added and html stays. CI and the host are unchanged.
   reporter: process.env.CI

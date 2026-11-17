@@ -40,6 +40,7 @@ test('the sender’s request page is accessible in every status and while timed 
     } else {
       await expect(dialog.getByLabel(/^Your Reply/)).toBeEnabled();
     }
+    // Sweep gap: the sender's request dialog in each status, with the reply field present or absent.
     await assertNoAccessibilityViolations(page);
   }
 
@@ -54,5 +55,6 @@ test('the sender’s request page is accessible in every status and while timed 
   const dialog = page.getByRole('dialog', { name: 'A open request' });
   await expect(dialog.getByText(/You cannot reply until/)).toBeVisible();
   await expect(dialog.getByLabel(/^Your Reply/)).toBeDisabled();
+  // Sweep gap: the sender's request dialog while timed out, with the reply field disabled.
   await assertNoAccessibilityViolations(page);
 });

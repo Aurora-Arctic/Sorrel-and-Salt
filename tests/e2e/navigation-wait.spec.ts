@@ -17,6 +17,7 @@ import {
 } from './stories/coven-ingredients';
 import { holdServerAnswers } from './hold-server-answers';
 import { insertWorkspace } from '../support/db/insert-workspace';
+import { requiredDelay } from './waits';
 
 // Every loading wait looks the same (claude-docs/design-decisions/ui.md, "One Loading Standard for the Site"), held open through a coven switch, a section link and a site link. A non-member's 404 is coven.spec.ts's.
 
@@ -123,6 +124,7 @@ test('a coven switch takes the old coven away at once, marks the switcher busy, 
   await expect(statuses(page)).toHaveCount(1);
   // The address moves at the press, so Back during the wait returns to the page left.
   expect(new URL(page.url()).pathname).toBe(`/coven/${willow.slug}/ingredients`);
+  // Sweep gap: the loading skeleton shown while a coven switch is waiting, with the switcher busy.
   await assertNoAccessibilityViolations(page);
 
   await server.release();
@@ -168,6 +170,7 @@ test("a site link takes the shell's page away at once and puts one status in its
   await expect(cardsIn(ingredientList(page))).toHaveCount(0);
   await expect(statuses(page)).toHaveCount(1);
   expect(new URL(page.url()).pathname).toBe('/compendium');
+  // Sweep gap: the loading skeleton shown while a site link is waiting.
   await assertNoAccessibilityViolations(page);
 
   await server.release();
@@ -235,10 +238,14 @@ test("a curator nav link keeps the curator page's wait until the server answers,
 
   await expect(statuses(page)).toHaveCount(1);
   await expect(pills).toHaveCount(0);
-  await page.waitForTimeout(500);
+  await requiredDelay(
+    500,
+    'The skeleton must still stand after a quiet interval, and only elapsed time shows that nothing replaced it.',
+  );
   await expect(statuses(page)).toHaveCount(1);
   await expect(pills).toHaveCount(0);
   expect(new URL(page.url()).pathname).toBe(href);
+  // Sweep gap: the loading skeleton shown while a curator nav link is waiting.
   await assertNoAccessibilityViolations(page);
 
   await server.release();
@@ -388,6 +395,7 @@ test("signed out, the Compendium link takes an entry's page away at once and put
   await expectOneWait(page);
   await expectFrameStanding(page);
   expect(new URL(page.url()).pathname).toBe('/compendium');
+  // Sweep gap: the loading skeleton shown while the signed-out Compendium link is waiting.
   await assertNoAccessibilityViolations(page);
 
   await server.release();

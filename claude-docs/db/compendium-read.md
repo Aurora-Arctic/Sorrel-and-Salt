@@ -15,6 +15,8 @@ database's own collation (`en_US.utf8` in the image). A cursor lives only as lon
 the page it came from, so changing a sort is harmless
 (["Keyset pages"](keyset-pages.md)).
 
+`findCompendiumPage(filter, page, columns)` with a list of column names reads only those columns of each row, in the same order and with the same cursors (`pickColumns` in `unread-columns.ts`; a column the read hides, such as `curatorReviewedBy`, throws `No readable column`). The anonymous list and `findCompendiumSlugs` use it so a row's unused text never leaves the database host; with no `columns`, the whole row is read as before.
+
 - **`query`** is word similarity, case- and accent-folded, against the display name,
   the formal name, a live folk name, and the form or description of a live variant:
   `unaccent_immutable($query) <% unaccent_immutable(column)`, true when the query is

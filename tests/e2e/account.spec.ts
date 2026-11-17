@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 
@@ -11,7 +11,7 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('shows the account’s name, address and one greyed method, jumps to a section, with no accessibility violations', async ({
+test('shows the account’s name, address and one greyed method, jumps to a section, with no sideways scroll', async ({
   page,
 }) => {
   await signInAs(page, 'one-method@account-page.test');
@@ -41,12 +41,6 @@ test('shows the account’s name, address and one greyed method, jumps to a sect
   await expect(page).toHaveURL(/#sign-in-methods$/);
   await expect(main.getByRole('heading', { level: 2, name: 'Sign-In Methods' })).toBeInViewport();
 
-  // Both themes, since a Playwright page is in the light theme unless told otherwise.
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
-    await settleTransitions(page);
-    await assertNoAccessibilityViolations(page);
-  }
   await assertNoSidewaysScroll(page);
 });
 
@@ -63,6 +57,7 @@ test('two linked and a failed link have no accessibility violations', async ({ p
   await expect(
     main.getByRole('listitem').filter({ hasText: 'Microsoft' }).getByRole('alert'),
   ).toBeVisible();
+  // Sweep gap: linked providers beside a failed-link alert
   await assertNoAccessibilityViolations(page);
 });
 

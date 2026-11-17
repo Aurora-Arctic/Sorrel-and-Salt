@@ -45,6 +45,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       await expect(page.getByRole('link', { name: 'Marked For Curators' })).toBeVisible();
       await expect(page.getByRole('link', { name: 'Assigned To The Curator' })).toBeVisible();
       await expect(page.getByText('Kept From Curators')).toHaveCount(0);
+      // Sweep gap: the curator's list of marked and assigned requests
       await assertNoAccessibilityViolations(page);
     });
 
@@ -56,6 +57,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       await expect(dialog.getByRole('button', { name: 'Resolve' })).toHaveCount(0);
       await expect(dialog.getByLabel('Assignee')).toHaveCount(0);
       await expect(dialog.getByRole('switch', { name: 'Shared With Curators' })).toHaveCount(0);
+      // Sweep gap: a request dialog with the staff-only controls hidden from a curator
       await assertNoAccessibilityViolations(page);
       await dialog.getByLabel(/^Your Note/).fill('Seen by a curator.');
       await dialog.getByRole('button', { name: 'Add Note' }).click();
@@ -82,6 +84,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
         .getByRole('button', { name: 'Resolve' })
         .click();
       await expect(dialog.getByRole('button', { name: 'Resolve' })).toBeHidden();
+      // Sweep gap: a resolved request as a curator sees it
       await assertNoAccessibilityViolations(page);
     });
 

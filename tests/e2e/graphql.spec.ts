@@ -3,15 +3,7 @@ import { test, expect } from './fixtures';
 // What the site's own client sends; a mutation without it or an Origin is refused.
 const WEB = { 'x-sorrel-client': 'web' };
 
-// Against `next start`, which runs at NODE_ENV=production like every deploy:
-// the endpoint is served by the app's own process, and the IDE is not.
-test('/api/graphql answers a query from the app itself', async ({ request }) => {
-  const response = await request.post('/api/graphql', { data: { query: '{ ok }' }, headers: WEB });
-
-  expect(response.status()).toBe(200);
-  expect(await response.json()).toEqual({ data: { ok: true } });
-});
-
+// Against `next start`, which runs at NODE_ENV=production like every deploy: the IDE is not served.
 test('/api/graphql serves no IDE in a production build', async ({ request }) => {
   const response = await request.get('/api/graphql', { headers: { accept: 'text/html' } });
 

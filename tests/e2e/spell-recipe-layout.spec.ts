@@ -11,14 +11,15 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
+import { BAND_WIDTHS, PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
 for (const [name, size] of [
-  ['desktop', { width: 1280, height: 900 }],
-  ['phone', { width: 390, height: 844 }],
+  ['desktop', { width: DESKTOP_WIDTH, height: 900 }],
+  ['phone', { width: PHONE_WIDTH, height: 844 }],
 ] as const) {
   test(`Workings sits at the bottom of the main column on a ${name}`, async ({ page }) => {
     const coven = await seedCoven(page, `Fixture Coven ${name}`, `spell-layout-${name}.test`, {
@@ -63,10 +64,10 @@ for (const [name, size] of [
 }
 
 for (const [name, size] of [
-  ['desktop', { width: 1280, height: 900 }],
-  ['phone', { width: 390, height: 844 }],
+  ['desktop', { width: DESKTOP_WIDTH, height: 900 }],
+  ['phone', { width: PHONE_WIDTH, height: 844 }],
 ] as const) {
-  test(`the header's icon buttons ${name === 'phone' ? "sit under the title's last line" : "start level with the title's first line"} on a ${name}, wrapped title`, async ({
+  test(`the header's icon buttons and the title's row ${name === 'phone' ? "sit under the title's last line" : "start level with the title's first line"} on a ${name}, wrapped title`, async ({
     page,
   }) => {
     const coven = await seedCoven(page, `Fixture Coven Head ${name}`, `spell-head-${name}.test`, {
@@ -89,6 +90,19 @@ for (const [name, size] of [
     expect(titleBox.height).toBeGreaterThan(editBox.height * 1.5);
     if (name === 'phone') expect(editBox.top).toBeGreaterThanOrEqual(titleBox.bottom);
     else expect(Math.abs(editBox.top - titleBox.top)).toBeLessThanOrEqual(1);
+
+    // The title also takes the head's row, with the action icons beside it or beneath it.
+    const head = await box(page.locator('.spell-recipe__head'));
+    const actions = await box(page.locator('.spell-recipe__actions'));
+    const edited = await box(page.locator('.spell-recipe__head .last-edit'));
+    expect(edited.bottom).toBeLessThanOrEqual(titleBox.top + 1);
+    expect(titleBox.width).toBeGreaterThan(head.width / 2);
+    expect(titleBox.left).toBeLessThanOrEqual(head.left + 1);
+    if (name === 'phone') expect(actions.top).toBeGreaterThanOrEqual(titleBox.bottom);
+    else {
+      expect(actions.left).toBeGreaterThanOrEqual(titleBox.right - 1);
+      expect(actions.top).toBeLessThan(titleBox.top + 60);
+    }
   });
 }
 
@@ -101,7 +115,7 @@ test('the moon phase sits on one line in the facts strip on a desktop', async ({
     return id;
   });
   await signInAgainAs(page, A);
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
   // The text alone, not the drawing beside it: one rect top per line it sets.
   const lines = await page.locator('.spell-recipe__facts dd').evaluateAll((cells) =>
@@ -156,7 +170,7 @@ test('the badges of a draft and a complete working sit the same distance after t
     return id;
   });
   await signInAgainAs(page, A);
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
   const rows = page.getByRole('list', { name: 'Workings' }).getByRole('listitem');
   await expect(rows).toHaveCount(2);
@@ -178,8 +192,8 @@ test('the badges of a draft and a complete working sit the same distance after t
 });
 
 for (const [name, size] of [
-  ['desktop', { width: 1280, height: 900 }],
-  ['phone', { width: 390, height: 844 }],
+  ['desktop', { width: DESKTOP_WIDTH, height: 900 }],
+  ['phone', { width: PHONE_WIDTH, height: 844 }],
 ] as const) {
   test(`the jump menu stands beside the page and jumps to a section on a ${name}`, async ({
     page,
@@ -223,6 +237,11 @@ for (const [name, size] of [
         .getByRole('list', { name: 'Steps' })
         .evaluate((el) => el.getBoundingClientRect().toJSON());
       expect(navBox.right).toBeLessThanOrEqual(stepsBox.left + 1);
+      // The menu stands as far from the page as the ingredient entry page's does (a `space(6)`, 32px).
+      const headLeft = await page
+        .locator('.spell-recipe__head')
+        .evaluate((el) => el.getBoundingClientRect().left);
+      expect(headLeft - navBox.right).toBeGreaterThanOrEqual(32);
     }
     await nav.getByRole('link', { name: 'Workings' }).click();
     await expect(page).toHaveURL(/#spell-workings$/);
@@ -230,52 +249,6 @@ for (const [name, size] of [
 
     await page.emulateMedia({ media: 'print' });
     await expect(nav).toBeHidden();
-  });
-}
-
-for (const [name, size] of [
-  ['desktop', { width: 1280, height: 900 }],
-  ['tablet', { width: 800, height: 900 }],
-  ['phone', { width: 390, height: 844 }],
-] as const) {
-  test(`the title takes the head's row with its action icons ${name === 'phone' ? 'beneath' : 'beside'} it on a ${name}`, async ({
-    page,
-  }) => {
-    const coven = await seedCoven(page, `Fixture Head ${name}`, `spell-title-${name}.test`, {
-      A: 'owner',
-    });
-    const { A } = coven.users;
-    const spellId = await withSql(async (sql) => {
-      const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
-      const id = await insertSpell(
-        sql,
-        coven.id,
-        'Fixture Layout With A Fairly Long Title',
-        'workspace',
-        A,
-        'complete',
-      );
-      await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
-      return id;
-    });
-    await signInAgainAs(page, A);
-    await page.setViewportSize(size);
-    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-
-    const box = (locator: ReturnType<typeof page.locator>) =>
-      locator.evaluate((el) => el.getBoundingClientRect().toJSON());
-    const head = await box(page.locator('.spell-recipe__head'));
-    const title = await box(page.getByRole('heading', { level: 1 }));
-    const actions = await box(page.locator('.spell-recipe__actions'));
-    const edited = await box(page.locator('.spell-recipe__head .last-edit'));
-    expect(edited.bottom).toBeLessThanOrEqual(title.top + 1);
-    expect(title.width).toBeGreaterThan(head.width / 2);
-    expect(title.left).toBeLessThanOrEqual(head.left + 1);
-    if (name === 'phone') expect(actions.top).toBeGreaterThanOrEqual(title.bottom);
-    else {
-      expect(actions.left).toBeGreaterThanOrEqual(title.right - 1);
-      expect(actions.top).toBeLessThan(title.top + 60);
-    }
   });
 }
 
@@ -297,9 +270,9 @@ test('the Workings heading has a Record a Working button that opens the dialog, 
 });
 
 for (const [name, size] of [
-  ['desktop', { width: 1280, height: 900 }],
-  ['tablet', { width: 800, height: 900 }],
-  ['phone', { width: 390, height: 844 }],
+  ['desktop', { width: DESKTOP_WIDTH, height: 900 }],
+  ['tablet', { width: BAND_WIDTHS.tablet, height: 900 }],
+  ['phone', { width: PHONE_WIDTH, height: 844 }],
 ] as const) {
   test(`the Workings heading's button ends at the section's right edge on a ${name}`, async ({
     page,
@@ -329,8 +302,8 @@ for (const [name, size] of [
   });
 }
 
-// The menu stands as far from the page as the ingredient entry page's does (a `space(6)`, 32px).
-for (const width of [1280, 800]) {
+// The menu stands as far from the page as the ingredient entry page's does (a `space(6)`, 32px); the desktop width is asserted by the jump menu test above.
+for (const width of [BAND_WIDTHS.tablet]) {
   test(`the jump menu stands at least 32px clear of the page at ${width}px`, async ({ page }) => {
     const coven = await seedCoven(page, `Fixture Gap ${width}`, `spell-gap-${width}.test`, {
       A: 'owner',
@@ -356,8 +329,8 @@ for (const width of [1280, 800]) {
 }
 
 for (const [name, size] of [
-  ['desktop', { width: 1280, height: 900 }],
-  ['phone', { width: 390, height: 844 }],
+  ['desktop', { width: DESKTOP_WIDTH, height: 900 }],
+  ['phone', { width: PHONE_WIDTH, height: 844 }],
 ] as const) {
   test(`the date calendar floats over the Record a Working dialog's fields and the date box keeps its width on a ${name}`, async ({
     page,
@@ -432,7 +405,7 @@ test("a short jar's deduction line keeps each part whole at 375px", async ({ pag
     return id;
   });
   await signInAgainAs(page, A);
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
   await page
     .getByRole('region', { name: 'Workings' })
@@ -468,7 +441,7 @@ test('on a phone the jump menu stands under the intent and over the facts', asyn
     return id;
   });
   await signInAgainAs(page, A);
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
   const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
@@ -498,7 +471,7 @@ test('on a phone the keyboard reaches the jump menu after the intent and categor
     return id;
   });
   await signInAgainAs(page, A);
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
   const nav = page.getByRole('navigation', { name: 'On This Page' });
@@ -549,7 +522,7 @@ test('on a phone the keyboard reaches The Cupboard after the recipe and before W
     return id;
   });
   await signInAgainAs(page, A);
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
   const side = page.getByRole('complementary', { name: 'The Cupboard' });
@@ -595,7 +568,7 @@ for (const visibility of ['private', 'workspace'] as const) {
       insertSpell(sql, coven.id, title, visibility, A, 'complete'),
     );
     await signInAgainAs(page, A);
-    await page.setViewportSize({ width: 375, height: 812 });
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
     const heading = page.getByRole('heading', { level: 1, name: title });

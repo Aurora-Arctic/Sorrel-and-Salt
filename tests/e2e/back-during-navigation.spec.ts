@@ -1,31 +1,21 @@
+import type { Route } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
+import { slotUrl } from './slots';
+import { hydrated, requiredDelay } from './waits';
 import { compendiumList, rowOf, seedCoven, withSql } from './stories/coven-ingredients';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 import { ingredientSlug } from '@/lib/slugify';
 
-test.beforeAll(async () => {
-  await recreateE2eDatabase();
-});
-
-test.use({ reducedMotion: 'reduce' });
-
-// The second test reads the entry the first one seeds.
-test.describe.configure({ mode: 'serial' });
-
 const NAME = 'Fixture Backwort';
 const FORMAL = 'Fixtura retrorsa';
 
-test('Back pressed while a compendium entry is still loading returns to the compendium', async ({
-  page,
-  browser,
-  baseURL,
-}) => {
-  const slug = ingredientSlug(NAME, FORMAL);
-  const coven = await seedCoven(page, 'Fixture Coven Back', 'back-nav.test', { A: 'owner' });
-  const admin = await browser.newPage({ baseURL });
+// Every test reads the compendium entry seeded here.
+test.beforeAll(async ({ browser, slot }) => {
+  await recreateE2eDatabase();
+  const admin = await browser.newPage({ baseURL: slotUrl(slot) });
   try {
     const { userId } = await signInAs(admin, 'admin@back-nav.test', ['discord'], 'admin');
     await withSql((sql) =>
@@ -34,6 +24,19 @@ test('Back pressed while a compendium entry is still loading returns to the comp
   } finally {
     await admin.close();
   }
+});
+
+test.use({ reducedMotion: 'reduce' });
+
+/** Resolves once every request the route held has been answered or has failed. */
+const answered = (held: readonly { response(): Promise<unknown> }[]) =>
+  Promise.all(held.map((request) => request.response().catch(() => null)));
+
+test('Back pressed while a compendium entry is still loading returns to the compendium', async ({
+  page,
+}) => {
+  const slug = ingredientSlug(NAME, FORMAL);
+  const coven = await seedCoven(page, 'Fixture Coven Back', 'back-nav.test', { A: 'owner' });
   await signInAgainAs(page, coven.users.A);
 
   await page.goto('/coven');
@@ -44,8 +47,10 @@ test('Back pressed while a compendium entry is still loading returns to the comp
   let release: () => void = () => {};
   const held = new Promise<void>((resolve) => (release = resolve));
   let requested = false;
+  const heldRequests: ReturnType<Route['request']>[] = [];
   await page.route(`**/compendium/ingredients/${slug}*`, async (route) => {
     requested = true;
+    heldRequests.push(route.request());
     await held;
     await route.continue().catch(() => {});
   });
@@ -53,10 +58,10 @@ test('Back pressed while a compendium entry is still loading returns to the comp
   await rowOf(compendiumList(page), NAME).getByRole('link', { name: NAME, exact: true }).click();
   await expect.poll(() => requested).toBe(true);
   await page.goBack();
-  await page.waitForTimeout(500);
+  await expect(page).toHaveURL(/\/compendium\?query=/);
   const afterBack = new URL(page.url()).pathname;
   release();
-  await page.waitForTimeout(500);
+  await answered(heldRequests);
   expect(afterBack).toBe('/compendium');
   // The page that was left stays, with no skeleton over it, once the held request is let go.
   await expect(rowOf(compendiumList(page), NAME)).toBeVisible();
@@ -106,29 +111,39 @@ async function openListAndPressCard(page: import('@playwright/test').Page) {
   await signInAgainAs(page, coven.users.A);
   await page.goto(`/compendium?query=${encodeURIComponent(NAME)}`);
   await expect(rowOf(compendiumList(page), NAME)).toBeVisible();
-  await page.waitForTimeout(1500);
+  await hydrated(page, `a[href*="/compendium/ingredients/${slug}"]`);
   let release: () => void = () => {};
   const held = new Promise<void>((resolve) => (release = resolve));
   let requested = false;
+  const heldRequests: ReturnType<Route['request']>[] = [];
   await page.route(`**/compendium/ingredients/${slug}*`, async (route) => {
     if (route.request().headers()['next-router-prefetch']) return route.continue();
     requested = true;
+    heldRequests.push(route.request());
     await held;
     await route.continue().catch(() => {});
   });
   await rowOf(compendiumList(page), NAME).getByRole('link', { name: NAME, exact: true }).click();
   await expect.poll(() => requested).toBe(true);
-  return { slug, release };
+  return {
+    slug,
+    letGo: async () => {
+      release();
+      await answered(heldRequests);
+    },
+  };
 }
 
 test('a request let go after Back does not carry the page to the entry', async ({ page }) => {
-  const { release } = await openListAndPressCard(page);
+  const { letGo } = await openListAndPressCard(page);
   await page.goBack();
   await expect(page).toHaveURL(/\/compendium\?query=/);
   const length = await page.evaluate(() => window.history.length);
-  release();
-  await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(1000);
+  await letGo();
+  await requiredDelay(
+    1_000,
+    'A late navigation to the entry would show only after the answer is handled, and the test asserts that none comes.',
+  );
   expect(new URL(page.url()).pathname).toBe('/compendium');
   await expect(rowOf(compendiumList(page), NAME)).toBeVisible();
   await expect(page.getByRole('heading', { level: 1, name: NAME })).toHaveCount(0);
@@ -138,11 +153,10 @@ test('a request let go after Back does not carry the page to the entry', async (
 test('Forward after Back during the wait shows the entry itself at its address', async ({
   page,
 }) => {
-  const { slug, release } = await openListAndPressCard(page);
+  const { slug, letGo } = await openListAndPressCard(page);
   await page.goBack();
   await expect(page).toHaveURL(/\/compendium\?query=/);
-  release();
-  await page.waitForLoadState('networkidle');
+  await letGo();
   await page.goForward();
   await expect(page).toHaveURL(new RegExp(`/compendium/ingredients/${slug}$`));
   await expect(page.getByRole('heading', { name: NAME }).first()).toBeVisible();

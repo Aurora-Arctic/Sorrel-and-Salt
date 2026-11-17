@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
 import { USER_ID } from '../support/constants';
-import { getSession, sessionIsVerified } from '../support/request-session';
+import { getSession, hasSessionCookie, sessionIsVerified } from '../support/request-session';
 
 // /sign-in sends an already signed-in visitor on, by `?next=` or the role's landing, the way a sign-in itself does.
 // The session and landing are mocked; `redirect` throws as Next's does, so the page stops at it.
@@ -22,7 +22,7 @@ vi.mock('@/lib/configured-providers', () => ({ providersToPass: () => [] }));
 const SignInPanel = vi.fn<(props: { ledes?: unknown; mode?: unknown }) => null>(() => null);
 vi.mock('@/components/SignInPanel', () => ({ default: SignInPanel }));
 
-const { default: SignInPage, generateMetadata } = await import('@/app/sign-in/page');
+const { default: SignInPage, metadata } = await import('@/app/sign-in/page');
 const { ADDRESS_LEDES } = await import('@/components/InvitationAcceptance/ledes');
 const { newCardToken, newToken, looksLikeCardToken } = await import('@/lib/invitation-token');
 
@@ -40,6 +40,8 @@ const visit = async (next?: string | string[]) => {
 
 beforeEach(() => {
   getSession.mockReset();
+  hasSessionCookie.mockReset();
+  hasSessionCookie.mockResolvedValue(true);
   sessionIsVerified.mockReset();
   sessionIsVerified.mockResolvedValue(true);
   signedInLanding.mockReset();
@@ -77,6 +79,21 @@ describe('the sign-in page for a signed-in visitor', () => {
 });
 
 describe('the sign-in page for a signed-out visitor', () => {
+  // A crawler sends no cookie, and every session lookup costs a query, so the page asks for none.
+  it('looks no session up when the request carries no session cookie', async () => {
+    hasSessionCookie.mockResolvedValue(false);
+    getSession.mockResolvedValue(SIGNED_IN);
+    expect(await visit('/coven/fixture-coven')).toBeUndefined();
+    expect(getSession).not.toHaveBeenCalled();
+  });
+
+  // The precondition for the test above: a request that does carry the cookie is looked up, so the lookup could have run.
+  it('looks the session up when the request carries a session cookie', async () => {
+    getSession.mockResolvedValue(null);
+    expect(await visit('/coven/fixture-coven')).toBeUndefined();
+    expect(getSession).toHaveBeenCalledTimes(1);
+  });
+
   it('draws the page and redirects nowhere', async () => {
     getSession.mockResolvedValue(null);
     expect(await visit('/coven/fixture-coven')).toBeUndefined();
@@ -145,23 +162,10 @@ describe('the sign-in page mode', () => {
   });
 });
 
-// /sign-in is crawlable and in the sitemap; its ?next= and ?error= addresses are the same form.
+// /sign-in is rendered per request, so no address of it is offered to a crawler: it stays out of search results, canonical to the bare address.
 describe('the sign-in page metadata', () => {
-  const metadata = (params: { next?: string; error?: string }) =>
-    generateMetadata({ searchParams: Promise.resolve(params) });
-
-  it('names /sign-in as canonical and stays indexable at the bare address', async () => {
-    const result = await metadata({});
-    expect(result.alternates?.canonical).toBe('https://sorrelandsalt.com/sign-in');
-    expect(result.robots).toBeUndefined();
+  it('keeps the page out of search results, its links followed, canonical to /sign-in', () => {
+    expect(metadata.robots).toEqual({ index: false, follow: true });
+    expect(metadata.alternates?.canonical).toBe('https://sorrelandsalt.com/sign-in');
   });
-
-  it.each([{ next: '/coven/fixture-coven' }, { error: 'signup_disabled' }])(
-    'keeps %o out of search results, its links followed, canonical to /sign-in',
-    async (params) => {
-      const result = await metadata(params);
-      expect(result.robots).toEqual({ index: false, follow: true });
-      expect(result.alternates?.canonical).toBe('https://sorrelandsalt.com/sign-in');
-    },
-  );
 });

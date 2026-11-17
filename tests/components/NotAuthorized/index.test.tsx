@@ -18,4 +18,10 @@ describe('NotAuthorized', () => {
     expect(links).toHaveLength(1);
     expect(links[0]).toHaveAttribute('href', '/');
   });
+
+  it('titles the tab by its own heading', () => {
+    render(<NotAuthorized />);
+
+    expect(document.title).toBe(screen.getByRole('heading', { level: 1 }).textContent);
+  });
 });

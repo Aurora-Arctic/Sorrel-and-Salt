@@ -1,5 +1,4 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
@@ -21,7 +20,6 @@ test('an account that has not agreed is sent to the acceptance page, and returns
     'href',
     '/terms',
   );
-  await assertNoAccessibilityViolations(page);
 
   await page.getByRole('button', { name: 'Agree & Continue' }).click();
   await expect(page).toHaveURL(/\/account(\/|$)(?!terms)/);

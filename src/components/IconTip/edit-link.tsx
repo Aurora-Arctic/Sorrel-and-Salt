@@ -18,18 +18,20 @@ const IconLink = ({
   icon,
   place,
   className = 'icon-tip__edit',
+  rel,
 }: EditLinkProps & {
   verb: string;
   icon: ReactElement;
   place?: string;
   className?: string;
+  rel?: string;
 }): ReactElement => {
   const onClick = useOpenModalClick(href, heading, place);
   // A page of its own scrolls to its top, as any page does; a modal leaves the list where it is.
   const Link = heading ? ModalLink : PendingLink;
   return (
     <IconTip tip={verb}>
-      <Link ref={ref} className={className} href={href} onClick={onClick} {...preload}>
+      <Link ref={ref} className={className} href={href} rel={rel} onClick={onClick} {...preload}>
         {icon}
         <span className="visually-hidden">{name ? `${verb} ${name}` : verb}</span>
       </Link>
@@ -60,8 +62,15 @@ export const AnnotateLink = ({
   <IconLink {...props} className={className} verb="Annotate" icon={<AnnotateIcon />} />
 );
 
+/** `nofollow`: its address is the list with a dialog open, a distinct URL per entry that a crawler would read cold, and the entry page has its own followable link. */
 export const QuickLookLink = (props: EditLinkProps & { place?: string }): ReactElement => (
-  <IconLink {...props} verb="Quick Look" icon={<MysticEyeIcon />} className="icon-tip__look" />
+  <IconLink
+    {...props}
+    verb="Quick Look"
+    icon={<MysticEyeIcon />}
+    className="icon-tip__look"
+    rel="nofollow"
+  />
 );
 
 /** A reader page of the row being edited, named and tipped View alone: the page is the one the editor is about. */

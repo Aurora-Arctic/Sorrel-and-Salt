@@ -1,42 +1,83 @@
+import { randomBytes, randomUUID } from 'node:crypto';
+import type postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { mintedLinks } from './cards';
-import { recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
+import { PHONE_WIDTH } from './breakpoints';
+
+// A sheet of ten cards minted today (live, or revoked), written straight to the slot database so a test that only reads the tab
+// need not mint through the dialog. Only the hash is stored, so these cards cannot be redeemed.
+async function insertCardBatch(
+  sql: postgres.Sql,
+  author: string,
+  revoked = false,
+): Promise<string> {
+  const batchId = randomUUID();
+  await sql.begin(async (tx) => {
+    await tx`select set_config('app.current_user_id', ${author}, true)`;
+    for (let position = 1; position <= 10; position += 1) {
+      await tx`
+        insert into invitations ${tx({
+          kind: 'card',
+          batch_id: batchId,
+          position,
+          token_hash: randomBytes(32).toString('hex'),
+          expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+          revoked_at: revoked ? new Date() : null,
+          created_by: author,
+          updated_by: author,
+        })}
+      `;
+    }
+  });
+  return batchId;
+}
 
 // Who may mint is tests/modules/identity's. Each test signs in as its own address: a worker keeps one database across the file's tests.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('an admin mints a sheet of cards and the Invitation Cards tab lists the batch without violations', async ({
+test('minting a sheet adds a batch to the Invitation Cards list once Done is pressed', async ({
   page,
 }) => {
-  // Minting a sheet and drawing its cards runs past the default 30 seconds on CI under coverage.
-  test.setTimeout(90_000);
   await signInAs(page, 'cards-admin-mint@admin-cards.test', ['discord'], 'admin');
   await page.goto('/keepers/invitation-cards');
+  const batches = page.getByRole('button', { name: /^Revoke Batch / });
+  const before = await batches.count();
 
   await page.getByRole('link', { name: 'Mint Cards' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
   await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
-  await expect(dialog.getByText('10 cards', { exact: true })).toBeVisible();
   await dialog.getByRole('button', { name: 'Mint Cards' }).click();
   await expect(dialog.getByText(/10 cards minted/)).toBeVisible();
 
+  // Done asks first when the PDF was not downloaded; the revoke test downloads it.
   await dialog.getByRole('button', { name: 'Done' }).click();
-  await expect(dialog.getByText(/You haven't downloaded the PDF/)).toBeVisible();
-  await dialog.getByRole('button', { name: 'Keep Open' }).click();
-  await expect(dialog.getByRole('button', { name: 'Download PDF' })).toBeVisible();
-
-  const download = page.waitForEvent('download');
-  await dialog.getByRole('button', { name: 'Download PDF' }).click();
-  expect((await download).suggestedFilename()).toMatch(/\.pdf$/);
-  await dialog.getByRole('button', { name: 'Done' }).click();
-
+  await dialog.getByRole('button', { name: 'Close Anyway' }).click();
   await expect(dialog).toBeHidden();
-  await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(1);
-  await assertNoAccessibilityViolations(page);
+  await expect(batches).toHaveCount(before + 1);
+});
+
+test('the Invitation Cards tab filters batches by status and Minted day without violations', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'cards-admin-filter@admin-cards.test',
+    ['discord'],
+    'admin',
+  );
+  const [live, revoked] = await withE2eSql(async (sql) => [
+    await insertCardBatch(sql, userId),
+    await insertCardBatch(sql, userId, true),
+  ]);
+  // A batch is named by the first block of its id.
+  const liveName = live.slice(0, 8);
+  const revokedName = revoked.slice(0, 8);
+  await page.goto('/keepers/invitation-cards');
 
   await page.getByRole('button', { name: /^Filters/ }).click();
   const drawer = page.getByRole('dialog', { name: 'Filters' });
@@ -47,20 +88,32 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await drawer.getByRole('button', { name: /^Minted/ }).click();
   const minted = page.getByRole('dialog', { name: 'Choose Minted Days' });
   await expect(minted).toBeVisible();
+  // Sweep gap: the Minted Days calendar open
   await assertNoAccessibilityViolations(page);
   await minted.getByRole('button', { name: 'Today', exact: true }).click();
   await expect(minted).toBeHidden();
+  // Sweep gap: the batch list with a Minted day applied
   await assertNoAccessibilityViolations(page);
   await drawer.getByRole('button', { name: 'Apply Filters' }).click();
   await expect(page).toHaveURL(
     /status=live&mintedFrom=\d{4}-\d{2}-\d{2}&mintedTo=\d{4}-\d{2}-\d{2}/,
   );
   await expect(page.getByRole('button', { name: /^Filters\D*2/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(1);
+  // Other tests in this file leave live batches of their own in the worker's database, so this test's batches are found by name:
+  // the live one is listed with exactly one Revoke Batch button, and the revoked one, which the Live filter drops, is not listed.
+  await expect(page.getByRole('button', { name: `Revoke Batch ${liveName}` })).toHaveCount(1);
+  await expect(page.getByText(revokedName)).toHaveCount(0);
+  // Sweep gap: the batch list filtered by status
   await assertNoAccessibilityViolations(page);
+});
 
+test('the Card Sign-Ups tab is empty until a card is accepted, downloads as CSV and searches', async ({
+  page,
+}) => {
+  await signInAs(page, 'cards-admin-signups@admin-cards.test', ['discord'], 'admin');
   await page.goto('/keepers/card-sign-ups');
   await expect(page.getByText('No one has accepted a card yet.')).toBeVisible();
+  // Sweep gap: the empty Card Sign-Ups tab
   await assertNoAccessibilityViolations(page);
 
   const csv = page.waitForEvent('download');
@@ -71,6 +124,7 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await page.getByRole('searchbox', { name: 'Name, Email or Batch' }).press('Enter');
   await expect(page).toHaveURL(/query=nobody/);
   await expect(page.getByText(/No sign-ups match/)).toBeVisible();
+  // Sweep gap: a search with no matching sign-ups
   await assertNoAccessibilityViolations(page);
 });
 
@@ -78,7 +132,7 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
 test('on a phone, Escape shuts the range calendar and the status list and leaves the Filters sheet open', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 844 });
   await signInAs(page, 'cards-admin-phone@admin-cards.test', ['discord'], 'admin');
   await page.goto('/keepers/invitation-cards');
   await page.getByRole('button', { name: /^Filters/ }).click();
@@ -88,6 +142,7 @@ test('on a phone, Escape shuts the range calendar and the status list and leaves
   await drawer.getByRole('button', { name: /^Expires/ }).click();
   const expires = page.getByRole('dialog', { name: 'Choose Expires Days' });
   await expect(expires.getByRole('grid')).toHaveCount(1);
+  // Sweep gap: the Expires Days calendar open on a phone
   await assertNoAccessibilityViolations(page);
   await page.keyboard.press('Escape');
   await expect(expires).toBeHidden();
@@ -125,6 +180,7 @@ test('an admin types a Minted range into Start and End, and an End before Start 
   await end.press('Tab');
   await expect(end).toHaveAttribute('aria-invalid', 'true');
   await expect(drawer.getByRole('button', { name: /^Minted.*From 10 Jan 2026/ })).toBeVisible();
+  // Sweep gap: an End before Start refused in the range drawer
   await assertNoAccessibilityViolations(page);
 
   await end.fill('2026-01-31');
@@ -196,8 +252,8 @@ test("a beta card's landing page has no violations, and no sideways scroll on a 
   const visitor = await context.newPage();
   await visitor.goto(link!);
   await expect(visitor.getByRole('heading', { name: 'You’re Among the First' })).toBeVisible();
+  // Sweep gap: a beta card's landing page, which a visitor opens signed out
   await assertNoAccessibilityViolations(visitor);
   await assertNoSidewaysScroll(visitor);
-  await assertNoAccessibilityViolations(visitor);
   await context.close();
 });

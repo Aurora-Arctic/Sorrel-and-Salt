@@ -48,3 +48,22 @@ export async function holdServerAnswers(
     },
   };
 }
+
+/**
+ * Holds back every JS chunk until `release()`, so the page shows its server HTML and nothing hydrates. A page
+ * opened under it must not wait for `load`, which waits for the held scripts: use `waitUntil: 'commit'`.
+ * Only scripts are held; the stylesheets share the chunks path and block the first paint.
+ */
+export async function holdPageScripts(page: Page) {
+  let release: () => void = () => undefined;
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let held = 0;
+  await page.route('**/_next/static/chunks/**/*.js', async (route) => {
+    held += 1;
+    await released;
+    await route.continue().catch(() => undefined);
+  });
+  return { held: () => held, release };
+}

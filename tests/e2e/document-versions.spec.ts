@@ -1,5 +1,4 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
 
 // A document's earlier published versions each have a page of their own, `/<document>/versions/<number>`; a draft, or a number
@@ -40,7 +39,6 @@ for (const { path, title } of DOCUMENTS) {
       current!,
     );
     await expect(page.getByRole('navigation', { name: 'On This Page' })).toBeVisible();
-    await assertNoAccessibilityViolations(page);
   });
 }
 

@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { test, expect } from '../fixtures';
-import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { VERIFY_LINK, latestMessageTo } from '../mailpit';
 import { PASSWORD, field } from '../session';
+import { hydrated } from '../waits';
 import { BREACHED_PASSWORD } from '../pwned-range.mjs';
 import { withSql } from './coven-ingredients';
 import { DEMO_COVEN_NAME } from '@/db/seed/demo-coven';
@@ -21,7 +21,6 @@ test(
   async ({ page }) => {
     const email = `sign-up-${randomUUID()}@password.test`;
     await page.goto('/sign-in?next=%2Fcoven');
-    await assertNoAccessibilityViolations(page);
 
     await page.getByRole('button', { name: 'Continue with Email' }).click();
     await expect(page).toHaveURL(/method=email/);
@@ -39,7 +38,6 @@ test(
     await field(page.getByRole('main'), 'Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create Account', exact: true }).click();
     await expect(page).toHaveURL('/account/email?next=%2Fcoven');
-    await assertNoAccessibilityViolations(page);
 
     const [made] = await withSql(
       (sql) => sql<{ email_verified: boolean; can_create_workspace: boolean }[]>`
@@ -87,7 +85,7 @@ test(
     await page.goto('/sign-in?method=email');
     await page.getByRole('link', { name: 'Forgot Password?' }).click();
     await expect(page).toHaveURL('/forgot-password');
-    await assertNoAccessibilityViolations(page);
+    await hydrated(page, 'main form input');
 
     await field(page.getByRole('main'), 'Email Address').fill(email);
     await page.getByRole('button', { name: 'Send Reset Link' }).click();
@@ -105,7 +103,7 @@ test(
     expect(landing.searchParams.get('token')).toBeTruthy();
     await page.goto(`${landing.pathname}${landing.search}`);
     await expect(field(page.getByRole('main'), 'New Password')).toBeVisible();
-    await assertNoAccessibilityViolations(page);
+    await hydrated(page, 'main form input');
 
     await field(page.getByRole('main'), 'New Password').fill(NEW_PASSWORD);
     await page.getByRole('button', { name: 'Set New Password' }).click();

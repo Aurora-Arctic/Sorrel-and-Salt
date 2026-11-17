@@ -4,6 +4,7 @@ import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 import { asTouch } from '../support/db/touch-row';
 import { slugify } from '@/lib/slugify';
+import { DESKTOP_WIDTH } from './breakpoints';
 
 // For what the story suite (stories/07-admin.spec.ts, 08-email-and-admin.spec.ts) does not walk. A signed-out redirect is route-protection.spec.ts's.
 test.beforeAll(async () => {
@@ -24,7 +25,7 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
 }) => {
   // A desktop window: a phone folds the later tabs behind More (shell.spec.ts),
   // and this test counts every link.
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 800 });
   await signInAs(page, 'an-admin@admin-guard.test', ['discord'], 'admin');
 
   const curator = await page.goto('/curator');
@@ -35,7 +36,6 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
     await expect(curatorNav.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
   }
   await expect(page.getByRole('navigation', { name: 'Keepers' })).toHaveCount(0);
-  await assertNoAccessibilityViolations(page);
 
   const keepers = await page.goto('/keepers');
   expect(keepers?.status()).toBe(200);
@@ -56,7 +56,6 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
     ).toHaveAttribute('href', href);
   }
   await expect(page.getByRole('navigation', { name: 'Curator' })).toHaveCount(0);
-  await assertNoAccessibilityViolations(page);
 });
 
 test('the old /admin addresses answer 404 to an admin', async ({ page }) => {
@@ -158,6 +157,7 @@ test('an admin lists the users at /keepers/users, filtered, with their sign-in m
     .locator('.user-list__hint:has(.provider-mark--discord)');
   await discord.hover();
   await expect(discord.locator('.user-list__tip')).toBeVisible();
+  // Sweep gap: the user list with a sign-in method's tip open
   await assertNoAccessibilityViolations(page);
 });
 
@@ -198,6 +198,7 @@ test('an admin narrows the users to those timed out of support, and to those who
   await expect(page).toHaveURL(/\/keepers\/users\?query=admin-filters\.test&paused$/);
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText('paused@admin-filters.test');
+  // Sweep gap: the user list narrowed to timed-out and paused accounts
   await assertNoAccessibilityViolations(page);
 });
 
@@ -205,14 +206,13 @@ test('an admin narrows the users to those timed out of support, and to those who
 test('a curator reaches /curator, the curation pages and /keepers with Support alone, and is refused People, Invitations, the documents and a coven', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 800 });
   await signInAs(page, 'a-curator@admin-curator.test', ['discord'], 'curator');
 
   const curator = await page.goto('/curator');
   expect(curator?.status()).toBe(200);
   const curatorNav = page.getByRole('navigation', { name: 'Curator' });
   await expect(curatorNav.getByRole('link')).toHaveCount(CURATION.length);
-  await assertNoAccessibilityViolations(page);
 
   const keepers = await page.goto('/keepers');
   expect(keepers?.status()).toBe(200);
@@ -230,6 +230,7 @@ test('a curator reaches /curator, the curation pages and /keepers with Support a
   await expect(keepersNav.getByRole('link', { name: 'Help', exact: true })).toHaveCount(0);
   await expect(page.getByRole('main').getByRole('link', { name: 'People' })).toHaveCount(0);
   await expect(page.getByRole('main').getByRole('link', { name: 'Invitations' })).toHaveCount(0);
+  // Sweep gap: the Keepers pages as a curator sees them
   await assertNoAccessibilityViolations(page);
 
   for (const path of [
@@ -280,6 +281,7 @@ test('an admin filters the zodiac signs by part of a name', async ({ page }) => 
     'href',
     '/curator/zodiac-signs?query=AR&edit=aries',
   );
+  // Sweep gap: the zodiac signs filtered by a name
   await assertNoAccessibilityViolations(page);
 
   await search.getByRole('searchbox', { name: 'Name' }).fill('no such sign');

@@ -5,6 +5,7 @@ import { signInAgainAs } from './session';
 import { insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
 import { holdServerAnswers } from './hold-server-answers';
+import { PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
 
 // The wait on the Grimoire draws the Grimoire's own cards, not the Ingredients list's: each placeholder card is as tall as a
 // real spell card and the grid has as many columns, at desktop and phone width, and at Compact. The wait on a spell page
@@ -62,7 +63,7 @@ const cardGrid = (page: Page, waiting: boolean) =>
     };
   }, waiting);
 
-for (const width of [1280, 375]) {
+for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
   test(`at ${width}px the Grimoire's wait draws spell-card-sized placeholders, from another section and between its tabs`, async ({
     page,
   }) => {
@@ -108,7 +109,7 @@ for (const width of [1280, 375]) {
   });
 }
 
-for (const width of [1280, 375]) {
+for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
   test(`at ${width}px with the Grimoire set to Compact, its wait draws compact cards as tall as the loaded ones`, async ({
     page,
   }) => {
@@ -204,7 +205,7 @@ const pageBars = (page: Page, step: 'rest' | 'wait' | 'after') =>
     return (noted.bars ?? []).filter((mark) => drawn.includes(mark as HTMLElement)).length;
   }, step);
 
-for (const width of [1280, 375]) {
+for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
   test(`at ${width}px a spell page's wait draws the recipe's own frame under the page bar, and gives way to the spell`, async ({
     page,
   }) => {

@@ -1,88 +1,13 @@
-import { createRequire } from 'node:module';
-
 import { describe, expect, it } from 'vitest';
 
-import { fromRoot } from '../../support/paths';
+import { PR, context, core, fakeGitHub, lib } from '../../support/pr-comment';
 
 // A single-result CI comment (one check, one comment) through postComment, as the pr-comment action calls it:
 // the inputs read from the action's environment, GitHub a fake that keeps the pull request's comments, so each
 // case is proved by the comments it leaves.
 
-type Comment = { id: number; node_id: string; body: string; minimized: boolean; issue: number };
-
-type Lib = {
-  inputsFromEnv: (env: Record<string, string>) => unknown;
-  postComment: (options: {
-    github: unknown;
-    context: unknown;
-    core: unknown;
-    inputs: unknown;
-    readFile: (file: string) => string;
-  }) => Promise<string>;
-};
-
-const lib = createRequire(import.meta.url)(fromRoot('.github/scripts/lib/pr-comment.cjs')) as Lib;
-
-const PR = 7;
 const MARKER = '<!-- ci-lint -->';
 const LOG = 'Testwort lint log line';
-
-function fakeGitHub(seed: Omit<Comment, 'issue'>[]) {
-  const comments: Comment[] = seed.map((comment) => ({ ...comment, issue: PR }));
-  let next = 100;
-  const byId = (id: number) => {
-    const comment = comments.find((candidate) => candidate.id === id);
-    if (!comment) throw new Error(`No comment ${id}`);
-    return comment;
-  };
-  const listComments = () => {
-    throw new Error('read through paginate');
-  };
-  const github = {
-    paginate: async (method: unknown, { issue_number }: { issue_number: number }) => {
-      expect(method).toBe(listComments);
-      return comments
-        .filter((comment) => comment.issue === issue_number)
-        .map(({ id, node_id, body }) => ({ id, node_id, body }));
-    },
-    rest: {
-      issues: {
-        listComments,
-        createComment: async ({ issue_number, body }: { issue_number: number; body: string }) => {
-          const id = next++;
-          comments.push({ id, node_id: `node-${id}`, body, minimized: false, issue: issue_number });
-          return { data: { id } };
-        },
-        updateComment: async ({ comment_id, body }: { comment_id: number; body: string }) => {
-          byId(comment_id).body = body;
-        },
-        deleteComment: async () => {
-          throw new Error('a single-result comment deletes nothing');
-        },
-      },
-    },
-    graphql: async (query: string, { id }: { id: string }) => {
-      const comment = comments.find((candidate) => candidate.node_id === id);
-      if (!comment) throw new Error(`No node ${id}`);
-      const hide = /\bminimizeComment\(/.test(query);
-      // GitHub refuses to unhide a comment that is not hidden.
-      if (!hide && !comment.minimized) throw new Error('Comment is not minimized');
-      comment.minimized = hide;
-    },
-  };
-  return { github, comments };
-}
-
-const context = {
-  repo: { owner: 'testwort-owner', repo: 'testwort-repo' },
-  runId: 42,
-  runAttempt: 1,
-  serverUrl: 'https://github.example',
-  sha: 'fallbacksha',
-  payload: { pull_request: { head: { sha: 'abcdef1234567' } } },
-};
-
-const core = { info: () => {}, warning: () => {} };
 
 function post(github: unknown, env: Record<string, string>) {
   return lib.postComment({

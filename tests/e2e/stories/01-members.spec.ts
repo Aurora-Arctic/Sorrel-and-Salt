@@ -4,6 +4,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe'
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
 import { expectRoll, makeCoven, makeUser, seatsOf, withSql } from './accounts-setup';
+import { PHONE_WIDTH } from '../breakpoints';
 
 // Each test builds its own coven by SQL (accounts-setup.ts). A refusal shows twice: the control is absent where the page knows better, and where a stale page still offers it the server refuses and the page says so.
 
@@ -88,7 +89,6 @@ test.describe('who is in a coven', () => {
           else await expect(row).not.toContainText(address);
         }
         if (reader === ash) {
-          await assertNoAccessibilityViolations(page);
           await assertNoSidewaysScroll(page);
         }
       }
@@ -130,6 +130,7 @@ test.describe('who is in a coven', () => {
         await expect(page.getByRole('table', { name: 'Members' })).toHaveCount(0);
       }
       expect((await page.goto('/coven/no-such-coven'))?.status()).toBe(404);
+      // Sweep gap: the 404 page a signed-in non-member meets at a coven's roll, with the shell around it.
       await assertNoAccessibilityViolations(page);
     },
   );
@@ -168,12 +169,14 @@ test.describe('removing a member, and leaving', () => {
       const dialog = await openMember(page, BIRCH);
       await dialog.getByRole('button', { name: `Remove ${BIRCH}` }).click();
       await expect(dialog.getByRole('button', { name: 'Remove', exact: true })).toBeEnabled();
+      // Sweep gap: the member dialog on its Remove confirmation.
       await assertNoAccessibilityViolations(page);
       await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
       await expect(dialog).toHaveCount(0);
       await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/members$`));
       await expectRoll(page, { [ASH]: 'Steward', [CEDAR]: 'Observer' }, NAMES);
-      await page.setViewportSize({ width: 375, height: 812 });
+      await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
+      // Sweep gap: the roll after a removal at PHONE_WIDTH; the sweep scans the roll at desktop width.
       await assertNoAccessibilityViolations(page);
       await assertNoSidewaysScroll(page);
 
@@ -212,6 +215,7 @@ test.describe('removing a member, and leaving', () => {
       const dialog = page.getByRole('dialog');
       const confirm = dialog.getByRole('button', { name: 'Leave Coven', exact: true });
       await expect(confirm).toBeEnabled();
+      // Sweep gap: the Leave Coven confirmation for an Observer, who is not the last Steward.
       await assertNoAccessibilityViolations(page);
       await confirm.click();
 
@@ -255,6 +259,7 @@ test.describe('removing a member, and leaving', () => {
       await expect(modal.getByRole('alert')).toBeVisible();
       await expect(modal.getByRole('button', { name: 'Remove', exact: true })).toHaveCount(0);
       await expect(remove).toBeVisible();
+      // Sweep gap: the member dialog showing the refusal alert after a Remove is sent without permission.
       await assertNoAccessibilityViolations(page);
       expect(await seatsOf(coven.id)).toEqual({
         [ash]: 'owner',
@@ -323,6 +328,7 @@ test.describe('the last owner', () => {
       expect(at!.x).toBeLessThan(button!.x + button!.width);
       expect(at!.x + at!.width).toBeGreaterThan(button!.x);
       expect(await facts.boundingBox()).toEqual(placed);
+      // Sweep gap: the member dialog showing the refusal beside the Change Role button of the only Steward.
       await assertNoAccessibilityViolations(page);
       await expectRoll(
         page,
@@ -362,6 +368,7 @@ test.describe('the last owner', () => {
       await expect(dialog.getByRole('option')).toHaveCount(2);
       await dialog.getByRole('option', { name: new RegExp(BIRCH) }).click();
       await expect(dialog.getByRole('button', { name: 'Promote and Leave' })).toBeEnabled();
+      // Sweep gap: the Leave Coven dialog with the New Steward list open.
       await assertNoAccessibilityViolations(page);
 
       await dialog.getByRole('button', { name: 'Promote and Leave' }).focus();
@@ -410,6 +417,7 @@ test.describe('the last owner', () => {
         page.getByRole('main').getByRole('button', { name: 'Leave Coven', exact: true }),
       ).toBeFocused();
       await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}$`));
+      // Sweep gap: the coven page showing the refusal alert after a Leave sent while another Steward had gone.
       await assertNoAccessibilityViolations(page);
       expect(await seatsOf(coven.id)).toEqual({ [ash]: 'owner', [cedar]: 'member' });
 
@@ -443,6 +451,7 @@ test.describe('the last owner', () => {
       await dialog.getByRole('button', { name: `Change Role for ${BIRCH}` }).click();
       await dialog.getByRole('radio', { name: /^Steward/ }).check();
       await expect(dialog.getByRole('button', { name: 'Promote', exact: true })).toBeEnabled();
+      // Sweep gap: the member dialog's Change Role view with the Steward radio checked; the sweep opens only its first view.
       await assertNoAccessibilityViolations(page);
       await dialog.getByRole('button', { name: 'Promote', exact: true }).click();
       await expect(dialog.getByRole('region', { name: 'Membership' })).toContainText('Steward');

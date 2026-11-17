@@ -53,6 +53,7 @@ test('the save status is accessible while saving', async ({ page }) => {
   });
   await dialog.getByRole('button', { name: 'Save Spell' }).click();
   await expect(dialog.getByText('Saving…')).toBeVisible();
+  // Sweep gap: the spell dialog's save line while a save is in flight.
   await assertNoAccessibilityViolations(page);
   release();
   await expect(dialog.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible();
@@ -62,6 +63,7 @@ test('the save status is accessible once saved', async ({ page }) => {
   const dialog = await startDraft(page, 'axe-saved');
   await dialog.getByRole('button', { name: 'Save Spell' }).click();
   await expect(dialog.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible();
+  // Sweep gap: the spell dialog's save line once the draft is saved.
   await assertNoAccessibilityViolations(page);
 });
 
@@ -71,6 +73,7 @@ test('the save status is accessible when the save failed, with Retry', async ({ 
   await dialog.getByRole('button', { name: 'Save Spell' }).click();
   await expect(dialog.getByText(/Could not save/)).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Retry' })).toBeVisible();
+  // Sweep gap: the spell dialog's save line after a refused save, with Retry.
   await assertNoAccessibilityViolations(page);
 });
 
@@ -82,5 +85,6 @@ test('the save status is accessible when the spell was changed elsewhere', async
   await dialog.getByRole('textbox', { name: 'Intent' }).fill('Changed again');
   await dialog.getByRole('button', { name: 'Save Spell' }).click();
   await expect(dialog.getByText('This spell was changed elsewhere.')).toBeVisible();
+  // Sweep gap: the spell dialog's save line after a save lost to a change made elsewhere.
   await assertNoAccessibilityViolations(page);
 });

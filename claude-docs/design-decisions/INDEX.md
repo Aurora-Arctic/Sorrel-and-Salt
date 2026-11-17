@@ -176,6 +176,7 @@ Read [support.md](support.md).
 - [mb.175-plan](support.md#scope-help-and-faq-articles-plan) — Open plan for help articles.
 - [m17.27-about-us-document](support.md#the-about-us-page-is-a-site-document-outside-the-agreement) — About Us is a keeper-edited site document that is not agreed to at sign-up.
 - [m17.18-promotional-email-consent](support.md#promotional-email-needs-recorded-consent-withdrawn-in-one-click) — Promotional email needs a recorded, unticked, withdrawable-in-one-click consent; no mail is promotional today.
+- [n6-vendor-check](support.md#vendor-check-against-the-code-of-ethics-and-the-operations-wave) — Vendor check against the code of ethics, and the plan for N · Wave 06.
 
 ## CI
 

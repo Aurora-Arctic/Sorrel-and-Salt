@@ -69,6 +69,7 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   await access.getByRole('button', { name: 'Pause Access', exact: true }).click();
   const confirmPause = page.getByRole('button', { name: 'Pause', exact: true });
   await expect(confirmPause).toBeVisible();
+  // Sweep gap: the Pause confirmation dialog
   await assertNoAccessibilityViolations(page);
   await confirmPause.click();
   await expect(access.getByRole('button', { name: 'Lift Pause', exact: true })).toBeVisible();
@@ -82,7 +83,6 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   await signInByPassword(userPage, email);
   await expect(userPage).toHaveURL('/access-paused');
   await expect(userPage.getByRole('heading', { name: 'Access Paused', level: 1 })).toBeVisible();
-  await assertNoAccessibilityViolations(userPage);
   expect(await sessionsOf(userId)).toHaveLength(1);
 
   await userPage.getByRole('main').getByRole('link', { name: 'Support', exact: true }).click();
@@ -105,6 +105,7 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
     'href',
     '/access-paused',
   );
+  // Sweep gap: the paused account's support-only page with the request form open
   await assertNoAccessibilityViolations(userPage);
 
   await userPage.goto('/compendium');
@@ -137,6 +138,7 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   const thread = userPage.getByRole('dialog', { name: 'Why is my access paused?' });
   await expect(thread.getByText('I cannot open my coven.')).toBeVisible();
   await expect(thread.getByLabel(/^Your Reply/)).toBeDisabled();
+  // Sweep gap: a request thread whose reply box is disabled
   await assertNoAccessibilityViolations(userPage);
 
   await access.getByRole('button', { name: 'Lift Pause', exact: true }).click();

@@ -2,6 +2,8 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { hydrated } from './waits';
+import { DESKTOP_WIDTH } from './breakpoints';
 
 // (claude-docs/components/field.md, "Announcing errors")
 test.beforeAll(async () => {
@@ -11,13 +13,13 @@ test.beforeAll(async () => {
 test('a failed Save puts focus on the error summary, which links to the field and prefixes the page title', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
   await signInAs(page, 'a-keeper@error-summary.test', ['discord'], 'admin');
   await page.goto('/curator/compendium?new=ingredient-compendium');
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
   await expect(adding).toBeVisible();
   // Hydrated first, or the press lands on server HTML that no form owns.
-  await page.waitForLoadState('networkidle');
+  await hydrated(page, 'dialog form, [role="dialog"] form');
 
   // Save stays shut until something is typed; a Description alone leaves the required Name empty.
   await adding.getByRole('textbox', { name: 'Description' }).fill('A fixture description.');
@@ -32,5 +34,6 @@ test('a failed Save puts focus on the error summary, which links to the field an
   const target = await link.getAttribute('href');
   await link.click();
   await expect(adding.locator(target!)).toBeFocused();
+  // Sweep gap: the Add form after a failed Save, with the error summary shown and focused.
   await assertNoAccessibilityViolations(page);
 });

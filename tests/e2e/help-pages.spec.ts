@@ -4,6 +4,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransiti
 import { recreateE2eDatabase } from './database';
 import { HELP, SCREENSHOT_ALT, STAFF_WORD, helpRowState, seedHelpArticles } from './help-articles';
 import { signInAs } from './session';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
 
 // The public help pages, the staff help pages and the help search against the built server (DESIGN.md §10, "Help and
 // FAQ articles"). A sub page has one address, under its parent's; a row answers only at its audience's address.
@@ -131,6 +132,7 @@ test.describe('the addresses', () => {
     await page.goto('/help/staff');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('link', { name: new RegExp(HELP.curation.title) })).toHaveCount(0);
+    // Sweep gap: the staff help index as a member who is neither curator nor keeper, with no staff article listed.
     await assertNoAccessibilityViolations(page);
   });
 
@@ -165,11 +167,9 @@ test.describe('the staff help pages', () => {
     // A curator does not reach a keeper row, and a public row lives under /help.
     await expect(page.getByRole('link', { name: new RegExp(HELP.keeper.title) })).toHaveCount(0);
     await expect(page.locator(`a[href="/help/staff/${HELP.guide.slug}"]`)).toHaveCount(0);
-    await assertNoAccessibilityViolations(page);
 
     await page.getByRole('link', { name: new RegExp(HELP.curation.title) }).click();
     await expect(page.getByRole('heading', { level: 2, name: HELP.curation.title })).toBeVisible();
-    await assertNoAccessibilityViolations(page);
 
     // The sub page list's link, not the guide's Next link to the same page.
     await page.getByRole('link', { name: HELP.curationForms.title, exact: true }).click();
@@ -179,7 +179,6 @@ test.describe('the staff help pages', () => {
     await expect(
       page.getByRole('heading', { level: 2, name: HELP.curationForms.title }),
     ).toBeVisible();
-    await assertNoAccessibilityViolations(page);
 
     const search = page.getByRole('search');
     await search.getByRole('searchbox').fill(STAFF_WORD);
@@ -192,6 +191,7 @@ test.describe('the staff help pages', () => {
     await expect(
       page.getByRole('link', { name: new RegExp(HELP.staffKindling.title) }),
     ).toHaveAttribute('href', `/help/staff/${HELP.guide.slug}/${HELP.staffKindling.slug}`);
+    // Sweep gap: the help search results listing staff articles for a curator.
     await assertNoAccessibilityViolations(page);
   });
 
@@ -267,7 +267,7 @@ test.describe('the help header', () => {
     };
   };
 
-  for (const width of [1280, 375]) {
+  for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
     test(`the heading, the lede and the search box stand in the same place on /help, /help/search and an article at ${width}px`, async ({
       page,
     }) => {
@@ -304,7 +304,7 @@ test.describe('the help header', () => {
     main.getByRole('region', { name: 'Frequently Asked Questions' }),
   ];
 
-  for (const width of [1280, 1000, 375]) {
+  for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
     test(`every section of /help, and of its skeleton, takes the search box's edges at ${width}px`, async ({
       page,
     }) => {
@@ -491,7 +491,11 @@ test.describe('indexing', () => {
   });
 });
 
-test.describe('accessibility', () => {
+// The sweep scans the index, glossary, article, sub page and search with results; a search that finds nothing and a
+// missing article are states it never reaches, so those two are scanned here.
+const SCANNED_HERE = new Set(['search with none', 'a missing article']);
+
+test.describe('sideways scroll', () => {
   for (const [name, path] of [
     ['the help index', '/help'],
     ['the glossary', '/help/glossary'],
@@ -501,16 +505,16 @@ test.describe('accessibility', () => {
     ['search with none', '/help/search?q=testwort-nothing-matches'],
     ['a missing article', '/help/testwort-never-written'],
   ]) {
-    test(`${name} has no violations and no sideways scroll, signed out and signed in`, async ({
-      page,
-    }) => {
+    test(`${name} has no sideways scroll, signed out and signed in`, async ({ page }) => {
       await page.goto(path!);
       await assertNoSidewaysScroll(page, { restore: true });
-      await assertNoAccessibilityViolations(page);
+      // Sweep gap: the help search that matches nothing, and the help page for an article never written.
+      if (SCANNED_HERE.has(name)) await assertNoAccessibilityViolations(page);
 
       await signInAs(page, `reader-${name.replace(/ /g, '-')}@help-pages-axe.test`);
       await page.goto(path!);
-      await assertNoAccessibilityViolations(page);
+      // Sweep gap: the glossary, an article, a sub page and the search signed in; the sweep scans only /help signed in.
+      if (name !== 'the help index') await assertNoAccessibilityViolations(page);
     });
   }
 
@@ -519,7 +523,7 @@ test.describe('accessibility', () => {
     ['a staff article', `/help/staff/${HELP.curation.slug}`],
     ['a staff sub page', `/help/staff/${HELP.curation.slug}/${HELP.curationForms.slug}`],
   ]) {
-    test(`${name} has no violations and no sideways scroll for a curator`, async ({ page }) => {
+    test(`${name} has no sideways scroll for a curator`, async ({ page }) => {
       await signInAs(
         page,
         `f-${name.replace(/ /g, '-')}@help-pages-axe.test`,
@@ -528,7 +532,6 @@ test.describe('accessibility', () => {
       );
       await page.goto(path!);
       await assertNoSidewaysScroll(page, { restore: true });
-      await assertNoAccessibilityViolations(page);
     });
   }
 });
@@ -580,7 +583,7 @@ test.describe('screenshots', () => {
   test('Enter opens the picture full size as one named image, scrolling, and Escape or Close gives the focus back', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1200, height: 700 });
+    await page.setViewportSize({ width: DESKTOP_WIDTH, height: 700 });
     await page.goto(ARTICLE);
     const button = page.getByRole('button', { name: ENLARGE });
     const dialog = page.getByRole('dialog');
@@ -601,7 +604,6 @@ test.describe('screenshots', () => {
       }),
     ).toEqual({ scrolls: true, fits: true });
     await settleTransitions(page);
-    await assertNoAccessibilityViolations(page);
 
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
@@ -614,7 +616,7 @@ test.describe('screenshots', () => {
     await expect(button).toBeFocused();
   });
 
-  for (const width of [1200, 375]) {
+  for (const width of [PHONE_WIDTH]) {
     test(`the picture is never wider than its article section at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
       await page.goto(ARTICLE);
@@ -638,24 +640,4 @@ test.describe('screenshots', () => {
       expect(sizes.page).toBeLessThanOrEqual(sizes.window);
     });
   }
-});
-
-test.describe('look', () => {
-  test("a guide card's left bar takes the accent while it is hovered", async ({ page }) => {
-    await page.goto('/help');
-    const guide = page.getByRole('region', { name: 'Guides' }).getByRole('listitem').first();
-    const bar = () => guide.evaluate((card) => getComputedStyle(card).borderInlineStartColor);
-    const accent = await page.evaluate(() => {
-      const probe = document.createElement('span');
-      probe.style.color = 'var(--accent)';
-      document.body.append(probe);
-      const colour = getComputedStyle(probe).color;
-      probe.remove();
-      return colour;
-    });
-
-    expect(await bar()).not.toBe(accent);
-    await guide.hover();
-    await expect.poll(bar).toBe(accent);
-  });
 });

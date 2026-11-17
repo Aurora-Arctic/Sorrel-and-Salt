@@ -46,6 +46,7 @@ vi.mock('@/modules/identity', async (actual) => ({
 const {
   getSession,
   getShellSession,
+  hasSessionCookie,
   hasPassword,
   linkedAccounts,
   requireAdminSession,
@@ -88,6 +89,17 @@ beforeEach(() => {
   standingAccessPauseMock.mockReset();
   standingAccessPauseMock.mockResolvedValue(undefined);
   requestHeaders = new Headers({ cookie: 'better-auth.session_token=t.s' });
+});
+
+describe('hasSessionCookie', () => {
+  it("is true for a request carrying Better Auth's session cookie and false for one with none", async () => {
+    requestHeaders = new Headers({ cookie: 'better-auth.session_token=abc.def' });
+    await expect(hasSessionCookie()).resolves.toBe(true);
+    requestHeaders = new Headers({ cookie: 'unrelated=1' });
+    await expect(hasSessionCookie()).resolves.toBe(false);
+    requestHeaders = new Headers();
+    await expect(hasSessionCookie()).resolves.toBe(false);
+  });
 });
 
 describe('getSession', () => {

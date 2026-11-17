@@ -59,12 +59,38 @@ import type {
   CompendiumWrite,
   DeityRecord,
   IngredientFields,
+  CompendiumCardRow,
   IngredientRow,
   PickedLists,
 } from '../types';
 
+/**
+ * The columns a public compendium card and its dialog headings read: the name and its formal name, the address,
+ * the safety flags and the two dates behind the recency mark. `id` keys the card’s category, form and holding reads.
+ */
+export const COMPENDIUM_CARD_COLUMNS = [
+  'id',
+  'slug',
+  'name',
+  'canonicalName',
+  'nomenclature',
+  'toxic',
+  'safetyNotes',
+  'createdAt',
+  'updatedAt',
+] as const;
+
 // The list and its count, held in the data cache under the `compendium` tag, keyed by the parsed filter (claude-docs/db/compendium-cache.md).
-const cachedPage = cachedCompendiumRead('compendium-page', findCompendiumPage);
+const cachedPage = cachedCompendiumRead(
+  'compendium-page',
+  (filter: ReturnType<typeof compendiumFilterFor>, page: PageRequest) =>
+    findCompendiumPage(filter, page),
+);
+const cachedCardPage = cachedCompendiumRead(
+  'compendium-card-page',
+  (filter: ReturnType<typeof compendiumFilterFor>, page: PageRequest) =>
+    findCompendiumPage(filter, page, COMPENDIUM_CARD_COLUMNS),
+);
 const cachedCount = cachedCompendiumRead('compendium-count', findCompendiumCount);
 
 /**
@@ -81,6 +107,20 @@ export async function listCompendium(
   viewer: Session | null = null,
 ): Promise<PageEntry<IngredientRow, CompendiumListEdge>[]> {
   return cachedPage(compendiumFilterFor(filter, viewer), page);
+}
+
+/**
+ * `listCompendium` for a list of cards: each entry holds only the columns a card and its dialog headings read, so a page
+ * does not carry every entry’s long text from Postgres. Everyone sees it alike, so it takes no viewer.
+ *
+ * @throws {Forbidden} the filter sets what only a curator may (`compendiumFilterFor`).
+ * @throws {ValidationError} a category or deity id is not a uuid, or the toxic setting is not in `TOXIC_FILTERS`.
+ */
+export async function listCompendiumCards(
+  filter: CompendiumFilterInput,
+  page: PageRequest,
+): Promise<PageEntry<CompendiumCardRow, CompendiumListEdge>[]> {
+  return cachedCardPage(compendiumFilterFor(filter, null), page);
 }
 
 /**

@@ -54,6 +54,7 @@ export type {
   IngredientDetail,
   IngredientFacets,
   IngredientKey,
+  CompendiumCardRow,
   IngredientRow,
   IngredientVariantRow,
   LastEdit,

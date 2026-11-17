@@ -7,6 +7,7 @@ import { PASSWORD, field, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Locator, Page } from '@playwright/test';
 import { insertWorkspace } from '../support/db/insert-workspace';
+import { PHONE_WIDTH } from './breakpoints';
 
 // Sign In and Create Account opened over the page they are on: from the public bar, and as the two
 // equal choices on a signed-out invitation (claude-docs/components/sign-in-dialog.md).
@@ -79,9 +80,9 @@ test.describe('the sign-in dialog', () => {
       await expect(dialog, how).toBeVisible();
       await expect(dialog.getByRole('button', { name: 'Continue with Email' })).toBeVisible();
       if (how === 'Close') {
-        await scanBothThemes(page);
         await dialog.getByRole('button', { name: 'Continue with Email' }).click();
         await expect(field(dialog, 'Email Address')).toBeVisible();
+        // Sweep gap: the sign-in dialog on its email step, with the Email Address field shown.
         await scanBothThemes(page);
       }
 
@@ -111,6 +112,7 @@ test.describe('the sign-in dialog', () => {
       `/account/email?next=${encodeURIComponent(here)}`,
     );
     await expect(page).toHaveURL(here);
+    // Sweep gap: the sign-in dialog turned to Check Your Inbox after an account is created.
     await scanBothThemes(page);
     // The mailed link comes back here, through the confirmed view's Continue.
     const mailed = new URL((await latestMessageTo(address)).text.match(VERIFY_LINK)![0]);
@@ -137,6 +139,7 @@ test.describe('the sign-in dialog', () => {
     expect(above!.y + above!.height).toBeLessThanOrEqual(
       (await main.getByRole('link', { name: 'Sign In' }).boundingBox())!.y,
     );
+    // Sweep gap: the signed-out invitation page with a refused-link alert above Sign In.
     await scanBothThemes(page);
 
     await page.goto(INVITATION);
@@ -158,6 +161,7 @@ test.describe('the sign-in dialog', () => {
     const signUp = page.getByRole('dialog', { name: 'Create an Account' });
     await expect(signUp.getByRole('button', { name: 'Continue with Email' })).toBeVisible();
     await expect(signUp.getByRole('button', { name: 'Sign In with a Passkey' })).toHaveCount(0);
+    // Sweep gap: the Create an Account dialog opened from a signed-out invitation.
     await scanBothThemes(page);
     await expect(page).toHaveURL(INVITATION);
 
@@ -172,6 +176,7 @@ test.describe('the sign-in dialog', () => {
     await expect(main.getByRole('link', { name: 'Confirm Your Email' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
     await expect(main.getByRole('alert')).toHaveCount(0);
+    // Sweep gap: the signed-out invitation of an unverified address, told to check the inbox.
     await scanBothThemes(page);
 
     // A refused link comes back with ?error=: the inbox state says so, beside the way to a new one.
@@ -179,6 +184,7 @@ test.describe('the sign-in dialog', () => {
     await expect(main.getByRole('alert')).toBeVisible();
     await expect(main).not.toContainText('TOKEN_EXPIRED');
     await expect(main.getByRole('link', { name: 'Confirm Your Email' })).toBeVisible();
+    // Sweep gap: the signed-out invitation after a refused link, with its alert beside Confirm Your Email.
     await scanBothThemes(page);
 
     const message = await latestMessageTo(INVITED);
@@ -221,7 +227,7 @@ test.describe('the sign-in dialog', () => {
   });
 
   test('stacks the two choices on a phone', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 800 });
     await page.goto(INVITATION);
     const main = page.getByRole('main');
     // An address invitation leads with Sign In.
@@ -239,8 +245,8 @@ test.describe('the sign-in dialog', () => {
       parseFloat(getComputedStyle(document.documentElement).fontSize),
     );
     expect(box.x).toBeCloseTo(rem, -1);
-    expect(375 - (box.x + box.width)).toBeCloseTo(rem, -1);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
+    expect(PHONE_WIDTH - (box.x + box.width)).toBeCloseTo(rem, -1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(PHONE_WIDTH);
   });
 });
 

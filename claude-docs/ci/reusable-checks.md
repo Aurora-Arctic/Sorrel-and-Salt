@@ -177,16 +177,16 @@
   `stories` job. It shares the gate's `build-e2e-image` and `build-db-image` jobs
   with `playwright` and runs beside it, under its own `stories` path filter. The
   input switches the run command (`npm run test:stories` with
-  `STORIES_JSON=/app/stories.json`), the summariser
+  `STORIES_JSON=/app/stories.json`, set on the `playwright-coverage.yml` job), the summariser
   (`.github/scripts/summarize-stories.mjs`: "3 of 63 stories passing" and a
   markdown checklist, under the failing and flaky stories it reads from the
   JSON report through `lib/playwright-failures.mjs`, as
   `summarize-playwright.mjs` reads the gate's failing tests), the Playwright comment's section it writes
   (`stories` rather than `gate`), the report artifact's name (`stories-report`, since
   one workflow run may not upload two artifacts under one name) and the coverage
-  artifact's (`playwright-coverage-stories`). Neither suite's summariser reports
+  artifact's (`playwright-coverage-stories-<shard>`). Neither suite's summariser reports
   coverage: the merged figure is the Coverage section's. Both suites'
-  coverage artifacts hold monocart's raw data too, for the `playwright-coverage`
+  per-shard coverage artifacts hold monocart's raw data too, for the `playwright-coverage`
   job. The run step carries `continue-on-error: true` for stories, since a job
   that calls a workflow cannot, so a red story never fails the job; the section
   reads the real result from `steps.run.outcome`, and so does the report upload,
@@ -194,44 +194,51 @@
   retry (its `flaky` output). It is never a required check, which keeps red
   scaffolds off the merge path, and nothing waits on it, which keeps the gate's
   time down (`claude-docs/testing/acceptance.md`).
-- **`playwright-coverage.yml`** — the two Playwright suites' coverage, merged,
+- **`playwright-coverage.yml`** — where the two Playwright suites' shards join, and their coverage is merged,
   called by `pr-gate.yml`'s `playwright-coverage` job in the `testing` image.
   That job `needs` `playwright` and `stories` and runs after both whatever their
   result (`!cancelled()` keeps a failed suite from skipping it, and also names
-  the stand-down, which it would otherwise ignore; it is no required check, and
-  the workflow carries `continue-on-error` too). A run that stands down leaves it
+  the stand-down, which it would otherwise ignore; a failed gate fails the job, so it fails the
+  run; a story never does). A run that stands down leaves it
   skipped, as for the other called workflows. Its steps run only when `changes`
   says a suite ran (`should-run`), and write nothing otherwise: the
   `pr-comments` job has already marked the section Skipped. It downloads each
-  coverage artifact by name into a folder of its own. A failed download is either
+  suite's coverage artifacts by name pattern (`playwright-coverage-gate-*`,
+  `playwright-coverage-stories-*`) into a folder of its own, one subfolder per shard. A failed download is either
   an artifact never uploaded (a suite that did not run), which the merge leaves
   out quietly, or one that exists in the run and could not be fetched;
   `check-coverage-downloads.mjs` tells them apart by asking the run's artifact
   list (the called workflow and its caller grant `actions: read` for this). For
   the second kind the job writes the Playwright comment's Coverage section as a failure
-  saying coverage is missing for this commit, with the run link, merges nothing,
-  and fails, so "Re-run failed jobs" runs it again. Otherwise
+  saying coverage is missing for this commit, with the run link, and merges nothing; the
+  job's own result stays green. Otherwise
   `merge-playwright-coverage.mjs` merges the `raw/` data that is there, and the
   job uploads `playwright-coverage-merged`, writes the job summary and writes the
   Coverage section. A merge that fails writes its log there, and a merge that
   finds no coverage at all writes a failure saying neither suite left any. The
   summary line names the suites included. Only this section carries the per-file
   table and the only coverage figure; the two suites' sections carry none. It reads as a failure when
-  either suite failed (`suites-failed`): `playwright`'s result, and `stories`'s
-  run step outcome, which `playwright.yml` exposes as its `outcome` output because
-  the stories job passes whatever its stories did.
-- **`playwright.yml`** — `npm run e2e` against the servers `webServer` builds and
+  either suite failed: a shard job's result (`suites-failed`, from
+  `needs.<suite>.result`), or what the job finds itself in the joined reports.
+- **`playwright.yml`** — one job, `playwright`, which runs `npm run e2e` (or
+  `test:stories`) on one shard of a matrix: three shards for the gate suite, two
+  for stories and one for `build-only`, passed as `--shard i/n`. Each check reads
+  `playwright / playwright (n)`. The shards are joined in `playwright-coverage.yml`,
+  not here: it downloads the blob reports, runs `playwright merge-reports` with
+  the suite's config, summarises, writes the suite's comment section and fails
+  when the gate failed ([Runner budget](runner-budget.md), "Playwright shards"). Each shard runs the steps below against the servers `webServer` builds and
   starts: one per worker slot on 8001 and up — four on GitHub's 4-vCPU runner
   (`E2E_WORKERS: 4` over the half-the-CPUs default, since a test mostly waits on
   the browser) — then the configured-providers server on 8100 and the
   compendium-cache server on 8101 (`testing/e2e.md`). Runs in
   `build-e2e-image.yml`'s dedicated image, **not** `build-image.yml`'s, with the
-  same `inputs.db-image`/`services: postgres:` shape as `vitest.yml`. Uploads
-  `.reports/playwright-report/` and `.reports/test-results/` on failure or a flaky
-  pass and `.reports/coverage-e2e/` always (named `playwright-coverage`). Its
-  reporters (`list`, `json`, `html`) come from `playwright.config.ts` under `CI`,
-  not the command line: a CLI `--reporter` replaces the config's list and with it
-  the html report's `outputFolder`. `should-run` path-filters the same way.
+  same `inputs.db-image`/`services: postgres:` shape as `vitest.yml`. Each shard uploads
+  its blob report (`playwright-blob-<suite>-<shard>`), `.reports/coverage-e2e/`
+  always (`playwright-coverage-<gate|stories>-<shard>`) and its server logs on a
+  failure. `playwright-coverage.yml` uploads `.reports/playwright-report/` (the html report)
+  on a failure or a flaky pass. A shard's reporters are `list,blob`, set on the
+  command line; the merge uses the config's own (`list`, `json`, `html`), so
+  the html report's `outputFolder` is the config's. `should-run` path-filters the same way.
   `next.config.ts`'s `productionBrowserSourceMaps: true` and
   `tests/e2e/coverage.config.ts`'s `sourceFilter` (JS-only coverage, `src/**`
   only) apply here (`testing/coverage.md`, which also covers the

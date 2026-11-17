@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, scanBothThemes } from './axe';
-import { MODAL_SCANS, ROUTE_SCANS, type Persona } from './axe-scans';
+import { assertNoAccessibilityViolations, COLOUR_RULES, scanBothThemes } from './axe';
+import { ROUTE_SCANS, SWEEP_TESTS, type ScannedModal, type ScannedRoute } from './axe-scans';
 import {
   MODAL_OPENERS,
   recordUnreached,
@@ -24,12 +24,29 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
+import { PHONE_WIDTH } from './breakpoints';
 
 test('a seeded violation fails the scan', async ({ page }) => {
   await page.setContent(
     '<html><head><title>Fixture</title></head><body><img src="x.png"></body></html>',
   );
   await expect(assertNoAccessibilityViolations(page)).rejects.toThrow();
+});
+
+// The dark scan is narrowed to the colour rules because a theme switch changes only colour tokens, so it must
+// still fail a colour fault and must not report one the rules outside the list own.
+test('the dark scan fails a contrast fault in dark only', async ({ page }) => {
+  await page.setContent(
+    '<html lang="en"><head><title>Fixture</title><style>@media (prefers-color-scheme: dark) { p { color: #777; background: #808080; } }</style></head><body><main><h1>Fixture</h1><p>Low contrast in dark</p></main></body></html>',
+  );
+  await expect(scanBothThemes(page)).rejects.toThrow();
+});
+
+test('the dark colour pass reports no fault outside the colour rules', async ({ page }) => {
+  await page.setContent(
+    '<html><head><title>Fixture</title></head><body><img src="x.png"></body></html>',
+  );
+  await assertNoAccessibilityViolations(page, { onlyRules: COLOUR_RULES });
 });
 
 // A soft navigation removes the <title> and puts the next one back a
@@ -225,63 +242,86 @@ test.describe('the grimoire', () => {
   });
 });
 
-// The sweep over tests/e2e/axe-scans.ts in both themes, one test per person for pages and one for modals, each
-// seeding its own coven so another test recreating the slot's database cannot take its rows. Findings are
+// The phone layout is its own markup state the sweep, at desktop width, cannot reach: the shell's tab bar and the
+// Filters sheet, each scanned in full once at 375, with the colour rules again in dark.
+// 375 is the phone width every e2e spec shares (assertNoSidewaysScroll defaults to it).
+const PHONE = { width: PHONE_WIDTH, height: 812 };
+
+test.describe('the phone layout', () => {
+  test.beforeAll(async () => {
+    await recreateE2eDatabase();
+  });
+
+  test('the coven tab bar', async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    const world = await seedWorld(page);
+    await signIn(page, world, 'steward');
+    await visit(page, ROUTE_VISITS['/coven/[slug]'](world) ?? '');
+    await expect(page.getByRole('navigation', { name: 'Coven' })).toBeVisible();
+    await scanBothThemes(page);
+  });
+
+  test('the curator tab bar with its More menu open', async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    const world = await seedWorld(page);
+    await signIn(page, world, 'curator');
+    await visit(page, '/curator/categories');
+    const more = page
+      .getByRole('navigation', { name: 'Curator' })
+      .getByRole('button', { name: 'More', exact: true });
+    await more.click();
+    await expect(more).toHaveAttribute('aria-expanded', 'true');
+    await scanBothThemes(page);
+  });
+
+  test('the Filters sheet', async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    const coven = await covenWithSpell(page, 'Fixture Coven Axe Sheet', 'axe-sheet.test');
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    await openFilters(page);
+    await scanBothThemes(page);
+  });
+});
+
+// The sweep over tests/e2e/axe-scans.ts, the full rule set in light and the colour rules in dark, one test per run of pages or modals per person (SWEEP_TESTS),
+// each seeding its own coven so another test recreating the slot's database cannot take its rows. Findings are
 // collected, not thrown, so one run lists every page; the full result goes to .reports/axe-sweep/.
 test.describe('the accessibility sweep', () => {
-  const personas = [...new Set(ROUTE_SCANS.flatMap(({ as }) => as as readonly Persona[]))];
-  for (const persona of personas) {
-    const routes = ROUTE_SCANS.filter(({ as }) => (as as readonly Persona[]).includes(persona));
-    test(`every page, as ${persona}`, async ({ page }) => {
-      test.setTimeout(60_000 + routes.length * 30_000);
+  for (const { title, kind, as: persona, scans } of SWEEP_TESTS) {
+    test(title, async ({ page }) => {
+      test.setTimeout(60_000 + scans.length * 30_000);
       // One stuck opener fails its own scan, not the whole test.
       page.setDefaultTimeout(8_000);
       const world = await seedWorld(page);
       await signIn(page, world, persona);
       const result: SweepResult = { persona, findings: [], unreached: [] };
-      for (const scan of routes) {
-        const { route } = scan;
-        const path = ROUTE_VISITS[route](world);
-        if (path === null) continue;
-        await test.step(route, async () => {
-          try {
-            await visit(page, path, 'status' in scan ? scan.status : undefined);
-            await collectBothThemes(page, route, result);
-          } catch (error) {
-            await recordUnreached(page, route, error, result);
-          }
-        });
+      for (const id of scans) {
+        if (kind === 'pages') {
+          const scan = ROUTE_SCANS.find(({ route }) => route === id);
+          const path = ROUTE_VISITS[id as ScannedRoute](world);
+          if (!scan || path === null) continue;
+          await test.step(id, async () => {
+            try {
+              await visit(page, path, 'status' in scan ? scan.status : undefined);
+              await collectBothThemes(page, id, result);
+            } catch (error) {
+              await recordUnreached(page, id, error, result);
+            }
+          });
+        } else {
+          await test.step(id, async () => {
+            try {
+              const dialog = await MODAL_OPENERS[id as ScannedModal](page, world);
+              await expect(dialog).toBeVisible({ timeout: 10_000 });
+              await collectBothThemes(page, id, result, dialog);
+            } catch (error) {
+              await recordUnreached(page, id, error, result);
+            }
+            await page.keyboard.press('Escape').catch(() => {});
+          });
+        }
       }
-      expect(reportSweep(`${persona}-pages`, result)).toBe('');
-    });
-  }
-
-  const modalPersonas = [...new Set(MODAL_SCANS.map(({ as }) => as as Persona))];
-  for (const persona of modalPersonas) {
-    // Two-factor signs in an account of its own, so it goes last.
-    const modals = MODAL_SCANS.filter(({ as }) => as === persona).sort(
-      (a, b) => Number(a.id === 'two-factor-warning') - Number(b.id === 'two-factor-warning'),
-    );
-    test(`every modal, as ${persona}`, async ({ page }) => {
-      test.setTimeout(60_000 + modals.length * 30_000);
-      // One stuck opener fails its own scan, not the whole test.
-      page.setDefaultTimeout(8_000);
-      const world = await seedWorld(page);
-      await signIn(page, world, persona);
-      const result: SweepResult = { persona, findings: [], unreached: [] };
-      for (const { id } of modals) {
-        await test.step(id, async () => {
-          try {
-            const dialog = await MODAL_OPENERS[id](page, world);
-            await expect(dialog).toBeVisible({ timeout: 10_000 });
-            await collectBothThemes(page, id, result, dialog);
-          } catch (error) {
-            await recordUnreached(page, id, error, result);
-          }
-          await page.keyboard.press('Escape').catch(() => {});
-        });
-      }
-      expect(reportSweep(`${persona}-modals`, result)).toBe('');
+      expect(reportSweep(`${persona}-${title.replace(/\W+/g, '-')}`, result)).toBe('');
     });
   }
 });

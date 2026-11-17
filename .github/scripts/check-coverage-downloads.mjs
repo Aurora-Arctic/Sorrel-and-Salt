@@ -5,7 +5,7 @@
 // stale PR comment, so it is reported as missing and the job fails.
 //
 // Reads ARTIFACTS, a JSON list of { name, outcome }, where `outcome` is the
-// download step's outcome. Only a failed download is looked up. Sets the
+// download step's outcome and `name` an artifact's, or a prefix ending in `*`. Only a failed download is looked up. Sets the
 // `missing` output: the names that exist but could not be downloaded, comma
 // separated, empty when there are none. A lookup that itself fails counts as
 // missing, since existence cannot be told.
@@ -27,13 +27,16 @@ export async function findMissing(artifacts, listByName) {
   return missing;
 }
 
+// `name` is an artifact name, or a prefix ending in `*`, the pattern of a suite's shards.
 async function listFromApi(name) {
   const {
     GITHUB_API_URL = 'https://api.github.com',
     GITHUB_REPOSITORY,
     GITHUB_RUN_ID,
   } = process.env;
-  const url = `${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?name=${encodeURIComponent(name)}`;
+  const prefix = name.endsWith('*') ? name.slice(0, -1) : null;
+  const query = prefix === null ? `name=${encodeURIComponent(name)}` : 'per_page=100';
+  const url = `${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?${query}`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
@@ -41,7 +44,10 @@ async function listFromApi(name) {
     },
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return (await response.json()).artifacts ?? [];
+  const { artifacts = [] } = await response.json();
+  return prefix === null
+    ? artifacts
+    : artifacts.filter((artifact) => artifact.name.startsWith(prefix));
 }
 
 if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {

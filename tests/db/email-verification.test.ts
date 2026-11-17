@@ -373,6 +373,7 @@ describe('the primary keeper is promoted at first-party verification', () => {
     const { secret } = await auth.$context;
     const token = await createEmailVerificationToken(secret, STRANGER, OWNER, 3600, {
       requestType: 'change-email-verification',
+      userId: before.id,
     });
     const changeLink = new URL(mailedLink());
     changeLink.searchParams.set('token', token);

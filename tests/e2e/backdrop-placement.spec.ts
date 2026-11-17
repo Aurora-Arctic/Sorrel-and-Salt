@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { insertSpell, localIngredient, seedCoven, withSql } from './stories/coven-ingredients';
+import { PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
 
 // The sorrel and salt drawings sit in the same place on a spell's page and an ingredient's page as on the
 // coven's Ingredients list: measured against the window, not read from a class.
@@ -36,7 +37,7 @@ async function drawings(page: Page): Promise<Record<'sorrel' | 'salt', Box>> {
   });
 }
 
-for (const width of [1280, 375]) {
+for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
   test(`the drawings sit as they do on the Ingredients list, on an ingredient's page and a spell's, at ${width} wide`, async ({
     page,
   }) => {

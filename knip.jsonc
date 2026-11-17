@@ -15,8 +15,6 @@
     "tests/support/db/bounded-postgres.ts",
     // The db project's Vitest runner, which tests/support/db-project.mts names by path rather than importing.
     "tests/support/db-runner.ts",
-    // Loaded by path by drizzle-kit in migration-lock-timeout.test.ts.
-    "tests/support/db/lock-probe.drizzle.config.ts",
   ],
   "project": ["src/**/*.{ts,tsx,scss,sass}", "tests/**/*.{ts,tsx,mts}", "scripts/**/*.{mjs,ts}"],
   "ignore": [".storybook/public/mockServiceWorker.js", ".design-sync/dist-index.mjs"],

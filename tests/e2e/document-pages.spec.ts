@@ -41,7 +41,6 @@ for (const { path, title, link } of DOCUMENTS) {
       path,
     );
     await assertNoSidewaysScroll(page, { restore: true });
-    await assertNoAccessibilityViolations(page);
   });
 
   test(`${path} reads the same inside the shell, linked from its footer`, async ({ page }) => {
@@ -52,6 +51,7 @@ for (const { path, title, link } of DOCUMENTS) {
     await expect(page).toHaveURL(new RegExp(`${path}$`));
     await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign In', exact: true })).toHaveCount(0);
+    // Sweep gap: a document page inside the signed-in shell, which the sweep scans only signed out.
     await assertNoAccessibilityViolations(page);
   });
 
@@ -75,6 +75,7 @@ test('/privacy draws the access cards under Who Can See What', async ({ page }) 
     .poll(async () => (await article.getByRole('group').count()) - (await menuGroups.count()))
     .toBe(11);
   await expect(article.getByText('{access-cards}')).toHaveCount(0);
+  // Sweep gap: the privacy page with the access-cards groups drawn from the widget.
   await assertNoAccessibilityViolations(page);
 });
 

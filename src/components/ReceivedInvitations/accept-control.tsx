@@ -48,6 +48,7 @@ const AcceptControl = ({
         aria-label={`Accept the invitation to ${covenName}`}
         aria-disabled={pending || undefined}
         busy={pending}
+        busyAriaLabel={`Accepting the invitation to ${covenName}`}
         busyLabel="Accepting"
         onClick={() => void run()}
       >

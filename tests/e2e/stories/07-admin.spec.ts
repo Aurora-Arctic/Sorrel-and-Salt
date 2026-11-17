@@ -25,61 +25,77 @@ async function expectNotAuthorized(page: Page, path: string) {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
-// Every page under `/curator` and `/keepers` (claude-docs/auth/admin-guard.md). A page added there joins this list.
-const ADMIN_ROUTES = [
-  '/curator',
-  '/keepers',
-  '/keepers/support',
-  '/curator/compendium',
-  '/keepers/users',
-  '/keepers/privilege-changes',
-  '/keepers/invitations',
-  '/keepers/invitation-cards',
-  '/keepers/card-sign-ups',
-  '/curator/categories',
-  '/curator/category-groups',
-  '/curator/forms',
-  '/curator/form-groups',
-  '/curator/deities',
-  '/curator/deity-traditions',
-  '/curator/celestial-bodies',
-  '/curator/zodiac-signs',
-];
+// Every page under `/curator` and `/keepers` (claude-docs/auth/admin-guard.md), in groups that run as tests of their own. A page added there joins a group.
+const ADMIN_ROUTE_GROUPS: Record<string, readonly string[]> = {
+  'the landing pages': ['/curator', '/keepers', '/keepers/support'],
+  'the keepers’ people and cards': [
+    '/keepers/users',
+    '/keepers/privilege-changes',
+    '/keepers/invitations',
+    '/keepers/invitation-cards',
+    '/keepers/card-sign-ups',
+  ],
+  'the compendium and its categories': [
+    '/curator/compendium',
+    '/curator/categories',
+    '/curator/category-groups',
+  ],
+  'the vocabularies': [
+    '/curator/forms',
+    '/curator/form-groups',
+    '/curator/deities',
+    '/curator/deity-traditions',
+    '/curator/celestial-bodies',
+    '/curator/zodiac-signs',
+  ],
+};
 
 test.describe('story 17: everyone but a keeper is kept from editing the compendium', () => {
-  test(
-    'a coven owner who is not a keeper meets the 403 page on every admin page a keeper opens',
-    { tag: '@story-17' },
-    async ({ page }) => {
-      // 27 loads ran 28.5s to 32.2s in CI against the default 30s.
-      test.setTimeout(60_000);
-      // Why each refusal below is the guard's: the same addresses answer a keeper.
-      await signInAs(page, 'admin@story-17.test', ['discord'], 'admin');
-      for (const path of ADMIN_ROUTES) {
-        const response = await page.goto(path);
-        expect(response?.status(), path).toBe(200);
-        const area = path.startsWith('/curator') ? 'Curator' : 'Keepers';
-        await expect(page.getByRole('navigation', { name: area })).toBeVisible();
-      }
+  for (const [group, routes] of Object.entries(ADMIN_ROUTE_GROUPS)) {
+    const groupSlug = slugify(group);
+    test(
+      `a coven owner who is not a keeper meets the 403 page on ${group}, which a keeper opens`,
+      { tag: '@story-17' },
+      async ({ page }) => {
+        // Why each refusal below is the guard's: the same addresses answer a keeper.
+        await signInAs(page, `admin-${groupSlug}@story-17.test`, ['discord'], 'admin');
+        for (const path of routes) {
+          const response = await page.goto(path);
+          expect(response?.status(), path).toBe(200);
+          const area = path.startsWith('/curator') ? 'Curator' : 'Keepers';
+          await expect(page.getByRole('navigation', { name: area })).toBeVisible();
+        }
 
-      // The highest seat a coven has, so nothing but the site role is left to refuse it.
-      const { userId } = await signInAs(page, 'owner@story-17.test');
-      const { slug } = await makeCoven('Fixture Story Seventeen Coven', [[userId, 'owner']]);
-      expect((await page.goto(`/coven/${slug}`))?.status()).toBe(200);
-      await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
-      await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
+        // The highest seat a coven has, so nothing but the site role is left to refuse it.
+        const { userId } = await signInAs(page, `owner-${groupSlug}@story-17.test`);
+        const { slug } = await makeCoven(`Fixture Story Seventeen ${group} Coven`, [
+          [userId, 'owner'],
+        ]);
+        expect((await page.goto(`/coven/${slug}`))?.status()).toBe(200);
+        await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(
+          0,
+        );
+        await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(
+          0,
+        );
 
-      for (const path of ADMIN_ROUTES) await expectNotAuthorized(page, path);
-      await expect(page.getByRole('banner')).toBeVisible();
-      await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
-      await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
-      await expect(
-        page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
-      ).toBeVisible();
-      await assertNoSidewaysScroll(page, { restore: true });
-      await assertNoAccessibilityViolations(page);
-    },
-  );
+        for (const path of routes) await expectNotAuthorized(page, path);
+        await expect(page.getByRole('banner')).toBeVisible();
+        await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(
+          0,
+        );
+        await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(
+          0,
+        );
+        await expect(
+          page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
+        ).toBeVisible();
+        await assertNoSidewaysScroll(page, { restore: true });
+        // Sweep gap: the not-authorized page a signed-in steward meets at a curator or keepers address, with the shell around it.
+        await assertNoAccessibilityViolations(page);
+      },
+    );
+  }
 
   test(
     'a coven owner who is not a keeper finds no way to edit a compendium entry a keeper edits',
@@ -122,6 +138,7 @@ test.describe('story 17: everyone but a keeper is kept from editing the compendi
       await expect(page.getByRole('heading', { level: 1, name, exact: true })).toBeVisible();
       await expect(page.getByRole('link', { name: /^(edit|delete)/i })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /^(edit|delete)/i })).toHaveCount(0);
+      // Sweep gap: the public compendium entry page read by a signed-in steward, with the shell and no edit controls.
       await assertNoAccessibilityViolations(page);
 
       await signInAgainAs(page, adminId);
@@ -167,6 +184,7 @@ test.describe('story 19: a keeper sees a user’s covens but reaches none of the
       await expect(covens.getByRole('link')).toHaveCount(0);
       // Impersonation is not registered in this run, so there is no Impersonate.
       await expect(dialog.getByRole('button', { name: /Impersonate/ })).toHaveCount(0);
+      // Sweep gap: the keeper's user dialog for a user who holds a Steward seat and an Observer seat, listing both covens.
       await assertNoAccessibilityViolations(page);
 
       await dialog.getByRole('button', { name: 'Close', exact: true }).click();
@@ -214,6 +232,7 @@ test.describe('story 19: a keeper sees a user’s covens but reaches none of the
           expect(await response?.text()).not.toContain(`${W} ${tag}`);
           await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
           await expect(page.getByRole('navigation', { name: 'Coven' })).toHaveCount(0);
+          // Sweep gap: the 404 page a signed-in non-member meets at a coven address, with the shell around it.
           await assertNoAccessibilityViolations(page);
         }
       },
@@ -268,6 +287,7 @@ async function moveAndDelete(page: Page, dialog: Locator, picker: string, destin
   await dialog.getByRole('button', { name: 'Continue' }).click();
   const confirm = dialog.getByRole('button', { name: 'Move and Delete' });
   await expect(confirm).toBeVisible();
+  // Sweep gap: the Move and Delete confirmation inside a vocabulary dialog, after a replacement is chosen.
   await assertNoAccessibilityViolations(page);
   await confirm.click();
 }
@@ -283,7 +303,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       expect((await page.goto('/curator/compendium'))?.status()).toBe(200);
       const add = page.getByRole('link', { name: 'Add Ingredient' });
       await expect(add).toBeVisible();
-      await assertNoAccessibilityViolations(page);
 
       const gate = await holdModalRequests(page, '/curator/compendium', 'new');
       await add.click();
@@ -297,7 +316,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       const name = adding.getByRole('textbox', { name: 'Name', exact: true });
       await expect(name).toBeVisible();
       await expect(busy(adding)).toHaveCount(0);
-      await assertNoAccessibilityViolations(page);
 
       const addForm = async (dialog: Locator, form: string) => {
         const box = dialog.getByRole('combobox', { name: 'New Form' });
@@ -344,6 +362,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await addForm(editing, 'Oil');
       const oil = editing.getByRole('group', { name: 'Oil', exact: true });
       await oil.getByRole('textbox', { name: 'Safety Notes' }).fill('Dilute before use.');
+      // Sweep gap: the compendium entry dialog with an Oil form added and its Safety Notes filled.
       await assertNoAccessibilityViolations(page);
       await expect(save).toBeEnabled();
       await save.click();
@@ -367,6 +386,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(reopenedOil.getByRole('textbox', { name: 'Safety Notes' })).toHaveValue(
         'Dilute before use.',
       );
+      // Sweep gap: the compendium entry dialog reopened with an Oil form's Details & Care section expanded.
       await assertNoAccessibilityViolations(page);
       await renamed.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(renamed).toHaveCount(0);
@@ -392,7 +412,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       expect((await page.goto('/curator/categories'))?.status()).toBe(200);
       const add = page.getByRole('link', { name: 'Add Category' });
       await expect(page.getByRole('table', { name: 'Categories' })).toBeVisible();
-      await assertNoAccessibilityViolations(page);
 
       // Closed while it loads, it stays closed once its page lands.
       const newGate = await holdModalRequests(page, '/curator/categories', 'new');
@@ -420,7 +439,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(adding).toBeVisible();
       await expect(page).toHaveURL(/\/curator\/categories\?new$/);
       await expect(adding.getByRole('button', { name: 'Save Category' })).toBeDisabled();
-      await assertNoAccessibilityViolations(page);
       await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft');
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       await adding.getByRole('combobox', { name: 'Group' }).click();
@@ -443,6 +461,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(busy(editing)).toHaveCount(1);
       await expect(editing.getByRole('textbox')).toHaveCount(0);
       await expect(page).toHaveURL(/\/curator\/categories$/);
+      // Sweep gap: the Edit Category dialog while its content is still loading, with the busy status and no fields.
       await assertNoAccessibilityViolations(page);
       const pressed = await editing.elementHandle();
       await editGate.release();
@@ -455,6 +474,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await page.unrouteAll();
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft Renamed');
       await editing.getByRole('textbox', { name: 'Description' }).fill('Rewritten by the story');
+      // Sweep gap: the Edit Category dialog with the name and description rewritten and Save Category enabled; the sweep opens only Add.
       await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Category' }).click();
       await expect(editing).toHaveCount(0);
@@ -480,6 +500,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await deleteFrom(held, 'Category');
       await expect(held.getByRole('alert')).toContainText('Bay Laurel');
       await expect(held).toBeVisible();
+      // Sweep gap: the Edit Category dialog showing the refusal alert for a category that entries still hold.
       await assertNoAccessibilityViolations(page);
       await held.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(held).toHaveCount(0);
@@ -500,7 +521,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       );
       expect((await page.goto('/curator/category-groups'))?.status()).toBe(200);
       await expect(page.getByRole('table', { name: 'Category Groups' })).toBeVisible();
-      await assertNoAccessibilityViolations(page);
 
       await page.getByRole('link', { name: 'Add Group' }).click();
       const adding = page.getByRole('dialog', { name: 'Add Category Group' });
@@ -514,6 +534,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
         .fill('#0c5393');
       const saveNew = adding.getByRole('button', { name: 'Save Group' });
       await expect(saveNew).toBeEnabled();
+      // Sweep gap: the Add Category Group dialog with both theme colours filled, showing the colour preview.
       await assertNoAccessibilityViolations(page);
       await saveNew.click();
       await expect(adding).toHaveCount(0);
@@ -528,6 +549,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(editing).toBeVisible();
       const dark = editing.getByRole('textbox', { name: 'Dark Theme Colour', exact: true });
       // Scanned before the bad colour goes in, so the preview shows it at its failing contrast.
+      // Sweep gap: the Edit Category Group dialog with its colour preview shown at a saved colour.
       await assertNoAccessibilityViolations(page);
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Bulwarks');
       await dark.fill('#0c5393');
@@ -628,6 +650,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await undo.click();
       await expect(name).toHaveValue(savedName);
       await expect(save).toBeDisabled();
+      // Sweep gap: the Edit Category Group dialog after an undo, with the Edit History status filled.
       await assertNoAccessibilityViolations(page);
 
       // The picker reports every pointer move; one chord still takes the whole drag back.
@@ -680,7 +703,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await signInAs(page, 'forms@story-18.test', ['discord'], 'admin');
       expect((await page.goto('/curator/forms'))?.status()).toBe(200);
       await expect(page.getByRole('table', { name: 'Forms' })).toBeVisible();
-      await assertNoAccessibilityViolations(page);
 
       await page.getByRole('link', { name: 'Add Form' }).click();
       const adding = page.getByRole('dialog', { name: 'Add Form' });
@@ -691,6 +713,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       await adding.getByRole('combobox', { name: 'Group' }).click();
       await adding.getByRole('option', { name: 'Mineral', exact: true }).click();
+      // Sweep gap: the Add Form dialog with the Group picker having chosen Mineral and the Name and Description filled; the sweep opens the dialog empty.
       await assertNoAccessibilityViolations(page);
       await adding.getByRole('button', { name: 'Save Form' }).click();
       await expect(adding).toHaveCount(0);
@@ -713,6 +736,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(save).toHaveAccessibleDescription(/\S/);
       await editing.getByRole('combobox', { name: 'Group' }).click();
       await editing.getByRole('option', { name: 'Substance', exact: true }).click();
+      // Sweep gap: the Edit Form dialog with a new name and the Group picker having chosen Substance; the sweep opens only Add.
       await assertNoAccessibilityViolations(page);
       await save.click();
       await expect(editing).toHaveCount(0);
@@ -742,7 +766,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       const { userId } = await signInAs(page, 'form-groups@story-18.test', ['discord'], 'admin');
       expect((await page.goto('/curator/form-groups'))?.status()).toBe(200);
       await expect(page.getByRole('table', { name: 'Form Groups' })).toBeVisible();
-      await assertNoAccessibilityViolations(page);
 
       await page.getByRole('link', { name: 'Add Group' }).click();
       const adding = page.getByRole('dialog', { name: 'Add Form Group' });
@@ -756,7 +779,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       const save = adding.getByRole('button', { name: 'Save Group' });
       await expect(save).toBeEnabled();
-      await assertNoAccessibilityViolations(page);
       await save.click();
       await expect(adding).toHaveCount(0);
       const row = rowOf(page, 'Form Groups', 'Aaa Fixture Matter');
@@ -777,6 +799,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       });
       await expect(editing).toBeVisible();
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Fixture Stuff');
+      // Sweep gap: the Edit Form Group dialog with a new name filled; the sweep opens only Add.
       await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Group' }).click();
       await expect(editing).toHaveCount(0);
@@ -827,7 +850,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
         await signInAs(page, `${slugify(label)}@story-18.test`, ['discord'], 'admin');
         expect((await page.goto(path))?.status()).toBe(200);
         await expect(page.getByRole('table', { name: title })).toBeVisible();
-        await assertNoAccessibilityViolations(page);
 
         await page.getByRole('link', { name: `Add ${label}` }).click();
         const adding = page.getByRole('dialog', { name: `Add ${label}` });
@@ -836,7 +858,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
         await expect(adding.getByRole('button', { name: `Save ${label}` })).toBeDisabled();
         await adding.getByRole('textbox', { name: 'Name' }).fill(added);
         await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
-        await assertNoAccessibilityViolations(page);
         await adding.getByRole('button', { name: `Save ${label}` }).click();
         await expect(adding).toHaveCount(0);
         const row = rowOf(page, title, added);
@@ -853,7 +874,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
         await editing.getByRole('textbox', { name: 'Name' }).fill(renamedTo);
         await editing.getByRole('textbox', { name: 'Description' }).fill('Rewritten by the story');
         await expect(save).toHaveAccessibleDescription(/\S/);
-        await assertNoAccessibilityViolations(page);
         await save.click();
         await expect(editing).toHaveCount(0);
         const renamed = rowOf(page, title, renamedTo);
@@ -883,7 +903,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       const { userId } = await signInAs(page, 'traditions@story-18.test', ['discord'], 'admin');
       expect((await page.goto('/curator/deity-traditions'))?.status()).toBe(200);
       await expect(page.getByRole('table', { name: 'Deity Traditions' })).toBeVisible();
-      await assertNoAccessibilityViolations(page);
 
       await page.getByRole('link', { name: 'Add Tradition' }).click();
       const adding = page.getByRole('dialog', { name: 'Add Tradition' });
@@ -893,6 +912,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       const saveNew = adding.getByRole('button', { name: 'Save Tradition' });
       await expect(saveNew).toBeEnabled();
+      // Sweep gap: the Add Tradition dialog filled with Save Tradition enabled; the sweep opens the dialog empty.
       await assertNoAccessibilityViolations(page);
       await saveNew.click();
       await expect(adding).toHaveCount(0);
@@ -914,6 +934,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       });
       await expect(editing).toBeVisible();
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Mockish');
+      // Sweep gap: the Edit Tradition dialog with a new name filled; the sweep opens only Add.
       await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Tradition' }).click();
       await expect(editing).toHaveCount(0);
@@ -959,7 +980,6 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       const { userId } = await signInAs(page, 'deities@story-18.test', ['discord'], 'admin');
       expect((await page.goto('/curator/deities'))?.status()).toBe(200);
       await expect(page.getByRole('table', { name: 'Deities' })).toBeVisible();
-      await assertNoAccessibilityViolations(page);
       // The list runs by tradition, then name, so a deity under Greek sits pages in.
       await page.goto('/curator/deities?query=Aaa+Testri');
 
@@ -973,6 +993,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await tradition.click();
       await adding.getByRole('option', { name: 'Greek', exact: true }).click();
       await expect(tradition).toHaveValue('Greek');
+      // Sweep gap: the Add Deity dialog with the Tradition picker having chosen Greek; the sweep opens the dialog empty.
       await assertNoAccessibilityViolations(page);
       await adding.getByRole('button', { name: 'Save Deity' }).click();
       await expect(adding).toHaveCount(0);
@@ -990,6 +1011,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
         `/curator/deities?query=Aaa+Testri&edit=${deitySlug('Aaa Testris', 'Greek')}`,
       );
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testrix');
+      // Sweep gap: the Edit Deity dialog with a new name filled; the sweep opens only Add.
       await assertNoAccessibilityViolations(page);
       await editing.getByRole('button', { name: 'Save Deity' }).click();
       await expect(editing).toHaveCount(0);
@@ -1026,6 +1048,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await deleteFrom(held, 'Deity');
       await expect(held.getByRole('alert')).toContainText(entry);
       await expect(held).toBeVisible();
+      // Sweep gap: the Edit Deity dialog showing the refusal alert for a deity that an entry still holds.
       await assertNoAccessibilityViolations(page);
       await held.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(held).toHaveCount(0);

@@ -63,6 +63,7 @@ test.describe('a coven’s invitation from the account page', () => {
     await page.goto('/coven');
     const see = page.getByRole('link', { name: 'See your invitations' });
     await expect(see).toBeVisible();
+    // Sweep gap: the coven list for a user holding a pending invitation, with See Your Invitations shown.
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
 
@@ -131,6 +132,7 @@ test.describe('a declined coven invitation', () => {
       name: `Remove the declined invitation to ${invited}`,
     });
     await expect(remove).toBeVisible();
+    // Sweep gap: the account page listing a declined invitation with its Remove button.
     await assertNoAccessibilityViolations(page);
 
     await remove.click();
@@ -189,6 +191,7 @@ test.describe('a deleted coven’s invitation', () => {
         sql`update workspaces set deleted_at = now(), deleted_by = ${ownerId} where id = ${covenId}`,
     );
     const closedMessage = await refusalAt(page, linkPath);
+    // Sweep gap: the refusal page for an invitation to a coven that has been deleted.
     await assertNoAccessibilityViolations(page);
 
     // Not a broken link's reason.

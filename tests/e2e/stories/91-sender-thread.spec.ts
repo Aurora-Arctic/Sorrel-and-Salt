@@ -56,6 +56,7 @@ test.describe('Story 91: A Sender Answers in the Thread', { tag: '@story-91' }, 
       await expect(request.getByRole('region', { name: 'Thread' })).toContainText(
         'Which jar is it?',
       );
+      // Sweep gap: the sender's request dialog in the Waiting for You state, with the keeper's question in the thread.
       await assertNoAccessibilityViolations(page);
       await request.getByLabel(/^Your Reply/).fill('The red one.');
       await request.getByRole('button', { name: 'Reply', exact: true }).click();
@@ -81,6 +82,7 @@ test.describe('Story 91: A Sender Answers in the Thread', { tag: '@story-91' }, 
       await expect(list.getByText('Resolved')).toBeVisible();
       await list.getByRole('link', { name: subject }).click();
       const request = page.getByRole('dialog', { name: subject });
+      // Sweep gap: the sender's request dialog in the Resolved state, with the reply box still offered.
       await assertNoAccessibilityViolations(page);
       await request.getByLabel(/^Your Reply/).fill('It opened, thank you, but another is stuck.');
       await request.getByRole('button', { name: 'Reply', exact: true }).click();

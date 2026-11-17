@@ -7,7 +7,7 @@ import type { SignInLedes } from '@/components/SignInPanel/types';
 import { emailPagePath } from '@/lib/account-email';
 import { signedInLanding } from '@/lib/landing';
 import { looksLikeCardToken } from '@/lib/invitation-token';
-import { getSession, sessionIsVerified } from '@/lib/request-session';
+import { getSession, hasSessionCookie, sessionIsVerified } from '@/lib/request-session';
 import { safeReturnPath, signInErrorMessage } from '@/lib/sign-in';
 import { invitationTokenFromPath } from '@/lib/invitation-link';
 import { publicPageMetadata } from '@/lib/page-metadata';
@@ -17,16 +17,15 @@ import type { SignInPageProps } from './types';
 import PageFrame from '@/components/PageFrame';
 
 /**
- * The bare address is the one to index. `?next=` and `?error=` show the same form, so they name it
- * as canonical and stay out of search results, their links still followed.
+ * Out of search results at every address, links followed: the form is no use as a result, and a crawler that finds it
+ * indexable keeps fetching a page that is rendered per request. Canonical stays `/sign-in`, so `?next=` and `?error=` name it.
  */
-export async function generateMetadata({ searchParams }: SignInPageProps): Promise<Metadata> {
-  const { next, error } = await searchParams;
-  return {
-    ...publicPageMetadata('Sign In', `Sign in to ${SITE_NAME}.`, '/sign-in'),
-    ...((next !== undefined || error !== undefined) && { robots: { index: false, follow: true } }),
-  };
-}
+export const metadata: Metadata = publicPageMetadata(
+  'Sign In',
+  `Sign in to ${SITE_NAME}.`,
+  '/sign-in',
+  { noIndex: true },
+);
 
 /** Read from the address alone, as the invite page does signed out: reading the invitation would tell a visitor with no account whether its token is live. */
 function ledesFor(next: string | undefined): SignInLedes | undefined {
@@ -39,7 +38,7 @@ function ledesFor(next: string | undefined): SignInLedes | undefined {
 export default async function SignInPage({ searchParams }: SignInPageProps) {
   const params = await searchParams;
   const next = safeReturnPath(params.next);
-  const session = await getSession();
+  const session = (await hasSessionCookie()) ? await getSession() : null;
   if (session) {
     const target = (next as Route | undefined) ?? (await signedInLanding(session));
     redirect((await sessionIsVerified()) ? target : (emailPagePath(target) as Route));

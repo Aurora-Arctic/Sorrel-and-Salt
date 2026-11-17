@@ -4,6 +4,8 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
 import { destinationMenu } from './stories/ingredient-dialogs';
+import { DESKTOP_WIDTH, PURPOSE_WIDTHS } from './breakpoints';
+import { settledBox } from './waits';
 
 // A MenuButton's menu hangs from its button's end edge and stays on screen (claude-docs/components/menu-button.md,
 // "Contracts"), measured on the bar's Add Ingredient chevron at a desktop width and the narrowest phone.
@@ -17,8 +19,8 @@ test.beforeAll(async () => {
 // menu is wider than the room before the chevron's end, so it is shifted back
 // onto the screen instead (Floating UI's shift, MenuButton/index.tsx).
 for (const { viewport, hangs } of [
-  { viewport: { width: 1280, height: 800 }, hangs: true },
-  { viewport: { width: 320, height: 640 }, hangs: false },
+  { viewport: { width: DESKTOP_WIDTH, height: 800 }, hangs: true },
+  { viewport: { width: PURPOSE_WIDTHS.reflow, height: 640 }, hangs: false },
 ]) {
   test(`the Add Ingredient menu opens under the chevron, inside a ${viewport.width}px window`, async ({
     page,
@@ -49,11 +51,8 @@ for (const { viewport, hangs } of [
     const { toggle, menu, choices } = destinationMenu(page);
     await toggle.click();
     await expect(choices).toHaveCount(2);
-    // Let the fade and the first placement settle before measuring.
-    await page.waitForTimeout(300);
-
     const button = (await toggle.boundingBox())!;
-    const box = (await menu.boundingBox())!;
+    const box = (await settledBox(menu))!;
     // Why it could fail: the menu is wider than the chevron, so a menu hung
     // from the chevron's start edge would run off the window's end.
     expect(box.width).toBeGreaterThan(button.width);
@@ -64,6 +63,7 @@ for (const { viewport, hangs } of [
     expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
     expect(box.y).toBeGreaterThanOrEqual(button.y + button.height);
     expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+    // Sweep gap: the Add Ingredient menu open under its chevron.
     if (hangs) await assertNoAccessibilityViolations(page);
   });
 }

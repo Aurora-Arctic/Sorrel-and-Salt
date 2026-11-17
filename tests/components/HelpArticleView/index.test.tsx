@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import HelpArticleView from '@/components/HelpArticleView';
+import { HELP_WIDGET_ELEMENTS } from '@/components/HelpWidget';
 import { hrefs } from '../../support/links';
 
 // One help article: its title, its Markdown body through the site's one sanitising renderer, the sub pages the
@@ -17,7 +18,14 @@ const SUBPAGES = [
 ];
 
 const view = (body: string, subpages = SUBPAGES) =>
-  render(<HelpArticleView title="Testwort Guide" body={body} subpages={subpages} />);
+  render(
+    <HelpArticleView
+      title="Testwort Guide"
+      body={body}
+      subpages={subpages}
+      widgets={HELP_WIDGET_ELEMENTS}
+    />,
+  );
 
 describe('HelpArticleView', () => {
   it('heads the page with Help, then the search box, then the article title beneath', () => {

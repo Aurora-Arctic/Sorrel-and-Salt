@@ -1,8 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from '../breakpoints';
 
 // The user modal's refused Change Role and Approve say so in the click feedback's callout (claude-docs/components/user-detail.md).
 
-const WIDTHS = [1280, 375] as const;
+const WIDTHS = [DESKTOP_WIDTH, PHONE_WIDTH] as const;
 
 async function openDialog(page: Page, width: number): Promise<Locator> {
   await page.setViewportSize({ width, height: 800 });
@@ -102,11 +103,8 @@ for (const width of WIDTHS) {
 
 // The story in Storybook's own page, where an iframe draws it: the callout must find its dialog across that boundary.
 const SIZES = [
-  [1512, 982],
-  [1440, 900],
-  [1280, 800],
-  [1024, 800],
-  [768, 900],
+  [DESKTOP_WIDTH, 800],
+  [PHONE_WIDTH, 800],
 ] as const;
 
 for (const [width, height] of SIZES) {
@@ -157,7 +155,7 @@ for (const { name, control, confirm } of CONTROLS) {
   test(`${name} refused in Storybook's frame: Escape closes the callout alone, a press elsewhere in the dialog closes it`, async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.setViewportSize({ width: DESKTOP_WIDTH, height: 800 });
     await page.goto('/?path=/story/admin-user-detail--in-a-modal&globals=theme:dark');
     const frame = page.frameLocator('#storybook-preview-iframe').first();
     const dialog = frame.getByRole('dialog', { name: 'Bo Fixturewort' });

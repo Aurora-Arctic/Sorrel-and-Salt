@@ -14,7 +14,7 @@ test.beforeAll(async () => {
 test('the Shared switch stands above the footer buttons and Delete Spell shares the Save Spell row', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: page.viewportSize()!.width, height: 900 });
   const coven = await seedCoven(page, 'Fixture Coven Footer', 'spell-footer-layout.test', {
     A: 'owner',
   });

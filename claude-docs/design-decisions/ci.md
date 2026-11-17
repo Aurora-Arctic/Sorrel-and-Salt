@@ -288,9 +288,10 @@ Playwright is kept to what only a real server can prove; what was missing was tr
 - **Each speed lever is one task and one PR**, measured before and after on the same tree: three runs, the median, wall time from `time` around `flock /tmp/sorrel-e2e.lock npx playwright test`, with per-file sums from the report. A measurement says whether the servers were warm, because local runs reuse servers already up.
 - **Not pursued, and why:**
   - **Postgres `fsync=off` and friends** for the test instance: clones take tens of milliseconds and each test writes a handful of rows, so the saving is estimated at 1–3 s of summed test time, under a second of wall. Revisit only if a profile shows database waits.
-  - **Trimming the double-theme and double-width axe scans:** they are the accessibility gate. A quarter fewer scans would save about 2 s of wall at 6 workers (estimate), not worth the coverage.
+  - **Cutting the double-theme and double-width axe scans outright:** reassessed. A theme switch changes colour tokens and no markup, so the dark pass runs only the colour rules; a scan that repeats a state the sweep already covers adds time and no finding. A phone layout whose markup differs is scanned once, in full, at 375 px. The rule is in `testing/layer-ownership.md`, rule 9.
   - **Splitting the 12.9 s compendium flow:** the longest test plus startup is the floor of any run, and 12.9 s is under the 27.5 s ideal span, so it is off the critical path.
-  - **CI sharding, `--only-changed`, project dependencies:** sharding pays more in pulls than it saves; `--only-changed` does not fit a gate that must run everything; seeding already lives in `globalSetup`.
+  - **`--only-changed`, project dependencies:** `--only-changed` does not fit a gate that must run everything; seeding already lives in `globalSetup`.
+  - **CI sharding:** rejected at 56 tests, because the pulls cost more than it saved. Reversed at 563 tests: each extra shard costs about 3 minutes of repeated work and removes about 4 minutes of test time (`claude-docs/ci/runner-budget.md`, "Playwright shards").
   - **A smaller build** (`productionBrowserSourceMaps` off): shared with the coverage report CI needs, and a change to the production bundle.
 
 ### Why
@@ -299,7 +300,7 @@ A lever not measured against a stated baseline cannot be told from noise.
 
 ### Rules out
 
-- Cutting accessibility scans for speed.
+- Cutting an accessibility scan of a state the sweep cannot reach, or any manual or keyboard check, for speed.
 
 ## Pre-commit on changed files only: lint-staged
 
@@ -673,8 +674,8 @@ Case B was read back as `[[{"context":"call-plain / leg (leg-off)"}]]`, case C a
 Part 1, in `vitest.yml` and `playwright.yml`:
 
 - `vitest-dom`, `vitest-node` and `vitest-db` carry `if: inputs.should-run`. The merge job `vitest` carries `if: ${{ !cancelled() && inputs.should-run }}`, so it still runs after a failed part but not on a filtered-off run.
-- The `playwright` job carries `if: inputs.should-run`. The step-level `should-run` gating is gone from both files.
-- Check names are unchanged (`vitest / vitest`, `playwright / playwright`). The only other caller of `playwright.yml` is `e2e-cache.yml`'s `warm` job, which relies on the default `should-run: true`.
+- The `playwright` job (its shards read `playwright / playwright (n)`) carries `if: inputs.should-run`; the shards join in `playwright-coverage.yml`, which has no merge job of its own. The step-level `should-run` gating is gone from both files.
+- The `vitest / vitest` check name is unchanged. The only other caller of `playwright.yml` is `e2e-cache.yml`'s `warm` job, which relies on the default `should-run: true`.
 - `playwright-coverage` reads only the `playwright` and `stories` results and outputs and uses `!cancelled()`. A skipped inner job leaves the caller's result `success` with empty outputs, so nothing breaks. Nothing `needs:` the vitest job.
 
 Part 2, in `checks.yml`:
@@ -988,7 +989,7 @@ A test proves a behaviour a user, admin or operator depends on, by the state it 
 
 1. Functional requirements only. No tests of the harness, CI YAML, docs, scripts, the Dockerfile or `package.json` wiring, and none for code only Claude agents run (`scripts/task-board.mjs`, the doc and citation tools, the CI summarisers).
 2. State, never copy. Assert the status, alert, row or chip, not a heading, label, placeholder, empty-state sentence, email subject or the sentence of an error whose kind (`Forbidden`, `extensions.code`, zod `path`, `reason`) is already asserted. The one exception: the words are the state when nothing else tells two outcomes apart, such as which of two lock reasons won. Locators keep exact names.
-3. A regression test needs a bug that reached a PR or production, and cites it. A bug caught while building gets none, and neither does "X stays removed".
+3. A regression test needs a bug that reached `staging` or production, and cites it. A bug caught while building, including one found in an open PR, gets none, and neither does "X stays removed".
 4. No presentation in jsdom: no class name, custom property, z-index, compiled-Sass value or faked layout. The workshop story and the Playwright axe scan own presentation. A real browser measuring a layout requirement, and one token-contrast check per theme, are allowed.
 5. One row per shared path. A `describe.each` over a component's or module's own config table runs the shared behaviour on one row; every other row gets only what it changes. A fixed list is proven by one accepted value, one refused, and one equality check of the database's list against the code's.
 6. Each layer proves only what it adds. A service refusal is asserted once, as one non-keeper fixture with its precondition, when the check reads only the site role. A GraphQL file never re-tests the service, the scope sweep or signed-out callers. A module validation test asserts only what its schema adds over `src/lib/validation.ts`. A page test holds the guard, its search params reaching the service, and its modal close href; Pager owns paging.
@@ -1019,7 +1020,7 @@ A copy, class or memorial test adds no coverage of behaviour and costs a CI-minu
 - **Not taken:**
   - **Builds or Playwright on Blacksmith** (`claude-docs/ci/runner-budget.md`, "Why Blacksmith was dropped"). Revisit only if the free tier is raised or Playwright grows past about 5 minutes.
   - **Merging the seven small `checks` legs into one runner:** saves about 150 s of free GitHub minutes per run and changes every check name, with no gate-time gain because they run beside Playwright.
-  - **Sharding Playwright across runners:** 56 tests do not need it, and the pull and build are fixed costs each shard would repeat.
+  - **Sharding Playwright across runners:** rejected at 56 tests, where the pull and build were fixed costs each shard would repeat. **Taken once the gate suite reached 563 tests** (three shards, stories two): an extra shard repeats about 3 minutes (about 94 s outside the test step and about 81 s of server start inside it) and removes about 4 minutes of test time, and the runners are free. See `claude-docs/ci/runner-budget.md`, "Playwright shards".
 
 ### Why
 

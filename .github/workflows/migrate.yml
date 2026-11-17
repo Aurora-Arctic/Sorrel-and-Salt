@@ -157,8 +157,8 @@ jobs:
           # The source, never the value — every candidate is masked.
           echo "Resolved DATABASE_URL from $source"
 
-      # `drizzle-kit migrate` swallows the driver error and exits 1, so connect
-      # first for a cause. Reads the RESOLVED value, whichever source won,
+      # Connect first for a hint beside the cause: a bad URL is told apart from
+      # a failed migration before any migration runs. Reads the RESOLVED value, whichever source won,
       # since that is what migrates. Fatal here, advisory in deploy.yml.
       - name: Probe the database
         if: steps.guard.outputs.enabled == 'true'

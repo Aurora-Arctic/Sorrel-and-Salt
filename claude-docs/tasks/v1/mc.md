@@ -178,13 +178,13 @@ _Acceptance criteria:_
 - The Playwright gate runs as 3 shards and the stories as 2, each using a matrix and `--shard` with the blob reporter, and `merge-reports` joins them into one report (T-1, T-3)
 - The axe sweep generates one test per route group and per modal group from `ROUTE_SCANS` and `MODAL_SCANS`, so `fullyParallel` can spread them, and `tests/guards/axe-scans.test.ts` still passes (T-2)
 - Shard cache, coverage and report artifacts have shard-unique names, and `playwright-coverage` reads every shard's artifacts (T-3)
-- The shards join at the end of the run, with no new aggregator job (R-2): the Playwright shards join in the job that runs `merge-reports`, which runs when a shard fails and fails when any shard failed; `vitest / vitest` stays the required check and still needs every part
+- The shards join at the end of the run, with no new aggregator job (R-2): the Playwright shards join in `playwright-coverage`, which runs `merge-reports` per suite and fails when the gate failed; `vitest / vitest` keeps its name, the one listed for branch protection, and still needs every part
 - `summarize-playwright.mjs`, `summarize-vitest.mjs` and the sections of `pr-gate.yml` (`needs` and the skipped-section logic) aggregate across shards, and `vitest.yml` no longer hard-codes a blob count of 3 or a fixed `VITEST_PARTS_PASSED` (T-3)
 - The `vitest-dom` project is re-measured first, following `runner-budget.md`'s deferred order, and is sharded with `--shard` and a unique blob name only if its test step is still over 7 minutes (R-1); the PR says which
 - The Playwright comment shows its duration, a slowest-files list beside Vitest's, and the stories coverage figure on its own line (T-4, T-5)
 - The comment warns about each Playwright test over 30s, naming the test (R-3)
 - Every CI test step is under 7 minutes in the PR's own run
-- The timing tables in `claude-docs/ci/runner-budget.md` are refreshed from CI, and the file gains R-2 (shards join in the end-of-run merge jobs) (T-7)
+- The timing tables in `claude-docs/ci/runner-budget.md` are refreshed from CI, and the file gains R-2 (the shards join at the end of the run: Vitest's in `vitest / vitest`, Playwright's in `playwright-coverage`) (T-7)
 - `claude-docs/testing/layer-ownership.md`, "The file budget", gains R-3 (30s per Playwright test, named in the comment)
 - The two rejections of Playwright sharding in `claude-docs/design-decisions/ci.md` are corrected in place: they were made at 56 tests, the gate now has 563, and the entry weighs each shard's repeated cost, about 94s outside the test step plus about 81s of server start inside it, so about 3 minutes per extra shard, against about 4 minutes of test time each shard removes
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
@@ -220,7 +220,7 @@ _Acceptance criteria:_
 
 - A shared e2e breakpoint file lists the widths the code crosses (640, 896, 928, 800, the page-header container widths and `TABLET_BAND`) with the 375 phone width as the one constant outside the list, and a guard in `tests/guards/` refuses a `setViewportSize` width that comes from neither; it lands in the same commit, is seen failing once with a copy put back, and has an empty allowlist (R-4)
 - No width is written in two places that must change together: the breakpoint file is checked against MC.9's `container-from` and `container-to` mixins (D-244) and against D-12, and the PR names any width it restates and why
-- The width sweeps are cut as T-13 sets out: `tabbed-page-alignment` keeps 712 and drops 500, 600, 680, 700 and 1000; `jump-menu-width` keeps 700, 900 and 1000, with its stale `width < 1200` guard at 928; `page-with-nav-layout` drops 1280; `shell.spec.ts:430-436` uses one `goto` and a `setViewportSize` per step
+- The width sweeps are cut as T-13 sets out: `tabbed-page-alignment` keeps 712 and drops 500, 600, 680, 700 and 1000; `jump-menu-width` keeps 800, 927 and 929, straddling the 928 edge, with its stale `width < 1200` guard replaced by one at 928; `page-with-nav-layout` drops 1280; `shell.spec.ts:430-436` uses one `goto` and a `setViewportSize` per step
 - The identical-body pairs in T-14 are merged or cut (`skeleton-layout`, `skeleton-back-scroll`, `help-pages`, `spell-recipe-layout`, `theme-switch`, `spell-quick-look`, `spell-footer-layout`, `ingredient-details-modal`), and no loop row runs the same code as another (R-5)
 - The design pins in T-15 are cut, the unasserted screenshots in `stories/06-spell-preview` are deleted, and the merges in T-16 are made
 - Every kept width, pin and loop row in T-17 is still proved by a test that is not cut, and the PR table names, for each cut, the test that keeps its rule proved

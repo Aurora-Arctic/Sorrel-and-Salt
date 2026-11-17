@@ -5,6 +5,7 @@ import { seedCoven } from './stories/coven-ingredients';
 import { signInAgainAs, signInAs } from './session';
 import { SITE_ROLE_ACCESS } from '@/components/UserList/roles';
 import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/roles';
+import { DESKTOP_WIDTH } from './breakpoints';
 
 // Each Role column carries a tip per row saying what the role may do, in the words Change Role shows:
 // the site roles on the keeper's People page, the coven roles on a coven's members page.
@@ -26,6 +27,7 @@ test('a keeper opens a role tip on the People page and reads what the role may d
   await expect(tip).toBeVisible();
   await expect(tip).toHaveText(SITE_ROLE_ACCESS.admin);
 
+  // Sweep gap: the role tip open on the People page.
   await assertNoAccessibilityViolations(page);
   await page.keyboard.press('Escape');
   await expect(tip).toBeHidden();
@@ -35,7 +37,7 @@ test('a role tip in a wide People table wraps its text inside its bubble and the
   page,
 }) => {
   // Wide enough that the table keeps its columns rather than stacking into cards.
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
   await signInAs(page, 'wrap@role-tooltips.test', ['discord'], 'admin');
   await page.goto('/keepers/users?query=wrap@role-tooltips.test');
 
@@ -85,5 +87,6 @@ test('an owner opens a role tip on the members page and reads what the role may 
   await expect(tip).toBeVisible();
   await expect(tip).toHaveText(WORKSPACE_ROLE_ACCESS.viewer);
 
+  // Sweep gap: the role tip open on the members page.
   await assertNoAccessibilityViolations(page);
 });

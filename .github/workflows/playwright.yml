@@ -7,6 +7,12 @@ name: Playwright E2E
 # Playwright's Chromium has no musl support.
 on:
   workflow_call:
+    outputs:
+      shards:
+        description: >-
+          How many shards the suite ran as, for the join to count blobs against.
+          Empty when the job did not run.
+        value: ${{ jobs.playwright.outputs.shards }}
     inputs:
       image:
         description: E2E testing image ref to run against (from build-e2e-image.yml)
@@ -16,21 +22,12 @@ on:
         description: Postgres service image ref to run against (from build-db-image.yml, built once by the caller — same image vitest.yml uses)
         required: true
         type: string
-      pr-number:
-        description: Pull request number to comment on (omit to skip PR commenting)
-        required: false
-        type: string
-      merge-queue:
-        description: Set true when called for a merge queue — uses a separate, merge-queue-labeled comment thread and posts only on failure, instead of always commenting pass/fail. Nothing passes it today — merge-queue.yml was deleted with the five check workflows (MB.32) and is restored from git history when M7.A.1 turns the merge queue on.
-        required: false
-        type: boolean
-        default: false
       should-run:
         description: >-
           Set false to skip the job before it starts, so a run the path filter
           rules out never pulls its container. pr-gate passes this from its
           path-filter output instead of putting an `if:` on the calling job, which
-          would report one bare "playwright" check in place of "playwright / playwright"
+          would report one bare "playwright" check in place of "playwright / playwright (n)"
           (claude-docs/design-decisions/mb.39-job-level-if-and-check-names.md).
           Defaults true so a caller that does no path filtering is unaffected.
         required: false
@@ -53,25 +50,32 @@ on:
         required: false
         type: string
         default: e2e
-    outputs:
-      outcome:
-        description: >-
-          The run step's outcome. The story suite's job reports success whatever
-          its stories did (continue-on-error), so a caller reads this instead.
-        value: ${{ jobs.playwright.outputs.outcome }}
 
 permissions:
   contents: read
   # read: this job pulls images and pushes none.
   packages: read
-  pull-requests: write
 
 jobs:
+  # One job per shard of the suite: Playwright's `--shard i/n` runs the i-th
+  # share of the tests, each shard on a runner and database of its own. The
+  # shards write blob reports, which playwright-coverage.yml joins
+  # (claude-docs/ci/runner-budget.md, "Playwright shards"). The job is named
+  # `playwright`, so each shard's check reads "playwright / playwright (n)".
+  # Add a shard by editing the matrix below; the join takes its count from the
+  # `shards` output.
   playwright:
     if: inputs.should-run
-    runs-on: ubuntu-26.04
     outputs:
-      outcome: ${{ steps.run.outcome }}
+      shards: ${{ strategy.job-total }}
+    runs-on: ubuntu-26.04
+    strategy:
+      # A failed shard must not cancel the others: the join needs every
+      # shard's results.
+      fail-fast: false
+      matrix:
+        # The build-only run builds once and runs no spec, so it takes one shard.
+        shard: ${{ fromJSON(inputs.build-only && '[1]' || inputs.suite == 'stories' && '[1,2]' || '[1,2,3]') }}
     container:
       image: ${{ inputs.image }}
       credentials:
@@ -119,8 +123,8 @@ jobs:
       # playwright.config.ts's webServer.reuseExistingServer reads this and
       # always starts a fresh server.
       CI: true
-      # Read by summarize-playwright.mjs and summarize-stories.mjs.
-      PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
+      # Where the blob reporter writes this shard's report.
+      PLAYWRIGHT_BLOB_OUTPUT_DIR: /app/.reports/blob-report
       # tests/e2e/database.ts derives each worker's sorrel_e2e_<slot> URL from it.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # The webServer's production build needs a Better Auth secret, and a
@@ -162,30 +166,31 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-e2e-${{ hashFiles('package-lock.json') }}-
 
-      # The webServer builds and serves; the browser is in the image. The
-      # reporters (list, json, html) come from playwright.config.ts under CI:
-      # a `--reporter` here would replace them and lose the html report's
-      # output folder. Under build-only every title matches `.`, so no spec
-      # runs, but Playwright starts the webServers, and so the build, before
-      # it loads a spec.
+      # The webServer builds and serves; the browser is in the image. `--reporter`
+      # replaces the config's list here on purpose: a shard writes the blob that
+      # playwright-coverage.yml turns into the json, html and story reports, which
+      # come from the config's reporters there. Under build-only every title matches `.`,
+      # so no spec runs, but Playwright starts the webServers, and so the
+      # build, before it loads a spec.
       #
       # `suite: stories` runs the story suite instead. `continue-on-error`
       # there because red scaffolds land on purpose and a story must never
-      # fail the job; `steps.run.outcome` below still reads the real result.
-      # It sits on the step because a job that calls a workflow cannot carry it.
+      # fail the job; playwright-coverage.yml reads the real result from the
+      # blobs. It sits on the step because a job that calls a workflow cannot carry it.
       - name: Run Playwright tests
         id: run
         continue-on-error: ${{ inputs.suite == 'stories' }}
         env:
           E2E_ARGS: ${{ inputs.build-only && '--grep-invert . --pass-with-no-tests' || '' }}
           SUITE: ${{ inputs.suite }}
+          SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
         run: |
           set -o pipefail
           if [ "$SUITE" = stories ]; then
-            STORIES_JSON=/app/stories.json npm run test:stories 2>&1 | tee /app/output.log
+            npm run test:stories -- --shard "$SHARD" --reporter=list,blob 2>&1 | tee /app/output.log
           else
             # Unquoted on purpose: two flags, or nothing.
-            npm run e2e -- $E2E_ARGS 2>&1 | tee /app/output.log
+            npm run e2e -- --shard "$SHARD" --reporter=list,blob $E2E_ARGS 2>&1 | tee /app/output.log
           fi
 
       # Only e2e-cache.yml's run on staging saves, and only after a build that
@@ -193,70 +198,39 @@ jobs:
       # hand on. The key is the restore step's, so both name the same entry,
       # and an exact hit has nothing new to save.
       - name: Save Next.js e2e build cache
-        if: inputs.build-only && steps.e2e-cache.outputs.cache-hit != 'true'
+        if: inputs.build-only && matrix.shard == 1 && steps.e2e-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6
         with:
           path: /app/.next-e2e/cache
           key: ${{ steps.e2e-cache.outputs.cache-primary-key }}
 
-      # Not failure-only: a coverage report on every run that ran a spec. Named
-      # per suite for the same reason as the report above.
+      # Not failure-only: a coverage report on every run that ran a spec. One
+      # artifact per suite and shard, since a name may appear once in a run;
+      # playwright-coverage.yml merges them.
       - name: Upload coverage artifact
         if: always() && !inputs.build-only
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ inputs.suite == 'stories' && 'playwright-coverage-stories' || 'playwright-coverage' }}
+          name: playwright-coverage-${{ inputs.suite == 'stories' && 'stories' || 'gate' }}-${{ matrix.shard }}
           path: /app/.reports/coverage-e2e/
           retention-days: 7
 
-      - name: Summarize output
-        id: summarize
-        if: always()
-        env:
-          SUITE: ${{ inputs.suite }}
-        run: |
-          if [ "$SUITE" = stories ]; then
-            node .github/scripts/summarize-stories.mjs
-          else
-            node .github/scripts/summarize-playwright.mjs
-          fi
-
-      # A failing story fails only its step, under continue-on-error, so the step's outcome is read as well as
-      # the job's. Each suite names its own artifact: the two run in one workflow, where a name may appear once.
-      # After the summary, which says whether a test failed and then passed on retry: that run is green, and
-      # its report holds the trace of the first attempt.
-      - name: Upload Playwright report
-        if: failure() || steps.run.outcome == 'failure' || steps.summarize.outputs.flaky == 'true'
+      # The shard's report, which playwright-coverage.yml downloads. Whatever the shard
+      # did, since a failed shard's blob holds its failures and their traces.
+      # The name carries the suite: the two run in one workflow.
+      - name: Upload blob report
+        if: always() && !inputs.build-only
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ inputs.suite == 'stories' && 'stories-report' || 'playwright-report' }}
-          path: |
-            /app/.reports/playwright-report/
-            /app/.reports/test-results/
-            /app/.reports/e2e-servers/
+          name: playwright-blob-${{ inputs.suite }}-${{ matrix.shard }}
+          path: /app/.reports/blob-report/
+          retention-days: 1
+
+      # The slot servers' logs, which a blob does not hold.
+      - name: Upload server logs
+        if: failure() || steps.run.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-servers-${{ inputs.suite }}-${{ matrix.shard }}
+          path: /app/.reports/e2e-servers/
           retention-days: 7
-
-      - name: Write job summary
-        if: always()
-        uses: ./.github/actions/job-summary
-        with:
-          check-name: ${{ inputs.suite == 'stories' && 'Stories' || 'Playwright E2E' }}
-          outcome: ${{ steps.run.outcome }}
-          log-file: /app/output.log
-          summary: ${{ steps.summarize.outputs.summary }}
-          details: ${{ steps.summarize.outputs.details }}
-
-      # This suite's section of the one Playwright comment (.github/actions/pr-comment).
-      - name: Comment on PR
-        if: ${{ !cancelled() && inputs.pr-number }}
-        uses: ./.github/actions/pr-comment
-        with:
-          check-name: Playwright
-          marker-slug: playwright
-          section: ${{ inputs.suite == 'stories' && 'stories' || 'gate' }}
-          pr-number: ${{ inputs.pr-number }}
-          merge-queue: ${{ inputs.merge-queue }}
-          outcome: ${{ steps.run.outcome }}
-          log-file: /app/output.log
-          summary: ${{ steps.summarize.outputs.summary }}
-          details: ${{ steps.summarize.outputs.details }}

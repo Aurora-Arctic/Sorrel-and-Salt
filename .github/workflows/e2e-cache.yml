@@ -55,13 +55,9 @@ jobs:
 
   warm:
     needs: [e2e-image, db-image]
-    # playwright.yml declares pull-requests: write for its PR comment, and a
-    # called workflow may not ask for more than its caller grants. With no
-    # pr-number it comments nowhere.
     permissions:
       contents: read
       packages: read
-      pull-requests: write
     uses: ./.github/workflows/playwright.yml
     with:
       image: ${{ needs.e2e-image.outputs.image }}

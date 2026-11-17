@@ -18,5 +18,5 @@ export interface VitestFileResult {
 export function buildSlowestFilesSection(
   testResults: VitestFileResult[] | undefined,
   repoRoot: string,
-  options?: { budgetMs?: number },
+  options?: { budgetMs?: number | null; notes?: string[]; notesHeading?: string },
 ): { over: SlowFile[]; block: string } | null;

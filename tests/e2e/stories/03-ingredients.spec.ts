@@ -160,6 +160,7 @@ test(
       await expect(
         page.getByRole('navigation', { name: 'Coven' }).getByRole('link', { name: 'Ingredients' }),
       ).toHaveAttribute('aria-current', 'page');
+      // Sweep gap: the ingredients list at 375 px with the coven nav marking Ingredients as the page.
       await assertNoAccessibilityViolations(page);
       await assertNoSidewaysScroll(page);
     });
@@ -211,7 +212,6 @@ test(
       await expect(cards).toHaveCount(4);
       await expect(nameSearch(page)).toHaveValue('');
       expect(new URL(page.url()).search).toBe('');
-      await assertNoAccessibilityViolations(page);
     });
   },
 );
@@ -251,6 +251,7 @@ test(
       await expect(cards).toHaveCount(1);
       await expect(rowOf(list, 'Rosemary')).toBeVisible();
       expect(new URL(page.url()).search).not.toBe('');
+      // Sweep gap: the ingredients list narrowed by two categories, with its active filter chips.
       await assertNoAccessibilityViolations(page);
     });
 
@@ -325,6 +326,7 @@ test(
         'Low Stock at 10 g or less',
       );
       await page.keyboard.press('Escape');
+      // Sweep gap: the ingredients list with a Low Stock tip open on a badge.
       await assertNoAccessibilityViolations(page);
     });
 
@@ -450,7 +452,8 @@ test(
       ]);
       expect(new URL(page.url()).pathname).toBe(path);
       expect(await stillSameDocument(page)).toBe(true);
-      await assertNoAccessibilityViolations(page);
+      // The list refreshes after the save; the next step must open an editor holding the saved stock.
+      await expect(rowOf(list, 'Rosemary')).toContainText('0.5 kg');
     });
 
     await test.step('Add Form offers the forms not held, and a form added is saved with the rest', async () => {
@@ -594,6 +597,7 @@ test(
       const details = page.getByRole('dialog', { name: 'Rosemary', exact: true });
       await expect(details).toBeVisible();
       await expect(stockEditor(details, 'Rosemary').open).toHaveCount(0);
+      // Sweep gap: the Quick Look dialog read by an Observer, with no Edit Stock button.
       await assertNoAccessibilityViolations(page);
     });
   },
@@ -698,7 +702,6 @@ test(
       await edit.click();
       await bin.click();
       await expect(question).toContainText('Testwort');
-      await assertNoAccessibilityViolations(page);
       await question.getByRole('button', { name: 'Cancel', exact: true }).click();
 
       await expect(question).toHaveCount(0);
@@ -792,6 +795,7 @@ test(
       await expect(cardsIn(ingredientList(page))).toHaveCount(0);
       await expect(firstAdd).toBeVisible();
       await expect(empty.getByRole('button')).toHaveCount(0);
+      // Sweep gap: the ingredients list of a coven with none, offering the first add.
       await assertNoAccessibilityViolations(page);
 
       // Filters is a button only once the page has hydrated (claude-docs/components/facet-panel.md).
@@ -821,6 +825,7 @@ test(
         'href',
         '/compendium?query=Knitbone',
       );
+      // Sweep gap: the ingredients list for a name that matches nothing, pointing to Search the Compendium.
       await assertNoAccessibilityViolations(page);
 
       await filterOf(page).getByRole('button', { name: 'Clear Name' }).click();
@@ -904,7 +909,6 @@ test(
       await expect(cards).toHaveCount(2);
       await expect(rowOf(list, 'Rosemary')).toBeVisible();
       await expect(localBadge(rowOf(list, 'Testwort'))).toBeVisible();
-      await assertNoAccessibilityViolations(page);
     });
 
     await test.step('local and in stock together, kept by a reload, and Back steps out of each', async () => {

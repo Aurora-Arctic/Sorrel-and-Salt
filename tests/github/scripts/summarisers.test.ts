@@ -1,11 +1,11 @@
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { fromRoot } from '../../support/paths';
+import { FLAKY_NOTE } from '../../../.github/scripts/lib/failure-list.mjs';
+import { mergedPlaywrightReport, runScript } from '../../support/github-scripts';
 
 // The summarisers are scripts, so each runs as its own process against fixture
 // files, and what it hands GitHub Actions is read back out of GITHUB_OUTPUT.
@@ -26,37 +26,7 @@ const write = (name: string, data: unknown) => {
   return path;
 };
 
-/**
- * Parses `name<<DELIM\nvalue\nDELIM\n` blocks strictly: anything outside a
- * block, an unterminated block or a reused delimiter fails the test.
- */
-function readOutputs(path: string) {
-  const text = readFileSync(path, 'utf8');
-  const outputs: Record<string, string> = {};
-  const delimiters: string[] = [];
-  let rest = text;
-  while (rest.length) {
-    const head = /^([a-z_]+)<<(\S+)\n/.exec(rest);
-    if (!head) throw new Error(`not an output block: ${JSON.stringify(rest.slice(0, 80))}`);
-    const [whole, name, delim] = head;
-    const end = rest.indexOf(`\n${delim}\n`, whole.length - 1);
-    if (end === -1) throw new Error(`output ${name} is never closed by ${delim}`);
-    outputs[name] = rest.slice(whole.length, Math.max(end, whole.length));
-    delimiters.push(delim);
-    rest = rest.slice(end + delim.length + 2);
-  }
-  return { outputs, delimiters };
-}
-
-function run(script: string, env: Record<string, string>) {
-  const output = join(dir, 'github-output');
-  writeFileSync(output, '');
-  execFileSync(process.execPath, [fromRoot('.github/scripts', script)], {
-    env: { NODE_ENV: 'test', PATH: process.env.PATH ?? '', GITHUB_OUTPUT: output, ...env },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  return readOutputs(output);
-}
+const run = (script: string, env: Record<string, string>) => runScript(script, env, dir);
 
 // Vitest's JSON reporter: the summariser reads paths relative to /app.
 const vitestResult = (file: string, failed: string[], extra: Record<string, unknown> = {}) => ({
@@ -238,6 +208,7 @@ describe('the failing-test list', () => {
         '<details><summary>Failing tests</summary>',
         '',
         '- `tests/e2e/a.spec.ts` › Testwort › breaks — boom',
+        `- \`tests/e2e/a.spec.ts\` › Testwort › wobbles${FLAKY_NOTE} — once`,
         '',
         '</details>',
       ].join('\n'),
@@ -289,5 +260,158 @@ describe('the flaky note', () => {
     );
     expect(lines).toContain(`- [ ] Story 7: Testwort walk${NOTE}`);
     expect(outputs.flaky).toBe('true');
+  });
+});
+
+describe('a flaky test in the Playwright gate', () => {
+  const FILE = 'tests/e2e/testwort.spec.ts';
+  // Two tests failed and then passed on retry, one passed, one failed outright.
+  const report = playwrightReport(
+    FILE,
+    [
+      { title: 'Testwort steeps', ok: true, status: 'flaky', message: 'first try' },
+      { title: 'Testwort boils', ok: true, status: 'flaky', message: 'first try' },
+      { title: 'Testwort cools', ok: true, status: 'expected' },
+      { title: 'Testwort burns', ok: false, status: 'unexpected', message: 'scorched' },
+    ],
+    { expected: 1, unexpected: 1, skipped: 0, flaky: 2 },
+  );
+  const onlyFlaky = playwrightReport(
+    FILE,
+    [
+      { title: 'Testwort steeps', ok: true, status: 'flaky', message: 'first try' },
+      { title: 'Testwort cools', ok: true, status: 'expected' },
+    ],
+    { expected: 1, unexpected: 0, skipped: 0, flaky: 1 },
+  );
+  const summarise = (data: unknown) =>
+    run('summarize-playwright.mjs', {
+      PLAYWRIGHT_JSON_OUTPUT_NAME: write('playwright.json', data),
+    });
+  const annotationsIn = (stdout: string) =>
+    stdout.split('\n').filter((line) => line.startsWith('::warning'));
+  const lineFor = (lines: string[], title: string) =>
+    lines.filter((line) => line.includes(`\`${FILE}\` › Testwort › ${title}`));
+
+  it('is named in the comment with the flaky note, as the stories summary names one', () => {
+    const lines = summarise(report).outputs.details.split('\n');
+
+    expect(lineFor(lines, 'Testwort steeps')).toHaveLength(1);
+    expect(lineFor(lines, 'Testwort steeps')[0]).toContain(FLAKY_NOTE);
+    expect(lineFor(lines, 'Testwort boils')).toHaveLength(1);
+    expect(lineFor(lines, 'Testwort boils')[0]).toContain(FLAKY_NOTE);
+    // The outright failure is listed too, without the note, and the passing test is not listed.
+    expect(lineFor(lines, 'Testwort burns')).toHaveLength(1);
+    expect(lineFor(lines, 'Testwort burns')[0]).not.toContain(FLAKY_NOTE);
+    expect(lineFor(lines, 'Testwort cools')).toEqual([]);
+  });
+
+  it('writes one ::warning annotation per flaky test, and none for any other', () => {
+    const annotations = annotationsIn(summarise(report).stdout);
+    const naming = (title: string) =>
+      annotations.filter((line) => line.includes(FILE) && line.includes(title));
+
+    expect(annotations).toHaveLength(2);
+    expect(naming('Testwort steeps')).toHaveLength(1);
+    expect(naming('Testwort boils')).toHaveLength(1);
+    expect(naming('Testwort cools')).toEqual([]);
+    expect(naming('Testwort burns')).toEqual([]);
+  });
+
+  it('writes no ::warning annotation when nothing was flaky', () => {
+    const steady = playwrightReport(
+      FILE,
+      [{ title: 'Testwort cools', ok: true, status: 'expected' }],
+      { expected: 1 },
+    );
+    const { stdout, outputs } = summarise(steady);
+
+    // Precondition: the run was summarised.
+    expect(outputs.summary).toMatch(/^1 passed, 0 failed/);
+    expect(annotationsIn(stdout)).toEqual([]);
+  });
+
+  it('does not make a run whose only problem is a flaky test a failure', () => {
+    // runScript throws on a non-zero exit, so reaching the outputs means the step passed.
+    const { outputs, stdout } = summarise(onlyFlaky);
+
+    // Precondition: the flaky test was seen, named and annotated.
+    expect(outputs.flaky).toBe('true');
+    expect(outputs.details).toContain(FLAKY_NOTE);
+    expect(annotationsIn(stdout)).toHaveLength(1);
+    expect(outputs.summary).toMatch(/^1 passed, 0 failed\b/);
+  });
+});
+
+describe('the Playwright summary, from the merged report of every shard', () => {
+  const SLOW = 'tests/e2e/testwort-slow.spec.ts';
+  const OVER = 'tests/e2e/testwort-over.spec.ts';
+  const UNDER = 'tests/e2e/testwort-under.spec.ts';
+  // The slow file's two tests ran on different shards; neither is over 30 s, the file is.
+  const report = mergedPlaywrightReport(
+    [
+      { file: UNDER, tests: [{ title: 'Testwort steeps', ms: 29_000 }] },
+      {
+        file: SLOW,
+        tests: [
+          { title: 'Testwort boils', ms: 25_000 },
+          { title: 'Testwort cools', ms: 20_000 },
+        ],
+      },
+      { file: OVER, tests: [{ title: 'Testwort simmers', ms: 31_000 }] },
+    ],
+    250_000,
+  );
+  const summarise = () =>
+    run('summarize-playwright.mjs', {
+      PLAYWRIGHT_JSON_OUTPUT_NAME: write('playwright.json', report),
+    }).outputs;
+  const linesOf = (outputs: Record<string, string>) =>
+    Object.values(outputs).join('\n').split('\n');
+
+  it("gives the run's duration in its summary, as a Vitest part's row does", () => {
+    const { summary } = summarise();
+
+    expect(summary).toMatch(/^4 passed, 0 failed/);
+    expect(summary).toContain(' in 4m 10s');
+  });
+
+  it("lists the slowest files, slowest first, each with its tests' time added up", () => {
+    const lines = linesOf(summarise());
+    // A file's row names it and gives its time in the Vitest list's format.
+    const row = (file: string, time: string) =>
+      lines.findIndex((line) => line.includes(`\`${file}\``) && line.includes(time));
+
+    expect(row(SLOW, '45.0 s')).toBeGreaterThan(-1);
+    expect(row(OVER, '31.0 s')).toBeGreaterThan(row(SLOW, '45.0 s'));
+    expect(row(UNDER, '29.0 s')).toBeGreaterThan(row(OVER, '31.0 s'));
+  });
+
+  it('warns of each test over 30 s by name, and of no test under it', () => {
+    const warnings = linesOf(summarise()).filter((line) => line.includes('⚠'));
+
+    expect(warnings.filter((line) => line.includes('Testwort simmers')).length).toBeGreaterThan(0);
+    expect(warnings.filter((line) => line.includes('Testwort steeps'))).toEqual([]);
+    expect(warnings.filter((line) => /Testwort (boils|cools)/.test(line))).toEqual([]);
+  });
+
+  it('puts the over-budget warnings inside the slowest-files block, after its table, and counts them in its summary', () => {
+    const lines = summarise().details.split('\n');
+    const close = lines.lastIndexOf('</details>');
+    const open = lines.findIndex((line) => line.startsWith('<details>'));
+    const warned = lines.findIndex(
+      (line) => line.includes('⚠') && line.includes('Testwort simmers'),
+    );
+    const lastRow = lines.map((line) => line.startsWith('|')).lastIndexOf(true);
+
+    // Preconditions: the block exists and the warning is in the output at all.
+    expect(open).toBeGreaterThan(-1);
+    expect(warned).toBeGreaterThan(-1);
+    // Nothing is printed after the block closes, and the warning sits between the table and the close.
+    expect(lines.slice(close + 1).filter(Boolean)).toEqual([]);
+    expect(warned).toBeGreaterThan(lastRow);
+    expect(warned).toBeLessThan(close);
+    // The collapsed line says one test is over.
+    expect(lines[open]).toMatch(/\b1 test\b/);
   });
 });

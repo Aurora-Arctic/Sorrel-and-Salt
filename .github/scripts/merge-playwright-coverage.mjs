@@ -1,9 +1,12 @@
-// Merges the gate suite's and the story suite's raw monocart coverage into one
-// report, and writes the `summary` and `details` outputs job-summary and
-// pr-comment consume, plus `ran` ('true' when any suite left raw data).
-// pr-gate.yml's `playwright-coverage` job downloads each suite's coverage
-// artifact into its own folder under DOWNLOAD_DIR; a suite that did not run
-// has no folder and is left out of the merge and the summary line.
+// Merges the gate suite's and the story suite's raw monocart coverage, every
+// shard's of each, into one report, and writes the `summary` and `details`
+// outputs job-summary and pr-comment consume, plus `ran` ('true' when any
+// suite left raw data). The story suite's own figure leads the details, since
+// the merged one hides how much of it the stories reach alone.
+// playwright-coverage.yml downloads each suite's shard artifacts into a folder
+// per suite under DOWNLOAD_DIR, a subfolder per shard artifact (or none, when
+// one artifact alone was fetched); a suite that did not run has no folder and
+// is left out of the merge and the summary line.
 import fs from 'node:fs';
 import path from 'node:path';
 import MCR from 'monocart-coverage-reports';
@@ -15,24 +18,34 @@ const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR ?? '/app/.reports/coverage-downloa
 const OUTPUT_DIR = process.env.MERGED_OUTPUT_DIR ?? '/app/.reports/coverage-e2e-merged';
 const REPO_ROOT = process.env.REPO_ROOT ?? '/app';
 
-// Artifact names are those of playwright.yml's "Upload coverage artifact" step.
+// Folder names are those of playwright-coverage.yml's download steps.
 const SUITES = [
-  { name: 'Gate', artifact: 'playwright-coverage' },
-  { name: 'Story', artifact: 'playwright-coverage-stories' },
+  { name: 'Gate', folder: 'gate' },
+  { name: 'Story', folder: 'stories' },
 ];
 
-const included = SUITES.map((suite) => ({
-  ...suite,
-  rawDir: path.join(DOWNLOAD_DIR, suite.artifact, 'raw'),
-})).filter(({ rawDir }) => fs.existsSync(rawDir) && fs.readdirSync(rawDir).length > 0);
+const hasFiles = (dir) => fs.existsSync(dir) && fs.readdirSync(dir).length > 0;
+
+/** The `raw` folders of one suite: its own, or one in each shard's artifact folder. */
+function rawDirsOf(folder) {
+  const suiteDir = path.join(DOWNLOAD_DIR, folder);
+  if (!fs.existsSync(suiteDir)) return [];
+  const own = path.join(suiteDir, 'raw');
+  const shards = fs
+    .readdirSync(suiteDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name !== 'raw')
+    .map((entry) => path.join(suiteDir, entry.name, 'raw'));
+  return [own, ...shards].filter(hasFiles);
+}
+
+const included = SUITES.map((suite) => ({ ...suite, rawDirs: rawDirsOf(suite.folder) })).filter(
+  ({ rawDirs }) => rawDirs.length > 0,
+);
 
 // Logged so a run that merged nothing says where it looked and what was there.
-for (const { artifact, rawDir } of SUITES.map((s) => ({
-  ...s,
-  rawDir: path.join(DOWNLOAD_DIR, s.artifact, 'raw'),
-}))) {
-  const found = fs.existsSync(rawDir) ? `${fs.readdirSync(rawDir).length} raw files` : 'not found';
-  console.log(`${artifact}: ${rawDir} — ${found}`);
+for (const { folder } of SUITES) {
+  const found = rawDirsOf(folder);
+  console.log(`${folder}: ${found.length} raw folders${found.map((dir) => `, ${dir}`).join('')}`);
 }
 if (fs.existsSync(DOWNLOAD_DIR)) {
   console.log(`${DOWNLOAD_DIR} holds: ${fs.readdirSync(DOWNLOAD_DIR).join(', ') || '(nothing)'}`);
@@ -52,7 +65,7 @@ if (included.length === 0) {
 await MCR({
   name: 'Sorrel & Salt Merged E2E Coverage',
   outputDir: OUTPUT_DIR,
-  inputDir: included.map(({ rawDir }) => rawDir),
+  inputDir: included.flatMap(({ rawDirs }) => rawDirs),
   reports: ['v8', 'json-summary'],
   sourceFilter: coverageOptions.sourceFilter,
 }).generate();
@@ -61,6 +74,22 @@ const section = buildCoverageSection(path.join(OUTPUT_DIR, 'coverage-summary.jso
 const label =
   included.length === SUITES.length ? 'Gate and story suites' : `${included[0].name} suite only`;
 
+// The stories alone, when the gate's data is merged in the figure above.
+const stories = included.find(({ folder }) => folder === 'stories');
+let storyLine = '';
+if (stories && included.length > 1) {
+  const storyDir = `${OUTPUT_DIR}-stories`;
+  await MCR({
+    name: 'Sorrel & Salt Story Coverage',
+    outputDir: storyDir,
+    inputDir: stories.rawDirs,
+    reports: ['json-summary'],
+    sourceFilter: coverageOptions.sourceFilter,
+  }).generate();
+  const alone = buildCoverageSection(path.join(storyDir, 'coverage-summary.json'), REPO_ROOT);
+  if (alone) storyLine = `Story suite alone — ${alone.stat}\n\n`;
+}
+
 setOutput('ran', 'true');
 setOutput('summary', section ? `${label} — ${section.stat}` : `${label} — no coverage report`);
-setOutput('details', section?.table ?? '');
+setOutput('details', `${storyLine}${section?.table ?? ''}`);

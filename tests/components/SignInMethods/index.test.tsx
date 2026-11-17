@@ -178,7 +178,7 @@ describe('SignInMethods', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Google' }));
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Add Google' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'Adding Google' })).toHaveAttribute(
         'aria-busy',
         'true',
       ),

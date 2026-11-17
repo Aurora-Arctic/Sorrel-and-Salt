@@ -18,8 +18,15 @@ function formatDuration(ms) {
  * Vitest's JSON reporter gives each file its `startTime` and `endTime`, which
  * is what the summed worker time is made of. Returns the files over the budget
  * and the collapsible block, or null when the run wrote no file results.
+ * `notes` are Markdown pieces written inside the block after the table, and `notesHeading` is what its summary line
+ * says of them, so a collapsed block still tells the reader there is one.
  */
-export function buildSlowestFilesSection(testResults, repoRoot, { budgetMs = BUDGET_MS } = {}) {
+export function buildSlowestFilesSection(
+  testResults,
+  repoRoot,
+  { budgetMs = BUDGET_MS, notes = [], notesHeading = '' } = {},
+) {
+  // `budgetMs: null` lists the files with no file budget: Playwright's budget is per test (R-3), so its list only ranks.
   const rows = (testResults ?? [])
     .filter((result) => typeof result.startTime === 'number' && typeof result.endTime === 'number')
     .map((result) => ({
@@ -30,12 +37,16 @@ export function buildSlowestFilesSection(testResults, repoRoot, { budgetMs = BUD
     .sort((a, b) => b.ms - a.ms);
   if (rows.length === 0) return null;
 
-  const over = rows.filter((row) => row.ms > budgetMs);
-  const budget = formatDuration(budgetMs);
-  const heading =
-    over.length === 0
-      ? `Slowest files — none over the ${budget} budget`
-      : `Slowest files — ${over.length} over the ${budget} budget`;
+  const budgeted = budgetMs !== null;
+  const over = budgeted ? rows.filter((row) => row.ms > budgetMs) : [];
+  const budget = budgeted ? formatDuration(budgetMs) : '';
+  let heading = 'Slowest files';
+  if (budgeted)
+    heading +=
+      over.length === 0
+        ? ` — none over the ${budget} budget`
+        : ` — ${over.length} over the ${budget} budget`;
+  if (notes.length > 0 && notesHeading) heading += ` — ${notesHeading}`;
 
   const lines = [
     `<details><summary>${heading}</summary>`,
@@ -46,11 +57,16 @@ export function buildSlowestFilesSection(testResults, repoRoot, { budgetMs = BUD
       .slice(0, MAX_ROWS)
       .map(
         ({ file, tests, ms }) =>
-          `| ${ms > budgetMs ? '⚠ ' : ''}\`${file}\` | ${tests} | ${formatDuration(ms)} |`,
+          `| ${budgeted && ms > budgetMs ? '⚠ ' : ''}\`${file}\` | ${tests} | ${formatDuration(ms)} |`,
       ),
     '',
-    '*A file over the budget is the run’s wall clock whatever the worker count. Split it along the owning layer: claude-docs/testing/layer-ownership.md, "The file budget".*',
-    '',
+    ...(budgeted
+      ? [
+          '*A file over the budget is the run’s wall clock whatever the worker count. Split it along the owning layer: claude-docs/testing/layer-ownership.md, "The file budget".*',
+          '',
+        ]
+      : []),
+    ...notes.flatMap((note) => [note, '']),
     '</details>',
   ];
 

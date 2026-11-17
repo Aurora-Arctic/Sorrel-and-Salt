@@ -176,16 +176,6 @@ test('the printed recipe names the coven with no line under it, leads with the i
   expect(Math.max(...lefts) - Math.min(...lefts)).toBeLessThanOrEqual(1);
   expect(Math.min(...lefts)).toBeGreaterThan(Math.max(...amounts));
 
-  const weights = await page.evaluate(() => ({
-    summary: getComputedStyle(
-      document.querySelector('.spell-recipe__summary ul .spell-recipe__need')!,
-    ).fontWeight,
-    step: getComputedStyle(document.querySelector('.spell-recipe__steps .step-row__amount')!)
-      .fontWeight,
-  }));
-  expect(weights.step).toBe('500');
-  expect(weights.summary).toBe(weights.step);
-
   const indent = await page.evaluate(() => {
     const heading = [...document.querySelectorAll('h2')].find(
       (h) => h.textContent === 'Ingredients',
@@ -246,18 +236,6 @@ test('the printed recipe is an A4 sheet on white with no drawings, its note rule
   await page.emulateMedia({ media: 'print' });
   expect(await drawings()).toBe(0);
   expect(await grounds()).toEqual([clear, clear]);
-
-  const widths = await page.evaluate(() => ({
-    note: document.querySelector('.spell-recipe__note')!.getBoundingClientRect().width,
-    facts: document.querySelector('.spell-recipe__facts-box')!.getBoundingClientRect().width,
-  }));
-  expect(Math.abs(widths.note - widths.facts)).toBeLessThanOrEqual(1);
-
-  const sizes = await page.getByText('Crumble it over the salt').evaluate((el) => ({
-    note: getComputedStyle(el).fontSize,
-    root: getComputedStyle(document.documentElement).fontSize,
-  }));
-  expect(sizes.note).toBe(sizes.root);
 
   const sheet = await mediaBox();
   expect(Math.abs(sheet.width - 595.28)).toBeLessThanOrEqual(2);

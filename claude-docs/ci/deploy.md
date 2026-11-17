@@ -141,9 +141,9 @@ githubCommitRef=<branch>`.** `--git-branch` fixes what the **build** pulls;
   `scripts/probe-database.ts`. It reads a connection string from a file,
   connects, and runs `select 1`; on success it prints the role, database and
   server version, on failure the driver's own error code and message, scrubbed
-  of credentials. It exists because `drizzle-kit migrate` catches whatever
-  postgres.js throws and exits 1 without printing it, whether the host is
-  unreachable, the password wrong, `sslmode` mismatched or
+  of credentials. It exists because the deploy build issues no query and so
+  prints no cause of its own, and a hint beside the cause is cheaper than
+  a guess, whether the host is unreachable, the password wrong, `sslmode` mismatched or
   `channel_binding=require` against a server that cannot offer it. `ECONNREFUSED`,
   `ENOTFOUND`, `28P01`, `3D000` and `CHANNEL_BINDING_REQUIRED` each name
   themselves in its output.
