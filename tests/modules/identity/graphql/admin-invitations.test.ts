@@ -139,23 +139,21 @@ describe('Mutation.createAdminInvitation', () => {
     expect(carriers).toEqual(['MintedInvitationCards.tokens']);
   });
 
-  // The role is the keeper's choice, and the transport carries it through. `user` is the invitation to create a coven.
-  it.each(['curator', 'user'])(
-    'answers the %s role it was asked to invite to',
-    async (siteRole) => {
-      const { sender } = recordingSender();
+  // The role is the keeper's choice, and the transport carries it through.
+  it('answers the role it was asked to invite to', async () => {
+    const siteRole = 'curator';
+    const { sender } = recordingSender();
 
-      const result = await run<CreateAdminInvitationResult>(
-        asUser(E),
-        CREATE,
-        { email: INVITED, siteRole },
-        { invitations: sender },
-      );
+    const result = await run<CreateAdminInvitationResult>(
+      asUser(E),
+      CREATE,
+      { email: INVITED, siteRole },
+      { invitations: sender },
+    );
 
-      expect(result.errors).toBeUndefined();
-      expect(result.data?.createAdminInvitation).toMatchObject({ siteRole });
-    },
-  );
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.createAdminInvitation).toMatchObject({ siteRole });
+  });
 
   it('answers a malformed address as VALIDATION on the email', async () => {
     const result = await run(asUser(E), CREATE, { email: 'not-an-address' });

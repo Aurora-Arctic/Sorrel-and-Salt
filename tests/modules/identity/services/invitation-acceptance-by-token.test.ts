@@ -333,16 +333,6 @@ describe('a link that cannot be used', () => {
     }
   });
 
-  it('rejects a second use as already accepted', async () => {
-    await invite();
-    await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
-
-    expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
-      reason: 'accepted',
-    });
-    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
-  });
-
   it('answers NotFound for a token naming none, and for the stored hash passed as a token', async () => {
     await invite();
 
@@ -650,19 +640,6 @@ describe('acceptInvitation, on a card', () => {
     expect(await roleOf(STRANGER)).toMatchObject({ can_create_workspace: false });
   });
 
-  // The second account is verified and the card pending until the first use, so only the single-use stamp refuses.
-  it('refuses a second use as already accepted, whoever asks', async () => {
-    await invite({ card: true });
-    await acceptInvitation(asUser(AS_STRANGER), TOKEN);
-
-    expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
-      reason: 'accepted',
-    });
-    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
-    expect(await roleOf(GRANTEE)).toMatchObject({ can_create_workspace: false });
-    expect((await invitation()).accepted_by).toBe(STRANGER);
-  });
-
   it('tells the account that accepted the card so, apart from a stranger refused as already accepted', async () => {
     await invite({ card: true });
     await acceptInvitation(asUser(AS_STRANGER), TOKEN);
@@ -671,11 +648,15 @@ describe('acceptInvitation, on a card', () => {
     expect(own).toMatchObject({ acceptable: false, reason: 'used-by-you' });
     expect(JSON.stringify(own)).toContain("You've already used this card");
     await expect(acceptInvitation(asUser(AS_STRANGER), TOKEN)).rejects.toThrow(Forbidden);
-    // The precondition: the card is accepted by this very account, and another account still sees the stranger's refusal.
+    // The precondition: the card is accepted by this very account. Another account, verified and with the card pending until
+    // the first use, is refused by the single-use stamp alone, and gains nothing.
     expect((await invitation()).accepted_by).toBe(STRANGER);
     expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
       reason: 'accepted',
     });
+    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
+    expect(await roleOf(GRANTEE)).toMatchObject({ can_create_workspace: false });
+    expect((await invitation()).accepted_by).toBe(STRANGER);
   });
 
   describe('a second card for an account that has used one', () => {

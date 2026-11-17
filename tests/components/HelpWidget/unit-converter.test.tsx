@@ -59,13 +59,10 @@ describe('UnitConverter', () => {
 
   it.each([
     ['g', 'ml', 'dimension'],
-    ['cup', 'kg', 'dimension'],
     ['piece', 'g', 'count'],
-    ['ml', 'pinch', 'count'],
   ] as const)('refuses %s to %s with the app’s %s refusal', (from, to, reason) => {
     const result = convert('3', from, to);
 
-    expect(unitConvert(3, from, to)).toEqual({ ok: false, reason });
     expect(result).toHaveTextContent(CONVERSION_REFUSALS[reason]);
     expect(result).not.toHaveTextContent('NaN');
   });

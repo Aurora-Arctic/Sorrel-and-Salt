@@ -212,29 +212,22 @@ describe('recordWorking', () => {
 });
 
 describe('completeWorking', () => {
-  it('takes the converted amount of each stocked step, in the jar’s unit, in one write', async () => {
+  // The arithmetic, conversion and shortfall included, is planDeductions'; this proves the plan lands on the jar.
+  it('takes each stocked step from its jar and records the deduction, completing the working', async () => {
     const salt = await stocked('Fixture Salt', '100', 'g');
-    const oil = await stocked('Fixture Oil', '10', 'l');
     const spell = await spellBy(A, {
-      steps: [
-        { body: 'Stir.' },
-        { ingredientId: salt.ingredientId, quantity: '2', unit: 'kg' },
-        { ingredientId: oil.ingredientId, quantity: '500', unit: 'ml' },
-      ],
+      steps: [{ ingredientId: salt.ingredientId, quantity: '30', unit: 'g' }],
     });
     const { working } = await record(B, spell);
-    // 2 kg is more than the 100 g held: the jar empties and the rest is the shortfall.
+
     const report = await completeWorking(asUser(B), WORKSPACE_W_ID, working.id);
 
     expect(report.working).toMatchObject({ status: 'complete' });
     expect(report.working.completedAt).not.toBeNull();
-    expect(await quantityOf(salt.jarId)).toBe(0);
-    expect(await quantityOf(oil.jarId)).toBe(9.5);
-    const byJar = new Map(report.deductions.map((row) => [row.inventoryItemId, row]));
-    expect(Number(byJar.get(salt.jarId)?.quantity)).toBe(100);
-    expect(Number(byJar.get(salt.jarId)?.shortfall)).toBe(1900);
-    expect(byJar.get(salt.jarId)?.unit).toBe('g');
-    expect(Number(byJar.get(oil.jarId)?.shortfall)).toBe(0);
+    expect(await quantityOf(salt.jarId)).toBe(70);
+    expect(report.deductions).toHaveLength(1);
+    expect(report.deductions[0]).toMatchObject({ inventoryItemId: salt.jarId, unit: 'g' });
+    expect(Number(report.deductions[0]?.quantity)).toBe(30);
   });
 
   it('deducts a count step by identical unit, and reports a custom step without a deduction', async () => {
