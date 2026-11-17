@@ -123,7 +123,12 @@ describe('setOutput, as each summariser writes it', () => {
       PLAYWRIGHT_JSON_OUTPUT_NAME: write('playwright.json', report),
     });
     // No failed count when none failed, as a Vitest part's row reads.
-    expect(outputs).toEqual({ summary: '1 passed', details: '', flaky: 'false' });
+    expect(outputs).toEqual({
+      summary: '1 passed',
+      details: '',
+      flaky: 'false',
+      heading_note: '1 test',
+    });
   });
 
   it('summarize-stories writes its three outputs when no checklist was written', () => {
@@ -220,6 +225,7 @@ describe('the failing-test list', () => {
         '</details>',
       ].join('\n'),
       flaky: 'true',
+      heading_note: '2 tests',
     });
   });
 
