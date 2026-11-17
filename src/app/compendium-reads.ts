@@ -13,6 +13,7 @@ import { orMissing } from '@/lib/or-not-found';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { DEFAULT_PAGE_SIZE, allPages } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/types';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 import {
@@ -44,9 +45,8 @@ import type { IngredientDetail, IngredientKey } from '@/modules/ingredients';
 import type { CovenMembership } from '@/modules/coven';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
-// The reads the admin's compendium table and the public cards share: sessionless service reads held in
-// the data cache under the `compendium` tag, wrapped in React's `cache` for one read per request. Only
-// the review filter takes the viewer, which the service lets a curator alone ask for.
+// Sessionless service reads held in the data cache under the `compendium` tag, wrapped in React's `cache`
+// for one read per request.
 
 // The page and GraphQL's `compendium` end at the same service, paged by the same helper (rules 1 and
 // 8). Keyed by primitives rather than a filter object: the filter as the parameter table's variables
@@ -71,17 +71,14 @@ export const readCompendiumAsCurator = cache(
     before: string | undefined,
     size: number,
     viewer: Session,
-  ) => {
-    // Written by the page from its parameter table, and checked again by the service.
-    const filter: Parameters<typeof listCompendium>[0] = JSON.parse(variables);
-    const page = await readNumberedPage(
+  ) =>
+    readFilteredPage(
+      variables,
       { after, before },
-      (request) => listCompendium(filter, request, viewer),
-      (start) => countCompendium(filter, start, viewer),
       size,
-    );
-    return withForms(page);
-  },
+      (filter, request) => listCompendium(filter, request, viewer),
+      (filter, start) => countCompendium(filter, start, viewer),
+    ),
 );
 
 // The page with each entry's forms and icons: the services' own caches hold the list and its count, and
@@ -93,12 +90,31 @@ async function readCards(
   before: string | undefined,
   size: number,
 ) {
-  // Written by the page from its parameter table, and checked again by the service.
-  const filter: Parameters<typeof listCompendiumCards>[0] = JSON.parse(variables);
-  const page = await readNumberedPage(
+  return readFilteredPage(
+    variables,
     { after, before },
-    (request) => listCompendiumCards(filter, request),
-    (start) => countCompendium(filter, start),
+    size,
+    (filter, request) => listCompendiumCards(filter, request),
+    (filter, start) => countCompendium(filter, start),
+  );
+}
+
+type CompendiumFilter = Parameters<typeof listCompendium>[0];
+
+// The numbered page of one filter, with its forms. The filter is written by the page from its parameter
+// table, and checked again by the service.
+async function readFilteredPage<T extends { id: string }, Edge extends object = {}>(
+  variables: string,
+  request: { after: string | undefined; before: string | undefined },
+  size: number,
+  list: (filter: CompendiumFilter, request: PageRequest) => Promise<PageEntry<T, Edge>[]>,
+  count: (filter: CompendiumFilter, start: Cursor | undefined) => Promise<PageCount>,
+) {
+  const filter: CompendiumFilter = JSON.parse(variables);
+  const page = await readNumberedPage(
+    request,
+    (r) => list(filter, r),
+    (start) => count(filter, start),
     size,
   );
   return withForms(page);
