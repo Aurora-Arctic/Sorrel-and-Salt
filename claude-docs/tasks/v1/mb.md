@@ -337,21 +337,7 @@ _Acceptance criteria:_
 
 **MB.77 — Mark the last-used provider on the sign-in page** · 2h
 
-**MB.78 — OAuth proxy, so a hotfix preview can complete a real sign-in** · 3h
-
-_Story:_ As a developer, I want to sign in to a hotfix preview, so that a fix to anything behind sign-in can be checked where it will ship, and MB.53's impersonation works there.
-
-**Post-launch, the owner's call.** It was minted into Wave 8 ahead of MB.53, but hotfixes are not needed until after launch, and the hotfix path needs infrastructure fixes before its branches work properly. It sits unscheduled at the end of the Bugfixes milestone, and its trigger is the first hotfix after launch that needs a sign-in to check ([`waves/v1/wave-15.md`](../../waves/v1/wave-15.md)).
-
-Every provider needs its redirect URI registered in advance, and a hotfix preview's `hotfix-<slug>.sorrelandsalt.com` does not exist until its PR does, so no hotfix preview can finish a sign-in today (`secrets.md`). Better Auth's `oAuthProxy` sends the provider's callback to a fixed `productionURL` whose URI is registered, where the code is exchanged and the profile encrypted, then redirects to the preview's own `/callback/:id/oauth-proxy`, which creates the user and session there. The redirect target must be a trusted origin, and `baseURL.allowedHosts` already names `hotfix-*.sorrelandsalt.com`. `productionURL` is staging's origin, which shares the Preview secret with every hotfix preview. The plugin is registered only at `VERCEL_ENV=preview`, the gate MB.53 uses, so at production and locally it is never constructed and its endpoint is absent rather than refusing. Two things to answer from running code: the preview completes on `/callback/:id/oauth-proxy`, which `src/lib/auth.ts`'s hooks do not match, so the provisional-account sweep and the promotion at sign-in do not run there; and staging's own callback also runs its hooks against a request it did not start. The record says what each means and whether either hook should also match the proxy path.
-
-_Acceptance criteria:_
-
-- Registered only when `VERCEL_ENV=preview`, asserted in both directions, with the endpoint absent, not refusing, at `production` and with `VERCEL_ENV` unset
-- `productionURL` is staging's origin, pinned by test
-- A real sign-in completes on a hotfix preview, and a recording or screenshot is linked from the PR
-- Which of `src/lib/auth.ts`'s callback hooks run on each side is asserted, and the decision on whether they should also match the proxy path is written into the MB.74 record
-- `secrets.md` and `../auth/README.md` drop "hotfix previews can't complete a real sign-in" and say how they do; MB.53's entry names MB.78 as what makes it usable on a hotfix preview
+**MB.78 — [RETIRED] OAuth proxy, so a hotfix preview can complete a real sign-in** · **RETIRED 2026-11-17, not done**
 
 **MB.79 — Record subscription billing as a v2 feature and the Stripe plugin's fit** · 1h
 

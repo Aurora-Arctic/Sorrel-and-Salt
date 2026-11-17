@@ -1130,9 +1130,9 @@ The parent branch is production, because a hotfix branches off `main` and so nee
 
 **N7.10, tag and sync after a hotfix.** On a hotfix merge into `main`, a workflow creates the next patch tag, so a rollback target and the next release's baseline have a name; no skill tags a hotfix today. It opens the `main-sync` PR into `staging` when `main` is ahead of `staging` after that merge; today that is a manual `/create-main-sync`.
 
-### MB.78 (the OAuth proxy for hotfix previews) becomes redundant
+### MB.78 (the OAuth proxy for hotfix previews) is retired
 
-Its user story is to sign in to a hotfix preview so that a fix to anything behind sign-in can be checked. Password sign-in is enabled in `src/lib/auth.ts` and needs no provider redirect, and `baseURL.allowedHosts` already names `hotfix-*.sorrelandsalt.com`. What retiring it gives up is completing a Google or Microsoft sign-in on a hotfix preview; staging covers that. This is proved, not assumed: N7.1's acceptance includes one password sign-in on a live hotfix preview, and no preview has deployed yet, so it is untested. MB.78 is retired with `task-board retire` only after that passes. N7.1 corrects `claude-docs/auth/config.md`, `claude-docs/secrets.md`, `claude-docs/auth/plugins.md`, `claude-docs/auth/impersonation.md` and MB.53's entry.
+Its user story is to sign in to a hotfix preview so that a fix to anything behind sign-in can be checked. Password sign-in is enabled in `src/lib/auth.ts` and needs no provider redirect, and `baseURL.allowedHosts` already names `hotfix-*.sorrelandsalt.com`. What retiring it gives up is completing a Google or Microsoft sign-in on a hotfix preview; staging covers that. N7.1's acceptance includes one password sign-in on a live hotfix preview, and no preview has deployed yet, so until that passes the replacement is untested. N7.1 corrects `claude-docs/auth/config.md`, `claude-docs/secrets.md`, `claude-docs/auth/plugins.md`, `claude-docs/auth/impersonation.md` and MB.53's entry.
 
 ### Rules out
 
