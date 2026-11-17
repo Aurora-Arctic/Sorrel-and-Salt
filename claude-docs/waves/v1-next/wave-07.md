@@ -2,7 +2,7 @@
 
 **The row is** `N7.1 → N7.11`.
 
-**This wave exists because the site moved from Vercel Hobby and Neon's free plan to Vercel Pro and Neon Launch.** Both new plans bill by use, so settings that were fixed or free before now cost money or can be changed. The repo and its docs still describe the old plans, and the hotfix preview does not deploy. The tasks are in [`tasks/v1-next/n7.md`](../../tasks/v1-next/n7.md). Every vendor fact in the tasks comes from the vendors' current documentation, and a fact the documentation did not confirm is marked "unconfirmed" in its task, with confirming it part of that task.
+**This wave exists because the site moved from Vercel Hobby and Neon's free plan to Vercel Pro and Neon Launch.** Both new plans bill by use, so settings that were fixed or free before now cost money or can be changed. The repo and its docs still describe the old plans, and the hotfix preview does not deploy. The tasks are in [`tasks/v1-next/n7.md`](../../tasks/v1-next/n7.md). The settings, reasons, hotfix setup and sources are in [`ci.md`, "Hosting on Vercel Pro and Neon Launch"](../../design-decisions/ci.md#hosting-on-vercel-pro-and-neon-launch). Every vendor fact in the tasks comes from the vendors' current documentation, and a fact the documentation did not confirm is marked "unconfirmed" in its task, with confirming it part of that task.
 
 **The dashboard settings are the owner's and are not tasks.** The Vercel and Neon dashboard changes (function region, Fluid compute, the AI Bots ruleset, Neon's compute range and history window, the database address Vercel holds, and the branch clean-up) are done by the owner in the vendors' dashboards. The Vercel budget and Neon spending notifications already belong to N6.15 and are not repeated here.
 
@@ -11,7 +11,7 @@
 1. **N7.1 comes first.** The hotfix preview does not deploy today: the only hotfix preview run among the last 40 deploy runs (PR #1688, 2026-11-11) failed at the `migrate` job. N7.5, N7.6, and N7.10 are each rehearsed on a hotfix preview, so they need N7.1 working.
 2. **N7.2, N7.3, and N7.4 are small settings and config changes** with no dependency on each other. N7.2 needs the Vercel function region from the owner, who chooses it after finding the Neon project's region; without that value the task cannot write the `regions` line.
 3. **N7.5 and N7.6 change the production deploy path.** N7.5 adds the rollback workflow and N7.6 adds the check before promotion. Both are proved by one rehearsal each on a throwaway `hotfix/*` branch, after N7.1.
-4. **N7.7 and N7.8 cache reads** that run on every request today, and have no dependency on the tasks above.
+4. **N7.7 caches the form reads** that the Compendium page still repeats on every request, and does not depend on the tasks above. N7.8 is retired: the sitemap and the robots file are already held at the CDN.
 5. **N7.9 is research only.** It installs no package. It is measured against N6.3 (the guard against analytics packages) and N6.12 → N6.15 (the site counting its own visits, and the move to Vercel Pro) and changes none of them.
 6. **N7.10 tags a hotfix and opens its main-sync PR.** It follows N7.1 because it is rehearsed on a hotfix.
 7. **N7.11 is last, and is research first.** It would change how rule 6 of `CLAUDE.md` (never cache anything not keyed by viewer identity) is implemented, so it ends in a proposal to the owner and builds nothing.
