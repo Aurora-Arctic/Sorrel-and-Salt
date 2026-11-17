@@ -1,9 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import {
-  COMPENDIUM_REVALIDATE_SECONDS,
-  COMPENDIUM_TAG,
-  cachedCompendiumRead,
-} from '@/lib/compendium-cache';
+import { COMPENDIUM_REVALIDATE_SECONDS } from '@/lib/compendium-revalidate';
+import { COMPENDIUM_TAG, cachedCompendiumRead } from '@/lib/compendium-cache';
 import { clearDataCache, declared } from '../support/next-data-cache';
 
 // The wrapper over `unstable_cache`, against a data cache that holds as Next's does (tests/support/next-data-cache.ts; claude-docs/db/compendium-cache.md).

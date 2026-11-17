@@ -180,3 +180,11 @@ One more server keeps it: the compendium-cache server on 8101, over
 `sorrel_e2e_cache`, which no spec reseeds, running
 `tests/e2e/compendium-cache.spec.ts` alone in the `chromium-compendium-cache`
 project.
+
+## `/robots.txt` and `/sitemap.xml`
+
+Both routes stay `export const dynamic = 'force-dynamic'`: a cached metadata route is prerendered at build, and the sitemap's read would query Postgres in the deploy build, which `claude-docs/ci/deploy.md` forbids. Instead `next.config.ts` sets `Vercel-CDN-Cache-Control: max-age=3600` on the two paths (`cdnCacheHeaders` in `src/lib/cdn-cache-headers.ts`, the hour from `src/lib/compendium-revalidate.ts`). Next hard-codes `Cache-Control: max-age=0` on a metadata route and a function's `Cache-Control` beats one from `next.config` on Vercel, so `Cache-Control` would do nothing; `Vercel-CDN-Cache-Control` takes priority and is never sent to the client.
+
+- Vercel's CDN keeps each response for an hour. Its cache key includes the deployment, so each deployment and each environment has its own copy, and `robots.txt` never serves another environment's answer.
+- A keeper edit does not purge that copy, so the sitemap can be up to an hour behind. A new deployment starts with an empty copy.
+- Check it on a deployment by requesting the path twice: the `x-vercel-cache` response header goes from `MISS` to `HIT`. A local `next start` has no CDN, so nothing here is checked locally except that the config carries the header (`tests/lib/security-headers.test.ts`).

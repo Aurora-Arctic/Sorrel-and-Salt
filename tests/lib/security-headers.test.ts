@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { contentSecurityPolicy } from '@/lib/security-headers';
+import { COMPENDIUM_REVALIDATE_SECONDS } from '@/lib/compendium-revalidate';
 import { nextConfig } from '../../next.config';
 
 // Next reads a `source` as path-to-regexp; the rules here are one regex group, which a RegExp
@@ -63,4 +64,22 @@ describe('security headers', () => {
 
     expect((await headersFor('/support'))['cache-control']).toBeUndefined();
   });
+});
+
+describe('CDN cache headers', () => {
+  it.each(['/robots.txt', '/sitemap.xml'])(
+    "%s is kept by the CDN for the compendium cache's hour",
+    async (path) => {
+      expect((await headersFor(path))['vercel-cdn-cache-control']).toBe(
+        `max-age=${COMPENDIUM_REVALIDATE_SECONDS}`,
+      );
+    },
+  );
+
+  it.each(['/', '/compendium', '/sign-in', '/sitemap.xml.bak', '/api/graphql'])(
+    '%s carries no CDN cache header',
+    async (path) => {
+      expect((await headersFor(path))['vercel-cdn-cache-control']).toBeUndefined();
+    },
+  );
 });
