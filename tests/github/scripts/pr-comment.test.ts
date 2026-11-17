@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { PR, context, core, fakeGitHub, lib } from '../../support/pr-comment';
+import {
+  PR,
+  context,
+  core,
+  fakeGitHub,
+  headingStatusOf,
+  lib,
+  rowsOf,
+  sectionsOf,
+  shardsOf,
+} from '../../support/pr-comment';
 
 // A single-result CI comment (one check, one comment) through postComment, as the pr-comment action calls it:
 // the inputs read from the action's environment, GitHub a fake that keeps the pull request's comments, so each
@@ -121,5 +131,216 @@ describe('a single-result CI comment', () => {
     expect(comments).toHaveLength(2);
     expect(comments[0].body).toBe(marked(2).body);
     expect(comments[1].body).toContain('<!-- ci-lint-mergequeue -->');
+  });
+});
+
+// The Playwright comment's suites, each shard reporting as it finishes in a sub-row beneath its suite's row
+// (claude-docs/ci/pr-comments.md). Each write goes through postComment as the pr-comment action makes it.
+describe("the Playwright comment's shard rows", () => {
+  type Env = Record<string, string>;
+  const PLAYWRIGHT = {
+    CHECK_NAME: 'Playwright',
+    MARKER_SLUG: 'playwright',
+    PR_NUMBER: String(PR),
+    LOG_FILE: 'playwright.log',
+  };
+
+  function write(
+    github: unknown,
+    env: Env,
+    { id = 42, attempt = 1 }: { id?: number; attempt?: number } = {},
+    sleep: () => Promise<void> = async () => {},
+  ) {
+    return lib.postComment({
+      github,
+      context: { ...context, runId: id, runAttempt: attempt },
+      core,
+      inputs: lib.inputsFromEnv({ ...PLAYWRIGHT, ...env }),
+      readFile: () => LOG,
+      sleep,
+      random: () => 0,
+    });
+  }
+
+  const reset = (skipped = ''): Env => ({ RESET: 'true', SKIPPED_SECTIONS: skipped });
+  // One shard's write: its suite, its index of the total, and its one-line summary.
+  const shard = (section: string, index: number, total: number, outcome = 'success'): Env => ({
+    SECTION: section,
+    SHARD: `${index}/${total}`,
+    OUTCOME: outcome,
+    SUMMARY: `Testwort shard ${index}`,
+  });
+  // The end job's write of the whole suite, unchanged by the shards.
+  const joined = (section: string, outcome: string): Env => ({
+    SECTION: section,
+    OUTCOME: outcome,
+    SUMMARY: 'Testwort joined',
+    DETAILS: 'Testwort joined details',
+  });
+
+  // Each row as [its suite's key, or its shard's index when it is a sub-row, and its status].
+  const table = (body: string) =>
+    rowsOf(body).map(({ label, shard: index, status }) => [
+      index ?? (/Gate/.test(label) ? 'gate' : /Stories/.test(label) ? 'stories' : label),
+      status,
+    ]);
+
+  it("puts each shard's row beneath its suite's row in shard order, whatever order they write in", async () => {
+    const { github, comments } = fakeGitHub([]);
+    await write(github, reset('stories'));
+
+    // Before any shard writes, the suite is one Running row.
+    expect(table(comments[0].body)).toEqual([
+      ['gate', 'Running'],
+      ['stories', 'Skipped'],
+    ]);
+
+    expect(await write(github, shard('gate', 3, 3))).toBe('written');
+    expect(await write(github, shard('gate', 1, 3))).toBe('written');
+
+    const body = comments[0].body;
+    expect(table(body)).toEqual([
+      ['gate', 'Running'],
+      [1, 'Passed'],
+      // Not written yet; the total came with its siblings' writes.
+      [2, 'Running'],
+      [3, 'Passed'],
+      ['stories', 'Skipped'],
+    ]);
+    const third = rowsOf(body).find((row) => row.shard === 3);
+    expect(third?.result).toContain('Testwort shard 3');
+  });
+
+  it("derives the suite's row from its shards until the end job writes it, and the heading counts it", async () => {
+    const { github, comments } = fakeGitHub([]);
+    await write(github, reset());
+    await write(github, shard('stories', 1, 2));
+    await write(github, shard('stories', 2, 2));
+    await write(github, shard('gate', 1, 3));
+    await write(github, shard('gate', 2, 3));
+
+    const gate = () => rowsOf(comments[0].body).find((row) => row.label.includes('Gate'));
+    expect(gate()?.status).toBe('Running');
+    // "2 of 3 shards finished".
+    expect(gate()?.result).toMatch(/\b2\b.*\b3\b/);
+    expect(headingStatusOf(comments[0].body)).toBe('Running');
+
+    expect(await write(github, shard('gate', 3, 3, 'failure'))).toBe('written');
+
+    const body = comments[0].body;
+    expect(gate()?.status).toBe('Failed');
+    expect(headingStatusOf(body)).toBe('Failed');
+    expect(table(body)).toContainEqual([3, 'Failed']);
+    // A shard writes no log: the suite's block, from the end job, carries it.
+    expect(body).not.toContain(LOG);
+  });
+
+  it("shows what the end job wrote on the suite's row, with its shards' rows kept beneath it", async () => {
+    const { github, comments } = fakeGitHub([]);
+    await write(github, reset());
+    for (const index of [1, 2, 3]) await write(github, shard('gate', index, 3));
+
+    expect(await write(github, joined('gate', 'failure'))).toBe('written');
+
+    const body = comments[0].body;
+    expect(table(body).slice(0, 4)).toEqual([
+      ['gate', 'Failed'],
+      [1, 'Passed'],
+      [2, 'Passed'],
+      [3, 'Passed'],
+    ]);
+    expect(rowsOf(body)[0].result).toContain('Testwort joined');
+    expect(sectionsOf(body).gate.block).toContain(LOG);
+  });
+
+  it("keeps the end job's row and block when a shard's write lands after it", async () => {
+    const { github, comments } = fakeGitHub([]);
+    await write(github, reset());
+    await write(github, shard('gate', 1, 3));
+    await write(github, joined('gate', 'failure'));
+
+    expect(await write(github, shard('gate', 2, 3))).toBe('written');
+
+    const body = comments[0].body;
+    expect(table(body).slice(0, 4)).toEqual([
+      ['gate', 'Failed'],
+      [1, 'Passed'],
+      [2, 'Passed'],
+      [3, 'Running'],
+    ]);
+    expect(sectionsOf(body).gate.block).toContain(LOG);
+  });
+
+  it("confirms a shard's write by its own token, and writes again when a sibling's concurrent write dropped it", async () => {
+    const { github, comments } = fakeGitHub([]);
+    await write(github, reset());
+    // Shard 2's write, made from the comment as it was before shard 1's, lands while shard 1 waits.
+    const sibling = fakeGitHub([{ ...comments[0], body: comments[0].body }]);
+    await write(sibling.github, shard('gate', 2, 3));
+    let waits = 0;
+    const interleave = async () => {
+      if (waits++ === 0) comments[0].body = sibling.comments[0].body;
+    };
+
+    expect(await write(github, shard('gate', 1, 3), {}, interleave)).toBe('written');
+
+    expect(waits).toBe(2);
+    const body = comments[0].body;
+    expect(table(body).slice(1, 4)).toEqual([
+      [1, 'Passed'],
+      [2, 'Passed'],
+      [3, 'Running'],
+    ]);
+    const held = shardsOf(body).gate;
+    expect(Object.keys(held).sort()).toEqual(['1', '2']);
+    expect(held['1'].total).toBe(3);
+    expect(held['1'].token).toBeTruthy();
+    expect(held['1'].token).not.toBe(held['2'].token);
+  });
+
+  it('clears the shard rows on a reset for a new run or a later attempt, and keeps them on a late reset of the same attempt', async () => {
+    const subRows = (body: string) => rowsOf(body).filter((row) => row.shard !== null);
+    const written = async () => {
+      const made = fakeGitHub([]);
+      await write(made.github, reset());
+      await write(made.github, shard('gate', 1, 3));
+      await write(made.github, shard('stories', 2, 2));
+      return made;
+    };
+
+    const late = await written();
+    expect(subRows(late.comments[0].body)).toHaveLength(2);
+    await write(late.github, reset());
+    expect(table(late.comments[0].body)).toContainEqual([1, 'Passed']);
+    expect(subRows(late.comments[0].body)).toHaveLength(2);
+
+    const retried = await written();
+    await write(retried.github, reset(), { attempt: 2 });
+    expect(subRows(retried.comments[0].body)).toEqual([]);
+
+    const next = await written();
+    await write(next.github, reset(), { id: 43 });
+    expect(subRows(next.comments[0].body)).toEqual([]);
+  });
+
+  it("drops a shard's write from an older run, and starts over a comment an older run left", async () => {
+    const { github, comments } = fakeGitHub([]);
+    await write(github, reset(), { id: 41 });
+    for (const index of [1, 2, 3])
+      await write(github, shard('gate', index, 3, 'failure'), { id: 41 });
+
+    expect(await write(github, shard('gate', 1, 3))).toBe('written');
+
+    expect(table(comments[0].body)).toEqual([
+      ['gate', 'Running'],
+      [1, 'Passed'],
+      [2, 'Running'],
+      [3, 'Running'],
+      ['stories', 'Running'],
+    ]);
+
+    const before = comments[0].body;
+    expect(await write(github, shard('gate', 2, 3, 'failure'), { id: 41 })).toBe('stale');
+    expect(comments[0].body).toBe(before);
   });
 });

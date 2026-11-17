@@ -44,6 +44,34 @@ export function runScript(script: string, env: Record<string, string>, dir: stri
   return { ...readOutputs(output), stdout };
 }
 
+/**
+ * The facts a row's Result line carries, in the shape a Vitest part's has: its counts, then its duration
+ * (` in 1m 4s`), then how many are over the budget (`, 2 over the test budget`). Each is null when absent;
+ * `inOrder` says the ones present come in that order.
+ */
+export function resultFacts(line: string) {
+  const passed = /(\d+) passed/.exec(line);
+  const failed = /(\d+) failed/.exec(line);
+  const stories = /(\d+) of (\d+) stories/.exec(line);
+  const duration = / in ((?:\d+m )?\d+s)\b/.exec(line);
+  const over = /(\d+) over the (file|test) budget/.exec(line);
+  const counts = [passed, stories].flatMap((match) => (match ? [match.index] : []));
+  const positions = [
+    counts.length ? Math.min(...counts) : null,
+    duration?.index ?? null,
+    over?.index ?? null,
+  ].filter((position): position is number => position !== null);
+  return {
+    passed: passed ? Number(passed[1]) : null,
+    failed: failed ? Number(failed[1]) : null,
+    stories: stories ? { passing: Number(stories[1]), of: Number(stories[2]) } : null,
+    duration: duration?.[1] ?? null,
+    over: over ? Number(over[1]) : null,
+    budget: over?.[2] ?? null,
+    inOrder: positions.every((position, index) => index === 0 || position > positions[index - 1]),
+  };
+}
+
 // One merged report, as `playwright merge-reports` writes it from every shard's blob: each file once,
 // each test with its results and their durations in milliseconds. A test with `failed` failed with that
 // message; `tags` are written as the report writes them, without their `@`.

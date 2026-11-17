@@ -1,11 +1,12 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { FLAKY_NOTE } from '../../../.github/scripts/lib/failure-list.mjs';
-import { mergedPlaywrightReport, runScript } from '../../support/github-scripts';
+import { mergedPlaywrightReport, resultFacts, runScript } from '../../support/github-scripts';
+import { fromRoot } from '../../support/paths';
 
 // The summarisers are scripts, so each runs as its own process against fixture
 // files, and what it hands GitHub Actions is read back out of GITHUB_OUTPUT.
@@ -116,7 +117,8 @@ describe('setOutput, as each summariser writes it', () => {
     const { outputs } = run('summarize-playwright.mjs', {
       PLAYWRIGHT_JSON_OUTPUT_NAME: write('playwright.json', report),
     });
-    expect(outputs).toEqual({ summary: '1 passed, 0 failed', details: '', flaky: 'false' });
+    // No failed count when none failed, as a Vitest part's row reads.
+    expect(outputs).toEqual({ summary: '1 passed', details: '', flaky: 'false' });
   });
 
   it('summarize-stories writes its three outputs when no checklist was written', () => {
@@ -372,7 +374,8 @@ describe('the Playwright summary, from the merged report of every shard', () => 
   it("gives the run's duration in its summary, as a Vitest part's row does", () => {
     const { summary } = summarise();
 
-    expect(summary).toMatch(/^4 passed, 0 failed/);
+    expect(summary).toMatch(/^4 passed\b/);
+    expect(summary).not.toContain('failed');
     expect(summary).toContain(' in 4m 10s');
   });
 
@@ -413,5 +416,138 @@ describe('the Playwright summary, from the merged report of every shard', () => 
     expect(warned).toBeLessThan(close);
     // The collapsed line says one test is over.
     expect(lines[open]).toMatch(/\b1 test\b/);
+  });
+});
+
+// A Playwright shard's sub-row, a suite's row and a Vitest part's row carry the same facts in the same order:
+// the counts, the run's duration, then how many are over the budget when any is. Playwright's budget is per
+// test (30 s), Vitest's per file.
+describe("a row's Result line, alike in the Vitest and Playwright comments", () => {
+  type Line = (options: {
+    counts: string;
+    ms?: number;
+    over?: number;
+    budget: 'file' | 'test';
+  }) => string;
+  const loadResultLine = async () =>
+    ((await import(fromRoot('.github/scripts/lib/result-line.mjs'))) as { resultLine: Line })
+      .resultLine;
+
+  it('is written by one shared helper: counts, then duration, then the count over the budget when any is', async () => {
+    const resultLine = await loadResultLine();
+
+    expect(
+      resultFacts(resultLine({ counts: '3 passed', ms: 64_000, over: 2, budget: 'test' })),
+    ).toMatchObject({ passed: 3, duration: '1m 4s', over: 2, budget: 'test', inOrder: true });
+    expect(
+      resultFacts(resultLine({ counts: '3 passed', ms: 12_000, over: 0, budget: 'file' })),
+    ).toMatchObject({ passed: 3, duration: '12s', over: null });
+    expect(resultFacts(resultLine({ counts: '3 passed', budget: 'file' })).duration).toBeNull();
+  });
+
+  it.each(['summarize-vitest.mjs', 'summarize-playwright.mjs', 'summarize-stories.mjs'])(
+    '%s writes its Result line through that helper, not a copy of it',
+    (script) => {
+      const source = readFileSync(fromRoot('.github/scripts', script), 'utf8');
+
+      expect(source).toMatch(/from '\.\/lib\/result-line\.mjs'/);
+    },
+  );
+
+  const GATE = 'tests/e2e/testwort.spec.ts';
+  const gateReport = (tests: { title: string; ms: number; failed?: string }[], ms: number) =>
+    write('playwright.json', mergedPlaywrightReport([{ file: GATE, tests }], ms));
+
+  it("gives a gate shard's counts, its duration and its tests over 30 s, in that order, naming no count that is zero", () => {
+    const { summary } = run('summarize-playwright.mjs', {
+      PLAYWRIGHT_JSON_OUTPUT_NAME: gateReport(
+        [
+          { title: 'Testwort simmers', ms: 31_000 },
+          { title: 'Testwort steeps', ms: 29_000 },
+          { title: 'Testwort boils', ms: 1_000, failed: 'expected Testwort to boil' },
+        ],
+        75_000,
+      ),
+    }).outputs;
+
+    expect(resultFacts(summary)).toMatchObject({
+      passed: 2,
+      failed: 1,
+      duration: '1m 15s',
+      over: 1,
+      budget: 'test',
+      inOrder: true,
+    });
+
+    const under = run('summarize-playwright.mjs', {
+      PLAYWRIGHT_JSON_OUTPUT_NAME: gateReport([{ title: 'Testwort steeps', ms: 29_000 }], 30_000),
+    }).outputs.summary;
+    expect(resultFacts(under)).toMatchObject({
+      passed: 1,
+      failed: null,
+      duration: '30s',
+      over: null,
+    });
+  });
+
+  it('writes a stand-in summary, as a Vitest part does, when the shard left no report', () => {
+    const { outputs } = run('summarize-playwright.mjs', {
+      PLAYWRIGHT_JSON_OUTPUT_NAME: join(dir, 'missing.json'),
+    });
+
+    expect(outputs.summary).toBeTruthy();
+    expect(outputs.details).toBe('');
+  });
+
+  // Three v1 stories: one the shard ran and passed, one it ran and failed, one it never ran.
+  const checklist = {
+    stories: [
+      { id: 91, title: 'Testwort walk', section: 'Testwort', status: 'passed' },
+      { id: 92, title: 'Testwort run', section: 'Testwort', status: 'failed' },
+      { id: 93, title: 'Testwort rest', section: 'Testwort', status: 'untested' },
+    ],
+    unknown: [],
+    untagged: [],
+    counts: { passed: 1, failed: 1, skipped: 0, untested: 1 },
+    total: 3,
+  };
+  const storyRun = (env: Record<string, string> = {}) =>
+    run('summarize-stories.mjs', {
+      STORIES_JSON: write('stories.json', checklist),
+      PLAYWRIGHT_JSON_OUTPUT_NAME: write(
+        'playwright.json',
+        mergedPlaywrightReport(
+          [
+            {
+              file: 'tests/e2e/stories/testwort.spec.ts',
+              tests: [
+                { title: 'Testwort walk', ms: 40_000, tags: ['story-91'] },
+                { title: 'Testwort run', ms: 2_000, tags: ['story-92'], failed: 'expected a run' },
+              ],
+            },
+          ],
+          65_000,
+        ),
+      ),
+      ...env,
+    }).outputs.summary;
+
+  it("gives the stories' counts, then the run's duration, then its tests over 30 s", () => {
+    expect(resultFacts(storyRun())).toMatchObject({
+      stories: { passing: 1, of: 3 },
+      duration: '1m 5s',
+      over: 1,
+      budget: 'test',
+      inOrder: true,
+    });
+  });
+
+  it('counts only the stories a shard ran, with PLAYWRIGHT_SHARD=true', () => {
+    expect(resultFacts(storyRun({ PLAYWRIGHT_SHARD: 'true' }))).toMatchObject({
+      stories: { passing: 1, of: 2 },
+      duration: '1m 5s',
+      over: 1,
+      inOrder: true,
+    });
   });
 });

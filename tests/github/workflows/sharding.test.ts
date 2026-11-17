@@ -35,6 +35,7 @@ import {
   loadWorkflow,
   matrixRuns,
   needsOf,
+  runJob,
   runStepScript,
   runWorkflow,
   stringify,
@@ -42,13 +43,14 @@ import {
   uploadsOf,
   workflowResult,
 } from '../../support/github-workflow';
-import { type TimedTest, mergedPlaywrightReport } from '../../support/github-scripts';
+import { type TimedTest, mergedPlaywrightReport, resultFacts } from '../../support/github-scripts';
 import { fromRoot } from '../../support/paths';
 import {
   context as commentContext,
   core,
   fakeGitHub,
   lib,
+  rowsOf,
   sectionsOf,
 } from '../../support/pr-comment';
 
@@ -143,15 +145,6 @@ const PASS = { success: true, failure: false };
 /** Where a shard's blob reporter writes, which tells its blob upload from its other uploads. */
 const BLOB = /blob-report/;
 
-/** A job's steps with every local composite action's own steps in its place, the pr-comment action kept. */
-function flatSteps(steps: Step[] | undefined): Step[] {
-  return (steps ?? []).flatMap((step) =>
-    step.uses?.startsWith('./.github/actions/') && !usesComment(step)
-      ? flatSteps(loadAction(step.uses).runs.steps)
-      : [step],
-  );
-}
-
 describe('the Playwright suites, sharded', () => {
   it.each([
     ['playwright', 3, /\be2e\b/],
@@ -223,22 +216,6 @@ describe('the Playwright suites, sharded', () => {
     expect(
       evaluateValue(job.name ?? name, { ...base, inputs: playwrightInputs('playwright') }),
     ).toBe('playwright');
-  });
-
-  it('writes no comment section from playwright.yml for either suite: playwright-coverage writes them', () => {
-    for (const caller of ['playwright', 'stories'] as const) {
-      const runs = jobRuns(PLAYWRIGHT, playwrightInputs(caller)).filter(({ job, context }) =>
-        holds(job.if, context, PASS),
-      );
-      const writes = runs.flatMap(({ context, job }) =>
-        flatSteps(job.steps).filter(
-          (step) => usesComment(step) && holds(step.if, { ...context, steps: {} }, PASS),
-        ),
-      );
-
-      expect(runs.length).toBeGreaterThan(1);
-      expect(writes).toEqual([]);
-    }
   });
 
   it('runs no shard of a suite the path filter rules out', () => {
@@ -1458,5 +1435,249 @@ describe('the Playwright comment, from the sharded suites', () => {
     expect(storyLines.some((line) => line.includes('25% functions') && !line.includes('75%'))).toBe(
       true,
     );
+  });
+});
+
+describe("each suite's row in the Playwright comment, as the end job writes it", () => {
+  // Shard 1 of each suite ran a test over the 30 s test budget.
+  const slow = (report: ShardReport): ShardReport => ({
+    ...report,
+    files: report.files.map((file) => ({
+      ...file,
+      tests: file.tests.map((test) => ({ ...test, ms: 31_000 })),
+    })),
+  });
+
+  it("gives its counts, the suite's duration and its tests over 30 s, as a Vitest part's row does", async () => {
+    const run = await runJoin({
+      shards: {
+        playwright: (index) => (index === 0 ? slow(gateShard(1)) : gateShard(index + 1)),
+        stories: (index) => (index === 0 ? slow(storyShard(1)) : storyShard(index + 1)),
+      },
+    });
+
+    expect(resultFacts(run.sections.gate?.summary ?? '')).toMatchObject({
+      passed: 3,
+      failed: null,
+      duration: '1m 0s',
+      over: 1,
+      budget: 'test',
+      inOrder: true,
+    });
+    expect(resultFacts(run.sections.stories?.summary ?? '')).toMatchObject({
+      stories: { passing: 2, of: 2 },
+      duration: '1m 0s',
+      over: 1,
+      budget: 'test',
+      inOrder: true,
+    });
+  });
+});
+
+/** What one shard's run leaves: its Playwright JSON report, for a story shard its checklist, and whether it failed. */
+type ShardRun = { report: unknown; checklist?: unknown; failed?: boolean };
+
+// `npm run e2e` or `npm run test:stories` with `--shard i/n`, as Playwright behaves: the JSON reporter writes
+// shard i's report to PLAYWRIGHT_JSON_OUTPUT_NAME, and the story checklist reporter its checklist to
+// STORIES_JSON, each only when `--reporter` names it. It exits 1 when the shard failed.
+const STUB_SHARD_NPM = `#!${process.execPath}
+const fs = require('node:fs');
+const path = require('node:path');
+const args = process.argv.slice(2);
+const flag = (name) => {
+  const at = args.findIndex((arg) => arg === name || arg.startsWith(name + '='));
+  if (at === -1) return '';
+  return args[at].includes('=') ? args[at].slice(name.length + 1) : args[at + 1] ?? '';
+};
+const reporters = flag('--reporter').split(',');
+const index = Number(flag('--shard').split('/')[0]);
+const fixture = JSON.parse(fs.readFileSync(process.env.STUB_SHARDS, 'utf8'))[index - 1];
+if (!fixture) process.exit(0);
+const write = (to, value) => {
+  fs.mkdirSync(path.dirname(path.resolve(to)), { recursive: true });
+  fs.writeFileSync(path.resolve(to), JSON.stringify(value));
+};
+if (reporters.includes('json') && process.env.PLAYWRIGHT_JSON_OUTPUT_NAME)
+  write(process.env.PLAYWRIGHT_JSON_OUTPUT_NAME, fixture.report);
+if (reporters.some((reporter) => reporter.includes('story-playwright-reporter')) && process.env.STORIES_JSON && fixture.checklist)
+  write(process.env.STORIES_JSON, fixture.checklist);
+process.exit(fixture.failed ? 1 : 0);
+`;
+
+const SHARD_LOG = 'Testwort shard log line';
+
+/** Every shard job one caller of playwright.yml runs, each run step by step with its own `runs` entry, writing into `github`. */
+async function runShards(
+  caller: 'playwright' | 'stories' | 'warm',
+  runs: ShardRun[],
+  github: unknown,
+) {
+  const shards = jobRuns(PLAYWRIGHT, playwrightInputs(caller)).filter(({ job, context }) =>
+    holds(job.if, context, PASS),
+  );
+  const writes: Record<string, string>[] = [];
+  for (const { job, context } of shards) {
+    const at = mkdtempSync(join(root, 'shard-'));
+    symlinkSync(fromRoot('.github'), join(at, '.github'));
+    const fixtures = join(at, 'shard-runs.json');
+    writeFileSync(fixtures, JSON.stringify(runs));
+    const uses: UsesHandler = async (step, stepContext) => {
+      if (usesComment(step)) {
+        const env = actionEnv(step, stepContext);
+        writes.push(env);
+        const result = await lib.postComment({
+          github,
+          context: commentContext,
+          core,
+          inputs: lib.inputsFromEnv(env),
+          readFile: () => SHARD_LOG,
+          sleep: async () => {},
+          random: () => 0,
+        });
+        return { outcome: result === 'written' ? 'success' : 'failure' };
+      }
+      if (step.uses === './.github/actions/job-summary') return { outcome: 'success' };
+      return undefined;
+    };
+    await runJob(job, {
+      context,
+      root: at,
+      stubs: { npm: STUB_SHARD_NPM },
+      env: { STUB_SHARDS: fixtures },
+      uses,
+    });
+  }
+  return { shards: shards.length, writes };
+}
+
+const shardReport = (file: string, tests: TimedTest[], duration: number) =>
+  mergedPlaywrightReport([{ file, tests }], duration);
+
+const GATE_RUNS: ShardRun[] = [
+  { report: shardReport('tests/e2e/testwort-1.spec.ts', [{ title: 'one', ms: 1_000 }], 20_000) },
+  {
+    report: shardReport(
+      'tests/e2e/testwort-2.spec.ts',
+      [{ title: 'two', ms: 1_000, failed: FAILURE }],
+      40_000,
+    ),
+    failed: true,
+  },
+  {
+    report: shardReport(
+      'tests/e2e/testwort-3.spec.ts',
+      [
+        { title: 'three', ms: 1_000 },
+        { title: 'three slowly', ms: 31_000 },
+      ],
+      60_000,
+    ),
+  },
+];
+
+// Each story shard's checklist lists every v1 story, as the reporter writes it: the ones it did not run untested.
+const storyRun = (n: number, failed: boolean, duration: number): ShardRun => {
+  const stories = [91, 92].map((id) => ({
+    id,
+    title: `Testwort story ${id}`,
+    section: 'Testwort',
+    status: id !== 90 + n ? 'untested' : failed ? 'failed' : 'passed',
+  }));
+  const count = (status: string) => stories.filter((story) => story.status === status).length;
+  return {
+    report: shardReport(
+      `tests/e2e/stories/testwort-${n}.spec.ts`,
+      [
+        {
+          title: `Testwort story 9${n}`,
+          ms: 1_000,
+          tags: [`story-9${n}`],
+          ...(failed ? { failed: FAILURE } : {}),
+        },
+      ],
+      duration,
+    ),
+    checklist: {
+      stories,
+      unknown: [],
+      untagged: [],
+      counts: { passed: count('passed'), failed: count('failed'), skipped: 0, untested: 1 },
+      total: stories.length,
+    },
+    failed,
+  };
+};
+const STORY_RUNS = [storyRun(1, false, 30_000), storyRun(2, true, 50_000)];
+
+describe("each shard's row in the Playwright comment", () => {
+  it("is written by every shard of both suites, under !cancelled(), with its own result, beneath its suite's row", async () => {
+    const { github, comments } = fakeGitHub([]);
+
+    expect((await runShards('playwright', GATE_RUNS, github)).shards).toBe(3);
+    expect((await runShards('stories', STORY_RUNS, github)).shards).toBe(2);
+
+    expect(comments).toHaveLength(1);
+    const body = comments[0].body;
+    const rows = rowsOf(body);
+    expect(
+      rows.map(({ label, shard, status }) => [
+        shard ?? (/Gate/.test(label) ? 'gate' : /Stories/.test(label) ? 'stories' : label),
+        status,
+      ]),
+    ).toEqual([
+      ['gate', 'Failed'],
+      [1, 'Passed'],
+      [2, 'Failed'],
+      [3, 'Passed'],
+      ['stories', 'Failed'],
+      [1, 'Passed'],
+      [2, 'Failed'],
+    ]);
+    const facts = rows.map(({ result }) => resultFacts(result));
+    expect(facts[1]).toMatchObject({ passed: 1, failed: null, duration: '20s', over: null });
+    expect(facts[2]).toMatchObject({ passed: 0, failed: 1, duration: '40s', over: null });
+    expect(facts[3]).toMatchObject({ passed: 2, duration: '1m 0s', over: 1, inOrder: true });
+    // A story shard counts the stories it ran, not the ones the other shard ran.
+    expect(facts[5]).toMatchObject({ stories: { passing: 1, of: 1 }, duration: '30s' });
+    expect(facts[6]).toMatchObject({ stories: { passing: 0, of: 1 }, duration: '50s' });
+    // A shard writes no log: the suite's block, from the end job, carries it.
+    expect(body).not.toContain(SHARD_LOG);
+  });
+
+  it('is written by no shard of the build-only run, which has no pull request', async () => {
+    const { github, comments } = fakeGitHub([]);
+    const gate = await runShards('playwright', GATE_RUNS, fakeGitHub([]).github);
+
+    const warm = await runShards('warm', [], github);
+
+    // Precondition: a gate run's shards do write.
+    expect(gate.writes.length).toBeGreaterThan(0);
+    expect(warm.shards).toBe(1);
+    expect(warm.writes).toEqual([]);
+    expect(comments).toEqual([]);
+  });
+});
+
+describe("playwright.yml's permissions", () => {
+  const LEVEL: Record<string, number> = { none: 0, read: 1, write: 2 };
+
+  it('ask pull-requests: write, and every caller grants each permission it asks', () => {
+    const asked = PLAYWRIGHT.permissions ?? {};
+    expect(asked['pull-requests']).toBe('write');
+
+    const callers = [
+      ['pr-gate playwright', PR_GATE, PR_GATE.jobs.playwright],
+      ['pr-gate stories', PR_GATE, PR_GATE.jobs.stories],
+      ['e2e-cache warm', E2E_CACHE, E2E_CACHE.jobs.warm],
+    ] as const;
+    for (const [name, workflow, job] of callers) {
+      const granted = job.permissions ?? workflow.permissions ?? {};
+      for (const [scope, level] of Object.entries(asked)) {
+        expect(
+          LEVEL[granted[scope] ?? 'none'],
+          `${name} grants ${scope}: ${level}`,
+        ).toBeGreaterThanOrEqual(LEVEL[level]);
+      }
+    }
   });
 });

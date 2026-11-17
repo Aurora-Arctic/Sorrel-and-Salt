@@ -92,6 +92,54 @@ export const context = {
 
 export const core = { info: () => {}, warning: () => {} };
 
+const STATUS_WORDS = ['Passed', 'Failed', 'Running', 'Skipped', 'Warning'] as const;
+
+/** One row of a sectioned comment's table: a section's, or a shard's sub-row (`↳`) beneath it. */
+export type Row = {
+  label: string;
+  /** The shard's index when the row is a sub-row, else null. */
+  shard: number | null;
+  status: string;
+  result: string;
+};
+
+/** A sectioned comment's table rows, top to bottom. */
+export function rowsOf(body: string): Row[] {
+  return body
+    .split('\n')
+    .filter((line) => line.startsWith('|') && !/^\|\s*-/.test(line))
+    .slice(1)
+    .map((line) => {
+      const [label = '', status = '', result = ''] = line
+        .slice(1, -1)
+        .split(/(?<!\\)\|/)
+        .map((cell) => cell.trim());
+      const sub = label.startsWith('↳');
+      return {
+        label,
+        shard: sub ? Number(/\d+/.exec(label)?.[0]) : null,
+        status: STATUS_WORDS.find((word) => status.includes(word)) ?? status,
+        result,
+      };
+    });
+}
+
+/** The status word of a comment's heading. */
+export function headingStatusOf(body: string): string {
+  const heading = body.split('\n').find((line) => line.startsWith('### '));
+  if (!heading) throw new Error('The comment has no heading');
+  return STATUS_WORDS.find((word) => heading.split(' · ').includes(word)) ?? '';
+}
+
+/** A sectioned comment's shard entries, by section key and then shard index, as its hidden state holds them. */
+export function shardsOf(
+  body: string,
+): Record<string, Record<string, { status: string; total: number; token: string }>> {
+  const state = /<!-- ci-state (.*?) -->/s.exec(body);
+  if (!state) throw new Error('The comment carries no ci-state');
+  return (JSON.parse(state[1]) as { shards?: ReturnType<typeof shardsOf> }).shards ?? {};
+}
+
 export type Section = { status: string; summary: string; block: string };
 
 /** A sectioned comment's sections, by key, as its hidden state and its blocks hold them. */
