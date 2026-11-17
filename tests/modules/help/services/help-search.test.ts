@@ -189,6 +189,59 @@ describe('paging a search by its cursor', () => {
     expect(walked).toEqual(whole);
     expect(new Set(walked).size).toBe(5);
   });
+
+  it('keeps a staff and a keeper row from a signed-out reader on every page, where a keeper walking the same words reaches both', async () => {
+    for (const n of ['one', 'two', 'three', 'four', 'five']) {
+      await insertHelpArticle(
+        sql,
+        { title: `Testwort Saltmarsh ${n}`, slug: `testwort-saltmarsh-${n}`, body: 'saltmarsh' },
+        E.id,
+      );
+    }
+    await insertHelpArticle(
+      sql,
+      {
+        title: 'Testwort Saltmarsh Staff Notes',
+        slug: 'testwort-saltmarsh-staff',
+        body: 'saltmarsh',
+        audience: 'staff',
+      },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      {
+        title: 'Testwort Saltmarsh Keeper Notes',
+        slug: 'testwort-saltmarsh-keeper',
+        body: 'saltmarsh',
+        audience: 'keeper',
+      },
+      E.id,
+    );
+    const walk = async (session: Session | null) => {
+      const walked: string[] = [];
+      let after: PageRequest['after'];
+      for (let pages = 0; pages < 10; pages += 1) {
+        const entries = await searchHelp(session, 'saltmarsh', {
+          limit: 2,
+          inverted: false,
+          after,
+        });
+        if (entries.length === 0) break;
+        walked.push(...entries.map((entry) => entry.node.slug));
+        after = entries[entries.length - 1].cursor;
+      }
+      return walked;
+    };
+    const hidden = ['testwort-saltmarsh-staff', 'testwort-saltmarsh-keeper'];
+
+    // Precondition: the words find both rows, a page at a time, for a reader their audience admits.
+    expect(await walk(asUser(E))).toEqual(expect.arrayContaining(hidden));
+
+    const walked = await walk(null);
+    expect(walked).toHaveLength(5);
+    expect(walked.filter((slug) => hidden.includes(slug))).toEqual([]);
+  });
 });
 
 describe('a hidden row is never found', () => {

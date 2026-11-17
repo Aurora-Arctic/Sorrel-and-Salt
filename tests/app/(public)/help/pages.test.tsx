@@ -1,8 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import type { Metadata } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { MAX_PAGE_SIZE, decodeCursor, encodeCursor } from '@/lib/cursor';
 import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
+import type { Cursor, PageRequest } from '@/lib/types';
 import { hrefs } from '../../../support/links';
 import { getSession, sessionIsVerified } from '../../../support/request-session';
 
@@ -513,5 +515,86 @@ describe('/help/search', () => {
 
     expect(meta.title).toBeTruthy();
     expect(meta.robots).toMatchObject({ index: false });
+  });
+
+  describe('paged by its cursor', () => {
+    const QUERY = 'tallowmere';
+    const cursorAt = (i: number): Cursor => ({
+      key: [String(-3 + i / 1000)],
+      id: `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+    });
+    const matchAt = (i: number) => ({
+      node: row(`testwort-tallowmere-${i}`),
+      cursor: cursorAt(i),
+      score: 3 - i / 1000,
+    });
+    // Answers every row asked for, numbered on from the cursor, so another page always follows.
+    const moreThanAPage = () =>
+      searchHelp.mockImplementation(async (_session, _query, request: PageRequest) => {
+        const from = request.after ? Number(request.after.id.slice(-12)) + 1 : 0;
+        return Array.from({ length: request.limit }, (_, i) => matchAt(from + i));
+      });
+    const at = (q: string, cursor: { after?: string; before?: string }) => ({
+      searchParams: Promise.resolve({ q, ...cursor }),
+    });
+    const resultIndexes = () =>
+      linkHrefs()
+        .filter((href) => href?.startsWith('/help/testwort-tallowmere-'))
+        .map((href) => Number(href!.slice('/help/testwort-tallowmere-'.length)));
+    const pager = () => screen.getByRole('navigation', { name: 'Pages' });
+    const endHref = (name: 'Prev' | 'Next') =>
+      within(pager()).getByRole('link', { name }).getAttribute('href');
+
+    it('reads one page through the helper and links the next at the same words', async () => {
+      moreThanAPage();
+      const { default: Page } = await load();
+
+      render((await Page(search(QUERY))) as React.ReactElement);
+
+      // The helper sizes the read: one page and the row that says another follows, never the page's own bound.
+      const [[, , request]] = searchHelp.mock.calls as [unknown, unknown, PageRequest][];
+      expect(request.limit).toBeLessThanOrEqual(MAX_PAGE_SIZE + 1);
+      const drawn = resultIndexes();
+      expect(drawn.length).toBe(request.limit - 1);
+      expect(endHref('Prev')).toBeNull();
+
+      const next = new URL(endHref('Next')!, 'http://x');
+      expect(next.pathname).toBe('/help/search');
+      expect(next.searchParams.get('q')).toBe(QUERY);
+      expect(decodeCursor(next.searchParams.get('after')!)).toEqual(
+        cursorAt(drawn[drawn.length - 1]),
+      );
+    });
+
+    it('reads the page its address names, and links the one before at the same words', async () => {
+      moreThanAPage();
+      const { default: Page } = await load();
+
+      render((await Page(at(QUERY, { after: encodeCursor(cursorAt(30)) }))) as React.ReactElement);
+
+      expect(searchHelp).toHaveBeenCalledWith(
+        null,
+        QUERY,
+        expect.objectContaining({ after: cursorAt(30) }),
+      );
+      const drawn = resultIndexes();
+      expect(drawn[0]).toBe(31);
+
+      const previous = new URL(endHref('Prev')!, 'http://x');
+      expect(previous.pathname).toBe('/help/search');
+      expect(previous.searchParams.get('q')).toBe(QUERY);
+      expect(decodeCursor(previous.searchParams.get('before')!)).toEqual(cursorAt(31));
+    });
+
+    it('draws no pager when the matches fit one page', async () => {
+      searchHelp.mockResolvedValue([0, 1, 2].map(matchAt));
+      const { default: Page } = await load();
+
+      render((await Page(search(QUERY))) as React.ReactElement);
+
+      // Precondition: the matches are drawn, so the missing pager is not a missing list.
+      expect(resultIndexes()).toEqual([0, 1, 2]);
+      expect(screen.queryByRole('navigation', { name: 'Pages' })).toBeNull();
+    });
   });
 });
