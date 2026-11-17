@@ -21,7 +21,7 @@ A top-level page answers 404 for a row that is not a public article or guide, a 
 
 ## Staff routes
 
-`/help/staff`, `/help/staff/[slug]` and `/help/staff/[slug]/[child]` call `requireCuratorSession()` before any read, are never cached, and are `noindex`. They answer 404 for a public row, so a public row has one address. The staff index lists the top-level staff and keeper articles and guides together. The `/curator` and `/keepers` layouts link to `/help/staff`.
+`/help/staff`, `/help/staff/[slug]` and `/help/staff/[slug]/[child]` call `requireCuratorSession()` before any read, are never cached, and are `noindex`. They answer 404 for a public row, so a public row has one address. The staff index lists the top-level staff and keeper articles and guides together. It reads `listStaffHelpArticles` with `withPublic: false`, so the public rows are left out in SQL, before the 200-row cap. The `/curator` and `/keepers` layouts link to `/help/staff`.
 
 ## Layout
 

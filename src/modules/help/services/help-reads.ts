@@ -141,10 +141,11 @@ export async function readStaffHelpArticle(
 export async function listStaffHelpArticles(
   session: Session,
   page: PageRequest,
+  { withPublic = true }: { withPublic?: boolean } = {},
 ): Promise<PageEntry<HelpArticle>[]> {
   assertCurator(session);
   const reach = reachOf(session);
-  return mapPage(await findHelpArticleStaffPage(reach, page), reach);
+  return mapPage(await findHelpArticleStaffPage(reach, page, { withPublic }), reach);
 }
 
 /** The rows the reader reaches that `query` finds, best first; a blank query finds none. A null session is a signed-out reader. */

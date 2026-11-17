@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden } from '@/lib/errors';
-import type { Session } from '@/lib/session';
 import type { PageEntry, PageRequest } from '@/lib/types';
 import type { HelpArticle } from '@/modules/help';
-import * as help from '@/modules/help';
+import { listStaffHelpArticles } from '@/modules/help';
 import { assertCurator, assertSiteAdmin } from '@/modules/identity';
 import { B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
@@ -18,13 +17,6 @@ let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
-
-// Typed with the option until the service takes it, so this file type-checks before the change.
-const listStaffHelpArticles = help.listStaffHelpArticles as unknown as (
-  session: Session,
-  page: PageRequest,
-  options?: { withPublic?: boolean },
-) => Promise<PageEntry<HelpArticle>[]>;
 
 // Fewer rows than the public ones ranked ahead of the staff and keeper rows.
 const SMALL: PageRequest = { limit: 3, inverted: false };

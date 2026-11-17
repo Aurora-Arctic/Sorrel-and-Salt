@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import {
   helpArticleKind,
@@ -101,12 +101,18 @@ export function findHelpGlossaryPage(
   );
 }
 
-/** One page of every kind of live row a reader of `reach` sees, A to Z: the staff help index. */
+/** One page of every kind of live row a reader of `reach` sees, A to Z: the staff help index. `withPublic: false` leaves the public rows out in SQL. */
 export function findHelpArticleStaffPage(
   reach: HelpReach,
   page: PageRequest,
+  { withPublic = true }: { withPublic?: boolean } = {},
 ): Promise<PageEntry<HelpArticleRow>[]> {
-  return findPage(helpArticles, A_TO_Z, page, readable(reach));
+  return findPage(
+    helpArticles,
+    A_TO_Z,
+    page,
+    withPublic ? readable(reach) : and(readable(reach), ne(helpArticles.audience, 'public')),
+  );
 }
 
 /** One page of the live rows of every kind and audience, shown and hidden, that `filter` admits, A to Z or in position order: the keeper's list. */
