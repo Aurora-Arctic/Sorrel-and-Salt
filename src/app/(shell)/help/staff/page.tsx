@@ -10,11 +10,13 @@ export const metadata: Metadata = noIndexMetadata('Staff Help');
 
 export default async function Page() {
   const session = await requireCuratorSession();
-  const rows = (
-    await listStaffHelpArticles(session, { limit: HELP_PAGE_LIMIT, inverted: false })
+  const staff = (
+    await listStaffHelpArticles(
+      session,
+      { limit: HELP_PAGE_LIMIT, inverted: false },
+      { withPublic: false },
+    )
   ).map(({ node }) => node);
-  // The public rows have their own pages; this one lists what only staff and keepers read.
-  const staff = rows.filter((row) => row.audience !== 'public');
   const terms = await readGlossaryTerms();
   return (
     <HelpIndex

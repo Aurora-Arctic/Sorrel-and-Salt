@@ -12,16 +12,21 @@ const KIND = { faq: 'Question', term: 'Term' } as const;
 
 // Beneath the help layout's header, whose search box holds the words: a count, then the results in the order handed (the search's rank), each a card
 // with its title, then a chip saying what kind of page it opens and, for a row not public, a chip naming its audience (Staff or Keeper), with the searched words
-// marked. No results draws no list; an unmatched query says so in the site's No Matches status
+// marked, and the pager the page hands as children beneath. The count is the whole number of matches, not the page's rows. No results draws no list; an unmatched query says so in the site's No Matches status
 // (claude-docs/components/help-pages.md).
-const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactElement => (
+const HelpSearchResults = ({
+  query,
+  results,
+  totalCount = results.length,
+  children,
+}: HelpSearchResultsProps): ReactElement => (
   <div className="help-page help-results">
     <HelpBackLink href="/help" title="Help" />
     <h2>Search Help</h2>
     {results.length > 0 ? (
       <>
         <output className="help-results__count">
-          {results.length} {plural(results.length, 'result', 'results')} for “{query}”
+          {totalCount} {plural(totalCount, 'result', 'results')} for “{query}”
         </output>
         <ul className="help-results__list">
           {results.map((result) => (
@@ -51,6 +56,7 @@ const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactEle
             </li>
           ))}
         </ul>
+        {children}
       </>
     ) : (
       query !== '' && (

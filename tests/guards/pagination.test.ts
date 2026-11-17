@@ -72,3 +72,40 @@ describe('a page reads its list through the numbered-page helpers', () => {
     expect(files.filter((file) => RAW_RESOLVER.test(readFileSync(file, 'utf8')))).toEqual([]);
   });
 });
+
+// A search finds as many rows as its words match: a page that sizes the read itself drops every match past that size, and one that does not count them cannot say how many there are.
+describe('a page reads a search through readNumberedPage', () => {
+  const APP_FILE = /^src\/app\/.*\.tsx?$/;
+  const MODULE_IMPORT = /import\s*\{([^}]*)\}\s*from\s*'@\/modules\/[\w-]+'/g;
+  const HELPER = /\breadNumberedPage\b/;
+  // A page request written out by hand: the size it names is the page's own, not the helper's.
+  const HAND_BUILT_REQUEST = /\binverted\s*:/;
+
+  const searchesCalled = (text: string): string[] =>
+    [...text.matchAll(MODULE_IMPORT)]
+      .flatMap(([, names]) => names.split(','))
+      .map((name) => name.replace(/^\s*type\s+/, '').trim())
+      .filter((name) => /^search[A-Z]\w*$/.test(name))
+      .filter((name) => new RegExp(String.raw`\b${name}\s*\(`).test(text));
+
+  it('counts and pages every search a page calls, and hands it no request it sized itself', () => {
+    const searching = inject('repoFiles')
+      .filter((file) => APP_FILE.test(file))
+      .filter((file) => searchesCalled(readFileSync(file, 'utf8')).length > 0);
+    // Preconditions: the scan finds the help search's read, and the patterns match what they should refuse.
+    expect(searching.some((file) => file.startsWith('src/app/(public)/help/search/'))).toBe(true);
+    expect(
+      searchesCalled("import { searchHelp } from '@/modules/help';\nsearchHelp(s, q, p)"),
+    ).toEqual(['searchHelp']);
+    expect('searchHelp(session, query, { limit: 200, inverted: false })').toMatch(
+      HAND_BUILT_REQUEST,
+    );
+
+    const unpaged = searching.filter((file) => {
+      const text = readFileSync(file, 'utf8');
+      return !HELPER.test(text) || HAND_BUILT_REQUEST.test(text);
+    });
+
+    expect(unpaged).toEqual([]);
+  });
+});

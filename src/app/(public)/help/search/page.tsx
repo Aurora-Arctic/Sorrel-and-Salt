@@ -3,9 +3,14 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { noIndexMetadata } from '@/lib/page-metadata';
 import HelpSearchResults from '@/components/HelpSearchResults';
-import { HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
+import { HelpSearchSkeleton } from '@/components/HelpSearchResults/skeleton';
+import ListFrame, { ListBody } from '@/components/ListFrame';
+import Pager from '@/components/Pager';
+import { linkTo } from '@/lib/help-pages';
+import { listHref, pagerHrefs } from '@/lib/list-href';
+import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
 import { getSession } from '@/lib/request-session';
-import { searchHelp } from '@/modules/help';
+import { countHelpSearch, searchHelp } from '@/modules/help';
 
 export const metadata: Metadata = noIndexMetadata('Search Help');
 
@@ -13,25 +18,44 @@ export const metadata: Metadata = noIndexMetadata('Search Help');
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string | string[] }>;
+  searchParams: Promise<{ q?: string | string[]; after?: string; before?: string }>;
 }) {
-  const { q } = await searchParams;
-  const query = trimmed(q);
+  const params = await searchParams;
+  const query = trimmed(params.q);
   // A box emptied and sent without script lands on the index, as it does with script.
-  if (q !== undefined && query === '') redirect('/help');
+  if (params.q !== undefined && query === '') redirect('/help');
   const session = await getSession();
-  const results =
+  const page =
     query === ''
-      ? []
-      : await searchHelp(session, query, { limit: HELP_PAGE_LIMIT, inverted: false });
+      ? undefined
+      : await readNumberedPage(
+          readPageCursors(params),
+          (request) => searchHelp(session, query, request),
+          (start) => countHelpSearch(session, query, start),
+        );
   return (
-    <HelpSearchResults
-      query={query}
-      results={results.map(({ node }) => ({
-        kind: node.kind,
-        audience: node.audience,
-        ...linkTo(node),
-      }))}
-    />
+    <ListFrame>
+      <ListBody skeleton={<HelpSearchSkeleton />}>
+        <HelpSearchResults
+          query={query}
+          totalCount={page?.totalCount}
+          results={(page?.edges ?? []).map(({ node }) => ({
+            kind: node.kind,
+            audience: node.audience,
+            ...linkTo(node),
+          }))}
+        >
+          {page && (
+            <Pager
+              {...pagerHrefs(page.pageInfo, (cursor) =>
+                listHref('/help/search', { q: query, ...cursor }),
+              )}
+              position={page.position}
+              drawOnOnePage
+            />
+          )}
+        </HelpSearchResults>
+      </ListBody>
+    </ListFrame>
   );
 }

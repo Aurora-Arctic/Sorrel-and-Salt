@@ -25,8 +25,9 @@ const Pager = ({
   nextHref,
   soft = false,
   position,
+  drawOnOnePage = false,
 }: PagerProps): ReactElement | null => {
-  if (!previousHref && !nextHref) return null;
+  if (!drawOnOnePage && !previousHref && !nextHref) return null;
   return (
     <nav className="pager" aria-label="Pages">
       <ul>
