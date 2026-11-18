@@ -1,6 +1,6 @@
 # AppShell
 
-`src/components/AppShell/` is the frame around every signed-in page: a skip link, the global bar, and the page. Its layout is `src/app/(shell)/layout.tsx`, over `/account`, `/coven`, `/curator` and `/keepers`. It is a server component; only the account menu, the current-page marking and the Add Ingredient button are client code.
+`src/components/AppShell/` is the frame around every signed-in page: a skip link, the global bar, and the page. Its layout is `src/app/(shell)/layout.tsx`, over `/account`, `/coven`, `/curator` and `/keepers`. It is a server component; only the bar's end block (`shell-end.tsx`: Add Ingredient, the account menu and the theme disc) and the current-page marking are client code.
 
 ## Contracts
 
@@ -32,11 +32,26 @@
 - **The context row** is the layouts' to render, as only they know the area: the coven layout puts the switcher and `CovenNav` in it, the admin layout "Admin" linking to `/keepers` and `AdminNav` ([`context-row.md`](context-row.md)).
 - **Accessibility.** One `banner`, a `nav` named "Site", every link and button 44.5px tall or more, a visible focus ring on each, and `aria-current` on the current link.
 
+## The end block
+
+`ShellEnd` (`shell-end.tsx`) draws Add Ingredient, `NewSpellElsewhere`, the account menu and the theme disc, and measures them with the shared `useMeasuredFit` (`src/lib/use-measured-fit.ts`, the hook the section nav uses). It takes the first of four steps whose width fits the room between whatever precedes it in the bar and the bar's inner edge:
+
+1. Everything in full.
+2. The account button shows the avatar alone (AccountMenu's `compact`).
+3. Add Ingredient's main part shows a plus, a square as tall as its label's button; its accessible name stays "Add Ingredient" (`form="plus"`).
+4. Add Ingredient leaves the bar and leads the account panel as its first item (`form="folded"`, AccountMenu's `lead`). The item runs the main part's action, the default place; the chevron's choice of place is not offered while folded. Its dialog stays mounted, so focus returns to the account button when it closes.
+
+The theme disc and the account button never fold. New Spell has no control in the bar (`NewSpellElsewhere` only redirects), so nothing of it folds. At 320px with normal text the plus shows; at 320px with a 200% root font Add Ingredient folds; at 1280px with a 200% root font the avatar shows alone beside the label.
+
+- **It measures, so it follows the text size.** A rem media query does not follow a root font set on the page, and the block measures in pixels, so it re-measures when the disc's own width changes (a text-size change), when Add Ingredient appears after the first measure, once the web fonts load, and on a navigation (the current link's weight changes the room). A change of the window re-chooses from the measured widths through a `ResizeObserver` on the bar's row and its items.
+- **The measuring render is never painted.** It marks the block `data-measuring`, where every item keeps its full width. Before hydration, and without script, the block is not measured: the stylesheet clips it (`overflow: hidden`) so the page still does not scroll sideways.
+- **The block may shrink** (`min-width: 0`) while the disc keeps its width, so the account button gives way before the disc would pass the window.
+
 ## Styling
 
 The bar's inner row, brand, initials and end group are the mixin `frame-bar($block)` in `src/scss/_frame-bar.scss`, shared with [`PublicFrame`](public-frame.md). Measurements are tokens ([`styling.md`](../styling.md), "The application shell and the layers").
 
-- **The bar grows, the page does not scroll sideways.** The bar and its inner row have `$shell-bar-height` as a minimum, and the end group may shrink and wrap, right-aligned, so at a 320px window or a 200% root font its controls take a second line instead of pushing the page wider. `tests/e2e/header-reflow.spec.ts` checks both settings, signed in and public.
+- **The bar is one line at every width and text size, and the page does not scroll sideways because of it.** The bar is `$shell-bar-height` tall, never more; what does not fit is folded ("The end block", below), never wrapped. `tests/e2e/header-reflow.spec.ts` checks a 320px window and a 200% root font, signed in and public; `tests/e2e/header-fold.spec.ts` checks the one line, that every bar control ends inside the window, and each fold.
 - The bar's `margin-bottom` is zeroed (the layout layer gives every `header` one), so a context row meets the bar edge to edge and a page that fits the window does not scroll by it.
 - The current site link is told by weight and the `$rule-heavy` accent rule along the bar's foot (`nav-current`), a border and not a box-shadow so forced colours keeps it, with no fill, so a hover's quiet wash still shows.
 - `_primitives.scss` takes the bar off `.page-frame`'s height (for the public frame's bar too) and pads `.app-shell__main` for the bottom bar. The root's `scroll-padding-top` and the `scroll-margin-top` of `.page-frame__section` and the ingredient entry's sections are keyed the same way, so a jump or a focus lands below either frame's sticky bar.

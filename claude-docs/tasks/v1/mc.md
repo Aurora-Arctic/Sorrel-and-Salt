@@ -482,18 +482,22 @@ _Acceptance criteria:_
 - The guard fails once with a fixed limit put back on the search page, after help search has its pager.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 
-**MC.28 — Let The App Header Wrap At 320 Pixels And Large Text** · 3h
+**MC.28 — Keep The App Header On One Line At 320 Pixels And Large Text** · 3h
 
 _Story:_ As a person who reads at a large text size or on a narrow screen, I want the header controls to stay on screen, so that I never scroll sideways to reach them.
 
-Minted from the accessibility audit (M17.9). Findings: AX-1 (A-2); each is in `claude-docs/audits/accessibility.md`. The header end blocks (`app-shell__end` in `AppShell` and `public-frame__end` in `PublicFrame`) do not wrap, so at a 320 px window and at a 200% root font the page scrolls sideways and header controls leave the screen. The section nav's More overflow follows the viewport width, not the font size.
+Minted from the accessibility audit (M17.9). Findings: AX-1 (A-2); each is in `claude-docs/audits/accessibility.md`. The header end blocks (`app-shell__end` in `AppShell` and `public-frame__end` in `PublicFrame`) do not fit, so at a 320 px window and at a 200% root font the page scrolls sideways and header controls leave the screen. The section nav's More overflow follows the viewport width, not the font size. The header folds what does not fit rather than wrapping (claude-docs/components/app-shell.md, "The end block").
 
 _Acceptance criteria:_
 
+- The header stays one line tall at every width and text size, and every header control ends inside the window.
+- The signed-in header's end block measures what fits, so it follows the font size, not a media query. Where Add Ingredient's full label does not fit, its main part shows a plus, keeping the accessible name "Add Ingredient"; where even the plus does not fit, Add Ingredient leads the account panel as its first item. The theme disc and the account button never fold.
+- At 320 px with normal text the plus shows; at 320 px with a 200% root font Add Ingredient is in the account panel.
+- The section nav and the end block share one measuring hook in `src/lib/`.
 - At a window 320 px wide, no signed-in or public page scrolls sideways because of the header.
 - With the root font at 200% at 1280 px, the header and the section nav do not scroll the page sideways, and the section nav's More overflow follows the font size.
-- Every header control stays reachable by keyboard and by pointer at both settings.
-- A Playwright check fails on sideways page scroll at 320 px and at 200% root font, on one signed-in page and one public page (R5).
+- Every header control stays reachable by keyboard and by pointer at both settings, the folded Add Ingredient included.
+- A Playwright check fails on sideways page scroll at 320 px and at 200% root font, on one signed-in page and one public page (R5), and another checks the one line and each fold (`tests/e2e/header-fold.spec.ts`).
 - The R5 rule text is added to `.claude/rules/testing.md`, "What a test asserts".
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 

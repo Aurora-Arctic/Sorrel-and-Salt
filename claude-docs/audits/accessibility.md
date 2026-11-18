@@ -97,7 +97,7 @@ I did not write a task for the candidate findings AX-13 to AX-20 and AX-22. Each
 - **Found:** measured, `scrollWidth` against `clientWidth`. Page zoom to 200% overflows on 0 views, so the failure is in text-only scaling and at 320 px, not in page zoom.
 - **Why It Matters:** A person who sets a larger text size, or uses a window 320 px wide, has to scroll sideways to reach a header control. Reflow asks that content fit a 320 px wide window without two-dimensional scrolling [S2], and resized text must stay usable without loss of content or function [S3]. I rated it Medium because the controls are reachable only by sideways scrolling.
 - **Recommended Fix:** Let `app-shell__end` and `public-frame__end` wrap (flex wrap with `min-inline-size: 0`) at 320 px and at large text sizes, and make the section nav's "More" overflow follow the font size and not only the viewport width.
-- **Follow-up Task:** MC.28 Let The App Header Wrap At 320 Pixels And Large Text
+- **Follow-up Task:** MC.28 Keep The App Header On One Line At 320 Pixels And Large Text
 
 ### AX-2 Help Search Button Is 20 Pixels Wide
 
@@ -488,7 +488,7 @@ MC.20 already holds the same rule for Promote and Leave (F-11), so this is the s
 
 ### New Tasks
 
-**MC.28 — Let The App Header Wrap At 320 Pixels And Large Text** · 3h
+**MC.28 — Keep The App Header On One Line At 320 Pixels And Large Text** · 3h
 
 _Story:_ As a person who reads at a large text size or on a narrow screen, I want the header controls to stay on screen, so that I never scroll sideways to reach them.
 
