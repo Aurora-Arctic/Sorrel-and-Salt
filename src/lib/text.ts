@@ -41,12 +41,12 @@ export const fold = (text: string): string => text.trim().toLowerCase();
 export const emptyList = (things: string): string => `There are no ${things} yet.`;
 
 /** Shared with lists that draw their filters as nodes (CompendiumList), so the wording has one source. */
-export const noMatchLead = (noun: string): string => `No ${noun} match `;
+const noMatchLead = (noun: string): string => `No ${noun} match `;
 
 /** A sentence of its own where something else has already said nothing matched, as a coven's list does under its search sentence. */
 export const NO_MATCH_HINT = 'Change or clear the filter to see more.';
 
-export const NO_MATCH_ADVICE = `. ${NO_MATCH_HINT}`;
+const NO_MATCH_ADVICE = `. ${NO_MATCH_HINT}`;
 
 /** `noun` is the plural, so one wording serves every list (claude-docs/modules.md, "Empty-list text"). */
 export function noMatchText(noun: string, parts: readonly string[], emptyText: string): string {
