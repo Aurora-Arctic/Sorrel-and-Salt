@@ -23,7 +23,7 @@
 
 ## Report This
 
-The 404 keeps Help and Report This together in `.error-page__pair`, so the icon button never wraps alone onto its own row at 375px; the 500 screen pairs Report This with the way back to `/` the same way.
+`WayOn` keeps Help and Report This together in `.error-page__pair`, so the icon button never wraps alone onto its own row at 375px; the 500 screen pairs Report This with the way back to `/` the same way.
 
 `src/components/ReportThis/` — the link on the 404, 500 and global-error screens. It builds a bug request with the status (`error`) and the page filled in, and opens the Support dialog over the same page. It is an icon-only quiet button in an `IconTip` ("Report This"), the same icon and button as the footer's Support link.
 
@@ -32,12 +32,12 @@ The 404 keeps Help and Report This together in `.error-page__pair`, so the icon 
 
 ## Not Authorized
 
-`src/components/NotAuthorized/` — what a signed-in non-keeper sees at `/curator` or `/keepers`, and a member who is not a steward sees at a coven's invitations page: a level-one "Not Authorized", the sentence "Your account cannot open this page.", and a link back to `/`. It takes no props and is an `ErrorPage` with that one link, so it draws the one `<main className="page-frame">` itself. `src/app/(shell)/forbidden.tsx` renders it with no wrapper, and Next shows that, with a 403, wherever `forbidden()` is thrown: the `/curator` and `/keepers` guard (`claude-docs/auth/admin-guard.md`, "The admin guard") and the coven invitations page for a member who is not a steward (`claude-docs/auth/coven-guard.md`, "The invitations page"). The 404 also offers Help and Report This; the 403 offers neither.
+`src/components/NotAuthorized/` — what a signed-in non-keeper sees at `/curator` or `/keepers`, and a member who is not a steward sees at a coven's invitations page: a level-one "Not Authorized", the sentence "Your account cannot open this page.", and the same three ways on as the 404 (`WayOn`, `src/components/ErrorPage/way-on.tsx`: Back to Sorrel & Salt, Help and Report This with code 403). It takes no props and is an `ErrorPage`, so it draws the one `<main className="page-frame">` itself. `src/app/(shell)/forbidden.tsx` renders it with no wrapper, and Next shows that, with a 403, wherever `forbidden()` is thrown: the `/curator` and `/keepers` guard (`claude-docs/auth/admin-guard.md`, "The admin guard") and the coven invitations page for a member who is not a steward (`claude-docs/auth/coven-guard.md`, "The invitations page"). `WayOn` is the one block both the 404 and the 403 draw.
 
 - **No admin is named**, not a person and not an address: a refused visitor does not need to know who curates the site, and naming them invites the mail the next point rules out.
-- **No way to request access**: no button, no form, no contact link. A keeper is granted by another keeper from `/keepers/users` or invited by one (MB.59, MB.69), never requested, so a request control would promise a path that does not exist. `tests/components/NotAuthorized/index.test.tsx` holds both, and checks the single link back to `/` and the absence of any button, form, text field, address or request wording.
+- **No way to request access**: the page's own text has no button, form, text field or contact address. Report This reports a fault in the page and does not ask for access. A keeper is granted by another keeper from `/keepers/users` or invited by one (MB.59, MB.69), never requested, so a request control would promise a path that does not exist. `tests/components/NotAuthorized/index.test.tsx` holds both, and checks the three links against the 404's and the absence of any form, text field, address or request wording in the page's own text.
 - **The reason says what the area is for** (curating the shared compendium), so the refusal reads as a fact about the account rather than an error. It never says _workspace_ (CLAUDE.md, "Vocabulary").
-- **The way back is a quiet button-styled `next/link` to `/`**, the one page every signed-in visitor can reach. Neither solid nor the accent outline: it is the page's only action, but a way back changes nothing and nothing about it is primary.
+- **The way back is a quiet button-styled `next/link` to `/`**, the one page every signed-in visitor can reach. Neither solid nor the accent outline: a way back changes nothing and nothing about it is primary. Report This reads the page from `useActualPathname`, so on a 403 it reports `/keepers`, `/curator` or the coven's invitations address.
 - **The root `forbidden.tsx` is exercised by the admin 403 tests of `tests/e2e/admin.spec.ts` alone**, which reach it through the guard against the built server and check nothing pushes it sideways at 375px before the axe scan (`claude-docs/testing/e2e.md`).
 
 ## Not here

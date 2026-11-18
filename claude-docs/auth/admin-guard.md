@@ -23,8 +23,8 @@ section describes. Both answer in the same three ways, all from the server:
   proof in the service it calls.
 - **A 403 page, not a 404.** `/curator` and `/keepers` are paths everyone already knows, so
   pretending it does not exist buys no secrecy and only makes the app look
-  broken (CLAUDE.md's domain invariants; ["The three errors"](service-session.md)). The page says the account lacks keeper rights and
-  offers the way back to `/`. It never names a keeper and offers no way to ask
+  broken (CLAUDE.md's domain invariants; ["The three errors"](service-session.md)). The page says the account cannot open it and
+  offers the 404's ways on: back to `/`, Help and Report This. It never names a keeper and offers no way to ask
   for access ([`../components/error-page.md`](../components/error-page.md)).
 - **`forbidden()` is Next's, behind `experimental.authInterrupts`** in
   `next.config.ts`. It throws, and Next answers 403 with a `noindex` robots
