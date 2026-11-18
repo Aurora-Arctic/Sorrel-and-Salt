@@ -139,9 +139,11 @@
   }
 
   // A page head's eyebrow is the first thing in the top-left corner, where the sorrel lies
-  // (Backdrop); muted and small, it is the text the ornament can swallow, so it wears the halo.
+  // (Backdrop); muted and small, it is the text the ornament can swallow, so it sits on the page colour.
   .header .eyebrow {
-    text-shadow: $text-halo;
+    width: fit-content;
+    background-color: $surface-page;
+    box-shadow: 0 0 0 0.25rem $surface-page;
   }
 
   // Body size: it is read, not skimmed. Anything but a `p` is held to the measure by the class.

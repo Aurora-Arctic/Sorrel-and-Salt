@@ -176,10 +176,11 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   padding-inline-end: $close-reserve;
 }
 
-// A page head's eyebrow wears the page's halo against the art behind it; a dialog's own surface has none, and
-// the halo would draw a patch of the page's colour on it. Weighted past `body .header .eyebrow`.
+// A page head's eyebrow sits on the page's colour against the art behind it; a dialog's own surface has none, and
+// that colour would draw a patch on it. Weighted past `body .header .eyebrow`.
 .modal .header .eyebrow {
-  text-shadow: none;
+  background-color: transparent;
+  box-shadow: none;
 }
 
 // "to" and its destination: the hidden word is a flex item of no size and the name a box of its own, so the

@@ -107,6 +107,11 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   margin: 0 0 space(2);
   color: $text-muted;
   font-size: type-size('small');
+  // Muted and small over the backdrop ornament, so it sits on the page colour.
+  width: fit-content;
+  background-color: $surface-page;
+  // Spread past the box so its edge pixels, which a fractional position blends with the art, are the page colour too.
+  box-shadow: 0 0 0 0.25rem $surface-page;
 }
 
 // The skeleton's bar in that line is as tall as the line, so the head below it keeps its place.
