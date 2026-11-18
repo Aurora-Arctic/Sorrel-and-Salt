@@ -71,7 +71,7 @@ Run only the test files the layer touches. A good result: the commit touches onl
 
 The agent must not write the implementation in the same layer, and must not run the full suites (`test:coverage`, `test:stories`, the full e2e run) unless you say so.
 
-**Not available yet:** the tests-first layer as its own pull request needs the stack mode of `/create-pr`, which is Draft F in `stacks.md`. Until then it is a local commit that you review before telling the agent to continue, and it ships with the rest of the branch.
+**Not available yet:** the tests-first layer as its own pull request needs the stack mode of `/create-pr`, which is Draft F in `stacks.md` and waits on its Decisions 1 and 2. Until then it is a local commit that you review before telling the agent to continue, and it ships with the rest of the branch.
 
 **Done when.** You have read the tests, each fails for the right reason, and you have told the agent to continue.
 
@@ -95,7 +95,7 @@ A good result: `gh stack view` lists every layer in order, and each layer's diff
 
 The agent must not run any `gh stack` command that writes to GitHub (`stacks.md`, section 3, lists them), and must not rebase or force-push by hand.
 
-**Not available yet:** the extension is not installed in the dev container, and whether stack branches are exempt from `/create-pr`'s "never rebase, never force-push" rules is open (Decision 2 in `stacks.md`). Whether the layers of a task conflict with "one task per PR" is settled there too. Until then work as a single branch.
+**Not available yet:** `gh stack` works (proved on a scratch repo, `verify.md` checks 6 and 7), but the extension is not installed in the dev container, and whether stack branches are exempt from `/create-pr`'s "never rebase, never force-push" rules is open (Decision 2 in `stacks.md`). Until then work as a single branch.
 
 **Done when.** `gh stack view` lists the layers, and each layer's diff is small enough that you expect to read it in 15 minutes.
 
@@ -117,7 +117,7 @@ A good result: every required check is green. Do not read a layer whose gate is 
 
 The agent must not call `gh stack submit` or `link` itself: those write PRs without a `Closes`/`Refs` line, a task-id title or a board link (`stacks.md`, section 3).
 
-**Not available yet:** one pull request per layer needs Draft F (`stacks.md`). Whether `pr-gate.yml` and `gitflow.yml` run on an upper layer, and what base they see, is unproved and is the scratch-repo run in Draft E (`stacks.md`; Draft C in `verify.md`). The gate also has no dependency-rules job (Draft B in `verify.md`), and no `oversized` label (Draft D). Until then `/create-pr` opens one PR per branch, and the gate runs as it does today.
+**Not available yet:** one pull request per layer needs Draft F (`stacks.md`). `pr-gate.yml` and `gitflow.yml` do run on an upper layer: GitHub starts them with `github.base_ref` equal to `staging`, and `gitflow.yml` passes an upper layer (proved on stand-ins, `stacks.md` section 6). Do not read a layer whose gate is red; whether a lower layer runs the full gate is Decision 3 in `stacks.md`, and I recommend it does. The gate also has no dependency-rules job (Draft B in `verify.md`), and no `oversized` label (Draft D). Until then `/create-pr` opens one PR per branch, and the gate runs as it does today.
 
 **Done when.** The PR is open, linked to its task, and its required checks are green.
 
@@ -212,7 +212,7 @@ The agent must not push, merge or resolve a review thread on GitHub itself.
 
 **With an agent.** No prompt. The agent does not merge.
 
-**Not available yet:** the merge queue returns with a later task. Where `Closes #N` goes on a stack is Decision 1 in `stacks.md`, and whether the close workflow fires for an upper layer is unproved (Draft E).
+**Not available yet:** the merge queue returns with a later task. Where `Closes #N` goes on a stack is Decision 1 in `stacks.md`, and the close workflow fires for a layer merged when it is the lowest unmerged one, because its base is then `staging` (proved one layer at a time; layers merged in one atomic call are unproved and are in Draft G). `gh stack merge N` merges layer N and every layer below it, and the layer above is retargeted to `staging`.
 
 **Done when.** The PR is merged into `staging`, and the task shows `Done` on the board.
 
@@ -224,7 +224,7 @@ You can ask an agent to take you through the loop one step at a time from this f
 
 ## Where a stack meets `/create-pr` and the task board
 
-`/create-pr` and the board assume one PR per task. `stacks.md` lists each place with file and line (section 5), says how a layer links to its task (section 4), and drafts the changes (Drafts E to G). Until they exist, use one branch and one PR per task.
+`/create-pr` and the board assume one PR per task. `stacks.md` lists each place with file and line (section 5), says how a layer links to its task (section 4), and drafts the changes (Drafts F and G, and Draft C in `verify.md`). Until they exist, use one branch and one PR per task.
 
 ## Open decisions
 
@@ -233,4 +233,4 @@ Each is held in its record; the owner chooses.
 - The container build: Decision 4 in `verify.md`.
 - Where `Closes #N` goes on a stack: Decision 1 in `stacks.md`.
 - Whether stack branches are exempt from "never rebase, never force-push": Decision 2 in `stacks.md`.
-- Prove stacks before building: Decision 3 in `stacks.md`.
+- What the workflows do on a stack (I recommend no change): Decision 3 in `stacks.md`.

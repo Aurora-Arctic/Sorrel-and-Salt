@@ -11,8 +11,8 @@ Record for M17.31 (issue #1721). It checks every "Verify first" item of the loca
 | 3   | `pr-gate.yml` triggers and checks                   | Pass (read). Differs from the brief: bases `main`, `staging`, `release/**` only                                                                                                                                                                                                                                                    |
 | 4   | Branches Vercel and Neon deploy from                | Pass (read). Deploys are CI-only, from `main`, `staging` and `hotfix/*` PRs                                                                                                                                                                                                                                                        |
 | 5   | `depcruise --affected` with `--output-type mermaid` | Fail with the `tsc` parser and the repo's TypeScript 7.0.2 (silent, 0 modules). Pass with the `swc` parser on the real `src/` (one file excluded), and with a second TypeScript 6                                                                                                                                                  |
-| 6   | `gh stack` on a public scratch repo                 | Not run: the token cannot create a repository; the owner creates a public repo (Decision 3)                                                                                                                                                                                                                                        |
-| 7   | A stack can target `staging`                        | Not run: no scratch repo. The docs say `--base` allows it                                                                                                                                                                                                                                                                          |
+| 6   | `gh stack` on a public scratch repo                 | Pass on a public repo. Install, `init`, `submit --auto`, `rebase`, `push`, `sync`, `merge` and `unstack`-free clean-up all worked. The private-repository half is not run (the real repo is public)                                                                                                                                |
+| 7   | A stack can target `staging`                        | Pass: `gh stack init --base staging`, `submit --auto`; the bottom PR's base is `staging`, and `github.base_ref` is `staging` for every layer                                                                                                                                                                                       |
 | 8   | Plannotator through port 19432                      | Fail run directly (the binary does not start on Alpine). Pass through a private glibc loader without root: `--version`, and HTTP 200 on port 19432. The owner reports the port opened in their host browser (not run by me). Unrun: the full `/plannotator-review` flow from Claude Code, and the port line in `devcontainer.json` |
 | 9   | What `install.sh` does beyond the binary            | Pass (read, never run). Full list below                                                                                                                                                                                                                                                                                            |
 | 10  | difftastic parses TSX structurally                  | Pass                                                                                                                                                                                                                                                                                                                               |
@@ -139,25 +139,21 @@ See Decision 1.
 
 ## 6 and 7. `gh stack` on a public scratch repo, and targeting `staging`
 
-Not run. Check 6 runs on a public repository only. Sorrel & Salt becomes private only when the organisation moves to a paid plan, so a private repository on the Free plan is a state the real repository never has; the private-repository half of the check is not run. The scratch repository holds throwaway files and no Sorrel & Salt source.
+Run on 2026-11-18 on `Aurora-Arctic/stack-scratch-m17-31`, a public repository the owner created. Check 6 runs on a public repository only. Sorrel & Salt becomes private only when the organisation moves to a paid plan, so a private repository on the Free plan is a state the real repository never has; the private-repository half of the check is not run. The repository holds throwaway files, stand-in workflows (`gate`, `gitflow`, `close-on-merge`, `probe`, `meta`) that copy the real triggers, and no Sorrel & Salt source. The token was read from a file for each command and never stored.
 
-The brief's order was the `Aurora-Arctic` organisation first, then the authenticated user:
+Results, each seen in the run:
 
-```
-$ gh repo create Aurora-Arctic/stack-scratch-m17-31 --private
-GraphQL: Resource not accessible by personal access token (createRepository)
-$ gh repo create stack-scratch-m17-31 --private
-GraphQL: mjoynes-wombat-web does not have the correct permissions to execute `CreateRepository` (createRepository)
-```
+- **Install.** `gh extension install github/gh-stack` works; `gh stack init --base staging <branch>` and `gh stack submit --auto` create a stack whose bottom PR targets `staging`. Each upper PR's base is the layer below. `--auto` makes drafts, titles from the commit subject, and a body holding only the stack footer.
+- **Bases seen by a workflow.** `github.base_ref` is `staging` for every layer. `github.event.pull_request.base.ref` is the layer below. `github.ref` is `refs/pull/<N>/merge`.
+- **Triggers.** A workflow with `branches: [main, staging, 'release/**']` ran for upper layers whose own base was another `feature/*` branch. `opened` did not always start a run for an upper layer (cause not proved); every later event did.
+- **Stack metadata.** `github.event.pull_request.stack` is `null` on the first `opened` and, once the stack exists, `{base, id, number, position, size}`.
+- **Merging.** `gh stack merge <N> --yes --merge` merged that PR and the PRs below it; the PR above was retargeted to `staging` and its gate re-ran.
+- **Dirty foreign worktree.** `rebase` and `sync` refuse, change nothing and exit 1. With the worktree clean, `sync` rebased and pushed all layers. A review comment survived the force-push.
+- **Required check on `staging`.** Refused. A branch protection rule and a repository ruleset both returned HTTP 403, "Resource not accessible by personal access token": the token lacks the repository Administration permission. No workaround tried.
 
-The token in the container cannot create a repository in either place. I did not widen scopes. No scratch repo exists, so there is nothing to delete. The `gh-stack` extension was installed to read its help and removed again (`gh extension remove gh-stack`; `gh extension list` is empty).
+Still unproved: how a required check behaves on a stack; the `closed` event of layers merged in one atomic call; why some upper layers' `opened` events started no run; a hotfix stack's preview deployment (`deploy.yml` was not copied); a rebase conflict. The full answers and the run counts are in `stacks.md`.
 
-What I could check without a repo:
-
-- `gh stack init --help`: "Use --base to specify a different trunk branch", for example `gh stack init --base develop my-feature`. So `gh stack init --base staging` is the documented way.
-- GitHub docs, "About stacked pull requests" (`docs.github.com`, stacked pull requests page): "A stack's trunk is the base branch of the bottom pull request … it can be any branch". The same page says required reviews, required status checks and Actions are evaluated as if each PR targets the stack base.
-
-Result: the documentation says a stack can target `staging`; I could not prove it on a real repo. The scratch repository is decided (Decision 3) and does not exist yet. The M17.33 record (`stacks.md`) lists the questions that need the repo.
+Clean-up: all PRs closed or merged, no open issues, `gh extension remove gh-stack` done (`gh extension list` is empty), the local clone deleted, and the token string found nowhere on disk. The scratch repository itself is the owner's to delete.
 
 ## 8. Plannotator through port 19432
 
@@ -257,19 +253,19 @@ Result: pass.
 
 ## Where the brief differs from the repo
 
-| Brief says                                                                                  | Repo says                                                                                                                  | Correction                                                                                                |
-| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Debian or Ubuntu dev container, `apt`                                                       | Alpine (musl), `apk`, aarch64 (check 1)                                                                                    | Every install step uses `apk` or a musl-compatible binary; glibc-only binaries need Decision 2            |
-| Repo name Tarry-A-Spell                                                                     | `Aurora-Arctic/Sorrel-and-Salt`                                                                                            | Use the repo's own name                                                                                   |
-| Next 15                                                                                     | `next` at a 16 range (`package.json`)                                                                                      | Next 16                                                                                                   |
-| `merge-queue.yml` exists                                                                    | Deleted; `gitflow.yml` header says it returns with a later task; no `merge_group` workflow                                 | Nothing to extend today                                                                                   |
-| One trunk branch, `BASE ${BASE:-main}`                                                      | Gitflow: feature work targets `staging`                                                                                    | Default base is `origin/staging`, and `depcruise --affected` must be given it (check 5)                   |
-| The gate runs for every pull request                                                        | `pr-gate.yml` runs for bases `main`, `staging`, `release/**` only (check 3)                                                | A stack layer is covered only if GitHub treats it as targeting the stack base; unproved (see `stacks.md`) |
-| depcruise works on the repo                                                                 | Repo uses TypeScript 7.0.2; depcruise supports below 7.0.0 or 7.1.0 and above                                              | Decision 1                                                                                                |
-| Plannotator installs with `curl … \| bash`                                                  | The installer also writes skills, hooks and agent config into `~/.claude`, and the binary does not start on musl           | Never pipe it; `--minimal` only; Decision 2                                                               |
-| Graphify and others install through Python (`uv`)                                           | The container has no Python                                                                                                | Out of scope here; M17.32 covers Graphify                                                                 |
-| Test `gh stack` on a private scratch repo                                                   | A public scratch repo, created by the owner (check 6); the real repo is public until the organisation moves to a paid plan | Check 6 runs on a public repo only; Decision 3 (decided)                                                  |
-| `git dft` alias, `scripts/review-graph.sh`, `depcruise:check` and `review:affected` scripts | None exist in the repo (`package.json` has no dependency-cruiser)                                                          | They are new files; see the drafted tasks                                                                 |
+| Brief says                                                                                  | Repo says                                                                                                                                         | Correction                                                                                                                                       |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Debian or Ubuntu dev container, `apt`                                                       | Alpine (musl), `apk`, aarch64 (check 1)                                                                                                           | Every install step uses `apk` or a musl-compatible binary; glibc-only binaries need Decision 2                                                   |
+| Repo name Tarry-A-Spell                                                                     | `Aurora-Arctic/Sorrel-and-Salt`                                                                                                                   | Use the repo's own name                                                                                                                          |
+| Next 15                                                                                     | `next` at a 16 range (`package.json`)                                                                                                             | Next 16                                                                                                                                          |
+| `merge-queue.yml` exists                                                                    | Deleted; `gitflow.yml` header says it returns with a later task; no `merge_group` workflow                                                        | Nothing to extend today                                                                                                                          |
+| One trunk branch, `BASE ${BASE:-main}`                                                      | Gitflow: feature work targets `staging`                                                                                                           | Default base is `origin/staging`, and `depcruise --affected` must be given it (check 5)                                                          |
+| The gate runs for every pull request                                                        | `pr-gate.yml` runs for bases `main`, `staging`, `release/**` only (check 3)                                                                       | Proved on stand-ins: GitHub starts the gate on every layer with `github.base_ref` equal to `staging`; no trigger change (`stacks.md`, section 6) |
+| depcruise works on the repo                                                                 | Repo uses TypeScript 7.0.2; depcruise supports below 7.0.0 or 7.1.0 and above                                                                     | Decision 1                                                                                                                                       |
+| Plannotator installs with `curl … \| bash`                                                  | The installer also writes skills, hooks and agent config into `~/.claude`, and the binary does not start on musl                                  | Never pipe it; `--minimal` only; Decision 2                                                                                                      |
+| Graphify and others install through Python (`uv`)                                           | The container has no Python                                                                                                                       | Out of scope here; M17.32 covers Graphify                                                                                                        |
+| Test `gh stack` on a private scratch repo                                                   | A public scratch repo, created by the owner and used on 2026-11-18 (check 6); the real repo is public until the organisation moves to a paid plan | Check 6 ran on a public repo only; Decision 3 (done)                                                                                             |
+| `git dft` alias, `scripts/review-graph.sh`, `depcruise:check` and `review:affected` scripts | None exist in the repo (`package.json` has no dependency-cruiser)                                                                                 | They are new files; see the drafted tasks                                                                                                        |
 
 ## Drafted implementation tasks
 
@@ -305,18 +301,19 @@ _Acceptance criteria:_
 - The `swc` parser is set in the config, which excludes `src/modules/documents/jobs/document-mailing.ts` (the one file `swc` rejects) with a comment saying why, and a test fails when a new file breaks the parser
 - A mechanical guard for the new mechanism lands in the same commit (`CLAUDE.md`, "The sweep-task rule")
 
-**Draft C — Run the Gate on Every Stack Layer** · 2h (estimate, rises if the check below fails)
+**Draft C — Test the Whole Stack on Its Top Layer** · 3h (estimate). Minted only if you choose option (2), or the whole-diff variant of option (4), in `stacks.md` Decision 3
 
-_Story:_ As a reviewer of a stacked pull request, I want every layer to run the full gate and the `gitflow` check, so that no layer reaches `staging` unchecked.
+_Story:_ As a reviewer of a stacked pull request, I want the top layer's gate to run every job the whole stack's diff needs, so that code from lower layers is tested together before the last layer merges.
 
-Depends on the scratch-repo run (Decision 3). GitHub's docs say workflows trigger as if each layer targets the stack base, which would need no change; `gitflow.yml` and `pr-gate.yml` line 299 read the layer's real base, which would.
+The run showed that GitHub already starts the gate and `gitflow` on every layer with `github.base_ref` equal to `staging`, and that the real `gitflow.yml` passes an upper layer. So the trigger needs no change. What is open is the `changes` job: it reads only each layer's own files, so a top layer that touches no test path skips Vitest and Playwright even though its checkout holds the lower layers.
 
 _Acceptance criteria:_
 
-- A run on a real two-layer stack shows which values `base.ref`, `github.base_ref` and `stack.base.ref` take for layer two, recorded in `claude-docs/`
-- `pr-gate.yml` and `gitflow.yml` run for both layers; where they read the base ref, they read the value that is `staging` for every layer
-- A layer whose base is its parent `feature/*` branch is not reported as a Gitflow violation
-- The aggregate check names stay unchanged so the required checks still match
+- When `github.event.pull_request.stack` is present and `stack.position == stack.size`, `changes` computes its filters from the diff between `stack.base.sha` and the head, and in every other case it behaves as today
+- A layer with no stack, and every layer below the top, run exactly the jobs they run today
+- The aggregate check names stay unchanged, and a skipped job still reports skipped (MB.39)
+- A run on a real two-layer stack records which jobs ran on each layer, in `claude-docs/ci/`
+- If you choose option (2), the lower layers run only format, lint and types, and `process.md` Step 4's "do not read a layer whose gate is red" is reworded to match
 
 **Draft D — Label Oversized Pull Requests** · 2h (estimate)
 
@@ -350,11 +347,12 @@ Items 1, 2 and 3 are decided. I need you to choose for item 4 only.
 
    Decided: V, a private glibc prefix with a wrapper, with W (run on the host) as the fallback. The reason: it is the only route proved to start the server in the container, it changes no base image, and it keeps the glibc libraries out of the system. Draft A is the task for it.
 
-3. **The scratch repo for `gh stack`. Decided.** You create `stack-scratch-m17-31` under `Aurora-Arctic` as a public repository and give the container's token access. It holds throwaway files and no Sorrel & Salt source. Check 6 runs on it as a public repo only (check 6 explains why). Checks 6 and 7 and the `stacks.md` questions run on it in a later step, after you tell me it exists. Nothing for you to do until then except create the repository.
+3. **The scratch repo for `gh stack`. Decided and done.** The owner created `stack-scratch-m17-31` under `Aurora-Arctic` as a public repository. Checks 6 and 7 and the `stacks.md` questions ran on it on 2026-11-18, as a public repo only (check 6 explains why). Nothing for you to do except delete the repository when you no longer want it.
 4. **The container build.** The dev container has no `docker`, so the build in check 1 is read from files only. I need you to choose X or Y: X, you run `docker compose build` for the dev container on the host and paste the result; or Y, accept the file reading. I recommend Y, because nothing in this task builds the image.
 
 ## Status of the scratch repo and the extension
 
-- The scratch repository does not exist yet; you create it (Decision 3). I created no repository, so there is nothing to delete.
-- The `gh-stack` extension was installed to read its help and removed. `gh extension list` is empty.
+- The scratch repository `Aurora-Arctic/stack-scratch-m17-31` exists and is public. It holds stand-in workflows and throwaway files, no open PRs and no open issues. Deleting it is yours to do.
+- The `gh-stack` extension was removed again. `gh extension list` is empty.
+- The local clone is deleted. The owner's token file in the home directory is left as it was, and the token string appears nowhere in the worktree, the scratchpad, `~/.gitconfig` or `~/.config/gh`.
 - Scratch files (the difftastic binary, the Plannotator binary, the extracted Debian libraries, the dependency-cruiser projects) are in the session's scratchpad, outside the repo and the container's system. No scratch process is running.
