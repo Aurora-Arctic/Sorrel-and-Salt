@@ -97,3 +97,21 @@ test('on a phone, the date range quick picks are at least 24 tall, with a gap be
     expect(apart, `${before.name} and ${box.name} stand apart`).toBe(true);
   }
 });
+
+test('on a phone, the help search results and the filters panel Clear All link are at least 24 tall', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 844 });
+  await page.goto('/help/search?q=testwort');
+  const results = page.getByRole('main').getByRole('list').first().getByRole('link');
+  await expect(results.first()).toBeVisible();
+  for (const [at, link] of (await results.all()).entries()) {
+    await expectAtLeast24(link, `help result ${at + 1}`);
+  }
+
+  await signInAs(page, 'keeper-clear@target-size.test', ['discord'], 'admin');
+  await page.goto('/keepers/invitation-cards');
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  const drawer = page.getByRole('dialog', { name: 'Filters' });
+  await expectAtLeast24(drawer.getByRole('link', { name: 'Clear All' }), 'Clear All');
+});

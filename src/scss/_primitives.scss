@@ -918,6 +918,8 @@
   // container a `.data-table--stack` table stacks by. The frame must sit as a block or stretched flex item, never in a row
   // that shrinks to its content (size containment).
   .data-table-frame {
+    // The containing block for the table's absolutely positioned hidden labels, so its clip holds them and the page never scrolls sideways.
+    position: relative;
     overflow-x: auto;
     container: data-table / inline-size;
   }
