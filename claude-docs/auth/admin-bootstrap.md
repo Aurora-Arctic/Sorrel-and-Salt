@@ -356,7 +356,7 @@ the tests [`tests.md`](tests.md).
   `after`), so the call does not wait for either and a free address does not
   take longer to answer than a taken one. It tells the address being left that a
   change was asked for (`sender.notifyChangeRequested`: when, and the new
-  address's domain only, with no link in it), stamps the row as mailed and records the address as pending in one write
+  address's domain only, with a link to the account page and no token in it), stamps the row as mailed and records the address as pending in one write
   (`recordEmailChange`, which is also what restarts a provisional caller's window), and asks the sender to mail
   the pending address a change link. A held address is recorded as pending too, so the two cases write alike; no link is
   sent to it. The row's own, still-unverified address is
@@ -378,8 +378,8 @@ the tests [`tests.md`](tests.md).
   the account holds when it is sent. `former_email` has no unique index, so the
   address is free for another account to sign up with or change to the moment
   the change completes: the sign-up and the `EMAIL_TAKEN` gate read
-  `users.email` alone. The mail carries no action: a link in it would be one a
-  thief could press. Nothing is sent to a `.invalid` placeholder, and none is
+  `users.email` alone. The mail carries no action: its one link is the account page, which acts on
+  nothing until the reader signs in. Nothing is sent to a `.invalid` placeholder, and none is
   held.
 - **One verification mail a minute per account.** `users.verification_sent_at`
   is set by every mail sent for the row's own account, and `setEmail`
