@@ -97,7 +97,30 @@ describe('AccountMenu', () => {
     expect(button()).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('offers Sign Out alone to an unverified account', async () => {
+  it('offers an unverified account Sign Out and the Compendium, the one site link open to everyone', async () => {
+    const links = [
+      { label: 'Compendium', href: '/compendium' as Route, base: '/compendium', open: true },
+      { label: 'Your Coven', href: '/coven/fixture-coven' as Route, base: '/coven' },
+      { label: 'Curator', href: '/curator' as Route, base: '/curator' },
+      { label: 'Keepers', href: '/keepers' as Route, base: '/keepers' },
+    ];
+    // Precondition: the same links, given to a verified account, are all offered, so the unverified menu leaves the rest out by its own rule.
+    const { unmount } = render(<AccountMenu name="Fixture Owner" verified links={links} />);
+    await openPanel(button());
+    expect(
+      screen.getAllByRole('link', { name: /Compendium|Your Coven|Curator|Keepers/ }),
+    ).toHaveLength(4);
+    unmount();
+
+    render(<AccountMenu name="Fixture Owner" verified={false} links={links} />);
+    await openPanel(button());
+
+    expect(screen.getByRole('button', { name: 'Sign Out' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Compendium' })).toHaveAttribute('href', '/compendium');
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+  });
+
+  it('offers an unverified account Sign Out alone when no link is open to everyone', async () => {
     render(<AccountMenu name="Fixture Owner" verified={false} />);
 
     await openPanel(button());

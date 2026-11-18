@@ -12,6 +12,8 @@ export interface SiteLink {
   label: string;
   href: Route;
   base: string;
+  /** Offered to every viewer, an unverified account included; any other link is a verified account's alone. */
+  open?: boolean;
 }
 
 export interface SiteNavProps {
