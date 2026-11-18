@@ -4,6 +4,7 @@ import { stackCell, tableRole } from '../../lib/table-roles';
 import EmptyMark from '../EmptyMark';
 import EmptyState from '../EmptyState';
 import Skeleton from '../Skeleton';
+import TableFrame from '../TableFrame';
 import { SortSelect } from './sort-select';
 import type { ColumnSort, SortChoice, StackColumn, StackTableProps } from './types';
 import { cx } from '@/lib/class-names';
@@ -44,6 +45,12 @@ function SortArrow({ current }: { current: ColumnSort['current'] }): ReactNode {
       <path className="data-table__sort-mate" d="M5 12l7 7 7-7" />
     </svg>
   );
+}
+
+// The heading's name for a stacked table, whose hidden header row hides its sort links from everyone, a screen
+// reader included (`_primitives.scss`); this copy is drawn only there.
+function StackHeading({ heading }: { heading: string }): ReactNode {
+  return <span className="data-table__stack-heading">{heading}</span>;
 }
 
 function SortHeading({ heading, sort }: { heading: string; sort: ColumnSort }): ReactNode {
@@ -111,7 +118,7 @@ function StackTable<Row>({
   const shown = columns.filter((column): column is StackColumn<Row> => Boolean(column));
   const sorting = shown.some((column) => column.sort) && sortChoices(shown, otherOrders);
   return (
-    <div className="data-table-frame">
+    <TableFrame label={label ?? 'Table'}>
       {/* Inside the frame, as the container query that shows it at phone width asks of the frame. */}
       {sorting && (
         <SortSelect choices={sorting.choices} current={sorting.current} disabled={pending} />
@@ -140,12 +147,18 @@ function StackTable<Row>({
                 {column.hiddenHeading ? (
                   <span className="visually-hidden">{column.heading}</span>
                 ) : column.sort && !pending ? (
-                  <SortHeading heading={column.heading} sort={column.sort} />
+                  <>
+                    <StackHeading heading={column.heading} />
+                    <SortHeading heading={column.heading} sort={column.sort} />
+                  </>
                 ) : column.sort ? (
-                  <span className="data-table__sort-link">
-                    <span>{column.heading}</span>
-                    <SortArrow current={undefined} />
-                  </span>
+                  <>
+                    <StackHeading heading={column.heading} />
+                    <span className="data-table__sort-link">
+                      <span>{column.heading}</span>
+                      <SortArrow current={undefined} />
+                    </span>
+                  </>
                 ) : (
                   column.heading
                 )}
@@ -207,7 +220,7 @@ function StackTable<Row>({
               ))}
         </tbody>
       </table>
-    </div>
+    </TableFrame>
   );
 }
 

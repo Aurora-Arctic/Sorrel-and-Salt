@@ -6,7 +6,7 @@ It has no styles of its own. It draws the `.data-table` primitive, which turns e
 
 ## Contracts
 
-`<StackTable columns rows rowKey empty>` draws a `.data-table-frame` (it scrolls the table sideways and is the container the cards are measured against, named so a `.form` or `.page-header` container is not the one asked), holding a `table.data-table.data-table--stack`. With no rows it draws `empty` in an [`EmptyState`](empty-state.md) instead. The first column's cell is a row header (`th scope="row"`), so a screen reader moving down the table hears which row it is in.
+`<StackTable columns rows rowKey empty>` draws a [`TableFrame`](table-frame.md) (it scrolls the table sideways and is the container the cards are measured against, named so a `.form` or `.page-header` container is not the one asked), holding a `table.data-table.data-table--stack`. With no rows it draws `empty` in an [`EmptyState`](empty-state.md) instead. The first column's cell is a row header (`th scope="row"`), so a screen reader moving down the table hears which row it is in.
 
 - **A column only some pages show is passed as `false` or `undefined` when it is off**, so a list writes its columns as one array.
 - **Every part carries its role** (`role="table"`, `rowgroup`, `row`, `columnheader`, `cell`), spread from `src/lib/table-roles.ts`. WebKit drops a table's meaning once `display` changes on its parts, as it does when the rows become cards, and the explicit roles put it back.
@@ -22,6 +22,7 @@ A column sorts when it carries a `sort` (`ColumnSort`), which the list builds fr
 - **The heading holds a link and carries `aria-sort`** with `current`. The link goes to the reverse direction when the column is sorted ascending, and to ascending otherwise. Its accessible name states the current order, "Name, Sorted A to Z". With no JavaScript the links still sort.
 - **Every sortable heading draws an arrow hidden from screen readers**: the sorted one in the accent colour, the others a muted up-and-down pair. The arrow is one SVG of the same four parts in every state, so a sort moves them rather than swapping glyphs.
 - **Flipping the direction turns the arrow over with `scaleY(-1)`**, not the `chevron-flip` mixin: its `.is-descending &` selector cannot reach a rule nested under `body`, and its `rotateX` is not drawn on an SVG part in every browser. Motion is inside `prefers-reduced-motion: no-preference`. The sort is a client navigation that keeps the heading mounted, which the animation needs.
+- **A sortable heading also holds a `.data-table__stack-heading` copy of its text**, drawn only in the stacked layout. The stacked head hides each sort link with `visibility: hidden` so it leaves the tab order, and a hidden link takes its text with it, so a screen reader and an accessibility scan would otherwise find an empty header.
 - **At phone width the headings are hidden with the rest of the head**, so when any column sorts the frame also draws a Sort By select above the cards (`SortSelect`). It lists the table's `otherOrders` first, then each sortable column in each direction, and choosing one navigates. It is drawn only after hydration (`useHydrated`) and only inside the stacked container query, so it is an enhancement: a phone with no JavaScript has no sort control.
 
 ## GroupChip

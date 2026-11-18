@@ -19,7 +19,7 @@
 
 ## Styling
 
-The shared list primitives ([`styling.md`](../styling.md), "Designing a section"): `.list-frame`, `FilterForm`'s `.filter-row`, [`StackTable`](data-table.md) in a `.data-table-frame`, `.pager`. Under `$table-stack-width` of its frame each change is a card. Its stylesheet keeps the time on one line and holds the note to `$measure`.
+The shared list primitives ([`styling.md`](../styling.md), "Designing a section"): `.list-frame`, `FilterForm`'s `.filter-row`, [`StackTable`](data-table.md) in a [`TableFrame`](table-frame.md), `.pager`. Under `$table-stack-width` of its frame each change is a card. Its stylesheet keeps the time on one line and holds the note to `$measure`.
 
 ## Stories and tests
 

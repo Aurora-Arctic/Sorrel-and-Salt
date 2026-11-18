@@ -50,7 +50,7 @@ A paragraph that opens with `>` in a document's markdown is a plain `<blockquote
 
 `variant` is an optional prop only the About Us page passes (`'about'`). It adds a modifier class that sets that page's own typography: a larger lede (the About page passes none today), and a hairline over each section heading. Every other document passes none and draws as before. The About page also hands the component two placeholders, `{aboutPillars}` and `{aboutRoles}` ([`about-pillars.md`](about-pillars.md), [`about-roles.md`](about-roles.md)).
 
-A table sits in the `.data-table-frame` primitive, so a wide table scrolls inside its frame rather than widening the page. `sup` takes `line-height: 0` inside the page, so a line holding a source number is no taller than its neighbours.
+A table sits in a [`TableFrame`](table-frame.md), named from the heading above it (or "Table"), so a wide table scrolls inside its frame rather than widening the page. `sup` takes `line-height: 0` inside the page, so a line holding a source number is no taller than its neighbours.
 
 ## Disclaimer notice
 

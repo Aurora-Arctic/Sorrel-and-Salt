@@ -3,6 +3,7 @@ import EmptyState from '../EmptyState';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import Pager from '../Pager';
+import TableFrame from '../TableFrame';
 import ListFrame, { ListBody, ListNavigationContext } from '.';
 
 const meta = {
@@ -16,7 +17,7 @@ const ROWS = ['Testwort', 'Fixture Salt', 'Mockroot'];
 const List = () => (
   <ListFrame>
     <ListBody skeleton={null}>
-      <div className="data-table-frame">
+      <TableFrame label="Fixtures">
         <table className="data-table" aria-label="Fixtures">
           <thead>
             <tr>
@@ -31,7 +32,7 @@ const List = () => (
             ))}
           </tbody>
         </table>
-      </div>
+      </TableFrame>
       <Pager nextHref="?after=cursor" position={{ page: 1, pages: 2 }} soft />
     </ListBody>
   </ListFrame>

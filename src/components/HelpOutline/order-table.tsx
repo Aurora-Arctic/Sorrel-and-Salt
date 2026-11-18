@@ -9,6 +9,7 @@ import { stackCell, tableRole } from '../../lib/table-roles';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import EmptyState from '../EmptyState';
 import Spinner from '../Spinner';
+import TableFrame from '../TableFrame';
 import { MoveFailedNotice, useOptimisticOrder } from './use-optimistic-order';
 import { SortableColumn } from '@/lib/sortable/column';
 import { useHelpSortableRow } from './sortable';
@@ -156,7 +157,7 @@ const HelpOrderTable = ({
         names={listed.map((row) => row.title)}
         onMove={onMove}
       >
-        <div className="data-table-frame">
+        <TableFrame label={label}>
           <table
             className="data-table data-table--stack help-outline__order-table"
             aria-label={label}
@@ -199,7 +200,7 @@ const HelpOrderTable = ({
               ))}
             </tbody>
           </table>
-        </div>
+        </TableFrame>
       </SortableColumn>
     </>
   );

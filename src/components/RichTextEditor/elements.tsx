@@ -37,6 +37,7 @@ import {
 } from 'platejs/react';
 import { Children, type ReactElement } from 'react';
 import remarkGfm from 'remark-gfm';
+import TableFrame from '../TableFrame';
 
 // The editor's nodes drawn as the public page draws them, so the text is edited looking as it will read: the same elements
 // under `.document-page__body`. Each plugin is the one `markdown.ts` reads the text with, with a component added.
@@ -81,11 +82,13 @@ function Link(
 function Table(props: PlateElementProps): ReactElement {
   const [head, ...body] = Children.toArray(props.children);
   return (
-    <PlateElement {...props} className="data-table-frame">
-      <table className="data-table">
-        <thead>{head}</thead>
-        <tbody>{body}</tbody>
-      </table>
+    <PlateElement {...props}>
+      <TableFrame label="Table">
+        <table className="data-table">
+          <thead>{head}</thead>
+          <tbody>{body}</tbody>
+        </table>
+      </TableFrame>
     </PlateElement>
   );
 }

@@ -1060,6 +1060,10 @@
     @include data-table-nowrap;
   }
 
+  .data-table__stack-heading {
+    display: none;
+  }
+
   // A table whose rows turn into cards when its frame is narrower than `$table-stack-width`. Every stacking table
   // carries explicit `role` attributes, since WebKit drops a table's semantics once `display` changes on its parts.
   // A component's `position: sticky` cell must reset to `static` under this rule (claude-docs/styling.md, "Tables at phone width").
@@ -1069,8 +1073,12 @@
       margin-block-end: space(3);
     }
 
-    // The hidden header row's sort links leave the tab order, as the select above stands in for them; their
-    // text stays visible to a screen reader, which still reads each heading.
+    // The hidden header row's sort links leave the tab order, as the select above stands in for them; the
+    // heading is read from `.data-table__stack-heading` instead, since a hidden link takes its text with it.
+    .data-table--stack .data-table__stack-heading {
+      display: inline;
+    }
+
     .data-table--stack .data-table__sort-link {
       visibility: hidden;
 

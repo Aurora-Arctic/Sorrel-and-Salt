@@ -13,6 +13,7 @@ import { OPENABLE_ADDRESS } from '../../lib/link-address';
 import { slugify } from '../../lib/slugify';
 import HelpScreenshot from '../HelpScreenshot';
 import HelpTerm from '../HelpTerm';
+import TableFrame from '../TableFrame';
 import type { PageNavEntry } from '../PageNav/types';
 import type { DocumentPlaceholders } from './types';
 
@@ -190,6 +191,7 @@ function shapeCallouts(children: ElementContent[]): ElementContent[] {
 const SITE_IMAGE = /^\/(?!\/)/;
 
 const SCREENSHOT_TAG = 'help-screenshot';
+const TABLE_FRAME_TAG = 'table-frame';
 
 /**
  * A figure's picture, drawn by HelpScreenshot: the written file for light and `<name>.dark.<ext>` beside it for dark,
@@ -261,6 +263,7 @@ function reactProcessorFor(placeholders: DocumentPlaceholders, widgets: HelpWidg
       [PLACEHOLDER_TAG]: ({ name }: { name: string }) => placeholders[name],
       [TERM_TAG]: HelpTerm,
       [SCREENSHOT_TAG]: HelpScreenshot,
+      [TABLE_FRAME_TAG]: TableFrame,
       [WIDGET_TAG]: ({ name }: { name: HelpWidgetName }) => widgets[name],
     },
   });
@@ -352,12 +355,9 @@ function frameTables(children: ElementContent[]): ElementContent[] {
       classes(child, 'data-table');
       return {
         type: 'element',
-        tagName: 'div',
+        tagName: TABLE_FRAME_TAG,
         properties: {
-          className: ['data-table-frame'],
-          role: 'region',
-          tabIndex: 0,
-          ...(heading ? { ariaLabel: heading } : {}),
+          label: heading || 'Table',
         },
         children: [child],
       };

@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { WORKSPACE_STATEMENTS, rolePermits } from '@/modules/coven';
 import { WORKSPACE_ROLE_LABELS } from '../MemberList/roles';
 import { Mark } from '../UserList/marks';
+import TableFrame from '../TableFrame';
 
 // Who may do what in a coven, each cell asked of the access check itself (claude-docs/components/help-pages.md,
 // "Widgets"). The labels are keyed by the statements, so a statement added to the check fails to compile here.
@@ -47,7 +48,7 @@ export const STATEMENT_LABELS: {
 
 const RolePermissionTable = (): ReactElement => (
   <figure className="figure help-widget">
-    <div className="data-table-frame">
+    <TableFrame label="What Each Role May Do">
       <table className="data-table">
         <caption className="visually-hidden">What Each Role May Do</caption>
         <thead>
@@ -78,7 +79,7 @@ const RolePermissionTable = (): ReactElement => (
           )}
         </tbody>
       </table>
-    </div>
+    </TableFrame>
     <figcaption>
       Read from the coven&rsquo;s own access check. A private spell is its writer&rsquo;s alone,
       whatever the role.
