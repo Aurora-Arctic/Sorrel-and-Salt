@@ -329,7 +329,7 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Also on `main`:** yes. `json-ld.ts` is identical.
 - **Why It Matters:** none shown. This is a gap in what the pages say about themselves, not a fault a served response reveals.
 - **Recommended Fix:** add a breadcrumb description to help articles, as entries have, and an `Article` description to documents.
-- **Owner's Decision:** skipped. Google's documentation shows breadcrumb markup changes only the address line of a desktop result, and breadcrumbs left mobile results on 23 January 2025 [S8][S9]. It describes Article markup as for news, blog, and sports article pages, and lists no help or FAQ type [S10].
+- **Owner's Decision:** skipped. Google's documentation shows breadcrumb markup changes only the address line of a desktop result, and breadcrumbs left mobile results on 23 January 2025 [S8][S9]. It describes Article markup as for news, blog, and sports article pages [S10]. Its gallery of supported types lists no help or FAQ type [S11].
 - **Follow-up Task:** None. Skipped by the owner (see "Proposed Tasks").
 
 ### SEO-13 `llms.txt` And The AI Catalogue Name The Compendium Only
@@ -516,7 +516,7 @@ Estimate based on: MB.80 (2h). The figure is an estimate; the guard extends one 
 
 _Story:_ As a person searching, I want a help article or a document to describe itself to search engines, so that a result can show more than a title.
 
-From SEO-12. Skipped by the owner. Google's documentation shows breadcrumb markup changes only the address line of a desktop result [S8][S9]. It describes Article markup as for news, blog, and sports article pages, and lists no help or FAQ type [S10].
+From SEO-12. Skipped by the owner. Google's documentation shows breadcrumb markup changes only the address line of a desktop result [S8][S9]. It describes Article markup as for news, blog, and sports article pages [S10]. Its gallery of supported types lists no help or FAQ type [S11].
 
 _Acceptance criteria:_
 
@@ -584,3 +584,4 @@ These were checked and need no fix.
 - [S8] Google. "Breadcrumb structured data." _Google Search Central_. https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
 - [S9] Google. "Simplifying the search results page." _Google Search Central Blog_, January 2025. https://developers.google.com/search/blog/2025/01/simplifying-breadcrumbs
 - [S10] Google. "Article structured data." _Google Search Central_. https://developers.google.com/search/docs/appearance/structured-data/article
+- [S11] Google. "Structured data markup that Google Search supports." _Google Search Central_. https://developers.google.com/search/docs/appearance/structured-data/search-gallery
