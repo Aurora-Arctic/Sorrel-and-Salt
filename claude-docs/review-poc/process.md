@@ -13,7 +13,7 @@ The loop, in one screen:
 1. Acceptance criteria exist in writing before any code.
 2. The tests for those criteria come first, in their own layer, and you review them before the implementation is written.
 3. The implementation is written as small layers, each reviewable in under 15 minutes.
-4. The layers are submitted as pull requests, and you read a layer only when its gate is green.
+4. The layers are submitted as pull requests, and you read a layer when the top layer's gate is green; the tests-first layer is read before its tests pass.
 5. You open the impact graph of the layer, to see which modules it reaches.
 6. When a symbol is unfamiliar, you explore it.
 7. You read the diff.
@@ -101,7 +101,7 @@ The agent must not run any `gh stack` command that writes to GitHub (`stacks.md`
 
 ## Step 4. Submit, and read once the top layer is green
 
-**What it is for.** To push the layers as pull requests, so the gate (types, lint, Vitest, Playwright and the rest) runs on each layer before you spend time on it.
+**What it is for.** To push the layers as pull requests, so the gate runs before you spend time on it. The top layer runs the whole gate (types, lint, Vitest, Playwright and the rest) on the stack's whole diff. A layer below it runs only the format, lint and type checks.
 
 **By hand.** Open the pull request with `/create-pr` (it commits after asking, pushes, opens the PR, and links the board task). Then read the gate result:
 
@@ -109,7 +109,7 @@ The agent must not run any `gh stack` command that writes to GitHub (`stacks.md`
 gh pr checks <pr-number>
 ```
 
-A good result: every required check is green on the top layer. Read a layer when the top layer's gate is green; the tests-first layer is read before its tests pass. A lower layer's green means only types, lint and format passed, and a failure is placed by the failing test's name.
+A good result: every required check is green on the top layer. Read a layer when the top layer's gate is green; the tests-first layer is read before its tests pass. A lower layer's green means only types, lint and format passed, and a failure is placed by the failing test's name. Merge the stack whole: nothing yet stops a lower layer being merged alone, because that guard is a process rule (`claude-docs/ci/aggregating-workflows.md`, "Stacked pull requests").
 
 **With an agent.** Paste:
 
@@ -117,7 +117,7 @@ A good result: every required check is green on the top layer. Read a layer when
 
 The agent must not call `gh stack submit` or `link` itself: those write PRs without a `Closes`/`Refs` line, a task-id title or a board link (`stacks.md`, section 3).
 
-**Not available yet:** one pull request per layer needs the `/create-pr` stacks task (M17.40). `pr-gate.yml` and `gitflow.yml` do run on an upper layer: GitHub starts them with `github.base_ref` equal to `staging`, and `gitflow.yml` passes an upper layer (proved on stand-ins, `stacks.md` section 6). The full gate on the top layer testing the whole stack's diff, and cheap checks only below it (decided, Decision 3 in `stacks.md`), need M17.39. The gate also has no impact graph (M17.38) and no `oversized` label (M17.39). Until then `/create-pr` opens one PR per branch, and the gate runs as it does today.
+**Not available yet:** one pull request per layer needs the `/create-pr` stacks task (M17.40). `pr-gate.yml` and `gitflow.yml` do run on an upper layer: GitHub starts them with `github.base_ref` equal to `staging`, and `gitflow.yml` passes an upper layer (proved on stand-ins, `stacks.md` section 6). The full gate on the top layer testing the whole stack's diff, and cheap checks only below it (Decision 3 in `stacks.md`), are in `pr-gate.yml` (M17.39), as is the `oversized` label; both are described in `claude-docs/ci/aggregating-workflows.md`, "Stacked pull requests". The gate has no impact graph yet (M17.38). Until M17.40 lands, `/create-pr` opens one PR per branch, and the gate runs as it does for any single pull request.
 
 **Done when.** The PR is open, linked to its task, and its required checks are green.
 
