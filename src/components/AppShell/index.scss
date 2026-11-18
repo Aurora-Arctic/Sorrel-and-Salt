@@ -91,6 +91,11 @@
   }
 }
 
+// The end block's last step: the site links leave the bar for the account panel (shell-end.tsx).
+.app-shell__bar-inner:has(> .app-shell__end[data-fit='4']) > .app-shell__nav {
+  display: none;
+}
+
 // What an Add Ingredient save left behind, beside the button: a short line,
 // cut off with an ellipsis rather than pushing the bar's controls out at a
 // phone's width.

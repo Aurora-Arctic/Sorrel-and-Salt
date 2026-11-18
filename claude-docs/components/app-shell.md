@@ -34,12 +34,13 @@
 
 ## The end block
 
-`ShellEnd` (`shell-end.tsx`) draws Add Ingredient, `NewSpellElsewhere`, the account menu and the theme disc, and measures them with the shared `useMeasuredFit` (`src/lib/use-measured-fit.ts`, the hook the section nav uses). It takes the first of four steps whose width fits the room between whatever precedes it in the bar and the bar's inner edge:
+`ShellEnd` (`shell-end.tsx`) draws Add Ingredient, `NewSpellElsewhere`, the account menu and the theme disc, and measures them with the shared `useMeasuredFit` (`src/lib/use-measured-fit.ts`, the hook the section nav uses). It takes the first of five steps whose width fits the room between the brand and the bar's inner edge, the site nav's width counted in every step that keeps it:
 
 1. Everything in full.
 2. The account button shows the avatar alone (AccountMenu's `compact`).
 3. Add Ingredient's main part shows a plus, a square as tall as its label's button; its accessible name stays "Add Ingredient" (`form="plus"`).
 4. Add Ingredient leaves the bar and leads the account panel as its first item (`form="folded"`, AccountMenu's `lead`). The item runs the main part's action, the default place; the chevron's choice of place is not offered while folded. Its dialog stays mounted, so focus returns to the account button when it closes.
+5. The site links leave the bar too, and the account panel lists them (AccountMenu's `withLinks`; a `:has()` rule on `data-fit="4"` hides the nav). A keeper's four links at 1280px with a 200% root font reach this step.
 
 The theme disc and the account button never fold. New Spell has no control in the bar (`NewSpellElsewhere` only redirects), so nothing of it folds. At 320px with normal text the plus shows; at 320px with a 200% root font Add Ingredient folds; at 1280px with a 200% root font the avatar shows alone beside the label.
 

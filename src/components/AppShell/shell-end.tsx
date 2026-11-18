@@ -13,21 +13,22 @@ import NewSpellElsewhere from './new-spell-elsewhere';
 import type { AddIngredientForm, AddIngredientHandle, ShellEndProps } from './types';
 
 // The bar's end block, measured so the bar stays one line at every width and text size. Each step gives up a
-// little more: the account's name goes first, then Add Ingredient's label for a plus, and then Add Ingredient
-// folds into the account panel as its first item. The account button and the theme disc never fold
+// little more: the account's name goes first, then Add Ingredient's label for a plus, then Add Ingredient
+// folds into the account panel as its first item, and last the bar's site links move into the panel too. The account button and the theme disc never fold
 // (claude-docs/components/app-shell.md, "The end block").
 
-const STEPS: readonly { form: AddIngredientForm; compact: boolean }[] = [
-  { form: 'label', compact: false },
-  { form: 'label', compact: true },
-  { form: 'plus', compact: true },
-  { form: 'folded', compact: true },
+const STEPS: readonly { form: AddIngredientForm; compact: boolean; links: boolean }[] = [
+  { form: 'label', compact: false, links: false },
+  { form: 'label', compact: true, links: false },
+  { form: 'plus', compact: true, links: false },
+  { form: 'folded', compact: true, links: false },
+  { form: 'folded', compact: true, links: true },
 ];
 
 const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
 type Natural = {
-  // The block's width at each step.
+  // The width each step needs: the block's, and the site nav's beside it while the nav is in the bar.
   widths: number[];
   // The disc's own width, kept to tell a change of text size from a change of the window.
   disc: number;
@@ -58,19 +59,38 @@ const measureEnd = (end: HTMLElement): Natural | null => {
   const compact = full - named;
   const group = end.querySelector<HTMLElement>(':scope > .app-shell__add-group');
   const main = group?.querySelector<HTMLElement>('.app-shell__add');
+  const nav = navWidth(end);
   if (!group || !main) {
-    return { widths: [full, compact, compact, compact], disc: disc.offsetWidth, group: false };
+    return {
+      widths: [full + nav, compact + nav, compact + nav, compact + nav, compact],
+      disc: disc.offsetWidth,
+      group: false,
+    };
   }
   // The plus is a square as tall as the label's button; its border can round up a pixel.
   const plus = compact - main.offsetWidth + main.offsetHeight + 1;
   return {
-    widths: [full, compact, plus, compact - group.offsetWidth - gap],
+    widths: [
+      full + nav,
+      compact + nav,
+      plus + nav,
+      compact - group.offsetWidth - gap + nav,
+      compact - group.offsetWidth - gap,
+    ],
     disc: disc.offsetWidth,
     group: true,
   };
 };
 
-// The room the block has: from the end of whatever precedes it in the bar, and a gap, to the bar's inner edge.
+// The site nav's width and the gap after it, or 0 where it is not in the bar (a tablet's width).
+const navWidth = (end: HTMLElement): number => {
+  const nav = end.parentElement?.querySelector<HTMLElement>(':scope > .app-shell__nav');
+  if (!nav || nav.offsetWidth === 0 || !end.parentElement) return 0;
+  return nav.offsetWidth + pixels(getComputedStyle(end.parentElement).columnGap);
+};
+
+// The room the block and the site nav share: from the end of whatever precedes them in the bar, and a gap, to the
+// bar's inner edge. The nav is passed over, so hiding it at the last step does not change the room.
 const roomFor = (end: HTMLElement): number => {
   const row = end.parentElement;
   if (!row) return Infinity;
@@ -79,7 +99,7 @@ const roomFor = (end: HTMLElement): number => {
   let start = box.left + pixels(style.paddingLeft);
   for (let before = end.previousElementSibling; before; before = before.previousElementSibling) {
     const edge = before.getBoundingClientRect();
-    if (edge.width > 0) {
+    if (edge.width > 0 && !before.matches('.app-shell__nav')) {
       start = edge.right + pixels(style.columnGap);
       break;
     }
@@ -123,7 +143,7 @@ const ShellEnd = ({ viewer, workspaces, links }: ShellEndProps): ReactElement =>
     resetKey: pathname,
   });
   // While measuring, everything shows in full, so its width is read.
-  const { form, compact } = STEPS[fit ?? 0];
+  const { form, compact, links: linksInPanel } = STEPS[fit ?? 0];
   const folded = form === 'folded' && addsIngredient(viewer, workspaces);
 
   return (
@@ -144,6 +164,7 @@ const ShellEnd = ({ viewer, workspaces, links }: ShellEndProps): ReactElement =>
         assignedSupport={viewer.assignedSupport}
         waitingSupport={viewer.waitingSupport}
         compact={compact}
+        withLinks={linksInPanel}
         lead={
           folded
             ? {

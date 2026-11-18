@@ -16,6 +16,8 @@ export interface AccountMenuProps {
   lead?: AccountMenuLead;
   /** The avatar alone, the name kept for a screen reader: the bar has no room for the name. */
   compact?: boolean;
+  /** Lists the site links in the panel at any width: the bar has no room for them. */
+  withLinks?: boolean;
 }
 
 /** A control the bar has no room for, shown as the panel's first item (claude-docs/components/account-menu.md). */

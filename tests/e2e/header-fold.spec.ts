@@ -100,6 +100,33 @@ for (const [kind, open, settings] of [
   });
 }
 
+test('moves the site links into the account panel where even the folded bar has no room for them', async ({
+  page,
+}) => {
+  const world = await seedWorld(page);
+  // A keeper's bar has four site links, more than a 1280px window holds beside the folded end at a 200% root font.
+  await signIn(page, world, 'keeper');
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 812 });
+  await visit(page, '/keepers');
+  const banner = page.getByRole('banner');
+  const site = banner.getByRole('navigation', { name: 'Site' });
+  await expect(site.getByRole('link', { name: 'Keepers' })).toBeVisible();
+
+  await rootFont(page, '200%');
+  await expectOneLine(page);
+  await expectBarInWindow(page);
+  await assertNoSidewaysScroll(page, { width: DESKTOP_WIDTH });
+  await expect(site).toBeHidden();
+
+  const account = banner.locator('.account-menu__button');
+  await account.click();
+  const panel = page.locator(`[id="${await account.getAttribute('aria-controls')}"]`);
+  for (const name of ['Compendium', 'Your Coven', 'Curator', 'Keepers']) {
+    await expect(panel.getByRole('link', { name, exact: true })).toBeVisible();
+  }
+  await expect(panel.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeVisible();
+});
+
 test.describe('Add Ingredient', () => {
   test('shows its full label where it fits', async ({ page }) => {
     const path = await signedInCovenPage(page);

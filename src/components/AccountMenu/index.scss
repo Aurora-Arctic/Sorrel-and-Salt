@@ -293,6 +293,11 @@ $panel-window-room: 18px;
 
 @include avatar-only('.account-menu--compact');
 
+// The bar has no room for its site links (AppShell's end block), so the panel lists them.
+.account-menu--links .account-menu__link {
+  display: block;
+}
+
 // A control folded in from the bar leads the panel, set off from the account's own rows by a hairline below it.
 .account-menu__lead {
   border-bottom: $hairline-border;

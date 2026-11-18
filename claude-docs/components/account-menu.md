@@ -15,7 +15,7 @@
 - **Every link in the panel is a `PendingLink`** ([`loading.md`](../loading.md)): it starts the navigation through the shared hook and sets `aria-busy` while it runs.
   - The destination's address chooses the skeleton (`src/app/skeletons.ts`), so the site links and the account links name nothing.
 - **A control folded in from the bar leads the panel.** `lead` (`AccountMenuLead`: a label, an icon and `onSelect`) draws a first row set off by a hairline below it; choosing it closes the panel, returns focus to the button, then runs `onSelect`. The shell passes Add Ingredient there when the bar has no room for it ([`app-shell.md`](app-shell.md), "The end block").
-- **`compact`** shows the avatar alone, as at a tablet's width, where the bar measures no room for the name; the name stays for a screen reader.
+- **`compact`** shows the avatar alone, as at a tablet's width, where the bar measures no room for the name; the name stays for a screen reader. **`withLinks`** lists the site links in the panel at any width, where the bar measures no room for them.
 - **The panel lists**, in order: the lead, where there is one, Your Account (a link to `/account`, not for an unverified viewer), the site links at or under `$shell-tablet-width`, Help (a link to `/help`; the top bar has no Help link, so this and the footer are where a signed-in reader finds it), Support, then Sign Out. An unverified viewer gets Sign Out and the Compendium link. **The theme switch is not in the panel.** It stays in the shell's bar at every width.
 - **Waiting invitations show in three places.**
   - **A dot on the avatar disc**, `aria-hidden` with the disc.

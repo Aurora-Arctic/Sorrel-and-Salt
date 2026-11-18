@@ -26,6 +26,7 @@ const AccountMenu = ({
   waitingSupport = 0,
   lead,
   compact = false,
+  withLinks = false,
 }: AccountMenuProps): ReactElement => {
   const [open, setOpen] = useState(false);
   const { pending, staffCount, senderCount, invitations } = accountCounts({
@@ -73,7 +74,14 @@ const AccountMenu = ({
   });
 
   return (
-    <div ref={root} className={cx('account-menu', compact && 'account-menu--compact')}>
+    <div
+      ref={root}
+      className={cx(
+        'account-menu',
+        compact && 'account-menu--compact',
+        withLinks && 'account-menu--links',
+      )}
+    >
       <button
         ref={(node) => {
           button.current = node;
