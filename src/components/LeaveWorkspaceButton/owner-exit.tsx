@@ -1,7 +1,7 @@
 'use client';
 
 import { useLeaveCoven } from '../../lib/navigation';
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useId, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { failureMessage } from '../../lib/graphql-failure';
@@ -102,14 +102,24 @@ const Options = ({
 }: OwnerExitProps & { onCancel: () => void; report: Report }): ReactElement => {
   const leaveCoven = useLeaveCoven();
   const id = useId();
-  const ownerField = fieldDescription({ id: `${id}-owner` });
+  const [missing, setMissing] = useState(false);
+  const ownerBox = useRef<HTMLInputElement>(null);
+  const ownerField = fieldDescription({
+    id: `${id}-owner`,
+    error: missing ? 'Choose who becomes the steward.' : undefined,
+  });
   const only = successors.length === 1 ? successors[0] : undefined;
   const [way, setWay] = useState<WayOut>('hand');
   const [picked, setPicked] = useState(only?.userId ?? '');
   const [sending, setSending] = useState(false);
 
   async function handOverAndLeave() {
-    if (!picked) return;
+    // Enabled while empty, so the press says what is missing rather than the button saying nothing.
+    if (!picked) {
+      setMissing(true);
+      ownerBox.current?.focus();
+      return;
+    }
     setSending(true);
     report(undefined);
     const successor = successors.find(({ userId }) => userId === picked);
@@ -171,7 +181,14 @@ const Options = ({
             labelId={ownerField.labelId}
             required
             value={picked}
-            onChange={(userId) => !sending && setPicked(userId)}
+            inputRef={ownerBox}
+            aria-invalid={ownerField.aria['aria-invalid']}
+            aria-describedby={ownerField.aria['aria-describedby']}
+            onChange={(userId) => {
+              if (sending) return;
+              setPicked(userId);
+              if (userId) setMissing(false);
+            }}
             placeholder="Search members"
             choices={successors.map(({ userId, name: member, role }) => ({
               value: userId,
@@ -185,7 +202,7 @@ const Options = ({
         {way === 'hand' ? (
           <BusyButton
             className="btn btn--solid"
-            disabled={sending || !picked}
+            disabled={sending}
             busy={sending}
             busyLabel="Handing Over"
             onClick={() => void handOverAndLeave()}

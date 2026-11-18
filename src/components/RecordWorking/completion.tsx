@@ -234,14 +234,14 @@ export default function WorkingCompletion({
             <BusyButton
               className="btn btn--solid"
               busy={complete.isPending}
-              busyLabel="Marking Complete"
+              busyLabel="Completing"
               disabled={!plan || complete.isPending}
               onClick={() => {
                 setFailure(undefined);
                 complete.mutate();
               }}
             >
-              Mark Complete
+              Complete
             </BusyButton>
             <button
               type="button"

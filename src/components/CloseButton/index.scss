@@ -1,0 +1,36 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A 2rem × in a `$close-target` square, past WCAG 2.2's 24px minimum target.
+.close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: $close-target;
+  height: $close-target;
+  padding: 0;
+  border: 0;
+  border-radius: radius('pill');
+  background-color: transparent;
+  color: $text-muted;
+  font-size: $close-target;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+  }
+
+  @include forced-colors {
+    &:hover:not(:focus-visible) {
+      outline: 1px solid Highlight;
+      outline-offset: -1px;
+    }
+  }
+
+  // The shared ring, in place of the browser's own.
+  &:focus-visible {
+    @include focus-ring;
+  }
+}

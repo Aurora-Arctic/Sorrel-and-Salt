@@ -195,7 +195,7 @@ The dialog fades by opacity alone; a theme change runs no colour transition on i
 
 ### The × and the toolbar row
 
-The Close button is a 2rem target (`$close-target`, past WCAG 2.5.8's 24px), out of the header's flow, so its right edge is the right edge of the head's lines beneath and it is level with the first. The head stops short (`$close-reserve`) so a long name wraps. A head with an eyebrow first and no top line has the × raised to put its middle on the eyebrow text's, written with `:has()` so a browser without it keeps the inset. Controls go in the toolbar row ("A control in the header").
+The Close button is the shared `CloseButton` (`src/components/CloseButton/`, also the Filters sheet's Close), placed by `.modal-dialog__close`, and is a 2rem target (`$close-target`, past WCAG 2.5.8's 24px), out of the header's flow, so its right edge is the right edge of the head's lines beneath and it is level with the first. The head stops short (`$close-reserve`) so a long name wraps. A head with an eyebrow first and no top line has the × raised to put its middle on the eyebrow text's, written with `:has()` so a browser without it keeps the inset. Controls go in the toolbar row ("A control in the header").
 
 ### The top line
 
