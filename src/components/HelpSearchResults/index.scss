@@ -23,6 +23,11 @@
   }
 }
 
+// The pager stands apart from the last card by the step the list frame's stack gives a list and its pager elsewhere; this page's one column has no stack to give it.
+.help-results__list + .pager {
+  margin-block-start: space(5);
+}
+
 .help-results__item {
   position: relative;
 }

@@ -110,7 +110,16 @@ async function names(filter: UserFilter): Promise<string[]> {
 }
 
 describe('listUsers', () => {
-  it('lists every live user to a keeper, by name and then id', async () => {
+  // The seed's bootstrap user, the signed-out support sender and the job actor are live rows nobody signs in as, so
+  // nothing a keeper does to a person applies to them.
+  it('lists every live user to a keeper, by name and then id, leaving out the three system rows', async () => {
+    const system = [BOOTSTRAP_USER_ID, SIGNED_OUT_SENDER_ID, SYSTEM_ACTOR_ID];
+    expect(await sql`select deleted_at from users where id in ${sql(system)}`).toEqual(
+      system.map(() => ({ deleted_at: null })),
+    );
+    expect(await sql`select name from users where id = ${BOOTSTRAP_USER_ID}`).toEqual([
+      { name: 'Seed System User' },
+    ]);
     const expected = await listableUsers();
     expect(expected.map((row) => row.id)).toEqual(
       expect.arrayContaining([A.id, B.id, C.id, D.id, E.id, PENDING, WILDCARD]),
@@ -119,6 +128,9 @@ describe('listUsers', () => {
     const page = await listUsers(asUser(E), {}, PAGE);
 
     expect(page.map((entry) => entry.node.id)).toEqual(expected.map((row) => row.id));
+    for (const id of system) expect(page.map((entry) => entry.node.id)).not.toContain(id);
+    expect(await names({ query: 'Seed System' })).toEqual([]);
+    expect(await names({ query: 'signed out' })).toEqual([]);
     expect(page.find((entry) => entry.node.id === A.id)?.node).toMatchObject({
       name: A.name,
       email: A.email,
@@ -127,37 +139,6 @@ describe('listUsers', () => {
       emailVerified: expect.any(Boolean),
       createdAt: expect.any(Date),
     });
-  });
-
-  // It stamps the seeded rows and nobody signs in as it: nothing a keeper does
-  // to a person applies to it.
-  it("leaves out the seed's bootstrap user, though it is a live row", async () => {
-    const [row] = await sql`select name, deleted_at from users where id = ${BOOTSTRAP_USER_ID}`;
-    expect(row).toEqual({ name: 'Seed System User', deleted_at: null });
-
-    const page = await listUsers(asUser(E), {}, PAGE);
-
-    expect(page.map((entry) => entry.node.id)).not.toContain(BOOTSTRAP_USER_ID);
-    expect(await names({ query: 'Seed System' })).toEqual([]);
-  });
-
-  it('leaves out the signed-out support sender, though it is a live row', async () => {
-    const [row] = await sql`select deleted_at from users where id = ${SIGNED_OUT_SENDER_ID}`;
-    expect(row).toEqual({ deleted_at: null });
-
-    const page = await listUsers(asUser(E), {}, PAGE);
-
-    expect(page.map((entry) => entry.node.id)).not.toContain(SIGNED_OUT_SENDER_ID);
-    expect(await names({ query: 'signed out' })).toEqual([]);
-  });
-
-  it('leaves out the job actor, though it is a live row', async () => {
-    const [row] = await sql`select deleted_at from users where id = ${SYSTEM_ACTOR_ID}`;
-    expect(row).toEqual({ deleted_at: null });
-
-    const page = await listUsers(asUser(E), {}, PAGE);
-
-    expect(page.map((entry) => entry.node.id)).not.toContain(SYSTEM_ACTOR_ID);
   });
 
   it('filters by a substring of the name or the email, whatever its case', async () => {

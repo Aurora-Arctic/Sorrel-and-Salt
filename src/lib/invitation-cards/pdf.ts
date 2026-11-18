@@ -26,7 +26,7 @@ import {
   frontText,
   type QrItem,
 } from './layout';
-import { CARDS_PER_SHEET } from './limits';
+import { CARDS_PER_SHEET, sheetCount } from './limits';
 import { qrShapes } from '../qr';
 import { codeShadows, type CodeShadows } from './shadow';
 import type { RoundedSquare } from '../qr/types';
@@ -130,7 +130,7 @@ export async function renderCardSheets(
     doc,
     codeShadows(embedded.measure, codeColumnText(embedded.measure, valid, code), code),
   );
-  const sheets = Math.ceil(links.length / CARDS_PER_SHEET);
+  const sheets = sheetCount(links.length);
   for (let start = 0; start < links.length; start += CARDS_PER_SHEET) {
     const number = start / CARDS_PER_SHEET + 1;
     const sheetLinks = links.slice(start, start + CARDS_PER_SHEET);

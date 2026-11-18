@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { router } from '../../support/next-navigation';
 import type {
   PublishDocumentDraftMutation,
@@ -24,8 +24,13 @@ warmImport(() => import('@/components/DocumentEditor/editor'));
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
 beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
   router.push.mockClear();
   router.refresh.mockClear();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 function Go() {
@@ -69,7 +74,7 @@ async function change(text: HTMLElement): Promise<void> {
     selection.removeAllRanges();
     selection.addRange(range);
     document.dispatchEvent(new Event('selectionchange'));
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await vi.advanceTimersByTimeAsync(150);
   });
   fireEvent.click(
     within(screen.getByRole('toolbar', { name: 'Document Text Formatting' })).getByRole('button', {

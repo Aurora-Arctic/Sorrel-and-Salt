@@ -304,9 +304,17 @@ describe('IngredientForm on the compendium', () => {
       expect(box('Deity')).toHaveAccessibleDescription(expect.stringContaining('Mockate'));
       expect(onSubmit).not.toHaveBeenCalled();
     });
+  });
 
-    it('suggest substitutes from the compendium, leaving out the entry itself', async () => {
+  describe('an entry given to it', () => {
+    it('says that it edits the compendium, as a new entry does not, and suggests substitutes from the compendium, leaving out the entry itself', async () => {
+      renderForm();
+      expect(screen.queryByText(COMPENDIUM_EDIT_NOTICE)).not.toBeInTheDocument();
+      cleanup();
+
       renderEntry();
+      expect(screen.getByText(COMPENDIUM_EDIT_NOTICE)).toBeInTheDocument();
+
       const asks = offerCompendium([
         {
           id: ENTRY_ID,
@@ -336,21 +344,43 @@ describe('IngredientForm on the compendium', () => {
       expect(within(list).queryByRole('option', { name: /Testwort/ })).not.toBeInTheDocument();
       expect(asks[asks.length - 1]).toMatchObject({ query: 'wort' });
     });
-  });
 
-  describe('an entry given to it', () => {
-    it('says that it edits the compendium, as a new entry does not', () => {
+    const reviewSwitch = () => screen.getByRole('switch', { name: 'Reviewed' });
+    const noSwitch = () => expect(screen.queryByRole('switch', { name: 'Reviewed' })).toBeNull();
+    const shownSwitch = () => screen.getByRole('switch', { name: 'Shown in Compendium' });
+
+    // The two flags are crossed between the edits, so a switch reading the other's flag fails.
+    it('offers the Reviewed and Shown switches only when the page gives a review, each starting from its own flag, Shown off on an add with no categories', () => {
       renderForm();
-      expect(screen.queryByText(COMPENDIUM_EDIT_NOTICE)).not.toBeInTheDocument();
+      noSwitch();
       cleanup();
 
       renderEntry();
-      expect(screen.getByText(COMPENDIUM_EDIT_NOTICE)).toBeInTheDocument();
+      noSwitch();
+      cleanup();
+
+      renderForm({ review: { reviewed: false } });
+      expect(reviewSwitch()).not.toBeChecked();
+      expect(shownSwitch()).not.toBeChecked();
+      cleanup();
+
+      renderForm({
+        entry: { id: ENTRY_ID, values: TESTWORT },
+        review: { reviewed: true, shown: false },
+      });
+      expect(reviewSwitch()).toBeChecked();
+      expect(shownSwitch()).not.toBeChecked();
+      cleanup();
+
+      renderForm({
+        entry: { id: ENTRY_ID, values: TESTWORT },
+        review: { reviewed: false, shown: true },
+      });
+      expect(reviewSwitch()).not.toBeChecked();
+      expect(shownSwitch()).toBeChecked();
     });
 
     describe('the Reviewed switch', () => {
-      const reviewSwitch = () => screen.getByRole('switch', { name: 'Reviewed' });
-      const noSwitch = () => expect(screen.queryByRole('switch', { name: 'Reviewed' })).toBeNull();
       const REVIEW_ID = ENTRY_ID;
 
       function acceptReview() {
@@ -364,26 +394,6 @@ describe('IngredientForm on the compendium', () => {
         });
         return calls;
       }
-
-      it('is offered on an add and on an edit when the page gives it, and on neither when it does not', () => {
-        renderForm();
-        noSwitch();
-        cleanup();
-
-        renderEntry();
-        noSwitch();
-        cleanup();
-
-        renderForm({ review: { reviewed: false } });
-        expect(reviewSwitch()).not.toBeChecked();
-        cleanup();
-
-        renderForm({
-          entry: { id: ENTRY_ID, values: TESTWORT },
-          review: { reviewed: true },
-        });
-        expect(reviewSwitch()).toBeChecked();
-      });
 
       // Regression: with every section closed on an edit, the switch was the first shown field, so
       // the modal opened with the focus on it at the form's foot rather than on the dialog.
@@ -488,8 +498,6 @@ describe('IngredientForm on the compendium', () => {
     });
 
     describe('the Shown in Compendium switch', () => {
-      const shownSwitch = () => screen.getByRole('switch', { name: 'Shown in Compendium' });
-
       function refuseAnyShownWrite() {
         const calls: SetCompendiumEntryShownMutationVariables[] = [];
         mockGraphQLMutation<
@@ -501,26 +509,6 @@ describe('IngredientForm on the compendium', () => {
         });
         return calls;
       }
-
-      it('starts from the entry on an edit', () => {
-        renderForm({
-          entry: { id: ENTRY_ID, values: TESTWORT },
-          review: { reviewed: false, shown: false },
-        });
-        expect(shownSwitch()).not.toBeChecked();
-        cleanup();
-
-        renderForm({
-          entry: { id: ENTRY_ID, values: TESTWORT },
-          review: { reviewed: false, shown: true },
-        });
-        expect(shownSwitch()).toBeChecked();
-      });
-
-      it('starts hidden on an add with no categories', () => {
-        renderForm({ review: { reviewed: false } });
-        expect(shownSwitch()).not.toBeChecked();
-      });
 
       it('changes the form when flipped and writes nothing until Save', async () => {
         const separate = refuseAnyShownWrite();
@@ -650,70 +638,66 @@ describe('IngredientForm on the compendium', () => {
     });
 
     // Regression: an Unknown entry with no formal name, a picked form and a source for its
-    // classification kept Save off after None was chosen.
-    // The admin list's dialog passes the saved Shown flag; the entry page's pencil passes none, so Shown follows the categories.
-    it.each([
-      ['from the admin list, the saved Shown flag given', { reviewed: false, shown: false }],
-      ['from the entry page, no Shown flag given', { reviewed: false, reviewedAt: null }],
-    ])(
-      'saves a hidden Unknown entry with a picked form reclassified as None, %s',
-      async (_, review) => {
-        const calls = acceptUpdate();
-        const source = {
-          value: 'Fixture Almanac',
-          link: {
-            id: OTHER_ID,
-            isGlobal: true,
-            kind: 'book' as const,
-            title: 'Fixture Almanac',
-            authors: null,
-            container: null,
-          },
-          locator: '',
-          nameBasis: '' as const,
-        };
-        const { onSaved } = renderForm({
-          entry: {
-            id: ENTRY_ID,
-            values: {
-              ...EMPTY_VALUES,
-              name: 'Testwax',
-              nomenclature: 'unknown',
-              canonicalName: '',
-              description: 'A fixture wax.',
-              references: [{ ...source, supports: ['nomenclature', 'description'] }],
-              variants: [
-                {
-                  ...EMPTY_VARIANT,
-                  variantId: 'f1e2d3c4-b5a6-4978-8a6b-5c4d3e2f1a0b',
-                  form: 'Fixture Wax',
-                  formLink: {
-                    id: 'a0b1c2d3-e4f5-4a6b-8c7d-9e0f1a2b3c4d',
-                    name: 'Fixture Wax',
-                    group: null,
-                    icon: null,
-                    description: null,
-                  },
-                  references: [{ ...source, supports: ['form'] }],
+    // classification kept Save off after None was chosen. The entry page's pencil passes no Shown
+    // flag, so Shown follows the categories; the admin list's path, which passes the saved flag, is
+    // tests/e2e/ingredient-classification-none.spec.ts's.
+    it('saves a hidden Unknown entry with a picked form reclassified as None, from the entry page, no Shown flag given', async () => {
+      const review = { reviewed: false, reviewedAt: null };
+      const calls = acceptUpdate();
+      const source = {
+        value: 'Fixture Almanac',
+        link: {
+          id: OTHER_ID,
+          isGlobal: true,
+          kind: 'book' as const,
+          title: 'Fixture Almanac',
+          authors: null,
+          container: null,
+        },
+        locator: '',
+        nameBasis: '' as const,
+      };
+      const { onSaved } = renderForm({
+        entry: {
+          id: ENTRY_ID,
+          values: {
+            ...EMPTY_VALUES,
+            name: 'Testwax',
+            nomenclature: 'unknown',
+            canonicalName: '',
+            description: 'A fixture wax.',
+            references: [{ ...source, supports: ['nomenclature', 'description'] }],
+            variants: [
+              {
+                ...EMPTY_VARIANT,
+                variantId: 'f1e2d3c4-b5a6-4978-8a6b-5c4d3e2f1a0b',
+                form: 'Fixture Wax',
+                formLink: {
+                  id: 'a0b1c2d3-e4f5-4a6b-8c7d-9e0f1a2b3c4d',
+                  name: 'Fixture Wax',
+                  group: null,
+                  icon: null,
+                  description: null,
                 },
-              ],
-            },
+                references: [{ ...source, supports: ['form'] }],
+              },
+            ],
           },
-          review,
-        });
-        openSections('Identity');
-        expect(textbox('Formal Name')).toHaveValue('');
-        expect(button('Save Ingredient')).toBeDisabled();
+        },
+        review,
+      });
+      openSections('Identity');
+      expect(textbox('Formal Name')).toHaveValue('');
+      expect(button('Save Ingredient')).toBeDisabled();
 
-        choose('Classification', 'None');
-        expect(button('Save Ingredient')).toBeEnabled();
-        press('Save Ingredient');
+      choose('Classification', 'None');
+      expect(button('Save Ingredient')).toBeEnabled();
+      press('Save Ingredient');
 
-        await waitFor(() => expect(calls).toHaveLength(1));
-        expect(calls[0]?.input).toMatchObject({ nomenclature: 'none' });
-        await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      },
-    );
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input).toMatchObject({ nomenclature: 'none' });
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    });
 
     it('saves a rename near another entry at once, the match named but not itself, and nothing to set aside', async () => {
       const calls = acceptUpdate();

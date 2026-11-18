@@ -137,7 +137,7 @@ describe('TermsAgreement', () => {
       expect(agree()).toBeDisabled();
       fireEvent.click(agree());
       await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 0));
       });
       expect(calls).toHaveLength(1);
       expect(assign).toHaveBeenCalledOnce();

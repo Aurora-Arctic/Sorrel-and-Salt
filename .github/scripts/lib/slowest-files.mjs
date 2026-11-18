@@ -1,5 +1,5 @@
-// The slowest test files of a Vitest run, for summarize-vitest.mjs's PR
-// comment: a warning, never a failure (MB.180). One file holding most of the
+// The slowest-files block of a PR comment, for summarize-vitest.mjs and
+// merge-playwright-coverage.mjs (which lists tests, not files): a warning, never a failure (MB.180). One file holding most of the
 // run's time is the wall clock however many workers CI has, so the block names
 // what to split before it grows (claude-docs/testing/layer-ownership.md, "The
 // file budget").
@@ -14,19 +14,24 @@ function formatDuration(ms) {
   return ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms)} ms`;
 }
 
+/** How many are over the budget, in the form both comments' slowest-files blocks use. */
+export function budgetLine({ over, budgetMs, budget }) {
+  return `${over === 0 ? 'none' : over} over the ${formatDuration(budgetMs)} ${budget} budget`;
+}
+
 /**
  * Vitest's JSON reporter gives each file its `startTime` and `endTime`, which
  * is what the summed worker time is made of. Returns the files over the budget
  * and the collapsible block, or null when the run wrote no file results.
- * `notes` are Markdown pieces written inside the block after the table, and `notesHeading` is what its summary line
- * says of them, so a collapsed block still tells the reader there is one.
+ * `budget` says whose budget it is. Vitest's is per file, so a row over it is marked and the block says
+ * why. Playwright's is per test, so `fileBudget: false` leaves its rows unmarked, `over` is the count of tests
+ * over it, and `notes` (Markdown inside the block after the table) name them.
  */
 export function buildSlowestFilesSection(
   testResults,
   repoRoot,
-  { budgetMs = BUDGET_MS, notes = [], notesHeading = '' } = {},
+  { budgetMs = BUDGET_MS, budget = 'file', fileBudget = true, over: overCount, notes = [] } = {},
 ) {
-  // `budgetMs: null` lists the files with no file budget: Playwright's budget is per test (R-3), so its list only ranks.
   const rows = (testResults ?? [])
     .filter((result) => typeof result.startTime === 'number' && typeof result.endTime === 'number')
     .map((result) => ({
@@ -37,16 +42,8 @@ export function buildSlowestFilesSection(
     .sort((a, b) => b.ms - a.ms);
   if (rows.length === 0) return null;
 
-  const budgeted = budgetMs !== null;
-  const over = budgeted ? rows.filter((row) => row.ms > budgetMs) : [];
-  const budget = budgeted ? formatDuration(budgetMs) : '';
-  let heading = 'Slowest files';
-  if (budgeted)
-    heading +=
-      over.length === 0
-        ? ` — none over the ${budget} budget`
-        : ` — ${over.length} over the ${budget} budget`;
-  if (notes.length > 0 && notesHeading) heading += ` — ${notesHeading}`;
+  const over = fileBudget ? rows.filter((row) => row.ms > budgetMs) : [];
+  const heading = `Slowest files — ${budgetLine({ over: overCount ?? over.length, budgetMs, budget })}`;
 
   const lines = [
     `<details><summary>${heading}</summary>`,
@@ -57,10 +54,10 @@ export function buildSlowestFilesSection(
       .slice(0, MAX_ROWS)
       .map(
         ({ file, tests, ms }) =>
-          `| ${budgeted && ms > budgetMs ? '⚠ ' : ''}\`${file}\` | ${tests} | ${formatDuration(ms)} |`,
+          `| ${fileBudget && ms > budgetMs ? '⚠ ' : ''}\`${file}\` | ${tests} | ${formatDuration(ms)} |`,
       ),
     '',
-    ...(budgeted
+    ...(fileBudget
       ? [
           '*A file over the budget is the run’s wall clock whatever the worker count. Split it along the owning layer: claude-docs/testing/layer-ownership.md, "The file budget".*',
           '',

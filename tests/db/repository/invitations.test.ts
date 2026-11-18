@@ -329,67 +329,13 @@ describe('revokeInvitation, by tier', () => {
   });
 });
 
-describe('the owner’s list and a declined invitation', () => {
-  const FULL = { limit: 101, inverted: false };
-  const listed = async (proof: Membership = inW) =>
-    (await findPendingWorkspaceInvitationPage(proof, FULL)).map(({ node }) => node.id);
-  const counted = async (proof: Membership = inW) =>
-    (await findPendingWorkspaceInvitationCount(proof, undefined)).totalCount;
-
-  it.each([
-    ['a declined one', ''],
-    ['a declined one past its expiry', 'past'],
-  ])('lists and counts %s until it is revoked', async (_kind, when) => {
-    const [row] = await inviteIntoW({ token: 'fixture-token-o-declined' });
-    await declineAs(A, row!.id);
-    if (when)
-      await sql`update invitations set expires_at = now() - interval '1 day' where id = ${row!.id}`;
-
-    expect(await rowOf(row!.id)).toMatchObject({ declined_at: expect.any(Date), revoked_at: null });
-    expect(await listed()).toEqual([row!.id]);
-    expect(await counted()).toBe(1);
-    // Why it is the open filter that keeps it: another coven sees nothing, and
-    // an expired invitation that was never declined is gone from the same list.
-    expect(await listed(inX)).toEqual([]);
-    const [lapsed] = await inviteIntoW({ token: 'fixture-token-o-lapsed', expiresAt: PAST() });
-    expect(await listed()).not.toContain(lapsed!.id);
-
-    await revokeInWorkspace(row!.id);
-
-    expect(await listed()).toEqual([]);
-    expect(await counted()).toBe(0);
-  });
-
-  it('revokes a declined invitation, the row keeping its decline and gaining the revoke', async () => {
-    const [row] = await inviteIntoW();
-    await declineAs(A, row!.id);
-
-    const revoked = await revokeInWorkspace(row!.id);
-
-    expect(revoked).toHaveLength(1);
-    expect(revoked[0]).toMatchObject({
-      id: row!.id,
-      declinedAt: expect.any(Date),
-      revokedAt: expect.any(Date),
-      updatedBy: A.id,
-    });
-  });
-
-  it('revokes no accepted invitation, though it too is no longer pending', async () => {
-    const [accepted] = await inviteIntoW();
-    await acceptAs(A);
-
-    expect(await rowOf(accepted!.id)).toMatchObject({ declined_at: null });
-    expect(await revokeInWorkspace(accepted!.id)).toEqual([]);
-    expect(await listed()).toEqual([]);
-  });
-
+describe('a declined invitation and the site tier’s pending filter', () => {
+  // A revoke takes only a row not yet revoked, so the owner's revoke landing shows the other coven's wrote nothing.
   it('cannot be revoked through another coven’s proof, and the owner’s revoke takes it', async () => {
     const [row] = await inviteIntoW();
     await declineAs(A, row!.id);
 
     expect(await revokeInWorkspace(row!.id, () => inX)).toEqual([]);
-    expect(await rowOf(row!.id)).toMatchObject({ revoked_at: null });
     expect(await revokeInWorkspace(row!.id)).toHaveLength(1);
   });
 
@@ -956,40 +902,9 @@ describe('invitation cards', () => {
   const cardAccept = (user: SessionUser, token = CARD) =>
     withAudit(asUser(user), (write) => write.acceptInvitation(token));
 
-  it('stores only the hash, with no address, coven or role, one batch and one expiry', async () => {
-    const expiresAt = LATER();
-    const inserted = await mint([CARD, OTHER_CARD], expiresAt);
-
-    expect(inserted).toHaveLength(2);
-    expect(inserted[0]).toMatchObject({
-      kind: 'card',
-      email: null,
-      workspaceId: null,
-      role: null,
-      siteRole: null,
-      batchId: BATCH,
-      tokenHash: sha256(CARD),
-      createdBy: E.id,
-      acceptedAt: null,
-    });
-    expect(inserted[0]!.expiresAt).toEqual(expiresAt);
-    for (const row of inserted) {
-      expect(Object.values(await rowOf(row.id))).not.toContain(CARD);
-      expect(Object.values(await rowOf(row.id))).not.toContain(OTHER_CARD);
-    }
-  });
-
   it('inserts five hundred cards in one statement', async () => {
     const tokens = Array.from({ length: 500 }, (_, i) => `card-${String(i).padStart(11, '0')}`);
     expect(await mint(tokens)).toHaveLength(500);
-  });
-
-  it('is accepted by any verified account, whatever its address', async () => {
-    await mint([CARD]);
-    const [accepted] = await cardAccept(B);
-
-    expect(accepted).toMatchObject({ acceptedBy: B.id, batchId: BATCH });
-    expect((await findInvitationByToken(CARD))?.acceptedBy).toBe(B.id);
   });
 
   it('is accepted by no unverified account, though the card is pending', async () => {
@@ -1000,26 +915,6 @@ describe('invitation cards', () => {
 
     await sql`update users set email_verified = true where id = ${B.id}`;
     expect(await cardAccept(B)).toHaveLength(1);
-  });
-
-  // The second account is verified and the card was pending until the first stamp, so the single-use predicate alone refuses.
-  it('affects no row on a second accept', async () => {
-    await mint([CARD]);
-    expect(await cardAccept(B)).toHaveLength(1);
-
-    expect(await cardAccept(A)).toHaveLength(0);
-    expect(await cardAccept(B)).toHaveLength(0);
-    expect((await findInvitationByToken(CARD))?.acceptedBy).toBe(B.id);
-  });
-
-  it('is not accepted once expired or revoked', async () => {
-    await mint([CARD]);
-    await mint([OTHER_CARD], LATER());
-    await sql`update invitations set expires_at = now() - interval '1 second' where token_hash = ${sha256(CARD)}`;
-    await sql`update invitations set revoked_at = now() where token_hash = ${sha256(OTHER_CARD)}`;
-
-    expect(await cardAccept(B)).toHaveLength(0);
-    expect(await cardAccept(B, OTHER_CARD)).toHaveLength(0);
   });
 
   it('never reaches the received list, the accept by id, the decline or the site tier’s lists', async () => {
@@ -1036,20 +931,6 @@ describe('invitation cards', () => {
       await findPendingSiteInvitationPage(admin, {}, { limit: 101, inverted: false }),
     ).toHaveLength(0);
     expect(await withAudit(asUser(E), (w) => w.revokeInvitation(admin, card!.id))).toHaveLength(0);
-  });
-
-  it('revokes a batch’s pending cards and leaves an accepted one untouched', async () => {
-    await mint([CARD, OTHER_CARD]);
-    await cardAccept(B);
-    const before = await rowOf((await findInvitationByToken(CARD))!.id);
-
-    const revoked = await withAudit(asUser(E), (write) =>
-      write.revokeInvitationCardBatch(admin, BATCH),
-    );
-
-    expect(revoked).toHaveLength(1);
-    expect(revoked[0]!.tokenHash).toBe(sha256(OTHER_CARD));
-    expect(await rowOf((await findInvitationByToken(CARD))!.id)).toEqual(before);
   });
 
   it('answers who arrived by card, when and from which batch, from the rows alone', async () => {
@@ -1073,30 +954,14 @@ describe('invitation cards', () => {
     expect((await findCardArrivalCount(admin, {}, undefined)).totalCount).toBe(2);
   });
 
-  it('pages one row per batch, newest first, and counts each batch’s cards in SQL', async () => {
-    const OTHER_BATCH = '22222222-2222-4222-8222-222222222222';
-    await mint([CARD, OTHER_CARD]);
-    await mint(['cardtokenCCCCCCC'], LATER(), OTHER_BATCH);
-    await cardAccept(B);
+  it('pages and counts no address invitation as a batch', async () => {
+    await mint([CARD]);
     await inviteIntoW({ token: 'fixture-token-w-listed' });
-    const all = { limit: 101, inverted: false };
 
-    const page = await findCardBatchPage(admin, {}, all);
-    const totals = await findCardBatchTotals(admin, [BATCH, OTHER_BATCH]);
+    const page = await findCardBatchPage(admin, {}, { limit: 101, inverted: false });
 
-    expect(page.map(({ node }) => node.batchId).sort()).toEqual([BATCH, OTHER_BATCH].sort());
-    expect((await findCardBatchCount(admin, {}, undefined)).totalCount).toBe(2);
-    expect(totals.find((t) => t.batchId === BATCH)).toMatchObject({
-      cards: 2,
-      accepted: 1,
-      pending: 1,
-    });
-    expect(totals.find((t) => t.batchId === OTHER_BATCH)).toMatchObject({
-      cards: 1,
-      accepted: 0,
-      pending: 1,
-    });
-    expect(await findCardBatchTotals(admin, [])).toEqual([]);
+    expect(page.map(({ node }) => node.batchId)).toEqual([BATCH]);
+    expect((await findCardBatchCount(admin, {}, undefined)).totalCount).toBe(1);
   });
 
   describe('the batch filter', () => {

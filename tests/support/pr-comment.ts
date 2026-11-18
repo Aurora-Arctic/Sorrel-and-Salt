@@ -92,6 +92,79 @@ export const context = {
 
 export const core = { info: () => {}, warning: () => {} };
 
+const STATUS_WORDS = ['Passed', 'Failed', 'Running', 'Skipped', 'Warning'] as const;
+
+/** One row of a sectioned comment's table: a section's, or a shard's sub-row (`↳`) beneath it. */
+export type Row = {
+  label: string;
+  /**
+   * The shard's index when the row is a numbered sub-row ("↳ Shard 2 of 3"), `'sweep'` for the gate's
+   * accessibility sweep sub-row ("↳ Accessibility Sweep"), else null.
+   */
+  shard: number | 'sweep' | null;
+  /** The count a numbered sub-row's label gives ("of 3"), else null. */
+  of: number | null;
+  status: string;
+  result: string;
+};
+
+const SWEEP_LABEL = '↳ Accessibility Sweep';
+
+/** A sectioned comment's table rows, top to bottom. */
+export function rowsOf(body: string): Row[] {
+  return body
+    .split('\n')
+    .filter((line) => line.startsWith('|') && !/^\|\s*-/.test(line))
+    .slice(1)
+    .map((line) => {
+      const [label = '', status = '', result = ''] = line
+        .slice(1, -1)
+        .split(/(?<!\\)\|/)
+        .map((cell) => cell.trim());
+      const sub = label.startsWith('↳');
+      const numbered = /Shard (\d+) of (\d+)/.exec(label);
+      return {
+        label,
+        shard: label === SWEEP_LABEL ? 'sweep' : sub ? Number(/\d+/.exec(label)?.[0]) : null,
+        of: numbered ? Number(numbered[2]) : null,
+        status: STATUS_WORDS.find((word) => status.includes(word)) ?? status,
+        result,
+      };
+    });
+}
+
+/** The status word of a comment's heading. */
+export function headingStatusOf(body: string): string {
+  const heading = body.split('\n').find((line) => line.startsWith('### '));
+  if (!heading) throw new Error('The comment has no heading');
+  return STATUS_WORDS.find((word) => heading.split(' · ').includes(word)) ?? '';
+}
+
+/** The notes a comment's heading carries after its status word, in order. */
+export function headingNotesOf(body: string): string[] {
+  const heading = body.split('\n').find((line) => line.startsWith('### '));
+  if (!heading) throw new Error('The comment has no heading');
+  const parts = heading.split(' · ');
+  return parts.slice(
+    parts.findIndex((part) => (STATUS_WORDS as readonly string[]).includes(part)) + 1,
+  );
+}
+
+/** The label of the heading that opens a section's block, without its status mark or word. */
+export function blockLabelOf(block: string): string {
+  const heading = block.split('\n').find((line) => line.startsWith('#### ')) ?? '';
+  return heading.slice(5).split(' · ')[0].replace(/^\S+ /, '');
+}
+
+/** A sectioned comment's shard entries, by section key and then shard index, as its hidden state holds them. */
+export function shardsOf(
+  body: string,
+): Record<string, Record<string, { status: string; total: number; token: string }>> {
+  const state = /<!-- ci-state (.*?) -->/s.exec(body);
+  if (!state) throw new Error('The comment carries no ci-state');
+  return (JSON.parse(state[1]) as { shards?: ReturnType<typeof shardsOf> }).shards ?? {};
+}
+
 export type Section = { status: string; summary: string; block: string };
 
 /** A sectioned comment's sections, by key, as its hidden state and its blocks hold them. */

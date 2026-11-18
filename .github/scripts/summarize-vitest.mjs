@@ -10,12 +10,13 @@ import path from 'node:path';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
 import { formatFailures, stripAnsi } from './lib/failure-list.mjs';
 import { setOutput } from './lib/github-output.mjs';
+import { NO_FAILED_TEST, resultLine } from './lib/result-line.mjs';
 import { buildSlowestFilesSection } from './lib/slowest-files.mjs';
 
 const RESULTS_PATH = process.env.VITEST_RESULTS || '/app/vitest-results.json';
 const PART = process.env.VITEST_PART === 'true';
 // The run step's outcome. The JSON reporter drops Vitest's unhandled errors, so
-// a run that failed on one alone reports no failed test.
+// a run that failed on one alone lists no failure.
 const OUTCOME = process.env.VITEST_OUTCOME ?? '';
 const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage/coverage-summary.json';
 // The merged run's log: Vitest reports a missed threshold only there.
@@ -62,13 +63,12 @@ const coverage = PART ? null : buildCoverageSection(COVERAGE_SUMMARY_PATH, REPO_
 // A file over the budget is named in the stat line too, so the warning is
 // read without opening the block (MB.180); it never fails the job.
 const slowest = buildSlowestFilesSection(data.testResults, REPO_ROOT);
-const overBudget = slowest?.over.length ? `, ${slowest.over.length} over the file budget` : '';
+const overBudget = slowest?.over.length ?? 0;
 // The run's wall-clock time, from its start to the last file's end.
-function runDuration() {
+function runMs() {
   const ends = (data.testResults ?? []).map((r) => r.endTime).filter((t) => typeof t === 'number');
-  if (typeof data.startTime !== 'number' || ends.length === 0) return '';
-  const seconds = Math.round((Math.max(...ends) - data.startTime) / 1000);
-  return seconds >= 60 ? ` in ${Math.floor(seconds / 60)}m ${seconds % 60}s` : ` in ${seconds}s`;
+  if (typeof data.startTime !== 'number' || ends.length === 0) return undefined;
+  return Math.max(...ends) - data.startTime;
 }
 
 const failures = [];
@@ -105,11 +105,14 @@ const violations = (
   .filter(Boolean);
 
 const runFailed = OUTCOME === 'failure';
-const unexplained =
-  runFailed && failures.length === 0 && violations.length === 0
-    ? '; run failed with no failed test: see the log'
-    : '';
-const summary = `${testSummary}${PART ? runDuration() : ''}${overBudget}${unexplained}`;
+const unexplained = runFailed && failures.length === 0 && violations.length === 0;
+const summary = resultLine({
+  counts: testSummary,
+  ms: PART ? runMs() : undefined,
+  over: overBudget,
+  budget: 'file',
+  unexplained,
+});
 
 const details = formatFailures(failures, { heading: 'Failing tests' });
 
@@ -122,7 +125,7 @@ if (!PART) {
   if (missedByParts) {
     alert = `The merged run found ${failures.length} failed ${failures.length === 1 ? 'test' : 'tests'} that no part's row shows: see the log.`;
   } else if (unexplained) {
-    alert = 'The merged run failed with no failed test and no missed threshold: see the log.';
+    alert = `The merged run ${NO_FAILED_TEST} and no missed threshold: see the log.`;
   }
   let coverageSummary;
   let finalOutcome;
@@ -142,7 +145,10 @@ if (!PART) {
   const total = data.numTotalTests ?? numPassedTests + numFailedTests;
   setOutput('heading_note', `${total.toLocaleString('en-GB')} ${total === 1 ? 'test' : 'tests'}`);
   setOutput('alert', alert);
-  setOutput('final_summary', `${coverageSummary}${overBudget}`);
+  setOutput(
+    'final_summary',
+    resultLine({ counts: coverageSummary, over: overBudget, budget: 'file' }),
+  );
   // The failing tests only when no part's row lists them.
   setOutput(
     'final_details',

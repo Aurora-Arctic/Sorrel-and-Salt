@@ -1,5 +1,5 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, onTestFinished, vi, beforeAll } from 'vitest';
 import RecordWorkingButton, { RecordWorkingDialog } from '@/components/RecordWorking';
 import type {
   RecordWorkingMembersQuery,
@@ -129,11 +129,15 @@ describe('Record a Working', () => {
   });
 
   it('asks nothing of the server on opening, though the participant box takes the focus', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
     const asked = mockMembers();
     openButton();
     const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
     await waitFor(() => expect(people).toHaveFocus());
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await act(() => vi.advanceTimersByTimeAsync(400));
     expect(asked).toEqual([]);
   });
 

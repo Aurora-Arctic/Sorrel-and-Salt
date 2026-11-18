@@ -15,13 +15,13 @@ The public help centre and its staff counterpart. Components: `HelpSearchForm`, 
 
 ## Public routes
 
-`/help`, `/help/glossary`, `/help/[slug]` and `/help/[slug]/[child]` read the cached public finders (tag `help`) and are in the sitemap. `/help/search` is public, reads the session, is never cached and is `noindex`. The proxy admits `/help`, `/help/glossary`, `/help/search` and one or two segments beneath `/help` except `staff` (`HELP_ARTICLE` in `src/proxy.ts`); robots allows the `/help` prefix.
+`/help`, `/help/glossary`, `/help/[slug]` and `/help/[slug]/[child]` read the cached public finders (tag `help`) and are in the sitemap. `/help/search` is public, reads the session, is never cached and is `noindex`. It shows the matches a page at a time with the shared `Pager` inside `ListFrame`, and its count line states the total of all matches, not the rows on the page; one page of matches draws the pager with both ends disabled (page 1 of 1), and no matches draws none. The proxy admits `/help`, `/help/glossary`, `/help/search` and one or two segments beneath `/help` except `staff` (`HELP_ARTICLE` in `src/proxy.ts`); robots allows the `/help` prefix.
 
 A top-level page answers 404 for a row that is not a public article or guide, a nested page for a row that is not a public article, and for a child requested at the wrong parent. A child asked for at its top-level address gets a 308 to its nested address.
 
 ## Staff routes
 
-`/help/staff`, `/help/staff/[slug]` and `/help/staff/[slug]/[child]` call `requireCuratorSession()` before any read, are never cached, and are `noindex`. They answer 404 for a public row, so a public row has one address. The staff index lists the top-level staff and keeper articles and guides together. The `/curator` and `/keepers` layouts link to `/help/staff`.
+`/help/staff`, `/help/staff/[slug]` and `/help/staff/[slug]/[child]` call `requireCuratorSession()` before any read, are never cached, and are `noindex`. They answer 404 for a public row, so a public row has one address. The staff index lists the top-level staff and keeper articles and guides together. It reads `listStaffHelpArticles` with `withPublic: false`, so the public rows are left out in SQL, before the 200-row cap. The `/curator` and `/keepers` layouts link to `/help/staff`.
 
 ## Layout
 

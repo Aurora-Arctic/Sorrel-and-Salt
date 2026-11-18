@@ -1,7 +1,9 @@
 name: Playwright E2E
 
 # The Playwright e2e suite against a built and served site. workflow_call
-# only, from pr-gate, and from e2e-cache.yml with `build-only`.
+# only, from pr-gate, and from e2e-cache.yml with `build-only`. Each shard
+# also writes its own sub-row in the Playwright PR comment as it finishes
+# (claude-docs/ci/pr-comments.md).
 # claude-docs/ci/reusable-checks.md, "Reusable checks" is the walkthrough.
 # Runs in Docker/Dockerfile.e2e's image, not the Alpine `testing` one:
 # Playwright's Chromium has no musl support.
@@ -50,11 +52,28 @@ on:
         required: false
         type: string
         default: e2e
+      sweep:
+        description: >-
+          Set true to make the gate's last job run only the accessibility sweep
+          (tests/e2e/axe.spec.ts) and the others share the rest of the gate. Only
+          pr-gate's gate call passes it; the stories and the build-only run have no sweep.
+        required: false
+        type: boolean
+        default: false
+      pr-number:
+        description: >-
+          Pull request number the shards write their sub-rows on. Empty for
+          e2e-cache.yml's build-only run, which has no pull request and writes none.
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
   # read: this job pulls images and pushes none.
   packages: read
+  # write: each shard comments its row. A caller grants it, or this workflow fails to start.
+  pull-requests: write
 
 jobs:
   # One job per shard of the suite: Playwright's `--shard i/n` runs the i-th
@@ -75,7 +94,7 @@ jobs:
       fail-fast: false
       matrix:
         # The build-only run builds once and runs no spec, so it takes one shard.
-        shard: ${{ fromJSON(inputs.build-only && '[1]' || inputs.suite == 'stories' && '[1,2]' || '[1,2,3]') }}
+        shard: ${{ fromJSON(inputs.build-only && '[1]' || inputs.suite == 'stories' && '[1,2]' || inputs.sweep && '[1,2,3,4]' || '[1,2,3]') }}
     container:
       image: ${{ inputs.image }}
       credentials:
@@ -125,6 +144,10 @@ jobs:
       CI: true
       # Where the blob reporter writes this shard's report.
       PLAYWRIGHT_BLOB_OUTPUT_DIR: /app/.reports/blob-report
+      # Where the json reporter and the story reporter write this shard's own
+      # report and checklist, which the summary step below reads.
+      PLAYWRIGHT_JSON_OUTPUT_NAME: /app/.reports/shard-results.json
+      STORIES_JSON: /app/.reports/shard-stories.json
       # tests/e2e/database.ts derives each worker's sorrel_e2e_<slot> URL from it.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # The webServer's production build needs a Better Auth secret, and a
@@ -168,30 +191,76 @@ jobs:
 
       # The webServer builds and serves; the browser is in the image. `--reporter`
       # replaces the config's list here on purpose: a shard writes the blob that
-      # playwright-coverage.yml turns into the json, html and story reports, which
-      # come from the config's reporters there. Under build-only every title matches `.`,
+      # playwright-coverage.yml turns into the html and story reports, which come
+      # from the config's reporters there, and a json report (and, for stories,
+      # the checklist) of its own for its row in the comment. The story reporter
+      # is named by path, since the config's list is replaced. Under build-only every title matches `.`,
       # so no spec runs, but Playwright starts the webServers, and so the
       # build, before it loads a spec.
       #
       # `suite: stories` runs the story suite instead. `continue-on-error`
       # there because red scaffolds land on purpose and a story must never
-      # fail the job; playwright-coverage.yml reads the real result from the
-      # blobs. It sits on the step because a job that calls a workflow cannot carry it.
+      # fail the job; the shard's row and playwright-coverage.yml read the
+      # real result from this step's outcome and the blobs. It sits on the step because a job that calls a workflow cannot carry it.
       - name: Run Playwright tests
         id: run
         continue-on-error: ${{ inputs.suite == 'stories' }}
         env:
           E2E_ARGS: ${{ inputs.build-only && '--grep-invert . --pass-with-no-tests' || '' }}
           SUITE: ${{ inputs.suite }}
-          SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
+          INDEX: ${{ matrix.shard }}
+          TOTAL: ${{ strategy.job-total }}
+          SWEEP: ${{ inputs.sweep }}
         run: |
           set -o pipefail
           if [ "$SUITE" = stories ]; then
-            npm run test:stories -- --shard "$SHARD" --reporter=list,blob 2>&1 | tee /app/output.log
+            npm run test:stories -- --shard "$INDEX/$TOTAL" --reporter=list,blob,json,./tests/support/story-playwright-reporter.ts 2>&1 | tee /app/output.log
+          elif [ "$SWEEP" = true ] && [ "$INDEX" = "$TOTAL" ]; then
+            # --shard cuts by test count in file order, so the sweep's tests would all land in one shard.
+            npm run e2e -- tests/e2e/axe.spec.ts --reporter=list,blob,json 2>&1 | tee /app/output.log
           else
-            # Unquoted on purpose: two flags, or nothing.
-            npm run e2e -- --shard "$SHARD" --reporter=list,blob $E2E_ARGS 2>&1 | tee /app/output.log
+            # The last job of a sweep run takes the sweep, so the others share the rest.
+            if [ "$SWEEP" = true ]; then TOTAL=$((TOTAL - 1)); SWEEP_OUT='--grep-invert axe\.spec\.ts'; fi
+            # Unquoted on purpose: flags, or nothing.
+            npm run e2e -- --shard "$INDEX/$TOTAL" --reporter=list,blob,json $E2E_ARGS $SWEEP_OUT 2>&1 | tee /app/output.log
           fi
+
+      # The shard's one line for the comment: its counts, duration and tests over
+      # the budget, from the report above. The flaky-test annotations are left to
+      # playwright-coverage.yml, which would otherwise print them twice. Not on
+      # the build-only run, which runs no spec.
+      - name: Summarize the shard
+        id: shard-summary
+        if: ${{ !cancelled() && !inputs.build-only }}
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_SHARD: true
+          PLAYWRIGHT_OUTCOME: ${{ steps.run.outcome }}
+          SUITE: ${{ inputs.suite }}
+        run: |
+          if [ "$SUITE" = stories ]; then
+            node .github/scripts/summarize-stories.mjs
+          else
+            node .github/scripts/summarize-playwright.mjs
+          fi
+
+      # The row's status is the run step's outcome, not the job's: the story
+      # run step has `continue-on-error`, which hides a failed story from the
+      # job. No log and no details, so the suite's block stays the end job's.
+      # `continue-on-error` because the row only informs: a comment that could
+      # not be written must not fail a gate shard, which would fail the gate.
+      - name: Comment the shard's row on PR
+        if: ${{ !cancelled() && !inputs.build-only && inputs.pr-number }}
+        continue-on-error: true
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Playwright
+          marker-slug: playwright
+          pr-number: ${{ inputs.pr-number }}
+          section: ${{ inputs.suite == 'stories' && 'stories' || 'gate' }}
+          shard: ${{ matrix.shard }}/${{ strategy.job-total }}
+          outcome: ${{ steps.run.outcome }}
+          summary: ${{ steps.shard-summary.outputs.summary }}
 
       # Only e2e-cache.yml's run on staging saves, and only after a build that
       # succeeded: no always(), since a failed build's cache is not one to

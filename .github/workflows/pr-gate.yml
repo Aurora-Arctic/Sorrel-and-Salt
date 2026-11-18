@@ -334,6 +334,8 @@ jobs:
       image: ${{ needs.build-e2e-image.outputs.image }}
       db-image: ${{ needs.build-db-image.outputs.image }}
       should-run: ${{ needs.changes.outputs.playwright == 'true' }}
+      sweep: true
+      pr-number: ${{ github.event.pull_request.number }}
 
   # The story suite (M9.1), on the same images as `playwright` and beside it,
   # so it adds nothing to the gate's time. Never a required check: its run step
@@ -351,6 +353,7 @@ jobs:
       db-image: ${{ needs.build-db-image.outputs.image }}
       suite: stories
       should-run: ${{ needs.changes.outputs.stories == 'true' }}
+      pr-number: ${{ github.event.pull_request.number }}
 
   # Where the Playwright shards of both suites join: playwright-coverage.yml
   # merges each suite's blob reports, writes the Playwright comment's Gate and

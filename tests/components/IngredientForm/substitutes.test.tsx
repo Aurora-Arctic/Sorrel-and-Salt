@@ -5,6 +5,7 @@ import { waitFor } from '../../support/ingredient-form';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { ENTRY_ID, WORKSPACE_ID } from '../../support/msw/ingredient-lookups';
 import {
+  FORMLESS_PLAINWORT,
   HERB_VARIANT_ID,
   OILWORT_OIL_ID,
   addOil,
@@ -68,6 +69,35 @@ describe('a variant’s substitutes', () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(sent(onSubmit)?.variants?.[0]?.substitutes).toEqual([{ name: 'Plainwort' }]);
+  });
+
+  // Old data, from before a link had to name a form: the chip stays to be
+  // read, and the save is refused beside it until it is replaced.
+  it('refuses a save holding a link that names no form, the error on that entry alone', async () => {
+    const onSubmit = renderVariants({
+      workspaceId: null,
+      values: twoForms({ substitutes: [{ value: 'Fixture moss' }, FORMLESS_PLAINWORT] }),
+    });
+    const oil = openVariant('Oil');
+    openSectionsIn(oil, 'Relations');
+    const remove = (name: string) => within(oil).getByRole('button', { name: `Remove ${name}` });
+    const described = (element: HTMLElement) =>
+      element.getAttribute('aria-describedby')?.split(' ') ?? [];
+
+    press('Save Ingredient');
+
+    const box = control(oil, 'Substitute Ingredient');
+    await waitFor(() => expect(box).toHaveAttribute('aria-invalid', 'true'));
+    const [errorId] = described(remove('Plainwort'));
+    expect(described(box)).toContain(errorId);
+    expect(described(remove('Fixture moss'))).not.toContain(errorId);
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    // Why: the same save, the formless link removed, goes.
+    fireEvent.click(remove('Plainwort'));
+    press('Save Ingredient');
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(sent(onSubmit)?.variants?.[0]?.substitutes).toEqual([{ name: 'Fixture moss' }]);
   });
 
   it('never offers the variant itself as its own substitute, its sibling forms still offered', async () => {

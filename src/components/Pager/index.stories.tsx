@@ -28,6 +28,11 @@ export const States: Story = {
             />
           </ListFrame>
         ),
+        'One Page': (
+          <ListFrame>
+            <Pager drawOnOnePage position={{ page: 1, pages: 1 }} />
+          </ListFrame>
+        ),
         'Last Page': (
           <ListFrame>
             <Pager previousHref="?before=cursor" />

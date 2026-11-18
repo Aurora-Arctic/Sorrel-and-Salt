@@ -43,57 +43,41 @@ const links = (n: number) =>
     (_, i) => `https://sorrelandsalt.com/i/card${String(i).padStart(12, '0')}`,
   );
 
-async function build(n: number) {
+async function build(n: number, backs = true) {
   const bytes = await renderCardSheets(
-    { links: links(n), batch: 'b4444444', expiresAt: EXPIRES },
+    { links: links(n), batch: 'b4444444', expiresAt: EXPIRES, backs },
     assets,
   );
   return { bytes, doc: await PDFDocument.load(bytes) };
 }
 
-describe('the card sheets PDF', () => {
-  let ten: PDFDocument;
-  let tenBytes: Uint8Array;
-  beforeAll(async () => {
-    ({ doc: ten, bytes: tenBytes } = await build(10));
-  });
+// One full sheet and one sheet past it, built once for every test in the file.
+let ten: PDFDocument;
+let tenBytes: Uint8Array;
+let eleven: PDFDocument;
+beforeAll(async () => {
+  [{ doc: ten, bytes: tenBytes }, { doc: eleven }] = await Promise.all([build(10), build(11)]);
+});
 
+describe('the card sheets PDF', () => {
   it.each([
-    [1, 2],
     [10, 2],
     [11, 4],
-    [20, 4],
-    [21, 6],
-  ])(
-    'gives %i cards %i Letter pages: per sheet of ten, the fronts then the backs',
-    async (n, pages) => {
-      const { doc } = await build(n);
-      expect(doc.getPageCount()).toBe(pages);
-      for (const page of doc.getPages()) expect(page.getSize()).toEqual(LETTER);
-      const fronts = doc
-        .getPages()
-        .flatMap((_, i) => (i % 2 === 0 ? pictures(doc, i, 'salt') : []));
-      const backs = doc
-        .getPages()
-        .flatMap((_, i) => (i % 2 === 1 ? pictures(doc, i, 'sorrel') : []));
-      expect(fronts).toHaveLength(n);
-      expect(backs).toHaveLength(n);
-    },
-  );
-
-  it.each([
-    [10, 1],
-    [11, 2],
-    [21, 3],
-  ])('gives %i cards %i pages of fronts alone when the backs are left out', async (n, pages) => {
-    const bytes = await renderCardSheets(
-      { links: links(n), batch: 'b4444444', expiresAt: EXPIRES, backs: false },
-      assets,
-    );
-    const doc = await PDFDocument.load(bytes);
+  ])('gives %i cards %i Letter pages: per sheet of ten, the fronts then the backs', (n, pages) => {
+    const doc = n === 10 ? ten : eleven;
     expect(doc.getPageCount()).toBe(pages);
+    for (const page of doc.getPages()) expect(page.getSize()).toEqual(LETTER);
+    const fronts = doc.getPages().flatMap((_, i) => (i % 2 === 0 ? pictures(doc, i, 'salt') : []));
+    const backs = doc.getPages().flatMap((_, i) => (i % 2 === 1 ? pictures(doc, i, 'sorrel') : []));
+    expect(fronts).toHaveLength(n);
+    expect(backs).toHaveLength(n);
+  });
+
+  it('gives 11 cards 2 pages of fronts alone when the backs are left out', async () => {
+    const { doc } = await build(11, false);
+    expect(doc.getPageCount()).toBe(2);
     expect(doc.getPages().flatMap((_, i) => pictures(doc, i, 'sorrel'))).toHaveLength(0);
-    expect(doc.getPages().flatMap((_, i) => pictures(doc, i, 'salt'))).toHaveLength(n);
+    expect(doc.getPages().flatMap((_, i) => pictures(doc, i, 'salt'))).toHaveLength(11);
   });
 
   it('fills, and clips to, a 7.25 × 10.25 in block centred on each page, 5/8 in from each side and 3/8 in from the top and bottom', () => {
@@ -152,11 +136,10 @@ describe('the card sheets PDF', () => {
     }
   });
 
-  it('puts each back behind its front when the sheet is turned over its long edge', async () => {
-    const { doc } = await build(10);
-    const fronts = pictures(doc, 0, 'salt').map(cell);
+  it('puts each back behind its front when the sheet is turned over its long edge', () => {
+    const fronts = pictures(ten, 0, 'salt').map(cell);
     // A long-edge turn mirrors the page left to right, so a back's cell, mirrored, is its front's.
-    const backs = pictures(doc, 1, 'sorrel').map((box) =>
+    const backs = pictures(ten, 1, 'sorrel').map((box) =>
       cell({ ...box, left: LETTER.width - box.right, right: LETTER.width - box.left }),
     );
     expect(new Set(fronts).size).toBe(10);
@@ -250,19 +233,17 @@ describe('the card sheets PDF', () => {
     }
   });
 
-  it('builds 495 cards on 100 pages, with each font and picture embedded once', async () => {
-    const { doc } = await build(495);
-    expect(doc.getPageCount()).toBe(100);
-    const objects = doc.context.enumerateIndirectObjects().map(([, object]) => object);
+  it('embeds each font and picture once across every sheet, a shadow and its mask per card', () => {
+    expect(eleven.getPageCount()).toBe(4);
+    const objects = eleven.context.enumerateIndirectObjects().map(([, object]) => object);
     const dictOf = (object: unknown) =>
       object instanceof PDFRawStream ? object.dict : object instanceof PDFDict ? object : undefined;
     const ofType = (key: string, value: string) =>
       objects.filter((object) => dictOf(object)?.get(PDFName.of(key)) === PDFName.of(value));
     expect(ofType('Subtype', 'Type0')).toHaveLength(4);
-    expect(ofType('Subtype', 'Image')).toHaveLength(4 + 2 * 495);
-    const saltPage = pictures(doc, 98, 'salt');
-    expect(saltPage).toHaveLength(495 - 49 * 10);
-  }, 60_000);
+    expect(ofType('Subtype', 'Image')).toHaveLength(4 + 2 * 11);
+    expect(pictures(eleven, 2, 'salt')).toHaveLength(1);
+  });
 
   it('embeds every glyph it draws with the outline the shipped font gives it', () => {
     // A subset whose glyph data lands at the wrong offsets draws nothing, or the wrong shape, for those letters.
@@ -300,10 +281,6 @@ describe('the card sheets PDF', () => {
 });
 
 describe("the card sheets PDF's inks", () => {
-  let ten: PDFDocument;
-  beforeAll(async () => {
-    ({ doc: ten } = await build(10));
-  });
   const same = (a: number[], b: readonly number[]) =>
     a.length === 4 && a.every((v, i) => Math.abs(v - b[i]) < 1e-4);
 

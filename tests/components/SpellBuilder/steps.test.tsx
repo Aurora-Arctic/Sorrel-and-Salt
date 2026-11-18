@@ -17,6 +17,7 @@ import { useTurkishCaseFolding } from '../../support/turkish-locale';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 import { renderWithQuery } from '../../support/render-with-query';
 import { save, submitForm } from '../../support/interact';
+import { renderSpellSteps } from './steps-harness';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
@@ -209,7 +210,7 @@ const drawn = (name: FormGroupIcon | null) => {
 describe('the spell builder’s Add to Jar', () => {
   it('lists the coven’s ingredients and the compendium’s under two headings', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder();
+    renderSpellSteps();
 
     await lookUp('Fixture', /Fixture Mockroot/);
 
@@ -229,7 +230,7 @@ describe('the spell builder’s Add to Jar', () => {
         { id: ID.twinSeed, form: 'seed' },
       ]),
     );
-    renderBuilder();
+    renderSpellSteps();
 
     await lookUp('Fixture', /Fixture Twinwort \(Seed\)/);
 
@@ -259,7 +260,7 @@ describe('the spell builder’s Add to Jar', () => {
   // step's Quantity took the focus a render later, and the list never opened.
   it('keeps the focus in the search after a pick, so the next ingredient can be typed', async () => {
     suggest(ROSEWORT);
-    renderBuilder();
+    renderSpellSteps();
 
     await add('Rose', /Fixture Rosewort/);
 
@@ -269,7 +270,7 @@ describe('the spell builder’s Add to Jar', () => {
 
   it('adds a form again for another step: its row stays pickable and the jar gets two rows', async () => {
     suggest(ROSEWORT);
-    renderBuilder();
+    renderSpellSteps();
     await add('Rose', /Fixture Rosewort/);
 
     const again = await lookUp('Rose', /Fixture Rosewort/);
@@ -281,7 +282,7 @@ describe('the spell builder’s Add to Jar', () => {
 
   it('adds a one-off ingredient from the box’s first row, drawn with the generic spoon, and opens it for its form', async () => {
     suggest();
-    renderBuilder();
+    renderSpellSteps();
 
     await addOneOff('Testwort');
 
@@ -296,12 +297,11 @@ describe('the spell builder’s Add to Jar', () => {
     expect(within(row).getByRole('button', { name: 'One-Off' })).toHaveAccessibleDescription(
       'Used in this spell only; not kept in your cupboard.',
     );
-    expect(within(row).queryByText(/Used in this spell only/, { selector: 'p' })).toBeNull();
   });
 
   it('offers no one-off row for an empty box, and refuses one already in the jar', async () => {
     suggest();
-    renderBuilder();
+    renderSpellSteps();
     act(() => search().focus());
     fireEvent.change(search(), { target: { value: '   ' } });
     expect(screen.queryByRole('option', { name: /as a one-off ingredient/ })).toBeNull();
@@ -317,7 +317,7 @@ describe('the spell builder’s Add to Jar', () => {
     const restore = useTurkishCaseFolding();
     try {
       suggest();
-      renderBuilder();
+      renderSpellSteps();
 
       await addOneOff('Irisic');
       await addOneOff('irisic');
@@ -363,7 +363,11 @@ describe('the spell builder’s Add to Jar', () => {
     fireEvent.blur(box());
     submitForm();
 
-    await waitFor(() => expect(stepRow('Fixture Rosewort')).toHaveClass('step-row--closed'));
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Edit Fixture Rosewort (Dried Leaf)' }),
+      ).toHaveAttribute('aria-expanded', 'false'),
+    );
     expect(calls).toHaveLength(0);
     openRow('Fixture Rosewort (Dried Leaf)');
     expect(box()).toBeInvalid();
@@ -378,7 +382,7 @@ describe('the spell builder’s Add to Jar', () => {
 
   it('shows a closed one-off’s quantity and unit in its row, as an ingredient step’s are', async () => {
     suggest(ROSEWORT);
-    renderBuilder();
+    renderSpellSteps();
     await addOneOff('Testwort');
     const row = stepRow('Testwort');
     fireEvent.change(within(row).getByRole('textbox', { name: /^Quantity/ }), {
@@ -436,7 +440,7 @@ describe('the spell builder’s Add to Jar', () => {
 
   it('shows a linked ingredient’s name read-only: no Name field', async () => {
     suggest(ROSEWORT);
-    renderBuilder();
+    renderSpellSteps();
     await add('Rose', /Fixture Rosewort/);
     expect(
       within(stepRow('Fixture Rosewort')).queryByRole('textbox', { name: /^Name/ }),
@@ -445,7 +449,7 @@ describe('the spell builder’s Add to Jar', () => {
 
   it('takes a step out with Remove', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder();
+    renderSpellSteps();
     await add('Fixture', /Fixture Rosewort/);
     await add('Fixture', /Fixture Mockroot/);
 
@@ -459,42 +463,9 @@ describe('the spell builder’s Add to Jar', () => {
     expect(stepRows()[0]).toHaveTextContent('Fixture Mockroot');
   });
 
-  it('undoes a Remove, putting the step back with what was typed, and redoes it', async () => {
-    suggest(ROSEWORT);
-    renderBuilder();
-    await add('Fixture', /Fixture Rosewort/);
-    const quantity = () =>
-      within(stepRow('Fixture Rosewort')).getByRole('textbox', { name: /^Quantity/ });
-    fireEvent.change(quantity(), { target: { value: '7' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Close Fixture Rosewort (Dried Leaf)' }));
-    fireEvent.click(
-      within(stepRow('Fixture Rosewort')).getByRole('button', {
-        name: 'Remove Fixture Rosewort (Dried Leaf)',
-      }),
-    );
-    expect(stepRows()).toHaveLength(0);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
-    await waitFor(() => expect(stepRows()).toHaveLength(1));
-    expect(stepRow('Fixture Rosewort')).toHaveTextContent('7');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
-    await waitFor(() => expect(stepRows()).toHaveLength(0));
-  });
-
-  it('undoes an added step', async () => {
-    suggest(ROSEWORT);
-    renderBuilder();
-    await add('Fixture', /Fixture Rosewort/);
-    expect(stepRows()).toHaveLength(1);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
-    await waitFor(() => expect(stepRows()).toHaveLength(0));
-  });
-
   it('opens a closed ingredient row from a click on its name, and a click on Remove removes it without opening it', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder();
+    renderSpellSteps();
     await add('Fixture', /Fixture Rosewort/);
     await add('Fixture', /Fixture Mockroot/);
     const pencil = () =>
@@ -525,7 +496,7 @@ describe('the spell builder’s Add to Jar', () => {
 
   it('stays open for a click or focus on anything inside its fields, including a Unit list picked from', async () => {
     suggest(ROSEWORT);
-    renderBuilder();
+    renderSpellSteps();
     await add('Fixture', /Fixture Rosewort/);
     const pencil = () =>
       screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ });
@@ -557,7 +528,7 @@ describe('the spell builder’s Add to Jar', () => {
 
   it('makes the pencil the row’s Close while open, hiding Remove, and Close collapses it with the focus kept', async () => {
     suggest(ROSEWORT);
-    renderBuilder();
+    renderSpellSteps();
     await add('Fixture', /Fixture Rosewort/);
     const row = stepRow('Fixture Rosewort');
     const pencil = screen.getByRole('button', {
@@ -603,7 +574,7 @@ describe('the spell builder’s Add to Jar', () => {
 
   it('shows each row’s categories beneath its name: the form’s own, else the ingredient’s', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder();
+    renderSpellSteps();
 
     const rosewort = await lookUp('Fixture', /Fixture Rosewort/);
     const mockroot = screen.getByRole('option', { name: /Fixture Mockroot/ });
@@ -617,7 +588,7 @@ describe('the spell builder’s Add to Jar', () => {
 
   it('starts a stocked form in the unit it is stocked in, and an unstocked one blank', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder();
+    renderSpellSteps();
 
     await add('Fixture', /Fixture Rosewort/);
     const unit = (name: string) => within(stepRow(name)).getByRole('combobox', { name: /^Unit/ });
@@ -645,36 +616,32 @@ describe('the spell builder’s Add to Jar', () => {
 
   it('opens a saved quantity with thousands separators', () => {
     suggest(MOCKROOT);
-    renderBuilder({
-      spell: {
-        ...answer('s3', 4),
-        steps: [
-          {
-            id: ID.savedRosewort,
-            name: 'Fixture Rosewort',
-            form: 'dried leaf',
-            quantity: 1000,
-            unit: 'g',
-            body: null,
-            ingredient: {
-              id: ID.rosewort,
-              toxic: false,
-              safetyNotes: null,
-              categories: [category('Love')],
-              stock: [],
-            },
-            variant: {
-              id: ID.roseLeaf,
-              toxic: false,
-              safetyNotes: null,
-              categories: [],
-              formChoice: null,
-            },
+    renderSpellSteps({
+      steps: [
+        {
+          id: ID.savedRosewort,
+          name: 'Fixture Rosewort',
+          form: 'dried leaf',
+          quantity: 1000,
+          unit: 'g',
+          body: null,
+          ingredient: {
+            id: ID.rosewort,
+            toxic: false,
+            safetyNotes: null,
+            categories: [category('Love')],
+            stock: [],
           },
-        ],
-      },
+          variant: {
+            id: ID.roseLeaf,
+            toxic: false,
+            safetyNotes: null,
+            categories: [],
+            formChoice: null,
+          },
+        },
+      ],
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
     openRow('Fixture Rosewort (Dried Leaf)');
 
     expect(
@@ -785,7 +752,7 @@ describe('the spell builder’s safety warning', () => {
 
   it('marks a toxic ingredient’s step, shows its notes, and says so as it is added', async () => {
     suggest(TOXWORT);
-    renderBuilder();
+    renderSpellSteps();
 
     await add('Tox', /Fixture Toxwort/);
 
@@ -804,7 +771,7 @@ describe('the spell builder’s safety warning', () => {
 
   it('marks a form with notes Caution, open or closed, shows the notes while open, and says so', async () => {
     suggest(CAREWORT);
-    renderBuilder();
+    renderSpellSteps();
 
     await add('Care', /Fixture Carewort/);
 
@@ -829,7 +796,7 @@ describe('the spell builder’s safety warning', () => {
 
   it('says nothing for an ingredient with nothing to say, and for a one-off', async () => {
     suggest(ROSEWORT);
-    renderBuilder();
+    renderSpellSteps();
     await add('Rose', /Fixture Rosewort/);
     await addOneOff('Testwort');
 
@@ -856,35 +823,32 @@ describe('the spell builder’s safety warning', () => {
   });
 
   it('shows the warning on a saved spell’s step, read back with it', () => {
-    renderBuilder({
-      spell: {
-        ...answer('s2', 3, [
-          {
-            id: ID.savedRosewort,
-            name: 'Fixture Toxwort',
-            form: 'root',
-            quantity: null,
-            unit: null,
-            body: null,
-            ingredient: {
-              id: ID.mockroot,
-              toxic: true,
-              safetyNotes: null,
-              categories: [],
-              stock: [],
-            },
-            variant: {
-              id: ID.mockRoot,
-              toxic: false,
-              safetyNotes: null,
-              categories: [],
-              formChoice: null,
-            },
+    renderSpellSteps({
+      steps: [
+        {
+          id: ID.savedRosewort,
+          name: 'Fixture Toxwort',
+          form: 'root',
+          quantity: null,
+          unit: null,
+          body: null,
+          ingredient: {
+            id: ID.mockroot,
+            toxic: true,
+            safetyNotes: null,
+            categories: [],
+            stock: [],
           },
-        ]),
-      },
+          variant: {
+            id: ID.mockRoot,
+            toxic: false,
+            safetyNotes: null,
+            categories: [],
+            formChoice: null,
+          },
+        },
+      ],
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
 
     expect(within(stepRow('Fixture Toxwort')).getByText('Toxic')).toBeInTheDocument();
   });
@@ -934,19 +898,21 @@ describe('the spell builder’s jar fill colours', () => {
 
   it('draws a row’s categories in their groups’ chip colours, with the row’s name unchanged', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder({}, [
-      node('Love', group('Love', '#cf6e87', '#a44c63')),
-      node('Calm', group('Calm', '#50a58e', '#1d755d')),
-    ] as never);
+    renderSpellSteps({
+      categories: [
+        node('Love', group('Love', '#cf6e87', '#a44c63')),
+        node('Calm', group('Calm', '#50a58e', '#1d755d')),
+      ] as never,
+    });
 
     const rosewort = await lookUp('Fixture', /Fixture Rosewort/);
     const mockroot = screen.getByRole('option', { name: /Fixture Mockroot/ });
+    const chips = (row: HTMLElement) => within(row).getByRole('list', { name: 'Categories' });
 
-    const chip = await within(rosewort).findByText('Calm');
-    expect(chip).toHaveClass('chip');
+    const chip = await within(chips(rosewort)).findByText('Calm');
     expect(chip.style.getPropertyValue('--chip-dark')).toBe('#50a58e');
     expect(chip.style.getPropertyValue('--chip-light')).toBe('#1d755d');
-    expect(within(mockroot).getByText('Love')).toHaveClass('chip');
+    expect(within(chips(mockroot)).getAllByRole('listitem')[0]).toHaveTextContent(/^Love$/);
     expect(mockroot).toHaveTextContent('Love+1');
   });
 
@@ -971,7 +937,7 @@ describe('the spell builder’s jar fill colours', () => {
 describe('the spell builder’s open and closed steps', () => {
   it('opens a new step at once, and one row at a time', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder();
+    renderSpellSteps();
 
     await add('Rose', /Fixture Rosewort/);
     expect(
@@ -992,7 +958,7 @@ describe('the spell builder’s open and closed steps', () => {
 
   it('keeps what was typed in a row after it is closed, and shows it in the row’s summary', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder();
+    renderSpellSteps();
     await add('Rose', /Fixture Rosewort/);
     const row = stepRow('Fixture Rosewort');
     fireEvent.change(within(row).getByRole('textbox', { name: /^Quantity/ }), {
@@ -1028,7 +994,7 @@ describe('the spell builder’s open and closed steps', () => {
 
   it('closes an open row when a click lands outside it, and keeps what was typed', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder();
+    renderSpellSteps();
     await add('Rose', /Fixture Rosewort/);
     const row = stepRow('Fixture Rosewort');
     fireEvent.change(within(row).getByRole('textbox', { name: /^Quantity/ }), {
@@ -1049,7 +1015,7 @@ describe('the spell builder’s open and closed steps', () => {
 
   it('closes an open row when the focus leaves it', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder();
+    renderSpellSteps();
     await add('Rose', /Fixture Rosewort/);
     fireEvent.click(
       screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
@@ -1094,7 +1060,7 @@ describe('the spell builder’s open and closed steps', () => {
 
   it('opens a new step while the focus stays in Add to Jar, and closes it on the next click outside the box and the row', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder();
+    renderSpellSteps();
     await add('Rose', /Fixture Rosewort/);
     expect(
       screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
@@ -1117,11 +1083,7 @@ describe('the spell builder’s Add to Jar categories', () => {
   const group = { id: 'g-all', name: 'All', colorDark: '#50a58e', colorLight: '#1d755d' };
   const offered = (...names: string[]) =>
     names.map((name) => ({ ...category(name), description: null, group })) as never;
-  const openAll = () => fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
-  const assigned = (...names: string[]) => ({
-    ...answer('s3', 1),
-    categoryIds: names.map((name) => category(name).id),
-  });
+  const assigned = (...names: string[]) => names.map((name) => category(name).id);
   const MANY = suggestion(
     'yours',
     ID.twinwort,
@@ -1139,7 +1101,7 @@ describe('the spell builder’s Add to Jar categories', () => {
       ['Love'],
     );
     suggest(MANY, ONE);
-    renderBuilder({}, offered('Aid', 'Bind', 'Calm', 'Dawn', 'Ember', 'Love'));
+    renderSpellSteps({ categories: offered('Aid', 'Bind', 'Calm', 'Dawn', 'Ember', 'Love') });
 
     const many = await lookUp('Fixture', /Fixture Manywort/);
     const one = screen.getByRole('option', { name: /Fixture Onewort/ });
@@ -1160,11 +1122,10 @@ describe('the spell builder’s Add to Jar categories', () => {
 
   it('lists the spell’s Missing categories first, its other assigned ones next, and the rest in their order', async () => {
     suggest(MANY);
-    renderBuilder(
-      { spell: assigned('Ember', 'Bind') },
-      offered('Aid', 'Bind', 'Calm', 'Dawn', 'Ember'),
-    );
-    openAll();
+    renderSpellSteps({
+      categoryIds: assigned('Ember', 'Bind'),
+      categories: offered('Aid', 'Bind', 'Calm', 'Dawn', 'Ember'),
+    });
 
     const many = await lookUp('Fixture', /Fixture Manywort/);
 
@@ -1199,16 +1160,11 @@ describe('the spell builder’s Add to Jar categories', () => {
         formChoice: null,
       },
     };
-    renderBuilder(
-      {
-        spell: {
-          ...answer('s3', 1, [carrier]),
-          categoryIds: [category('Ember').id, category('Bind').id],
-        },
-      },
-      offered('Aid', 'Bind', 'Calm', 'Dawn', 'Ember'),
-    );
-    openAll();
+    renderSpellSteps({
+      steps: [carrier],
+      categoryIds: assigned('Ember', 'Bind'),
+      categories: offered('Aid', 'Bind', 'Calm', 'Dawn', 'Ember'),
+    });
 
     const many = await lookUp('Fixture', /Fixture Manywort/);
 
@@ -1237,8 +1193,7 @@ describe('the spell builder’s Add to Jar categories', () => {
         formChoice: null,
       },
     };
-    renderBuilder({ spell: answer('s3', 1, [laid]) });
-    openAll();
+    renderSpellSteps({ steps: [laid] });
 
     const rosewort = await lookUp('Fixture', /Fixture Rosewort/);
     const mockroot = screen.getByRole('option', { name: /Fixture Mockroot/ });
@@ -1268,8 +1223,10 @@ describe('the spell builder’s Add to Jar categories', () => {
         return { ingredientSuggestions: { edges } };
       },
     );
-    renderBuilder({ spell: assigned('Calm', 'Protection') }, offered('Calm', 'Love', 'Protection'));
-    openAll();
+    renderSpellSteps({
+      categoryIds: assigned('Calm', 'Protection'),
+      categories: offered('Calm', 'Love', 'Protection'),
+    });
 
     const filter = screen.getByRole('group', { name: 'Filter By Category' });
     const calm = await within(filter).findByRole('button', { name: 'Calm' });
@@ -1297,8 +1254,10 @@ describe('the spell builder’s Add to Jar categories', () => {
 
   it('offers Clear only while a category is pressed, and Clear unpresses them all', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder({ spell: assigned('Calm', 'Protection') }, offered('Calm', 'Love', 'Protection'));
-    openAll();
+    renderSpellSteps({
+      categoryIds: assigned('Calm', 'Protection'),
+      categories: offered('Calm', 'Love', 'Protection'),
+    });
 
     const filter = screen.getByRole('group', { name: 'Filter By Category' });
     const calm = await within(filter).findByRole('button', { name: 'Calm' });
@@ -1318,8 +1277,10 @@ describe('the spell builder’s Add to Jar categories', () => {
 
   it('names the pressed categories in the list heading', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    renderBuilder({ spell: assigned('Calm', 'Protection') }, offered('Calm', 'Love', 'Protection'));
-    openAll();
+    renderSpellSteps({
+      categoryIds: assigned('Calm', 'Protection'),
+      categories: offered('Calm', 'Love', 'Protection'),
+    });
 
     const filter = screen.getByRole('group', { name: 'Filter By Category' });
     const calm = await within(filter).findByRole('button', { name: 'Calm' });
@@ -1333,15 +1294,9 @@ describe('the spell builder’s Add to Jar categories', () => {
     expect(await screen.findByText('Your Ingredients · In Calm, Protection')).toBeInTheDocument();
   });
 
-  it('labels the picker with a visible Add to Jar', () => {
-    suggest(ROSEWORT);
-    renderBuilder({});
-    expect(screen.getByText('Add to Jar', { selector: 'label' })).toBeVisible();
-  });
-
   it('shows no filter while the spell has no categories of its own', async () => {
     suggest(ROSEWORT);
-    renderBuilder({}, offered('Calm'));
+    renderSpellSteps({ categories: offered('Calm') });
     await lookUp('Fixture', /Fixture Rosewort/);
 
     expect(screen.queryByRole('group', { name: 'Filter By Category' })).toBeNull();

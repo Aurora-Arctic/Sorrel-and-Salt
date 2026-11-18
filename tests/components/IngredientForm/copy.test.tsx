@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { waitFor } from '../../support/ingredient-form';
 import { press } from '../../support/interact';
 import {
+  CATEGORY_A,
+  CATEGORY_B,
   COPIED,
   OILWORT_ID,
   OILWORT_OIL_ID,
@@ -66,6 +68,45 @@ describe('copying from the ingredient', () => {
     expect(control(oil, 'Description')).toHaveValue('A fixture herb.');
     expect(control(oil, 'Safety Notes')).toHaveValue('Dilute before use.\n\nKeep from children.');
     expect(copyOf(oil, 'Safety Notes')).toHaveFocus();
+  });
+
+  it('adds the ingredient’s entries the variant lacks after its own, removing none, and sends them', async () => {
+    const onSubmit = renderVariants({ workspaceId: null, values: filled() });
+    const oil = openWhole('Oil');
+
+    for (const field of [
+      'Elements',
+      'Celestial Bodies',
+      'Zodiac Signs',
+      'Colours',
+      'Categories',
+      'References',
+    ]) {
+      const button = copyOf(oil, field);
+      act(() => button.focus());
+      fireEvent.click(button);
+      expect(button).toHaveFocus();
+    }
+    fireEvent.click(copyOf(oil, 'Celestial Bodies'));
+    expect(
+      within(oil).getByRole('status', { name: 'Celestial Bodies changes' }),
+    ).not.toBeEmptyDOMElement();
+
+    saveIngredient();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(sent(onSubmit)?.variants?.[0]).toEqual(
+      expect.objectContaining({
+        elements: ['fire', 'water'],
+        celestialBodies: ['venus', 'Mercury'],
+        zodiacSigns: ['Gemini'],
+        colors: ['Fixture Red', 'Fixture Green'],
+        categoryIds: [CATEGORY_B, CATEGORY_A],
+        references: [
+          { referenceId: OTHER_REFERENCE_ID, locator: '' },
+          { referenceId: REFERENCE_ID, locator: 'p. 112' },
+        ],
+      }),
+    );
   });
 
   it('links each substitute’s same form, skips one in no such form and says which, and keeps a name as a name', async () => {

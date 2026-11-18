@@ -65,6 +65,25 @@ describe('Pager', () => {
 
     expect(screen.queryByRole('navigation', { name: 'Pages' })).not.toBeInTheDocument();
   });
+
+  it('draws a list of one page with both ends disabled when told to draw it on one page', () => {
+    render(paged(<Pager drawOnOnePage position={{ page: 1, pages: 1 }} />));
+
+    for (const name of ['Prev', 'Next'] as const) {
+      expect(end(name)).toHaveAttribute('aria-disabled', 'true');
+      expect(end(name)).not.toHaveAttribute('href');
+    }
+    expect(within(pages()).getAllByRole('link')).toEqual([end('Prev'), end('Next')]);
+    const [, middle] = within(pages()).getAllByRole('listitem');
+    expect(middle).toHaveTextContent(/1\D+1/);
+  });
+
+  it('still links both ends when told to draw on one page and both have a page', () => {
+    render(paged(<Pager drawOnOnePage previousHref="/list?before=b" nextHref="/list?after=a" />));
+
+    expect(end('Prev')).toHaveAttribute('href', '/list?before=b');
+    expect(end('Next')).toHaveAttribute('href', '/list?after=a');
+  });
 });
 
 describe('Pager, once an end is followed', () => {

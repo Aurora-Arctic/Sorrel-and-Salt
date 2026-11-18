@@ -1,8 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import type { Metadata } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { MAX_PAGE_SIZE, decodeCursor, encodeCursor } from '@/lib/cursor';
 import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
+import type { Cursor, PageRequest } from '@/lib/types';
 import { hrefs } from '../../../support/links';
 import { getSession, sessionIsVerified } from '../../../support/request-session';
 
@@ -37,12 +39,14 @@ const readHelpArticleIndex = vi.fn();
 const readHelpGlossary = vi.fn();
 const readHelpArticle = vi.fn();
 const searchHelp = vi.fn();
+const countHelpSearch = vi.fn();
 vi.mock('@/modules/help', () => ({
   readHelpFaq,
   readHelpArticleIndex,
   readHelpGlossary,
   readHelpArticle,
   searchHelp,
+  countHelpSearch,
 }));
 
 type Kind = 'faq' | 'article' | 'guide' | 'term';
@@ -433,6 +437,16 @@ describe('/help/[slug]/[child]', () => {
 
 describe('/help/search', () => {
   const load = async () => (await import('@/app/(public)/help/search/page')) as unknown as Mod;
+  // A cursor the codec reads, as every entry a finder answers carries one.
+  const searchCursor = (i: number): Cursor => ({
+    key: [String(-i)],
+    id: row(`testwort-cursor-${i}`).id,
+  });
+
+  beforeEach(() => {
+    // One page: the cases that do not page read a count that agrees with any short answer.
+    countHelpSearch.mockResolvedValue({ totalCount: 4, countBefore: 0 });
+  });
 
   it('searches as a signed-out reader and links each result to its address, a term to its glossary anchor', async () => {
     searchHelp.mockResolvedValue(
@@ -441,7 +455,7 @@ describe('/help/search', () => {
         row('stock', { kind: 'term' }),
         row('where-is-my-stock', { kind: 'faq' }),
         row('testwort-ingredients'),
-      ].map((node, i) => ({ node, cursor: `c${i}`, score: 1 - i / 10 })),
+      ].map((node, i) => ({ node, cursor: searchCursor(i), score: 1 - i / 10 })),
     );
     const { default: Page } = await load();
 
@@ -466,7 +480,7 @@ describe('/help/search', () => {
     searchHelp.mockResolvedValue(
       [row('testwort-vocabularies', { audience: 'staff' })].map((node) => ({
         node,
-        cursor: 'c0',
+        cursor: searchCursor(0),
         score: 1,
       })),
     );
@@ -513,5 +527,155 @@ describe('/help/search', () => {
 
     expect(meta.title).toBeTruthy();
     expect(meta.robots).toMatchObject({ index: false });
+  });
+
+  describe('counted pages, each read by its cursor', () => {
+    const QUERY = 'tallowmere';
+    const TOTAL = 201;
+    const cursorAt = (i: number): Cursor => ({
+      key: [String(-3 + i / 1000)],
+      id: `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+    });
+    const indexOf = (cursor: Cursor) => Number(cursor.id.slice(-12));
+    const matchAt = (i: number) => ({
+      node: row(`testwort-tallowmere-${i}`),
+      cursor: cursorAt(i),
+      score: 3 - i / 1000,
+    });
+    // TOTAL matches, numbered from 0 in rank order: each read answers the rows asked for from its cursor on, and
+    // the count says how many come before the page's first row.
+    const totalMatches = () => {
+      searchHelp.mockImplementation(async (_session, _query, request: PageRequest) => {
+        const from = request.after ? indexOf(request.after) + 1 : 0;
+        const length = Math.max(0, Math.min(request.limit, TOTAL - from));
+        return Array.from({ length }, (_, i) => matchAt(from + i));
+      });
+      countHelpSearch.mockImplementation(async (_session, _query, start?: Cursor) => ({
+        totalCount: TOTAL,
+        countBefore: start ? indexOf(start) : null,
+      }));
+    };
+    const at = (q: string, cursor: { after?: string; before?: string }) => ({
+      searchParams: Promise.resolve({ q, ...cursor }),
+    });
+    const resultIndexes = () =>
+      linkHrefs()
+        .filter((href) => href?.startsWith('/help/testwort-tallowmere-'))
+        .map((href) => Number(href!.slice('/help/testwort-tallowmere-'.length)));
+    const pager = () => screen.getByRole('navigation', { name: 'Pages' });
+    const endHref = (name: 'Prev' | 'Next') =>
+      within(pager()).getByRole('link', { name }).getAttribute('href');
+    // The pager's middle item, between its two ends, holds the page and the number of pages.
+    const position = () => within(pager()).getAllByRole('listitem')[1];
+    const sizeAsked = () =>
+      (searchHelp.mock.calls[0] as [unknown, unknown, PageRequest])[2].limit - 1;
+    const statesTotal = (total: number) =>
+      screen
+        .getAllByRole('status')
+        .some((status) => new RegExp(`(^|\\D)${total}(\\D|$)`).test(status.textContent ?? ''));
+
+    it('reads the first page through the helper, counted, and links the next at the same words', async () => {
+      totalMatches();
+      const { default: Page } = await load();
+
+      render((await Page(search(QUERY))) as React.ReactElement);
+
+      // The helper sizes the read: one page and the row that says another follows, never the page's own bound.
+      const size = sizeAsked();
+      expect(size + 1).toBeLessThanOrEqual(MAX_PAGE_SIZE + 1);
+      const drawn = resultIndexes();
+      expect(drawn).toEqual(Array.from({ length: size }, (_, i) => i));
+      expect(countHelpSearch).toHaveBeenCalledWith(null, QUERY, cursorAt(0));
+      expect(statesTotal(TOTAL)).toBe(true);
+      expect(statesTotal(size)).toBe(false);
+      expect(position()).toHaveTextContent(new RegExp(`^\\D*1\\D+${Math.ceil(TOTAL / size)}\\D*$`));
+      expect(endHref('Prev')).toBeNull();
+
+      const next = new URL(endHref('Next')!, 'http://x');
+      expect(next.pathname).toBe('/help/search');
+      expect(next.searchParams.get('q')).toBe(QUERY);
+      expect(decodeCursor(next.searchParams.get('after')!)).toEqual(cursorAt(size - 1));
+    });
+
+    it('reads the page its address names, says where it stands, and links the one before at the same words', async () => {
+      totalMatches();
+      const { default: Page } = await load();
+
+      render((await Page(at(QUERY, { after: encodeCursor(cursorAt(30)) }))) as React.ReactElement);
+
+      expect(searchHelp).toHaveBeenCalledWith(
+        null,
+        QUERY,
+        expect.objectContaining({ after: cursorAt(30) }),
+      );
+      const size = sizeAsked();
+      expect(resultIndexes()[0]).toBe(31);
+      expect(countHelpSearch).toHaveBeenCalledWith(null, QUERY, cursorAt(31));
+      expect(statesTotal(TOTAL)).toBe(true);
+      expect(position()).toHaveTextContent(
+        new RegExp(`^\\D*${Math.floor(31 / size) + 1}\\D+${Math.ceil(TOTAL / size)}\\D*$`),
+      );
+
+      const previous = new URL(endHref('Prev')!, 'http://x');
+      expect(previous.pathname).toBe('/help/search');
+      expect(previous.searchParams.get('q')).toBe(QUERY);
+      expect(decodeCursor(previous.searchParams.get('before')!)).toEqual(cursorAt(31));
+    });
+
+    it('states the total on the last page, where fewer rows than a page are drawn', async () => {
+      totalMatches();
+      const { default: Page } = await load();
+
+      render(
+        (await Page(at(QUERY, { after: encodeCursor(cursorAt(TOTAL - 3)) }))) as React.ReactElement,
+      );
+
+      // Precondition: this is the last page, with the last match on it.
+      expect(resultIndexes()).toEqual([TOTAL - 2, TOTAL - 1]);
+      expect(statesTotal(TOTAL)).toBe(true);
+      expect(endHref('Next')).toBeNull();
+    });
+
+    it('counts as the signed-in reader, so the total follows their audience', async () => {
+      getSession.mockResolvedValue(CURATOR);
+      totalMatches();
+      const { default: Page } = await load();
+
+      render((await Page(search(QUERY))) as React.ReactElement);
+
+      expect(searchHelp).toHaveBeenCalledWith(CURATOR, QUERY, expect.anything());
+      expect(countHelpSearch).toHaveBeenCalledWith(CURATOR, QUERY, cursorAt(0));
+    });
+
+    it('draws the pager with both ends disabled, page 1 of 1, when the matches fit one page', async () => {
+      searchHelp.mockResolvedValue([0, 1, 2].map(matchAt));
+      countHelpSearch.mockResolvedValue({ totalCount: 3, countBefore: 0 });
+      const { default: Page } = await load();
+
+      render((await Page(search(QUERY))) as React.ReactElement);
+
+      // Precondition: the matches are drawn.
+      expect(resultIndexes()).toEqual([0, 1, 2]);
+      for (const name of ['Prev', 'Next'] as const) {
+        const end = within(pager()).getByRole('link', { name });
+        expect(end).toHaveAttribute('aria-disabled', 'true');
+        expect(end).not.toHaveAttribute('href');
+      }
+      expect((position().textContent?.match(/\d+/g) ?? []).map(Number)).toEqual([1, 1]);
+    });
+
+    it('draws no pager when nothing matches', async () => {
+      searchHelp.mockResolvedValue([]);
+      countHelpSearch.mockResolvedValue({ totalCount: 0, countBefore: null });
+      const { default: Page } = await load();
+
+      render((await Page(search(QUERY))) as React.ReactElement);
+
+      // Precondition: the page answered the search, with its status and no result.
+      expect(searchHelp).toHaveBeenCalled();
+      expect(screen.getAllByRole('status').length).toBeGreaterThan(0);
+      expect(resultIndexes()).toEqual([]);
+      expect(screen.queryByRole('navigation', { name: 'Pages' })).toBeNull();
+    });
   });
 });

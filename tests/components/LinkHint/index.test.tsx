@@ -9,35 +9,16 @@ vi.mock('next/link', async (importOriginal) => ({
   useLinkStatus: () => ({ pending }),
 }));
 
-// The hint is decorative: no role, no text. Its pending class IS the state
-// (it is what the stylesheet shows), so the class is read here directly.
+// The hint is decorative: no role and no text, so it is found by its class and adds nothing to the link's name.
 describe('LinkHint', () => {
-  beforeEach(() => {
-    pending = false;
-  });
-
-  it('is hidden from the accessibility tree and not pending at rest', () => {
+  it.each([false, true])('is hidden from the accessibility tree, pending %s', (isPending) => {
+    pending = isPending;
     const { container } = render(
       <a href="/x">
         Name <LinkHint />
       </a>,
     );
-    const hint = container.querySelector('.link-hint');
-    expect(hint).toHaveAttribute('aria-hidden', 'true');
-    expect(hint).not.toHaveClass('is-pending');
-    expect(screen.getByRole('link', { name: 'Name' })).toBeInTheDocument();
-  });
-
-  it('carries the pending class, still hidden, while the link is pending', () => {
-    pending = true;
-    const { container } = render(
-      <a href="/x">
-        Name <LinkHint />
-      </a>,
-    );
-    const hint = container.querySelector('.link-hint');
-    expect(hint).toHaveAttribute('aria-hidden', 'true');
-    expect(hint).toHaveClass('is-pending');
+    expect(container.querySelector('.link-hint')).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getByRole('link', { name: 'Name' })).toBeInTheDocument();
   });
 });
@@ -67,7 +48,6 @@ describe('LinkIconHint', () => {
       </a>,
     );
     expect(container.querySelector('.spinner')).toHaveAttribute('aria-hidden', 'true');
-    expect(container.querySelector('.link-icon-hint')).toHaveClass('is-pending');
     expect(screen.getByRole('link', { name: 'Name' })).toBeInTheDocument();
 
     pending = false;
@@ -77,6 +57,5 @@ describe('LinkIconHint', () => {
       </a>,
     );
     expect(container.querySelector('.spinner')).not.toBeInTheDocument();
-    expect(container.querySelector('.link-icon-hint')).not.toHaveClass('is-pending');
   });
 });

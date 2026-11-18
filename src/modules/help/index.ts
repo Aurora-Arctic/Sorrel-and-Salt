@@ -8,6 +8,7 @@ export {
   updateHelpArticle,
 } from './services/help-writes';
 export {
+  countHelpSearch,
   listHelpArticlePaths,
   listKeeperHelpArticles,
   listStaffHelpArticles,

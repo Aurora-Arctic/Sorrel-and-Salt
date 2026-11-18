@@ -164,7 +164,7 @@ describe('ComparisonPanel', () => {
     expect(within(extra).queryByRole('button', { name: /more categories/ })).toBeNull();
   });
 
-  it('draws each row as category chips in the category group colours', () => {
+  it('draws each row’s categories in their group colours', () => {
     render(
       <ComparisonPanel
         groups={groups}
@@ -174,7 +174,6 @@ describe('ComparisonPanel', () => {
     );
     const chips = within(row('Carried') as HTMLElement).getByRole('list', { name: 'Categories' });
     const chip = within(chips).getByText('Prosperity');
-    expect(chip).toHaveClass('chip');
     expect(chip).toHaveStyle({ '--chip-dark': '#8fb8de', '--chip-light': '#2f5d86' });
   });
 

@@ -893,3 +893,49 @@ _Acceptance criteria:_
 - The search page stays uncached and unindexed
 - `tests/guards/pagination.test.ts` covers the page, with no exemption for it
 - The help doc under `claude-docs/` that describes the search page's bounded read is corrected in the same PR
+
+**MB.302 — Search Boxes Lose Typed Text, the Plus Lacks Its Coven Count, and "Used By" Notes Run Long** · 6h
+
+_Story:_ As a coven member, I want search boxes to keep what I type, the plus to show how many of my covens hold an ingredient, and "used by" notes to stay short, so that these screens stop getting in my way.
+
+Three bugs in one task, on the owner's call. Found on 2026-11-17, in production, signed in as a coven owner, as a member or viewer, and as a site admin. Not a hotfix.
+
+**Search boxes lose typed text.** Steps to reproduce:
+
+1. Sign in as a coven owner and open the coven's Ingredients list
+2. Type "rose" in the search box and press Enter
+3. Before the results arrive, type more, such as "mary"
+
+Actual: when the results arrive the box goes back to "rose" and "mary" is lost. Every search box does this.
+
+Expected: the box keeps everything typed, whenever the results arrive.
+
+The filter row is remounted by a `key` on the searched text (`src/components/CompendiumList/filter.tsx`, `GrimoireList/filter.tsx`, `UserList/index.tsx`, `AdminCards/index.tsx`, `HelpOutline/index.tsx`), and `src/components/HelpSearchForm/index.tsx` overwrites its input when the searched text changes.
+
+**The plus lacks its coven count.** Steps to reproduce:
+
+1. Sign in as a member of two covens, where one coven holds an ingredient and the other does not
+2. Open `/compendium` and find that ingredient's card; its plus button carries the number 1
+3. Open the ingredient's own page: the coven ingredient page, the compendium entry page, or the Quick Look dialog
+
+Actual: the plus button there carries no number.
+
+Expected: the plus button carries the number of the viewer's covens that hold the ingredient, as the card's does.
+
+**"Used by" notes run long.** Steps to reproduce:
+
+1. Sign in as a coven owner and open the form that adds or edits an ingredient
+2. Type in a lookup field whose suggestions carry a "Used by" note, such as Forms
+
+Actual: each suggestion's note lists the name of every ingredient that uses it (`src/components/IngredientForm/suggestions.tsx`).
+
+Expected: the note reads as a count, such as "Used by 12 ingredients", there and wherever else the same list-of-names note appears.
+
+_Acceptance criteria:_
+
+- Three regression tests that fail before the fix: text typed after a search is sent is still in the box when the results arrive; the plus on the ingredient page exposes the number of the viewer's covens holding the ingredient; a suggestion's note carries a count and no ingredient names
+- Every search box keeps typed text: the compendium, ingredients, grimoire, help, and each keeper and curator filter
+- The fix for the search boxes is one shared mechanism, not one per box
+- The plus carries the count on the coven ingredient page, the compendium entry page, and the Quick Look dialog, counting every coven the viewer has a seat in, as the card does (`HoldingCount`, `src/components/AddIcon/holding.tsx`)
+- The count reaches the page from `covensHolding` in `src/app/plus-covens.ts`; no other viewer's covens are counted
+- Every list-of-names "used by" note becomes a count

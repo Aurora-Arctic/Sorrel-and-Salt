@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import {
   helpArticleKind,
@@ -8,9 +8,9 @@ import {
 type HelpAudience = (typeof helpAudience.enumValues)[number];
 type HelpReach = HelpAudience;
 type HelpArticleKind = (typeof helpArticleKind.enumValues)[number];
-import type { PageEntry, PageRequest } from '../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import type { HelpKeeperFilter } from '@/modules/help';
-import { findPage } from './finders';
+import { findPage, findPageCount } from './finders';
 import { containsText, foldedWordMatch, notSoftDeleted } from './predicates';
 import { selectFrom, selectOne, whenIds } from './select';
 import type { ListOrder, SortPart } from './types';
@@ -101,12 +101,18 @@ export function findHelpGlossaryPage(
   );
 }
 
-/** One page of every kind of live row a reader of `reach` sees, A to Z: the staff help index. */
+/** One page of every kind of live row a reader of `reach` sees, A to Z: the staff help index. `withPublic: false` leaves the public rows out in SQL. */
 export function findHelpArticleStaffPage(
   reach: HelpReach,
   page: PageRequest,
+  { withPublic = true }: { withPublic?: boolean } = {},
 ): Promise<PageEntry<HelpArticleRow>[]> {
-  return findPage(helpArticles, A_TO_Z, page, readable(reach));
+  return findPage(
+    helpArticles,
+    A_TO_Z,
+    page,
+    withPublic ? readable(reach) : and(readable(reach), ne(helpArticles.audience, 'public')),
+  );
 }
 
 /** One page of the live rows of every kind and audience, shown and hidden, that `filter` admits, A to Z or in position order: the keeper's list. */
@@ -280,6 +286,29 @@ function questionMatch(vector: AnyPgColumn, query: string): { pass: SQL; score: 
   };
 }
 
+function helpSearch(reach: HelpReach, query: string): { order: ListOrder<HelpScore>; where: SQL } {
+  const found = questionMatch(helpArticles.searchVector, query);
+  const other = alias(helpArticles, 'full_text_match');
+  const anyFullText = sql`exists (select 1 from ${helpArticles} as ${other}
+    where ${isNull(other.deletedAt)} and ${readable(reach, other)}
+      and ${questionMatch(other.searchVector, query).pass})`;
+  const word = foldedWordMatch(query);
+
+  const score = sql<number>`case when ${found.pass} then ${found.score}
+    else ${word.similarity(helpArticles.title)} end`;
+  return {
+    order: {
+      sort: [{ expression: sql`-${score}`, type: 'real' }],
+      wordMatch: true,
+      carry: { score },
+    },
+    where: and(
+      readable(reach),
+      sql`(${found.pass} or (not ${anyFullText} and ${word.matches(helpArticles.title)}))`,
+    )!,
+  };
+}
+
 /**
  * One page of the live rows `reach` admits that `query` finds, best first, each carrying its score. A full-text match
  * (any word of the question over the weighted `search_vector`; see {@link questionMatch}) answers when any row passes; when none
@@ -291,27 +320,16 @@ export function findHelpArticleSearchPage(
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<HelpArticleRow, HelpScore>[]> {
-  const found = questionMatch(helpArticles.searchVector, query);
-  const other = alias(helpArticles, 'full_text_match');
-  const anyFullText = sql`exists (select 1 from ${helpArticles} as ${other}
-    where ${isNull(other.deletedAt)} and ${readable(reach, other)}
-      and ${questionMatch(other.searchVector, query).pass})`;
-  const word = foldedWordMatch(query);
+  const { order, where } = helpSearch(reach, query);
+  return findPage(helpArticles, order, page, where);
+}
 
-  const score = sql<number>`case when ${found.pass} then ${found.score}
-    else ${word.similarity(helpArticles.title)} end`;
-  const order: ListOrder<HelpScore> = {
-    sort: [{ expression: sql`-${score}`, type: 'real' }],
-    wordMatch: true,
-    carry: { score },
-  };
-  return findPage(
-    helpArticles,
-    order,
-    page,
-    and(
-      readable(reach),
-      sql`(${found.pass} or (not ${anyFullText} and ${word.matches(helpArticles.title)}))`,
-    ),
-  );
+/** How many rows the search finds, and how many come before `start` in its pages' order, null with no `start`. */
+export function findHelpArticleSearchCount(
+  reach: HelpReach,
+  query: string,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const { order, where } = helpSearch(reach, query);
+  return findPageCount(helpArticles, order, start, where);
 }
