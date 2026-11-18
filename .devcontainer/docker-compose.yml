@@ -6,7 +6,7 @@
 # `--project-directory`, so the first `-f` file's directory wins, and
 # `Docker/.env` is auto-loaded for `${...}`.
 #
-# `devcontainer` mirrors `app` (build target, bind mount, DATABASE_URL,
+# `devcontainer` mirrors `app` (bind mount, DATABASE_URL,
 # postgres health gate) with its own node_modules volume, and lives here so a
 # bare `make docker-up` carries nothing editor-specific.
 
@@ -23,8 +23,10 @@ services:
     build:
       context: ..
       dockerfile: Docker/Dockerfile.node
-      target: development
-    image: sorrel-node:development
+      # `development` plus the review tools (difftastic, Plannotator); its own
+      # tag, so the `app` service keeps the plain `development` image.
+      target: devcontainer
+    image: sorrel-node:devcontainer
     working_dir: /app
     volumes:
       - ..:/app:cached

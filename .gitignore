@@ -95,3 +95,7 @@ ds-bundle/
 /.swc
 /.workflow-data
 /.workflow-vitest
+
+# The local review's generated files: `npm run review:affected` writes the
+# affected-modules graph here.
+.review/
