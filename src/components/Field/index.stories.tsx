@@ -401,7 +401,7 @@ export const RadioCards: Story = {
           layout="cards"
           value={value}
           onChange={setValue}
-          error={value === null ? 'Choose what this is about.' : undefined}
+          error={value === null ? 'Choose what this is about' : undefined}
           options={[
             { value: 'bug', label: 'Bug', description: 'Something is broken or behaves wrongly.' },
             {

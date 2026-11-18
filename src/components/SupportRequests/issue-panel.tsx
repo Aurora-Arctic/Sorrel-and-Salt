@@ -117,9 +117,9 @@ const IssuePanel = ({
               className="btn btn--solid btn--medium"
               disabled={!changed || busy}
               busy={busy}
-              busyLabel="Saving Address"
+              busyLabel="Saving Issue"
             >
-              Save Address
+              Save Issue
             </BusyButton>
           </div>
           {discard.asking && <DiscardQuestion guard={discard} />}
