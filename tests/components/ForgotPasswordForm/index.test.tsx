@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ForgotPasswordForm, { GENERIC_RESET_REQUEST_ERROR } from '@/components/ForgotPasswordForm';
 import { TOO_MANY_ATTEMPTS } from '@/lib/auth-messages';
 import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
+import { expectFocusOnError } from '../../support/error-summary';
 
 // Better Auth's client is mocked at its one call; tests/db/password-reset.test.ts proves an unknown address is answered as a known one.
 const requestPasswordReset = vi.fn();
@@ -43,6 +44,17 @@ describe('ForgotPasswordForm', () => {
 
     expect(screen.getByText(EMAIL_FORMAT_MESSAGE)).toBeInTheDocument();
     expect(requestPasswordReset).not.toHaveBeenCalled();
+  });
+
+  // Regression: the refusal showed while the focus stayed on Send Reset Link.
+  it('moves the focus to the refused address, or to a summary linking to it', async () => {
+    fireEvent.change(email(), { target: { value: 'name@' } });
+    act(() => send().focus());
+    expect(send()).toHaveFocus();
+
+    await press(send());
+
+    expectFocusOnError(email());
   });
 
   it('fills the visitor’s own email, not a username', () => {

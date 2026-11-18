@@ -86,12 +86,23 @@ describe('SignInPanel, email and password', () => {
     expect(signInEmail).not.toHaveBeenCalled();
   });
 
-  it('keeps Sign In disabled until both fields hold something', () => {
+  it('keeps Sign In disabled with nothing typed, and enables it once any field has text', () => {
     expect(submit('Sign In')).toBeDisabled();
     typeInField('Email Address', 'someone@password-form.test');
-    expect(submit('Sign In')).toBeDisabled();
-    typeInField('Password', PASSWORD);
+    expect(field('Password')).toHaveValue('');
     expect(submit('Sign In')).toBeEnabled();
+  });
+
+  // Regression: Sign In stayed disabled while the password was empty, so nothing said what was missing.
+  it('flags an empty password on Sign In and moves the focus to it, without signing in', async () => {
+    typeInField('Email Address', 'someone@password-form.test');
+    expect(field('Password')).not.toHaveAttribute('aria-invalid', 'true');
+
+    await press(submit('Sign In'));
+
+    expect(field('Password')).toHaveAttribute('aria-invalid', 'true');
+    expect(field('Password')).toHaveFocus();
+    expect(signInEmail).not.toHaveBeenCalled();
   });
 
   it('signs in with the trimmed address and the password as typed, then loads the sign-in page carrying next', async () => {

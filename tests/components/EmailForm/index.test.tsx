@@ -13,6 +13,7 @@ import type { SetEmailMutation, SetEmailMutationVariables } from '@/gql/graphql'
 import { EMAIL_FORMAT_MESSAGE, validateEmailAddress } from '@/lib/email-address';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { expectFocusOnError } from '../../support/error-summary';
 
 // MSW answers the mutation in /api/graphql's shape (tests/support/msw/graphql.ts), so the component reads the route's own error mapping (claude-docs/components/email-form.md).
 
@@ -133,6 +134,19 @@ describe('EmailForm', () => {
 
     expect(screen.getByText(EMAIL_FORMAT_MESSAGE)).toBeInTheDocument();
     expect(calls).toEqual([]);
+  });
+
+  // Regression: the refusal showed while the focus stayed on Send Confirmation.
+  it('moves the focus to the refused address, or to a summary linking to it', async () => {
+    acceptSetEmail();
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+    fireEvent.change(emailField(), { target: { value: 'new@' } });
+    act(() => submit().focus());
+    expect(submit()).toHaveFocus();
+
+    fireEvent.click(submit());
+
+    await waitFor(() => expectFocusOnError(emailField()));
   });
 
   it('marks the address as required', () => {

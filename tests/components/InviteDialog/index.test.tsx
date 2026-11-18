@@ -4,6 +4,9 @@ import InviteDialog from '@/components/InviteDialog';
 import type { CreateInvitationMutation, CreateInvitationMutationVariables } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { router } from '../../support/next-navigation';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { expectSaidInRegionFrom, statusRegionsNow } from '../../support/click-feedback';
+import { expectFocusOnError } from '../../support/error-summary';
 
 // claude-docs/components/invite-dialog.md
 
@@ -163,6 +166,39 @@ describe('InviteDialog', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(trigger()).toHaveFocus();
+  });
+
+  // Regression: after a send, nothing reached a status region a screen reader already knew, and the focus was lost.
+  it('gives the focus back to Invite once the send succeeds, saying "Invitation sent" in a status region there before it', async () => {
+    const calls = mockSending();
+    render(
+      <StatusRegionProvider>
+        <InviteDialog workspaceId={WORKSPACE} />
+      </StatusRegionProvider>,
+    );
+    const before = statusRegionsNow();
+    fireEvent.click(trigger());
+    typeAddress('ada@example.test');
+
+    fireEvent.click(send());
+
+    await expectSaidInRegionFrom(before, 'Invitation sent');
+    await waitFor(() => expect(trigger()).toHaveFocus());
+    expect(calls).toHaveLength(1);
+  });
+
+  // Regression: the refusal showed while the focus stayed on Send Invitation.
+  it('moves the focus to a refused address, or to a summary linking to it', async () => {
+    const calls = mockSending();
+    open();
+    typeAddress('ada@example.invalid');
+    send().focus();
+    expect(send()).toHaveFocus();
+
+    fireEvent.click(send());
+
+    await waitFor(() => expectFocusOnError(emailField()));
+    expect(calls).toEqual([]);
   });
 
   // A navigation from inside a modal goes unheld (tests/components/Modal/discard.test.tsx), so the guard here is the tab close and reload.

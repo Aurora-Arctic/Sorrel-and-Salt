@@ -12,6 +12,7 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { expectGuardedWaysOut } from '../../support/discard-guard';
 import { FILTER_ROWS } from '../../support/filter-form';
+import { expectFocusOnError } from '../../support/error-summary';
 import { router } from '../../support/next-navigation';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -384,6 +385,18 @@ describe('AdminInvitations filter', () => {
       await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
       expect(emailField()).toHaveAccessibleDescription(/\S/);
       expect(calls).toEqual([]);
+    });
+
+    // Regression: the refusal showed while the focus stayed on Send Invitation.
+    it('moves the focus to the refused address, or to a summary linking to it', async () => {
+      render(<AdminInvitations invitations={[]} inviting />);
+      fireEvent.change(emailField(), { target: { value: 'ada@example.invalid' } });
+      act(() => send().focus());
+      expect(send()).toHaveFocus();
+
+      fireEvent.click(send());
+
+      await waitFor(() => expectFocusOnError(emailField()));
     });
 
     it('clears the refusal as the address is changed', async () => {

@@ -32,3 +32,17 @@ export function announced(): string {
   const region = screen.getAllByRole('status').find((element) => element.tagName === 'OUTPUT');
   return region?.textContent?.trim() ?? '';
 }
+
+/** The status regions on the page now, so a check made later can ask what one already there says. */
+export const statusRegionsNow = (): HTMLElement[] => screen.queryAllByRole('status');
+
+/** Waits for `text` in a status region that was on the page before it: a screen reader reads out only a region it already knew. */
+export async function expectSaidInRegionFrom(before: HTMLElement[], text: string | RegExp) {
+  // The precondition: a region was there to be listened to.
+  expect(before.length).toBeGreaterThan(0);
+  const says = (region: HTMLElement) => {
+    const said = region.textContent ?? '';
+    return region.isConnected && (typeof text === 'string' ? said.includes(text) : text.test(said));
+  };
+  await waitFor(() => expect(before.some(says)).toBe(true));
+}

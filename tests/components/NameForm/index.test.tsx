@@ -8,6 +8,8 @@ import type { SetNameMutation, SetNameMutationVariables } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { renderWithQuery } from '../../support/render-with-query';
 import { save, submitForm } from '../../support/interact';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { expectSaidInRegionFrom, statusRegionsNow } from '../../support/click-feedback';
 
 // The account page's Name section. The mutation is answered by MSW in
 // the shape /api/graphql answers (tests/support/msw/graphql.ts), so a refusal
@@ -65,6 +67,22 @@ describe('NameForm', () => {
     expect(calls).toEqual([{ name: ' Ada Renamed ' }]);
     expect(nameField()).toHaveValue('Ada Renamed');
     expect(save()).toBeDisabled();
+  });
+
+  // Regression: the confirmation arrived in a region drawn with it, which a screen reader does not read out.
+  it('says the name was saved in a status region that was there before the save', async () => {
+    acceptSetName();
+    renderForm(
+      <StatusRegionProvider>
+        <NameForm name="Ada Fixture" />
+      </StatusRegionProvider>,
+    );
+    const before = statusRegionsNow();
+
+    fireEvent.change(nameField(), { target: { value: 'Ada Renamed' } });
+    submitForm();
+
+    await expectSaidInRegionFrom(before, 'Your name was saved.');
   });
 
   it('puts a refusal on `name` beside the field', async () => {

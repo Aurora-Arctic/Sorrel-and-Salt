@@ -10,3 +10,10 @@ export function expectSummaryLinksTo(control: HTMLElement): void {
     .map((link) => link.getAttribute('href'));
   expect(hrefs).toContain(`#${control.id}`);
 }
+
+/** A refused submit took the focus to the invalid `control` itself, or to an error summary that links to it. */
+export function expectFocusOnError(control: HTMLElement): void {
+  expect(control).toHaveAttribute('aria-invalid', 'true');
+  if (control.matches(':focus')) return;
+  expectSummaryLinksTo(control);
+}
