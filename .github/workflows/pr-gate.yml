@@ -78,16 +78,17 @@ jobs:
       pull-requests: read
     outputs:
       stand-down: ${{ steps.stand-down.outputs.stand-down || 'false' }}
+      stack-role: ${{ steps.stack.outputs.role || 'none' }}
       lint: ${{ steps.filter.outputs.lint }}
       typecheck: ${{ steps.filter.outputs.typecheck }}
-      build: ${{ steps.filter.outputs.build }}
+      build: ${{ steps.stack.outputs.role == 'lower' && 'false' || steps.filter.outputs.build }}
       destructive_ddl: ${{ steps.filter.outputs.destructive_ddl }}
       destructive_ddl_migrations_files: ${{ steps.filter.outputs.destructive_ddl_migrations_files }}
       migration_order: ${{ steps.filter.outputs.migration_order }}
-      vitest: ${{ steps.filter.outputs.vitest }}
-      playwright: ${{ steps.filter.outputs.playwright }}
-      stories: ${{ steps.filter.outputs.stories }}
-      workshop: ${{ steps.filter.outputs.workshop }}
+      vitest: ${{ steps.stack.outputs.role == 'lower' && 'false' || steps.filter.outputs.vitest }}
+      playwright: ${{ steps.stack.outputs.role == 'lower' && 'false' || steps.filter.outputs.playwright }}
+      stories: ${{ steps.stack.outputs.role == 'lower' && 'false' || steps.filter.outputs.stories }}
+      workshop: ${{ steps.stack.outputs.role == 'lower' && 'false' || steps.filter.outputs.workshop }}
     steps:
       # Decides whether this run stands down (see the header). `changes.base`
       # is in the payload only when the edit retargeted the PR; that run goes
@@ -123,11 +124,41 @@ jobs:
           fi
           echo "stand-down=$stand_down" >> "$GITHUB_OUTPUT"
 
+      # A stacked pull request carries `stack` in its payload; any other does
+      # not, and gets `none`. The top layer's checkout holds the whole stack,
+      # so it is gated on the stack's whole diff; a layer below it runs only the
+      # cheap checks and leaves the slow jobs to the top layer.
+      - name: Find this pull request's place in its stack
+        id: stack
+        if: steps.stand-down.outputs.stand-down != 'true'
+        env:
+          POSITION: ${{ github.event.pull_request.stack.position }}
+          SIZE: ${{ github.event.pull_request.stack.size }}
+          BASE_SHA: ${{ github.event.pull_request.stack.base.sha }}
+        run: |
+          role=none
+          if [ -n "$SIZE" ] && [ -n "$BASE_SHA" ]; then
+            if [ "$POSITION" = "$SIZE" ]; then role=top; else role=lower; fi
+          fi
+          echo "role=$role" >> "$GITHUB_OUTPUT"
+          echo "base-sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout the stack's head with its history
+        if: steps.stack.outputs.role == 'top'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
       - name: Determine changed-file categories
         if: steps.stand-down.outputs.stand-down != 'true'
         uses: dorny/paths-filter@v4
         id: filter
         with:
+          # The PR files API lists a layer's own files. An empty token and a
+          # base make the action diff the stack's base against the checkout.
+          token: ${{ steps.stack.outputs.role != 'top' && github.token || '' }}
+          base: ${{ steps.stack.outputs.role == 'top' && steps.stack.outputs.base-sha || '' }}
           # Step-wide; only destructive_ddl_migrations's `_files` output is read.
           list-files: json
           # Lets a filter carry `!` exclusions (vitest's below); a filter
