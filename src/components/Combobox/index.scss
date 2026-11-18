@@ -656,6 +656,12 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // A sortable entry's handle: its grip and its text as one unboxed button the chip moves by, shrinking with the chip; `touch-action` is dnd-kit's ask so a touch drag moves the chip.
+// The chip's handle is the whole text button, with no touch target reaching past it, so the first move button needs no
+// gap to keep clear of one (GripHandle's own gap would cost the text 12px on a phone).
+.combobox__entry .combobox__entry-handle + .grip-handle__move {
+  margin-inline-start: 0;
+}
+
 .combobox__entry-handle {
   @include button-reset(grab);
 

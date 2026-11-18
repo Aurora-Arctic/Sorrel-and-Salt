@@ -358,9 +358,21 @@ $step-line: type-size('body') * 1.65;
   .step-row.step-row--card.step-row--open {
     grid-template-areas:
       'handle position name controls'
-      '. . marks marks'
-      '. . summary summary';
+      'handle . marks marks'
+      'handle . summary summary';
     grid-template-columns: auto auto minmax(0, 1fr) auto;
+
+    // The grip and its two move buttons stack, so the handle column is one button wide and the name keeps its room.
+    .step-row__handle {
+      flex-direction: column;
+      align-items: center;
+      align-self: start;
+      min-height: 0;
+    }
+
+    .step-row__handle > .grip-handle__move {
+      margin-inline-start: 0;
+    }
 
     .step-row__marks {
       margin-block-start: space(1);
