@@ -35,6 +35,7 @@ Docker/.env
 # Local database and container state
 Docker/claude-home
 Docker/plannotator-home
+Docker/agents-home
 graphify-out/
 pgdata
 docker-data

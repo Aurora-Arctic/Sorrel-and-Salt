@@ -37,6 +37,9 @@ services:
       - ./claude-home:/home/node/.claude:cached
       # Plannotator's drafts, plan history and config.json, kept the same way.
       - ./plannotator-home:/home/node/.plannotator:cached
+      # Where `npx skills add --global` keeps a skill's files; ~/.claude/skills
+      # holds only a link to each, which a rebuild would leave pointing nowhere.
+      - ./agents-home:/home/node/.agents:cached
     init: true
     tty: true
     # ensure-deps.sh first (see Docker/docker-compose.yaml); `entrypoint` clears

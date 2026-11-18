@@ -5,7 +5,7 @@
   "workspaceFolder": "/app",
   "shutdownAction": "stopCompose",
   "overrideCommand": false,
-  "initializeCommand": "mkdir -p \"${localWorkspaceFolder}/Docker/claude-home\" \"${localWorkspaceFolder}/Docker/plannotator-home\" \"${localWorkspaceFolder}/graphify-out\"",
+  "initializeCommand": "mkdir -p \"${localWorkspaceFolder}/Docker/claude-home\" \"${localWorkspaceFolder}/Docker/plannotator-home\" \"${localWorkspaceFolder}/Docker/agents-home\" \"${localWorkspaceFolder}/graphify-out\"",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
