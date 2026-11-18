@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { stackCell, tableRole } from '../../lib/table-roles';
+import EmptyMark from '../EmptyMark';
 import EmptyState from '../EmptyState';
 import Skeleton from '../Skeleton';
 import { SortSelect } from './sort-select';
@@ -73,6 +74,17 @@ function sortChoices<Row>(
     }
   }
   return { choices, current };
+}
+
+/**
+ * A column's cell for a row. A value the column leaves out (null, undefined, false or an empty string) draws the shared
+ * empty mark, so a gap is not read as a fault and a card's label never stands alone. A zero is a value and draws as given.
+ * An action column that renders nothing stays blank: there is no value for it to lack.
+ */
+function cellContent<Row>(column: StackColumn<Row>, row: Row): ReactNode {
+  const content = column.cell(row);
+  const empty = content === null || content === undefined || content === false || content === '';
+  return empty && !column.action ? <EmptyMark /> : content;
 }
 
 function StackTable<Row>({
@@ -187,7 +199,7 @@ function StackTable<Row>({
                       </th>
                     ) : (
                       <td key={column.heading} className={cellClass(column)} {...cell}>
-                        {column.cell(row)}
+                        {cellContent(column, row)}
                       </td>
                     );
                   })}
