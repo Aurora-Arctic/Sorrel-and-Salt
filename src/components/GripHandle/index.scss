@@ -17,3 +17,8 @@
 .grip-handle__up {
   transform: rotate(180deg);
 }
+
+// A grip's hit area reaches 8px past its drawing; the gap keeps the first button from covering it.
+button:not(.grip-handle__move) + .grip-handle__move {
+  margin-inline-start: space(3);
+}
