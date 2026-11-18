@@ -181,8 +181,13 @@ test('at 375px the page behind the open Filters sheet does not scroll, and scrol
   await page.mouse.wheel(0, 400);
   await page.mouse.move(PHONE_WIDTH - 20, 480);
   await page.mouse.wheel(0, 400);
-  await page.waitForTimeout(300);
+  // Wheels are handled in order, so once the sheet has moved under the last one the earlier ones are done.
+  await expect.poll(() => panel.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
   expect(await scrollY(page)).toBe(held);
+  // The sheet's `overscroll-behavior` alone keeps a wheel off the page, so the lock itself is read off the root.
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).overflow)).toBe(
+    'hidden',
+  );
 
   // The sheet's own contents still scroll when taller than the screen.
   const sheetScrolls = await panel.evaluate((el) => el.scrollHeight > el.clientHeight);
@@ -192,6 +197,9 @@ test('at 375px the page behind the open Filters sheet does not scroll, and scrol
 
   await panel.getByRole('button', { name: 'Close' }).last().click();
   await expect(panel).toBeHidden();
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).overflow)).not.toBe(
+    'hidden',
+  );
   expect(await scrollY(page)).toBe(held);
   await page.mouse.wheel(0, 100);
   await expect.poll(() => scrollY(page)).toBeGreaterThan(held);
