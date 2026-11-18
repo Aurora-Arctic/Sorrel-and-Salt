@@ -2,17 +2,18 @@ import { Fragment, type ReactElement, type ReactNode } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { capitalise, hasText } from '../../lib/text';
 import CorrespondenceValue from './correspondence-value';
-import type { PlainCorrespondences, SourcedCorrespondences, SourcedValue } from './types';
+import type {
+  PlainCorrespondences,
+  Row,
+  ValueCardProps,
+  SourcedCorrespondences,
+  SourcedValue,
+} from './types';
 import type { CategoryDetail, DeityDetail } from '@/modules/ingredients';
 import './index.scss';
 import { cx } from '@/lib/class-names';
 
-export interface Row {
-  label: string;
-  values: string[];
-  /** Parallel to `values`: the ingredients that gave each one. */
-  sources?: string[][];
-}
+export type { Row } from './types';
 
 /** One row. A blank value goes and takes its sources with it, so `sources[i]` always belongs to `values[i]`. */
 function rowOf(
@@ -43,6 +44,7 @@ function rowsOf(
       label: 'Deities',
       values: deities.map(({ value }) => deityMention(value)),
       sources: deities.map(({ sources }) => [...sources]),
+      deities: deities.map(({ value }) => value),
     });
   }
   // A group with no value is left out, so a block never draws an empty line.
@@ -69,13 +71,18 @@ export function correspondences(
 
 export const sourcedCorrespondences = rowsOf;
 
-/** A deity as the Deities row names it: its tradition and other names in brackets, parted by a semicolon because the row joins its values with commas. */
-function deityMention({ name, tradition, otherNames }: DeityDetail): string {
-  const parts = [
-    tradition ?? [],
-    otherNames.length > 0 ? `also called ${otherNames.join(', ')}` : [],
-  ].flat();
-  return parts.length > 0 ? `${name} (${parts.join('; ')})` : name;
+/** A deity as the Deities row names it: its tradition in brackets. Its other names are in its card. */
+const deityMention = ({ name, tradition }: DeityDetail): string =>
+  tradition ? `${name} (${tradition})` : name;
+
+/** A value's card, or none when it has nothing to say past the row: no ingredient gave it and it names no deity with other names. */
+function cardOf(row: Row, value: string, index: number): ValueCardProps | null {
+  const sources = row.sources?.[index] ?? [];
+  const deity = row.deities?.[index];
+  if (sources.length === 0 && !deity?.otherNames.length) return null;
+  return deity
+    ? { title: deity.name, tradition: deity.tradition, otherNames: deity.otherNames, sources }
+    : { title: value, sources };
 }
 
 export interface Block {
@@ -140,15 +147,11 @@ export function CorrespondenceBlock({
             <dt>{row.label}</dt>
             <dd>
               {row.values.map((value, index) => {
-                const sources = row.sources?.[index] ?? [];
+                const card = cardOf(row, value, index);
                 return (
                   <Fragment key={`${index}-${value}`}>
                     {index > 0 && ', '}
-                    {sources.length > 0 ? (
-                      <CorrespondenceValue value={value} sources={sources} />
-                    ) : (
-                      value
-                    )}
+                    {card ? <CorrespondenceValue value={value} card={card} /> : value}
                   </Fragment>
                 );
               })}

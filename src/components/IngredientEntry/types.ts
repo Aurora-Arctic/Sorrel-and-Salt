@@ -7,7 +7,12 @@ import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { AddIconProps } from '../AddIcon/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
-import type { IngredientDetail, IngredientRow, SourcingScore } from '@/modules/ingredients';
+import type {
+  DeityDetail,
+  IngredientDetail,
+  IngredientRow,
+  SourcingScore,
+} from '@/modules/ingredients';
 import type { EditedIngredient, ReviewOffer } from '../IngredientForm/types';
 import type { LastEditProps } from '../LastEdit/types';
 import type { EntryMarksProps } from '../EntryMarks/types';
@@ -266,7 +271,37 @@ export interface PlainCorrespondences {
   colors: readonly string[] | null;
 }
 
+/** One row of a Correspondences block. */
+export interface Row {
+  label: string;
+  values: string[];
+  /** Parallel to `values`: the ingredients that gave each one. */
+  sources?: string[][];
+  /** Parallel to `values`, on the Deities row: the deity each one names. */
+  deities?: DeityDetail[];
+}
+
+/** What a value's card holds. */
+export interface ValueCardProps {
+  /** The value as the card names it: a deity by its name alone. */
+  title: string;
+  /** A deity's tradition, set above the title. */
+  tradition?: string | null;
+  otherNames?: readonly string[];
+  /** The ingredients that gave the value; none on an ingredient's own page. */
+  sources?: readonly string[];
+}
+
+/** A labelled list in a value's card. */
+export interface CardSectionProps {
+  label: string;
+  items: readonly string[];
+  /** Draws each item as a chip rather than a line. */
+  chips?: boolean;
+}
+
 export interface CorrespondenceValueProps {
+  /** The value as the row shows it. */
   value: string;
-  sources: readonly string[];
+  card: ValueCardProps;
 }

@@ -116,7 +116,7 @@ Decorative, so held to no contrast ratio. A row in `tests/scss/tokens.test.ts` a
 `chip()` draws a pill in one of two emphasis levels. Neither draws a dot: the group colour sits on the full level's wash, border and label.
 
 - **`full`**: the category chip, everywhere a category shows (the card, the entry page, pickers, filters, admin tables, the Combobox's chosen entries). A wash of the group colour (5% over `$surface-card`; the ratios below were measured at 14%, and a lighter wash only raises them), a border at 35%, and the label in the group colour with 30% of `$text-primary` stirred in (`chip-wash()`, which the Combobox entry reuses as it keeps its own shape).
-- **`quiet`**: neutral ink and a `$hairline` border, no group colour. A control rather than a category: the +N button, its one user. The colour field's preview shows `full` only.
+- **`quiet`**: neutral ink and a `$hairline` border, no group colour. For what is not a category: the +N button, and a deity's other names in its correspondence card ([`components/ingredient-entry.md`](components/ingredient-entry.md), "Correspondence cards"). The colour field's preview shows `full` only.
 
 `chip()` takes `$size: regular | compact`. **Compact** is for a table cell (the admin Compendium's Categories column): no block padding and 7px inline, and the card's `overline` text size. The wash, the 1px border and the label's colour mix are unchanged, so the contrast figures below hold. A compact chip measures about 18.8px tall in Chromium. The shared chip row takes it as `compact` (`category-chips--compact`: `claude-docs/components/category-chips.md`); a compact +N button keeps a 24px hit area through a transparent pseudo-element (WCAG 2.5.8) without growing its pill.
 

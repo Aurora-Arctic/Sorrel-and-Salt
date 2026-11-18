@@ -404,7 +404,7 @@
   @if $state == full {
     @include chip-wash($color);
   } @else if $state == quiet {
-    // Only the card's +N control wears it; a category is always full.
+    // Uncoloured, for what is not a category: the card's +N control and a deity's other names. A category is always full.
     background-color: transparent;
     border-color: $hairline;
     color: $text-primary;
