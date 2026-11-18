@@ -140,7 +140,7 @@ const Options = ({
       setSending(false);
       // Said plainly: the first half happened and stands.
       report(
-        `${successor?.name ?? 'They'} is now a steward, but you did not leave. ${failureMessage(error)}`,
+        `${successor?.name ?? 'They'} is now a Steward, but you did not leave. ${failureMessage(error)}`,
       );
       return;
     }
@@ -151,7 +151,7 @@ const Options = ({
   return (
     <>
       <p>
-        Leave <strong>{name}</strong>? It needs a steward, so choose what happens to it.
+        Leave <strong>{name}</strong>? It needs a Steward, so choose what happens to it.
       </p>
       <RadioGroupField
         legend="What Happens to the Coven?"
@@ -160,7 +160,7 @@ const Options = ({
           {
             value: 'hand',
             label: only ? `Hand It to ${only.name}` : 'Hand It to Another Member',
-            description: 'They become a steward first, then you leave.',
+            description: 'They become a Steward first, then you leave.',
           },
           {
             value: 'delete',

@@ -337,7 +337,7 @@ const IngredientEntry = ({
         )}
         {hiddenFromPublic && (
           <Notice kind="warn" quiet block>
-            Hidden in the Compendium. Only curators and keepers can see this page.
+            Hidden in the Compendium. Only Curators and Keepers can see this page.
           </Notice>
         )}
         {movedAway && (

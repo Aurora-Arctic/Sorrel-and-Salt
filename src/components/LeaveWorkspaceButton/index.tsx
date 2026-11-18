@@ -31,7 +31,7 @@ const LeaveWorkspaceButton = ({
       question={
         <>
           Leave <strong>{name}</strong>? You lose access to its ingredients and its grimoire until a
-          steward invites you back.
+          Steward invites you back.
         </>
       }
       warning="Your own entries stay with the coven."

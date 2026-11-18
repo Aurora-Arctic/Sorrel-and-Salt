@@ -16,8 +16,8 @@ export function sameAddress(a: string, b: string): boolean {
 
 /** One string so the service's refusal and its row's words cannot drift. It names no variable; how to change who it is lives in the docs. */
 export const PRIMARY_ADMIN_REFUSAL =
-  "You can't revoke the primary keeper. The site's configuration sets who that is.";
+  "You can't revoke the primary Keeper. The site's configuration sets who that is.";
 
 /** One string so the service's refusal and a locked button's words cannot drift. It names a role, not a person. */
 export const ADMIN_CHANGES_PAUSED_REFUSAL =
-  'The primary keeper has paused keeper changes. Ask them to resume changes.';
+  'The primary Keeper has paused Keeper changes. Ask them to resume changes.';

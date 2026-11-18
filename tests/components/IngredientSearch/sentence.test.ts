@@ -209,7 +209,7 @@ describe('buildSearchSentence', () => {
   it('names the review mark only for an admin list, either way, and carries the facet that removes it', () => {
     expect(text({ reviewed: 'reviewed' }, 2)).toBe('2 ingredients');
     expect(text({ reviewed: 'reviewed' }, 2, { admin: true })).toBe(
-      '2 ingredients, reviewed by a curator',
+      '2 ingredients, reviewed by a Curator',
     );
     expect(text({ reviewed: 'needs_review' }, 2, { admin: true })).toBe(
       '2 ingredients, needing review',

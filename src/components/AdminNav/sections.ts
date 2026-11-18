@@ -123,7 +123,7 @@ export const ADMIN_PAGES = {
     label: 'Staff Help',
     icon: 'help',
     description:
-      'The guides for curators and keepers: how to curate the Compendium and run the site.',
+      'The guides for Curators and Keepers: how to curate the Compendium and run the site.',
     tabs: [{ href: '/help/staff', label: 'Staff Help' }],
   },
 } as const satisfies Record<string, AdminPage>;
