@@ -320,7 +320,7 @@ test('the printed recipe keeps the Correspondences block and leaves out the side
 
   await page.emulateMedia({ media: 'print' });
   await expect(block).toBeVisible();
-  await expect(block.getByText('Fire')).toBeVisible();
-  await expect(block.getByText('Silver')).toBeVisible();
+  await expect(block.getByRole('button', { name: 'Fire' })).toBeVisible();
+  await expect(block.getByRole('button', { name: 'Silver' })).toBeVisible();
   for (const panel of panels) await expect(panel).toBeHidden();
 });
