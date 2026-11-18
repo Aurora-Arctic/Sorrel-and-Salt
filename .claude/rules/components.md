@@ -49,7 +49,7 @@ Each job below has one shared piece, and a component or page uses it, never a co
 - **Plural words, "has text", and option labels**: `plural` and `hasText` (`src/lib/text.ts`), `labelOf` (`src/lib/options.ts`).
 - **An untitled spell's name**: `spellNameOf` (`src/components/SpellCard/untitled.ts`). Lint rule: `sorrel/spell-name-through-spell-name-of`.
 - **Downloading a file**: `saveFile` (`src/lib/save-file.ts`).
-- **A drag handle**: `GripHandle` (`src/components/GripHandle/`). Guard: `sortable-wiring`.
+- **A drag handle**: `GripHandle` (`src/components/GripHandle/`). Every list a person can reorder by dragging has Move Up and Move Down buttons, and they come from the shared grip handle, so no caller draws a drag-only handle. Guard: `sortable-wiring`.
 - **A page and its skeleton**: `PanelSection`, `NarrowPanelPage`, `HelpFrontShell`, `HelpArticlePage`, `DocumentPageSkeleton` and the title constants (`ADD_INGREDIENT_TITLE`, `NEW_SPELL_TITLE`, the spell section titles in `SpellRecipe/sections.ts`) are written once and used by both. Guard: `page-pieces`.
 - **A table that scrolls sideways**: `TableFrame` (`src/components/TableFrame/`), which sets the frame's `role="region"`, its Tab stop and its name itself, so a keyboard can scroll it and a screen reader announces it. A table is never wrapped in a hand-written `.data-table-frame`. Guard: `table-frame`.
 - **A breakpoint**: the mixins in `src/scss/_mixins.scss` (`phone-down`, `above-phone`, `tablet-down`, `above-tablet`, `width-from`, `width-to`; `container-from` and `container-to` for a container width), never a hand-written `@media` or `@container` width query. Guard: `breakpoints`.

@@ -34,7 +34,7 @@ SQL narrows every list through `listKeeperHelpArticles` (`claude-docs/design-dec
 `order-table.tsx` (`HelpOrderTable`) draws the chosen guide's sub pages and the FAQ as a stacking table with a grip on every row, always on: the first column, under a visually hidden "Order" heading, then Position. It writes `StackTable`'s markup itself, because `StackTable` takes cell functions from the server and a grip is a client hook. One sortable (`sortable.tsx`) wraps the whole table frame, since dnd-kit draws its instructions in a `div`, which a table may not hold.
 
 - **A drop saves at once**, with no Save step: the sub pages through `UpdateHelpArticle`'s `childIds`, the FAQ through `OrderHelpFaq`. The write is the whole order (`order`), never the filtered table, because `childIds` releases to the top level any sub page it leaves out; a drop among the visible rows is placed within it.
-- **While it saves**, the moved row's Position cell is `aria-busy` with a spinner and every grip is off. A save announces "Moved Testwort Basics to position 2." and refreshes.
+- **While it saves**, the moved row's Position cell is `aria-busy` with a spinner and every grip is off. A save announces "Moved Testwort Basics to position 2." and refreshes. Each row's grip also has Move Up and Move Down buttons beside it (from `GripHandle`), which save the same way, and the guides' rows have them too.
 - **A failure** springs the row back and shows an alert, "Could not move Testwort Basics. It is back where it was.", with Try Again, which sends the same move again.
 
 `skeleton.tsx` is the page's loading face, at the outline's size.

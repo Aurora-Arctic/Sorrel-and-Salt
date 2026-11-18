@@ -153,7 +153,7 @@ The Jar section is one column at every width (the default dialog is 32rem of con
 
 ## Reordering
 
-Each step is moved by its handle, a grip button named "Move" and the step's name. Linked, one-off and instruction steps move alike.
+Each step is moved by its handle, a grip button named "Move" and the step's name. Linked, one-off and instruction steps move alike. Beside it sit Move Up and Move Down buttons (from `GripHandle`), single presses that announce "Name moved to position N of M."; the first step's Move Up and the last step's Move Down are `aria-disabled` and keep focus.
 
 - **The list** (`SortableSteps`, dnd-kit's `verticalListSortingStrategy`) takes its sensors (4px pointer drag, `TOUCH_DRAG_DELAY_MS` 250ms touch hold within 5px), keyboard target, handle instructions and wording from [`src/lib/sortable`](../../src/lib/sortable/index.ts), shared with the combobox.
 - **Keyboard.** Space or Enter lifts the focused handle's step, Up and Down move it a place, Home and End take it to either end, Space or Enter puts it down, Escape puts it back. Left and Right do nothing in a column. Focus stays on the moved step's handle.
