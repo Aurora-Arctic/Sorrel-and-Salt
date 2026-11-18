@@ -184,6 +184,12 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   padding-inline-end: $close-reserve;
 }
 
+// A page head's eyebrow wears the page's halo against the art behind it; a dialog's own surface has none, and
+// the halo would draw a patch of the page's colour on it. Weighted past `body .header .eyebrow`.
+.modal .header .eyebrow {
+  text-shadow: none;
+}
+
 // A head with a top line (`topEnd`, the details window's) stands further above what follows it,
 // `space(5)` in place of `space(4)`; it is the only head with one, so no other dialog's gap moves.
 .modal-dialog__header--topped {
