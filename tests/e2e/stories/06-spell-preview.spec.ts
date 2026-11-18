@@ -479,3 +479,55 @@ test(
     expect(bubble.x + bubble.width).toBeLessThanOrEqual(viewport.width);
   },
 );
+
+test(
+  "a spell's page gathers its ingredients' correspondences, each value naming the ingredients that gave it",
+  { tag: '@story-85' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Correspondences', 'story-85c.test', {
+      A: 'owner',
+      C: 'viewer',
+    });
+    const { A, C } = coven.users;
+    const spellId = await withSql(async (sql) => {
+      const ember = await localIngredient(sql, coven.id, A, {
+        name: 'Fixture Emberwort',
+        nomenclature: 'none',
+        elements: ['fire'],
+        colors: ['Silver'],
+        variants: [makeVariant({ form: 'Root' })],
+      });
+      const tide = await localIngredient(sql, coven.id, A, {
+        name: 'Fixture Tidewort',
+        nomenclature: 'none',
+        elements: ['water'],
+        colors: ['Silver'],
+        variants: [makeVariant({ form: 'Leaf' })],
+      });
+      const id = await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', A, 'complete');
+      await insertStep(sql, id, ember, { quantity: 2, unit: 'g', position: 0 }, A);
+      await insertStep(sql, id, tide, { quantity: 3, unit: 'g', position: 1 }, A);
+      return id;
+    });
+    await page.addInitScript(() => Reflect.deleteProperty(Navigator.prototype, 'wakeLock'));
+    await signInAgainAs(page, C);
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+    const block = page.getByRole('region', { name: 'Correspondences' });
+    await expect(block).toBeVisible();
+    const fire = block.getByRole('button', { name: 'Fire' });
+    await expect(fire).toBeVisible();
+    await expect(block.getByRole('button', { name: 'Water' })).toBeVisible();
+    // Both ingredients give Silver, and the block shows it once.
+    const silver = block.getByRole('button', { name: 'Silver' });
+    await expect(silver).toHaveCount(1);
+
+    await fire.focus();
+    await expect(page.getByRole('tooltip')).toHaveText('Fixture Emberwort (Root)');
+    await silver.focus();
+    await expect(page.getByRole('tooltip')).toHaveText(
+      'Fixture Emberwort (Root) and Fixture Tidewort (Leaf)',
+    );
+    await assertNoAccessibilityViolations(page);
+  },
+);

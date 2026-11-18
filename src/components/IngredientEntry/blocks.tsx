@@ -11,6 +11,8 @@ const listed = (values: readonly string[] | null | undefined): string[] =>
 export interface Row {
   label: string;
   values: string[];
+  /** Parallel to `values`: the ingredients that gave each one. */
+  sources?: string[][];
 }
 
 type Correspondences = Pick<

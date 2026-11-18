@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
@@ -46,12 +46,21 @@ const assignedCategoriesOf = vi.fn();
 // No workings: the recipe page's Workings list is read through these and is tested on its own.
 const listWorkingsPage = vi.fn(async () => []);
 const previewWorkingDeductions = vi.fn(async () => ({ deductions: [], warnings: [] }));
+const NO_CORRESPONDENCES = {
+  elements: [],
+  celestialBodies: [],
+  zodiacSigns: [],
+  colors: [],
+  deities: [],
+};
+const spellCorrespondencesOf = vi.fn();
 vi.mock('@/modules/grimoire', () => ({
   readSpell,
   stepsOfSpells,
   assignedCategoriesOf,
   listWorkingsPage,
   previewWorkingDeductions,
+  spellCorrespondencesOf,
 }));
 const none = async (_s: unknown, refs: unknown[]): Promise<unknown[][]> => refs.map(() => []);
 const categoriesOf = vi.fn(none);
@@ -146,6 +155,7 @@ beforeEach(() => {
   ]);
   assignedCategoriesOf.mockResolvedValue([[{ id: 'cat-1' }]]);
   displayNamesOf.mockResolvedValue(['Fixture Author']);
+  spellCorrespondencesOf.mockResolvedValue(NO_CORRESPONDENCES);
 });
 
 describe('the spell recipe page', () => {
@@ -201,6 +211,43 @@ describe('the spell recipe page', () => {
     expect(stockOf).toHaveBeenCalledWith(session, [
       { ingredientId: 'ing-1', workspaceId: COVEN.id },
     ]);
+  });
+
+  it("draws the spell's correspondences, as the service reads them for this coven, in the side column", async () => {
+    spellCorrespondencesOf.mockResolvedValue({
+      ...NO_CORRESPONDENCES,
+      elements: [{ value: 'fire', sources: ['Testwort (Dried Leaf)'] }],
+      deities: [
+        {
+          value: { name: 'Testdeity', tradition: 'Fixture Pantheon', otherNames: [] },
+          sources: ['Testwort (Dried Leaf)', 'Fixture Moss (Testform)'],
+        },
+      ],
+    });
+    await draw();
+
+    expect(spellCorrespondencesOf).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
+    const aside = within(screen.getByRole('complementary'));
+    const block = within(aside.getByRole('region', { name: 'Correspondences' }));
+    // The rows the service left empty are not drawn.
+    expect(block.getAllByRole('term').map((term) => term.textContent)).toEqual([
+      'Elements',
+      'Deities',
+    ]);
+    expect(block.getByRole('button', { name: 'Fire' })).toBeInTheDocument();
+    const deity = block.getByRole('button', { name: 'Testdeity (Fixture Pantheon)' });
+    act(() => deity.focus());
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      'Testwort (Dried Leaf) and Fixture Moss (Testform)',
+    );
+  });
+
+  it('draws no Correspondences block when the service gives no value', async () => {
+    await draw();
+    // The side column is drawn, so the block's absence is the empty answer's.
+    expect(spellCorrespondencesOf).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
+    expect(screen.getByRole('region', { name: 'In the Cupboard' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Correspondences' })).toBeNull();
   });
 
   describe('the demo notice in the preview', () => {

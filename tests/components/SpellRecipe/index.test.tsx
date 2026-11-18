@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import SpellWorkings from '@/components/SpellWorkings';
@@ -386,6 +386,138 @@ describe('SpellRecipe', () => {
     it('keeps Steps and Workings when there is no side column', () => {
       render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], workings })} />);
       expect(linksOf().map((link) => link.textContent)).toEqual(['Steps', 'Workings']);
+    });
+  });
+});
+
+describe("the side column's Correspondences", () => {
+  const ROWS = [
+    { label: 'Elements', values: ['Fire'], sources: [['Testroot (Testform)']] },
+    { label: 'Celestial Bodies', values: [], sources: [] },
+    {
+      label: 'Colours',
+      values: ['Blue', 'Green'],
+      sources: [
+        ['Testroot (Testform)', 'Testbark (Testform)', 'Fixture Moss (Dried Leaf)'],
+        ['Testbark (Testform)'],
+      ],
+    },
+  ];
+  const drawn = (correspondences: typeof ROWS) =>
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [instruction('s1', 'Stir.')],
+          aside: (
+            <SpellRecipeAside
+              steps={[]}
+              doors={[]}
+              intended={[]}
+              groups={[]}
+              correspondences={correspondences}
+            />
+          ),
+        })}
+      />,
+    );
+
+  it('draws the block in the side column under a Correspondences heading, after In the Cupboard', () => {
+    drawn(ROWS);
+    const side = within(screen.getByRole('complementary', { name: 'The Cupboard' }));
+    const block = side.getByRole('region', { name: 'Correspondences' });
+    expect(within(block).getByRole('heading', { level: 2, name: 'Correspondences' })).toBeVisible();
+    expectBefore(side.getByRole('region', { name: 'In the Cupboard' }), block);
+    expect(
+      within(block)
+        .getAllByRole('definition')
+        .map((value) => value.textContent),
+    ).toEqual([expect.stringContaining('Fire'), expect.stringMatching(/Blue.*Green/)]);
+  });
+
+  it('leaves out a row no ingredient gives a value', () => {
+    drawn(ROWS);
+    const block = screen.getByRole('region', { name: 'Correspondences' });
+    expect(
+      within(block)
+        .getAllByRole('term')
+        .map((term) => term.textContent),
+    ).toEqual(['Elements', 'Colours']);
+  });
+
+  it('draws no Correspondences heading when every row is empty', () => {
+    drawn(ROWS.map((row) => ({ ...row, values: [], sources: [] })));
+    // The side column is drawn, so the block's absence is its own.
+    expect(screen.getByRole('region', { name: 'In the Cupboard' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Correspondences' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Correspondences' })).toBeNull();
+  });
+
+  it('makes each value a control whose tip names the ingredients that gave it, in step order', () => {
+    drawn(ROWS);
+    const block = within(screen.getByRole('region', { name: 'Correspondences' }));
+    const blue = block.getByRole('button', { name: 'Blue' });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+
+    act(() => blue.focus());
+
+    expect(blue).toHaveFocus();
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      'Testroot (Testform), Testbark (Testform), and Fixture Moss (Dried Leaf)',
+    );
+    act(() => blue.blur());
+    act(() => block.getByRole('button', { name: 'Fire' }).focus());
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/^Testroot \(Testform\)$/);
+  });
+
+  describe('in the jump menu', () => {
+    const linksOf = () =>
+      within(screen.getByRole('navigation', { name: 'On This Page' })).getAllByRole('link');
+    const workings = (
+      <SpellWorkings workings={[]} completeAction={() => null} editAction={() => null} />
+    );
+    const withBlock = (correspondences: boolean) =>
+      render(
+        <SpellRecipe
+          {...props({
+            steps: [instruction('s1', 'Stir.')],
+            workings,
+            correspondences,
+            aside: (
+              <SpellRecipeAside
+                steps={[]}
+                doors={[]}
+                intended={[]}
+                groups={[]}
+                correspondences={correspondences ? ROWS : []}
+              />
+            ),
+          })}
+        />,
+      );
+
+    it('lists Correspondences after In the Cupboard, its link pointing at the block', () => {
+      withBlock(true);
+      expect(linksOf().map((link) => link.textContent)).toEqual([
+        'Steps',
+        'Category Match',
+        'In the Cupboard',
+        'Correspondences',
+        'Workings',
+      ]);
+      const link = screen.getByRole('link', { name: 'Correspondences' });
+      const target = document.getElementById(link.getAttribute('href')!.slice(1));
+      expect(target).toBe(screen.getByRole('region', { name: 'Correspondences' }));
+    });
+
+    it('lists no Correspondences entry when the spell has none', () => {
+      withBlock(false);
+      // The side column's other entries are listed, so the missing one is the block's doing.
+      expect(linksOf().map((link) => link.textContent)).toEqual([
+        'Steps',
+        'Category Match',
+        'In the Cupboard',
+        'Workings',
+      ]);
     });
   });
 });

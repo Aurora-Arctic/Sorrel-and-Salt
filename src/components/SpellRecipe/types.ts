@@ -10,6 +10,7 @@ import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 import type { SpellMarksProps } from '../SpellMarks/types';
 import type { VerdictKind } from '../SpellBuilder/verdict-mark';
 import type { IngredientRow } from '@/modules/ingredients';
+import type { Row } from '../IngredientEntry/blocks';
 
 interface InstructionRecipeStep {
   kind: 'instruction';
@@ -67,6 +68,8 @@ export interface SpellRecipeProps {
   action?: ReactNode;
   workings?: ReactNode;
   aside?: ReactNode;
+  /** Whether the aside draws a Correspondences block, for the jump menu. */
+  correspondences?: boolean;
 }
 
 /**
@@ -90,6 +93,7 @@ export interface SpellRecipeAsideProps {
   doors: InventoryDoor[];
   intended: StepCategory[];
   groups: [string, GroupColors][];
+  correspondences?: Row[];
 }
 
 export type SpellRecipeBodyProps = Pick<

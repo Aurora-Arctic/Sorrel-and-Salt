@@ -471,6 +471,19 @@ describe('IngredientEntry', () => {
     },
   );
 
+  it('draws each correspondence as plain text, with no control and no tip, since one ingredient is its only source', () => {
+    renderEntry();
+    const definitions = screen.getAllByRole('definition');
+
+    for (const text of ['Fire', 'Fixture Moon', 'Fixtura (Fixture Pantheon)']) {
+      const value = definitions.find((definition) => definition.textContent === text);
+      expect(value, text).toBeDefined();
+      if (!value) continue;
+      expect(within(value).queryAllByRole('button')).toHaveLength(0);
+      expect(within(value).queryAllByRole('tooltip', { hidden: true })).toHaveLength(0);
+    }
+  });
+
   it('links a linked substitute to its page, naming the form a form link names, and leaves a typed one as text', () => {
     renderEntry();
     const substitutes = screen.getByRole('list', { name: 'Substitutes' });
