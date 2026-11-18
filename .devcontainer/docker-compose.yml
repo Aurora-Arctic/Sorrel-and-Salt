@@ -78,3 +78,101 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_healthy
+
+  # Builds graphify's code graph into git-ignored graphify-out/, then rebuilds
+  # it a few seconds after each change. Its first build takes about a minute.
+  # The repo is mounted read-only, and graphify-out/ alone is writable;
+  # `initializeCommand` creates that folder host-side so Compose does not
+  # make it root-owned. No AI model is called: there is no API key here.
+  # A failed build is retried three times, then left stopped with its log.
+  graphify-watch:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.graphify
+    image: sorrel-graphify
+    init: true
+    restart: on-failure:3
+    volumes:
+      - ..:/app:ro
+      - ../graphify-out:/app/graphify-out
+    command:
+      [
+        'sh',
+        '-c',
+        'graphify extract /app --code-only && graphify cluster-only /app && exec graphify watch /app',
+      ]
+    healthcheck:
+      test: ['CMD', 'test', '-f', '/app/graphify-out/graph.json']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # The graph over MCP, at http://graphify:8080/mcp (.mcp.json). No port is
+  # published, so only containers on this compose network reach it. It has
+  # no API key: it only reads, and what it serves comes from this public
+  # repo. It reloads graph.json itself whenever `graphify-watch` rewrites it.
+  graphify:
+    image: sorrel-graphify
+    init: true
+    volumes:
+      - ../graphify-out:/data:ro
+    command:
+      [
+        'graphify-mcp',
+        '/data/graph.json',
+        '--transport',
+        'http',
+        '--host',
+        '0.0.0.0',
+        '--port',
+        '8080',
+      ]
+    depends_on:
+      graphify-watch:
+        condition: service_healthy
+
+  # The graph's pages for a browser: http://localhost:8090/graph.html (the
+  # interactive graph) and /GRAPH_REPORT.md. Published on the host's loopback
+  # only, so nothing else on the network can open it.
+  graphify-web:
+    image: sorrel-graphify
+    init: true
+    volumes:
+      - ../graphify-out:/data:ro
+    ports:
+      - '127.0.0.1:8090:8090'
+    command: ['python', '-m', 'http.server', '8090', '--bind', '0.0.0.0', '--directory', '/data']
+    depends_on:
+      graphify-watch:
+        condition: service_healthy
+
+  # Rebuilds the smaller views whenever graph.json changes, which
+  # `graphify watch` does not do itself: the folder tree, /GRAPH_TREE.html,
+  # and, from Docker/graphify-views.py, the map of src/ by folder,
+  # /view/graph.html, and the wiki of one page per folder, /wiki/index.html.
+  # The tree goes to a temporary file first so the page never serves half a
+  # copy. The MCP server reads only the full graph.json, which this leaves alone.
+  graphify-views:
+    image: sorrel-graphify
+    init: true
+    working_dir: /app
+    volumes:
+      - ..:/app:ro
+      - ../graphify-out:/app/graphify-out
+    command:
+      - sh
+      - -c
+      - |
+        last=""
+        while true; do
+          now="$$(stat -c %Y graphify-out/graph.json 2>/dev/null)"
+          if [ -n "$$now" ] && [ "$$now" != "$$last" ] && graphify tree --graph graphify-out/graph.json --output graphify-out/.tree.tmp.html --label 'Sorrel & Salt' > /dev/null && mv graphify-out/.tree.tmp.html graphify-out/GRAPH_TREE.html && python Docker/graphify-views.py graphify-out/graph.json graphify-out; then
+            last="$$now"
+            echo "views rebuilt"
+          fi
+          sleep 10
+        done
+    depends_on:
+      graphify-watch:
+        condition: service_healthy
