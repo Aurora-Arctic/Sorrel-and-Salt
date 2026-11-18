@@ -51,13 +51,18 @@
   }
 }
 
-// One line is always reserved, so the total appearing or changing never moves the fields.
+// The total's line, out of flow while there is no total or refusal to show, as an empty field error is.
 .admin-cards__total {
   min-height: 1.5em;
   margin: 0;
   color: $text-muted;
   font-size: type-size('caption');
   line-height: 1.5;
+
+  &:has(> span:empty) {
+    position: absolute;
+    min-height: 0;
+  }
 }
 
 // The refusal stays on one line, running on under the next field, which has nothing beneath its control.

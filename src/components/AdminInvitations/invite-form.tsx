@@ -103,12 +103,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         onChange={setSiteRole}
         disabled={sending}
       />
-      <ReasonField
-        className="confirmed-action__note"
-        hint={NOTE_HINT}
-        {...reason.field}
-        disabled={sending}
-      />
+      <ReasonField hint={NOTE_HINT} {...reason.field} disabled={sending} />
       <FormActions
         noun="Invitation"
         label="Send Invitation"

@@ -86,7 +86,7 @@ An edit dialog says what is edited: an eyebrow naming the action and kind, then 
 
 - **`title`** is the name **as saved**, from what the page read, never the Name field's live value, so the head holds still during a rename.
 - **`qualifier`** follows the name in muted body ink where the list names it by a second thing: an ingredient's formal name, a deity's tradition ("Hecate (Greek)"). The caller sets binomial italics (`.binomial`); a mineral's formal name stays upright.
-- **`destination`** is where an add lands, in the eyebrow's place, spoken after the title through a hidden "to": "Add Ingredient to Whitethorn Coven".
+- **`destination`** is where an add lands, in the eyebrow's place, spoken after the title through a hidden "to": "Add Ingredient to Whitethorn Coven". The eyebrow is a flex row (`.modal-dialog__destination`), so the space after the hidden word starts no line and a long name wraps flush.
 - A screen reader hears eyebrow then title then qualifier, "Edit Ingredient, Mugwort, Artemisia vulgaris", with `.spoken-separator` commas (a comma drawn at no size, since `aria-labelledby` joins with a space and `.visually-hidden` text gets spaces either side in Chrome; `styling.md`).
 
 ## A title with its own end
@@ -183,6 +183,7 @@ Tokens are in `index.scss`: `$dialog-column` (32rem), `$modal-padding`, `$close-
 - **`headerAlign="center"`** centres the title and `under` (`.modal-dialog__header--centered`); `aboveName` keeps its place at the start. The title then takes `$close-reserve` on both sides, not only the end, so it centres on the dialog rather than on the room beside the ×, and the × stays where it is. The heading itself takes no reserve, so `aboveName` and `under` have the full width. Only the sign-in dialog turns it on, to match the centred `/sign-in` page; every other head starts at the start.
 - **`size="listed"`** changes only the width: 49rem, a third of the body to a side list and two to the column (Edit Stock, [`stock-dialog.md`](stock-dialog.md)).
 - **`size="picture"`** is as wide as a help screenshot is captured, 1024px plus the padding, and never wider than the window ([`help-screenshot.md`](help-screenshot.md)). `ModalButton` passes `size` and `readingBody` through to its modal.
+- **A row of answers stacks on a phone.** Every `.modal__actions` in a dialog, in its body or on a question's card, turns to a column of full-width buttons, in order, while the body (`modal-main`) is under `$narrow-column` plus the padding, as a narrow form's row does ([`styling.md`](../styling.md), "Form fields"), so no label wraps beside another. `ConfirmDialog` sets its answers outside the body and is not reached.
 - **Forced colours**: the dialog and confirm card take a 1px `CanvasText` border (their edge was a shadow); the flash uses the reduced-motion outline (a fill is dropped).
 
 ### Clipped, not hidden
