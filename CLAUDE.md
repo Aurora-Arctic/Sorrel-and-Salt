@@ -22,7 +22,7 @@ Code, schema and prose say _workspace_; the URL prefix `/coven/` and the screens
 
 ## Commands
 
-The devcontainer has no `make`, no `docker` and **no Python**: run the npm scripts, and script with `node -e`, `jq`, `grep` or `sed`. claude-docs/commands.md is the full table.
+The devcontainer has no `make`, no `docker` and **no Python** (the graphify sidecar image has its own, outside this rule): run the npm scripts, and script with `node -e`, `jq`, `grep` or `sed`. claude-docs/commands.md is the full table.
 
 | Command                         | Purpose                                          |
 | ------------------------------- | ------------------------------------------------ |

@@ -5,7 +5,7 @@
   "workspaceFolder": "/app",
   "shutdownAction": "stopCompose",
   "overrideCommand": false,
-  "initializeCommand": "mkdir -p \"${localWorkspaceFolder}/Docker/claude-home\"",
+  "initializeCommand": "mkdir -p \"${localWorkspaceFolder}/Docker/claude-home\" \"${localWorkspaceFolder}/graphify-out\"",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -17,12 +17,13 @@
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
   "postCreateCommand": "sudo apk add --no-cache github-cli",
-  "forwardPorts": [8000, 8001, 4983, 3456, 9229, 9230, 9231, 9323, 9324, 51204, 7900],
+  "forwardPorts": [8000, 8001, 4983, 3456, 8090, 9229, 9230, 9231, 9323, 9324, 51204, 7900],
   "portsAttributes": {
     "8000": { "label": "next dev" },
     "8001": { "label": "next start (production build)" },
     "4983": { "label": "drizzle studio" },
     "3456": { "label": "workflow job viewer" },
+    "8090": { "label": "graphify graph (graph.html)" },
     "9229": { "label": "node inspector (next dev --inspect)" },
     "9230": { "label": "node inspector (vitest --inspect-brk)" },
     "9231": { "label": "node inspector (playwright runner --inspect-brk)" },
