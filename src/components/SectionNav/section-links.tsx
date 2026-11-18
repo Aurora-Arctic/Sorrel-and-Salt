@@ -3,17 +3,9 @@
 import { PendingLink } from '../../lib/navigation';
 import { TABLET_BAND, useMediaQuery } from '../../lib/use-media-query';
 import { usePathname } from 'next/navigation';
-import {
-  type ReactElement,
-  useCallback,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useSyncExternalStore,
-  useState,
-} from 'react';
+import { type ReactElement, useId, useRef, useSyncExternalStore, useState } from 'react';
 import { useDismiss } from '../../lib/use-dismiss';
+import { useMeasuredFit } from '../../lib/use-measured-fit';
 import { isAtPath } from '../../lib/at-path';
 import { FacetCount } from '../FacetPanel/facet-count';
 import { ChevronIcon } from '../IconTip/icons';
@@ -37,10 +29,10 @@ type Natural = {
   more: number;
 };
 
+const FIRST_TAB = ':scope > .section-nav__item:not(.section-nav__more)';
+
 const measureNatural = (list: HTMLElement): Natural | null => {
-  const items = Array.from(
-    list.querySelectorAll<HTMLElement>(':scope > .section-nav__item:not(.section-nav__more)'),
-  );
+  const items = Array.from(list.querySelectorAll<HTMLElement>(FIRST_TAB));
   const widths = items.map(
     (item) => item.offsetWidth + pixels(getComputedStyle(item).marginInlineStart),
   );
@@ -63,6 +55,15 @@ const countThatFit = ({ widths, gap, more }: Natural, available: number): number
     if (tabs + (count < widths.length ? gap + more : 0) <= available) return count;
   }
   return 1;
+};
+
+const chooseCount = (natural: Natural, list: HTMLElement): number =>
+  countThatFit(natural, list.clientWidth);
+
+// A tab whose width no longer matches the measured one means the text size changed (the list's own width did not).
+const textSizeChanged = (natural: Natural, list: HTMLElement): boolean => {
+  const first = list.querySelector<HTMLElement>(FIRST_TAB);
+  return first !== null && first.offsetWidth !== natural.first;
 };
 
 // A section is current at its own address and, unless `exact`, beneath it;
@@ -88,7 +89,6 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
   const listId = useId();
   const root = useRef<HTMLElement>(null);
   const list = useRef<HTMLUListElement>(null);
-  const natural = useRef<Natural | null>(null);
   const button = useRef<HTMLButtonElement>(null);
   // The address More was opened at, not a flag: a navigation changes the
   // address and so shuts it, with no effect to reset the state.
@@ -97,65 +97,22 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
   const keyboard = useSyncExternalStore(subscribeToKeyboard, keyboardIsUp, keyboardIsNever);
 
   const tablet = useMediaQuery(TABLET_BAND);
-  const [fit, setFit] = useState<number | null>(null);
-  // Each time the band is entered, measure afresh: the count is reset while rendering, as React
-  // asks of state derived from a prop.
-  const [wasTablet, setWasTablet] = useState(false);
-  if (tablet !== wasTablet) {
-    setWasTablet(tablet);
-    setFit(null);
-  }
-  // And on each navigation: the current tab's weight changes its width.
-  const [measuredAt, setMeasuredAt] = useState(pathname);
-  if (pathname !== measuredAt) {
-    setMeasuredAt(pathname);
-    setFit(null);
-  }
+  // Measured afresh each time the band is entered and on each navigation, since the current tab's weight changes
+  // its width.
+  const fit = useMeasuredFit({
+    ref: list,
+    enabled: tablet,
+    measure: measureNatural,
+    choose: chooseCount,
+    stale: textSizeChanged,
+    // The row's width does not change with the text size; its tabs' widths do.
+    watch: (element) => element.querySelectorAll('.section-nav__item'),
+    fallback: VISIBLE,
+    resetKey: pathname,
+  });
   const measuring = tablet && fit === null;
   const count = tablet && fit !== null ? fit : VISIBLE;
   const shown = measuring ? sections.length : count;
-
-  // Measured before the browser paints: with every tab showing, then the
-  // count that fits, so no frame shows the row overflowing.
-  useLayoutEffect(() => {
-    if (!tablet || fit !== null || !list.current) return;
-    natural.current = measureNatural(list.current);
-    setFit(natural.current ? countThatFit(natural.current, list.current.clientWidth) : VISIBLE);
-  }, [tablet, fit]);
-
-  // A new row width picks a count from the widths already measured; web fonts arriving change the
-  // widths.
-  // A tab whose width no longer matches the measured one means the text size changed (the list's own
-  // width did not), so the tabs are measured afresh.
-  const refit = useCallback(() => {
-    const element = list.current;
-    const known = natural.current;
-    if (!element || !known) return;
-    const first = element.querySelector<HTMLElement>(
-      ':scope > .section-nav__item:not(.section-nav__more)',
-    );
-    if (first && first.offsetWidth !== known.first) {
-      setFit(null);
-      return;
-    }
-    setFit(countThatFit(known, element.clientWidth));
-  }, []);
-  useEffect(() => {
-    const element = list.current;
-    if (!tablet || !element || typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(refit);
-    observer.observe(element);
-    // The row's width does not change with the text size; its tabs' widths do.
-    element.querySelectorAll('.section-nav__item').forEach((item) => observer.observe(item));
-    let current = true;
-    void document.fonts?.ready.then(() => {
-      if (current) setFit(null);
-    });
-    return () => {
-      current = false;
-      observer.disconnect();
-    };
-  }, [tablet, refit]);
 
   // While measuring, More is drawn whenever there is more than one section, so its width is measured; that render is
   // never painted. With one section at least one tab stays out of More.
