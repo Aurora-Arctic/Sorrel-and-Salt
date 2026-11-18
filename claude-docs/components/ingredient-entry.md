@@ -158,6 +158,6 @@ The entry takes the frame's wide column (`$wide-column`).
 
 ## Correspondence source tips
 
-- A `Row` may carry `sources`, parallel to `values`: `sources[i]` names the ingredients that gave `values[i]`. `correspondences()` takes each list as plain strings or as `{ value, sources }`, drops a blank value together with its sources, and so keeps the two aligned.
+- A `Row` may carry `sources`, parallel to `values`: `sources[i]` names the ingredients that gave `values[i]`. `correspondences()` takes plain strings (the ingredient page) and `sourcedCorrespondences()` takes `{ value, sources }` pairs (the spell page); both end in one row builder that drops a blank value together with its sources, and so keeps the two aligned.
 - A value with at least one source is drawn by `CorrespondenceValue` (`correspondence-value.tsx`, a client part so the rows stay server-drawn) as a button named by the value, inside a `TipAnchor`. Its tip says the source names joined by `joinList(names, 'and')`, and opens on focus, a tap, or a hover resting 300ms. A value with no sources is plain text, so the ingredient page, which passes none, is unchanged.
 - The button looks like the text around it until hover or focus, when it gains a dotted underline and the shared focus ring. The tip is hidden in print, so the block prints as plain text.

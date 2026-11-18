@@ -19,25 +19,25 @@ export interface SourcedValue<T = string> {
   sources: readonly string[];
 }
 
-type Entry<T = string> = T | SourcedValue<T>;
-type Entries<T = string> = readonly Entry<T>[] | null | undefined;
-
 // Elements are plain text here: the spell page's combined values arrive as strings, not the column's enum.
-interface Correspondences {
-  elements: Entries;
-  celestialBodies: Entries;
-  zodiacSigns: Entries;
-  colors: Entries;
+interface Correspondences<T> {
+  elements: readonly T[];
+  celestialBodies: readonly T[];
+  zodiacSigns: readonly T[];
+  colors: readonly T[];
 }
 
-const sourced = <T,>(entry: Entry<T>): SourcedValue<T> =>
-  typeof entry === 'object' && entry !== null && 'sources' in entry && 'value' in entry
-    ? entry
-    : { value: entry as T, sources: [] };
+type PlainCorrespondences = {
+  [K in keyof Correspondences<string>]: readonly string[] | null;
+};
 
 /** One row. A blank value goes and takes its sources with it, so `sources[i]` always belongs to `values[i]`. */
-function rowOf(label: string, entries: Entries, format: (value: string) => string = (v) => v): Row {
-  const kept = (entries ?? []).map(sourced).filter(({ value }) => hasText(value));
+function rowOf(
+  label: string,
+  found: readonly SourcedValue[],
+  format = (value: string) => value,
+): Row {
+  const kept = found.filter(({ value }) => hasText(value));
   return {
     label,
     values: kept.map(({ value }) => format(value)),
@@ -45,24 +45,48 @@ function rowOf(label: string, entries: Entries, format: (value: string) => strin
   };
 }
 
-export function correspondences(source: Correspondences, deities?: Entries<DeityDetail>): Row[] {
-  const rows: Row[] = [
+function rowsOf(
+  source: Correspondences<SourcedValue>,
+  deities?: readonly SourcedValue<DeityDetail>[],
+): Row[] {
+  const rows = [
     rowOf('Elements', source.elements, capitalise),
     rowOf('Celestial Bodies', source.celestialBodies),
     rowOf('Zodiac Signs', source.zodiacSigns),
     rowOf('Colours', source.colors, capitalise),
   ];
   if (deities) {
-    const found = deities.map(sourced);
     rows.push({
       label: 'Deities',
-      values: found.map(({ value }) => deityMention(value)),
-      sources: found.map(({ sources }) => [...sources]),
+      values: deities.map(({ value }) => deityMention(value)),
+      sources: deities.map(({ sources }) => [...sources]),
     });
   }
   // A group with no value is left out, so a block never draws an empty line.
   return rows.filter((row) => row.values.length > 0);
 }
+
+const unsourced = (values: readonly string[] | null): SourcedValue[] =>
+  (values ?? []).map((value) => ({ value, sources: [] }));
+
+/** The ingredient page's rows: no value has sources, so none is a button. */
+export function correspondences(
+  source: PlainCorrespondences,
+  deities?: readonly DeityDetail[],
+): Row[] {
+  return rowsOf(
+    {
+      elements: unsourced(source.elements),
+      celestialBodies: unsourced(source.celestialBodies),
+      zodiacSigns: unsourced(source.zodiacSigns),
+      colors: unsourced(source.colors),
+    },
+    deities?.map((value) => ({ value, sources: [] })),
+  );
+}
+
+/** The spell page's rows: each value keeps the ingredients that gave it. */
+export const sourcedCorrespondences = rowsOf;
 
 /** A deity as the Deities row names it: its tradition and other names in brackets, parted by a semicolon because the row joins its values with commas. */
 function deityMention({ name, tradition, otherNames }: DeityDetail): string {
@@ -137,7 +161,7 @@ export function CorrespondenceBlock({
               {row.values.map((value, index) => {
                 const sources = row.sources?.[index] ?? [];
                 return (
-                  <Fragment key={value}>
+                  <Fragment key={`${index}-${value}`}>
                     {index > 0 && ', '}
                     {sources.length > 0 ? (
                       <CorrespondenceValue value={value} sources={sources} />
