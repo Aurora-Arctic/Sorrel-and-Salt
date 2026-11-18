@@ -139,14 +139,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// While a dialog is open the page behind it holds still: the overflow is CSS, so no listener can
-// leave the page locked, and the room the scrollbar took is given back as padding,
-// `--scrollbar-width`, which `holdPage` sets (claude-docs/components/modal.md, "Styling").
-:root:has(.modal-dialog:modal) {
-  overflow: hidden;
-  padding-inline-end: var(--scrollbar-width, 0);
-}
-
 // The default column with a list down its side: a third of the body to the list and two to the
 // column, half a column more and a step of gap, so the column keeps the width it has alone.
 .modal-dialog--listed {

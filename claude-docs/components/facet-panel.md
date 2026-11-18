@@ -41,6 +41,7 @@
 ### The modal sheet
 
 - Below the tablet width the dialog is `position: fixed` as a modal dialog is by default, not the overlay's absolute, because an absolute box translated past the right edge widens the page, which then scrolls sideways.
+- **The page behind holds still.** As the sheet opens, `shell.tsx` calls `holdPage()` (`Modal/page-hold.ts`) before `showModal()` and releases it when the dialog is shut or the panel unmounts. The root's `overflow: hidden` is the one shared rule in `Modal/page-hold.scss`, matching `:modal`, so the non-modal overlay from the tablet width up leaves the page scrolling, and a sheet that unmounts or a viewport that widens cannot leave the page locked. The sheet has `overscroll-behavior: contain`, so scrolling past its end does not move the page.
 - Its foot is sticky, with scroll padding so a focused control is never hidden behind it (WCAG 2.4.11).
 - It slides in from the right edge and back out to it, a slide rather than a fade because a drawer comes from its edge, while the backdrop fades as a `Modal`'s does. The way in is CSS alone, `@starting-style`. The way out is `.is-closing`, which the component sets and waits on (the dialog's `transitionend` for `transform`, or a net) before calling `close()`. The backdrop's `opacity` end reaches the dialog too and is not the one it waits on.
 - `$sheet-slide` is longer than a dialog's fade because the sheet travels its own width. `shell.tsx` waits up to `FADE_LIMIT_MS` (400ms, `src/lib/motion.ts`), which must stay longer.
