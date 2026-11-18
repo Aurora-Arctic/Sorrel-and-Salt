@@ -1,5 +1,10 @@
 import { fold } from '../../../lib/text';
-import type { CorrespondenceStep, Sourced, SpellCorrespondences } from '../types';
+import type {
+  CorrespondenceLists,
+  CorrespondenceStep,
+  Sourced,
+  SpellCorrespondences,
+} from '../types';
 
 function collector<T>() {
   const found = new Map<string, Sourced<T>>();
@@ -13,23 +18,28 @@ function collector<T>() {
   };
 }
 
+const LIST_KEYS: readonly (keyof CorrespondenceLists)[] = [
+  'elements',
+  'celestialBodies',
+  'zodiacSigns',
+  'colors',
+];
+
 /** Each value once, in the first spelling met and the order met, beside the labels of the steps that gave it. */
 export function combineCorrespondences(steps: readonly CorrespondenceStep[]): SpellCorrespondences {
-  const elements = collector<string>();
-  const celestialBodies = collector<string>();
-  const zodiacSigns = collector<string>();
-  const colors = collector<string>();
+  const listCollectors = {
+    elements: collector<string>(),
+    celestialBodies: collector<string>(),
+    zodiacSigns: collector<string>(),
+    colors: collector<string>(),
+  };
   const deities = collector<SpellCorrespondences['deities'][number]['value']>();
-  const lists = { elements, celestialBodies, zodiacSigns, colors };
 
-  for (const { label, lists: held, deities: named } of steps) {
-    for (const own of held) {
-      for (const [key, target] of Object.entries(lists) as [
-        keyof typeof lists,
-        typeof elements,
-      ][]) {
-        for (const value of own[key] ?? []) {
-          if (fold(value) !== '') target.add(fold(value), value, label);
+  for (const { label, lists, deities: named } of steps) {
+    for (const key of LIST_KEYS) {
+      for (const list of lists) {
+        for (const value of list[key] ?? []) {
+          if (fold(value) !== '') listCollectors[key].add(fold(value), value, label);
         }
       }
     }
@@ -40,10 +50,10 @@ export function combineCorrespondences(steps: readonly CorrespondenceStep[]): Sp
   }
 
   return {
-    elements: elements.rows(),
-    celestialBodies: celestialBodies.rows(),
-    zodiacSigns: zodiacSigns.rows(),
-    colors: colors.rows(),
+    elements: listCollectors.elements.rows(),
+    celestialBodies: listCollectors.celestialBodies.rows(),
+    zodiacSigns: listCollectors.zodiacSigns.rows(),
+    colors: listCollectors.colors.rows(),
     deities: deities.rows(),
   };
 }
