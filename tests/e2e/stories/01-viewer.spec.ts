@@ -133,12 +133,15 @@ test(
     });
 
     await test.step('the viewer is refused at every write address', async () => {
-      // The people pages answer a viewer as a stranger (tests/e2e/coven.spec.ts).
-      // There is no edit address for an ingredient row: stock is edited in place and the edit modal opens from the row.
-      for (const path of [`/coven/${coven.slug}/invitations`, `/coven/${coven.slug}/members`]) {
-        const response = await page.goto(path);
-        expect(response?.status(), path).toBe(404);
-      }
+      // The invitations page tells a viewer it is not theirs, inside the shell; the members page answers as to a stranger
+      // (tests/e2e/coven.spec.ts). There is no edit address for an ingredient row: stock is edited in place and the edit
+      // modal opens from the row.
+      const invitations = await page.goto(`/coven/${coven.slug}/invitations`);
+      expect(invitations?.status()).toBe(403);
+      await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
+      await expect(page.getByRole('banner')).toBeVisible();
+      const members = await page.goto(`/coven/${coven.slug}/members`);
+      expect(members?.status()).toBe(404);
       await page.goto(`/coven/${coven.slug}/grimoire?new=spell-${coven.slug}`);
       await expect(page.getByRole('heading', { name: 'Grimoire' })).toBeVisible();
       await expect(page.getByRole('dialog')).toHaveCount(0);

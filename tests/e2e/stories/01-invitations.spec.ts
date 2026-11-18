@@ -265,9 +265,11 @@ test(
     const tried = address('tried-by-hand');
     for (const person of [people.member, people.viewer]) {
       await signInAgainAs(page, person.id);
+      // A member is told the page is not theirs, inside the shell, not that it does not exist.
       const response = await page.goto(`/coven/${COVEN_SLUG}/invitations`);
-      expect(response?.status()).toBe(404);
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      expect(response?.status()).toBe(403);
+      await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
+      await expect(page.getByRole('banner')).toBeVisible();
       await expect(page.getByRole('button', { name: /^Revoke/ })).toHaveCount(0);
 
       const invite = await graphqlFromPage(page, CREATE_INVITATION, {

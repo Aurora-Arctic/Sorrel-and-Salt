@@ -6,13 +6,18 @@ import { requireCovenMembership, requireSession } from '../../../support/request
 
 // The invitations page, with the guard and the services mocked and the role check real.
 // It proves the list is read for an owner only, by the permission and not by catching a refusal, and that it pages through the default cursor keys.
+// A member who is refused is a member, so they get the shell's Not Authorized page (`forbidden()`), never the stranger's 404.
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');
 });
+const forbidden = vi.fn(() => {
+  throw new Error('forbidden');
+});
 vi.mock('next/navigation', async () => ({
   ...(await import('../../../support/next-navigation')),
   notFound,
+  forbidden,
 }));
 
 vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
@@ -80,10 +85,17 @@ describe('the /coven/[slug]/invitations page', () => {
   });
 
   it.each(['member', 'viewer'] as const)(
-    'answers a %s with the 404 and reads nothing',
+    'answers a %s, whom the coven guard admits, with Not Authorized and reads nothing',
     async (role) => {
-      await expect(visit(role)).rejects.toThrow('not-found');
+      await expect(visit(role)).rejects.toThrow('forbidden');
 
+      // The precondition: the coven guard passed them as a member of this coven, so only the role refused them.
+      expect(requireCovenMembership).toHaveBeenCalledWith('fixture-coven');
+      await expect(requireCovenMembership.mock.results[0].value).resolves.toMatchObject({
+        membership: { workspaceId: 'w', role },
+      });
+      expect(forbidden).toHaveBeenCalledTimes(1);
+      expect(notFound).not.toHaveBeenCalled();
       expect(listPendingWorkspaceInvitations).not.toHaveBeenCalled();
       expect(countPendingWorkspaceInvitations).not.toHaveBeenCalled();
     },
