@@ -5,7 +5,7 @@ import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 import { insertSpell, insertStep, localIngredient, seedCoven, withSql } from './coven-ingredients';
 import { BAND_WIDTHS, DESKTOP_WIDTH, PHONE_WIDTH } from '../breakpoints';
-import { settledBox } from '../waits';
+import { requiredDelay, settledBox } from '../waits';
 import { makeVariant } from '../../support/fixtures/ingredient';
 
 test.beforeAll(async () => {
@@ -480,40 +480,49 @@ test(
   },
 );
 
+/** Two ingredients with different correspondences, sharing Silver, in a spell a viewer opens; returns the block. */
+async function openCorrespondences(page: Page, name: string, domain: string): Promise<Locator> {
+  const coven = await seedCoven(page, name, domain, {
+    A: 'owner',
+    C: 'viewer',
+  });
+  const { A, C } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const ember = await localIngredient(sql, coven.id, A, {
+      name: 'Fixture Emberwort',
+      nomenclature: 'none',
+      elements: ['fire'],
+      colors: ['Silver'],
+      variants: [makeVariant({ form: 'Root' })],
+    });
+    const tide = await localIngredient(sql, coven.id, A, {
+      name: 'Fixture Tidewort',
+      nomenclature: 'none',
+      elements: ['water'],
+      colors: ['Silver'],
+      variants: [makeVariant({ form: 'Leaf' })],
+    });
+    const id = await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', A, 'complete');
+    await insertStep(sql, id, ember, { quantity: 2, unit: 'g', position: 0 }, A);
+    await insertStep(sql, id, tide, { quantity: 3, unit: 'g', position: 1 }, A);
+    return id;
+  });
+  await page.addInitScript(() => Reflect.deleteProperty(Navigator.prototype, 'wakeLock'));
+  await signInAgainAs(page, C);
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+  return page.getByRole('region', { name: 'Correspondences' });
+}
+
 test(
   "a spell's page gathers its ingredients' correspondences, each value naming the ingredients that gave it",
   { tag: '@story-85' },
   async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Correspondences', 'story-85c.test', {
-      A: 'owner',
-      C: 'viewer',
-    });
-    const { A, C } = coven.users;
-    const spellId = await withSql(async (sql) => {
-      const ember = await localIngredient(sql, coven.id, A, {
-        name: 'Fixture Emberwort',
-        nomenclature: 'none',
-        elements: ['fire'],
-        colors: ['Silver'],
-        variants: [makeVariant({ form: 'Root' })],
-      });
-      const tide = await localIngredient(sql, coven.id, A, {
-        name: 'Fixture Tidewort',
-        nomenclature: 'none',
-        elements: ['water'],
-        colors: ['Silver'],
-        variants: [makeVariant({ form: 'Leaf' })],
-      });
-      const id = await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', A, 'complete');
-      await insertStep(sql, id, ember, { quantity: 2, unit: 'g', position: 0 }, A);
-      await insertStep(sql, id, tide, { quantity: 3, unit: 'g', position: 1 }, A);
-      return id;
-    });
-    await page.addInitScript(() => Reflect.deleteProperty(Navigator.prototype, 'wakeLock'));
-    await signInAgainAs(page, C);
-    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-
-    const block = page.getByRole('region', { name: 'Correspondences' });
+    const block = await openCorrespondences(
+      page,
+      'Fixture Coven Correspondences',
+      'story-85c.test',
+    );
     await expect(block).toBeVisible();
     const fire = block.getByRole('button', { name: 'Fire' });
     await expect(fire).toBeVisible();
@@ -531,3 +540,26 @@ test(
     await assertNoAccessibilityViolations(page);
   },
 );
+
+test.describe('on a touch phone', () => {
+  test.use({ viewport: { width: PHONE_WIDTH, height: 844 }, hasTouch: true, isMobile: true });
+
+  test(
+    'a tap on a correspondence value opens its tip and leaves it open',
+    { tag: '@story-85' },
+    async ({ page }) => {
+      const block = await openCorrespondences(page, 'Fixture Coven Tapped Tip', 'story-85t.test');
+      const silver = block.getByRole('button', { name: 'Silver' });
+      await expect(silver).not.toBeFocused();
+
+      await silver.tap();
+      const tip = page.getByRole('tooltip');
+      await expect(tip).toBeVisible();
+      // "Still open" has no event to wait on, so this waits on the clock instead, past the
+      // 150ms close delay a stray close after the tap would take.
+      await requiredDelay(500, 'a tip staying open fires no event to wait on');
+      await expect(tip).toBeVisible();
+      await expect(tip).toHaveText('Fixture Emberwort (Root) and Fixture Tidewort (Leaf)');
+    },
+  );
+});
