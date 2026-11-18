@@ -16,7 +16,7 @@ import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
 import FormalName from './formal-name';
 import LinkHint, { LinkIconHint } from '../LinkHint';
-import SafetyNote, { ToxicMark } from '../SafetyNote';
+import { SafetyNoteWithDisclaimer, ToxicMark } from '../SafetyNote';
 import DisclaimerNotice from '../DisclaimerNotice';
 import { slugify } from '../../lib/slugify';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -116,8 +116,7 @@ function FormSection({
         {hasText(variant.description) && (
           <p className="ingredient-entry__description">{variant.description}</p>
         )}
-        <SafetyNote safetyNotes={variant.safetyNotes} level={4} />
-        {hasText(variant.safetyNotes) && <DisclaimerNotice />}
+        <SafetyNoteWithDisclaimer safetyNotes={variant.safetyNotes} level={4} />
         {addsNothing && (
           <p className="ingredient-entry__empty">
             {variant.toxic
@@ -410,10 +409,9 @@ const IngredientEntry = ({
             ) : (
               <p className="ingredient-entry__empty">No description recorded.</p>
             )}
-            <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
-            {/* The details' one disclaimer: beside the caution when there is one, else after the text. */}
-            {hasText(shown.safetyNotes) && <DisclaimerNotice />}
+            <SafetyNoteWithDisclaimer safetyNotes={shown.safetyNotes} level={3} />
             <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
+            {/* The details' one disclaimer: after the text here when there is no caution; the caution carries its own. */}
             {!hasText(shown.safetyNotes) && <DisclaimerNotice />}
           </div>
         </section>
