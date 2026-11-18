@@ -12,7 +12,7 @@ import { PendingLink } from '@/lib/navigation';
 export const metadata: Metadata = noIndexMetadata('Access Paused');
 
 // Where a paused account's pages send it (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access"). It reads the
-// viewer's own pause, so the address says nothing. No AppShell, since the shell would draw the notice that links here.
+// viewer's own pause, so the address says nothing. The (public) layout draws the site bar, and for a paused viewer the shell with that notice.
 export default async function AccessPausedPage() {
   const shell = await getShellSession();
   if (!shell) redirect('/sign-in');
@@ -22,7 +22,7 @@ export default async function AccessPausedPage() {
   const timedOut = session.emailUnverified ? null : await getMySupportTimeout(session);
 
   return (
-    <NarrowPanelPage title="Access Paused">
+    <NarrowPanelPage as="div" frameClassName="page-frame--in-column" title="Access Paused">
       {accessPause.until ? (
         <p>
           Access to this account is paused until <LocalTime at={accessPause.until} long />. The rest

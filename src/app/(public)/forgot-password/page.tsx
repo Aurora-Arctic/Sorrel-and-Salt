@@ -7,10 +7,10 @@ import { PendingLink } from '@/lib/navigation';
 
 export const metadata: Metadata = noIndexMetadata('Forgot Password');
 
-// No AppShell: DESIGN.md §9 scopes it to signed-in pages, and this page is reachable while signed out.
+// The (public) layout draws the site bar and holds the `main`, so the frame is a `div`; the page is open to a signed-out visitor.
 export default function ForgotPasswordPage() {
   return (
-    <PageFrame narrow>
+    <PageFrame as="div" narrow className="page-frame--in-column">
       <div className="panel">
         <PageHeader
           className="card-page-header"

@@ -1,8 +1,8 @@
 # SignInPanel
 
-`src/components/SignInPanel/` is the `/sign-in` page's card, and the body of the sign-in dialog that opens over a page ([`sign-in-dialog.md`](sign-in-dialog.md)). On the page, the server component `src/app/sign-in/page.tsx` reads `?next=`, `?error=` and the environment and hands the results down as props (`types.ts`); this component does the rendering and the click.
+`src/components/SignInPanel/` is the `/sign-in` page's card, and the body of the sign-in dialog that opens over a page ([`sign-in-dialog.md`](sign-in-dialog.md)). On the page, the server component `src/app/(public)/sign-in/page.tsx` reads `?next=`, `?error=` and the environment and hands the results down as props (`types.ts`); this component does the rendering and the click.
 
-A visitor who is already signed in never sees the panel. The page redirects on the server: to `?next=` when it passes `safeReturnPath()`, otherwise to `signedInLanding(session)`. An account whose address is unverified goes to `emailPagePath(target)` instead, as `requireSession()` sends it (`tests/app/sign-in-page.test.tsx`).
+A visitor who is already signed in never sees the panel. The page redirects on the server: to `?next=` when it passes `safeReturnPath()`, otherwise to `signedInLanding(session)`. An account whose address is unverified goes to `emailPagePath(target)` instead, as `requireSession()` sends it (`tests/app/(public)/sign-in-page.test.tsx`).
 
 ## Contracts
 
@@ -118,7 +118,7 @@ The configured scan exists because the greyed one cannot see the brand colours: 
 
 ## Used by
 
-`src/app/sign-in/page.tsx` and `SignInDialog` ([`sign-in-dialog.md`](sign-in-dialog.md)).
+`src/app/(public)/sign-in/page.tsx` and `SignInDialog` ([`sign-in-dialog.md`](sign-in-dialog.md)).
 
 ## Not here
 

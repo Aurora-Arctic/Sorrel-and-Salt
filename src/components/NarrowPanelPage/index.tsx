@@ -8,6 +8,7 @@ import { cx } from '@/lib/class-names';
 // A page and its skeleton both draw it, so the skeleton's heading lands where the page's does.
 const NarrowPanelPage = ({
   as,
+  frameClassName,
   contextRow,
   title,
   lede,
@@ -16,7 +17,7 @@ const NarrowPanelPage = ({
 }: NarrowPanelPageProps): ReactElement => (
   <>
     {contextRow}
-    <PageFrame as={as} narrow>
+    <PageFrame as={as} narrow className={frameClassName}>
       <div className={cx('page-frame__section panel narrow-panel-page', className)}>
         <PageHeader
           className="card-page-header"

@@ -18,13 +18,14 @@ const APP = join(REPO_ROOT, 'src/app');
  * so no `MainBody` is mounted there to draw one.
  */
 const EXEMPT: Record<string, string> = {
-  'src/app/page.tsx': 'the root landing, outside every skeleton host',
-  'src/app/sign-in/page.tsx': 'the sign-in form, outside every skeleton host',
-  'src/app/forgot-password/page.tsx': 'an auth form with no data, outside every skeleton host',
-  'src/app/reset-password/page.tsx': 'an auth form with no data, outside every skeleton host',
-  'src/app/access-paused/page.tsx': 'a paused-account notice, outside every skeleton host',
-  'src/app/invite/[token]/page.tsx': 'the invitation accept panel, outside every skeleton host',
-  'src/app/i/[token]/page.tsx': 'the card accept panel, outside every skeleton host',
+  'src/app/page.tsx': 'the root landing, no data to wait on',
+  'src/app/(public)/sign-in/page.tsx': 'the sign-in form, which holds no data',
+  'src/app/(public)/forgot-password/page.tsx': 'an auth form, which holds no data',
+  'src/app/(public)/reset-password/page.tsx': 'an auth form, which holds no data',
+  'src/app/(public)/access-paused/page.tsx':
+    'a short notice of its own pause, with no list to shape',
+  'src/app/invite/[token]/page.tsx': 'the invitation accept panel, no data to wait on',
+  'src/app/i/[token]/page.tsx': 'the card accept panel, no data to wait on',
   'src/app/(unmatched)/[...missing]/page.tsx':
     'answers every unmatched address with the 404, so there is no data to wait on',
   'src/app/(public)/support/request/page.tsx':

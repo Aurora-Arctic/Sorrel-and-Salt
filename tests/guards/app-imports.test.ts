@@ -27,7 +27,7 @@ describe('src/app imports', () => {
   it('reach code outside src/app through @/, never a relative path', () => {
     const files = sourceFiles({ under: 'src/app/' });
     // Precondition: the scan holds files that import deep relative paths today.
-    expect(files).toContain('src/app/access-paused/page.tsx');
+    expect(files).toContain('src/app/(public)/access-paused/page.tsx');
     expect(files).toContain('src/app/api/graphql/route.ts');
 
     const escaping = files.flatMap((file) =>
