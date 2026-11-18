@@ -84,6 +84,6 @@ export const FAQ_ENTRIES = [
   faq(
     17,
     'How do I ask for help or report an accessibility bug?',
-    `Send a [[Support Request|support request]]. Pick the topic that fits, such as Accessibility (“Something you cannot use or read.”) or Bug (“Something is broken or wrong.”), give a subject and a message, and choose **Send Request**. You can send one without signing in; we reply to the email address you give.`,
+    `Send a [[Support Request|support request]]. Pick the topic that fits, such as Accessibility ("Something you cannot use or read.") or Bug ("Something is broken or wrong."), give a subject and a message, and choose **Send Request**. You can send one without signing in; we reply to the email address you give.`,
   ),
 ];

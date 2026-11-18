@@ -51,7 +51,7 @@ An invitation lasts seven days, and it never lowers a role you already hold. If 
     'What a printed card does and how to use it.',
     `A printed card is handed to you by a [[Keeper]]. It carries a link and a QR code. Unlike an [[Invitation|invitation]], it is tied to no email address and seats you in no [[Coven|coven]], and it grants no role. What it does is let your account create a coven, once per account.
 
-Open the link, or scan the QR code, and sign in if asked. When the card is accepted you land on the **Create Coven** page with the note “Your card is accepted: you can now start a coven.” and you will be the coven's [[Steward]]. See **Create a Coven** for the next step.
+Open the link, or scan the QR code, and sign in if asked. When the card is accepted you land on the **Create Coven** page with the note "Your card is accepted: you can now start a coven." and you will be the coven's [[Steward]]. See **Create a Coven** for the next step.
 
 A card you have already used says so and points you to your account to start a coven. If you have already used one card, a second is refused and stays free for someone else. A card that is not valid, has been withdrawn or has expired is refused too, and the page says which. **My Invitation Link Does Not Work** gives the wording.`,
   ),
@@ -110,7 +110,7 @@ What the [[Compendium]] says, it sources. A source is a [[Reference|reference]]:
     3,
     'The Toxic Flag and Safety Notes',
     'How toxicity is marked on an ingredient and on each form.',
-    `An ingredient and each of its forms carry safety notes and a toxic flag. A form's flag is its own: a form's note reads “This form adds only its Toxic mark to what the ingredient says.”
+    `An ingredient and each of its forms carry safety notes and a toxic flag. A form's flag is its own: a form's note reads "This form adds only its Toxic mark to what the ingredient says."
 
 > **Take Care:** The entry page shows toxic if the ingredient or any of its forms is toxic.
 
@@ -147,9 +147,9 @@ A Steward renames a coven in the **Rename Coven** section of its page. The addre
     'How to start a coven of your own.',
     `Starting a [[Coven|coven]] needs permission. You get it by accepting an [[Invitation|invitation]], by redeeming a printed card, or when a [[Keeper]] grants it. Only a Keeper takes it away, and covens you already made stay.
 
-With permission, choose **Create Coven** in the coven switcher. The page says “Start a coven of your own. You will be its Steward.” Enter a **Name** and choose **Create Coven**. You become the coven's [[Steward]].
+With permission, choose **Create Coven** in the coven switcher. The page says "Start a coven of your own. You will be its Steward." Enter a **Name** and choose **Create Coven**. You become the coven's [[Steward]].
 
-Without permission, the page says: “Creating a coven needs an invitation from someone already using Sorrel & Salt, or a Keeper's approval.”`,
+Without permission, the page says: "Creating a coven needs an invitation from someone already using Sorrel & Salt, or a Keeper's approval."`,
   ),
   subPage(
     yourCoven,
@@ -180,7 +180,7 @@ A paused member who opens the coven sees **Access Paused** with the time it ends
     'How a seat ends, by removal or by leaving.',
     `A [[Steward]] can remove a member: choose **Remove** on the member, then confirm in **Remove Member**. The seat is ended. If the member is invited back, the same seat is revived with the role on the new invitation. The last Steward cannot be removed.
 
-Any member, a [[Pause|paused]] one too, can choose **Leave Coven** and confirm. The page says: “You lose access to its ingredients and its grimoire until a Steward invites you back.” Your own entries stay with the [[Coven|coven]].
+Any member, a [[Pause|paused]] one too, can choose **Leave Coven** and confirm. The page says: "You lose access to its ingredients and its grimoire until a Steward invites you back." Your own entries stay with the [[Coven|coven]].
 
 If you are the only Steward and other members remain, leaving opens a choice titled **What Happens to the Coven?**. Choose **Hand It to** a member you pick under **New Steward**, and **Promote and Leave** makes them a Steward first, then you leave. That is two steps: if the leave fails, you stay and the coven has two Stewards. The other choice is **Delete Coven**. If you are the only member, delete the coven instead of leaving it.`,
   ),
@@ -191,7 +191,7 @@ If you are the only Steward and other members remain, leaving opens a choice tit
     'What deleting a coven does and who can do it.',
     `Only a [[Steward]] can delete a [[Coven|coven]]. Open the coven and find the **Delete Coven** section.
 
-> **Take Care:** Once deleted, the coven becomes inaccessible to every member, Stewards included. The page warns: “Nothing is destroyed, but only an administrator with database access can restore it.”
+> **Take Care:** Once deleted, the coven becomes inaccessible to every member, Stewards included. The page warns: "Nothing is destroyed, but only an administrator with database access can restore it."
 
 The [[Demo Coven]] cannot be deleted.`,
   ),
@@ -255,7 +255,7 @@ Units are milligrams, grams, kilograms, ounces and pounds for weight; millilitre
 
 **Annotate** opens a form with seven fields: Label, Description, Safety Notes, Elements, and lists of celestial bodies, zodiac signs and colours. Each field has **Restore Original** to go back to the Compendium's text. The Label stands in for the Compendium's name on your pages, and a label must be unlike every other label and every ingredient name in your coven. The form saves itself as you work.
 
-**Make It Ours** asks “Make <name> your coven's own?” and explains: “You get a copy with your annotations. Your jars and spells move to the copy. Updates in the Compendium won't affect it.” Choose **Make It Ours** to confirm.`,
+**Make It Ours** asks "Make <name> your coven's own?" and explains: "You get a copy with your annotations. Your jars and spells move to the copy. Updates in the Compendium won't affect it." Choose **Make It Ours** to confirm.`,
   ),
 ];
 
@@ -284,11 +284,11 @@ const grimoirePages = [
 
 A step that names an ingredient is checked against your jars. There are six results:
 
-- **Out**: “The jar is empty, so there is nothing to put in.”
-- **Not Enough**: “The jar holds less than this step needs.”
-- **Units Differ**: “The units don't match, so it can't tell if you have enough.”
-- **Low**: “The jar is at or below the coven's Low mark.”
-- **One-Off**: “Used in this spell only; not kept in your cupboard.”
+- **Out**: "The jar is empty, so there is nothing to put in."
+- **Not Enough**: "The jar holds less than this step needs."
+- **Units Differ**: "The units don't match, so it can't tell if you have enough."
+- **Low**: "The jar is at or below the coven's Low mark."
+- **One-Off**: "Used in this spell only; not kept in your cupboard."
 - **No jar**: the ingredient has no jar, and the **In the Cupboard** panel says you have no jar.
 
 A form used in several steps is judged on the sum of its steps. Units are converted only within one dimension, so a weight cannot be set against a volume or a count. The marks also show on the spell's recipe page.`,
@@ -300,7 +300,7 @@ A form used in several steps is judged on the sum of its steps. Units are conver
     'The difference between the categories you assign and those your ingredients bring.',
     `Assigned categories are what the spell intends. Derived categories are the ones its ingredients carry. They are different things.
 
-The **Category Match** panel compares them in three rows: Carried (intended and present), Missing (assigned, and nothing in the jar carries it), and Extra (present but not intended). Before there is anything to compare it reads “Nothing to compare yet.” or “Assign categories to compare.”`,
+The **Category Match** panel compares them in three rows: Carried (intended and present), Missing (assigned, and nothing in the jar carries it), and Extra (present but not intended). Before there is anything to compare it reads "Nothing to compare yet." or "Assign categories to compare."`,
   ),
   subPage(
     grimoire,
@@ -311,14 +311,14 @@ The **Category Match** panel compares them in three rows: Carried (intended and 
 
 > **Take Care:** A complete spell shared with the coven cannot be made private again, and a complete spell cannot go back to a draft.
 
-The page says: “Duplicate it to get a private copy you can change, or delete it if it should not be there.”`,
+The page says: "Duplicate it to get a private copy you can change, or delete it if it should not be there."`,
   ),
   subPage(
     grimoire,
     5,
     'Duplicate a Spell',
     'Making a private draft copy.',
-    `A Practitioner or Steward can choose **Duplicate**. The copy's title gets “ (Copy)”, and it is a private draft. The recipe is copied; workings, the revision count and history stay behind. A category that has been deleted is not carried over.`,
+    `A Practitioner or Steward can choose **Duplicate**. The copy's title gets " (Copy)", and it is a private draft. The recipe is copied; workings, the revision count and history stay behind. A category that has been deleted is not carried over.`,
   ),
   subPage(
     grimoire,
@@ -340,7 +340,7 @@ On a spell's page, the preview has a **Screen Awake** toggle, with the tips **Ke
 
 A save starts 3 seconds after your last change, and at most 30 seconds into a long run of changes. It also saves when the tab is hidden or focus leaves the form. A copy is kept in your browser until the server confirms the save, and the browser asks before the tab closes with an unsaved change.
 
-The status shows **Saving…**, then **Saved** <time>, or “Draft saved <time>” for a draft. If a save fails it tries again after 2, 5 and 15 seconds. After that it stops at “Could not save.” with **Retry**. If someone else changed the same thing first, you can choose **Reload Latest** or **Keep My Version**. Each state looks like this:
+The status shows **Saving…**, then **Saved** <time>, or "Draft saved <time>" for a draft. If a save fails it tries again after 2, 5 and 15 seconds. After that it stops at "Could not save." with **Retry**. If someone else changed the same thing first, you can choose **Reload Latest** or **Keep My Version**. Each state looks like this:
 
 ::widget[autosave-status]
 
@@ -367,7 +367,7 @@ const workingPages = [
     2,
     'Complete a Working and Take Stock Out',
     'What completing does to your jars.',
-    `A Practitioner or Steward chooses **Complete Working**. The dialog lists the Deductions it will take from your jars: for each, how much it takes, how much the jar holds and what is left. To change a jar first, choose its **Edit Stock**. The summary says “Completing takes nothing from the jars for N ingredient(s).” for any ingredient it skips. It skips one when the units differ, the jar has no amount, the step has no amount, the ingredient is not in stock, or it is a one-off ingredient.
+    `A Practitioner or Steward chooses **Complete Working**. The dialog lists the Deductions it will take from your jars: for each, how much it takes, how much the jar holds and what is left. To change a jar first, choose its **Edit Stock**. The summary says "Completing takes nothing from the jars for N ingredient(s)." for any ingredient it skips. It skips one when the units differ, the jar has no amount, the step has no amount, the ingredient is not in stock, or it is a one-off ingredient.
 
 The recorder or a named participant can complete it. A jar short of stock goes to zero and the shortfall is recorded. If a deduction fails, the working stays a draft and nothing is taken. Deleting a working never puts stock back, and only its recorder can delete it. A completed working's visibility only widens.`,
   ),
@@ -428,7 +428,7 @@ const supportPages = [
     1,
     'Send a Support Request',
     'The request form.',
-    `Both forms ask **What Is This About?**, which is required. The signed-in form then asks for the Page, a Subject and a Message. The signed-out form asks your email address (“We reply to this address.”), a Subject and a Message. Choose **Send Request**. The signed-in form offers Accessibility, Bug, Account & Sign-In, [[Compendium]] Entry, Privacy & Data, Feedback and Question. The signed-out form offers Accessibility, Bug, Account & Sign-In, Privacy & Data and Question.
+    `Both forms ask **What Is This About?**, which is required. The signed-in form then asks for the Page, a Subject and a Message. The signed-out form asks your email address ("We reply to this address."), a Subject and a Message. Choose **Send Request**. The signed-in form offers Accessibility, Bug, Account & Sign-In, [[Compendium]] Entry, Privacy & Data, Feedback and Question. The signed-out form offers Accessibility, Bug, Account & Sign-In, Privacy & Data and Question.
 
 A request you sent while signed out moves to your account once the account has that address verified.`,
   ),
@@ -439,7 +439,7 @@ A request you sent while signed out moves to your account once the account has t
     'Following a request while signed in.',
     `A reply is read on the support page behind sign-in, and the email only tells you one has arrived. Staff replies are tagged **Staff** and your own **You**.
 
-Write under **Your Reply** and choose **Reply**. Choose **Resolve** if your question is answered. A request that has been timed out cannot be replied to. A closed request shows “This request is closed.” with **Open Your Follow-Up**, or tells you to write a new request from Support.`,
+Write under **Your Reply** and choose **Reply**. Choose **Resolve** if your question is answered. A request that has been timed out cannot be replied to. A closed request shows "This request is closed." with **Open Your Follow-Up**, or tells you to write a new request from Support.`,
   ),
   subPage(
     support,
@@ -488,19 +488,19 @@ const troubleshootingPages = [
 
 ::widget[invitation-refusals]
 
-The reason “Keeper changes are paused” applies to invitations from a [[Keeper]] only.`,
+The reason "Keeper changes are paused" applies to invitations from a [[Keeper]] only.`,
   ),
   subPage(
     troubleshooting,
     3,
     'I Cannot Complete a Working',
     'Why "Complete Working" is refused.',
-    `- “A working can't be completed before its day.”
-- “This working is already complete.”
-- The spell is a draft: “A spell takes workings once the spell is complete.”
+    `- "A working can't be completed before its day."
+- "This working is already complete."
+- The spell is a draft: "A spell takes workings once the spell is complete."
 - Only the person who recorded a working, or someone named on it, can change it. Only its recorder can delete it.
-- A private spell's working cannot be shared with the coven: “Share the spell first.”
-- A participant must be a member of the coven: “Choose a member of this coven”.`,
+- A private spell's working cannot be shared with the coven: "Share the spell first."
+- A participant must be a member of the coven: "Choose a member of this coven".`,
   ),
   subPage(
     troubleshooting,
@@ -518,9 +518,9 @@ Within volume, a teaspoon is 5 ml, a tablespoon is 15 ml and a cup is 250 ml. Ch
     5,
     'I Cannot Remove or Leave',
     'Why a seat cannot end.',
-    `- “This is the last Steward, and a coven needs one. Make another member a Steward first.”
-- “You are the only member. Delete the coven instead of leaving it.”
-- Removing someone who is not in the coven says “That person is not a member of this coven”.
+    `- "This is the last Steward, and a coven needs one. Make another member a Steward first."
+- "You are the only member. Delete the coven instead of leaving it."
+- Removing someone who is not in the coven says "That person is not a member of this coven".
 
 If you are the only Steward, **Leave Coven** opens **What Happens to the Coven?** to hand it to another member or delete it. See **Remove a Member or Leave**.`,
   ),

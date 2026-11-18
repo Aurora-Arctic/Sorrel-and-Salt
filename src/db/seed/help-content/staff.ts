@@ -116,7 +116,7 @@ const cardPages = [
     1,
     'Read Card Sign-Ups',
     'Who has accepted a printed card.',
-    `Open Card Sign-Ups in the Keepers area. **Filter Card Sign-Ups** searches by **Name, Email or Batch**. The columns are Name, Email, Accepted On, Batch, Beta and Covens Owned, which reads “None yet” for an account that has made no coven. Choose **Download CSV** to save the list as \`card-sign-ups.csv\`.`,
+    `Open Card Sign-Ups in the Keepers area. **Filter Card Sign-Ups** searches by **Name, Email or Batch**. The columns are Name, Email, Accepted On, Batch, Beta and Covens Owned, which reads "None yet" for an account that has made no coven. Choose **Download CSV** to save the list as \`card-sign-ups.csv\`.`,
     'keeper',
   ),
 ];
@@ -127,7 +127,7 @@ const businessCards = article(
   'Printing your own business cards from the Keepers area.',
   `Open Business Cards in the Keepers area. It makes a Letter sheet of ten business cards with your name, email and phone. Fill in **Name**, **Email** and **Phone**, all required. The switch **Include Backs** adds the backs. Choose **Generate**.
 
-The PDF is built in your browser and nothing you type is saved. The file is named \`business-cards-\`, then your name made into a slug, then \`.pdf\`, and the page says “Saved as <file>.” If it fails, it says “The PDF could not be built. Try again.”`,
+The PDF is built in your browser and nothing you type is saved. The file is named \`business-cards-\`, then your name made into a slug, then \`.pdf\`, and the page says "Saved as <file>." If it fails, it says "The PDF could not be built. Try again."`,
   'keeper',
 );
 
@@ -145,7 +145,7 @@ const documentPages = [
     1,
     'Mail a New Version to Every Account',
     'Telling every account that a document changed.',
-    `Open Documents in the Keepers area. There are tabs for Terms of Use, Disclaimer, Code of Ethics, Privacy Policy and **Email Updates**. The **Email Every Account** panel lists the documents under “Changed since the last email”, and the number of accounts and days.
+    `Open Documents in the Keepers area. There are tabs for Terms of Use, Disclaimer, Code of Ethics, Privacy Policy and **Email Updates**. The **Email Every Account** panel lists the documents under "Changed since the last email", and the number of accounts and days.
 
 Each changed document needs a **Summary of the** <document>: what changed in that version, in your words. Every account reads it in the email. Choose **Send Emails** to confirm. Each account may be asked to agree again at its next visit.
 
@@ -220,9 +220,9 @@ A sub page's audience is its parent's or narrower, in the order Public, Staff, K
     'How an entry gets its address, and which titles are refused.',
     `An entry's slug is the last part of its address, and it is always made from the title: lower case, with words joined by hyphens and other punctuation dropped. There is no slug to type. The form shows the address beneath **Title** as you type it.
 
-When you change a title, the slug changes with it, so the entry's address moves. The old address then answers “not found”, and nothing redirects it. A link to the old address in another entry's body, and a \`[[Term]]\` mark that names a renamed term by its old title or address, stop working until you correct them: the link answers “not found”, and the mark reads as plain text.
+When you change a title, the slug changes with it, so the entry's address moves. The old address then answers "not found", and nothing redirects it. A link to the old address in another entry's body, and a \`[[Term]]\` mark that names a renamed term by its old title or address, stop working until you correct them: the link answers "not found", and the mark reads as plain text.
 
-A title must make an address that holds a letter or a number. The address must also be unique within its kind: no two FAQ questions share one, no two terms share one, and no two articles share one, a sub page included. An FAQ question and an article may share one. A title whose address another entry of the same kind holds is refused on **Title**, saying “Another article has a title that makes the same address” or its like.
+A title must make an address that holds a letter or a number. The address must also be unique within its kind: no two FAQ questions share one, no two terms share one, and no two articles share one, a sub page included. An FAQ question and an article may share one. A title whose address another entry of the same kind holds is refused on **Title**, saying "Another article has a title that makes the same address" or its like.
 
 The addresses glossary, staff and search are reserved, since each is a page beneath /help. A title that makes one of them is refused on **Title**.
 
@@ -252,7 +252,7 @@ const pauseUser = article(
   20,
   "Pause a User's Access",
   'Stopping an account from using the site for a while.',
-  `Open Users in the Keepers area, open the user, and find the **Site Access** section. A [[Pause|pause]] needs a note, seen by staff only, and a **Message to User**. Each is required and up to 500 characters. Choose how long it lasts, then confirm. The toasts read “Access paused.” and “Pause lifted.”
+  `Open Users in the Keepers area, open the user, and find the **Site Access** section. A [[Pause|pause]] needs a note, seen by staff only, and a **Message to User**. Each is required and up to 500 characters. Choose how long it lasts, then confirm. The toasts read "Access paused." and "Pause lifted."
 
 The primary [[Keeper]], yourself, and stand-in accounts cannot be paused. A user who is already paused must be lifted first. Setting a pause ends every session of the user. While Keeper changes are paused, a Keeper other than the primary Keeper cannot pause a Keeper.
 
