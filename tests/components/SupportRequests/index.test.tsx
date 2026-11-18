@@ -29,7 +29,7 @@ import {
 } from '../../support/msw/graphql';
 import { choose } from '../../support/interact';
 import { filterForm } from '../../support/filter-form';
-import { rowCells } from '../../support/table';
+import { emptyCellMark, rowCells } from '../../support/table';
 import { router } from '../../support/next-navigation';
 
 // claude-docs/components/support-requests.md
@@ -684,12 +684,12 @@ describe('An anonymised request', () => {
     return rowCells(row)[column];
   };
 
-  it('leaves the Sender cell empty in its row, and names the link by the subject alone', () => {
+  it('shows the shared empty mark in place of the Sender, and names the link by the subject alone', () => {
     render(<SupportRequests requests={[ROW, ANONYMISED]} viewer={ADMIN} />);
     const ordinary = screen.getByRole('row', { name: /moon icon/ });
     const anonymised = screen.getByRole('row', { name: /Anonymised support request/ });
     expect(senderCell(ordinary)).not.toBeEmptyDOMElement();
-    expect(senderCell(anonymised)).toBeEmptyDOMElement();
+    expect(senderCell(anonymised).textContent).toBe(emptyCellMark());
     expect(
       within(anonymised).getByRole('link', { name: 'Anonymised support request.' }),
     ).toBeInTheDocument();
