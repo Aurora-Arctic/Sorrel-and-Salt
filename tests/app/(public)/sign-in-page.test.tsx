@@ -1,13 +1,13 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
-import { USER_ID } from '../support/constants';
-import { getSession, hasSessionCookie, sessionIsVerified } from '../support/request-session';
+import { USER_ID } from '../../support/constants';
+import { getSession, hasSessionCookie, sessionIsVerified } from '../../support/request-session';
 
 // /sign-in sends an already signed-in visitor on, by `?next=` or the role's landing, the way a sign-in itself does.
 // The session and landing are mocked; `redirect` throws as Next's does, so the page stops at it.
 
-vi.mock('@/lib/request-session', () => import('../support/request-session'));
+vi.mock('@/lib/request-session', () => import('../../support/request-session'));
 
 const signedInLanding = vi.fn<() => Promise<string>>();
 vi.mock('@/lib/landing', () => ({ signedInLanding }));
@@ -22,7 +22,7 @@ vi.mock('@/lib/configured-providers', () => ({ providersToPass: () => [] }));
 const SignInPanel = vi.fn<(props: { ledes?: unknown; mode?: unknown }) => null>(() => null);
 vi.mock('@/components/SignInPanel', () => ({ default: SignInPanel }));
 
-const { default: SignInPage, metadata } = await import('@/app/sign-in/page');
+const { default: SignInPage, metadata } = await import('@/app/(public)/sign-in/page');
 const { ADDRESS_LEDES } = await import('@/components/InvitationAcceptance/ledes');
 const { newCardToken, newToken, looksLikeCardToken } = await import('@/lib/invitation-token');
 

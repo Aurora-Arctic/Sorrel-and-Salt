@@ -101,7 +101,7 @@ export const TwoBuckets: Story = {
             onChange={setValue}
             onPick={setValue}
             suggestions={{ options: FORMS, pending: false }}
-            placeholder="Add a form"
+            placeholder="Add a Form"
           />
         )}
       </Labelled>
@@ -163,7 +163,7 @@ const ListView = () => {
         <Combobox
           {...ids}
           label="Folk Name"
-          placeholder="Add a name"
+          placeholder="Add a Name"
           value={value}
           onChange={setValue}
           onPick={add}
@@ -220,7 +220,7 @@ export const Sortable: Story = {
           <Combobox
             {...ids}
             label="Celestial Body"
-            placeholder="Add a body"
+            placeholder="Add a Body"
             value={value}
             onChange={setValue}
             onPick={add}
@@ -266,7 +266,7 @@ export const CreateRow: Story = {
               onPick={setValue}
               suggestions={{ options: NAMES, pending: false }}
               action={{ label: 'New Reference', onSelect: () => setMade((count) => count + 1) }}
-              placeholder="Search references"
+              placeholder="Search References"
             />
             {made > 0 && <output className="story-note">New Reference picked {made}×.</output>}
           </>
@@ -288,7 +288,7 @@ export const NoSource: Story = {
             value={value}
             onChange={setValue}
             onPick={setValue}
-            placeholder="Type a colour"
+            placeholder="Type a Colour"
           />
         )}
       </Labelled>
@@ -312,7 +312,7 @@ export const SelectOnly: Story = {
             value={value}
             onChange={setValue}
             choices={KINDS}
-            placeholder="Choose a classification"
+            placeholder="Choose a Classification"
           />
         )}
       </Labelled>
@@ -336,7 +336,7 @@ export const SelectWithIcons: Story = {
               { value: 'animal', label: 'Fixture Animal', icon: <FormIcon name="animal" /> },
               { value: 'none', label: 'Fixture Plain', icon: <FormIcon name={null} /> },
             ]}
-            placeholder="Choose a group"
+            placeholder="Choose a Group"
           />
         )}
       </Labelled>
@@ -361,7 +361,7 @@ export const Typeahead: Story = {
               value={value}
               onChange={setValue}
               choices={TRADITIONS}
-              placeholder="Choose a tradition"
+              placeholder="Choose a Tradition"
             />
             <p>Value: {value || '(none)'}</p>
           </>
@@ -388,7 +388,7 @@ export const MultiSelect: Story = {
             values={values}
             onChange={setValues}
             choices={ELEMENTS}
-            placeholder="Choose elements"
+            placeholder="Choose Elements"
           />
         )}
       </Labelled>
@@ -447,7 +447,7 @@ export const Leading: Story = {
             value={value}
             onChange={setValue}
             onPick={setValue}
-            placeholder="Search names"
+            placeholder="Search Names"
             toggle={false}
             leading={
               <button type="button" className="combobox__indicator" aria-label="Search">
@@ -474,7 +474,7 @@ export const LoadingSearch: Story = {
             onChange={setValue}
             onPick={setValue}
             suggestions={{ options: [], pending: true }}
-            placeholder="Search names"
+            placeholder="Search Names"
           />
         )}
       </Labelled>
@@ -495,7 +495,7 @@ export const LoadingSelect: Story = {
             onChange={setValue}
             choices={KINDS}
             busy
-            placeholder="Choose a classification"
+            placeholder="Choose a Classification"
           />
         )}
       </Labelled>
@@ -549,7 +549,7 @@ export const GroupedRows: Story = {
             highlightFirst
             required
             typedIcon={<span aria-hidden="true">+</span>}
-            placeholder="Add a category"
+            placeholder="Add a Category"
           />
         )}
       </Labelled>

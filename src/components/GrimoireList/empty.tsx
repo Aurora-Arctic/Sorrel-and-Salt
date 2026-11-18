@@ -21,7 +21,7 @@ const EmptyGrimoire = ({ status, filter, canCreate, path }: EmptyGrimoireProps):
     return (
       <EmptyState
         label={drafts ? 'No Drafts' : 'No Spells'}
-        detail={canCreate ? undefined : 'A practitioner or steward of this coven can write them.'}
+        detail={canCreate ? undefined : 'A Practitioner or Steward of this coven can write them.'}
         action={<PendingLink href={GRIMOIRE_GUIDE}>Learn More</PendingLink>}
       >
         {emptyList(drafts ? 'drafts' : 'complete spells')}

@@ -72,15 +72,15 @@ const TEXT: Record<TextField, { label: string; hint?: string; placeholder: strin
   label: {
     label: 'Label',
     hint: "What your coven calls this entry. It stands in for the Compendium's name on your pages, and no two entries in a coven share one.",
-    placeholder: 'Add a label',
+    placeholder: 'Add a Label',
   },
   description: {
     label: 'Description',
-    placeholder: 'Add a description',
+    placeholder: 'Add a Description',
   },
   safetyNotes: {
     label: 'Safety Notes',
-    placeholder: 'Add notes',
+    placeholder: 'Add Notes',
   },
 };
 

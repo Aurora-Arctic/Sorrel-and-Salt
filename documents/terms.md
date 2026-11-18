@@ -7,7 +7,7 @@ published: 2026-11-02
 
 When these terms change, the site asks you to agree to the new version before you use it again.
 
-These terms include two other pages, and agreeing to these terms is agreeing to them too. The [Disclaimer](/disclaimer) says what the site's information is and is not. The [Code of Ethics](/code-of-ethics) says what the site stands for: its section "What Everyone Agrees To" binds every account, and its sections for curators, keepers, developers and the owner bind whoever holds that role.
+These terms include two other pages, and agreeing to these terms is agreeing to them too. The [Disclaimer](/disclaimer) says what the site's information is and is not. The [Code of Ethics](/code-of-ethics) says what the site stands for: its section **What Everyone Agrees To** binds every account, and its sections for curators, keepers, developers and the owner bind whoever holds that role.
 
 ## The Short Version
 
@@ -41,7 +41,7 @@ The compendium is written and checked by the site's keepers and curators. Every 
 
 ### How to Treat Each Other
 
-The [Code of Ethics](/code-of-ethics) says what the site stands for. Its section "What Everyone Agrees To" binds every account, and agreeing to these terms is agreeing to it. In short: no bigotry, in any form, towards anyone.
+The [Code of Ethics](/code-of-ethics) says what the site stands for. Its section **What Everyone Agrees To** binds every account, and agreeing to these terms is agreeing to it. In short: no bigotry, in any form, towards anyone.
 
 The Code of Ethics goes on to ask more of the people who run the site. Its sections for curators, for keepers and for the site's owner each add to the one before, and bind whoever holds that role for as long as they hold it.
 

@@ -795,7 +795,8 @@ $footer-tagline-line: 0.8125rem * 1.5;
 $footer-height: 2rem + 2rem + 0.5rem + $footer-tagline-line;
 $footer-height-phone: 2rem + $footer-brand-line + 0.5rem + 2rem + 0.5rem + 2 * $footer-tagline-line;
 // The step of air is space(8), spelled in rem because the steps are defined further down.
-$footer-space: $footer-height + 4rem;
+// Plus the footer's 1px top border, which sits outside its min-height: left out, a page that fits scrolls by 1px.
+$footer-space: calc(#{$footer-height + 4rem} + 1px);
 $footer-space-phone: $footer-height-phone + 4rem;
 
 // The one width the admin tables stack into cards at, so a page changes shape once rather than twice. A screen width, where
@@ -1041,18 +1042,18 @@ $card-skeleton-heights: (
 // with no list named.
 $stack-row-skeleton-heights: (
   'default': 16rem,
-  'users': 30.75rem,
-  'members': 23.25rem,
-  'support': 29.416rem,
+  'users': 32rem,
+  'members': 24.5rem,
+  'support': 30.666rem,
   'invitation-cards': 28.25rem,
   'card-sign-ups': 21rem,
   'refused-opens': 15.25rem,
   'keeper-invitations': 16.625rem,
-  'privilege-changes': 22.75rem,
+  'privilege-changes': 24rem,
   'pending-invitations': 13.375rem,
   'received-invitations': 11rem,
-  'groups': 12.262rem,
-  'values': 18.25rem,
-  'category-values': 14.625rem,
-  'compendium': 23.612rem,
+  'groups': 13.512rem,
+  'values': 19.5rem,
+  'category-values': 15.637rem,
+  'compendium': 24.862rem,
 );

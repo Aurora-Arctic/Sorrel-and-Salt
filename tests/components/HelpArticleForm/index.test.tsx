@@ -1049,6 +1049,26 @@ describe('HelpArticleForm, deleting', () => {
     expect(calls).toEqual([{ id: FAQ.id }]);
   });
 
+  it('draws Delete Guide as the delete icon, whose tip opens on focus, and it still asks first', () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('DeleteHelpArticle', (variables) => {
+      calls.push(variables);
+      return { deleteHelpArticle: GUIDE.id };
+    });
+    renderForm({ article: GUIDE });
+    const remove = screen.getByRole('button', { name: /^Delete Guide/ });
+    // The form's field hints are tooltips too, so the control's own tip is the one its focus adds.
+    const tips = () => screen.queryAllByRole('tooltip', { hidden: true }).length;
+    const before = tips();
+
+    act(() => remove.focus());
+
+    expect(tips()).toBe(before + 1);
+    fireEvent.click(remove);
+    expect(answer('Delete')).toBeInTheDocument();
+    expect(calls).toHaveLength(0);
+  });
+
   it('shows the refusal of a guide with live sub pages, and stays', async () => {
     mockGraphQLError('DeleteHelpArticle', {
       code: 'VALIDATION',

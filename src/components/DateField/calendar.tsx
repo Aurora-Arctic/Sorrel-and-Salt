@@ -1,6 +1,7 @@
 'use client';
 
 import { type ChangeEvent, type RefObject, useId, useLayoutEffect } from 'react';
+import { stickyTopInset } from '../../lib/sticky-top';
 import { useDismiss } from '../../lib/use-dismiss';
 import type { ChevronProps, ClassNames, DropdownProps } from 'react-day-picker';
 import { ComboboxSelect } from '../Combobox/select';
@@ -72,11 +73,12 @@ export function useCalendarPopover({
         el.style.removeProperty('--calendar-width');
       }
       // Measured at its natural height; it goes below the field if it fits, else above if it fits there, else on the side with
-      // more room, capped to that room and scrolling.
+      // more room, capped to that room and scrolling. Above, the room ends at the sticky top bar, which it must not cover.
       el.style.removeProperty('--calendar-max-height');
       el.style.overflowY = '';
+      const ceiling = stickyTopInset(button) + MARGIN;
       const below = window.innerHeight - at.bottom - GAP - MARGIN;
-      const above = at.top - GAP - MARGIN;
+      const above = at.top - GAP - ceiling;
       const height = el.offsetHeight;
       const onTop = height > below && above > below;
       const room = onTop ? above : below;
@@ -84,7 +86,9 @@ export function useCalendarPopover({
         el.style.setProperty('--calendar-max-height', `${room}px`);
         el.style.overflowY = 'auto';
       }
-      const top = onTop ? Math.max(MARGIN, at.top - GAP - Math.min(height, room)) : at.bottom + GAP;
+      const top = onTop
+        ? Math.max(ceiling, at.top - GAP - Math.min(height, room))
+        : at.bottom + GAP;
       const wanted = alignEnd ? at.right - el.offsetWidth : at.left;
       const left = Math.max(EDGE, Math.min(wanted, window.innerWidth - el.offsetWidth - EDGE));
       el.style.setProperty('--calendar-top', `${top}px`);

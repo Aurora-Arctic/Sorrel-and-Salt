@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm, sent } from '../../../../../support/filter-form';
-import { rowCells } from '../../../../../support/table';
+import { emptyCellMark, rowCells } from '../../../../../support/table';
 import { requireAdminSession } from '../../../../../support/request-session';
 import { router } from '../../../../../support/next-navigation';
 
@@ -175,7 +175,7 @@ describe('the /keepers/users page', () => {
     await renderPage();
 
     expect(cellUnder('Listed Fixture 01', 'Logins')).toHaveTextContent('Google');
-    expect(cellUnder('Listed Fixture 02', 'Logins')).toHaveTextContent(/^$/);
+    expect(cellUnder('Listed Fixture 02', 'Logins').textContent).toBe(emptyCellMark());
   });
 
   it("reads in one batch, as the guard's session, which users hold a passkey, and marks their rows", async () => {

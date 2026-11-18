@@ -9,6 +9,7 @@ import { requireSession } from '@/lib/request-session';
 import { firstReachable } from '@/lib/shell-home';
 import { ACCOUNT_INVITATIONS_PATH } from '@/lib/sign-in';
 import { viewerOf } from '@/lib/viewer';
+import SupportLink from '@/components/SupportLink';
 import PageFrame from '@/components/PageFrame';
 
 export const metadata: Metadata = pageTitle('Your Coven');
@@ -63,7 +64,8 @@ export default async function CovenLandingPage() {
             Ask someone who already uses Sorrel &amp; Salt to invite you. An invitation sent to the
             address on this account shows up on your account page, or you can open the link they
             email you instead. Once you accept, your coven opens here. If you would rather start a
-            coven of your own, a keeper must approve that.
+            coven of your own, a Keeper must approve that. If you are stuck,{' '}
+            <SupportLink>Support</SupportLink> can help.
           </p>
         )}
       </section>

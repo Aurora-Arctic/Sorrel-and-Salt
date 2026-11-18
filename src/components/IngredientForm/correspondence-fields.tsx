@@ -42,7 +42,7 @@ const CorrespondenceFields = ({
         name={at('elements') as MultiSelectFieldName}
         label={FIELD_NOUNS.elements.label}
         hint={hints?.elements}
-        placeholder="Add an element"
+        placeholder="Add an Element"
         options={ELEMENT_OPTIONS}
         action={action?.('elements')}
       />
@@ -58,7 +58,7 @@ const CorrespondenceFields = ({
         legend={FIELD_NOUNS.celestialBodies.label}
         entry="Celestial Body"
         hint={hints?.celestialBodies}
-        placeholder="Add a body"
+        placeholder="Add a Body"
         action={beside('celestialBodies')}
       />
       <LookupListField
@@ -70,7 +70,7 @@ const CorrespondenceFields = ({
         legend={FIELD_NOUNS.zodiacSigns.label}
         entry="Zodiac Sign"
         hint={hints?.zodiacSigns}
-        placeholder="Add a sign"
+        placeholder="Add a Sign"
         action={beside('zodiacSigns')}
       />
       <ListField
@@ -79,7 +79,7 @@ const CorrespondenceFields = ({
         legend={FIELD_NOUNS.colors.label}
         entry="Colour"
         hint={hints?.colors}
-        placeholder="Add a colour"
+        placeholder="Add a Colour"
         action={beside('colors')}
       />
     </>

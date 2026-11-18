@@ -52,7 +52,7 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
       <SearchField
         label="Error #"
         name="error"
-        placeholder="Error numbers"
+        placeholder="Error Numbers"
         value={draftCode}
         onChange={setDraftCode}
       />

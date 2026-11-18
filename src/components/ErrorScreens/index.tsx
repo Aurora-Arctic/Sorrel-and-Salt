@@ -2,17 +2,11 @@
 
 import type { ReactElement } from 'react';
 import ErrorPage from '../ErrorPage';
+import { BackToSite, WayOn } from '../ErrorPage/way-on';
 import ReportThis from '../ReportThis';
 import { useErrorReport } from '../../lib/error-report';
-import { PendingLink } from '../../lib/navigation';
 
 // The 404 and 500 screens, shared by the root routes and the shell's (claude-docs/components/error-page.md).
-
-const BackToSite = (): ReactElement => (
-  <PendingLink className="btn btn--quiet" href="/">
-    Back to Sorrel &amp; Salt
-  </PendingLink>
-);
 
 export const NotFoundScreen = ({ withinMain = false }: { withinMain?: boolean }): ReactElement => (
   <ErrorPage
@@ -20,11 +14,7 @@ export const NotFoundScreen = ({ withinMain = false }: { withinMain?: boolean })
     withinMain={withinMain}
     reason="There is nothing at this address."
   >
-    <BackToSite />
-    <PendingLink className="btn btn--quiet" href="/help">
-      Help
-    </PendingLink>
-    <ReportThis code={404} />
+    <WayOn code={404} />
   </ErrorPage>
 );
 
@@ -45,8 +35,10 @@ export const ErrorScreen = ({
       <button type="button" className="btn btn--solid" onClick={() => retry()}>
         Try Again
       </button>
-      <BackToSite />
-      <ReportThis code={500} reference={reference} detail={detail} />
+      <span className="error-page__pair">
+        <BackToSite />
+        <ReportThis code={500} reference={reference} detail={detail} />
+      </span>
     </ErrorPage>
   );
 };

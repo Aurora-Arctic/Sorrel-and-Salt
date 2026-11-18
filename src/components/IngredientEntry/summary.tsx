@@ -2,7 +2,7 @@ import { hasText } from '@/lib/text';
 import { covenPath } from '@/lib/coven-path';
 import type { ReactElement } from 'react';
 import FormIcon from '../FormIcon';
-import SafetyNote from '../SafetyNote';
+import { SafetyNoteWithDisclaimer } from '../SafetyNote';
 import { StockBadge } from '../StockBadge';
 import SummaryDescription from './summary-description';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -45,7 +45,7 @@ export default function IngredientSummary({
   const cautioned = variants
     .filter(({ variant }) => hasText(variant.safetyNotes))
     .map(({ variant }) => formLabel(variant.form));
-  const rows = correspondences(shown, deities).filter((row) => row.values.length > 0);
+  const rows = correspondences(shown, deities);
   const listed = rows.length > 0 || folkNames.length > 0 || categories.length > 0;
   // Each form as a jar line: icon and name, then with the coven's jars its stock in a grid cell so
   // quantities end in one column; a form in no jar says "Not Stocked" to a screen reader alone
@@ -134,7 +134,7 @@ export default function IngredientSummary({
       {/* The page's own description, cut to its first lines here. Left out
           when empty, where the page says so. */}
       {hasText(shown.description) && <SummaryDescription text={shown.description!} />}
-      <SafetyNote
+      <SafetyNoteWithDisclaimer
         safetyNotes={shown.safetyNotes}
         level={3}
         footnote={

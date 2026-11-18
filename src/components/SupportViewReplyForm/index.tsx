@@ -43,7 +43,7 @@ const SupportViewReplyForm = ({ token, onSent }: SupportViewReplyFormProps): Rea
       busy={sending}
       failure={failure}
       label="Your Reply"
-      placeholder="Write a reply"
+      placeholder="Write a Reply"
       submitLabel="Reply"
       busyLabel="Sending"
       below={<BotTrapField value={website} onChange={setWebsite} />}

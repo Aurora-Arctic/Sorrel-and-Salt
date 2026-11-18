@@ -376,6 +376,49 @@ export function Action({ href, label, part }: { href: string; label: string; par
   );
 }
 
+/**
+ * A sentence with one link inside it, written as three siblings because an anchor cannot nest in the Ink around a
+ * paragraph's text. The text part prints the address on a line after the sentence.
+ */
+export function LinkedParagraph({
+  before,
+  linkText,
+  after,
+  href,
+  part,
+}: {
+  before: string;
+  linkText: string;
+  after: string;
+  href: string;
+  part: Part;
+}) {
+  if (part === 'text') {
+    return h(
+      Fragment,
+      null,
+      h(Paragraph, null, `${before}${linkText}${after}`),
+      h(Paragraph, null, href),
+    );
+  }
+  const ink = (text: string) => h(Ink, { className: 'ss-text', color: dark.text }, text);
+  return h(
+    Text,
+    { style: paragraphStyle(false) },
+    ink(before),
+    h(
+      Link,
+      {
+        href,
+        className: 'ss-link',
+        style: { background: INK_BACKGROUND, color: dark.accent, fontFamily: BODY_FONT },
+      },
+      linkText,
+    ),
+    ink(after),
+  );
+}
+
 export function actionVerb(part: Part): string {
   return part === 'html' ? 'click the button below' : 'open the link below';
 }

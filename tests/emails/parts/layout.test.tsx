@@ -309,14 +309,14 @@ describe.each(LINKED)('$name, link', ({ name, link }) => {
   });
 });
 
-// The notice goes to the address an account is leaving, so it carries no link but the wordmark (claude-docs/email.md).
-describe('a mail with no action', () => {
-  it('links only the wordmark and prints no address in the text part', () => {
+// The notice goes to the address an account is leaving, so its one link beside the wordmark is the account page, where the reader signs in (claude-docs/email.md).
+describe('a mail with no button', () => {
+  it('links the wordmark and the account page, and prints the account address on its own line', () => {
     const { html, text } = rendered.get('emailChangeNoticeMessage')!;
     const hrefs = [...html.matchAll(/<a\b[^>]*\shref="([^"]*)"/g)].map(([, href]) => href);
 
-    expect(hrefs).toEqual([ORIGIN]);
-    expect(text).not.toMatch(/https?:\/\//);
+    expect(hrefs).toEqual([ORIGIN, `${ORIGIN}/account`]);
+    expect(text.split('\n')).toContain(`${ORIGIN}/account`);
   });
 });
 

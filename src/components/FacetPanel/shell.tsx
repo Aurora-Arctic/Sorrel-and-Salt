@@ -19,6 +19,8 @@ import { useHydrated } from '../../lib/hydrated';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useMediaQuery } from '../../lib/use-media-query';
 import { useSlide } from '../../lib/use-slide';
+import CloseButton from '../CloseButton';
+import { holdPage } from '../Modal/page-hold';
 import { FacetCount } from './facet-count';
 import type { FacetShellProps } from './types';
 import './index.scss';
@@ -45,6 +47,12 @@ export function FacetShell({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const modal = useRef(false);
+  // Holds the page still while the sheet is a modal dialog (Modal/page-hold.ts).
+  const release = useRef<(() => void) | null>(null);
+  const letGo = () => {
+    release.current?.();
+    release.current = null;
+  };
   const slide = useSlide('facet-panel__clip');
   // The sheet sliding out: it stays open, with `is-closing` on it, until the slide ends.
   const [leaving, setLeaving] = useState(false);
@@ -99,14 +107,20 @@ export function FacetShell({
     const dialog = dialogRef.current;
     if (!dialog || !hydrated) return;
     if (slide.shown && !dialog.open) {
-      if (modal.current) dialog.showModal();
-      else dialog.show();
+      if (modal.current) {
+        // Measured before showModal(), while the page's scrollbar is still there to be replaced.
+        release.current ??= holdPage();
+        dialog.showModal();
+      } else dialog.show();
       dialog.focus({ preventScroll: true });
     } else if (slide.state === 'closed' && dialog.open) {
       returnFocus();
       dialog.close();
     }
+    if (!dialog.open) letGo();
   });
+
+  useEffect(() => letGo, []);
 
   // The net for a slide whose end the browser never reports.
   useEffect(() => {
@@ -232,13 +246,7 @@ export function FacetShell({
                 <h2 id={titleId} className="facet-panel__title">
                   Filters
                 </h2>
-                <button
-                  type="button"
-                  className="btn btn--quiet facet-panel__phone-only"
-                  onClick={dismiss}
-                >
-                  Close
-                </button>
+                <CloseButton className="facet-panel__phone-only" onClick={dismiss} />
               </div>
 
               {children}
@@ -254,7 +262,7 @@ export function FacetShell({
                 >
                   Close
                 </button>
-                <a href={clearHref} onClick={clear}>
+                <a href={clearHref} className="facet-panel__foot-clear" onClick={clear}>
                   Clear All
                 </a>
               </div>

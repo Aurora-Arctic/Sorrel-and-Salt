@@ -14,7 +14,7 @@ export const FAQ_ENTRIES = [
   faq(
     3,
     'How do I get my own coven?',
-    `You need permission to create one. Accepting an invitation, redeeming a printed card, or a [[Keeper]] granting it gives you that permission, and only a Keeper takes it away. Once you have it, choose "Create Coven" in the [[Coven|coven]] switcher.`,
+    `You need permission to create one. Accepting an invitation, redeeming a printed card, or a [[Keeper]] granting it gives you that permission, and only a Keeper takes it away. Once you have it, choose **Create Coven** in the [[Coven|coven]] switcher.`,
   ),
   faq(
     4,
@@ -24,12 +24,12 @@ export const FAQ_ENTRIES = [
   faq(
     5,
     "What's the difference between the Compendium and my Ingredients?",
-    `The [[Compendium]] is the shared reference of what exists, curated by the site's [[Keeper|Keepers]] and [[Curator|curators]]. Ingredients are your [[Coven|coven]]'s own: what you have, with your stock. You can add a Compendium entry to your Ingredients, or make an ingredient of your own.`,
+    `The [[Compendium]] is the shared reference of what exists, curated by the site's [[Keeper|Keepers]] and [[Curator|Curators]]. Ingredients are your [[Coven|coven]]'s own: what you have, with your stock. You can add a Compendium entry to your Ingredients, or make an ingredient of your own.`,
   ),
   faq(
     6,
     "Why can't I edit a Compendium entry?",
-    `Only [[Curator|curators]] and [[Keeper|Keepers]] edit the [[Compendium]]. You can add your own notes with "Annotate", or choose "Make It Ours" to turn the entry into your [[Coven|coven]]'s own ingredient, which you can then edit.`,
+    `Only [[Curator|Curators]] and [[Keeper|Keepers]] edit the [[Compendium]]. You can add your own notes with **Annotate**, or choose **Make It Ours** to turn the entry into your [[Coven|coven]]'s own ingredient, which you can then edit.`,
   ),
   faq(
     7,
@@ -44,7 +44,7 @@ export const FAQ_ENTRIES = [
   faq(
     9,
     'Does my spell save automatically?',
-    `Yes. The spell builder saves as you work, and so do the ingredient form and the Annotate form. This is [[Autosave]]. The status beside the form shows "Saving…" and then "Saved <time>". If a save fails it retries, and then offers "Retry".`,
+    `Yes. The spell builder saves as you work, and so do the ingredient form and the Annotate form. This is [[Autosave]]. The status beside the form shows **Saving…** and then **Saved** <time>. If a save fails it retries, and then offers **Retry**.`,
   ),
   faq(
     10,
@@ -79,11 +79,11 @@ export const FAQ_ENTRIES = [
   faq(
     16,
     'How do I leave a coven?',
-    `Open the [[Coven|coven]] and choose "Leave Coven". You lose access to its ingredients and its [[Grimoire|grimoire]] until a [[Steward]] invites you back. If you are the only Steward, you are asked what happens to the coven first.`,
+    `Open the [[Coven|coven]] and choose **Leave Coven**. You lose access to its ingredients and its [[Grimoire|grimoire]] until a [[Steward]] invites you back. If you are the only Steward, you are asked what happens to the coven first.`,
   ),
   faq(
     17,
     'How do I ask for help or report an accessibility bug?',
-    `Send a [[Support Request|support request]]. Pick the topic that fits, such as Accessibility ("Something you cannot use or read.") or Bug ("Something is broken or wrong."), give a subject and a message, and choose "Send Request". You can send one without signing in; we reply to the email address you give.`,
+    `Send a [[Support Request|support request]]. Pick the topic that fits, such as Accessibility ("Something you cannot use or read.") or Bug ("Something is broken or wrong."), give a subject and a message, and choose **Send Request**. You can send one without signing in; we reply to the email address you give.`,
   ),
 ];

@@ -21,7 +21,7 @@ export const ABOUT_PLACEHOLDERS: DocumentPlaceholders = {
           icon: <BookIcon />,
           accent: 'accent',
           heading: 'What Exists',
-          text: 'The ingredient reference, curated by the site’s keepers and open for anyone to read.',
+          text: 'The ingredient reference, curated by the site’s Keepers and open for anyone to read.',
         },
         {
           kicker: 'Ingredients',
@@ -53,17 +53,17 @@ export const ABOUT_PLACEHOLDERS: DocumentPlaceholders = {
         {
           heading: 'The Owner',
           icon: <SigilIcon />,
-          text: 'Holds the primary keeper account, the one no one can revoke. Every rule on the site applies to the owner as to anyone else.',
+          text: 'Holds the primary Keeper account, the one no one can revoke. Every rule on the site applies to the owner as to anyone else.',
         },
         {
           heading: 'Keepers',
           icon: <KeyIcon />,
-          text: 'Manage who uses the site: minting invitations, granting the right to create covens, changing site roles, and reading support requests. Every keeper holds a steward’s seat in the demo coven.',
+          text: 'Manage who uses the site: minting invitations, granting the right to create covens, changing site roles, and reading support requests. Every Keeper holds a Steward’s seat in the demo coven.',
         },
         {
           heading: 'Curators',
           icon: <AnnotateIcon />,
-          text: 'Curate the Compendium, its vocabularies, and its references, and read the support requests a keeper passes on. A curator adds no claim without a source.',
+          text: 'Curate the Compendium, its vocabularies, and its references, and read the support requests a Keeper passes on. A Curator adds no claim without a source.',
         },
       ]}
     />

@@ -117,6 +117,52 @@ describe('IngredientSummary', () => {
     );
   });
 
+  describe('the disclaimer', () => {
+    const disclaimers = () => screen.queryAllByRole('link', { name: 'Read the Disclaimer' });
+
+    it('shows once, after the caution block, when the entry has a caution', () => {
+      render(<IngredientSummary detail={full()} />);
+
+      // Precondition: the one caution block is shown.
+      const caution = screen.getByRole('region', { name: 'Caution' });
+      expect(within(caution).getByText('Fixture entry caution.')).toBeInTheDocument();
+      expect(disclaimers()).toHaveLength(1);
+      expect(disclaimers()[0]).toHaveAttribute('href', '/disclaimer');
+    });
+
+    it('shows none when nothing carries a caution', () => {
+      render(
+        <IngredientSummary
+          detail={full({
+            entry: { ...full().entry, safetyNotes: null },
+            variants: [variant('testoil', null), variant('testroot', null)],
+          })}
+        />,
+      );
+
+      expect(screen.queryByRole('region', { name: 'Caution' })).not.toBeInTheDocument();
+      expect(disclaimers()).toHaveLength(0);
+    });
+
+    it('shows once, not once per form, when only forms carry a caution', () => {
+      render(
+        <IngredientSummary
+          detail={full({
+            entry: { ...full().entry, safetyNotes: null },
+            variants: [
+              variant('testoil', 'Fixture oil caution.'),
+              variant('testroot', 'Fixture root caution.'),
+            ],
+          })}
+        />,
+      );
+
+      // Precondition: the forms are named under one caution block.
+      expect(screen.getAllByRole('region', { name: 'Caution' })).toHaveLength(1);
+      expect(disclaimers()).toHaveLength(1);
+    });
+  });
+
   it('names the forms that carry a caution of their own, and no form when none does', () => {
     const { unmount } = render(<IngredientSummary detail={full()} />);
     const caution = screen.getByRole('region', { name: 'Caution' });

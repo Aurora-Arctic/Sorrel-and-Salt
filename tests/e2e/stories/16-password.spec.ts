@@ -109,7 +109,7 @@ test(
     await page.getByRole('button', { name: 'Set New Password' }).click();
     await expect(page.getByRole('main').getByRole('status')).toBeVisible();
 
-    await page.getByRole('link', { name: 'Sign In', exact: true }).click();
+    await page.getByRole('main').getByRole('link', { name: 'Sign In', exact: true }).click();
     await expect(page).toHaveURL('/sign-in');
     await hydrated(page, 'main button');
     await page.getByRole('button', { name: 'Continue with Email' }).click();

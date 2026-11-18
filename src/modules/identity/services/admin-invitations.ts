@@ -26,7 +26,7 @@ import type { AdminInvitationFilter, InvitationSender } from '../types';
 
 // Accepting is invitation-acceptance.ts's (claude-docs/auth/admin-users.md, "Inviting a keeper").
 
-const REFUSAL = 'Only a site keeper may invite or withdraw a keeper invitation';
+const REFUSAL = 'Only a site Keeper may invite or withdraw a Keeper invitation';
 
 /**
  * Stored as its hash alone (claude-docs/auth/admin-users.md, "Inviting a keeper").
@@ -82,7 +82,7 @@ export async function revokeAdminInvitation(session: Session, id: string): Promi
 
 const EXPIRING_SOON_HOURS = 24;
 
-const LIST_REFUSAL = 'Only a site keeper may see admin invitations';
+const LIST_REFUSAL = 'Only a site Keeper may see Keeper invitations';
 
 /**
  * Open to every keeper, paused or not, as the list is where an invitation is seen.

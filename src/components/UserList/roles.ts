@@ -17,7 +17,7 @@ export const ROLES: readonly UserRole[] = ROLE_LABELS.map(({ value }) => value);
 export const SITE_ROLE_ACCESS: Record<UserRole, string> = {
   user: 'Uses the site through their covens, and creates covens once approved.',
   curator: 'Curates the compendium, its vocabularies and its references, and creates covens.',
-  admin: 'Everything a curator can do, plus managing who uses the site and who may create covens.',
+  admin: 'Everything a Curator can do, plus managing who uses the site and who may create covens.',
 };
 
 export const roleLabel = (role: UserRole): string => labelOf(ROLE_LABELS, role);

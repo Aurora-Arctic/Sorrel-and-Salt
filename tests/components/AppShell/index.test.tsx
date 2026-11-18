@@ -140,7 +140,7 @@ describe('AppShell', () => {
     expect(screen.queryByRole('button', { name: 'Add Ingredient' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /^Your Covens?$/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Fixture Member' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Toggle light and dark mode' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Toggle Light and Dark Mode' })).toBeInTheDocument();
   });
 
   it('offers an unverified admin the Compendium and no other link', () => {

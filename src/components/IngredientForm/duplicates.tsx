@@ -817,7 +817,7 @@ export function NameField({
         label="Name"
         autoComplete="off"
         required
-        placeholder="Add a name"
+        placeholder="Add a Name"
         describedBy={shown.length > 0 ? warningId : undefined}
         invalid={blocking}
         // The one sign of a lookup out: the region below draws nothing until an
@@ -832,7 +832,7 @@ export function NameField({
             // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- this live region holds block content, which an output element would restyle
             role="status"
             className={`ingredient-form__duplicates${open ? ' ingredient-form__duplicates--open' : ''}`}
-            aria-label="Possible duplicates"
+            aria-label="Possible Duplicates"
             aria-busy={pending || moving !== null || undefined}
           >
             {/* The region opens by height round its notice, which fades in. */}

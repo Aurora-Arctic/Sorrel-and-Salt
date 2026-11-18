@@ -72,7 +72,7 @@
   display: flex;
   flex-wrap: wrap;
   align-content: start;
-  gap: space(1);
+  gap: space(2);
   // Under the width where one month shows, the picks sit in a row above it. A zero inline-size with a full-width minimum
   // adds nothing to the panel's fit-content width, so the panel is as wide as the month and the picks wrap within it, not
   // the other way round.
@@ -91,10 +91,11 @@
 .date-range-field__pick {
   @include button-reset;
 
-  padding: space(1) space(2);
+  padding-inline: space(2);
   border-radius: radius('control');
   font-size: type-size('caption');
   text-align: start;
+  @include target-size($content-block: 1lh, $floor: space(1));
 
   &:hover {
     background-color: $surface-card-hover;

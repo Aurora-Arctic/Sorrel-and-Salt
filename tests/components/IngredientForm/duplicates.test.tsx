@@ -124,7 +124,7 @@ const ADD = /^Add to My Ingredients: /;
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 const typeName = (value: string) => typeIn(name(), value);
 const saveIngredient = () => press('Save Ingredient');
-const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
+const warning = () => screen.getByRole('status', { name: 'Possible Duplicates' });
 const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
 const emptied = async () => {
   await act(() => vi.advanceTimersByTimeAsync(600));

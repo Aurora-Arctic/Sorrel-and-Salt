@@ -31,7 +31,7 @@ const RemoveMemberControl = ({
     question={
       <>
         Remove <strong>{name}</strong> from this coven? They lose access to its ingredients and its
-        grimoire until a steward invites them back.
+        grimoire until a Steward invites them back.
       </>
     }
     busy="Removing"

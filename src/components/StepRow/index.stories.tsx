@@ -93,7 +93,7 @@ function Card({ initiallyOpen, editing }: { initiallyOpen: boolean; editing?: bo
               name="body"
               label="Instruction"
               labelSuffix={NAME}
-              placeholder="Add an instruction"
+              placeholder="Add an Instruction"
               multiline
               rows={2}
             />

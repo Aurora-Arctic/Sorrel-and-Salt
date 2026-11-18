@@ -139,14 +139,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// While a dialog is open the page behind it holds still: the overflow is CSS, so no listener can
-// leave the page locked, and the room the scrollbar took is given back as padding,
-// `--scrollbar-width`, which `holdPage` sets (claude-docs/components/modal.md, "Styling").
-:root:has(.modal-dialog:modal) {
-  overflow: hidden;
-  padding-inline-end: var(--scrollbar-width, 0);
-}
-
 // The default column with a list down its side: a third of the body to the list and two to the
 // column, half a column more and a step of gap, so the column keeps the width it has alone.
 .modal-dialog--listed {
@@ -182,6 +174,18 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   gap: space(1);
   min-width: 0;
   padding-inline-end: $close-reserve;
+}
+
+// A page head's eyebrow wears the page's halo against the art behind it; a dialog's own surface has none, and
+// the halo would draw a patch of the page's colour on it. Weighted past `body .header .eyebrow`.
+.modal .header .eyebrow {
+  text-shadow: none;
+}
+
+// "to" and its destination: the hidden word is a flex item of no size and the name a box of its own, so the
+// space after the word starts no line and a long name's wrapped lines start at one edge.
+.modal-dialog__destination {
+  display: flex;
 }
 
 // A head with a top line (`topEnd`, the details window's) stands further above what follows it,
@@ -371,43 +375,13 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   inset-block-start: calc(#{$close-inset} + (#{$eyebrow-line} - #{$close-target}) / 2);
 }
 
-// A 2rem × in a `$close-target` square, at the dialog's padding from its top and right edges, past
-// WCAG 2.2's 24px minimum target. Out of the flow, so a wrapping heading cannot squeeze the round
-// target to an oval; the head stops short of it (`$close-reserve`).
+// The × stands out of the flow, at the dialog's padding from its top and right edges, so a wrapping
+// heading cannot squeeze the round target to an oval; the head stops short of it (`$close-reserve`).
+// Its drawing is the shared `CloseButton`'s.
 .modal-dialog__close {
   position: absolute;
   inset-block-start: $close-inset;
   inset-inline-end: $close-inset;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: $close-target;
-  height: $close-target;
-  padding: 0;
-  border: 0;
-  border-radius: radius('pill');
-  background-color: transparent;
-  color: $text-muted;
-  font-size: $close-target;
-  line-height: 1;
-  cursor: pointer;
-
-  &:hover,
-  &:focus-visible {
-    color: $text-primary;
-  }
-
-  @include forced-colors {
-    &:hover:not(:focus-visible) {
-      outline: 1px solid Highlight;
-      outline-offset: -1px;
-    }
-  }
-
-  // The shared ring, in place of the browser's own.
-  &:focus-visible {
-    @include focus-ring;
-  }
 }
 
 .confirm-overlay {
@@ -470,10 +444,16 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   @include focus-ring;
 }
 
+// A dialog's row of answers stacks, full width and in order, where its body is under the narrow column,
+// as a narrow form's does, so no button's label wraps beside another's. A form in the body stacks its own.
 @include container-to(modal-main, #{$narrow-column + $modal-padding}) {
-  .confirm-overlay__card .modal__actions {
+  .modal__actions {
     flex-direction: column;
     align-items: stretch;
+
+    > * {
+      margin-inline: 0;
+    }
   }
 }
 

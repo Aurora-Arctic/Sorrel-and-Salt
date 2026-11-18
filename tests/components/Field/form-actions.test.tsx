@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { FormActions } from '@/components/Field';
 
 // Owns two rules every form relies on, so no form proves them again (rule 6): Save is off until there is something to save, and busy from the press to the answer.
@@ -22,6 +22,20 @@ describe('FormActions', () => {
 
     rerender(<FormActions noun="Name" dirty submitting={false} />);
     expect(screen.getByRole('button', { name: 'Save Name' })).toBeEnabled();
+  });
+
+  it('draws Delete as the delete icon, whose tip opens on focus, and pressing it calls onDelete', () => {
+    const onDelete = vi.fn();
+    render(<FormActions noun="Group" dirty={false} submitting={false} onDelete={onDelete} />);
+    const remove = screen.getByRole('button', { name: /^Delete Group/ });
+    // Precondition: no tip is open before the control takes focus.
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+
+    act(() => remove.focus());
+
+    expect(screen.getByRole('tooltip', { hidden: true })).toBeInTheDocument();
+    fireEvent.click(remove);
+    expect(onDelete).toHaveBeenCalledTimes(1);
   });
 
   it('is busy and disabled, saying what is happening, while the save is in flight', () => {

@@ -21,3 +21,11 @@
   flex-wrap: wrap;
   gap: space(3);
 }
+
+// Two controls kept side by side, so a lone icon button never wraps onto a row of its own.
+.error-page__pair {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: space(3);
+  align-items: center;
+}

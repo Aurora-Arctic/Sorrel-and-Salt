@@ -2,8 +2,8 @@
 
 `src/components/AccountMenu/` is the account button in the shell's bar and the panel it opens. It is a client component. Facts the props cannot say:
 
-- `verified` is whether the viewer's address is verified. When it is not, the panel offers Sign Out alone.
-- `links` are the bar's site links (Your Coven, Admin), offered in the panel at or under `$shell-tablet-width`, where the bar has no room for them.
+- `verified` is whether the viewer's address is verified. When it is not, the panel offers Sign Out and the links marked `open` (the Compendium, `COMPENDIUM_LINK` in `AppShell/compendium-link.ts`) and nothing else.
+- `links` are the bar's site links (Compendium, Your Coven, Admin), offered in the panel at or under `$shell-tablet-width`, where the bar has no room for them.
 - `pendingInvitations` counts coven invitations waiting for the viewer's verified address. `AppShell` passes `viewer.pendingInvitations`, which `viewerOf` reads once per request. It counts only for a verified viewer, because an unverified one cannot reach the account page the count leads to.
 - `assignedSupport` and `waitingSupport` default to 0. `viewerOf` reads them from `getMySupportCounts`, uncached, for a verified viewer, and `assignedSupport` is 0 unless the viewer is staff.
 
@@ -14,7 +14,7 @@
 - **The name is said once**, on the button. The avatar disc (up to two initials, from the first and last words of the name) is `aria-hidden`.
 - **Every link in the panel is a `PendingLink`** ([`loading.md`](../loading.md)): it starts the navigation through the shared hook and sets `aria-busy` while it runs.
   - The destination's address chooses the skeleton (`src/app/skeletons.ts`), so the site links and the account links name nothing.
-- **The panel lists**, in order: Your Account (a link to `/account`, not for an unverified viewer), the site links at or under `$shell-tablet-width`, Help (a link to `/help`; the top bar has no Help link, so this and the footer are where a signed-in reader finds it), Support, then Sign Out. An unverified viewer gets Sign Out alone. **The theme switch is not in the panel.** It stays in the shell's bar at every width.
+- **The panel lists**, in order: Your Account (a link to `/account`, not for an unverified viewer), the site links at or under `$shell-tablet-width`, Help (a link to `/help`; the top bar has no Help link, so this and the footer are where a signed-in reader finds it), Support, then Sign Out. An unverified viewer gets Sign Out and the Compendium link. **The theme switch is not in the panel.** It stays in the shell's bar at every width.
 - **Waiting invitations show in three places.**
   - **A dot on the avatar disc**, `aria-hidden` with the disc.
   - **The button's name gains ", N coven invitations"**, as hidden text (`account-menu__count`) that repeats the name and adds the count. The visible name is then `aria-hidden`, so the button reads "Name, 2 coven invitations" with no stray space. It is not an `aria-label`, because axe's `label-content-name-mismatch` wants a label to repeat every visible word, the avatar's initials among them.

@@ -54,7 +54,7 @@ export async function timeoutsForSenders(
   userIds: readonly string[],
 ): Promise<(SupportTimeoutRow[] | Forbidden)[]> {
   return refuseEach(userIds, async () => {
-    assertSiteAdmin(session, 'Only a site keeper may read a sender’s time-outs');
+    assertSiteAdmin(session, 'Only a site Keeper may read a sender’s time-outs');
     const sorted = newestFirst(await findSupportTimeoutsFor(userIds));
     return userIds.map((id) => sorted.filter((timeout) => timeout.userId === id));
   });
@@ -69,7 +69,7 @@ export async function timeoutsForAddresses(
   emails: readonly string[],
 ): Promise<(SupportTimeoutRow[] | Forbidden)[]> {
   return refuseEach(emails, async () => {
-    assertSiteAdmin(session, 'Only a site keeper may read a sender’s time-outs');
+    assertSiteAdmin(session, 'Only a site Keeper may read a sender’s time-outs');
     const keys = emails.map(addressCountKey);
     const sorted = newestFirst(await findSupportTimeoutsForAddresses(keys));
     return keys.map((key) => sorted.filter((timeout) => timeout.addressKey === key));
@@ -87,7 +87,7 @@ export async function standingTimeoutsOf(
   session: Session,
   userIds: readonly string[],
 ): Promise<(SupportTimeoutRow | undefined)[]> {
-  const admin = assertSiteAdmin(session, 'Only a site keeper may read a sender’s time-outs');
+  const admin = assertSiteAdmin(session, 'Only a site Keeper may read a sender’s time-outs');
   const rows = await findStandingSupportTimeoutsFor(admin, userIds);
   return userIds.map(
     (id) => rows.filter((row) => row.userId === id).sort((a, b) => endsAt(b) - endsAt(a))[0],

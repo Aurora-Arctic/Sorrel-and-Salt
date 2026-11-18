@@ -14,7 +14,7 @@ import { covenPath } from '@/lib/coven-path';
 // they wrap to, are the same. Pending draws the same words as plain text with no links, no ids and no
 // buttons: it sits in a hidden wrapper, where a link would still be reachable by keyboard and an id
 // would repeat the page's own.
-const ROLE_NAME = { owner: 'a steward', member: 'a practitioner', viewer: 'an observer' } as const;
+const ROLE_NAME = { owner: 'a Steward', member: 'a Practitioner', viewer: 'an Observer' } as const;
 
 // A page section named by its heading; pending it leaves out the ids, which the real page owns.
 const Section = ({
@@ -138,7 +138,7 @@ const CovenHome = ({
         </ul>
       </Section>
       {/* Each button says its own refusal under itself. Leave is here, not
-          on the members page, because an observer cannot open that page and must
+          on the members page, because an Observer cannot open that page and must
           still be able to go. Delete asks for the permission its service
           checks, never a rank
           (claude-docs/auth/coven-guard.md, "The coven index page"). */}
@@ -156,7 +156,7 @@ const CovenHome = ({
         <Section name="delete" title={bar('Delete Coven')} pending={pending}>
           <p>
             {bar(
-              'Closes its ingredients and its grimoire to every member, other stewards included.',
+              'Closes its ingredients and its grimoire to every member, other Stewards included.',
             )}
           </p>
           <div className="form__actions">

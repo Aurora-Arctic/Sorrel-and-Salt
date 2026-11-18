@@ -26,7 +26,7 @@ import { Navigating } from '../../support/navigating';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { RouteModal, RouteModalProvider } from '@/components/Modal';
 import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
-import { rowCells } from '../../support/table';
+import { emptyCellMark, rowCells } from '../../support/table';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
 
@@ -86,7 +86,7 @@ describe('CompendiumList', () => {
     expect(within(rows[2]).queryByRole('list', { name: 'Categories' })).toBeNull();
     const heads = screen.getAllByRole('columnheader').map((head) => head.textContent);
     const cells = rowCells(rows[2]);
-    expect(cells[heads.indexOf('Categories')]).toHaveTextContent('—');
+    expect(cells[heads.indexOf('Categories')]).toHaveTextContent(emptyCellMark());
   });
 
   it('draws each form with its group icon in the Form column', () => {
@@ -232,21 +232,15 @@ describe('CompendiumList', () => {
     expect(screen.queryByRole('link', { name: 'Clear Filters' })).toBeNull();
   });
 
-  it('bolds each filter value in the empty sentence and leaves the joining words plain', () => {
-    const filter: CompendiumListFilter = {
-      ...NO_FILTER,
-      query: 'nothing',
-      forms: ['Fixture Oil'],
-      withoutReferences: true,
-      categories: ['testward', 'testcraft'],
-    };
+  it('names a query that matched nothing once, in the search sentence, and not again in the empty state', () => {
+    const filter: CompendiumListFilter = { ...NO_FILTER, query: 'nothing' };
     render(<CompendiumList {...props({ entries: [], filter })} />);
 
-    // The search sentence above bolds its own values; the empty sentence is the one naming the quoted query.
-    const sentence = screen.getByText('“nothing”', { selector: 'strong' }).parentElement;
-    const bold = [...(sentence?.querySelectorAll('strong') ?? [])].map((each) => each.textContent);
-    expect(bold).toEqual(['“nothing”', '“Fixture Oil”', 'No Refs', 'Testward', 'Testcraft']);
-    expect(sentence?.textContent?.length).toBeGreaterThan(bold.join('').length);
+    // Precondition: the empty state is drawn, and the search sentence names the query.
+    const state = screen.getByRole('status', { name: 'No Matches' });
+    expect(screen.getAllByText(/nothing/).length).toBeGreaterThan(0);
+
+    expect(within(state).queryByText(/nothing/)).toBeNull();
   });
 
   it('bolds nothing when the filter is empty and the compendium itself is', () => {

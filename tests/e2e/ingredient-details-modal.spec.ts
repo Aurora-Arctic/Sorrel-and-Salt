@@ -446,7 +446,7 @@ test.describe('on the public compendium', () => {
       details.getByRole('list', { name: 'Folk Names' }).getByText('Fixture Peerbane'),
     ).toBeVisible();
     await expect(details.getByRole('heading', { name: 'Correspondences' })).toBeVisible();
-    // An empty block or row is left out here, where the page says "No elements recorded.".
+    // An empty block or row is left out here, as it is on the page.
     await expect(details.getByRole('heading', { name: 'Categories' })).toHaveCount(0);
     await expect(
       details.getByText(/^No (elements|celestial bodies|zodiac signs|colours|deities) recorded\.$/),

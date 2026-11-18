@@ -180,7 +180,7 @@ const PasswordForm = ({
             label="Name"
             required
             autoComplete="name"
-            placeholder="Your name"
+            placeholder="Your Name"
             value={name}
             onChange={setName}
           />

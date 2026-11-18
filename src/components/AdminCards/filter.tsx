@@ -144,7 +144,7 @@ const CardsFilterForm = ({ filter }: CardsFilterProps): ReactElement => {
       <SearchField
         label="Batch"
         name="batch"
-        placeholder="Search batches"
+        placeholder="Search Batches"
         value={draftBatch}
         onChange={setDraftBatch}
       />

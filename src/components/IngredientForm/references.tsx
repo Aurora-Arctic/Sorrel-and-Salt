@@ -287,7 +287,7 @@ export function ReferencesField({
         <Combobox<ReferenceOption>
           id={`${id}-box`}
           label="Reference"
-          placeholder="Search references"
+          placeholder="Search References"
           value={field.value as string}
           onChange={field.onChange}
           onFocus={() => setActive(true)}
@@ -399,7 +399,7 @@ export function ReferencesField({
                   <div className="ingredient-form__tier-row">
                     <span className="ingredient-form__tier">
                       {sourceTierOf(entry.link)}
-                      {!editable && '. Only the site’s keepers can edit it.'}
+                      {!editable && '. Only the site’s Keepers can edit it.'}
                     </span>
                     {editable && (
                       <IconTip tip="Edit Source">
@@ -430,7 +430,7 @@ export function ReferencesField({
                     <input
                       id={locatorField.controlId}
                       className="input"
-                      placeholder="Add a locator"
+                      placeholder="Add a Locator"
                       spellCheck={false}
                       autoComplete="off"
                       aria-describedby={[citationId, locatorField.hintId, invalid && errorId]
@@ -458,7 +458,7 @@ export function ReferencesField({
                         name={`${list}.${index}.nameBasis`}
                         label="Name Basis"
                         hint={NAME_BASIS_HINT}
-                        placeholder="Choose one"
+                        placeholder="Choose One"
                         options={NAME_BASIS_OPTIONS}
                       />
                       <MultiSelectField
@@ -469,7 +469,7 @@ export function ReferencesField({
                             ? 'The fields of this form that this source backs.'
                             : 'The fields of this entry that this source backs.'
                         }
-                        placeholder="Add a field"
+                        placeholder="Add a Field"
                         options={at ? VARIANT_SUPPORT_OPTIONS : ENTRY_SUPPORT_OPTIONS}
                       />
                     </>
@@ -512,7 +512,7 @@ export function ReferencesField({
         onKeep={() => setRemoving(null)}
       />
       {/* Labelled, so that it is told from the box's own status region. */}
-      <output className="visually-hidden" aria-label="References changes">
+      <output className="visually-hidden" aria-label="References Changes">
         {announcement}
       </output>
     </fieldset>

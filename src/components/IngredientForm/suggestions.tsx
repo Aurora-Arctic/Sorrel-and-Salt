@@ -383,7 +383,7 @@ export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactE
       name={`${at}.form`}
       label="Form"
       hint={pickOnly ? undefined : 'Pick a suggestion, or type a form that is not listed.'}
-      placeholder="Add a form"
+      placeholder="Add a Form"
       suggestions={suggestions}
       onActivate={() => setActive(true)}
       onPick={(option) => setValue(`${at}.formLink`, option?.link ?? null)}

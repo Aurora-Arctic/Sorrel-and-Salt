@@ -31,8 +31,9 @@
   font-weight: 500;
 }
 
+// Basis 0 lets the date wrap inside its own column, so Rename and Remove stay on the row's line.
 .passkeys__added {
-  flex: 1;
+  flex: 1 1 0;
 }
 
 .passkeys__item > .btn {

@@ -212,7 +212,11 @@ test.describe('the grimoire', () => {
     await expect(dialog.getByRole('combobox', { name: 'Participants' })).toBeVisible();
     await scanBothThemes(page);
     await dialog.getByRole('button', { name: 'Complete' }).click();
-    await expect(dialog.getByRole('list', { name: 'Deductions' })).toContainText('2 g');
+    await expect(
+      page
+        .getByRole('dialog', { name: 'Complete Working' })
+        .getByRole('list', { name: 'Deductions' }),
+    ).toContainText('2 g');
     await scanBothThemes(page);
   });
 

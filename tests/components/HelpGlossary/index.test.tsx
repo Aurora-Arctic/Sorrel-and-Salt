@@ -79,13 +79,13 @@ describe('HelpGlossary marks', () => {
 });
 
 describe('HelpGlossary links to self', () => {
-  it('gives each term a link to its own anchor, named for the term', () => {
+  it('gives each term a link to its own anchor, named alike', () => {
     render(<HelpGlossary terms={TERMS} />);
 
     for (const term of screen.getAllByRole('term')) {
       const title = term.textContent!;
       const slug = TERMS.find((entry) => entry.title === title)!.slug;
-      expect(within(term).getByRole('link', { name: `Link to ${title}` })).toHaveAttribute(
+      expect(within(term).getByRole('link', { name: 'Link to This Term' })).toHaveAttribute(
         'href',
         `#${slug}`,
       );

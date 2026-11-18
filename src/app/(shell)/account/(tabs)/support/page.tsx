@@ -42,7 +42,7 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
   const { hasPreviousPage, hasNextPage, startCursor, endCursor } = page.pageInfo;
   return (
     <PageWithNav as="div" headless>
-      <p className="lede">Requests you have sent to the keepers, and their replies.</p>
+      <p className="lede">Requests you have sent to the Keepers, and their replies.</p>
       <SupportList
         requests={rows.map((row, index) => ({
           id: row.id,

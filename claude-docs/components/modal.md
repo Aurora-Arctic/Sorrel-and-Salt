@@ -86,7 +86,7 @@ An edit dialog says what is edited: an eyebrow naming the action and kind, then 
 
 - **`title`** is the name **as saved**, from what the page read, never the Name field's live value, so the head holds still during a rename.
 - **`qualifier`** follows the name in muted body ink where the list names it by a second thing: an ingredient's formal name, a deity's tradition ("Hecate (Greek)"). The caller sets binomial italics (`.binomial`); a mineral's formal name stays upright.
-- **`destination`** is where an add lands, in the eyebrow's place, spoken after the title through a hidden "to": "Add Ingredient to Whitethorn Coven".
+- **`destination`** is where an add lands, in the eyebrow's place, spoken after the title through a hidden "to": "Add Ingredient to Whitethorn Coven". The eyebrow is a flex row (`.modal-dialog__destination`), so the space after the hidden word starts no line and a long name wraps flush.
 - A screen reader hears eyebrow then title then qualifier, "Edit Ingredient, Mugwort, Artemisia vulgaris", with `.spoken-separator` commas (a comma drawn at no size, since `aria-labelledby` joins with a space and `.visually-hidden` text gets spaces either side in Chrome; `styling.md`).
 
 ## A title with its own end
@@ -178,11 +178,12 @@ Tokens are in `index.scss`: `$dialog-column` (32rem), `$modal-padding`, `$close-
 - **The body scrolls, not the dialog.** `.modal-dialog__body` is the scroller (padding given back inside so a focus ring is not cut off, isolated so raised children do not rise over a question's layer). The header stays top without `position: sticky`.
 - **The foot** (`foot`; `RouteModalContent.foot` too) is a bar under the body for the details modal's link to the entry. It is a second row of `.modal-dialog__main`'s grid, not a sticky child, because a sticky child lies inside the scroller and the scrollbar's track ran over it. It is `inert` with the body while a question shows.
 - **`readingBody`** gives a body with no field `tabIndex={0}` and an inset focus ring, so it scrolls from the keyboard (axe `scrollable-region-focusable`). A form leaves it off.
-- **The page behind does not scroll**: `:root:has(.modal-dialog:modal)` sets `overflow: hidden`, in CSS so no listener can leave it locked.
+- **The page behind does not scroll**: `:root:has(:is(.modal-dialog, .spell-preview, .facet-panel):modal)` (`page-hold.scss`) sets `overflow: hidden`, in CSS so no listener can leave it locked.
 - **Nothing behind moves sideways.** As the first modal opens, `holdPage` measures the scrollbar and, only if over 0, sets `--scrollbar-width` on the root. The root's padding takes its place while a modal holds the page, and the right-anchored fixed elements (theme toggle, impersonation banner, page bar, the backdrop's salt corner) read the same property. A modal over another does not measure again; the room is returned when the last closes. CSS-only `scrollbar-gutter: stable` was rejected: set only while open it shifted a scrollbar-less page; set always it left a blank strip beside the header.
 - **`headerAlign="center"`** centres the title and `under` (`.modal-dialog__header--centered`); `aboveName` keeps its place at the start. The title then takes `$close-reserve` on both sides, not only the end, so it centres on the dialog rather than on the room beside the ×, and the × stays where it is. The heading itself takes no reserve, so `aboveName` and `under` have the full width. Only the sign-in dialog turns it on, to match the centred `/sign-in` page; every other head starts at the start.
 - **`size="listed"`** changes only the width: 49rem, a third of the body to a side list and two to the column (Edit Stock, [`stock-dialog.md`](stock-dialog.md)).
 - **`size="picture"`** is as wide as a help screenshot is captured, 1024px plus the padding, and never wider than the window ([`help-screenshot.md`](help-screenshot.md)). `ModalButton` passes `size` and `readingBody` through to its modal.
+- **A row of answers stacks on a phone.** Every `.modal__actions` in a dialog, in its body or on a question's card, turns to a column of full-width buttons, in order, while the body (`modal-main`) is under `$narrow-column` plus the padding, as a narrow form's row does ([`styling.md`](../styling.md), "Form fields"), so no label wraps beside another. `ConfirmDialog` sets its answers outside the body and is not reached.
 - **Forced colours**: the dialog and confirm card take a 1px `CanvasText` border (their edge was a shadow); the flash uses the reduced-motion outline (a fill is dropped).
 
 ### Clipped, not hidden
@@ -195,7 +196,7 @@ The dialog fades by opacity alone; a theme change runs no colour transition on i
 
 ### The × and the toolbar row
 
-The Close button is a 2rem target (`$close-target`, past WCAG 2.5.8's 24px), out of the header's flow, so its right edge is the right edge of the head's lines beneath and it is level with the first. The head stops short (`$close-reserve`) so a long name wraps. A head with an eyebrow first and no top line has the × raised to put its middle on the eyebrow text's, written with `:has()` so a browser without it keeps the inset. Controls go in the toolbar row ("A control in the header").
+The Close button is the shared `CloseButton` (`src/components/CloseButton/`, also the Filters sheet's Close), placed by `.modal-dialog__close`, and is a 2rem target (`$close-target`, past WCAG 2.5.8's 24px), out of the header's flow, so its right edge is the right edge of the head's lines beneath and it is level with the first. The head stops short (`$close-reserve`) so a long name wraps. A head with an eyebrow first and no top line has the × raised to put its middle on the eyebrow text's, written with `:has()` so a browser without it keeps the inset. Controls go in the toolbar row ("A control in the header").
 
 ### The top line
 

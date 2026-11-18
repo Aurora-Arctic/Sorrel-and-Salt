@@ -89,7 +89,7 @@ describe('copying from the ingredient', () => {
     }
     fireEvent.click(copyOf(oil, 'Celestial Bodies'));
     expect(
-      within(oil).getByRole('status', { name: 'Celestial Bodies changes' }),
+      within(oil).getByRole('status', { name: 'Celestial Bodies Changes' }),
     ).not.toBeEmptyDOMElement();
 
     saveIngredient();
@@ -123,7 +123,7 @@ describe('copying from the ingredient', () => {
     expect(within(notice).queryAllByRole('alert')).toEqual([]);
     expect(within(notice).queryAllByRole('status')).toEqual([]);
     expect(
-      within(oil).getByRole('status', { name: 'Substitute Ingredients changes' }),
+      within(oil).getByRole('status', { name: 'Substitute Ingredients Changes' }),
     ).toHaveTextContent(/2/);
     saveIngredient();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));

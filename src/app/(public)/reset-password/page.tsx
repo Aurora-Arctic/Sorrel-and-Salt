@@ -9,14 +9,14 @@ export const metadata: Metadata = noIndexMetadata('Choose a New Password');
 
 // Better Auth's mailed link checks its token and opens this page with `?token=`, or with
 // `?error=INVALID_TOKEN` for one spent or expired; the form offers a new link for any page without a usable
-// token (claude-docs/auth/passwords.md, "Reset and change"). No AppShell: the page is reachable signed out.
+// token (claude-docs/auth/passwords.md, "Reset and change"). The (public) layout draws the site bar and holds the `main`, so the frame is a `div`.
 export default async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
   const { token, error } = await searchParams;
   const usable =
     typeof token === 'string' && token !== '' && error === undefined ? token : undefined;
 
   return (
-    <PageFrame narrow>
+    <PageFrame as="div" narrow className="page-frame--in-column">
       <div className="panel">
         <PageHeader
           className="card-page-header"

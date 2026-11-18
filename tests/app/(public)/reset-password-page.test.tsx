@@ -13,7 +13,7 @@ vi.mock('@/components/ResetPasswordForm', () => ({
   },
 }));
 
-const { default: ResetPasswordPage, metadata } = await import('@/app/reset-password/page');
+const { default: ResetPasswordPage, metadata } = await import('@/app/(public)/reset-password/page');
 
 const visit = async (params: { token?: string | string[]; error?: string }) =>
   render(await ResetPasswordPage({ searchParams: Promise.resolve(params) }));

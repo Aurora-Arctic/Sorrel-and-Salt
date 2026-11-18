@@ -1,7 +1,7 @@
 import { covenPath } from '@/lib/coven-path';
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
-import { notFound } from 'next/navigation';
+import { forbidden } from 'next/navigation';
 import PendingInvitations from '@/components/PendingInvitations';
 import { listHref, pagerHrefs } from '@/lib/list-href';
 import { requireCovenMembership, requireSession } from '@/lib/request-session';
@@ -15,7 +15,7 @@ export const metadata: Metadata = pageTitle('Invitations');
 
 // The invitations a steward has sent and nobody has answered, newest first, with Revoke. Stewards
 // only: the addresses are those of people who have not joined. The permission (`member: invite`)
-// decides, anyone else gets the stranger's 404 (claude-docs/auth/coven-guard.md, "The invitations page").
+// decides: a member the guard admits gets the 403 inside the shell, a non-member the guard's 404 (claude-docs/auth/coven-guard.md, "The invitations page").
 export default async function InvitationsPage({
   params,
   searchParams,
@@ -23,7 +23,7 @@ export default async function InvitationsPage({
   const { slug } = await params;
   const query = await searchParams;
   const { workspace, membership } = await requireCovenMembership(slug);
-  if (!covenAccessOf(membership.role).canInvite) notFound();
+  if (!covenAccessOf(membership.role).canInvite) forbidden();
   const session = await requireSession();
 
   const page = await readNumberedPage(

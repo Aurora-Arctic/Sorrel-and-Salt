@@ -16,7 +16,7 @@ import type { FilterFormSubject } from '../../support/types';
 import { leavingAtEachLoad, stubLocationAssign } from '../../support/location';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
-import { rowCells } from '../../support/table';
+import { emptyCellMark, rowCells } from '../../support/table';
 import { router } from '../../support/next-navigation';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
@@ -200,7 +200,7 @@ describe('UserList', () => {
       for (const user of props().users) {
         const row = screen.getByRole('row', { name: new RegExp(user.name) });
         const link = within(row).getByRole('link', {
-          name: `Privilege changes for ${user.name}`,
+          name: `Privilege Changes for ${user.name}`,
         });
         expect(link).toHaveAttribute(
           'href',
@@ -215,7 +215,7 @@ describe('UserList', () => {
       render(<UserList {...props({ users: [{ ...ADA, email: 'Ada@Users.Test' }] })} />);
 
       expect(
-        screen.getByRole('link', { name: 'Privilege changes for Ada Fixturewort' }),
+        screen.getByRole('link', { name: 'Privilege Changes for Ada Fixturewort' }),
       ).toHaveAttribute('href', '/keepers/privilege-changes?query=ada%40users.test');
     });
   });
@@ -281,6 +281,15 @@ describe('UserList', () => {
     expect(screen.getByRole('cell', { name: 'Email & Password' })).toBe(
       cellUnder('Bo Fixturewort', 'Logins'),
     );
+  });
+
+  it('draws the shared empty mark under Logins for a user with no way in, as any empty cell does', () => {
+    const mark = emptyCellMark();
+    expect(mark.trim()).not.toBe('');
+
+    render(<UserList {...props({ users: [{ ...BO, providers: [], hasPasskey: false }] })} />);
+
+    expect(cellUnder('Bo Fixturewort', 'Logins').textContent).toBe(mark);
   });
 
   it('draws no table when no user matches', () => {
@@ -625,7 +634,7 @@ describe('UserList keeper changes switch', () => {
   it('says why under Resume when the service refuses, the focus still on it', async () => {
     mockGraphQLError('ResumeAdminRoleChanges', {
       code: 'FORBIDDEN',
-      message: 'Only the primary keeper may pause or resume keeper changes',
+      message: 'Only the primary Keeper may pause or resume Keeper changes',
     });
     render(<PauseControl paused={true} canToggle={true} />);
     const resume = screen.getByRole('button', { name: 'Resume Keeper Changes' });

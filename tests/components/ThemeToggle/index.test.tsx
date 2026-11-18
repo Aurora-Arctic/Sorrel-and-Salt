@@ -25,7 +25,7 @@ describe('ThemeToggle', () => {
   it('switches to light mode on click, setting the attribute and storage', () => {
     render(<ThemeToggle />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Toggle light and dark mode' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle Light and Dark Mode' }));
 
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
     expect(window.localStorage.getItem('theme')).toBe('light');
@@ -33,7 +33,7 @@ describe('ThemeToggle', () => {
 
   it('switches back to dark mode on a second click, resetting the attribute', () => {
     render(<ThemeToggle />);
-    const button = screen.getByRole('button', { name: 'Toggle light and dark mode' });
+    const button = screen.getByRole('button', { name: 'Toggle Light and Dark Mode' });
 
     fireEvent.click(button);
     fireEvent.click(button);
@@ -45,7 +45,7 @@ describe('ThemeToggle', () => {
   it('updates aria-pressed to reflect the current mode, light when mounted already in light mode', () => {
     document.documentElement.setAttribute('data-theme', 'light');
     const { unmount } = render(<ThemeToggle />);
-    expect(screen.getByRole('button', { name: 'Toggle light and dark mode' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Toggle Light and Dark Mode' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -53,7 +53,7 @@ describe('ThemeToggle', () => {
     document.documentElement.setAttribute('data-theme', 'dark');
 
     render(<ThemeToggle />);
-    const button = screen.getByRole('button', { name: 'Toggle light and dark mode' });
+    const button = screen.getByRole('button', { name: 'Toggle Light and Dark Mode' });
 
     expect(button).toHaveAttribute('aria-pressed', 'false');
 
@@ -75,7 +75,7 @@ describe('ThemeToggle', () => {
     it('switches to dark on the first click, not to the light already showing', () => {
       render(<ThemeToggle />);
 
-      fireEvent.click(screen.getByRole('button', { name: 'Toggle light and dark mode' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Toggle Light and Dark Mode' }));
 
       expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
       expect(window.localStorage.getItem('theme')).toBe('dark');
@@ -84,7 +84,7 @@ describe('ThemeToggle', () => {
     it('reports aria-pressed as true on mount', () => {
       render(<ThemeToggle />);
 
-      expect(screen.getByRole('button', { name: 'Toggle light and dark mode' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'Toggle Light and Dark Mode' })).toHaveAttribute(
         'aria-pressed',
         'true',
       );
@@ -96,7 +96,7 @@ describe('ThemeToggle', () => {
     document.documentElement.removeAttribute('data-theme');
     render(<ThemeToggle />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Toggle light and dark mode' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle Light and Dark Mode' }));
 
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
   });

@@ -59,7 +59,7 @@ export async function createInvitation(
   if (!isInvitableRole(role)) {
     throw fieldRefusal(
       'role',
-      'Invite someone as an observer or a practitioner; a steward makes them a steward afterwards',
+      'Invite someone as an Observer or a Practitioner; a Steward makes them a Steward afterwards',
     );
   }
   const email = normaliseEmail(input.email);

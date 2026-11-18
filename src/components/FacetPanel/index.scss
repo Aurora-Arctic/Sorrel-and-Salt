@@ -147,6 +147,11 @@
   @include wrap-row(space(4));
 }
 
+// The foot's Clear All is one line of text; the padding lifts it to 24px and the negative margin leaves the row as it was.
+.facet-panel__foot-clear {
+  @include target-size($content-block: 1lh, $pull: true);
+}
+
 @include width-from($shell-tablet-width) {
   .facet-panel:not(.facet-panel--static) {
     .facet-panel__head {
@@ -199,6 +204,8 @@ $sheet-slide: 250ms ease-out;
   background-color: $surface-page;
   border-left: $hairline-border;
   overflow-y: auto;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: scrolling past the end of the sheet moves the page behind it, not yet Baseline
+  overscroll-behavior: contain;
   scroll-padding-block-end: calc(2 * #{space(7)});
 
   // It slides in from and back out to the right edge while the backdrop fades. In is CSS alone,

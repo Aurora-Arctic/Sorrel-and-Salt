@@ -919,7 +919,7 @@ const IngredientForm = ({
                       name="nomenclature"
                       label="Classification"
                       hint='Botanical for a plant, mineral for a stone, and so on. "Unknown" if you are not sure which, with or without a formal name. "None" takes no formal name.'
-                      placeholder="Choose a classification"
+                      placeholder="Choose a Classification"
                       options={NOMENCLATURE_OPTIONS}
                       required={compendium}
                       deps={['canonicalName']}
@@ -930,7 +930,7 @@ const IngredientForm = ({
                     <TextField<IngredientFormValues>
                       name="canonicalName"
                       label="Formal Name"
-                      placeholder="Add a name"
+                      placeholder="Add a Name"
                       spellCheck={false}
                       autoComplete="off"
                       note={
@@ -963,7 +963,7 @@ const IngredientForm = ({
                       }}
                       legend="Folk Names"
                       entry="Folk Name"
-                      placeholder="Add a name"
+                      placeholder="Add a Name"
                     />
                   </CollapsibleSection>
                   <CollapsibleSection
@@ -980,7 +980,7 @@ const IngredientForm = ({
                     <TextField<IngredientFormValues>
                       name="safetyNotes"
                       label="Safety Notes"
-                      placeholder="Add notes"
+                      placeholder="Add Notes"
                       multiline
                     />
                     {/* Its own flag: a toxic form says so on its own. */}
@@ -1006,7 +1006,7 @@ const IngredientForm = ({
                       pickOnly={compendium}
                       legend="Deities"
                       entry="Deity"
-                      placeholder="Add a deity"
+                      placeholder="Add a Deity"
                     />
                   </CollapsibleSection>
                   <CollapsibleSection
@@ -1028,7 +1028,7 @@ const IngredientForm = ({
                       name="substitutes"
                       legend="Substitute Ingredients"
                       entry="Substitute Ingredient"
-                      placeholder="Add a substitute"
+                      placeholder="Add a Substitute"
                     />
                     {/* Which form of each linked ingredient, when it comes in several. */}
                     <SubstituteForms name="substitutes" />

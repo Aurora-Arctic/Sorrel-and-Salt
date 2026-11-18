@@ -55,7 +55,7 @@ export function CategoriesField({
     <CategoryPicker
       legend="Categories"
       entry="Category"
-      placeholder="Add a category"
+      placeholder="Add a Category"
       categories={categories}
       pending={isPending}
       value={picked}

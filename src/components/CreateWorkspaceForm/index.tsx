@@ -82,7 +82,7 @@ const CreateWorkspaceForm = (): ReactElement => {
           label="Name"
           required
           autoComplete="off"
-          placeholder="Add a name"
+          placeholder="Add a Name"
           limit={COVEN_NAME_LIMIT}
           value={value}
           onChange={(next) => {

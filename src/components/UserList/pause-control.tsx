@@ -52,7 +52,7 @@ const STATES = {
 
 /** Whom a pause stops, asked before it is sent. */
 const PAUSE_QUESTION =
-  'Pause keeper changes? Until you resume them, no other keeper can grant or revoke the keeper role, approve or revoke coven creation, or invite a keeper.';
+  'Pause Keeper changes? Until you resume them, no other Keeper can grant or revoke the Keeper role, approve or revoke coven creation, or invite a Keeper.';
 
 const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement => {
   const { refresh } = usePendingNavigation();

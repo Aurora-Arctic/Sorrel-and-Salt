@@ -3,6 +3,7 @@ import {
   Action,
   EmailLayout,
   IgnoreNote,
+  LinkedParagraph,
   Paragraph,
   actionVerb,
   defineMessage,
@@ -41,12 +42,14 @@ function VerifyEmail({
       null,
       `If that was you, ${actionVerb(part)} within one hour, in the same browser where you are signed in to Sorrel & Salt.`,
     ),
-    h(
-      Paragraph,
-      null,
-      'If the link has expired, sign in and ask for a new one from your account page.',
-    ),
     h(Action, { href: url, label: 'Confirm My Email', part }),
+    h(LinkedParagraph, {
+      before: 'If the link has expired, sign in and ask for a new one from your ',
+      linkText: 'account page',
+      after: '.',
+      href: `${origin}/account`,
+      part,
+    }),
     h(IgnoreNote, { when: 'If this was not you' }),
   );
 }

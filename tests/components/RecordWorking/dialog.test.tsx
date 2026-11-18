@@ -22,6 +22,7 @@ import { server } from '../../support/msw/server';
 import { WORKSPACE_ID } from '../../support/constants';
 import { router } from '../../support/next-navigation';
 import { renderWithQuery } from '../../support/render-with-query';
+import { type } from '../../support/interact';
 
 // claude-docs/components/record-working.md
 
@@ -174,7 +175,35 @@ describe('Record a Working', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Complete' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(await screen.findByRole('list', { name: 'Deductions' })).toHaveTextContent('Testwort');
-    expect(screen.getByRole('button', { name: 'Mark Complete' })).toBeEnabled();
+    expect(within(dialog()).getByRole('button', { name: 'Complete' })).toBeEnabled();
+  });
+
+  // One action, one name: the confirm is the same Complete, and is the only one on its step.
+  it('names the complete action Complete in both steps, and describes what completing does on the first', async () => {
+    mockRecording();
+    openButton();
+    const first = within(dialog()).getByRole('button', { name: 'Complete' });
+    expect(first).toHaveAccessibleDescription(/.+/);
+
+    fireEvent.click(first);
+    await within(dialog()).findByRole('list', { name: 'Deductions' });
+
+    expect(within(dialog()).getAllByRole('button', { name: 'Complete' })).toHaveLength(1);
+    expect(within(dialog()).getByRole('button', { name: 'Complete' })).toBeEnabled();
+    expect(within(dialog()).queryByRole('button', { name: 'Mark Complete' })).toBeNull();
+  });
+
+  // The same title the row's own Complete opens its confirm under.
+  it('titles the confirm step Complete Working, the action it confirms', async () => {
+    mockRecording();
+    openButton();
+    expect(screen.getByRole('dialog', { name: 'Record a Working' })).toBe(dialog());
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Complete' }));
+    await within(dialog()).findByRole('list', { name: 'Deductions' });
+
+    expect(screen.getByRole('dialog', { name: 'Complete Working' })).toBe(dialog());
+    expect(screen.queryByRole('dialog', { name: 'Record a Working' })).toBeNull();
   });
 
   it('draws the loading skeleton while the deduction preview is read', async () => {
@@ -288,6 +317,62 @@ describe('Record a Working', () => {
     expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }, { name: 'Guest Witness' }]);
   });
 
+  // Text typed and not added is no participant yet: Save and Complete refuse it and say so, rather than drop it.
+  describe('with a name typed into Participants and not added', () => {
+    const TYPED = 'Guest Witness';
+    const people = () => within(dialog()).getByRole('combobox', { name: 'Participants' });
+
+    it.each(['Save Working', 'Complete'])(
+      'sends nothing on %s, flags Participants and focuses it',
+      async (name) => {
+        const calls = mockRecording();
+        openButton();
+        type('Participants', TYPED);
+
+        fireEvent.click(within(dialog()).getByRole('button', { name }));
+
+        await waitFor(() => expect(people()).toBeInvalid());
+        expect(people()).toHaveFocus();
+        expect(people()).toHaveAccessibleDescription(
+          'Error: Press Enter to add this name, or clear it',
+        );
+        expect(calls).toEqual([]);
+        expect(dialog()).toBeInTheDocument();
+      },
+    );
+
+    it('sends the name once Enter has added it', async () => {
+      const calls = mockRecording();
+      openButton();
+      type('Participants', TYPED);
+      fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+      await waitFor(() => expect(people()).toBeInvalid());
+
+      fireEvent.keyDown(people(), { key: 'Enter' });
+      await within(dialog()).findByRole('button', { name: /Remove.*Guest Witness/ });
+      expect(people()).not.toBeInvalid();
+      fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }, { name: TYPED }]);
+    });
+
+    it('drops the flag once the text is cleared, and then sends', async () => {
+      const calls = mockRecording();
+      openButton();
+      type('Participants', TYPED);
+      fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+      await waitFor(() => expect(people()).toBeInvalid());
+
+      type('Participants', '');
+      expect(people()).not.toBeInvalid();
+      fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }]);
+    });
+  });
+
   it('starts with the recorder as a participant, and sends them', async () => {
     const calls = mockRecording();
     openButton();
@@ -350,6 +435,57 @@ describe('Edit Working', () => {
     status: 'draft' as const,
     participants: [{ userId: 'u1', name: 'Testa Owner' }],
   };
+
+  // Typed text in Participants is something to save, so Save is held only while nothing is typed or changed.
+  it('enables Save Working once text is typed into Participants on an unchanged working', () => {
+    renderWithQuery(
+      <RecordWorkingDialog
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        spellVisibility="workspace"
+        steps={STEPS}
+        working={working}
+        onClose={vi.fn()}
+      />,
+    );
+    const saveButton = within(dialog()).getByRole('button', { name: 'Save Working' });
+    expect(saveButton).toBeDisabled();
+
+    fireEvent.change(within(dialog()).getByRole('combobox', { name: 'Participants' }), {
+      target: { value: 'Mocka' },
+    });
+
+    expect(saveButton).toBeEnabled();
+  });
+
+  it('sends nothing on Save Working while a typed name is not added, and flags Participants', async () => {
+    const calls: UpdateWorkingMutationVariables[] = [];
+    mockGraphQLMutation<UpdateWorkingMutation, UpdateWorkingMutationVariables>(
+      'UpdateWorking',
+      (variables) => {
+        calls.push(variables);
+        return {} as UpdateWorkingMutation;
+      },
+    );
+    renderWithQuery(
+      <RecordWorkingDialog
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        spellVisibility="workspace"
+        steps={STEPS}
+        working={working}
+        onClose={vi.fn()}
+      />,
+    );
+    const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
+    fireEvent.change(people, { target: { value: 'Guest Witness' } });
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+
+    await waitFor(() => expect(people).toBeInvalid());
+    expect(people).toHaveFocus();
+    expect(calls).toEqual([]);
+  });
 
   it('changes the working it was given, rather than recording another', async () => {
     const calls: UpdateWorkingMutationVariables[] = [];

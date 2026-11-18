@@ -81,13 +81,13 @@ const BusinessCards = (): ReactElement => {
           </Notice>
         )}
         <FormErrorSummary />
-        <TextField<BusinessCardValues> name="name" label="Name" required placeholder="Add a name" />
+        <TextField<BusinessCardValues> name="name" label="Name" required placeholder="Add a Name" />
         <TextField<BusinessCardValues>
           name="email"
           label="Email"
           type="email"
           required
-          placeholder="Add an email"
+          placeholder="Add an Email"
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
@@ -100,7 +100,7 @@ const BusinessCards = (): ReactElement => {
           autoComplete="tel"
           mask={phoneMask}
           required
-          placeholder="Add a phone"
+          placeholder="Add a Phone"
         />
         <SwitchField
           label="Include Backs"

@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import Day from '../Day';
 import UserListFilter from './filter';
-import { Mark, SignInMarks } from './marks';
+import { hasSignInMarks, Mark, SignInMarks } from './marks';
 import UntilMark from './until-mark';
 import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
@@ -120,7 +120,10 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     heading: 'Logins',
     className: 'user-list__fact user-list__mark-column',
     headingClassName: 'user-list__mark-column',
-    cell: (user) => <SignInMarks providers={user.providers} hasPasskey={user.hasPasskey} />,
+    cell: (user) =>
+      hasSignInMarks(user) && (
+        <SignInMarks providers={user.providers} hasPasskey={user.hasPasskey} />
+      ),
   },
   {
     heading: 'Terms',

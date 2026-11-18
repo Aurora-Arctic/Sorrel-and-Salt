@@ -31,7 +31,8 @@ export function correspondences(source: Correspondences, deities?: readonly Deit
       values: deities.map(deityMention),
     });
   }
-  return rows;
+  // A group with no value is left out, so a block never draws an empty line.
+  return rows.filter((row) => row.values.length > 0);
 }
 
 /** A deity as the Deities row names it: its tradition and other names in brackets, parted by a semicolon because the row joins its values with commas. */
@@ -53,7 +54,7 @@ export function blockOf(prefix: string, key: string, nameId?: string): Block {
   return { id, labelledBy: nameId ? `${nameId} ${id}` : id };
 }
 
-export type BlockLevel = 3 | 4;
+export type BlockLevel = 2 | 3 | 4;
 
 export function ListBlock({
   block,
@@ -103,11 +104,7 @@ export function CorrespondenceBlock({
         {rows.map((row) => (
           <div key={row.label}>
             <dt>{row.label}</dt>
-            {row.values.length > 0 ? (
-              <dd>{row.values.join(', ')}</dd>
-            ) : (
-              <dd className="ingredient-entry__empty">{`No ${row.label.toLowerCase()} recorded.`}</dd>
-            )}
+            <dd>{row.values.join(', ')}</dd>
           </div>
         ))}
       </dl>

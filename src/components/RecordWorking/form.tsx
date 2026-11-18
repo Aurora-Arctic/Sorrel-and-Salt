@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useId, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import type { RecordWorkingMembersQuery, WorkingParticipantInput } from '../../gql/graphql';
 import { trimEnds } from '../../lib/formats';
@@ -107,7 +107,11 @@ export default function RecordWorkingForm({
   working,
   deleteWorking,
   close,
-}: Omit<RecordWorkingDialogProps, 'onClose' | 'returnTo'> & { close: () => void }): ReactElement {
+  onConfirming,
+}: Omit<RecordWorkingDialogProps, 'onClose' | 'returnTo'> & {
+  close: () => void;
+  onConfirming?: (confirming: boolean) => void;
+}): ReactElement {
   const { refresh } = usePendingNavigation();
   const ids = useId();
   const [initial] = useState(() => ({
@@ -123,6 +127,9 @@ export default function RecordWorkingForm({
     initial.participants,
   );
   const [text, setText] = useState('');
+  // A save was refused for typed text that is not yet a chip; shown only while that text is there.
+  const [refusedText, setRefusedText] = useState(false);
+  const peopleBox = useRef<HTMLInputElement>(null);
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
   const [completing, setCompleting] = useState<string>();
@@ -130,7 +137,9 @@ export default function RecordWorkingForm({
   const [removed, setRemoved] = useState(false);
 
   const complete = working?.status === 'complete';
+  // Text typed into Participants and not yet added is a change too, so Save is not held back while it waits.
   const changed =
+    text.trim() !== '' ||
     workedOn !== initial.workedOn ||
     note !== initial.note ||
     visibility !== initial.visibility ||
@@ -152,16 +161,18 @@ export default function RecordWorkingForm({
       type="button"
       className="btn"
       disabled={!valid || submitting || waitFor !== undefined}
-      aria-describedby={waitFor ? `${ids}-wait` : undefined}
+      aria-describedby={waitFor ? `${ids}-wait` : `${ids}-effect`}
       onClick={() => void submit(true)}
     >
       Complete
     </button>
   );
 
-  const peopleError = fieldMessage(failure, 'participants');
-
   const typed = text.trim();
+  const peopleError =
+    refusedText && typed !== ''
+      ? 'Press Enter to add this name, or clear it'
+      : fieldMessage(failure, 'participants');
   // The search waits for typed text, as the box takes the focus when the dialog opens and opening asks nothing.
   const active = useDebouncedValue(typed) !== '';
   const found = useLookup(
@@ -188,6 +199,12 @@ export default function RecordWorkingForm({
 
   async function submit(thenComplete: boolean) {
     if (!valid) return;
+    // Typed and not added is no participant yet: refuse it, so a save never drops a name unseen.
+    if (typed !== '') {
+      setRefusedText(true);
+      peopleBox.current?.focus();
+      return;
+    }
     setSubmitting(true);
     setFailure({});
     const people: WorkingParticipantInput[] = participants.map((p) =>
@@ -207,8 +224,10 @@ export default function RecordWorkingForm({
             .recordWorking;
       setSubmitting(false);
       refresh();
-      if (thenComplete) setCompleting(result.id);
-      else close();
+      if (thenComplete) {
+        setCompleting(result.id);
+        onConfirming?.(true);
+      } else close();
     } catch (error) {
       setSubmitting(false);
       setFailure(readGraphqlFailure(error, FIELDS));
@@ -254,7 +273,11 @@ export default function RecordWorkingForm({
           label="Participants"
           labelId={`${ids}-people-label`}
           value={text}
-          onChange={setText}
+          onChange={(next) => {
+            setText(next);
+            setRefusedText(false);
+          }}
+          inputRef={peopleBox}
           onPick={(_value, option) => {
             if (option?.key) {
               setParticipants([...participants, { userId: option.key, name: option.value }]);
@@ -268,7 +291,7 @@ export default function RecordWorkingForm({
           offerTyped={
             typed !== '' && !participants.some((p) => p.userId === null && sameText(p.name, typed))
           }
-          placeholder="Add a name"
+          placeholder="Add a Name"
           noun="member"
           aria-invalid={peopleError ? true : undefined}
           aria-describedby={peopleError ? `${ids}-people-error` : undefined}
@@ -329,6 +352,13 @@ export default function RecordWorkingForm({
       >
         {!complete && completeButton}
       </FormActions>
+      {/* Text rather than a tip, so the button's description is on screen; while it waits for its day, the reason below describes it instead. */}
+      {!complete && !waitFor && (
+        <p id={`${ids}-effect`} className="meta">
+          Completing takes the ingredients from the coven’s jars, and a complete working cannot go
+          back to a draft.
+        </p>
+      )}
       {/* Text rather than a tip, since a disabled button takes no focus to show one. */}
       {!complete && waitFor && (
         <p id={`${ids}-wait`} className="meta">

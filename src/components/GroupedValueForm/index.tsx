@@ -225,7 +225,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     noun: LIST_KINDS.category.label,
     group: {
       label: 'Group',
-      placeholder: 'Choose a group',
+      placeholder: 'Choose a Group',
     },
     // Deleting a category removes nothing of a coven's: an entry filed under it keeps its
     // link and stops reading the category, so the entry stays in its list and only the
@@ -243,7 +243,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
     group: {
       label: 'Group',
-      placeholder: 'Choose a group',
+      placeholder: 'Choose a Group',
     },
     deleteNote: USED_DELETE_NOTE,
     renameNote: USED_RENAME_NOTE,
@@ -261,7 +261,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
       "The other names and spellings a source calls them by, such as Hekate. The ingredient form's suggestions find them by these, and the compendium seed links a source's name to them.",
     group: {
       label: 'Tradition',
-      placeholder: 'Choose a tradition',
+      placeholder: 'Choose a Tradition',
       hint: 'The people or religion that honours them. A god several honour is filed under one, and the description names the others.',
     },
     deleteNote: USED_DELETE_NOTE,
@@ -428,7 +428,7 @@ const GroupedValueForm = ({
           <TextField<GroupedValueValues>
             name="name"
             label="Name"
-            placeholder="Add a name"
+            placeholder="Add a Name"
             autoComplete="off"
             required
           />
@@ -437,7 +437,7 @@ const GroupedValueForm = ({
               name="folkNames"
               legend="Other Names"
               entry="Other Name"
-              placeholder="Add a name"
+              placeholder="Add a Name"
               hint={spec.otherNamesHint}
             />
           )}

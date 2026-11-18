@@ -16,7 +16,9 @@ $switcher-min-width: 12rem;
     width: 100%;
   }
 
+  // One row: the name gives way to the chevron, which never drops beneath it.
   .input.combobox__control {
+    flex-wrap: nowrap;
     min-height: $control-height;
     padding: 0 space(3);
     border-color: $hairline;
@@ -38,18 +40,11 @@ $switcher-min-width: 12rem;
     flex: 1 1 auto;
   }
 
+  // The h4's face and size, so the name reads as the row's heading; a long name is cut with an ellipsis by the
+  // value's own truncation, on the control's line height.
   .combobox__value {
-    min-height: 0;
-    padding-block: space(1);
-    overflow: visible;
-    // The h4's face and size, so the name reads as the row's heading, with a closer line height of its own so a long
-    // name wrapped to two lines is not set far apart.
     @include heading-face;
     font-size: heading-size(4);
-    line-height: 1.1;
-    text-overflow: clip;
-    white-space: normal;
-    overflow-wrap: anywhere;
   }
 
   .combobox__list {

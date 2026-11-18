@@ -767,7 +767,7 @@ describe('IngredientForm', () => {
     afterEach(() => {
       vi.useRealTimers();
     });
-    const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
+    const warning = () => screen.getByRole('status', { name: 'Possible Duplicates' });
     const emptied = async () => {
       await act(() => vi.advanceTimersByTimeAsync(600));
       expect(warning()).toHaveTextContent('');

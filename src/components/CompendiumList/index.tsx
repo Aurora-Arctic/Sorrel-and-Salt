@@ -5,37 +5,31 @@ import { EditLink } from '../IconTip';
 import ShownToggle from '../IngredientEntry/shown-toggle';
 import { cardName } from '../../lib/ingredient-name';
 import { LinkIconHint } from '../LinkHint';
-import { Fragment, type ReactElement, type ReactNode } from 'react';
+import { Fragment, type ReactElement } from 'react';
 import CategoryChips from '../CategoryChips';
 import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { ColumnSort, OtherOrder, SortDirection, StackColumn } from '../DataTable/types';
-import { NO_MATCH_ADVICE, emptyList, noMatchLead, plural } from '../../lib/text';
+import { emptyList } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
-import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
+import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
 import { labelOf } from '@/lib/options';
 import { CompendiumListBodySkeleton } from './skeleton';
 import IngredientSearch from '../IngredientSearch';
-import { facetChoices, vocabulariesOf } from './facets';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
 import CompendiumListFilter from './filter';
 import { compendiumHref } from './href';
 import type {
-  CompendiumCategoryChoice,
-  CompendiumFacetCounts,
   CompendiumListEntry,
   CompendiumListFilter as Filter,
   CompendiumListProps,
 } from './types';
+import NoMatches from '../EmptyState/no-matches';
 import './index.scss';
 
 // `/curator/compendium`'s filter, table and pager. Render-only: the page reads one page under the
 // address's filter, and each Edit is an address, so a modal can be linked to and Back closes it
 // (claude-docs/components/compendium-list.md).
-
-// None, rather than an empty cell: the to-do list tells an unconfirmed formal
-// name from no formal name by this column.
-const NONE = '—';
 
 // Named with the formal name too, as two entries can share a label but never
 // a formal name: Edit and Quick Look read it after their verb.
@@ -95,7 +89,7 @@ const columnsFor = (filter: Filter): readonly StackColumn<CompendiumListEntry>[]
       </>
     ),
   },
-  { heading: 'Formal Name', cell: (entry) => entry.canonicalName ?? NONE },
+  { heading: 'Formal Name', cell: (entry) => entry.canonicalName },
   {
     heading: 'Classification',
     cell: (entry) => labelOf(NOMENCLATURE_OPTIONS, entry.nomenclature),
@@ -125,9 +119,7 @@ const columnsFor = (filter: Filter): readonly StackColumn<CompendiumListEntry>[]
             </Fragment>
           ))}
         </span>
-      ) : (
-        NONE
-      ),
+      ) : null,
   },
   {
     heading: 'Categories',
@@ -136,14 +128,12 @@ const columnsFor = (filter: Filter): readonly StackColumn<CompendiumListEntry>[]
     cell: (entry) =>
       entry.categories.length ? (
         <CategoryChips categories={entry.categories} label={entry.name} compact />
-      ) : (
-        NONE
-      ),
+      ) : null,
   },
   {
     heading: 'Sourcing Score',
     sort: scoreSort(filter),
-    cell: (entry) => entry.sourcingScore ?? NONE,
+    cell: (entry) => entry.sourcingScore,
   },
   updatedColumn(),
   {
@@ -160,112 +150,6 @@ const columnsFor = (filter: Filter): readonly StackColumn<CompendiumListEntry>[]
     ),
   },
 ];
-
-const value = (text: string): ReactNode => <strong>{text}</strong>;
-
-const andNodes = (items: readonly ReactNode[]): ReactNode =>
-  items.map((item, index) => (
-    <Fragment key={index}>
-      {index === 0 ? null : index === items.length - 1 ? ' and ' : ', '}
-      {item}
-    </Fragment>
-  ));
-
-const joinedNames = (names: readonly string[], word: string): ReactNode =>
-  names.map((each, index) => (
-    <Fragment key={index}>
-      {index === 0 ? null : word}
-      {value(each)}
-    </Fragment>
-  ));
-
-const orValues = (values: readonly string[]): ReactNode =>
-  joinedNames(
-    values.map((each) => `“${each}”`),
-    ' or ',
-  );
-
-/** A clause that names a facet and lists what was chosen: "the form “a” or “b”". */
-const chosenClause = (one: string, many: string, count: number, listed: ReactNode): ReactNode => (
-  <>
-    the {plural(count, one, many)} {listed}
-  </>
-);
-
-export function emptyText(
-  {
-    query,
-    forms,
-    deities,
-    zodiac,
-    celestialBodies,
-    toxic,
-    withoutReferences,
-    withoutForms,
-    hidden,
-    elements,
-    categories,
-    categoryMode,
-  }: Filter,
-  known: readonly CompendiumCategoryChoice[],
-  facets: CompendiumFacetCounts,
-  whenEmpty = `${emptyList('ingredients')} Add the first with Add Ingredient.`,
-): ReactElement {
-  const deityNames = deities.flatMap((slug) => {
-    const deity = facets.deities.find(({ value }) => value === slug);
-    return deity ? `${deity.label} (${deity.tradition})` : [];
-  });
-  const toxicLabel = facets.toxic.find(({ value }) => value === toxic)?.label;
-  const named = categories.flatMap((slug) => known.find((each) => each.slug === slug)?.name ?? []);
-  const filters = [
-    query && value(`“${query}”`),
-    forms.length > 0 && chosenClause('form', 'forms', forms.length, orValues(forms)),
-    deityNames.length > 0 &&
-      chosenClause('deity', 'deities', deityNames.length, orValues(deityNames)),
-    zodiac.length > 0 && chosenClause('sign', 'signs', zodiac.length, orValues(zodiac)),
-    celestialBodies.length > 0 &&
-      chosenClause(
-        'celestial body',
-        'celestial bodies',
-        celestialBodies.length,
-        orValues(celestialBodies),
-      ),
-    toxicLabel && <>the toxic setting {value(toxicLabel)}</>,
-    withoutReferences && value('No Refs'),
-    withoutForms && value('No Form'),
-    hidden && value('Hidden'),
-    elements.length > 0 &&
-      chosenClause(
-        'element',
-        'elements',
-        elements.length,
-        joinedNames(
-          elements.map((each) => labelOf(ELEMENT_OPTIONS, each)),
-          ' or ',
-        ),
-      ),
-    named.length > 0 &&
-      chosenClause(
-        'category',
-        'categories',
-        named.length,
-        joinedNames(named, categoryMode === 'any' ? ' or ' : ' and '),
-      ),
-  ].filter((filter): filter is Exclude<typeof filter, false | '' | undefined> => Boolean(filter));
-  return (
-    <span className="compendium-list__empty">
-      {filters.length ? (
-        <>
-          {noMatchLead('entries')}
-          {andNodes(filters)}
-          {NO_MATCH_ADVICE}
-        </>
-      ) : (
-        whenEmpty
-      )}
-    </span>
-  );
-}
 
 const CompendiumList = ({
   entries,
@@ -311,26 +195,19 @@ const CompendiumList = ({
       nextHref={nextHref}
       position={position}
     >
-      <StackTable
-        columns={columnsFor(filter)}
-        otherOrders={bestMatch(filter)}
-        rows={entries}
-        rowKey={(entry) => entry.id}
-        empty={emptyText(
-          filter,
-          categories,
-          facetChoices(counts, vocabulariesOf(categories, vocabulary)),
-        )}
-        emptyLabel={matched ? 'No Matches' : undefined}
-        emptyAction={
-          matched ? (
-            <PendingLink href={compendiumHref({})} className="btn btn--quiet">
-              Clear Filters
-            </PendingLink>
-          ) : undefined
-        }
-        className="data-table--nowrap"
-      />
+      {entries.length === 0 && matched ? (
+        // The search sentence above names what was searched, so this says only what to do.
+        <NoMatches clearHref={compendiumHref({})} />
+      ) : (
+        <StackTable
+          columns={columnsFor(filter)}
+          otherOrders={bestMatch(filter)}
+          rows={entries}
+          rowKey={(entry) => entry.id}
+          empty={emptyList('ingredients') + ' Add the first with Add Ingredient.'}
+          className="data-table--nowrap"
+        />
+      )}
     </IngredientSearch>
   );
 };

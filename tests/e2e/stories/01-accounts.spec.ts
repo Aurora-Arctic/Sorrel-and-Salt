@@ -51,15 +51,17 @@ test.describe('signing in', () => {
       await page.reload();
       await expect(page.getByRole('button', { name: 'Continue with Discord' })).toBeVisible();
       const focusedNames = new Set<string>();
-      // Spare presses beyond the provider buttons tolerate another tab stop; the theme toggle is
-      // one.
-      for (let i = 0; i < PROVIDER_NAMES.length + 3; i++) {
+      const reached = (name: string) => [...focusedNames].some((text) => text.includes(name));
+      // Tab until every provider has held focus. The site bar's own stops come first and may grow,
+      // so the walk is bounded by a generous cap rather than a count; the assertions below fail
+      // loudly, naming the provider, if the cap runs out first.
+      for (let i = 0; i < 40 && !PROVIDER_NAMES.every(reached); i++) {
         await page.keyboard.press('Tab');
         const text = await page.evaluate(() => document.activeElement?.textContent?.trim());
         if (text) focusedNames.add(text);
       }
       for (const name of PROVIDER_NAMES) {
-        expect([...focusedNames].some((text) => text.includes(name))).toBe(true);
+        expect(reached(name), `${name} was reached by keyboard`).toBe(true);
       }
     },
   );
