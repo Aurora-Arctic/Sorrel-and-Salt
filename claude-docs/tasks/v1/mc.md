@@ -522,7 +522,7 @@ Minted from the accessibility audit (M17.9). Findings: AX-4 (A-16), AX-6 (A-14) 
 
 _Acceptance criteria:_
 
-- After Send Invitation succeeds, focus returns to the Invite button and "Invitation sent" is written into a status region that existed before the text.
+- After Send Invitation succeeds, the dialog stays open and "Invitation sent" is written into a status region that existed before the text; pressing Done closes the dialog and returns focus to the Invite button.
 - "Your name was saved." is written into a status region that existed before the text.
 - On forgot-password, the account email form, Send Invitation and the keeper invite, a refused submit moves focus to the error summary or to the invalid field.
 - Sign In stays enabled once any field has text; pressing it with the password empty flags the field and moves focus to it.

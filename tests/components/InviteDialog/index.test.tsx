@@ -168,8 +168,8 @@ describe('InviteDialog', () => {
     expect(trigger()).toHaveFocus();
   });
 
-  // Regression: after a send, nothing reached a status region a screen reader already knew, and the focus was lost.
-  it('gives the focus back to Invite once the send succeeds, saying "Invitation sent" in a status region there before it', async () => {
+  // Regression: after a send, nothing reached a status region a screen reader already knew.
+  it('keeps the dialog open after a send, saying "Invitation sent" in a status region there before it, and gives the focus back to Invite from Done', async () => {
     const calls = mockSending();
     render(
       <StatusRegionProvider>
@@ -183,8 +183,13 @@ describe('InviteDialog', () => {
     fireEvent.click(send());
 
     await expectSaidInRegionFrom(before, 'Invitation sent');
-    await waitFor(() => expect(trigger()).toHaveFocus());
     expect(calls).toHaveLength(1);
+    expect(dialog()).toBeInTheDocument();
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Done' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(trigger()).toHaveFocus();
   });
 
   // Regression: the refusal showed while the focus stayed on Send Invitation.
