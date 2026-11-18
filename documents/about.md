@@ -7,7 +7,7 @@ published: 2026-11-09
 
 Sorrel & Salt is a grimoire for covens: somewhere to keep what they know, what they have, and the spells they make. Each coven is run by its own members.
 
-Beside the covens sits the Compendium, a public reference on ingredients that the site's keepers and curators write. A coven keeps its own notes; the Compendium shows everyone where the lore came from.
+Beside the covens sits the Compendium, a public reference on ingredients that the site's Keepers and Curators write. A coven keeps its own notes; the Compendium shows everyone where the lore came from.
 
 ## Why It Exists
 
@@ -25,13 +25,13 @@ Witches, folk practitioners, the curious, and the sceptical are all welcome, wha
 
 ## The Compendium and Its Sources
 
-The Compendium is written and checked by the site's keepers and curators. Every entry records where its information came from, and an entry with no source stays on the curators' list of work to do.
+The Compendium is written and checked by the site's Keepers and Curators. Every entry records where its information came from, and an entry with no source stays on the Curators' list of work to do.
 
-It records what traditions, books, and other sources say about an ingredient. It is the keepers' and curators' reading of those sources, not an authority on any tradition or practice: where a page cites a source, the source is the authority, not the page. A safety note is what a cited source said, never the whole story. Read the [Disclaimer](/disclaimer) before you act on anything here.
+It records what traditions, books, and other sources say about an ingredient. It is the Keepers' and Curators' reading of those sources, not an authority on any tradition or practice: where a page cites a source, the source is the authority, not the page. A safety note is what a cited source said, never the whole story. Read the [Disclaimer](/disclaimer) before you act on anything here.
 
 ## Who Runs It
 
-The site is run by the owner, its keepers, and its curators, and the [Code of Ethics](/code-of-ethics) binds whoever holds each role.
+The site is run by the owner, its Keepers, and its Curators, and the [Code of Ethics](/code-of-ethics) binds whoever holds each role.
 
 {aboutRoles}
 

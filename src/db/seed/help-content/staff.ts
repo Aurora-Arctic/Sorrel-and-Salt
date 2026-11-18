@@ -3,10 +3,10 @@ import { article, guide, subPage } from './build';
 const curating = guide(
   10,
   'Curating a Compendium Entry',
-  'How curators and Keepers add and correct Compendium entries.',
+  'How Curators and Keepers add and correct Compendium entries.',
   `[[Curator|Curators]] and [[Keeper|Keepers]] curate the [[Compendium]], its vocabularies and the site documents, and review [[Support Request|support requests]]. They have no access to any [[Coven|coven]]'s ingredients or [[Grimoire|grimoire]], except the [[Demo Coven]].
 
-A curator can use filters ordinary readers do not see: Reviewed, Hidden, No Refs and No Form, and a sort by how well sourced an entry is.`,
+A Curator can use filters ordinary readers do not see: Reviewed, Hidden, No Refs and No Form, and a sort by how well sourced an entry is.`,
   'staff',
 );
 const curatingPages = [
@@ -26,16 +26,16 @@ Entries with no references show under the No Refs filter.`,
     'Which names identify an ingredient and which do not.',
     `A [[Formal Name|formal name]] is a unique identifier and a [[Common Name|common name]] never is. An ingredient's identity is its formal name alone, and its folk names are only other names for it.
 
-When the name a source uses cannot be matched to a formal name, do not guess. Mark that name as unresolved and mark the entry file needs-review: an approved file may hold no unresolved name. A needs-review file must end with a **Questions for the Curator** section saying what is to be settled, and the seed writes only approved files, so it waits in the [[Curator|curator]]'s queue (the seed-queue script lists it).
+When the name a source uses cannot be matched to a formal name, do not guess. Mark that name as unresolved and mark the entry file needs-review: an approved file may hold no unresolved name. A needs-review file must end with a **Questions for the Curator** section saying what is to be settled, and the seed writes only approved files, so it waits in the [[Curator|Curator]]'s queue (the seed-queue script lists it).
 
-In the [[Compendium]] filters, a curator's **Reviewed** choice has the values Any, Reviewed and Needs Review. Needs Review keeps the entries that have no curator review mark; Reviewed keeps those that have one.`,
+In the [[Compendium]] filters, a curator's **Reviewed** choice has the values Any, Reviewed and Needs Review. Needs Review keeps the entries that have no Curator review mark; Reviewed keeps those that have one.`,
   ),
 ];
 
 const vocab = article(
   11,
   'Vocabularies and Categories',
-  'The lists curators keep that the rest of the site draws on.',
+  'The lists Curators keep that the rest of the site draws on.',
   `[[Curator|Curators]] keep the categories, the groups they are filed under, and the other curated lists: astrology, deities and the traditions they belong to, and the values an ingredient's form can take. They are the same for every [[Coven|coven]], so a change shows everywhere.
 
 Deleting a category group moves its categories rather than removing them. A category's slug comes from its own name alone, so renaming a group does not change it. Two items cannot share a slug.`,
@@ -45,10 +45,10 @@ Deleting a category group moves its categories rather than removing them. A cate
 const queue = guide(
   12,
   'Working the Support Queue',
-  'How curators and Keepers answer support requests.',
-  `Requests appear under [[Support Request|Support Requests]], in a tab per status, and can be filtered by **About**, by error number and by sender. A [[Keeper]] sees every request, and a [[Curator|curator]] only those marked **Shared With Curators** or assigned to them. A curator does not see a signed-out sender's address, though a reply still reaches it.
+  'How Curators and Keepers answer support requests.',
+  `Requests appear under [[Support Request|Support Requests]], in a tab per status, and can be filtered by **About**, by error number and by sender. A [[Keeper]] sees every request, and a [[Curator|Curator]] only those marked **Shared With Curators** or assigned to them. A Curator does not see a signed-out sender's address, though a reply still reaches it.
 
-A Keeper can reply to any request and a curator only to one assigned to them. Internal notes are seen by staff only, are never mailed, and change no status. A Keeper assigns a request (**Assignee**).`,
+A Keeper can reply to any request and a Curator only to one assigned to them. Internal notes are seen by staff only, are never mailed, and change no status. A Keeper assigns a request (**Assignee**).`,
   'staff',
 );
 const queuePages = [
@@ -79,7 +79,7 @@ const grants = article(
   13,
   'Granting Coven Creation or the Keeper Role',
   'Who can become a Keeper or create covens.',
-  `Only a [[Keeper]] grants or revokes the right to create [[Coven|covens]], and only a Keeper makes another Keeper. Accepting an invitation, a printed card, or being made a Keeper or [[Curator|curator]] turns the right on. Every change is recorded; see **Read the Privilege Ledger**.
+  `Only a [[Keeper]] grants or revokes the right to create [[Coven|covens]], and only a Keeper makes another Keeper. Accepting an invitation, a printed card, or being made a Keeper or [[Curator|Curator]] turns the right on. Every change is recorded; see **Read the Privilege Ledger**.
 
 While Keeper changes are paused, a Keeper other than the primary Keeper cannot grant or revoke the Keeper role or approve or revoke coven creation. See **Pausing Keeper Changes**.`,
   'keeper',
@@ -97,7 +97,7 @@ const inviteStaff = article(
   15,
   'Inviting a Curator or Keeper',
   'Giving someone a site role.',
-  `Accepting a site invitation raises the person's role to [[Curator|curator]] or [[Keeper]], never lowers it, and turns on their right to create [[Coven|covens]]. A Keeper also gets a [[Steward]] seat in the [[Demo Coven]]. While Keeper changes are paused, the invitation cannot be accepted until they are resumed.`,
+  `Accepting a site invitation raises the person's role to [[Curator|Curator]] or [[Keeper]], never lowers it, and turns on their right to create [[Coven|covens]]. A Keeper also gets a [[Steward]] seat in the [[Demo Coven]]. While Keeper changes are paused, the invitation cannot be accepted until they are resumed.`,
   'keeper',
 );
 
@@ -158,7 +158,7 @@ const writingHelp = guide(
   19,
   'Writing Help Articles',
   'How a Keeper adds, edits and deletes help entries.',
-  `Only a [[Keeper]] writes help. Open Help in the Keepers area. A [[Curator|curator]] reads staff help and writes none of it.
+  `Only a [[Keeper]] writes help. Open Help in the Keepers area. A [[Curator|Curator]] reads staff help and writes none of it.
 
 The page lists every help entry you can read, whatever its kind or audience, from A to Z by title, 25 to a page. Use **Prev** and **Next** to move between pages. The columns are Title, Kind, Audience and Position; a glossary term has no audience, and an entry with no position leaves that cell empty. Choose **Add Help Article** to add an entry, or the edit link on a row to change one. Either opens a form over the list.
 
@@ -205,7 +205,7 @@ The save button is named for the kind: **Save FAQ Entry**, **Save Article** or *
     2,
     'Audiences, Parents and Sub Pages',
     'Who can read an entry, and how a sub page relates to its parent.',
-    `An entry's audience says who can read it: Public means anyone, Staff means [[Curator|curators]] and [[Keeper|Keepers]], and Keeper means Keepers alone.
+    `An entry's audience says who can read it: Public means anyone, Staff means [[Curator|Curators]] and [[Keeper|Keepers]], and Keeper means Keepers alone.
 
 A glossary term is always public. Its form has no Audience, Parent or Position field, and the server refuses a term with any of them.
 
@@ -240,7 +240,7 @@ Opening a sub page at its top-level address redirects to the address beneath its
     4,
     'Who Reads What',
     'The reach of each kind of reader.',
-    `A signed-out reader and any signed-in user who is not staff reads Public entries. A [[Curator|curator]] reads Public and Staff entries, and a [[Keeper]] reads all three. A curator reads staff help at /help/staff, which lists the Staff and Keeper entries. A curator is not shown a Keeper entry, even by its address.
+    `A signed-out reader and any signed-in user who is not staff reads Public entries. A [[Curator|Curator]] reads Public and Staff entries, and a [[Keeper]] reads all three. A Curator reads staff help at /help/staff, which lists the Staff and Keeper entries. A Curator is not shown a Keeper entry, even by its address.
 
 Search shows a reader only the entries that reader may read, so a Staff entry never appears in a public search. See **Search the Help Centre** for how it ranks.
 

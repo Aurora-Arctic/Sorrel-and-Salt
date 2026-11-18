@@ -101,9 +101,8 @@ const ReplyForm = ({
       failure={failure}
       label={note ? 'Your Note' : 'Your Reply'}
       required
-      placeholder={
-        note ? 'Write a Note for Staff' : 'Write a Reply. The Sender Is Emailed That One Is Waiting'
-      }
+      placeholder={note ? 'Staff Note' : 'Write a Reply'}
+      hint={note ? undefined : 'The sender is emailed that a reply is waiting.'}
       submitLabel={note ? 'Add Note' : 'Reply'}
       busyLabel={note ? 'Adding' : 'Replying'}
       above={

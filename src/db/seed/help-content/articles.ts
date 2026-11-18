@@ -64,7 +64,7 @@ A card you have already used says so and points you to your account to start a c
 
 You can type a whole question. The search finds a page that has any of your words, and puts a page that has all of them first. A match in the title ranks above a match in the summary, and a match in the summary ranks above one in the body. If no page matches the words, it falls back to titles close to what you typed, so a misspelt title still finds its page.
 
-You are shown only the pages you may read. Pages for [[Curator|curators]] and [[Keeper|Keepers]] never appear in a public search. Search engines do not index the results page.`,
+You are shown only the pages you may read. Pages for [[Curator|Curators]] and [[Keeper|Keepers]] never appear in a public search. Search engines do not index the results page.`,
   ),
 ];
 
@@ -72,7 +72,7 @@ const compendium = guide(
   2,
   'The Compendium',
   'The shared reference of ingredients, readable by anyone.',
-  `The [[Compendium]] is the global reference of what exists, curated by the site's [[Keeper|Keepers]] and [[Curator|curators]]. Its pages are readable without an account. Nothing about any [[Coven|coven]] follows you out of it.
+  `The [[Compendium]] is the global reference of what exists, curated by the site's [[Keeper|Keepers]] and [[Curator|Curators]]. Its pages are readable without an account. Nothing about any [[Coven|coven]] follows you out of it.
 
 Each entry has a [[Formal Name|formal name]], which identifies it, and may list folk names, a description, safety notes, a toxic mark, correspondences and the sources it rests on. You cannot edit an entry, but you can add it to your coven's Ingredients.`,
 );
@@ -92,7 +92,7 @@ const compendiumPages = [
 - **In My Covens**, which keeps the entries your [[Coven|covens]] hold.
 - Elements, Celestial Bodies, Zodiac and Deities.
 
-Some filters, such as Reviewed, are for [[Curator|curators]] only.`,
+Some filters, such as Reviewed, are for [[Curator|Curators]] only.`,
   ),
   subPage(
     compendium,
@@ -147,7 +147,7 @@ A Steward renames a coven in the **Rename Coven** section of its page. The addre
     'How to start a coven of your own.',
     `Starting a [[Coven|coven]] needs permission. You get it by accepting an [[Invitation|invitation]], by redeeming a printed card, or when a [[Keeper]] grants it. Only a Keeper takes it away, and covens you already made stay.
 
-With permission, choose **Create Coven** in the coven switcher. The page says “Start a coven of your own. You will be its steward.” Enter a **Name** and choose **Create Coven**. You become the coven's [[Steward]].
+With permission, choose **Create Coven** in the coven switcher. The page says “Start a coven of your own. You will be its Steward.” Enter a **Name** and choose **Create Coven**. You become the coven's [[Steward]].
 
 Without permission, the page says: “Creating a coven needs an invitation from someone already using Sorrel & Salt, or a Keeper's approval.”`,
   ),
@@ -180,7 +180,7 @@ A paused member who opens the coven sees **Access Paused** with the time it ends
     'How a seat ends, by removal or by leaving.',
     `A [[Steward]] can remove a member: choose **Remove** on the member, then confirm in **Remove Member**. The seat is ended. If the member is invited back, the same seat is revived with the role on the new invitation. The last Steward cannot be removed.
 
-Any member, a [[Pause|paused]] one too, can choose **Leave Coven** and confirm. The page says: “You lose access to its ingredients and its grimoire until a steward invites you back.” Your own entries stay with the [[Coven|coven]].
+Any member, a [[Pause|paused]] one too, can choose **Leave Coven** and confirm. The page says: “You lose access to its ingredients and its grimoire until a Steward invites you back.” Your own entries stay with the [[Coven|coven]].
 
 If you are the only Steward and other members remain, leaving opens a choice titled **What Happens to the Coven?**. Choose **Hand It to** a member you pick under **New Steward**, and **Promote and Leave** makes them a Steward first, then you leave. That is two steps: if the leave fails, you stay and the coven has two Stewards. The other choice is **Delete Coven**. If you are the only member, delete the coven instead of leaving it.`,
   ),
@@ -222,7 +222,7 @@ The form saves itself as you work; see **Your Spell Saves Itself** for how that 
     2,
     'Variants and Forms',
     'How one ingredient comes in several forms.',
-    `An ingredient's identity is its [[Formal Name|formal name]] alone. Each form it comes in, such as dried or fresh, is a [[Variant|variant]] beneath it. A variant adds to its ingredient and never removes anything from it. A form is typed as text. The field suggests from the list curators keep, and from your own coven's forms, but you can type a form that is on neither.
+    `An ingredient's identity is its [[Formal Name|formal name]] alone. Each form it comes in, such as dried or fresh, is a [[Variant|variant]] beneath it. A variant adds to its ingredient and never removes anything from it. A form is typed as text. The field suggests from the list Curators keep, and from your own coven's forms, but you can type a form that is on neither.
 
 A form can have its own safety notes and toxic mark.
 
@@ -420,7 +420,7 @@ const support = guide(
   8,
   'Support',
   'How to ask for help and follow a reply.',
-  `[[Support Request|Support requests]] go to the site's [[Keeper|Keepers]] and [[Curator|curators]]. [[Observer|Observers]] can send them too.`,
+  `[[Support Request|Support requests]] go to the site's [[Keeper|Keepers]] and [[Curator|Curators]]. [[Observer|Observers]] can send them too.`,
 );
 const supportPages = [
   subPage(
@@ -518,7 +518,7 @@ Within volume, a teaspoon is 5 ml, a tablespoon is 15 ml and a cup is 250 ml. Ch
     5,
     'I Cannot Remove or Leave',
     'Why a seat cannot end.',
-    `- “This is the last steward, and a coven needs one. Make another member a steward first.”
+    `- “This is the last Steward, and a coven needs one. Make another member a Steward first.”
 - “You are the only member. Delete the coven instead of leaving it.”
 - Removing someone who is not in the coven says “That person is not a member of this coven”.
 

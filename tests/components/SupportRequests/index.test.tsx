@@ -173,6 +173,14 @@ describe('Error detail', () => {
 });
 
 describe('Reply', () => {
+  it('tells the keeper the sender is emailed that a reply is waiting', () => {
+    open(ADMIN);
+    chooseReply();
+    expect(
+      within(dialog()).getByRole('textbox', { name: /^Your Reply/ }),
+    ).toHaveAccessibleDescription(/sender is emailed that a reply is waiting/);
+  });
+
   it('counts the reply against 4000 characters without cutting what is typed', () => {
     open(ADMIN);
     chooseReply();

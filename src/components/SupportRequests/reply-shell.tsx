@@ -19,6 +19,8 @@ interface SupportReplyShellProps {
   failure: Failure;
   label: string;
   placeholder: string;
+  /** The field's tip. */
+  hint?: string;
   required?: boolean;
   submitLabel: string;
   busyLabel: string;
@@ -42,6 +44,7 @@ const SupportReplyShell = ({
   failure,
   label,
   placeholder,
+  hint,
   required = false,
   submitLabel,
   busyLabel,
@@ -64,6 +67,7 @@ const SupportReplyShell = ({
         multiline
         rows={4}
         placeholder={placeholder}
+        hint={hint}
         limit={MESSAGE_MAX_LENGTH}
         disabled={shut || busy}
         value={body}

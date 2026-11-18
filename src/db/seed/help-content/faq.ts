@@ -24,12 +24,12 @@ export const FAQ_ENTRIES = [
   faq(
     5,
     "What's the difference between the Compendium and my Ingredients?",
-    `The [[Compendium]] is the shared reference of what exists, curated by the site's [[Keeper|Keepers]] and [[Curator|curators]]. Ingredients are your [[Coven|coven]]'s own: what you have, with your stock. You can add a Compendium entry to your Ingredients, or make an ingredient of your own.`,
+    `The [[Compendium]] is the shared reference of what exists, curated by the site's [[Keeper|Keepers]] and [[Curator|Curators]]. Ingredients are your [[Coven|coven]]'s own: what you have, with your stock. You can add a Compendium entry to your Ingredients, or make an ingredient of your own.`,
   ),
   faq(
     6,
     "Why can't I edit a Compendium entry?",
-    `Only [[Curator|curators]] and [[Keeper|Keepers]] edit the [[Compendium]]. You can add your own notes with **Annotate**, or choose **Make It Ours** to turn the entry into your [[Coven|coven]]'s own ingredient, which you can then edit.`,
+    `Only [[Curator|Curators]] and [[Keeper|Keepers]] edit the [[Compendium]]. You can add your own notes with **Annotate**, or choose **Make It Ours** to turn the entry into your [[Coven|coven]]'s own ingredient, which you can then edit.`,
   ),
   faq(
     7,
