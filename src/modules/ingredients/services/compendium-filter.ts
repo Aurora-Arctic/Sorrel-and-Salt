@@ -9,13 +9,13 @@ import { assertCurator } from '@/modules/identity';
 // The compendium list's filter as its three reads (page, count, facets) take it. Each refuses the Reviewed setting, the hidden listing, the sourcing sort and the sourcing score to anyone but a curator.
 // Not exported from the module: the reads are its API.
 
-const REVIEW_REFUSAL = 'Only a curator may filter the compendium by its review mark';
+const REVIEW_REFUSAL = 'Only a Curator may filter the compendium by its review mark';
 
-const LISTING_REFUSAL = 'Only a curator may read the hidden compendium entries';
+const LISTING_REFUSAL = 'Only a Curator may read the hidden compendium entries';
 
-const SORT_REFUSAL = 'Only a curator may sort the compendium by its sourcing score';
+const SORT_REFUSAL = 'Only a Curator may sort the compendium by its sourcing score';
 
-const SCORE_REFUSAL = 'Only a curator may read the sourcing scores of compendium entries';
+const SCORE_REFUSAL = 'Only a Curator may read the sourcing scores of compendium entries';
 
 /**
  * `filter` parsed. The curator-only settings (Reviewed, hidden entries, the

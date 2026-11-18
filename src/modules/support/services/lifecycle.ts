@@ -145,7 +145,7 @@ export async function supportTiersForSenders(
   session: Session,
   userIds: readonly string[],
 ): Promise<SupportSenderTier[]> {
-  readerOf(session, 'Only a curator or a site keeper may read a sender’s tier');
+  readerOf(session, 'Only a Curator or a site Keeper may read a sender’s tier');
   const cards = await findCardAcceptorIds(userIds);
   return userIds.map((id) => (cards.has(id) ? 'beta_tester' : 'standard'));
 }

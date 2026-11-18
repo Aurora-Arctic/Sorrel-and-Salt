@@ -13,8 +13,8 @@ import type { CovenInvitationProps } from './types';
 // only its token's hash is stored (claude-docs/db/invitations.md, "Inviting into a coven").
 
 const ROLE_PROSE: Record<CovenInvitationProps['role'], string> = {
-  viewer: 'an observer',
-  member: 'a practitioner',
+  viewer: 'an Observer',
+  member: 'a Practitioner',
 };
 
 // The column's default, `now() + interval '7 days'`; nothing sets another.

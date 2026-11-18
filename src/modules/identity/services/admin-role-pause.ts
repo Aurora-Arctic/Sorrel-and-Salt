@@ -10,8 +10,8 @@ import type { AdminRoleChangePauseState } from '../types';
 // The primary keeper's switch on keeper grants and revokes, so a rogue admin can neither make keepers nor remove the good ones.
 // Only the primary keeper may flip it; `setUserRole` reads it (claude-docs/auth/admin-users.md, "Pausing keeper changes").
 
-const REFUSAL = 'Only a site keeper may see or change whether keeper changes are paused';
-const NOT_PRIMARY_REFUSAL = 'Only the primary keeper may pause or resume keeper changes';
+const REFUSAL = 'Only a site Keeper may see or change whether Keeper changes are paused';
+const NOT_PRIMARY_REFUSAL = 'Only the primary Keeper may pause or resume Keeper changes';
 
 /**
  * The primary keeper's own change passes, so it can clean up without resuming.

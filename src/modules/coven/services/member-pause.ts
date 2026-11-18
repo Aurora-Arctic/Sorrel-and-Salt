@@ -26,7 +26,7 @@ import { notAMember } from './not-a-member';
 // (claude-docs/design-decisions/auth.md, "How the coven access pause refuses a member, and what it decides along the way").
 
 const OWNER_REFUSAL =
-  "A steward's access can't be paused. Change their role first if they should be paused.";
+  "A Steward's access can't be paused. Change their role first if they should be paused.";
 const STAND_IN_REFUSAL = 'This account is not a person, so its access to a coven cannot be paused';
 const ALREADY_PAUSED = 'This member is already paused; lift the pause first';
 

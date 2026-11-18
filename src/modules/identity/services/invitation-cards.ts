@@ -67,7 +67,7 @@ function parsedArrivalFilter(filter: CardArrivalFilter): CardArrivalFilter {
   return { query: trimmedOrUndefined(filter.query) };
 }
 
-const REFUSAL = 'Only a site keeper may mint, list or revoke invitation cards';
+const REFUSAL = 'Only a site Keeper may mint, list or revoke invitation cards';
 
 /**
  * Answers the tokens: the only time any is readable, as the rows hold the hash alone.

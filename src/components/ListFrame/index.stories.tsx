@@ -70,7 +70,7 @@ const loadingCardsNode = (
 
 const emptyNode = (
   <ListFrame>
-    <EmptyState label="No Groups" detail="A keeper can add one.">
+    <EmptyState label="No Groups" detail="A Keeper can add one.">
       There are no groups yet.
     </EmptyState>
   </ListFrame>

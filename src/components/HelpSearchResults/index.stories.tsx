@@ -29,7 +29,7 @@ export const Results: StoryObj<typeof HelpSearchResults> = {
         kind: 'article',
         audience: 'staff' as const,
         title: 'Checking Stock Reports',
-        summary: 'What a curator reads in a stock report.',
+        summary: 'What a Curator reads in a stock report.',
         href: '/help/staff/curation/stock-reports',
       },
     ],

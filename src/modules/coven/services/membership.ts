@@ -102,7 +102,7 @@ async function admit(
   // neither the role nor the permission, which are the service's to decide.
   if (!rolePermits(role, permission)) {
     throw new Forbidden(
-      "Your role in this coven doesn't allow that. Ask a steward if you need it.",
+      "Your role in this coven doesn't allow that. Ask a Steward if you need it.",
     );
   }
 

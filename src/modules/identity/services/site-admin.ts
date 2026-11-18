@@ -33,7 +33,7 @@ export type SiteAdmin = Curator & {
 /**
  * @throws {Forbidden} the email address is unverified, or the role is neither `curator` nor `admin`.
  */
-export function assertCurator(session: Session, reason = 'Only a curator may do this'): Curator {
+export function assertCurator(session: Session, reason = 'Only a Curator may do this'): Curator {
   refuseUnverified(session);
   if (!curates(session.role)) throw new Forbidden(reason);
   return { userId: session.userId } as Curator;
@@ -47,7 +47,7 @@ export function assertCurator(session: Session, reason = 'Only a curator may do 
  */
 export function assertSiteAdmin(
   session: Session,
-  reason = 'Only a site keeper may do this',
+  reason = 'Only a site Keeper may do this',
 ): SiteAdmin {
   refuseUnverified(session);
   if (!isSiteAdmin(session)) throw new Forbidden(reason);

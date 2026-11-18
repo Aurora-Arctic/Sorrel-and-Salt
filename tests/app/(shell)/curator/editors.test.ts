@@ -68,7 +68,7 @@ describe('editorStamps', () => {
 
   it('passes on the refusal a non-keeper session gets', async () => {
     editorNamesForCurator.mockRejectedValueOnce(
-      new Forbidden('Only a curator may read editor names'),
+      new Forbidden('Only a Curator may read editor names'),
     );
 
     await expect(

@@ -32,8 +32,8 @@ import { NO_SUCH_REQUEST, NO_SUCH_USER } from './refusals';
 // What the staff do to a request. A keeper reads every request and may do everything; a curator reads the requests marked for
 // curators or assigned to them, and may reply to and resolve the ones assigned to them. Both are checked here, by direct call.
 
-const READ_REFUSAL = 'Only a curator or a site keeper may read support requests';
-const ADMIN_REFUSAL = 'Only a site keeper may do this to a support request';
+const READ_REFUSAL = 'Only a Curator or a site Keeper may read support requests';
+const ADMIN_REFUSAL = 'Only a site Keeper may do this to a support request';
 
 /**
  * The request as this session reads it: a curator sees no coven slug in its page and no signed-out sender’s address, a keeper
@@ -106,7 +106,7 @@ export async function requestToAnswer(
   const reader = readerOf(session, READ_REFUSAL);
   const row = await visibleRequest(reader, parseInput(RowId, id));
   if (reader.role === 'curator' && row.assignedTo !== session.userId) {
-    throw new Forbidden(`A curator may ${doing} only a request assigned to them`);
+    throw new Forbidden(`A Curator may ${doing} only a request assigned to them`);
   }
   return row;
 }
@@ -161,7 +161,7 @@ export async function assignSupportRequest(
     const assignee = await findOneById(users, parseInput(RowId, assigneeId));
     if (!assignee) throw new NotFound(NO_SUCH_USER);
     if (assignee.role !== 'curator' && assignee.role !== 'admin') {
-      throw fieldRefusal('assigneeId', 'Assign a request to a curator or an admin');
+      throw fieldRefusal('assigneeId', 'Assign a request to a Curator or a Keeper');
     }
     if (await standingAccessPause(assignee.id)) {
       throw fieldRefusal(

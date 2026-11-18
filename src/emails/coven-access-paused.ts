@@ -18,14 +18,14 @@ function CovenAccessPaused({
   return h(
     EmailLayout,
     {
-      preview: `A steward paused your access to ${covenName}.`,
+      preview: `A Steward paused your access to ${covenName}.`,
       heading: subjectOf({ covenName }),
       origin,
     },
     h(
       Paragraph,
       null,
-      `A steward of the coven ${covenName} paused your access to it. ${pauseEnd(until)} You keep your seat in the coven, and the rest of Sorrel & Salt works as before.`,
+      `A Steward of the coven ${covenName} paused your access to it. ${pauseEnd(until)} You keep your seat in the coven, and the rest of Sorrel & Salt works as before.`,
     ),
     message ? h(Paragraph, null, message) : null,
     h(Action, { href: url, label: 'Open the Support Page', part }),

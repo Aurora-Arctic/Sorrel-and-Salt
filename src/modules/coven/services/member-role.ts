@@ -13,7 +13,7 @@ import { assertNotSystemSeat } from './system-seat';
 // It changes an existing member's row and nothing else; ownership never comes through an invitation (DESIGN.md §5).
 
 const PAUSED_PROMOTION =
-  "This member's access is paused; lift the pause first to make them a steward";
+  "This member's access is paused; lift the pause first to make them a Steward";
 
 /**
  * Demoting a steward runs the last-owner guard under a lock.

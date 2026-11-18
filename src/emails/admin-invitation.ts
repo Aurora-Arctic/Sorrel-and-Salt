@@ -15,8 +15,8 @@ import type { AdminInvitationProps } from './types';
 // `offer` follows "invited this email address to" and "Accept within seven days to".
 const ROLE: Record<AdminInvitationProps['siteRole'], { subject: string; offer: string }> = {
   user: { subject: 'You Are Invited to Start a Coven', offer: 'start a coven of your own' },
-  curator: { subject: 'You Are Invited to Be a Curator', offer: 'become a curator' },
-  admin: { subject: 'You Are Invited to Be a Keeper', offer: 'become a keeper' },
+  curator: { subject: 'You Are Invited to Be a Curator', offer: 'become a Curator' },
+  admin: { subject: 'You Are Invited to Be a Keeper', offer: 'become a Keeper' },
 };
 
 // The column's default, `now() + interval '7 days'`; nothing sets another.
@@ -39,7 +39,7 @@ function AdminInvitation({
     h(
       Paragraph,
       null,
-      `${inviterName}, a keeper of Sorrel & Salt, has invited this email address to ${ROLE[siteRole].offer}.`,
+      `${inviterName}, a Keeper of Sorrel & Salt, has invited this email address to ${ROLE[siteRole].offer}.`,
     ),
     h(
       Paragraph,

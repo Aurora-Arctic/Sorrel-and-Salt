@@ -18,7 +18,7 @@ import type { PrivilegeChangeFilter, PrivilegeChangeRow, UserRow } from '../type
 
 // Only a site keeper reads the ledger, checked here by direct call (claude-docs/auth/admin-users.md, "The privilege ledger").
 
-const REFUSAL = 'Only a site keeper may read the privilege ledger';
+const REFUSAL = 'Only a site Keeper may read the privilege ledger';
 
 /**
  * A subject that is not an id is refused rather than read, so it is not taken for a bad cursor.

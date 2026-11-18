@@ -21,7 +21,7 @@ function AccessPaused({
     h(
       Paragraph,
       null,
-      `A site keeper paused your access to Sorrel & Salt. ${pauseEnd(until)} You have been signed out everywhere.`,
+      `A site Keeper paused your access to Sorrel & Salt. ${pauseEnd(until)} You have been signed out everywhere.`,
     ),
     message ? h(Paragraph, null, message) : null,
     h(

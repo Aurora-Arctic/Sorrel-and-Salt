@@ -15,7 +15,7 @@ import type { UserFilter, UserRow } from '../types';
 
 // A read, so the mutation sweep does not reach it: the check is here, by direct call, and the page confers no workspace access (claude-docs/auth/admin-users.md, "The user list").
 
-const REFUSAL = 'Only a site keeper may list users';
+const REFUSAL = 'Only a site Keeper may list users';
 
 /**
  * @throws {Forbidden} the session's role is not `admin`.

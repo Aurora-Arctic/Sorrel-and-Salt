@@ -10,7 +10,7 @@ import type { UserRow } from '../types';
 
 // Each change is declared `via: 'admin'` and the trigger on `users` records it in the privilege ledger (claude-docs/auth/admin-users.md, "Approving workspace creation").
 
-const REFUSAL = 'Only a site keeper may change who can create a coven';
+const REFUSAL = 'Only a site Keeper may change who can create a coven';
 
 /** The ledger row is the trigger's, carrying `note` (blank as none). */
 async function setFlag(

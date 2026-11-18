@@ -195,7 +195,7 @@ describe('AdminInvitations', () => {
   it('says a refused address beside the field and keeps the form open', async () => {
     mockGraphQLError('CreateAdminInvitation', {
       code: 'VALIDATION',
-      fieldErrors: [{ path: ['email'], message: 'That address belongs to a keeper already' }],
+      fieldErrors: [{ path: ['email'], message: 'That address belongs to a Keeper already' }],
     });
     render(<AdminInvitations invitations={[]} inviting />);
 
