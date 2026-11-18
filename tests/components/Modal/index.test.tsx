@@ -179,6 +179,20 @@ describe('Modal', () => {
     ).toBeNull();
   });
 
+  // Regression: the scrolling body took a Tab stop with no role or name, so a screen reader announced nothing there.
+  it('names a body only to read as a region, by the dialog title', async () => {
+    render(
+      <Modal title="Testwort Reading" onClose={vi.fn()} readingBody>
+        <p>Fixture reading.</p>
+      </Modal>,
+    );
+    await settle();
+
+    const reading = screen.getByRole('region', { name: 'Testwort Reading' });
+    expect(reading).toHaveAttribute('tabindex', '0');
+    expect(reading).toContainElement(screen.getByText('Fixture reading.'));
+  });
+
   it('closes from the Close button on its top line, with the top line empty or full', () => {
     const onClose = vi.fn();
     const { rerender } = render(

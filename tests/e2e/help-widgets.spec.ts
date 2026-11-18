@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase, withE2eSql } from './database';
+import { PHONE_WIDTH } from './breakpoints';
 import { insertHelpArticle } from '../support/db/insert-help-article';
 import { CONVERSION_REFUSALS } from '@/components/HelpWidget/conversion-refusals';
 import type { HelpWidgetName } from '@/lib/help-widgets';
@@ -98,6 +99,26 @@ test('the role permission table marks each role', async ({ page }) => {
   // Sweep gap: the help article holding the role permission table.
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
+});
+
+// Regression: at phone width the table scrolls sideways in a frame a keyboard could not reach.
+test('the role permission table scrolls at phone width in a frame the keyboard reaches', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
+  await page.goto(`/help/${ARTICLES['role-permission-table']}`);
+  const table = page.getByRole('table', { name: 'What Each Role May Do' });
+  await expect(table).toBeVisible();
+  // Precondition: the table is wider than its frame, so the frame has to scroll.
+  const scrolls = await table.evaluate(
+    (element) => element.parentElement!.scrollWidth > element.parentElement!.clientWidth,
+  );
+  expect(scrolls).toBe(true);
+
+  const frame = page.getByRole('region').filter({ has: table });
+  await expect(frame).toHaveAttribute('tabindex', '0');
+  await expect(frame).toHaveAccessibleName(/\S/);
+  await assertNoAccessibilityViolations(page);
 });
 
 test('the autosave states show the save line in each of its six states', async ({ page }) => {
