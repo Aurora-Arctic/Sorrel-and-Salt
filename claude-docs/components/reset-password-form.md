@@ -26,4 +26,4 @@ change". The page passes `token` only when the URL carries a non-empty `token` a
 - **A submit's result takes focus**: the invalid field, else the notice (`useResultFocus`).
 
 The story does not mock the request: a submit in the workshop fails into the alert region.
-`tests/app/reset-password-page.test.tsx` covers which URLs pass a token.
+`tests/app/(public)/reset-password-page.test.tsx` covers which URLs pass a token.

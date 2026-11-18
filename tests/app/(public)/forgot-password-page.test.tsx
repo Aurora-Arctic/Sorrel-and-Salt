@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/components/ForgotPasswordForm', () => ({ default: () => null }));
 
-const { metadata } = await import('@/app/forgot-password/page');
+const { metadata } = await import('@/app/(public)/forgot-password/page');
 
 describe('/forgot-password', () => {
   it('asks search engines not to index it', () => {

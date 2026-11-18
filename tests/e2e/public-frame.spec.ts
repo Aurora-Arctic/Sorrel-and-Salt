@@ -63,3 +63,21 @@ test('the signed-out page keeps a scrolled-to control clear of the sticky bar', 
   );
   expect(padding).toBeGreaterThan(barBottom);
 });
+
+for (const route of [
+  '/sign-in',
+  '/forgot-password',
+  '/reset-password',
+  '/reset-password?token=x',
+]) {
+  test(`${route} carries the site bar, with one main, for a signed-out visitor`, async ({
+    page,
+  }) => {
+    await page.goto(route);
+
+    await expect(
+      page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
+    ).toBeVisible();
+    await expect(page.getByRole('main')).toHaveCount(1);
+  });
+}

@@ -1,8 +1,8 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { longMinuteInZone } from '@/lib/utc';
-import { printed } from '../support/printed-text';
-import { getShellSession } from '../support/request-session';
+import { printed } from '../../support/printed-text';
+import { getShellSession } from '../../support/request-session';
 
 // /access-paused reads the viewer's own standing pause, as the shell does, and says when it ends: a pause with an end and
 // one with none. Signed out it sends the visitor to Sign In, and with no pause standing, lifted or ended, to the entry page.
@@ -11,18 +11,18 @@ import { getShellSession } from '../support/request-session';
 // and a link to read the requests, and no Support dialog link, since the dialog could send nothing.
 
 vi.mock('next/navigation', async () => ({
-  ...(await import('../support/next-navigation')),
+  ...(await import('../../support/next-navigation')),
   redirect: (url: string) => {
     throw new Error(`redirect:${url}`);
   },
   usePathname: () => '/access-paused',
   useSearchParams: () => new URLSearchParams(),
 }));
-vi.mock('@/lib/request-session', () => import('../support/request-session'));
+vi.mock('@/lib/request-session', () => import('../../support/request-session'));
 const getMySupportTimeout = vi.fn();
 vi.mock('@/modules/support', () => ({ getMySupportTimeout }));
 
-const { default: AccessPausedPage, metadata } = await import('@/app/access-paused/page');
+const { default: AccessPausedPage, metadata } = await import('@/app/(public)/access-paused/page');
 
 const SESSION = { userId: 'u', role: 'user' };
 
