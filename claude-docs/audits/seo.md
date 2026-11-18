@@ -8,13 +8,9 @@ The audit has 13 findings. No finding is High, so none stops a search engine rea
 
 ### What The Owner Needs To Do
 
-I need you to do three things.
+Nothing. All 13 findings are decided: 11 are minted as MC.33 to MC.43 in `claude-docs/tasks/v1/mc.md`, and 2 are skipped (SEO-10 and SEO-12). The audit asked nothing of Search Console, Bing Webmaster Tools or Vercel, and changed none of them.
 
-1. Read the findings and the proposed tasks (SEO-1 to SEO-13) and say which to mint, change or skip. Severity is a proposal; you can change it.
-2. For SEO-7, choose between the two fixes the task names: change the Vercel AI Bots setting to Allow, or correct the recorded decision to say Log. The task is written so that either passes.
-3. For SEO-10, choose which signal `/compendium?entry=<id>` keeps: the noindex header or the canonical tag.
-
-Nothing else needs you. The audit asked nothing of Search Console, Bing Webmaster Tools or Vercel, and changed none of them.
+- Both AI Bots rules are set to Log.
 
 ## Scope
 
@@ -121,12 +117,12 @@ Bing's top recommendations:
 
 Site scans, as listed on 2026-11-17:
 
-| Scan                  | Source        | Age     | Pages | Errors | Warnings |
-| --------------------- | ------------- | ------- | ----- | ------ | -------- |
-| Sorrel and Salve V1.4 | sitemap.xml   | 14 days | 529   | 0      | 0        |
-| Sorrel and Salt V1.3  | website crawl | 14 days | 174   | 2      | 0        |
-| Sorrel and Salt V1.1  | website crawl | 27 days | 103   | 0      | 0        |
-| Sorrel And Salt V1    | website crawl | 27 days | 103   | 1      | 0        |
+| Scan | Source | Age | Pages | Errors | Warnings |
+| --------------------- | ------------- | ------- | ----- | ------ | -------- | ------ |
+| Sorrel and Salve V1.4 | sitemap.xml | 14 days | 529 | 0 | 0 |
+| Sorrel and Salt V1.3 | website crawl | 14 days | 174 | 2 | 0 |
+| Sorrel and Salt V1.1 | website crawl | 27 days | 103 | 0 | 0 |
+| Sorrel And Salt V1 | website crawl | 27 days | 103 | 1 | 0 |
 
 The V1.3 errors are both "Blocked by robots.txt": `https://sorrelandsalt.com/account/terms` (page depth 2) and `https://sorrelandsalt.com/?support=` (page depth 1). The V1 error was not opened. The V1.3 scan ran on about 2026-11-03, the day MB.289 fixed crawl faults. No new scan was started.
 
@@ -196,21 +192,21 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 
 ## Summary
 
-| Id     | Title                                                                  | Severity | Also on `main`                               | Task estimate |
+| Id | Title | Severity | Also on `main` | Task estimate | Task |
 | ------ | ---------------------------------------------------------------------- | -------- | -------------------------------------------- | ------------- |
-| SEO-1  | Most Public Pages Have No Share Image                                  | Medium   | Yes                                          | 2h            |
-| SEO-2  | Every Help Page's Main Heading Is "Help"                               | Medium   | Yes                                          | 3h            |
-| SEO-3  | Pages Load 64 To 76 Separate Stylesheet Files                          | Medium   | Yes (live); not measured on `staging`        | 6h            |
-| SEO-4  | Crawlable Links Into Addresses That Are Never Indexed                  | Medium   | Yes, with a difference                       | 3h            |
-| SEO-5  | Older Document Versions Are Indexable Copies                           | Medium   | Yes                                          | 2h            |
-| SEO-6  | Bing Has Indexed 34 Of 58 Known Addresses And Is Not Told Of New Pages | Medium   | Yes                                          | 6h            |
-| SEO-7  | The Firewall's AI Bots Rules Differ From The Recorded Decision         | Medium   | Setting is live; record is on `staging` only | 1.5h          |
-| SEO-8  | The Home Page's Title And Description Are Short                        | Low      | Yes                                          | 1.5h          |
-| SEO-9  | A Retired Entry Answers A Plain 404                                    | Low      | Yes                                          | 4h            |
-| SEO-10 | `/compendium?entry=<id>` Sends Two Signals                             | Low      | Yes                                          | 2h            |
-| SEO-11 | No Rule Makes A Public Page Carry A Description Or Canonical Tag       | Low      | Yes                                          | 2h            |
-| SEO-12 | Help Articles And Documents Carry No Structured Data                   | Low      | Yes                                          | 3h            |
-| SEO-13 | `llms.txt` And The AI Catalogue Name The Compendium Only               | Low      | Yes                                          | 2h            |
+| SEO-1 | Most Public Pages Have No Share Image | Medium | Yes | 2h | MC.33 |
+| SEO-2 | Every Help Page's Main Heading Is "Help" | Medium | Yes | 3h | MC.34 |
+| SEO-3 | Pages Load 64 To 76 Separate Stylesheet Files | Medium | Yes (live); not measured on `staging` | 6h | MC.35 |
+| SEO-4 | Crawlable Links Into Addresses That Are Never Indexed | Medium | Yes, with a difference | 3h | MC.36 |
+| SEO-5 | Older Document Versions Are Indexable Copies | Medium | Yes | 2h | MC.37 |
+| SEO-6 | Bing Has Indexed 34 Of 58 Known Addresses And Is Not Told Of New Pages | Medium | Yes | 6h | MC.38 |
+| SEO-7 | The Firewall's AI Bots Rules Differ From The Recorded Decision | Medium | Setting is live; record is on `staging` only | 1.5h | MC.39 |
+| SEO-8 | The Home Page's Title And Description Are Short | Low | Yes | 1.5h | MC.40 |
+| SEO-9 | A Retired Entry Answers A Plain 404 | Low | Yes | 4h | MC.43 |
+| SEO-10 | `/compendium?entry=<id>` Sends Two Signals | Low | Yes | 2h | Skipped |
+| SEO-11 | No Rule Makes A Public Page Carry A Description Or Canonical Tag | Low | Yes | 2h | MC.41 |
+| SEO-12 | Help Articles And Documents Carry No Structured Data | Low | Yes | 3h | Skipped |
+| SEO-13 | `llms.txt` And The AI Catalogue Name The Compendium Only | Low | Yes | 2h | MC.42 |
 
 ## Findings
 
@@ -222,7 +218,7 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Also on `main`:** yes. `page-metadata.ts` and `tests/e2e/seo.spec.ts` are identical, and the live data is production's.
 - **Why It Matters:** a link to a document or a help page, pasted into a chat or a post, shows no picture. The served pages show this.
 - **Recommended Fix:** make the helper carry the site's share image on every page it builds, or add the image to the `openGraph` object it returns. Extend the share-card test to every public page that does not name its own card.
-- **Follow-up Task:** Carry The Share Image On Every Public Page (proposed, 2h).
+- **Follow-up Task:** MC.33 Carry The Share Image On Every Public Page
 
 ### SEO-2 Every Help Page's Main Heading Is "Help"
 
@@ -232,7 +228,7 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Also on `main`:** yes. The help components are identical on both branches, bar the skeleton file.
 - **Why It Matters:** a page's main heading is the first thing a reader or a search engine uses to say what the page is. Every article states the same one.
 - **Recommended Fix:** make the article's title the `<h1>` on article pages, and make "Help" a smaller label above it. Keep "Help" as the `<h1>` on `/help` itself.
-- **Follow-up Task:** Make The Article Title The Main Heading On Help Pages (proposed, 3h).
+- **Follow-up Task:** MC.34 Make The Article Title The Main Heading On Help Pages
 
 ### SEO-3 Pages Load 64 To 76 Separate Stylesheet Files
 
@@ -242,7 +238,7 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Also on `main`:** live data is `main`'s. `staging` changed `src/scss/` and component styles; its stylesheet counts were not measured.
 - **Why It Matters:** a crawler asks for every file, and the crawl budget Google gives a site is spent on them. The served pages and Google's crawl stats show the requests; no ranking effect is shown.
 - **Recommended Fix:** find why the build splits the styles into so many files and combine them, so a page loads a handful. Re-measure with the same counts.
-- **Follow-up Task:** Cut The Number Of Stylesheet Files A Page Loads (proposed, 6h).
+- **Follow-up Task:** MC.35 Cut The Number Of Stylesheet Files A Page Loads
 
 ### SEO-4 Crawlable Links Into Addresses That Are Never Indexed
 
@@ -252,7 +248,7 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Also on `main`:** yes, with one difference. On `staging` the header link is hidden on `/sign-in` (`sign-in-link.tsx:22`); on `main` the sign-in page is in `src/app/sign-in/` and production shows no link there.
 - **Why It Matters:** a crawler follows each link and fetches an address that holds nothing to index. The served responses show the fetches; the audit found no evidence of harm beyond that.
 - **Recommended Fix:** add `rel="nofollow"` to the header's Sign In link and to document-body links that open the support dialog. A body link is written in Markdown, so the fix goes in `markdown.tsx` beside the existing `/account/…` rule, keyed on a `?support=` link.
-- **Follow-up Task:** Stop Crawlers Following Sign-In And Support Links (proposed, 3h).
+- **Follow-up Task:** MC.36 Stop Crawlers Following Sign-In And Support Links
 
 ### SEO-5 Older Document Versions Are Indexable Copies
 
@@ -262,7 +258,7 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Also on `main`:** yes. `_documents.tsx` is identical.
 - **Why It Matters:** a superseded version is a near copy of the current text. The page is open to indexing and answers 200, so it can be listed in place of the current document. No search result showing it was observed.
 - **Recommended Fix:** mark a version that is not the current one noindex, with `follow`, as the helper does for other copies, and keep naming itself as canonical.
-- **Follow-up Task:** Keep Superseded Document Versions Out Of Search (proposed, 2h).
+- **Follow-up Task:** MC.37 Keep Superseded Document Versions Out Of Search
 
 ### SEO-6 Bing Has Indexed 34 Of 58 Known Addresses And Is Not Told Of New Pages
 
@@ -272,7 +268,7 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Also on `main`:** yes.
 - **Why It Matters:** Bing finds a page only when it crawls, and the console shows it crawled the home page 6 weeks before the audit. Google does not use IndexNow, so only Bing is affected.
 - **Recommended Fix:** serve an IndexNow key file and send a ping to Bing when a compendium entry or help article is published or changed.
-- **Follow-up Task:** Tell Bing About New And Changed Pages With IndexNow (proposed, 6h).
+- **Follow-up Task:** MC.38 Tell Bing About New And Changed Pages With IndexNow
 
 ### SEO-7 The Firewall's AI Bots Rules Differ From The Recorded Decision
 
@@ -281,8 +277,8 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Found:** live and code. The recorded setting is "AI Assistants: Allow. AI Crawlers: Deny", because the site publishes `llms.txt` and the AI catalogue for assistants. Vercel shows both AI Bots rules set to Log. Bot Protection, action Challenge, excludes only verified bots. An earlier plain request from outside the owner's browser was challenged with HTTP 429 and a "Vercel Security Checkpoint"; that request is recorded in the audit plan, not in the Chrome results, whose run saw no 429. **Not observed:** whether any AI assistant is challenged when it fetches `/llms.txt`. The audit states the two settings and the one 429, and no more.
 - **Also on `main`:** the setting is in the Vercel dashboard, so it is the same for both. The record of the decision (`ci.md`) is on `staging` and has no matching text on `main`.
 - **Why It Matters:** the record and the setting disagree, so the next person reading either is wrong about what the site does.
-- **Recommended Fix:** either change the Vercel setting to AI Assistants Allow and AI Crawlers Deny, or correct the record to say Log. The owner picks when approving the task.
-- **Follow-up Task:** Make The AI Bots Setting And Its Record Agree (proposed, 1.5h).
+- **Recommended Fix:** either change the Vercel setting to AI Assistants Allow and AI Crawlers Deny, or correct the record to say Log. The owner chose to correct the record to say Log.
+- **Follow-up Task:** MC.39 Correct The Record Of The AI Bots Setting
 
 ### SEO-8 The Home Page's Title And Description Are Short
 
@@ -292,17 +288,17 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Also on `main`:** yes. `src/app/page.tsx` is identical.
 - **Why It Matters:** Bing's console reports both as moderate. No effect on clicks is shown: Bing shows 2 impressions.
 - **Recommended Fix:** write a title of about 50-60 characters and a description of about 150-160 that say what the site is, from the visible intro.
-- **Follow-up Task:** Lengthen The Home Page's Title And Description (proposed, 1.5h).
+- **Follow-up Task:** MC.40 Lengthen The Home Page's Title And Description
 
 ### SEO-9 A Retired Entry Answers A Plain 404
 
 - **Severity:** Low
 - **Where:** `src/db/migrations/0090_retire-endangered-entries.sql`; `src/modules/ingredients/schema/retired-ingredient-slugs.ts:9-13` (a renamed entry's old slug redirects for 180 days).
-- **Found:** live and code. `/compendium/ingredients/agarwood-aquilaria-malaccensis` answers 404 with a noindex tag, and Google lists it as "Not found (404)", last crawled 2026-11-02. The migration marks the entry deleted and writes no row to the slug-history table, so no redirect applies. A search of `src/app/(public)/compendium` finds no code that answers 410 (gone). The retirement is deliberate; the finding is only that search engines are told "missing", not "removed".
+- **Found:** live and code. `/compendium/ingredients/agarwood-aquilaria-malaccensis` answers 404 with a noindex tag, and Google lists it as "Not found (404)", last crawled 2026-11-02. The migration retires four entries (seed keys `aquilaria malaccensis`, `pterocarpus santalinus`, `nardostachys jatamansi` and `liquidambar orientalis`), as the curator Delete retires an entry, by setting `deleted_at`; its comment says so. The row is kept, so code can tell a retired entry from an address that never existed. It writes no row to the slug-history table, so no redirect applies. A search of `src/app/(public)/compendium` finds no code that answers 410 (gone). The retirement is deliberate; the finding is only that search engines are told "missing", not "removed".
 - **Also on `main`:** yes.
 - **Why It Matters:** a search engine retries a 404 for longer than a 410 before it drops the address. This is general crawler behaviour, not something a served response here shows; Google's console shows the address once, with validation not started.
 - **Recommended Fix:** answer 410 for a retired entry's address. Keep 404 for an address that never existed.
-- **Follow-up Task:** Answer 410 For A Retired Compendium Entry (proposed, 4h).
+- **Follow-up Task:** MC.43 Answer 410 For A Retired Compendium Entry
 
 ### SEO-10 `/compendium?entry=<id>` Sends Two Signals
 
@@ -311,8 +307,9 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Found:** live and code. The address answers 200 with `x-robots-tag: noindex, follow` and a canonical tag naming the entry's page. `/compendium` holds 24 entry links. The first carries `rel="nofollow"`; the live data did not record the `rel` of the other 23. Google's "Alternate page with proper canonical tag" rows (2026-10-23) and "Excluded by 'noindex' tag" rows (2026-11-13) are the before and after of MB.289. The handoff's guess that these are old addresses is wrong: the page still builds them.
 - **Also on `main`:** yes. Both files are identical.
 - **Why It Matters:** a page says "index the other address" and "do not index this one" at once. The audit found no evidence that either signal fails today.
-- **Recommended Fix:** keep one signal. The owner picks which: the noindex header alone, or the canonical tag alone.
-- **Follow-up Task:** Give An Entry Quick Look Address One Search Signal (proposed, 2h).
+- **Recommended Fix:** keep one signal. The two choices were the noindex header alone, or the canonical tag alone.
+- **Owner's Decision:** skipped. Both signals stay.
+- **Follow-up Task:** None. Skipped by the owner: both signals stay.
 
 ### SEO-11 No Rule Makes A Public Page Carry A Description Or Canonical Tag
 
@@ -322,7 +319,7 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Also on `main`:** yes. The guard is identical.
 - **Why It Matters:** a new public page can ship with no description and no canonical tag, and no test fails.
 - **Recommended Fix:** add a guard that every indexable public page passes a description and a canonical path to the helper, with `/support` and `/help/search` named as noindex.
-- **Follow-up Task:** Fail A Public Page That Has No Description Or Canonical Tag (proposed, 2h).
+- **Follow-up Task:** MC.41 Fail A Public Page That Has No Description Or Canonical Tag
 
 ### SEO-12 Help Articles And Documents Carry No Structured Data
 
@@ -332,7 +329,8 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Also on `main`:** yes. `json-ld.ts` is identical.
 - **Why It Matters:** none shown. This is a gap in what the pages say about themselves, not a fault a served response reveals.
 - **Recommended Fix:** add a breadcrumb description to help articles, as entries have, and an `Article` description to documents.
-- **Follow-up Task:** Describe Help Articles And Documents To Search Engines (proposed, 3h).
+- **Owner's Decision:** skipped. Google's documentation shows breadcrumb markup changes only the address line of a desktop result, and breadcrumbs left mobile results on 23 January 2025 [S8][S9]. It describes Article markup as for news, blog, and sports article pages, and lists no help or FAQ type [S10].
+- **Follow-up Task:** None. Skipped by the owner (see "Proposed Tasks").
 
 ### SEO-13 `llms.txt` And The AI Catalogue Name The Compendium Only
 
@@ -342,7 +340,7 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 - **Also on `main`:** yes. `ai-discovery.ts`, `catalog-link.tsx`, `layout.tsx` and `claude-docs/seo` are identical.
 - **Why It Matters:** an assistant reading `llms.txt` is not shown the site's own documents or help. The files do what the doc says, so this is a scope choice and not a fault.
 - **Recommended Fix:** add a "Help And Documents" section to `llms.txt`, and decide whether the catalogue should list the help as a second entry. Re-read the two draft specifications first, as the doc records them as read on 2026-10-19.
-- **Follow-up Task:** Add The Documents And Help To `llms.txt` (proposed, 2h).
+- **Follow-up Task:** MC.42 Add The Documents And Help To `llms.txt`
 
 ## Coverage Gates
 
@@ -357,9 +355,9 @@ No local full run was made, by the owner's decision.
 
 ## Proposed Tasks
 
-One task per finding. No task has an id; an id is given when the owner approves it. Each estimate is scaled to the finished tasks MB.289 (6.5h), MB.84 (7h), MB.82 (4h), MB.80 (2h) and M12.2 (1.5h), and is an estimate. Every task also ends with "The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass."
+The owner approved eleven of the 13 tasks below, and skipped two. The eleven are minted as MC.33 to MC.43 in `claude-docs/tasks/v1/mc.md`, in the milestone "Z. Cleanup", one PR each. Their hours total 33. SEO-10 and SEO-12 are skipped, so each has a heading and no id. Each estimate is scaled to the finished tasks MB.289 (6.5h), MB.84 (7h), MB.82 (4h), MB.80 (2h) and M12.2 (1.5h), and is an estimate. Every task also ends with "The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.", except MC.39, which is document-only and ends with "`npm run format:check` and `npm run lint` pass."
 
-### Carry The Share Image On Every Public Page · 2h
+### MC.33 Carry The Share Image On Every Public Page · 2h
 
 _Story:_ As a person sharing a link to a document or a help page, I want the link to show the site's picture, so that it looks like the site and not a bare address.
 
@@ -374,7 +372,7 @@ _Acceptance criteria:_
 
 Estimate based on: MB.80 (2h). The figure is an estimate; the change is one helper and one test.
 
-### Make The Article Title The Main Heading On Help Pages · 3h
+### MC.34 Make The Article Title The Main Heading On Help Pages · 3h
 
 _Story:_ As a reader or a search engine, I want a help article's main heading to be its title, so that each article says what it is about.
 
@@ -390,7 +388,7 @@ _Acceptance criteria:_
 
 Estimate based on: MB.82 (4h). The figure is an estimate; the change is one shared head component, its skeleton and a heading test.
 
-### Cut The Number Of Stylesheet Files A Page Loads · 6h
+### MC.35 Cut The Number Of Stylesheet Files A Page Loads · 6h
 
 _Story:_ As a site keeper, I want a page to load a handful of stylesheet files, so that crawlers spend their requests on pages and not on styles.
 
@@ -406,7 +404,7 @@ _Acceptance criteria:_
 
 Estimate based on: MB.84 (7h). The figure is an estimate; the cause is not known, and the figure of 10 is a proposal the owner can change.
 
-### Stop Crawlers Following Sign-In And Support Links · 3h
+### MC.36 Stop Crawlers Following Sign-In And Support Links · 3h
 
 _Story:_ As a site keeper, I want crawlers to skip links that open sign-in or support, so that they spend their requests on pages with content.
 
@@ -421,7 +419,7 @@ _Acceptance criteria:_
 
 Estimate based on: MB.289 (6.5h). The figure is an estimate; it is a part of what MB.289 did.
 
-### Keep Superseded Document Versions Out Of Search · 2h
+### MC.37 Keep Superseded Document Versions Out Of Search · 2h
 
 _Story:_ As a site keeper, I want only the current version of a document to appear in search results, so that nobody finds an old copy of the terms.
 
@@ -436,7 +434,7 @@ _Acceptance criteria:_
 
 Estimate based on: MB.80 (2h). The figure is an estimate; the change is one metadata function and a test.
 
-### Tell Bing About New And Changed Pages With IndexNow · 6h
+### MC.38 Tell Bing About New And Changed Pages With IndexNow · 6h
 
 _Story:_ As a site keeper, I want Bing told when a page is published or changed, so that people on Bing can find new entries and help.
 
@@ -453,56 +451,42 @@ _Acceptance criteria:_
 
 Estimate based on: MB.84 (7h) and MB.82 (4h). The figure is an estimate; it adds a route, a key and a call from the keeper mutations.
 
-### Make The AI Bots Setting And Its Record Agree · 1.5h
+### MC.39 Correct The Record Of The AI Bots Setting · 1.5h
 
-_Story:_ As a site keeper, I want the firewall and the design record to say the same thing about AI bots, so that the next person to read either is not misled.
+_Story:_ As a site keeper, I want the design record to say what the Vercel AI Bots rules are set to, so that the next person to read it is not misled.
 
-From SEO-7.
-
-_Acceptance criteria:_
-
-- The owner has picked one fix: the Vercel setting changed to AI Assistants Allow and AI Crawlers Deny, or `claude-docs/design-decisions/ci.md` corrected to say Log.
-- If the setting is changed, the Vercel AI Bots rules show Allow and Deny, and a fetch of `/llms.txt` signed out is not challenged.
-- If the record is corrected, `ci.md` (setting V5) names what Vercel shows and why.
-- Either way, the task states in its comment which one was chosen.
-
-Estimate based on: M12.2 (1.5h). The figure is an estimate; it is a dashboard change or a one-line edit, plus one fetch to check.
-
-### Lengthen The Home Page's Title And Description · 1.5h
-
-_Story:_ As a person finding the site in Bing, I want the home page's title and description to say what the site is, so that I know whether to click.
-
-From SEO-8.
+From SEO-7. The owner chose to correct the record to say Log, and not to change the Vercel setting. The task is document-only.
 
 _Acceptance criteria:_
 
-- The home page's title is 50 to 60 characters.
-- Its description is 150 to 160 characters.
-- Its description agrees with the intro on the page.
-- Bing Webmaster Tools no longer lists either as too short after its next crawl.
+- `claude-docs/design-decisions/ci.md`, item 4 of the owner's decisions and setting V5 in the Vercel table, say both AI Bots rules are set to Log, and say why.
+- `claude-docs/seo/ai-discovery.md` is checked for any sentence that depends on the old setting, and each such sentence is corrected or none is found.
+- `npm run format:check` and `npm run lint` pass.
 
-Estimate based on: M12.2 (1.5h). The figure is an estimate; it is two strings and a check.
+Estimate based on: M12.2 (1.5h). The figure is an estimate; it is a short edit to two documents.
 
-### Answer 410 For A Retired Compendium Entry · 4h
+### MC.43 Answer 410 For A Retired Compendium Entry · 4h
 
 _Story:_ As a site keeper, I want a retired entry's address to say it was removed, so that search engines stop asking for it.
 
-From SEO-9.
+From SEO-9. The owner approved it.
 
 _Acceptance criteria:_
 
-- A retired entry's address answers 410 with a noindex tag.
+- A deleted compendium entry's address answers 410 with a noindex tag. This covers the four entries migration 0090 retired and any entry a curator deletes later.
+- A hidden entry still answers 404 to the public.
 - An address that never existed still answers 404.
 - A renamed entry's old address still redirects for 180 days.
-- A test covers all three.
+- The finder that sees a deleted row is named as an exception in `.claude/rules/database.md`, Rule 4.
+- A test covers all four cases.
 
-Estimate based on: MB.82 (4h). The figure is an estimate; it needs a way to tell "retired" from "never existed", which the schema does not hold today.
+Estimate based on: MB.82 (4h). The figure is an estimate. The deleted row is kept, so no new table is needed; a finder that sees a deleted row is an exception to the soft-delete rule (CLAUDE.md, rule 4) and must be named.
 
-### Give An Entry Quick Look Address One Search Signal · 2h
+### Give An Entry Quick Look Address One Search Signal · 2h (skipped)
 
 _Story:_ As a site keeper, I want `/compendium?entry=<id>` to send search engines one instruction, so that they do not read two that disagree.
 
-From SEO-10.
+From SEO-10. Skipped by the owner: both signals stay.
 
 _Acceptance criteria:_
 
@@ -513,7 +497,7 @@ _Acceptance criteria:_
 
 Estimate based on: MB.80 (2h). The figure is an estimate; the change is one function and a test.
 
-### Fail A Public Page That Has No Description Or Canonical Tag · 2h
+### MC.41 Fail A Public Page That Has No Description Or Canonical Tag · 2h
 
 _Story:_ As a developer, I want a test to fail when a public page ships with no description or canonical tag, so that no page loses them unnoticed.
 
@@ -528,11 +512,11 @@ _Acceptance criteria:_
 
 Estimate based on: MB.80 (2h). The figure is an estimate; the guard extends one existing file.
 
-### Describe Help Articles And Documents To Search Engines · 3h
+### Describe Help Articles And Documents To Search Engines · 3h (skipped)
 
 _Story:_ As a person searching, I want a help article or a document to describe itself to search engines, so that a result can show more than a title.
 
-From SEO-12.
+From SEO-12. Skipped by the owner. Google's documentation shows breadcrumb markup changes only the address line of a desktop result [S8][S9]. It describes Article markup as for news, blog, and sports article pages, and lists no help or FAQ type [S10].
 
 _Acceptance criteria:_
 
@@ -543,7 +527,7 @@ _Acceptance criteria:_
 
 Estimate based on: MB.84 (7h). The figure is an estimate, scaled down because `src/lib/json-ld.ts` already builds the entry blocks.
 
-### Add The Documents And Help To `llms.txt` · 2h
+### MC.42 Add The Documents And Help To `llms.txt` · 2h
 
 _Story:_ As an AI assistant reading `llms.txt`, I want to find the site's documents and help, so that I can answer questions about how the site works.
 
@@ -597,3 +581,6 @@ These were checked and need no fix.
 - [S5] Next.js. "generateMetadata." _Next.js documentation, as shipped in the repository_. `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/generate-metadata.md`
 - [S6] Google Search Console and Bing Webmaster Tools, read by the owner's session, 2026-11-17 and 2026-11-18.
 - [S7] The owner's Chrome session against production and the Vercel firewall settings, 2026-11-18.
+- [S8] Google. "Breadcrumb structured data." _Google Search Central_. https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
+- [S9] Google. "Simplifying the search results page." _Google Search Central Blog_, January 2025. https://developers.google.com/search/blog/2025/01/simplifying-breadcrumbs
+- [S10] Google. "Article structured data." _Google Search Central_. https://developers.google.com/search/docs/appearance/structured-data/article
