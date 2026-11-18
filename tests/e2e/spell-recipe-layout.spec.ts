@@ -220,7 +220,7 @@ for (const [name, size] of [
     await expect(nav.getByRole('link')).toHaveText(
       name === 'desktop'
         ? ['Steps', 'Workings']
-        : ['Steps', 'Category Match', 'In the Cupboard', 'Workings'],
+        : ['Steps', 'Category Match', 'In the Cupboard', 'Correspondences', 'Workings'],
     );
     await expect(nav.getByText('The Cupboard', { exact: true })).toBeVisible({
       visible: name !== 'desktop',
