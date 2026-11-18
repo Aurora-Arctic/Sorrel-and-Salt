@@ -1,6 +1,5 @@
+import { fold } from '../../../lib/text';
 import type { CorrespondenceStep, Sourced, SpellCorrespondences } from '../types';
-
-const fold = (value: string): string => value.trim().toLowerCase();
 
 function collector<T>() {
   const found = new Map<string, Sourced<T>>();
