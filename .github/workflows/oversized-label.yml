@@ -45,8 +45,6 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           LABEL: ${{ steps.size.outputs.label }}
         run: |
-          gh label create "$LABEL" --force --color D93F0B \
-            --description "Changes more lines than the limit; consider a stack"
           gh pr edit "$PR_NUMBER" --add-label "$LABEL"
 
       - name: Remove the label
