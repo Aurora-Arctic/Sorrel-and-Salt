@@ -3,12 +3,14 @@
 # Node image for local development and CI. claude-docs/docker.md is the
 # walkthrough.
 #
-#   development  dependencies only; the compose `app` service and devcontainer
-#   testing      `development` plus what CI needs and a vitest default command
+#   development   dependencies only; the compose `app` service
+#   testing       `development` plus what CI needs and a vitest default command
+#   review-tools  fetches and checks the review tools; nothing runs from it
+#   devcontainer  `development` plus the review tools; the devcontainer only
 #
-# Both stages are Alpine, and Playwright is deliberately absent: its Chromium
+# Every stage is Alpine, and Playwright is deliberately absent: its Chromium
 # has no musl support, and a browser would add half a gigabyte to the image CI
-# and the app share. Neither stage carries source — it arrives from the bind
+# and the app share. No stage carries source — it arrives from the bind
 # mount or checkout-to-app's `cp -a`, which overlays without deleting, so a
 # baked-in tree would let a deleted file survive. A new COPY source is a
 # decision, not a convenience.
@@ -55,3 +57,75 @@ USER node
 
 ENV NODE_ENV=test
 CMD ["npx", "vitest", "run"]
+
+# review-tools — difftastic, Plannotator, and the glibc both are built for.
+# Every download goes through `fetch`, which checks a pinned SHA-256
+# (tests/guards/download-checks.test.ts). Its build tools stay in this stage.
+FROM node:${NODE_VERSION}-alpine AS review-tools
+ARG TARGETARCH
+RUN apk add --no-cache binutils curl xz
+WORKDIR /stage
+RUN <<'EOF'
+set -eu
+fetch() { curl -fsSL --retry 3 -o "$2" "$1" && echo "$3  $2" | sha256sum -c -; }
+# snapshot.debian.org keeps every file at a fixed URL; the mirrors drop a
+# package once a point release replaces it.
+DEBIAN=https://snapshot.debian.org/archive/debian/20261118T000000Z/pool/main/g
+DIFFT=https://github.com/Wilfred/difftastic/releases/download/0.72.0
+PLANNOTATOR=https://github.com/backnotprop/plannotator/releases/download/v0.28.67
+case "$TARGETARCH" in
+  arm64)
+    TRIPLET=aarch64-linux-gnu LOADER=usr/lib/ld-linux-aarch64.so.1 ASSET=plannotator-linux-arm64
+    fetch "$DEBIAN/glibc/libc6_2.41-12%2Bdeb13u4_arm64.deb" libc6.deb 8784eda966b189c777a384dac5ce009e8fc9b52d006926c5a013e7fa8aa688cc
+    fetch "$DEBIAN/gcc-14/libgcc-s1_14.2.0-19_arm64.deb" libgcc-s1.deb 1108bc87879833d6d9a145f22a4a15cddb34e065b4b5f4b97bee586adbac2851
+    fetch "$DEBIAN/gcc-14/libstdc%2B%2B6_14.2.0-19_arm64.deb" libstdc++6.deb 6669b0c52a2e7c6af9adfdabce3ff6e286065cdfbc7b85280862b5f799daebee
+    # No musl build for aarch64; the glibc one runs on the base's libc6-compat.
+    fetch "$DIFFT/difft-aarch64-unknown-linux-gnu.tar.gz" difft.tar.gz 0993a82a6708a24adc6c6b8de366924728ed08f537a5b488940082c8edc79353
+    fetch "$PLANNOTATOR/$ASSET" "$ASSET" 9b363302ded9719e5e7eb359e54a63a6d3d79fa77d629276cf7fc581567927cb
+    fetch "$PLANNOTATOR/$ASSET.sha256" plannotator.sha256 691de1b0e9dee7e66aafefce1bf626520f52c63cf183d31170be9aced49418e7
+    ;;
+  amd64)
+    TRIPLET=x86_64-linux-gnu LOADER=usr/lib64/ld-linux-x86-64.so.2 ASSET=plannotator-linux-x64
+    fetch "$DEBIAN/glibc/libc6_2.41-12%2Bdeb13u4_amd64.deb" libc6.deb 967aa62605721081c3eb2a17650611a792aa802d76a6511d1840242623d204c9
+    fetch "$DEBIAN/gcc-14/libgcc-s1_14.2.0-19_amd64.deb" libgcc-s1.deb 3c71917b490d1a17aed43196a2787a256ecf060526cdb20216a74bedc061b150
+    fetch "$DEBIAN/gcc-14/libstdc%2B%2B6_14.2.0-19_amd64.deb" libstdc++6.deb ab1fa05837aa7a92aae748fd07a18a35f7d18bb4a71c4724fe2bbf0e32089de0
+    fetch "$DIFFT/difft-x86_64-unknown-linux-musl.tar.gz" difft.tar.gz 27b9c1fe038a95682eed241265a3cacb781227730f106104b617e10067d38ff4
+    fetch "$PLANNOTATOR/$ASSET" "$ASSET" 39335905cd9539442d7ae83094a464c7969ee55628bb89105016e497f7e687eb
+    fetch "$PLANNOTATOR/$ASSET.sha256" plannotator.sha256 b5693fe827f12914ec83be9d53a7453dc06f38f1c78568c8b01c1c9d001c43cd
+    ;;
+  *)
+    echo "review-tools: no build for $TARGETARCH" >&2
+    exit 1
+    ;;
+esac
+# The release's own .sha256 file, beside the pin above.
+sha256sum -c plannotator.sha256
+
+mkdir -p /opt/glibc /opt/plannotator /opt/review-bin
+for deb in libc6.deb libgcc-s1.deb libstdc++6.deb; do
+  ar x "$deb" data.tar.xz
+  tar -xJf data.tar.xz -C /opt/glibc
+  rm data.tar.xz
+done
+install -m 755 "$ASSET" /opt/plannotator/plannotator
+tar -xzf difft.tar.gz -C /opt/review-bin difft
+
+cat > /opt/review-bin/plannotator <<WRAPPER
+#!/bin/sh
+# Plannotator is built for glibc and has no musl build, so it runs through the
+# glibc loader in /opt/glibc. The loader's --library-path, not
+# LD_LIBRARY_PATH, so the git and shells it starts keep the system's musl.
+export PLANNOTATOR_REMOTE=1 PLANNOTATOR_PORT=19432 PLANNOTATOR_SHARE=disabled
+exec /opt/glibc/$LOADER --library-path /opt/glibc/usr/lib/$TRIPLET:/opt/glibc/usr/lib /opt/plannotator/plannotator "\$@"
+WRAPPER
+chmod 755 /opt/review-bin/plannotator /opt/review-bin/difft
+EOF
+
+# devcontainer — `development` plus the review tools. A stage of its own, so
+# the image `app` and CI build carries none of it. The glibc prefix sits
+# outside the system library paths, so no other program loads it.
+FROM development AS devcontainer
+COPY --from=review-tools /opt/glibc /opt/glibc
+COPY --from=review-tools /opt/plannotator /opt/plannotator
+COPY --from=review-tools /opt/review-bin/ /usr/local/bin/
+EXPOSE 19432
