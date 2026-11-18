@@ -747,10 +747,13 @@ test(
       .locator('.spell-recipe__actions')
       .getByRole('button', { name: 'Record a Working' })
       .click();
-    const dialog = page.getByRole('dialog', { name: 'Record a Working' });
-    await dialog.getByRole('button', { name: 'Complete' }).click();
+    await page
+      .getByRole('dialog', { name: 'Record a Working' })
+      .getByRole('button', { name: 'Complete' })
+      .click();
+    const dialog = page.getByRole('dialog', { name: 'Complete Working' });
     await expect(dialog.getByRole('list', { name: 'Deductions' })).toContainText('2 g');
-    await dialog.getByRole('button', { name: 'Mark Complete' }).click();
+    await dialog.getByRole('button', { name: 'Complete' }).click();
     await expect(dialog.getByText('Done')).toBeVisible();
     await page.goto(`/coven/${coven.slug}/ingredients`);
     await expect(page.getByRole('listitem').filter({ hasText: 'Herb' }).first()).toContainText(
