@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useId, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import type { RecordWorkingMembersQuery, WorkingParticipantInput } from '../../gql/graphql';
 import { trimEnds } from '../../lib/formats';
@@ -127,6 +127,9 @@ export default function RecordWorkingForm({
     initial.participants,
   );
   const [text, setText] = useState('');
+  // A save was refused for typed text that is not yet a chip; shown only while that text is there.
+  const [refusedText, setRefusedText] = useState(false);
+  const peopleBox = useRef<HTMLInputElement>(null);
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
   const [completing, setCompleting] = useState<string>();
@@ -165,9 +168,11 @@ export default function RecordWorkingForm({
     </button>
   );
 
-  const peopleError = fieldMessage(failure, 'participants');
-
   const typed = text.trim();
+  const peopleError =
+    refusedText && typed !== ''
+      ? 'Press Enter to add this name, or clear it'
+      : fieldMessage(failure, 'participants');
   // The search waits for typed text, as the box takes the focus when the dialog opens and opening asks nothing.
   const active = useDebouncedValue(typed) !== '';
   const found = useLookup(
@@ -194,6 +199,12 @@ export default function RecordWorkingForm({
 
   async function submit(thenComplete: boolean) {
     if (!valid) return;
+    // Typed and not added is no participant yet: refuse it, so a save never drops a name unseen.
+    if (typed !== '') {
+      setRefusedText(true);
+      peopleBox.current?.focus();
+      return;
+    }
     setSubmitting(true);
     setFailure({});
     const people: WorkingParticipantInput[] = participants.map((p) =>
@@ -262,7 +273,11 @@ export default function RecordWorkingForm({
           label="Participants"
           labelId={`${ids}-people-label`}
           value={text}
-          onChange={setText}
+          onChange={(next) => {
+            setText(next);
+            setRefusedText(false);
+          }}
+          inputRef={peopleBox}
           onPick={(_value, option) => {
             if (option?.key) {
               setParticipants([...participants, { userId: option.key, name: option.value }]);

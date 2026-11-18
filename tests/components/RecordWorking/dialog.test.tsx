@@ -316,6 +316,63 @@ describe('Record a Working', () => {
     expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }, { name: 'Guest Witness' }]);
   });
 
+  // Text typed and not added is no participant yet: Save and Complete refuse it and say so, rather than drop it.
+  describe('with a name typed into Participants and not added', () => {
+    const TYPED = 'Guest Witness';
+    const people = () => within(dialog()).getByRole('combobox', { name: 'Participants' });
+    const type = (text: string) => fireEvent.change(people(), { target: { value: text } });
+
+    it.each(['Save Working', 'Complete'])(
+      'sends nothing on %s, flags Participants and focuses it',
+      async (name) => {
+        const calls = mockRecording();
+        openButton();
+        type(TYPED);
+
+        fireEvent.click(within(dialog()).getByRole('button', { name }));
+
+        await waitFor(() => expect(people()).toBeInvalid());
+        expect(people()).toHaveFocus();
+        expect(people()).toHaveAccessibleDescription(
+          'Error: Press Enter to add this name, or clear it',
+        );
+        expect(calls).toEqual([]);
+        expect(dialog()).toBeInTheDocument();
+      },
+    );
+
+    it('sends the name once Enter has added it', async () => {
+      const calls = mockRecording();
+      openButton();
+      type(TYPED);
+      fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+      await waitFor(() => expect(people()).toBeInvalid());
+
+      fireEvent.keyDown(people(), { key: 'Enter' });
+      await within(dialog()).findByRole('button', { name: /Remove.*Guest Witness/ });
+      expect(people()).not.toBeInvalid();
+      fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }, { name: TYPED }]);
+    });
+
+    it('drops the flag once the text is cleared, and then sends', async () => {
+      const calls = mockRecording();
+      openButton();
+      type(TYPED);
+      fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+      await waitFor(() => expect(people()).toBeInvalid());
+
+      type('');
+      expect(people()).not.toBeInvalid();
+      fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }]);
+    });
+  });
+
   it('starts with the recorder as a participant, and sends them', async () => {
     const calls = mockRecording();
     openButton();
@@ -399,6 +456,35 @@ describe('Edit Working', () => {
     });
 
     expect(save).toBeEnabled();
+  });
+
+  it('sends nothing on Save Working while a typed name is not added, and flags Participants', async () => {
+    const calls: UpdateWorkingMutationVariables[] = [];
+    mockGraphQLMutation<UpdateWorkingMutation, UpdateWorkingMutationVariables>(
+      'UpdateWorking',
+      (variables) => {
+        calls.push(variables);
+        return {} as UpdateWorkingMutation;
+      },
+    );
+    renderWithQuery(
+      <RecordWorkingDialog
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        spellVisibility="workspace"
+        steps={STEPS}
+        working={working}
+        onClose={vi.fn()}
+      />,
+    );
+    const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
+    fireEvent.change(people, { target: { value: 'Guest Witness' } });
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+
+    await waitFor(() => expect(people).toBeInvalid());
+    expect(people).toHaveFocus();
+    expect(calls).toEqual([]);
   });
 
   it('changes the working it was given, rather than recording another', async () => {
