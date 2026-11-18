@@ -237,9 +237,12 @@ describe('the spell recipe page', () => {
     expect(block.getByRole('button', { name: 'Fire' })).toBeInTheDocument();
     const deity = block.getByRole('button', { name: 'Testdeity (Fixture Pantheon)' });
     act(() => deity.focus());
-    expect(screen.getByRole('tooltip')).toHaveTextContent(
-      'Testwort (Dried Leaf) and Fixture Moss (Testform)',
-    );
+    const given = within(screen.getByRole('tooltip')).getByRole('list', { name: 'Given By' });
+    expect(
+      within(given)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Testwort (Dried Leaf)', 'Fixture Moss (Testform)']);
   });
 
   it('draws no Correspondences block when the service gives no value', async () => {
