@@ -22,7 +22,7 @@ const ROWS: AccessRow[] = [
     cells: [
       { mark: 'yes', text: 'Yes, for everyone in the fixture' },
       { mark: 'yes', text: 'Yes, for everyone in the fixture' },
-      { mark: 'no', text: 'No: an observer does not see the fixture roll' },
+      { mark: 'no', text: 'No: an Observer does not see the fixture roll' },
       { mark: 'yes', text: 'Yes, as the name beside a fixture edit' },
       { mark: 'yes', text: 'Yes, for every account' },
       { mark: 'yes', text: 'Yes' },

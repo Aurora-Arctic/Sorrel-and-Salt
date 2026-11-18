@@ -102,7 +102,7 @@ const ReplyForm = ({
       label={note ? 'Your Note' : 'Your Reply'}
       required
       placeholder={
-        note ? 'Write a note for staff' : 'Write a reply. The sender is emailed that one is waiting'
+        note ? 'Write a Note for Staff' : 'Write a Reply. The Sender Is Emailed That One Is Waiting'
       }
       submitLabel={note ? 'Add Note' : 'Reply'}
       busyLabel={note ? 'Adding' : 'Replying'}

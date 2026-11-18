@@ -193,7 +193,7 @@ describe('pauseUserAccess', () => {
     );
 
     expect(error).toBeInstanceOf(Forbidden);
-    expect(error.message).toBe('The primary keeper’s access cannot be paused');
+    expect(error.message).toBe('The primary Keeper’s access cannot be paused');
     expect(await pauseRows(PRIMARY)).toEqual([]);
     // The precondition: once ADMIN_BOOTSTRAP_EMAIL names another address, the same keeper is pausable.
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `elsewhere${DOMAIN}`);
@@ -361,7 +361,7 @@ describe('pauseUserAccess', () => {
 
     expect(error).toBeInstanceOf(Forbidden);
     expect(error.message).toBe(
-      'The primary keeper has paused keeper changes. Ask them to resume changes.',
+      'The primary Keeper has paused Keeper changes. Ask them to resume changes.',
     );
     expect(await pauseRows(OTHER_ADMIN)).toEqual([]);
     // A plain user is not a keeper change, so the switch leaves pausing them open.

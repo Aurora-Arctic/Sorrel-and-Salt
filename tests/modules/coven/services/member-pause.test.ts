@@ -193,7 +193,7 @@ describe('pauseMemberAccess', () => {
 
     // The sentence the browser shows, whole: the members page names no field, so it says the error's message.
     const owner =
-      "A steward's access can't be paused. Change their role first if they should be paused.";
+      "A Steward's access can't be paused. Change their role first if they should be paused.";
     await expect(
       pauseMemberAccess(asUser(A), covenId, D.id, LATER, null, noPauseNotifier),
     ).rejects.toThrow(new Forbidden(owner));

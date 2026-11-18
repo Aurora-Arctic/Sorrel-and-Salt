@@ -118,7 +118,7 @@ export function HelpSubPagesField({
         empty="No article matches. An article that holds sub pages, an FAQ entry or a term is never offered."
         keepOpen
         noun="article"
-        placeholder="Add a page"
+        placeholder="Add a Page"
         entries={
           entries.length > 0 && (
             <LazySortableEntries

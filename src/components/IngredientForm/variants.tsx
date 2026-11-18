@@ -250,7 +250,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
           <Combobox<FormOption>
             id={`${id}-box`}
             label="New Form"
-            placeholder="Add a form"
+            placeholder="Add a Form"
             value={field.value}
             onChange={(typed) => {
               clearRefusal();
@@ -474,7 +474,7 @@ function VariantFieldset({
             <TextField<IngredientFormValues>
               name={`${at}.safetyNotes`}
               label="Safety Notes"
-              placeholder="Add notes"
+              placeholder="Add Notes"
               action={<CopyFromIngredient at={at} field="safetyNotes" />}
               multiline
             />
@@ -520,7 +520,7 @@ function VariantFieldset({
               name={`${at}.substitutes`}
               legend="Substitute Ingredients"
               entry="Substitute Ingredient"
-              placeholder="Add a substitute"
+              placeholder="Add a Substitute"
               action={(announce) => (
                 <CopyFromIngredient
                   at={at}

@@ -27,7 +27,7 @@ const AdminInvitationsFilter = ({ filter }: AdminInvitationsFilterProps): ReactE
       <SearchField
         label="Email"
         name="email"
-        placeholder="Search emails"
+        placeholder="Search Emails"
         value={draftEmail}
         onChange={setDraftEmail}
       />

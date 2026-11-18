@@ -817,7 +817,7 @@ export function NameField({
         label="Name"
         autoComplete="off"
         required
-        placeholder="Add a name"
+        placeholder="Add a Name"
         describedBy={shown.length > 0 ? warningId : undefined}
         invalid={blocking}
         // The one sign of a lookup out: the region below draws nothing until an

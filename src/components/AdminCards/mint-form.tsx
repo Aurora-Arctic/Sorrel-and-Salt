@@ -212,7 +212,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         hint={NOTE_HINT}
         multiline
         rows={3}
-        placeholder="Add a note"
+        placeholder="Add a Note"
         limit={MAX_NOTE_LENGTH}
         value={note}
         disabled={minting}

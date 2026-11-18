@@ -365,7 +365,7 @@ const GroupForm = ({
               label: each.name,
               icon: kind === 'form' ? <FormIcon name={each.icon ?? null} /> : undefined,
             }))}
-            placeholder={`Choose a ${noun}`}
+            placeholder={`Choose a ${title}`}
             required
             {...aria}
           />
@@ -450,7 +450,7 @@ const GroupForm = ({
           <TextField<GroupValues>
             name="name"
             label="Name"
-            placeholder="Add a name"
+            placeholder="Add a Name"
             autoComplete="off"
             required
           />

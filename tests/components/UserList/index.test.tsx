@@ -634,7 +634,7 @@ describe('UserList keeper changes switch', () => {
   it('says why under Resume when the service refuses, the focus still on it', async () => {
     mockGraphQLError('ResumeAdminRoleChanges', {
       code: 'FORBIDDEN',
-      message: 'Only the primary keeper may pause or resume keeper changes',
+      message: 'Only the primary Keeper may pause or resume Keeper changes',
     });
     render(<PauseControl paused={true} canToggle={true} />);
     const resume = screen.getByRole('button', { name: 'Resume Keeper Changes' });

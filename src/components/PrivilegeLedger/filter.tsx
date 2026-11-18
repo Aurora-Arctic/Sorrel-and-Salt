@@ -29,7 +29,7 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
       <SearchField
         label="Name or Email"
         name="query"
-        placeholder="Search users"
+        placeholder="Search Users"
         value={draftQuery}
         onChange={setDraftQuery}
       />

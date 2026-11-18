@@ -135,7 +135,7 @@ export const States: Story = {
         ),
         'With Placeholder': (
           <Form>
-            <TextField<Values> name="name" label="Name" placeholder="Add a name" />
+            <TextField<Values> name="name" label="Name" placeholder="Add a Name" />
           </Form>
         ),
         'Tall Multiline': (
@@ -191,7 +191,7 @@ export const States: Story = {
             <SelectField<Values>
               name="group"
               label="Group"
-              placeholder="Choose a group"
+              placeholder="Choose a Group"
               options={GROUP_OPTIONS}
             />
           </Form>
@@ -206,7 +206,7 @@ export const States: Story = {
             <SelectField<Values>
               name="group"
               label="Group"
-              placeholder="Choose a group"
+              placeholder="Choose a Group"
               options={NOTED_OPTIONS}
             />
           </Form>
@@ -216,7 +216,7 @@ export const States: Story = {
             <SelectField<Values>
               name="group"
               label="Group"
-              placeholder="Choose a group"
+              placeholder="Choose a Group"
               options={GROUP_OPTIONS}
               disabled
             />
@@ -227,7 +227,7 @@ export const States: Story = {
             <SelectField<Values>
               name="group"
               label="Tradition"
-              placeholder="Type a tradition"
+              placeholder="Type a Tradition"
               options={GROUP_OPTIONS}
               typeahead
             />
@@ -239,7 +239,7 @@ export const States: Story = {
               name="group"
               label="Group"
               hint="Which group the ingredient sits in."
-              placeholder="Choose a group"
+              placeholder="Choose a Group"
               options={GROUP_OPTIONS}
               required
             />
@@ -599,7 +599,7 @@ const Search = () => {
       <SearchField
         label="Name"
         name="query"
-        placeholder="Search names"
+        placeholder="Search Names"
         value={query}
         onChange={setQuery}
       />

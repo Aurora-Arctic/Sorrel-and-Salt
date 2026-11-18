@@ -291,7 +291,7 @@ export default function RecordWorkingForm({
           offerTyped={
             typed !== '' && !participants.some((p) => p.userId === null && sameText(p.name, typed))
           }
-          placeholder="Add a name"
+          placeholder="Add a Name"
           noun="member"
           aria-invalid={peopleError ? true : undefined}
           aria-describedby={peopleError ? `${ids}-people-error` : undefined}

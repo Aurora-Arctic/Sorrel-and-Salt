@@ -54,7 +54,7 @@ function Stateful({
         choices={choices}
         values={values}
         onChange={setValues}
-        placeholder={`Add ${noun}`}
+        placeholder={`Add ${noun.charAt(0).toUpperCase()}${noun.slice(1)}`}
         removeNoun={noun}
         {...props}
       />

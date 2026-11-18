@@ -418,7 +418,7 @@ const HelpArticleForm = ({
           <TextField<HelpFormValues>
             name="searchTerms"
             label="Search Terms"
-            placeholder="Add terms"
+            placeholder="Add Terms"
             hint="Other words someone might search for, like login for Sign In"
           />
           <div className="field">

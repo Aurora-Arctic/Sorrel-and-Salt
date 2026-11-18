@@ -21,7 +21,7 @@ function SupportTimedOut({
     h(
       Paragraph,
       null,
-      `A site keeper set a support time-out on your Sorrel & Salt account. ${pauseEnd(until)}`,
+      `A site Keeper set a support time-out on your Sorrel & Salt account. ${pauseEnd(until)}`,
     ),
     message ? h(Paragraph, null, message) : null,
     h(

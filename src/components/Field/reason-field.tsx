@@ -22,7 +22,7 @@ export function ReasonField({
         hint={hint}
         // Off: the reason is about someone else's change, not the person's own details.
         autoComplete="off"
-        placeholder="Add a reason"
+        placeholder="Add a Reason"
         limit={REASON_LIMIT}
         check={reasonProblem}
         error={error}

@@ -58,8 +58,8 @@ const ownerViewNode = (
 const SoleOwnerPage = () => (
   <ListFrame>
     <Notice kind="warn" quiet>
-      This coven has one steward. If that person loses access, nobody can manage its members. Make
-      another member a steward to be safe.
+      This coven has one Steward. If that person loses access, nobody can manage its members. Make
+      another member a Steward to be safe.
     </Notice>
     <ListBody skeleton={null}>
       <MemberList members={OWNER_VIEW} currentUserId="u-ada" showEmail showAccess />

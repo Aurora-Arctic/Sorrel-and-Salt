@@ -55,7 +55,7 @@ export default function DateRangeField({
   quickPicks = [],
   min,
   max,
-  placeholder = 'Any day',
+  placeholder = 'Any Day',
   past = false,
   ...aria
 }: DateRangeFieldProps): ReactElement {

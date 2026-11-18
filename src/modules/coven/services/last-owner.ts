@@ -16,7 +16,7 @@ export class LastOwner extends Forbidden {
   constructor(remedy: LastOwnerRemedy, promotable: readonly string[]) {
     super(
       remedy === 'promote'
-        ? 'This is the last steward, and a coven needs one. Make another member a steward first.'
+        ? 'This is the last Steward, and a coven needs one. Make another member a Steward first.'
         : 'You are the only member. Delete the coven instead of leaving it.',
     );
     this.name = 'LastOwner';

@@ -73,7 +73,7 @@ describe('DateRangeField', () => {
 
   it('shows the placeholder and no clear while it holds no day', () => {
     render(<Harness />);
-    expect(field()).toHaveAccessibleName(/Minted.*Any day/);
+    expect(field()).toHaveAccessibleName(/Minted.*Any Day/);
     expect(screen.queryByRole('button', { name: 'Clear Minted' })).toBeNull();
   });
 
@@ -89,7 +89,7 @@ describe('DateRangeField', () => {
     render(<Harness initial={{ from: '2026-10-01', to: '2026-10-30' }} />);
     fireEvent.click(screen.getByRole('button', { name: 'Clear Minted' }));
     expect(answer()).toBe('|');
-    expect(field()).toHaveAccessibleName(/Any day/);
+    expect(field()).toHaveAccessibleName(/Any Day/);
     expect(field()).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'Clear Minted' })).toBeNull();
   });
