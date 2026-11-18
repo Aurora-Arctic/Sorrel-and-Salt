@@ -38,7 +38,7 @@ To slow down malicious actors, the sign-in routes count requests by network addr
 
 ### Who Wrote What
 
-Nearly every row carries four stamps: who created it and when, and who last changed it and when. A row that is deleted gains two more: who deleted it and when. These stamps are how the site shows “edited by” names.
+Nearly every row carries four stamps: who created it and when, and who last changed it and when. A row that is deleted gains two more: who deleted it and when. These stamps are how the site shows "edited by" names.
 
 Every change to a site role or to the right to create covens is also written to a ledger that nobody can edit through the site: who changed it, how, when and any note the keeper wrote. The ledger exists so that every change a keeper makes to these rights can be clearly tracked, to prevent keeper abuse.
 
@@ -50,7 +50,7 @@ A printed invitation card is bound to no email. When someone opens a card's link
 
 ### Support Requests
 
-A support request keeps what you chose to write (its subject and message), the page you sent it from, the error code if you sent it from an error page, its status, who it is assigned to, and any replies. A request sent from an error page also keeps the reference that page showed and the error's name and message (its error details). A request sent without an account keeps the email you gave so that a reply can reach you. A time-out a keeper sets on a requestor is kept as history. Before a request is saved, the page address is cleaned: an invitation code in it is replaced and anything after a “?” is dropped. A curator sees only requests a keeper marked for curators or assigned to them, without the requestor's email or the coven named in the page address. A keeper sees them with the requestor's email.
+A support request keeps what you chose to write (its subject and message), the page you sent it from, the error code if you sent it from an error page, its status, who it is assigned to, and any replies. A request sent from an error page also keeps the reference that page showed and the error's name and message (its error details). A request sent without an account keeps the email you gave so that a reply can reach you. A time-out a keeper sets on a requestor is kept as history. Before a request is saved, the page address is cleaned: an invitation code in it is replaced and anything after a "?" is dropped. A curator sees only requests a keeper marked for curators or assigned to them, without the requestor's email or the coven named in the page address. A keeper sees them with the requestor's email.
 
 ### Time-Outs and Pauses
 
@@ -64,7 +64,7 @@ When a keeper emails every account about a change to a site document, a record i
 
 ### Who Can See What
 
-Each line below comes from the rule the site enforces in its services, not from what a screen happens to show. “Coven” means the coven in which you hold that role; every account holds an observer seat in the demo coven, and every site keeper a steward seat there. A developer with database access means a person who can read the database directly. Database access is given to as few developers as possible, and only to those who need it to run the site.
+Each line below comes from the rule the site enforces in its services, not from what a screen happens to show. "Coven" means the coven in which you hold that role; every account holds an observer seat in the demo coven, and every site keeper a steward seat there. A developer with database access means a person who can read the database directly. Database access is given to as few developers as possible, and only to those who need it to run the site.
 
 {access-cards}
 
@@ -83,7 +83,7 @@ The site runs on other companies' services. Each one handles some of your data t
 
 ### How Long It Is Kept
 
-Most tables use a soft delete: a deleted row is marked with who deleted it and when, and the site stops showing it, but the row stays in the database. So today, “deleted” does not mean “erased”. This applies to covens and their memberships, ingredients, spells and support replies alike.
+Most tables use a soft delete: a deleted row is marked with who deleted it and when, and the site stops showing it, but the row stays in the database. So today, "deleted" does not mean "erased". This applies to covens and their memberships, ingredients, spells and support replies alike.
 
 It works this way for two reasons: a spell keeps showing what went into it even after one of those ingredients is deleted, and a later version of the site can offer to bring back something deleted by mistake. That second feature does not exist yet.
 
