@@ -34,7 +34,6 @@ const GroupList = ({
   filter,
 }: GroupListProps): ReactElement => (
   <ListFrame>
-    {/* Keyed by the search shown, so another one starts the form again from it. */}
     {filter && <GroupListFilter kind={kind} filter={filter} />}
 
     <ListBody skeleton={<GroupListBodySkeleton kind={kind} />}>
