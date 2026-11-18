@@ -100,6 +100,16 @@ a sentence naming an issue ("this PR does not close #N") closes nothing. A PR in
 as an environment variable rather than interpolated, because it is text anyone
 can write.
 
+**A stack.** When one task is opened as a stack of layered PRs, the top layer's
+body opens with `Closes #N` and every layer below it opens with `Refs #N`, so
+the task closes when the last layer merges and a lower layer merged alone leaves
+it open. `link-pr` runs for the top layer only, and `In Review` is set once, with
+one comment listing every layer
+([`reference-stack.md`](../.claude/skills/create-pr/reference-stack.md)). The
+workflow's base filter is `staging`; the `base.ref` that an upper layer's closed
+event reports when a whole stack merges in one `gh stack merge` call is not yet
+recorded, and the filter changes only if that run shows a different base.
+
 A closed issue outranks its field: an issue closed as `completed` is done
 whatever `Status` says, which is what makes a field left behind by a mistake
 harmless.
