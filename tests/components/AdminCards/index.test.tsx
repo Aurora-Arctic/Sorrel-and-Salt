@@ -23,7 +23,7 @@ import type { FilterFormSubject } from '../../support/types';
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
-import { rowCells } from '../../support/table';
+import { emptyCellMark, rowCells } from '../../support/table';
 import { router } from '../../support/next-navigation';
 
 // claude-docs/components/admin-cards.md
@@ -308,7 +308,9 @@ describe('AdminCards', () => {
     expect(within(list).getByText('Unknown')).toBeInTheDocument();
     expect(within(list).queryByRole('link')).toBeNull();
     const removed = within(list).getByText('Removed account').closest('tr') as HTMLElement;
-    expect(rowCells(removed)[1]).toBeEmptyDOMElement();
+    // No address is shown: the cell holds the shared empty mark and nothing else.
+    expect(rowCells(removed)[1].textContent).toBe(emptyCellMark());
+    expect(within(removed).queryByText(/@/)).toBeNull();
   });
 
   it('lists a row per batch with its counts, and Revoke Batch only while a card is pending', () => {
