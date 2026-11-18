@@ -4,6 +4,8 @@
   display: flex;
   flex-direction: column;
   gap: space(3);
+  // The same step below the lede as `.forgot-password-form`, so the two pages space alike.
+  margin-top: space(4);
 }
 
 .reset-password-form__next {

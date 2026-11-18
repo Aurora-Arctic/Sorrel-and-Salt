@@ -164,7 +164,8 @@ both tabs.
 
 - **Stewards only, decided by the permission.** The layout leaves the
   Invitations tab out, the `@action` slot leaves Invite out, and the page
-  answers anyone else with the `notFound()` a stranger gets, each from
+  answers a member or observer the guard admitted with `forbidden()`, the Not Authorized page inside the shell
+  (a non-member never gets this far: the guard gives the 404), each from
   `rolePermits(role, { member: ['invite'] })`, never by catching a `Forbidden`.
   A member's visit therefore calls no pending service. The services
   (`listPendingWorkspaceInvitations`, `countPendingWorkspaceInvitations`,
