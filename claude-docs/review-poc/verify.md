@@ -4,20 +4,20 @@ Record for M17.31 (issue #1721). It checks every "Verify first" item of the loca
 
 ## Results at a glance
 
-| #   | Check                                               | Result                                                                                      |
-| --- | --------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| 1   | `.devcontainer/` build and `uname -m`               | Not run: the build needs `docker`, which the container lacks. Files read and `uname -m` run |
-| 2   | Package manager, `src/` or `app/`                   | Pass: npm, `src/`                                                                           |
-| 3   | `pr-gate.yml` triggers and checks                   | Pass (read). Differs from the brief: bases `main`, `staging`, `release/**` only             |
-| 4   | Branches Vercel and Neon deploy from                | Pass (read). Deploys are CI-only, from `main`, `staging` and `hotfix/*` PRs                 |
-| 5   | `depcruise --affected` with `--output-type mermaid` | Fail with the repo's TypeScript 7.0.2 (silent, 0 modules); pass with TypeScript 6           |
-| 6   | `gh stack` on a private scratch repo                | Not run: the token cannot create a repository                                               |
-| 7   | A stack can target `staging`                        | Not run: no scratch repo. The docs say `--base` allows it                                   |
-| 8   | Plannotator through port 19432                      | Fail: the binary does not start on Alpine                                                   |
-| 9   | What `install.sh` does beyond the binary            | Pass (read, never run). Full list below                                                     |
-| 10  | difftastic parses TSX structurally                  | Pass                                                                                        |
+| #   | Check                                               | Result                                                                                                                                                                                                                                                                                                                             |
+| --- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `.devcontainer/` build and `uname -m`               | Not run: the build needs `docker`, which the container lacks. Files read and `uname -m` run                                                                                                                                                                                                                                        |
+| 2   | Package manager, `src/` or `app/`                   | Pass: npm, `src/`                                                                                                                                                                                                                                                                                                                  |
+| 3   | `pr-gate.yml` triggers and checks                   | Pass (read). Differs from the brief: bases `main`, `staging`, `release/**` only                                                                                                                                                                                                                                                    |
+| 4   | Branches Vercel and Neon deploy from                | Pass (read). Deploys are CI-only, from `main`, `staging` and `hotfix/*` PRs                                                                                                                                                                                                                                                        |
+| 5   | `depcruise --affected` with `--output-type mermaid` | Fail with the `tsc` parser and the repo's TypeScript 7.0.2 (silent, 0 modules). Pass with the `swc` parser on the real `src/` (one file excluded), and with a second TypeScript 6                                                                                                                                                  |
+| 6   | `gh stack` on a public scratch repo                 | Not run: the token cannot create a repository; the owner creates a public repo (Decision 3)                                                                                                                                                                                                                                        |
+| 7   | A stack can target `staging`                        | Not run: no scratch repo. The docs say `--base` allows it                                                                                                                                                                                                                                                                          |
+| 8   | Plannotator through port 19432                      | Fail run directly (the binary does not start on Alpine). Pass through a private glibc loader without root: `--version`, and HTTP 200 on port 19432. The owner reports the port opened in their host browser (not run by me). Unrun: the full `/plannotator-review` flow from Claude Code, and the port line in `devcontainer.json` |
+| 9   | What `install.sh` does beyond the binary            | Pass (read, never run). Full list below                                                                                                                                                                                                                                                                                            |
+| 10  | difftastic parses TSX structurally                  | Pass                                                                                                                                                                                                                                                                                                                               |
 
-Four checks need a decision from the owner. They are in "Decisions", at the end.
+Three checks need a decision from the owner. They are in "Decisions", at the end.
 
 ## 1. How `.devcontainer/` is built, and `uname -m`
 
@@ -114,11 +114,34 @@ style 2 fill:lime,color:black
 
 `b.ts` (the changed file) is highlighted and `a.ts` (its importer) is included; `c.ts` is left out. So `--affected` and `--output-type mermaid` work together. `--affected` with no revision defaults to `main`, which does not exist in a Gitflow review against `staging`; it failed with `revision 'main' unknown`, so the review script must always pass `--affected origin/staging`.
 
-Result: fail with the repo's TypeScript, pass with TypeScript 6. The flags work. The repo's TypeScript is not supported by the current dependency-cruiser, and the failure is silent. A `TypeScript 7.1` build exists only as `7.1.0-dev.*` snapshots on npm today (`npm view typescript versions`). See Decision 1.
+Result for the `tsc` parser: fail with the repo's TypeScript, pass with TypeScript 6. The flags work. The repo's TypeScript is not supported by the current dependency-cruiser, and the failure is silent. A TypeScript 7.1 build exists only as `7.1.0-dev.*` snapshots on npm (`npm view typescript versions`).
 
-## 6 and 7. `gh stack` on a private scratch repo, and targeting `staging`
+### Other options tested
 
-Not run. The brief's order was the `Aurora-Arctic` organisation first, then the authenticated user:
+The brief's two jobs are separate, and the repo already does one of them.
+
+**Job (a), import rules that fail the gate (no circular imports, no unresolvable imports, the `CLAUDE.md` layering rules).** The repo already has these:
+
+- `.oxlintrc.json` line 84 turns on `import/no-cycle` with `{ "ignoreTypes": true }`; its `no-restricted-imports` patterns and the custom `sorrel/module-boundaries` rule (`lint/sorrel-lint.js`, `module-boundaries` at line 98; allowed edges at line 11) enforce the layering.
+- `tests/guards/lint-db-client-boundary.test.ts`, `lint-loader-boundary.test.ts`, `lint-job-boundary.test.ts` and `app-imports.test.ts` prove those rules fail on a probe under `tests/support/lint-probes/`.
+- `npm run typecheck` (`tsc --noEmit`) fails an import that does not resolve.
+
+A dependency-cruiser copy of these would duplicate them, so Draft B drops job (a).
+
+**Job (b), the affected-modules Mermaid graph.** Tested in the scratchpad, never in the repo.
+
+- **`swc` parser (dependency-cruiser's experimental, deprecated route, set in the config as `options.parser`; it is not a CLI flag, `--parser swc` is an error).** With TypeScript 7.0.2 still installed and `@swc/core` added, it cruises `.ts` and `.tsx` and resolves the `@/` alias. `@swc/core` has a linux arm64 musl build on npm (`@swc/core-linux-arm64-musl`), and it ran in this container. On the real `src/` it cruised 2145 modules and 10539 dependencies, with two costs. (1) It stops with `Unknown statement type: UsingDeclaration` on `src/modules/documents/jobs/document-mailing.ts:20` (`using claim = createHook(...)`), so that file has to be excluded. (2) It keeps type-only edges, which `tsc` drops, so a `no-circular` rule reported 985 cycles; every one runs through a type-only edge, and a `jq` filter on `.cycle[].dependencyTypes` leaves 0 cycles through a value import. For the graph alone neither matters. `--affected HEAD~4 --output-type mermaid` on the real tree produced a graph (42 KB for the changed files and their importers; 131 KB with no limit on depth). I could not check GitHub's limit on Mermaid size in a comment.
+- **`tsc` parser with a second, TypeScript 6 install.** On the real `src/`: 2136 modules, 0 errors, about 3.8 seconds. This is the only route that matches the compiler's view of types. Its cost is a second TypeScript beside the repo's.
+- **What is lost without the compiler (the `swc` route):** the `using` syntax is not parsed, type-only imports are not told from value imports unless the output is filtered, and the route is deprecated and experimental, so a later release can remove it.
+- **madge, skott, or a small script.** Docs only; I did not test them. I did not check whether either prints Mermaid, or whether either parses TypeScript 7 syntax. They are worth testing only if the owner rejects the routes above.
+
+See Decision 1.
+
+## 6 and 7. `gh stack` on a public scratch repo, and targeting `staging`
+
+Not run. Check 6 runs on a public repository only. Sorrel & Salt becomes private only when the organisation moves to a paid plan, so a private repository on the Free plan is a state the real repository never has; the private-repository half of the check is not run. The scratch repository holds throwaway files and no Sorrel & Salt source.
+
+The brief's order was the `Aurora-Arctic` organisation first, then the authenticated user:
 
 ```
 $ gh repo create Aurora-Arctic/stack-scratch-m17-31 --private
@@ -134,7 +157,7 @@ What I could check without a repo:
 - `gh stack init --help`: "Use --base to specify a different trunk branch", for example `gh stack init --base develop my-feature`. So `gh stack init --base staging` is the documented way.
 - GitHub docs, "About stacked pull requests" (`docs.github.com`, stacked pull requests page): "A stack's trunk is the base branch of the bottom pull request … it can be any branch". The same page says required reviews, required status checks and Actions are evaluated as if each PR targets the stack base.
 
-Result: the documentation says a stack can target `staging`; I could not prove it on a real repo. See Decision 3. The M17.33 record (`stacks.md`) lists the questions that need the repo.
+Result: the documentation says a stack can target `staging`; I could not prove it on a real repo. The scratch repository is decided (Decision 3) and does not exist yet. The M17.33 record (`stacks.md`) lists the questions that need the repo.
 
 ## 8. Plannotator through port 19432
 
@@ -165,7 +188,33 @@ What the owner can do on the host to prove the browser half. This tests only the
 3. Open `http://localhost:19432` in the host browser, and from a terminal run `curl -sI http://localhost:19432`.
 4. For the container half, see Decision 2.
 
-Result: fail for the dev container. See Decision 2.
+The owner reports that port 19432 did open in their host browser. This is the owner's observation; I did not run it. Still unrun: the full `/plannotator-review` flow from Claude Code, and adding 19432 to `forwardPorts` in `devcontainer.json`.
+
+### Through a private glibc loader, without root
+
+The binary needs glibc. I tested running it through a glibc loader that sits in a directory of its own, so that nothing in the container's system or `~` changes. In the scratchpad, I downloaded three Debian arm64 packages (`libc6`, `libgcc-s1`, `libstdc++6`), unpacked their `data.tar.xz` with a few lines of node and `tar -xJ` (no root, no `dpkg`), which gave 26 MB under `usr/lib`, and started the binary through that prefix's loader:
+
+```
+$ L=<scratch>/glibc/root/usr/lib
+$ $L/ld-linux-aarch64.so.1 --library-path $L/aarch64-linux-gnu:$L ./plannotator --version
+plannotator 0.28.67
+$ PLANNOTATOR_REMOTE=1 PLANNOTATOR_PORT=19432 PLANNOTATOR_SHARE=disabled \
+    $L/ld-linux-aarch64.so.1 --library-path $L/aarch64-linux-gnu:$L ./plannotator annotate t.md
+  Plannotator session ready: http://localhost:19432
+$ curl -sI http://127.0.0.1:19432/
+HTTP/1.1 200 OK
+x-plannotator-server: 1
+```
+
+I stopped the server after the `curl`; `ps` and `ss` show no `plannotator` process and nothing listening on 19432. So `annotate <file>` is a valid subcommand (`--help` lists it), and the server starts in the container. Not proved: the host browser reaching the page (port 19432 is not forwarded), and the `/plannotator-review` flow end to end. The binary was not modified, so I did not need to test whether changing a compiled single-file executable's interpreter is safe; I did not check the documentation for that, and I recommend against doing it, because it was not needed.
+
+### The other routes, from documentation only
+
+- **A glibc package on Alpine (`sgerrand/alpine-pkg-glibc`).** The repository is not archived; its last push is 2024-06-24 and its latest release, `2.35-r1`, is dated 2023-04-13 (`api.github.com/repos/sgerrand/alpine-pkg-glibc`). The release assets are `.apk` files and `APKINDEX.tar.gz`; I found no mention of aarch64 or arm in its README with `grep`, so I could not confirm an aarch64 build. I could not find any advice about it on the Alpine wiki page "Running glibc programs" (that page names `gcompat`, which the container already has and which fails here). Installing it writes into the system and needs root.
+- **A Debian compose sidecar.** The Graphify sidecar is the pattern (`origin/feature/graphify-sidecar`). Not tested. The cost is a second compose service that needs the repo's files and `git`, plus a way for the dev container to reach it.
+- **Plannotator from source, npm or bun.** The release has only glibc-linked Linux binaries (`linux-arm64`, `linux-x64`). npm has `@plannotator/opencode` (latest `0.28.67`) and the README lists `npm:@plannotator/pi-extension`; I could not check whether either runs the review server under plain Node, so this is open. Bun publishes a linux aarch64 musl build (`bun-linux-aarch64-musl.zip` in the bun releases), so a build from source on Alpine is plausible. I did not test it or read Plannotator's build steps.
+
+Result: fail run directly; pass through a private glibc loader. See Decision 2.
 
 ## 9. What `install.sh` does beyond installing the binary
 
@@ -208,18 +257,19 @@ Result: pass.
 
 ## Where the brief differs from the repo
 
-| Brief says                                                                                  | Repo says                                                                                                        | Correction                                                                                                |
-| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Debian or Ubuntu dev container, `apt`                                                       | Alpine (musl), `apk`, aarch64 (check 1)                                                                          | Every install step uses `apk` or a musl-compatible binary; glibc-only binaries need a decision (2)        |
-| Repo name Tarry-A-Spell                                                                     | `Aurora-Arctic/Sorrel-and-Salt`                                                                                  | Use the repo's own name                                                                                   |
-| Next 15                                                                                     | `next` at a 16 range (`package.json`)                                                                            | Next 16                                                                                                   |
-| `merge-queue.yml` exists                                                                    | Deleted; `gitflow.yml` header says it returns with a later task; no `merge_group` workflow                       | Nothing to extend today                                                                                   |
-| One trunk branch, `BASE ${BASE:-main}`                                                      | Gitflow: feature work targets `staging`                                                                          | Default base is `origin/staging`, and `depcruise --affected` must be given it (check 5)                   |
-| The gate runs for every pull request                                                        | `pr-gate.yml` runs for bases `main`, `staging`, `release/**` only (check 3)                                      | A stack layer is covered only if GitHub treats it as targeting the stack base; unproved (see `stacks.md`) |
-| depcruise works on the repo                                                                 | Repo uses TypeScript 7.0.2; depcruise supports below 7.0.0 or 7.1.0 and above                                    | Decision 1                                                                                                |
-| Plannotator installs with `curl … \| bash`                                                  | The installer also writes skills, hooks and agent config into `~/.claude`, and the binary does not start on musl | Never pipe it; `--minimal` only; Decision 2                                                               |
-| Graphify and others install through Python (`uv`)                                           | The container has no Python                                                                                      | Out of scope here; M17.32 covers Graphify                                                                 |
-| `git dft` alias, `scripts/review-graph.sh`, `depcruise:check` and `review:affected` scripts | None exist in the repo (`package.json` has no dependency-cruiser)                                                | They are new files; see the drafted tasks                                                                 |
+| Brief says                                                                                  | Repo says                                                                                                                  | Correction                                                                                                |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Debian or Ubuntu dev container, `apt`                                                       | Alpine (musl), `apk`, aarch64 (check 1)                                                                                    | Every install step uses `apk` or a musl-compatible binary; glibc-only binaries need Decision 2            |
+| Repo name Tarry-A-Spell                                                                     | `Aurora-Arctic/Sorrel-and-Salt`                                                                                            | Use the repo's own name                                                                                   |
+| Next 15                                                                                     | `next` at a 16 range (`package.json`)                                                                                      | Next 16                                                                                                   |
+| `merge-queue.yml` exists                                                                    | Deleted; `gitflow.yml` header says it returns with a later task; no `merge_group` workflow                                 | Nothing to extend today                                                                                   |
+| One trunk branch, `BASE ${BASE:-main}`                                                      | Gitflow: feature work targets `staging`                                                                                    | Default base is `origin/staging`, and `depcruise --affected` must be given it (check 5)                   |
+| The gate runs for every pull request                                                        | `pr-gate.yml` runs for bases `main`, `staging`, `release/**` only (check 3)                                                | A stack layer is covered only if GitHub treats it as targeting the stack base; unproved (see `stacks.md`) |
+| depcruise works on the repo                                                                 | Repo uses TypeScript 7.0.2; depcruise supports below 7.0.0 or 7.1.0 and above                                              | Decision 1                                                                                                |
+| Plannotator installs with `curl … \| bash`                                                  | The installer also writes skills, hooks and agent config into `~/.claude`, and the binary does not start on musl           | Never pipe it; `--minimal` only; Decision 2                                                               |
+| Graphify and others install through Python (`uv`)                                           | The container has no Python                                                                                                | Out of scope here; M17.32 covers Graphify                                                                 |
+| Test `gh stack` on a private scratch repo                                                   | A public scratch repo, created by the owner (check 6); the real repo is public until the organisation moves to a paid plan | Check 6 runs on a public repo only; Decision 3 (decided)                                                  |
+| `git dft` alias, `scripts/review-graph.sh`, `depcruise:check` and `review:affected` scripts | None exist in the repo (`package.json` has no dependency-cruiser)                                                          | They are new files; see the drafted tasks                                                                 |
 
 ## Drafted implementation tasks
 
@@ -229,26 +279,30 @@ Drafts only. Nothing is minted until the owner approves them. Hours are my estim
 
 _Story:_ As the owner, I want the review tools to run inside the dev container, so that the local review loop works the same for every session.
 
-Depends on Decisions 1 and 2. If Plannotator stays on the host, this task is only difftastic and the port line.
+Covers Decision 2 (decided: V, the private glibc prefix with a wrapper). Fallback if V fails in the image: W, Plannotator on the host.
 
 _Acceptance criteria:_
 
 - difftastic is in the dev container image and `difft --version` runs on the Alpine image, with the binary fetched from its release page and checked against its published checksum
-- Plannotator is not installed with `install.sh`; the chosen route (a glibc base for the container, or the host binary) is documented in `claude-docs/` with the exact command
-- Port 19432 is forwarded in `.devcontainer/devcontainer.json` if the container runs Plannotator
+- Plannotator is never installed with `install.sh`. The binary is fetched from the release and checked against its `.sha256`
+- The three glibc libraries (`libc6`, `libgcc-s1`, `libstdc++6`, about 26 MB) are fetched at image build with pinned checksums and unpacked into a private prefix, outside the system paths
+- A `plannotator` wrapper on `PATH` runs the binary through the prefix's loader and sets `PLANNOTATOR_REMOTE=1`, `PLANNOTATOR_PORT=19432` and `PLANNOTATOR_SHARE=disabled`
+- Port 19432 is in `forwardPorts` in `.devcontainer/devcontainer.json`
+- A test shows `plannotator --version` and an HTTP 200 on port 19432 in the container, and the exact commands are in `claude-docs/`
 - `claude-docs/commands.md` lists the new commands
 - No tool is installed into the repo's `package.json` unless Draft B says so
 
-**Draft B — Run the Dependency Rules on Every Pull Request** · 4h (estimate)
+**Draft B — Show the Affected Modules in the Review** · 2h (estimate)
 
-_Story:_ As a reviewer, I want the gate to fail a pull request that breaks the module import rules, so that a layering mistake shows before anyone reads the diff.
+_Story:_ As a reviewer, I want a graph of the modules a pull request changes and the modules that import them, so that I see the reach of a change before reading the diff.
+
+Covers Decision 1 (decided: X, dependency-cruiser with the `swc` parser; fallback Y, the `tsc` parser with a second TypeScript 6). The import rules are not in this task: Oxlint already owns them, including cycles (`import/no-cycle`, `no-restricted-imports`, `sorrel/module-boundaries`, proved by `tests/guards/`; check 5). Draft B adds only the graph, and reports no cycles.
 
 _Acceptance criteria:_
 
-- dependency-cruiser runs against the repo's TypeScript source with the route chosen in Decision 1, and cruises more than zero modules (a check fails the job if it cruises none, so the silent failure in check 5 cannot recur)
-- The rules from `CLAUDE.md` (only `src/db/repository/` imports the database client; `src/graphql/**`, `src/app/**` and `src/components/**` import nothing under `src/db` at runtime; modules reach each other only through `@/modules/<name>`) are written as rules and each is seen failing once with a violation put in
-- `pr-gate.yml` runs it as a job under the `checks` aggregate, and `--affected` is given `origin/staging`
-- A mermaid graph of the affected modules is attached to the PR comment
+- `--affected` is given `origin/staging` (its default is `main`, which does not exist in this flow), and the script fails if it cruises zero modules, so the silent failure in check 5 cannot recur
+- The graph is Mermaid, written by one script that `npm run review:affected` calls, and it is advisory: it never fails `pr-gate.yml`
+- The `swc` parser is set in the config, which excludes `src/modules/documents/jobs/document-mailing.ts` (the one file `swc` rejects) with a comment saying why, and a test fails when a new file breaks the parser
 - A mechanical guard for the new mechanism lands in the same commit (`CLAUDE.md`, "The sweep-task rule")
 
 **Draft C — Run the Gate on Every Stack Layer** · 2h (estimate, rises if the check below fails)
@@ -277,15 +331,30 @@ _Acceptance criteria:_
 
 ## Decisions
 
-I need you to choose X or Y for each of the four items.
+Items 1, 2 and 3 are decided. I need you to choose for item 4 only.
 
-1. **dependency-cruiser and the repo's TypeScript.** The repo uses TypeScript 7.0.2, which dependency-cruiser does not support, and it fails silently. I need you to choose X or Y: X, install an older TypeScript that dependency-cruiser supports, used only by dependency-cruiser (a second, version-pinned install beside the repo's own); or Y, hold dependency-cruiser until it supports the TypeScript the repo uses. I recommend Y, because X puts two TypeScript versions in the repo, and the import rules in Draft B need a parser that matches the compiler.
-2. **Plannotator in the dev container.** The Plannotator binary does not start on Alpine, and no musl build is published. I need you to choose X or Y: X, run Plannotator on the host and have the container send its review file to it through the forwarded port; or Y, change the dev container to a glibc base image. I recommend X, because Y changes the base of every environment to fix one tool. Under X, nothing needs installing in the container, and the host half in check 8 is the whole test.
-3. **A scratch repo for `gh stack`.** The token cannot create a repository. I need you to choose X or Y: X, you create a private repository named `stack-scratch-m17-31` (with `main` and `staging` branches) and give the container's token access to it, and I run checks 6 and 7 and the `stacks.md` questions on it; or Y, accept the documentation-only answers now and run the checks when the first real stack is made. I recommend X, because the questions in `stacks.md` about base refs and the close-on-merge workflow can only be answered on GitHub.
+1. **The affected-modules graph, and dependency-cruiser. Decided: X.** Dependency-cruiser's default parser does not support the repo's TypeScript 7.0.2 and fails silently. The import rules are already enforced by Oxlint and `tests/guards/` (check 5), so only the graph is open. Options:
+   - **X, the `swc` parser.** Proved on the real `src/`: 2145 modules; needs one file excluded (`using` syntax) and is deprecated and experimental. No second TypeScript.
+   - **Y, the `tsc` parser with a second TypeScript 6.** Proved on the real `src/`: 2136 modules, 0 errors. Costs a second TypeScript version in the repo.
+   - **Z, hold until dependency-cruiser supports TypeScript 7.1 or above.** No graph meanwhile; docs only.
+   - **madge, skott or a small script.** Docs only, untested; I list them only in case X, Y and Z are all rejected.
+
+   Decided: X, the `swc` parser, with Y as the stated fallback if the `swc` route breaks. The reason: the graph only informs a reviewer and never gates, so the experimental parser's limits cost little, and X adds no second TypeScript. Draft B is the task for it.
+
+2. **Plannotator in the dev container. Decided: V.** The binary does not start on Alpine and no musl build is published. Options:
+   - **V, a private glibc prefix with a wrapper.** Proved in the container without root: `--version`, and HTTP 200 on port 19432. Costs 26 MB, a wrapper script, a build step that fetches three Debian packages, and the `forwardPorts` line. Not proved: the host browser and the full review flow.
+   - **W, run Plannotator on the host** and send it the review file through the forwarded port. Nothing in the container; the host half in check 8 is untested.
+   - **X, a glibc package on Alpine (`sgerrand/alpine-pkg-glibc`).** Docs only. I could not confirm an aarch64 build; its latest release is from 2023; it needs root and writes into the system.
+   - **Y, a Debian compose sidecar** like the Graphify one. Docs only. Costs a second service that needs the repo's files and `git`.
+   - **Z, Plannotator from source, npm or bun.** Docs only. Bun has an aarch64 musl build, but I did not test a build, and I could not check whether the npm packages run the server.
+
+   Decided: V, a private glibc prefix with a wrapper, with W (run on the host) as the fallback. The reason: it is the only route proved to start the server in the container, it changes no base image, and it keeps the glibc libraries out of the system. Draft A is the task for it.
+
+3. **The scratch repo for `gh stack`. Decided.** You create `stack-scratch-m17-31` under `Aurora-Arctic` as a public repository and give the container's token access. It holds throwaway files and no Sorrel & Salt source. Check 6 runs on it as a public repo only (check 6 explains why). Checks 6 and 7 and the `stacks.md` questions run on it in a later step, after you tell me it exists. Nothing for you to do until then except create the repository.
 4. **The container build.** The dev container has no `docker`, so the build in check 1 is read from files only. I need you to choose X or Y: X, you run `docker compose build` for the dev container on the host and paste the result; or Y, accept the file reading. I recommend Y, because nothing in this task builds the image.
 
 ## Status of the scratch repo and the extension
 
-- No scratch repo was created (check 6), so there is none to delete. Nothing for you to do.
-- The `gh-stack` extension was installed and removed. `gh extension list` is empty.
-- Scratch files (the difftastic binary, the Plannotator binary, the dependency-cruiser project) are in the session's scratchpad, outside the repo.
+- The scratch repository does not exist yet; you create it (Decision 3). I created no repository, so there is nothing to delete.
+- The `gh-stack` extension was installed to read its help and removed. `gh extension list` is empty.
+- Scratch files (the difftastic binary, the Plannotator binary, the extracted Debian libraries, the dependency-cruiser projects) are in the session's scratchpad, outside the repo and the container's system. No scratch process is running.

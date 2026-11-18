@@ -139,7 +139,7 @@ A good result: you can name each module under `src/modules/` that the change tou
 
 The agent must not offer an opinion on the code. It only lists.
 
-**Not available yet:** the graph from `npm run review:affected` (dependency-cruiser's `--affected` with Mermaid output) is blocked by Decision 1 in `verify.md`: the tool cruises zero modules with the repo's TypeScript. It also needs Draft B (`verify.md`), and `--affected` must be given `origin/staging`, because it defaults to `main`.
+**Not available yet:** the graph from `npm run review:affected` (dependency-cruiser with the `swc` parser, `--affected origin/staging`, Mermaid output) needs Draft B (`verify.md`); the route is decided (Decision 1). The import rules are not part of it: Oxlint and `tests/guards/` already enforce them.
 
 **Done when.** You can list the modules the layer reaches.
 
@@ -161,11 +161,7 @@ A good result: you find its definition and callers. With Graphify in place, `gra
 
 The agent must not offer a review of the symbol. Where the Graphify MCP server is working, it may use `query_graph`, `shortest_path`, `get_node` and `get_neighbors` for this (`graphify.md`).
 
-**Not available yet:** Graphify is not usable today. The sidecar's graph is empty, and no `graphify` command exists in the dev container (`graphify.md`, "Summary"). What changes depends on the owner's choice in `graphify.md`, "Decision":
-
-- **End state A (sidecar):** the agent uses the MCP tools. You have no `graphify` command in the dev container's own terminal. Unblocked by Drafts G1 to G4.
-- **End state B (CLI in the image):** you run `graphify explain` and `graphify path` in the dev container terminal. Unblocked by Drafts G5 to G9, and it needs an exception to the "no Python" rule.
-- **No Graphify:** skip this step and use `grep`. The record's summary names this as a recommendation, while its "Decision" section offers only A or B, so I could not tell which is final.
+**Not available yet:** Graphify is not usable today. The sidecar's graph is empty, and no `graphify` command exists in the dev container (`graphify.md`, "Summary"). The form is the sidecar (end state A): the agent uses the MCP tools, and you have no `graphify` command in the dev container's own terminal. Unblocked by Drafts G1 to G4 in `graphify.md`.
 
 **Done when.** You can say what the symbol does and what uses it, or you decided it does not matter for the review.
 
@@ -204,7 +200,7 @@ The agent must not review, approve or summarise the change as "fine". It only sh
 
 The agent must not push, merge or resolve a review thread on GitHub itself.
 
-**Not available yet:** `/plannotator-review` does not work in this dev container, because the binary does not start on Alpine (Decision 2 in `verify.md`). Until it is decided, annotate on GitHub or in a file.
+**Not available yet:** `/plannotator-review` does not run in this dev container directly, because the binary does not start on Alpine. The route is decided (Decision 2: a private glibc prefix and a wrapper, proved in `verify.md`, check 8), but no wrapper exists until Draft A (`verify.md`) is built. Until then, annotate on GitHub or in a file.
 
 **Done when.** Each note is resolved or answered, and you have re-read the changes.
 
@@ -234,11 +230,7 @@ You can ask an agent to take you through the loop one step at a time from this f
 
 Each is held in its record; the owner chooses.
 
-- Dependency-cruiser and the repo's TypeScript: Decision 1 in `verify.md`.
-- Plannotator on Alpine: Decision 2 in `verify.md`.
-- A scratch repo for `gh stack`: Decision 3 in `verify.md`.
 - The container build: Decision 4 in `verify.md`.
 - Where `Closes #N` goes on a stack: Decision 1 in `stacks.md`.
 - Whether stack branches are exempt from "never rebase, never force-push": Decision 2 in `stacks.md`.
 - Prove stacks before building: Decision 3 in `stacks.md`.
-- Graphify, sidecar or CLI: "Decision" in `graphify.md`.
