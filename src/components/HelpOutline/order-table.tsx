@@ -157,7 +157,8 @@ const HelpOrderTable = ({
         names={listed.map((row) => row.title)}
         onMove={onMove}
       >
-        <TableFrame label={label}>
+        {/* The pane around this table is a region named by its heading, which is `label` too; a second region of that name fails the accessibility scan. */}
+        <TableFrame label={`${label} Table`}>
           <table
             className="data-table data-table--stack help-outline__order-table"
             aria-label={label}
