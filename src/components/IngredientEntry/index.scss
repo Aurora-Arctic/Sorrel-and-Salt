@@ -763,6 +763,7 @@ $replaces-gap: space(5);
 .ingredient-entry__card-eyebrow,
 .ingredient-entry__card-section,
 .ingredient-entry__card-label,
+.ingredient-entry__card-list,
 .ingredient-entry__card-item {
   display: block;
 }
@@ -781,15 +782,11 @@ $replaces-gap: space(5);
   font-weight: 500;
 }
 
-.ingredient-entry__card-list {
-  display: block;
-}
-
 .ingredient-entry__card-list--chips {
   display: flex;
   flex-wrap: wrap;
   gap: space(2);
-  margin-block: space(1) 0;
+  margin-block-start: space(1);
 }
 
 .ingredient-entry__card-chip {
