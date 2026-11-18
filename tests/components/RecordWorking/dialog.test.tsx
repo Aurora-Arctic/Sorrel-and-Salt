@@ -174,7 +174,35 @@ describe('Record a Working', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Complete' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(await screen.findByRole('list', { name: 'Deductions' })).toHaveTextContent('Testwort');
-    expect(screen.getByRole('button', { name: 'Mark Complete' })).toBeEnabled();
+    expect(within(dialog()).getByRole('button', { name: 'Complete' })).toBeEnabled();
+  });
+
+  // One action, one name: the confirm is the same Complete, and is the only one on its step.
+  it('names the complete action Complete in both steps, and describes what completing does on the first', async () => {
+    mockRecording();
+    openButton();
+    const first = within(dialog()).getByRole('button', { name: 'Complete' });
+    expect(first).toHaveAccessibleDescription(/.+/);
+
+    fireEvent.click(first);
+    await within(dialog()).findByRole('list', { name: 'Deductions' });
+
+    expect(within(dialog()).getAllByRole('button', { name: 'Complete' })).toHaveLength(1);
+    expect(within(dialog()).getByRole('button', { name: 'Complete' })).toBeEnabled();
+    expect(within(dialog()).queryByRole('button', { name: 'Mark Complete' })).toBeNull();
+  });
+
+  // The same title the row's own Complete opens its confirm under.
+  it('titles the confirm step Complete Working, the action it confirms', async () => {
+    mockRecording();
+    openButton();
+    expect(screen.getByRole('dialog', { name: 'Record a Working' })).toBe(dialog());
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Complete' }));
+    await within(dialog()).findByRole('list', { name: 'Deductions' });
+
+    expect(screen.getByRole('dialog', { name: 'Complete Working' })).toBe(dialog());
+    expect(screen.queryByRole('dialog', { name: 'Record a Working' })).toBeNull();
   });
 
   it('draws the loading skeleton while the deduction preview is read', async () => {
@@ -350,6 +378,28 @@ describe('Edit Working', () => {
     status: 'draft' as const,
     participants: [{ userId: 'u1', name: 'Testa Owner' }],
   };
+
+  // Typed text in Participants is something to save, so Save is held only while nothing is typed or changed.
+  it('enables Save Working once text is typed into Participants on an unchanged working', () => {
+    renderWithQuery(
+      <RecordWorkingDialog
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        spellVisibility="workspace"
+        steps={STEPS}
+        working={working}
+        onClose={vi.fn()}
+      />,
+    );
+    const save = within(dialog()).getByRole('button', { name: 'Save Working' });
+    expect(save).toBeDisabled();
+
+    fireEvent.change(within(dialog()).getByRole('combobox', { name: 'Participants' }), {
+      target: { value: 'Mocka' },
+    });
+
+    expect(save).toBeEnabled();
+  });
 
   it('changes the working it was given, rather than recording another', async () => {
     const calls: UpdateWorkingMutationVariables[] = [];

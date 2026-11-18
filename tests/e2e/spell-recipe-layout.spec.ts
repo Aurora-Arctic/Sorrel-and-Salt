@@ -411,8 +411,11 @@ test("a short jar's deduction line keeps each part whole at 375px", async ({ pag
     .getByRole('region', { name: 'Workings' })
     .getByRole('button', { name: 'Record a Working' })
     .click();
-  const dialog = page.getByRole('dialog', { name: 'Record a Working' });
-  await dialog.getByRole('button', { name: 'Complete' }).click();
+  await page
+    .getByRole('dialog', { name: 'Record a Working' })
+    .getByRole('button', { name: 'Complete' })
+    .click();
+  const dialog = page.getByRole('dialog', { name: 'Complete Working' });
   const words = dialog.getByRole('list', { name: 'Deductions' }).locator('.jar-line__words');
   await expect(words).toContainText('needs 3 g · have 1 g · short by 2 g');
 

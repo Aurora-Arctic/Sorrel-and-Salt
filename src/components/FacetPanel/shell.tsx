@@ -19,6 +19,7 @@ import { useHydrated } from '../../lib/hydrated';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useMediaQuery } from '../../lib/use-media-query';
 import { useSlide } from '../../lib/use-slide';
+import CloseButton from '../CloseButton';
 import { FacetCount } from './facet-count';
 import type { FacetShellProps } from './types';
 import './index.scss';
@@ -232,13 +233,7 @@ export function FacetShell({
                 <h2 id={titleId} className="facet-panel__title">
                   Filters
                 </h2>
-                <button
-                  type="button"
-                  className="btn btn--quiet facet-panel__phone-only"
-                  onClick={dismiss}
-                >
-                  Close
-                </button>
+                <CloseButton className="facet-panel__phone-only" onClick={dismiss} />
               </div>
 
               {children}

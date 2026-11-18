@@ -107,7 +107,11 @@ export default function RecordWorkingForm({
   working,
   deleteWorking,
   close,
-}: Omit<RecordWorkingDialogProps, 'onClose' | 'returnTo'> & { close: () => void }): ReactElement {
+  onConfirming,
+}: Omit<RecordWorkingDialogProps, 'onClose' | 'returnTo'> & {
+  close: () => void;
+  onConfirming?: (confirming: boolean) => void;
+}): ReactElement {
   const { refresh } = usePendingNavigation();
   const ids = useId();
   const [initial] = useState(() => ({
@@ -130,7 +134,9 @@ export default function RecordWorkingForm({
   const [removed, setRemoved] = useState(false);
 
   const complete = working?.status === 'complete';
+  // Text typed into Participants and not yet added is a change too, so Save is not held back while it waits.
   const changed =
+    text.trim() !== '' ||
     workedOn !== initial.workedOn ||
     note !== initial.note ||
     visibility !== initial.visibility ||
@@ -152,7 +158,7 @@ export default function RecordWorkingForm({
       type="button"
       className="btn"
       disabled={!valid || submitting || waitFor !== undefined}
-      aria-describedby={waitFor ? `${ids}-wait` : undefined}
+      aria-describedby={waitFor ? `${ids}-wait` : `${ids}-effect`}
       onClick={() => void submit(true)}
     >
       Complete
@@ -207,8 +213,10 @@ export default function RecordWorkingForm({
             .recordWorking;
       setSubmitting(false);
       refresh();
-      if (thenComplete) setCompleting(result.id);
-      else close();
+      if (thenComplete) {
+        setCompleting(result.id);
+        onConfirming?.(true);
+      } else close();
     } catch (error) {
       setSubmitting(false);
       setFailure(readGraphqlFailure(error, FIELDS));
@@ -330,6 +338,13 @@ export default function RecordWorkingForm({
         {!complete && completeButton}
       </FormActions>
       {/* Text rather than a tip, since a disabled button takes no focus to show one. */}
+      {/* Text rather than a tip, like the wait below, so the button's description is on screen; while it waits for its day, that reason describes it instead. */}
+      {!complete && !waitFor && (
+        <p id={`${ids}-effect`} className="meta">
+          Completing takes the ingredients from the coven’s jars, and a complete working cannot go
+          back to a draft.
+        </p>
+      )}
       {!complete && waitFor && (
         <p id={`${ids}-wait`} className="meta">
           {waitFor}

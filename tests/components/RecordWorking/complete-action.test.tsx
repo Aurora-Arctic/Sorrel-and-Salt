@@ -217,7 +217,7 @@ describe('Complete on a working', () => {
     expect(reads).toBe(2);
   });
 
-  it('takes nothing until Mark Complete, offers Keep as Draft beside it, then completes the working and reads the page again', async () => {
+  it('takes nothing until Complete, offers Keep as Draft beside it, then completes the working and reads the page again', async () => {
     const calls: CompleteWorkingMutationVariables[] = [];
     mockGraphQLMutation<CompleteWorkingMutation, CompleteWorkingMutationVariables>(
       'CompleteWorking',
@@ -235,7 +235,7 @@ describe('Complete on a working', () => {
     await screen.findByRole('list', { name: 'Deductions' });
     expect(calls).toEqual([]);
     expect(screen.getByRole('button', { name: 'Keep as Draft' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Mark Complete' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Complete' }));
     await waitFor(() => expect(calls).toEqual([{ workspaceId: WORKSPACE_ID, id: WORKING }]));
     expect(await screen.findByRole('button', { name: 'Done' })).toBeVisible();
     expect(router.refresh).toHaveBeenCalled();

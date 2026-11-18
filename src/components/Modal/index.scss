@@ -371,43 +371,13 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   inset-block-start: calc(#{$close-inset} + (#{$eyebrow-line} - #{$close-target}) / 2);
 }
 
-// A 2rem × in a `$close-target` square, at the dialog's padding from its top and right edges, past
-// WCAG 2.2's 24px minimum target. Out of the flow, so a wrapping heading cannot squeeze the round
-// target to an oval; the head stops short of it (`$close-reserve`).
+// The × stands out of the flow, at the dialog's padding from its top and right edges, so a wrapping
+// heading cannot squeeze the round target to an oval; the head stops short of it (`$close-reserve`).
+// Its drawing is the shared `CloseButton`'s.
 .modal-dialog__close {
   position: absolute;
   inset-block-start: $close-inset;
   inset-inline-end: $close-inset;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: $close-target;
-  height: $close-target;
-  padding: 0;
-  border: 0;
-  border-radius: radius('pill');
-  background-color: transparent;
-  color: $text-muted;
-  font-size: $close-target;
-  line-height: 1;
-  cursor: pointer;
-
-  &:hover,
-  &:focus-visible {
-    color: $text-primary;
-  }
-
-  @include forced-colors {
-    &:hover:not(:focus-visible) {
-      outline: 1px solid Highlight;
-      outline-offset: -1px;
-    }
-  }
-
-  // The shared ring, in place of the browser's own.
-  &:focus-visible {
-    @include focus-ring;
-  }
 }
 
 .confirm-overlay {
