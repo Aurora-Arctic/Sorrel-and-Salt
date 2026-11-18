@@ -25,6 +25,12 @@ updates:
         patterns:
           - 'graphql-yoga'
           - '@graphql-yoga/*'
+      # stylelint-config-* and stylelint-scss peer on one stylelint major;
+      # bumped apart, npm ci fails with ERESOLVE (PRs #1784, #1785).
+      stylelint:
+        patterns:
+          - 'stylelint'
+          - 'stylelint-*'
 
   - package-ecosystem: github-actions
     directory: /
