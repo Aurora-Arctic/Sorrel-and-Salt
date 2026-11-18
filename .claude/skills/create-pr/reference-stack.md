@@ -8,6 +8,8 @@ Steps 1, 2 and 4 of `SKILL.md` (sign-in, preconditions, offer to commit) are unc
 
 **Step 3, target.** The bottom layer targets `staging`; every other layer targets the layer below it, which `gh stack submit` sets. Ask the owner for the layers (a name and a one-line scope each) with AskUserQuestion, bottom first. When the owner has not named a tests-first layer, do not add one.
 
+**Creating the layers.** Run `gh stack init --base staging <bottom branch> <next branch> ...`, naming the layers bottom first. It adopts a branch that exists and creates one that does not, each based on the one before it. Without `--base staging` the stack targets the default branch, `main`, which Gitflow refuses for a feature. To put a layer on top of a stack that already exists, check out its top layer and run `gh stack add <branch>`. `gh stack view` lists the layers.
+
 **Step 5, no merge.** Do not run `git merge origin/<target>` on a layer branch. `gh stack sync` fetches, rebases each layer onto its parent, and pushes every branch with a lease check. If it reports a conflict, stop and tell the owner which layer conflicted.
 
 **Step 6, push.** `gh stack submit --auto` pushes every branch together. Never a bare `git push`.
