@@ -27,7 +27,7 @@ Rules that apply to every step:
 - Never push, open a pull request, or write to the task board by any route other than `/create-pr` and `node scripts/task-board.mjs`.
 - `/security-review` is run only when the owner asks, on a risky layer: authentication, workspace scoping, or a database migration. It consumes Claude usage. No script, hook, or workflow runs it.
 - The Claude Code GitHub Action and a hosted AI reviewer are not part of this process. Nor are Plannotator's Review Agents, which post a model's review comments on the diff: they are switched on by the same setting as guides, and are not used.
-- Plannotator shows one page at a time, on port 19432: a plan review, a code review, or an annotation. A second one started while the first is open fails on the port, so finish the open one in its page first.
+- Each Claude Code session takes the first free port from 19432 to 19436 for its Plannotator page (a plan review, a code review, or an annotation), so up to five sessions can have a page open at once. A sixth fails with a message that every port in the range is in use. Within one session, a second page waits for the first to finish, so finish the open one in its page first. The address Plannotator prints is the one to open, and it may be any of the five ports.
 
 The records behind the choices (what was checked, what stacks change, what Graphify offers) are in `claude-docs/review-poc/`.
 
@@ -52,7 +52,7 @@ The agent must not rewrite the criteria unasked, start work, or move the task's 
 
 **Done when.** Each acceptance criterion is written and checkable, and you have read it.
 
-**When the agent plans first.** An agent asked to plan a task writes the plan in plan mode. When it leaves plan mode, the plan opens in Plannotator, in the host browser on port 19432. Write notes on the lines you want changed, then approve the plan or request changes; the decision goes back to the agent's session as a message. A revised plan opens in the same page with a diff against the version before it. The agent does not open the plan in the editor as well.
+**When the agent plans first.** An agent asked to plan a task writes the plan in plan mode. When it leaves plan mode, the plan opens in Plannotator, in the host browser, on the address Plannotator prints (a port from 19432 to 19436). Write notes on the lines you want changed, then approve the plan or request changes; the decision goes back to the agent's session as a message. A revised plan opens in the same page with a diff against the version before it. The agent does not open the plan in the editor as well.
 
 ## Step 2. Tests first, reviewed before the implementation
 
@@ -261,7 +261,7 @@ These checks prove the setup works. The container rows were run after a full con
 | GitHub    | Open the three-layer test stack                             | The top layer runs the full gate on the whole stack's diff; the two layers below run only format, lint and types |                                                                                                                                  |
 | GitHub    | Push a test layer above the size limit                      | The pull request gets the `oversized` label, and loses it when a later push brings it under                      |                                                                                                                                  |
 | Container | `gh stack view` on the test stack                           | All layers are listed                                                                                            |                                                                                                                                  |
-| Container | `/plannotator-review` in Claude Code                        | The review opens in the host browser on port 19432                                                               | Pass                                                                                                                             |
+| Container | `/plannotator-review` in Claude Code                        | The review opens in the host browser on a port from 19432 to 19436                                               | Pass                                                                                                                             |
 | Container | `git status` after a review run                             | Nothing under `.review/` is tracked or listed as untracked                                                       | Pass                                                                                                                             |
 | Container | `graph_stats` through the MCP server                        | Counts, not "graph.json not found"                                                                               | Pass                                                                                                                             |
 | Container | Commit a small change, then check `graphify-out/graph.json` | The file's modified time is after the commit; the watch service does this, not a git hook                        | Pass: rebuilt 36 seconds after a source file was added                                                                           |

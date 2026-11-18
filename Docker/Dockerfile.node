@@ -72,7 +72,7 @@ fetch() { curl -fsSL --retry 3 -o "$2" "$1" && echo "$3  $2" | sha256sum -c -; }
 # package once a point release replaces it.
 DEBIAN=https://snapshot.debian.org/archive/debian/20261118T000000Z/pool/main/g
 DIFFT=https://github.com/Wilfred/difftastic/releases/download/0.72.0
-PLANNOTATOR=https://github.com/backnotprop/plannotator/releases/download/v0.28.67
+PLANNOTATOR=https://github.com/backnotprop/plannotator/releases/download/v0.29.0
 case "$TARGETARCH" in
   arm64)
     TRIPLET=aarch64-linux-gnu LOADER=usr/lib/ld-linux-aarch64.so.1 ASSET=plannotator-linux-arm64
@@ -81,8 +81,8 @@ case "$TARGETARCH" in
     fetch "$DEBIAN/gcc-14/libstdc%2B%2B6_14.2.0-19_arm64.deb" libstdc++6.deb 6669b0c52a2e7c6af9adfdabce3ff6e286065cdfbc7b85280862b5f799daebee
     # No musl build for aarch64; the glibc one runs on the base's libc6-compat.
     fetch "$DIFFT/difft-0.72.0-aarch64-unknown-linux-gnu.tar.gz" difft.tar.gz 0993a82a6708a24adc6c6b8de366924728ed08f537a5b488940082c8edc79353
-    fetch "$PLANNOTATOR/$ASSET" "$ASSET" 9b363302ded9719e5e7eb359e54a63a6d3d79fa77d629276cf7fc581567927cb
-    fetch "$PLANNOTATOR/$ASSET.sha256" plannotator.sha256 691de1b0e9dee7e66aafefce1bf626520f52c63cf183d31170be9aced49418e7
+    fetch "$PLANNOTATOR/$ASSET" "$ASSET" 54086386c8bd6335a133bcc3f9ed28ef4ba861cf072b70cef32d0e1d124829fb
+    fetch "$PLANNOTATOR/$ASSET.sha256" plannotator.sha256 496a7b97923c19f7cf0d8c94edf13f740e8f7a5e5cbcf19ec7da324f1a64d0fe
     ;;
   amd64)
     TRIPLET=x86_64-linux-gnu LOADER=usr/lib64/ld-linux-x86-64.so.2 ASSET=plannotator-linux-x64
@@ -90,8 +90,8 @@ case "$TARGETARCH" in
     fetch "$DEBIAN/gcc-14/libgcc-s1_14.2.0-19_amd64.deb" libgcc-s1.deb 3c71917b490d1a17aed43196a2787a256ecf060526cdb20216a74bedc061b150
     fetch "$DEBIAN/gcc-14/libstdc%2B%2B6_14.2.0-19_amd64.deb" libstdc++6.deb ab1fa05837aa7a92aae748fd07a18a35f7d18bb4a71c4724fe2bbf0e32089de0
     fetch "$DIFFT/difft-0.72.0-x86_64-unknown-linux-musl.tar.gz" difft.tar.gz 27b9c1fe038a95682eed241265a3cacb781227730f106104b617e10067d38ff4
-    fetch "$PLANNOTATOR/$ASSET" "$ASSET" 39335905cd9539442d7ae83094a464c7969ee55628bb89105016e497f7e687eb
-    fetch "$PLANNOTATOR/$ASSET.sha256" plannotator.sha256 b5693fe827f12914ec83be9d53a7453dc06f38f1c78568c8b01c1c9d001c43cd
+    fetch "$PLANNOTATOR/$ASSET" "$ASSET" f2c575e7ae219472a45f53adb667ebb6eff13c2d89726d992d1f984a81161391
+    fetch "$PLANNOTATOR/$ASSET.sha256" plannotator.sha256 beced4ebe50905d18534f1686deae6e97e160bde5415af1c18015b606913d2d4
     ;;
   *)
     echo "review-tools: no build for $TARGETARCH" >&2
@@ -193,7 +193,7 @@ cat > /opt/review-bin/plannotator <<'WRAPPER'
 # Plannotator is built for glibc and has no musl build; its interpreter and
 # library path are patched in the binary itself (above), so this only sets the
 # environment and runs it directly.
-export PLANNOTATOR_REMOTE=1 PLANNOTATOR_PORT=19432 PLANNOTATOR_SHARE=disabled
+export PLANNOTATOR_REMOTE=1 PLANNOTATOR_PORT=19432-19436 PLANNOTATOR_SHARE=disabled
 export PLANNOTATOR_UPDATE_CHECK=0 PLANNOTATOR_JINA=0
 exec /opt/plannotator/plannotator "$@"
 WRAPPER
@@ -214,4 +214,4 @@ RUN apk add --no-cache ripgrep
 # create stops VS Code copying the host’s name and email into the container.
 RUN printf '[alias]\n\tdft = -c diff.external=difft diff\n' >> /etc/gitconfig
 USER node
-EXPOSE 19432
+EXPOSE 19432-19436
