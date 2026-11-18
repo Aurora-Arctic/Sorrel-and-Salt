@@ -2486,8 +2486,8 @@ The outcome is four follow-up tasks and one change to §13:
   of the stored OAuth tokens and pins the session lifetimes.
 - **MB.77** marks the provider a browser last signed in with on the sign-in
   page.
-- **MB.78** registers the OAuth proxy on previews, so a hotfix preview can
-  complete a real sign-in.
+- **MB.78** would have registered the OAuth proxy on previews. It is retired,
+  not built: [`ci.md`, "MB.78 (the OAuth proxy for hotfix previews) is retired"](ci.md#mb78-the-oauth-proxy-for-hotfix-previews-is-retired).
 - **Passkeys become the v2 first-party credential** in DESIGN.md §13, in
   place of email and password.
 
@@ -2635,7 +2635,8 @@ address is one account (M2.9) and no story asks to switch.
 `VERCEL_ENV=preview`, with `productionURL` set to staging's origin, which
 already has registered redirect URIs. It is gated the way MB.53 gates the
 `admin` plugin: at production, and locally, the plugin is never constructed,
-so its endpoint is absent rather than refusing. MB.78.
+so its endpoint is absent rather than refusing. MB.78, since retired and not
+built: [`ci.md`, "MB.78 (the OAuth proxy for hotfix previews) is retired"](ci.md#mb78-the-oauth-proxy-for-hotfix-previews-is-retired).
 
 - **Cost: the app's callback hooks do not run on the preview side.** The
   preview completes on `/callback/:id/oauth-proxy`, and `src/lib/auth.ts`
@@ -2754,7 +2755,7 @@ No task is minted: v1 has no deletion story.
 | MB.75 | The `rate_limits` table, Better Auth's own                                                                 |
 | MB.76 | Database-backed rate limiting, a pinned client-IP header, OAuth token encryption, session lifetimes pinned |
 | MB.77 | `lastLoginMethod`, cookie only, marked on the sign-in page                                                 |
-| MB.78 | `oAuthProxy` at `VERCEL_ENV=preview` only, so hotfix previews complete a sign-in                           |
+| MB.78 | Retired, not built: `oAuthProxy` at `VERCEL_ENV=preview` only                                              |
 
 **v2, in this order:** passkeys, then magic link or email OTP. Two-factor,
 `captcha` and `haveIBeenPwned` only if email and password ever lands. The
@@ -2791,10 +2792,8 @@ MB.75 through MB.78, written into `TASKS.md` with their acceptance criteria.
 - **MB.75, MB.76 and MB.77 close Wave 7**, after MB.71. MB.75 before MB.76 is
   the table-then-behaviour rule. MB.77 follows MB.71 because its mark answers
   the sentence MB.71 writes.
-- **MB.78 lands in Wave 8 immediately before MB.53**, whose impersonation it
-  makes usable on hotfix previews. _Since moved to Wave 15, post-launch, on the
-  owner's call: hotfixes are not needed before launch, and the hotfix path
-  needs infrastructure fixes before its branches work properly._
+- **MB.78 is retired, not built.** Password sign-in replaces the proxy on a
+  hotfix preview.
 - **DESIGN.md §13** names passkeys as the v2 first-party credential, and §14
   records this decision.
 

@@ -337,21 +337,7 @@ _Acceptance criteria:_
 
 **MB.77 — Mark the last-used provider on the sign-in page** · 2h
 
-**MB.78 — OAuth proxy, so a hotfix preview can complete a real sign-in** · 3h
-
-_Story:_ As a developer, I want to sign in to a hotfix preview, so that a fix to anything behind sign-in can be checked where it will ship, and MB.53's impersonation works there.
-
-**Post-launch, the owner's call.** It was minted into Wave 8 ahead of MB.53, but hotfixes are not needed until after launch, and the hotfix path needs infrastructure fixes before its branches work properly. It sits unscheduled at the end of the Bugfixes milestone, and its trigger is the first hotfix after launch that needs a sign-in to check ([`waves/v1/wave-15.md`](../../waves/v1/wave-15.md)).
-
-Every provider needs its redirect URI registered in advance, and a hotfix preview's `hotfix-<slug>.sorrelandsalt.com` does not exist until its PR does, so no hotfix preview can finish a sign-in today (`secrets.md`). Better Auth's `oAuthProxy` sends the provider's callback to a fixed `productionURL` whose URI is registered, where the code is exchanged and the profile encrypted, then redirects to the preview's own `/callback/:id/oauth-proxy`, which creates the user and session there. The redirect target must be a trusted origin, and `baseURL.allowedHosts` already names `hotfix-*.sorrelandsalt.com`. `productionURL` is staging's origin, which shares the Preview secret with every hotfix preview. The plugin is registered only at `VERCEL_ENV=preview`, the gate MB.53 uses, so at production and locally it is never constructed and its endpoint is absent rather than refusing. Two things to answer from running code: the preview completes on `/callback/:id/oauth-proxy`, which `src/lib/auth.ts`'s hooks do not match, so the provisional-account sweep and the promotion at sign-in do not run there; and staging's own callback also runs its hooks against a request it did not start. The record says what each means and whether either hook should also match the proxy path.
-
-_Acceptance criteria:_
-
-- Registered only when `VERCEL_ENV=preview`, asserted in both directions, with the endpoint absent, not refusing, at `production` and with `VERCEL_ENV` unset
-- `productionURL` is staging's origin, pinned by test
-- A real sign-in completes on a hotfix preview, and a recording or screenshot is linked from the PR
-- Which of `src/lib/auth.ts`'s callback hooks run on each side is asserted, and the decision on whether they should also match the proxy path is written into the MB.74 record
-- `secrets.md` and `../auth/README.md` drop "hotfix previews can't complete a real sign-in" and say how they do; MB.53's entry names MB.78 as what makes it usable on a hotfix preview
+**MB.78 — [RETIRED] OAuth proxy, so a hotfix preview can complete a real sign-in** · **RETIRED 2026-11-17, not done**
 
 **MB.79 — Record subscription billing as a v2 feature and the Stripe plugin's fit** · 1h
 
@@ -879,6 +865,34 @@ _Acceptance criteria:_
 - The postgres.js client in `src/db/connection.ts` sets an `idle_timeout`
 - The PR body reports the before and after measurements, which assumptions were confirmed and which were wrong, whether production's `DATABASE_URL` names the pooled host (the name only, never the value), and every anonymous request that still queries Postgres, with the reason
 - The docs the change makes wrong are corrected in the same PR, under `claude-docs/`
+
+**MB.301 — Help Search Shows Every Match a Page at a Time** · 3h
+
+_Story:_ As a reader searching the help centre, I want the results a page at a time with a pager, so that I can reach every match however many there are.
+
+The help search page, `src/app/(public)/help/search/page.tsx`, asks the search service `searchHelp` for one batch of at most `HELP_PAGE_LIMIT` results (200, in `src/lib/help-pages.ts`) and draws them all. It shows no pager and reads no page from the address. A search with more than 200 matches drops the rest, and nothing on screen says so.
+
+Found on 2026-11-17, during the M17.7 design audit, on a local production build, signed out. It happens on every search. Steps to reproduce:
+
+1. Start signed out, on a site whose help centre has more than 200 entries matching one word (assumed: the audit's seed has 43 matches for "coven")
+2. Open `/help/search?q=coven`
+3. Scroll to the end of the results
+
+Actual: every match up to 200 is drawn on one page, there is no pager, and matches past 200 are not shown.
+
+Expected: results come a page at a time with a pager, and every match can be reached.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: with more matches seeded than one page holds, a match past the first page cannot be reached from `/help/search`
+- The search page reads its results through the numbered-page helpers the other pages use, and draws the shared `Pager` component; no new pager is written
+- With more matches than one page holds, the pager's next page shows the following matches, and the last page shows the last match
+- With one page of matches or fewer, no pager is drawn
+- The page number and the search words are in the address, so a page of results can be reloaded, and paging works without script
+- A reader sees only the help entries their audience allows on every page: a signed-out reader paging through never reaches a staff or Keeper entry, asserted with such an entry seeded
+- The search page stays uncached and unindexed
+- `tests/guards/pagination.test.ts` covers the page, with no exemption for it
+- The help doc under `claude-docs/` that describes the search page's bounded read is corrected in the same PR
 
 **MB.302 — Search Boxes Lose Typed Text, the Plus Lacks Its Coven Count, and "Used By" Notes Run Long** · 6h
 

@@ -1,6 +1,6 @@
 ## MC — Cleanup
 
-MC ids hold grouped clean-up work from two audits: M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)) for MC.1 → MC.9, and M17.10's test performance audit ([`audits/test-performance.md`](../audits/test-performance.md)) for MC.10 → MC.14. They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
+MC ids hold grouped clean-up work from three audits: M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)) for MC.1 → MC.9, and M17.10's test performance audit ([`audits/test-performance.md`](../audits/test-performance.md)) for MC.10 → MC.14, and M17.7's design and UX audit ([`audits/design-ux.md`](../audits/design-ux.md)) for MC.15 → MC.27. They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
 
 **MC.1 — Tidy the Test Support and Scripts** · 16.25h
 
@@ -269,3 +269,208 @@ _Acceptance criteria:_
 - `help-reads.test.ts` has positive staff reads (glossary, index, sitemap) beside its absence checks (R-12)
 - Every cut names, in the PR table, the test that keeps its rule proved, and no authorization test that asserts a direct-id refusal is removed
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
+
+**MC.15 — Tidy Copy And Casing Across The Site** · 6h
+
+_Story:_ As a person using the site, I want the site role named the same everywhere, so that I know who a Keeper is. As a reader, I want clean help pages, so that I read each name and link as meant. As a reader, I want short, clean messages, so that I read each fact once. As a mail recipient, I want a link where the mail tells me to sign in, so that I know the next step. As a developer, I want one casing for aria-labels and placeholders, so that they match their siblings.
+
+Minted from the design and UX audit (M17.7). Findings: F-6, F-13, F-17, F-38, F-42, F-45, F-47, F-61, F-75, F-76, F-78, F-79, F-80, R-6; each is in `claude-docs/audits/design-ux.md`. It joins these parts: Write Keeper With A Capital; Tidy Help And Public Page Copy; Tidy Coven And Auth Copy; Tidy The Mail Links And Headings; Set aria-label And Placeholder Casing.
+
+_Acceptance criteria:_
+
+- The coven list, new coven and account support screens write Keeper and Keepers with a capital.
+- The Keepers hub reads "Keeper invitations" and never "admin".
+- Field and button names in help copy, staff help and the document pages are set in bold, not straight quotes.
+- Each FAQ link is named "Link to this answer" or hidden from the heading name.
+- The footnote marker keeps "#" in front of the number as a superscript, with a tap area of at least 24 by 24 CSS pixels.
+- The signed-in help page at 375 shows the Compendium link.
+- The member dialog shows no stray dot before "none".
+- The invite dialog copy is shortened.
+- The four auth messages end without a full stop.
+- The email-change and verify-email mails that say to sign in carry a link, or say why not.
+- The support mail lead-ins use Title Case.
+- Every aria-label and every placeholder named in the findings is in Title Case.
+- `.claude/rules/components.md` gains the sentence "aria-labels and placeholders are Title Case."
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.16 — Route Every Date Through utc.ts** · 4h
+
+_Story:_ As a person reading dates across screens, I want long dates in detail views and short dates in tables, so that I never compare two formats.
+
+Minted from the design and UX audit (M17.7). Findings: F-1, R-3; each is in `claude-docs/audits/design-ux.md`.
+
+_Acceptance criteria:_
+
+- Every date and time shown on a screen or in a mail comes from a formatter in `src/lib/utc.ts`: the long form in detail views and the short form in tables.
+- The hand-written date formats in components and in the one mail that formats its own are gone.
+- A guard fails the build on a hand-written date format outside `src/lib/utc.ts`, and `.claude/rules/components.md` gains the sentence "Dates and times format only through `src/lib/utc.ts`."
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.17 — Give Error, Gate And Blocked Pages One Layout** · 5h
+
+_Story:_ As a person who lands on a blocked page, I want it to look like its siblings and say what to do, so that I am not left guessing. As a person who cannot use a coven page yet, I want to be told where to go next, so that I am not stuck.
+
+Minted from the design and UX audit (M17.7). Findings: F-2, F-48, F-49, F-50, F-52, F-53; each is in `claude-docs/audits/design-ux.md`. It joins these parts: Give Error And Gate Pages One Layout; Show Next Steps On Blocked Coven Pages.
+
+_Acceptance criteria:_
+
+- On the 404 pages at 375 the "?" icon button no longer wraps alone onto its own row; the Help and Report This links both stay.
+- The 403 and 404 pages share one body and each offers a next step.
+- The invite-token, access-paused and coven-paused cards align the same way.
+- The reset-password page spaces its subtitle like the forgot-password page, with room for the content that appears under the password field once something is typed.
+- The waiting page on the coven list and on new coven shows a link to Support.
+- The two-factor backup-codes line and the paused-coven steward line are unchanged.
+- A practitioner or observer who opens the coven invitations page sees a Not Authorized page inside the shell.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.18 — Fix The Support Form Hint, Radio Cards And Messages** · 4h
+
+_Story:_ As a person asking for support, I want the form to warn me only where it matters and to read the same everywhere, so that I trust what it says.
+
+Minted from the design and UX audit (M17.7). Findings: F-5, F-8, F-23, F-25, F-54, F-87, R-4; each is in `claude-docs/audits/design-ux.md`.
+
+_Acceptance criteria:_
+
+- The Message hint on the support page, the support-request page and the Feedback dialog is drawn in the warning style, not the error style and not the plain hint style.
+- `.claude/rules/components.md` R7 reads "a hint is never drawn in the error style; a caution uses the warning style".
+- The group error has no full stop.
+- The Question radio cards lay out the same way on the support page, the support-request page and the Feedback dialog at 375 and at desktop.
+- An empty radio group does not look selected; focus and selected look different.
+- The request thread names its author once.
+- The keeper button beside the GitHub Issue field reads "Save Issue".
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.19 — Bring Red Controls And Delete Icons Into The Rule** · 4h
+
+_Story:_ As a person using edit dialogs, I want Delete to look and sit the same everywhere, so that I find it and know when it is dangerous.
+
+Minted from the design and UX audit (M17.7). Findings: F-7, F-9, F-10, R-5; each is in `claude-docs/audits/design-ux.md`.
+
+_Acceptance criteria:_
+
+- The edit-ingredient and record-a-working dialogs show Delete as an icon with a tooltip and a visible or accessible name, at the footer end.
+- Delete Guide on the keeper help page uses the same icon control; Delete Coven stays red.
+- Decline Invitation stays red.
+- `.claude/rules/components.md` lists the named red controls as Impersonate, Pause Admin Changes, Revoke Batch, Email Every Account, Delete Coven and Decline Invitation, and says a page's other deletes use the delete icon.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.20 — Fix Dialog, Sheet And Page Spacing** · 7h
+
+_Story:_ As a steward, I want the Leave and Record a Working dialogs to name actions clearly, so that I know what each button does. As a person on a phone, I want sheets and dialogs to fit, so that I can reach every control. As a person using dialogs and long pages, I want even spacing, so that the screen looks finished.
+
+Minted from the design and UX audit (M17.7). Findings: F-11, F-18, F-22, F-30, F-31, F-32, F-33, F-34, F-35, F-36, F-37, F-63, F-77; each is in `claude-docs/audits/design-ux.md`. It joins these parts: Fix The Leave And Record A Working Dialogs; Fix 375 Layout Faults In Sheets And Dialogs; Even Out Dialog And Page Spacing.
+
+_Acceptance criteria:_
+
+- Promote and Leave stays enabled with New Steward empty; pressing it flags that field and moves focus to it.
+- The complete action is named Complete in both steps of Record a Working, and the dialog tells the user what completing does.
+- The confirm step is titled for the action it confirms.
+- The Filters sheet has an X button in its header and keeps Close at the bottom.
+- A long coven name is truncated in the coven switcher and the chevron stays on the name line.
+- The confirm buttons of the Discard Changes dialog stack instead of wrapping.
+- The wrapped lines of the builder eyebrow are aligned.
+- The Mint Cards dialog has no blank band and no uneven gaps at desktop and 375.
+- The dark eyebrow halo is gone from every dialog.
+- The Share With the Coven switch sits under its label with the gap closed.
+- The member dialog date stays on one line at 375.
+- The date popover stays inside the view and does not cover the top bar.
+- The gap between the intro and the first heading on the terms and privacy pages matches the other document pages.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.21 — Fix Empty Cells And Small Hit Areas** · 3h
+
+_Story:_ As a steward or keeper reading a table, I want an empty cell to say it is empty, so that a gap is not read as a fault. As a person on a phone, I want small buttons to be easy to press, so that I do not miss.
+
+Minted from the design and UX audit (M17.7). Findings: F-16, F-21; each is in `claude-docs/audits/design-ux.md`. It joins these parts: Show One Mark In Empty Cells; Grow Small Buttons To A 24 Pixel Hit Area.
+
+_Acceptance criteria:_
+
+- An empty table cell shows a dash, and a card label with no value shows a dash.
+- Small buttons on the sign-in methods page and the other screens listed have a hit area of at least 24 by 24 CSS pixels, grown by padding.
+- Button labels no longer wrap at 375.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.22 — Fix The Compendium Pages** · 4h
+
+_Story:_ As a reader of the compendium, I want pages that say each thing once, so that I find facts quickly.
+
+Minted from the design and UX audit (M17.7). Findings: F-19, F-20, F-55, F-60; each is in `claude-docs/audits/design-ux.md`.
+
+_Acceptance criteria:_
+
+- The safety note shows once per entry page, and again whenever the page has a caution block.
+- Correspondences shows no empty "No ... recorded" line for a group with no values.
+- The compendium list with no match shows one message and the shared empty state with an action, if the shared empty state offers one.
+- The Correspondences headings use the correct level without any heading becoming larger.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.23 — Draw Staff Help Inside The Keepers Frame** · 3h
+
+_Story:_ As a keeper or curator, I want Staff Help to keep the Keepers frame, so that I can see where I am.
+
+Minted from the design and UX audit (M17.7). Findings: F-4; each is in `claude-docs/audits/design-ux.md`.
+
+_Acceptance criteria:_
+
+- Staff Help pages show the Keepers context bar and the active top-nav tab.
+- The Staff Help index links back to the Keepers hub.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.24 — Tidy The Keeper Screens, Forms And Tab Strips** · 7h
+
+_Story:_ As a keeper, I want form pages to share one width and tab strips to show what is hidden, so that nothing jumps or hides. As a keeper or curator, I want the keeper screens to be compact and clearly labelled, so that I read each fact once.
+
+Minted from the design and UX audit (M17.7). Findings: F-26, F-27, F-28, F-29, F-62, F-65, F-66, F-68, F-72, F-74, F-86, R-1, R-9; each is in `claude-docs/audits/design-ux.md`. It joins these parts: Align Keeper Form Pages And Tab Strips; Tidy The Keeper Screens.
+
+_Acceptance criteria:_
+
+- First check in a browser whether the Documents tab strip already starts at Terms of Use; the owner believes it does.
+- Every tab strip starts at its first tab and shows a fade cue where it clips, so the three hidden support filters at 375 are cued.
+- Keeper form pages use one narrow width, and `.claude/rules/components.md` gains the sentence "Keeper form pages share one narrow width."
+- Download CSV is disabled while the list is empty.
+- `claude-docs/styling.md` and `claude-docs/components/app-shell.md` name the shell bar's Add Ingredient as the exception to "one solid button per view".
+- The Refused Opens intro reads easily at desktop and 375.
+- Each People card is much shorter at 375.
+- The Shown to Readers toggle shows its label once.
+- The sort icon on the keeper help page has an accessible name.
+- The colour sliders show the full words where there is room at 375.
+- The curator compendium table shows a shaded edge where it scrolls under the action column, and the Sourcing Score heading is not clipped.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.25 — Share fieldsRefused And Move The Users Page Assembly** · 4h
+
+_Story:_ As a developer, I want one copy of each helper, so that a change lands once.
+
+Minted from the design and UX audit (M17.7). Findings: F-82, F-83, F-84; each is in `claude-docs/audits/design-ux.md`.
+
+_Acceptance criteria:_
+
+- One `fieldsRefused` export serves the ingredient form and the spell builder.
+- The role and order tables use `DataTable` or carry a comment saying why not.
+- The keeper Users page file does frame work only.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.26 — Split The Large Ingredient And Spell Components By Job** · 6h
+
+_Story:_ As a developer, I want each large component to hold one job, so that a change touches one file.
+
+Minted from the design and UX audit (M17.7). Findings: F-85; each is in `claude-docs/audits/design-ux.md`.
+
+_Acceptance criteria:_
+
+- The row-sliding hook and the GraphQL documents move out of the two ingredient-form files, and the spell builder and reference panel split by job.
+- No file in the list stays over 300 lines with mixed jobs.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.27 — Extend The Pagination Guard To Page-Level Reads** · 3h
+
+_Story:_ As a developer, I want the guard to see fixed limits on pages, so that no page lists without a pager unnoticed.
+
+Minted from the design and UX audit (M17.7). Findings: R-7; each is in `claude-docs/audits/design-ux.md`.
+
+_Acceptance criteria:_
+
+- The pagination guard fails a page that passes `HELP_PAGE_LIMIT` or a literal `limit:` to a service read.
+- The help glossary, the help front page and the staff help index each have a recorded exemption in the guard, with the reason.
+- The guard fails once with a fixed limit put back on the search page, after help search has its pager.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
