@@ -2,13 +2,15 @@
 
 ## Purpose
 
-This is the accessibility audit of every screen the app draws, against WCAG 2.2 levels A and AA, for task M17.9. It measured the screens in a browser, read the code for what a browser cannot show, and ran the audit versions of the two Playwright suites in WebKit, Firefox and a phone profile. It lists each failure and candidate, ranks them, and proposes the tasks that would fix them. It changes no code and mints no task.
+This is the accessibility audit of every screen the app draws, against WCAG 2.2 levels A and AA, for task M17.9. It measured the screens in a browser, read the code for what a browser cannot show, and ran the audit versions of the two Playwright suites in WebKit, Firefox and a phone profile. It lists each failure and candidate, ranks them, and lists the tasks that would fix them. The owner has approved those tasks and adopted the rules in "Proposed Rules". It changes no code and mints no task.
 
 No finding is High. That means no finding stops a person finishing a task. Five findings are Medium and seventeen are Low.
 
 ### What The Owner Needs To Do
 
-I need you to approve, change or drop each task in "Proposed Tasks". Nothing is minted yet. That section proposes five new tasks (MC.28 to MC.32) and additions to two existing tasks (MC.20 and MC.21). I recommend approving all of them.
+Nothing to approve. You approved all five new tasks (MC.28 to MC.32), the additions to MC.20 and MC.21 and all seven rules (R1 to R7), with R4 adopted as a rule. The tasks are approved and minted as MC.28 to MC.32, with additions to MC.20 and MC.21, in `claude-docs/tasks/v1/mc.md`.
+
+The candidate findings that have no task (AX-13 to AX-20 and AX-22) still carry "I need you to choose" lines in their own sections. Those choices are not recorded here.
 
 Nothing else is waiting on you. The two items under "Audit Suite Results" that name the audit server image and the server-start check are tooling faults, and MC.32 covers them.
 
@@ -53,7 +55,7 @@ Within a severity, a proven or measured finding ranks before a candidate, and th
 
 ## Summary
 
-| Id    | Source ids           | Title                                                     | Severity | WCAG criterion                                     | Proposed task           |
+| Id    | Source ids           | Title                                                     | Severity | WCAG criterion                                     | Task                    |
 | ----- | -------------------- | --------------------------------------------------------- | -------- | -------------------------------------------------- | ----------------------- |
 | AX-1  | A-2                  | Header Overflows At 320 Pixels And At Large Text          | Medium   | 1.4.10 Reflow, 1.4.4 Resize Text                   | MC.28                   |
 | AX-2  | A-1                  | Help Search Button Is 20 Pixels Wide                      | Medium   | 2.5.8 Target Size (Minimum)                        | MC.21 (addition)        |
@@ -82,7 +84,7 @@ Within a severity, a proven or measured finding ranks before a candidate, and th
 
 AX-1 to AX-22 are accessibility findings: 0 High, 5 Medium, 17 Low. SX-1 and SX-2 are tooling findings and carry no severity.
 
-I did not propose a task for the candidate findings AX-13 to AX-20 and AX-22. Each is a decision for you, and the finding says what would settle it.
+I did not write a task for the candidate findings AX-13 to AX-20 and AX-22. Each is a decision for you, and the finding says what would settle it.
 
 ## Findings
 
@@ -106,7 +108,7 @@ I did not propose a task for the candidate findings AX-13 to AX-20 and AX-22. Ea
 - **Found:** measured, axe `target-size`. The button is 20 by 44.5 px on the staff pages and 20 by 48 px elsewhere. It sits inside the search input, so the spacing exception does not apply.
 - **Why It Matters:** A target narrower than 24 CSS px is hard to hit with a finger or a tremor, and its neighbours give it no spare room [S1]. I rated it Medium, not High, because pressing Enter in the field submits the same form.
 - **Recommended Fix:** Give `SearchSubmit` a minimum inline size of 24 px (the `$control-height` square, or the existing target-size mixin) and reserve the room in the input's inline padding.
-- **Follow-up Task:** Addition to MC.21 (see "Proposed Tasks")
+- **Follow-up Task:** Addition to MC.21 (see "Proposed Tasks", approved)
 
 ### AX-3 Reordering Needs A Drag Or A Keyboard
 
@@ -197,7 +199,7 @@ I did not propose a task for the candidate findings AX-13 to AX-20 and AX-22. Ea
 - **Found:** measured, axe. The picks are partly obscured, the smallest free area is 57 by 17 px, the spacing is insufficient, and 3 nodes fail.
 - **Why It Matters:** Three adjacent targets under 24 px are easy to mis-hit [S1]. It is Low because it is one screen and the typed fields do the same job.
 - **Recommended Fix:** Raise the block padding to reach 24 px (the `$control-height` token or the target-size mixin) and add a gap between picks.
-- **Follow-up Task:** Addition to MC.21 (see "Proposed Tasks")
+- **Follow-up Task:** Addition to MC.21 (see "Proposed Tasks", approved)
 
 ### AX-11 Duplicate Ids When The Spell Preview Opens
 
@@ -318,7 +320,7 @@ I did not propose a task for the candidate findings AX-13 to AX-20 and AX-22. Ea
 - **Found:** candidate, not proven, marginal. The test reports a height of 23.98 px against 24 px, about 0.02 px short, probably sub-pixel rounding.
 - **Why It Matters:** The target is almost 24 px, so a person would not notice. It fails the test, and the audit suite would stay red.
 - **Recommended Fix:** If the element should be 24 px, set `min-block-size` to 24 px; otherwise give the test a 0.1 px tolerance.
-- **Follow-up Task:** Addition to MC.21 (see "Proposed Tasks")
+- **Follow-up Task:** Addition to MC.21 (see "Proposed Tasks", approved)
 
 ### AX-22 No Guard Fails A Page Without A Title (Candidate)
 
@@ -453,7 +455,7 @@ Story titles are in `.reports/m17.9/findings-suites.md`.
 
 ## Proposed Tasks
 
-These are proposed, not minted. Each is one PR, in the milestone "Z. Cleanup", numbered from MC.28. Hours are my estimates, set from finished tasks of the same kind; no task document records actual time, so the hours in those tasks' headings were used. I checked the open tasks MC.15 to MC.27 in `claude-docs/tasks/v1/mc.md` for each file a finding would edit, by component name and by dialog name.
+The owner approved these tasks. They are approved and minted as MC.28 to MC.32, with additions to MC.20 and MC.21, in `claude-docs/tasks/v1/mc.md`. Each is one PR, in the milestone "Z. Cleanup", numbered from MC.28. Hours are my estimates, set from finished tasks of the same kind; no task document records actual time, so the hours in those tasks' headings were used. I checked the open tasks MC.15 to MC.27 in `claude-docs/tasks/v1/mc.md` for each file a finding would edit, by component name and by dialog name.
 
 Checked and found:
 
@@ -465,18 +467,20 @@ Checked and found:
 
 **Addition to MC.21 — Fix Empty Cells And Small Hit Areas** · from 3h to 5h (+2h, estimate)
 
-Add `AX-2`, `AX-10` and `AX-21` to its findings line. Add these acceptance criteria before the final test-and-lint line:
+Heading becomes `**MC.21 — Fix Empty Cells And Small Hit Areas** · 5h`. Add `AX-2`, `AX-10` and `AX-21` to its findings line, with the note "from `claude-docs/audits/accessibility.md`". Add these acceptance criteria before the final test-and-lint line:
 
 - The help search submit button is at least 24 by 24 CSS pixels on the 13 help screens, and the input reserves room for it, at desktop and 375.
 - The date range quick picks in the keeper date range field are at least 24 CSS pixels tall at 375, with a gap between them.
 - The "Edited just now" control that `card-click.spec.ts` measures at lines 233 and 321 is at least 24 CSS pixels tall in Firefox.
 - A Playwright check measures these three controls at 24 by 24 CSS pixels or larger, so the fault cannot return unseen (a regression test, because the three faults are shipped behaviour).
+- Axe's `target-size` rule is enabled in the sweep in `tests/e2e/axe.ts`, and a target-size mixin exists in `src/scss/_mixins.scss` and is used by the help search button, the date range quick picks and the "Edited just now" control (R2).
+- The R2 rule text is added to `claude-docs/styling.md`, beside the target-size note on chips, with a pointer from `.claude/rules/components.md`, "Styling".
 
 Estimate based on: MB.258 (2h) and M12.56 (1.5h). Both are estimates. The two shared pieces (`SearchSubmit` and `DateRangeField`) are one fix each, and the third is a sub-pixel check that I have not located yet.
 
 **Addition to MC.20 — Fix Dialog, Sheet And Page Spacing** · from 7h to 7.5h (+0.5h, estimate)
 
-Add `AX-9` (the Save Working part) to its findings line and this criterion:
+Heading becomes `**MC.20 — Fix Dialog, Sheet And Page Spacing** · 7.5h`. Add `AX-9` (the Save Working part) to its findings line, with the note "from `claude-docs/audits/accessibility.md`", and this criterion:
 
 - Save Working stays enabled once the people field has text with a required field empty; pressing it flags the empty field and moves focus to it.
 
@@ -495,7 +499,8 @@ _Acceptance criteria:_
 - At a window 320 px wide, no signed-in or public page scrolls sideways because of the header.
 - With the root font at 200% at 1280 px, the header and the section nav do not scroll the page sideways, and the section nav's More overflow follows the font size.
 - Every header control stays reachable by keyboard and by pointer at both settings.
-- A Playwright check fails on sideways page scroll at 320 px and at 200% root font, on one signed-in page and one public page.
+- A Playwright check fails on sideways page scroll at 320 px and at 200% root font, on one signed-in page and one public page (R5).
+- The R5 rule text is added to `.claude/rules/testing.md`, "What a test asserts".
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 
 Estimate based on: MB.264 (2h, the admin nav folds two tabs at desktop width) and MB.258 (2h). The figure is an estimate; there are two header files and one new check.
@@ -513,6 +518,8 @@ _Acceptance criteria:_
 - Move Up is unavailable on the first item and Move Down on the last, without losing focus.
 - Moving an item announces its new position.
 - A component test, with role and label queries, proves that pressing Move Down changes the order (a regression test, because the missing route is shipped behaviour).
+- The `sortable-wiring` guard also fails a sortable list that uses no `GripHandle`, was seen failing once with a drag-only handle put back, and its allowlist is empty (R3).
+- The R3 rule text is added to `.claude/rules/components.md`, "Shared pieces", on the existing `GripHandle` line.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 
 Estimate based on: M12.25 (3h) and M12.47 (3h). The figure is an estimate; it is one shared piece, three call sites and tests.
@@ -529,12 +536,13 @@ _Acceptance criteria:_
 - "Your name was saved." is written into a status region that existed before the text.
 - On forgot-password, the account email form, Send Invitation and the keeper invite, a refused submit moves focus to the error summary or to the invalid field.
 - Sign In stays enabled once any field has text; pressing it with the password empty flags the field and moves focus to it.
-- Regression tests: one per fixed behaviour, asserting the focus target or the status text, by role and label.
+- Regression tests: one per fixed behaviour, asserting the focus target or the status text, by role and label (R4, a check only).
+- The R4 rule text is added to `.claude/rules/components.md`, "Form inputs".
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 
 Estimate based on: M15.35 (4h, the support form validates on send and confirms) and M15.36 (4h, announces its changes). The figure is an estimate, and it is the sum of the parts less repeated branch and PR overhead; The menu-focus criterion that carried about 1h was removed with finding C-2.
 
-**MC.31 — Fix Names, Roles And Contrast Found By The Scans** · 4h
+**MC.31 — Fix Names, Roles And Contrast Found By The Scans** · 5h
 
 _Story:_ As a person using a screen reader or a keyboard, I want every control and table to have a name and be reachable, so that I can read and use it. As a reader on the privacy, terms and compendium pages, I want the small muted text to be readable.
 
@@ -542,8 +550,9 @@ Minted from AX-5 (Suite A1), AX-7 (A-4), AX-8 (A-9), AX-11 (A-10) and AX-12 (A-1
 
 _Acceptance criteria:_
 
-- The role-permission table frame in the help widget takes a Tab stop and has a role and name, as the document page frame does, and `help-widgets.spec.ts:92` passes at phone width.
-- The same frame class in `HelpOutline/order-table.tsx` and `DataTable` is checked, and fixed if it scrolls without a Tab stop.
+- One shared table frame, which sets `role="region"`, `tabIndex` and a name itself, replaces the hand-written frames in `DataTable/index.tsx`, `HelpOutline/order-table.tsx`, `HelpWidget/role-permission-table.tsx`, `RichTextEditor/elements.tsx` and `DocumentPage/markdown.tsx`, and `help-widgets.spec.ts:92` passes at phone width.
+- A guard in `tests/guards/`, in the form of `sortable-wiring`, fails a `data-table-frame` class written outside the shared piece (R1). It was seen failing once with a hand-written frame put back, and its allowlist is empty.
+- The R1 rule text is added to `.claude/rules/components.md`, "Shared pieces".
 - A scrolling dialog body (`readingBody`) has a role and a name from the dialog title.
 - The spell preview opens with no duplicate ids.
 - The curator compendium table keeps its header text in the accessibility tree at 375.
@@ -551,7 +560,7 @@ _Acceptance criteria:_
 - Regression tests: the axe sweeps for the pages and dialogs named above report none of these rules.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 
-Estimate based on: M12.56 (1.5h, a contrast pass) and MB.258 (2h). The figure is an estimate; it is five small fixes in separate files.
+Estimate based on: M12.56 (1.5h, a contrast pass) and MB.258 (2h). The figure is an estimate; it is five small fixes in separate files, plus one shared table frame that replaces the hand-written ones. That frame raised it from 4h to 5h.
 
 **MC.32 — Make The Audit Suites Run In WebKit, Firefox And Phone** · 8h
 
@@ -564,41 +573,37 @@ _Acceptance criteria:_
 - The audit server image tag and server package in `Docker/docker-compose.yaml` take their version from one place, or a check fails when they differ from the `@playwright/test` range in `package.json`.
 - `scripts/e2e-servers.ts` rebuilds when the first port answers, or refuses with a message naming what is on that port.
 - Each test in "Tests That Assume Desktop Chromium" either runs only in the projects where it is valid, with the reason in the skip, or asserts something true in every engine. The phone tests that click the Site nav open the AccountMenu first.
+- A guard in `tests/guards/` reads `Docker/docker-compose.yaml` and `package.json` and fails when the audit image tag or server package differs from the `@playwright/test` range (R6). It was seen failing once with a mismatch put back, and its allowlist is empty.
+- A guard fails a spec that calls `page.pdf(`, sets `forcedColors` or calls `mouse.wheel` without a `test.skip` on the project (R7). It was seen failing once with the skip removed, and its allowlist is empty. Layout assumptions stay review only.
+- The R6 and R7 rule texts are added to `.claude/rules/testing.md`, "Process".
 - The 14 unknown e2e tests and 11 unknown stories are traced once each, and each is fixed or recorded with its cause.
 - The owner runs the two audit suites once; every failure left is listed with its cause.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 
-Estimate based on: M10.25 (3h, the first local audit in WebKit, Firefox and a phone profile), MB.237 (3h, the e2e image) and MB.275 (6h). The figure is an estimate and this is the largest task here; about 24 tests and 2 stories are involved, and the unknown group may need a traced run each. It fits one task, but I would split it in two (harness first, 2h; tests second, 6h) if you prefer smaller PRs.
+Estimate based on: M10.25 (3h, the first local audit in WebKit, Firefox and a phone profile), MB.237 (3h, the e2e image) and MB.275 (6h). The figure is an estimate and this is the largest task here; about 24 tests and 2 stories are involved, and the unknown group may need a traced run each. The owner approved it as one task.
 
 ## Proposed Rules
 
-These are proposed, not added. This audit changes no rule file. I need you to approve, change or drop each rule. Before proposing a check I searched `lint/`, `.stylelintrc.json`, `tests/guards/` and `tests/e2e/axe.ts` for one that already does the job, and read `.claude/rules/components.md` and `.claude/rules/testing.md`. None of the seven rules is stated in them. Where a check exists and misses something, the row says what it misses.
+The owner adopted all seven rules; R4 is adopted as a rule. This audit changes no rule file. Each rule's text enters its rule file in the task that builds its check, not in this audit. Before proposing a check I searched `lint/`, `.stylelintrc.json`, `tests/guards/` and `tests/e2e/axe.ts` for one that already does the job, and read `.claude/rules/components.md` and `.claude/rules/testing.md`. None of the seven rules was stated in them. Where a check exists and misses something, the row says what it misses.
 
 "Mechanism" means a shared piece makes the fault impossible. "Check" means a test can only find it afterwards.
 
-| Id  | Rule text (as it would appear in the rule file)                                                                                                                                                                                          | Findings prevented                                      | Target file and heading                                                                                                                 | Enforcement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Task  |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| R1  | A frame that scrolls sideways is a focusable region with a name. It comes from one shared table frame, and no component writes `data-table-frame` itself.                                                                                | AX-5                                                    | `.claude/rules/components.md`, "Shared pieces"                                                                                          | Mechanism plus guard. The shared frame sets `role="region"`, `tabIndex` and the name, so a caller cannot forget them. A guard in `tests/guards/`, in the form of `sortable-wiring`, fails a `data-table-frame` class outside the shared piece. Today four files write it (`DataTable/index.tsx:102`, `HelpOutline/order-table.tsx:159`, `HelpWidget/role-permission-table.tsx:50`, `RichTextEditor/elements.tsx:84`), and `DocumentPage/markdown.tsx` sets its own region. Axe's `scrollable-region-focusable` already finds the fault, but only on a page a sweep reaches; a phone-width spec found it, not the sweep list. | MC.31 |
-| R2  | A control a pointer presses has a hit area of at least 24 by 24 CSS pixels, or sits inside a sentence, or has 24 px of clear space round it. A control that looks smaller grows its hit area through one target-size mixin.              | AX-2, AX-10, AX-21                                      | `claude-docs/styling.md`, beside the target-size note on chips (line 121), with a pointer from `.claude/rules/components.md`, "Styling" | Mechanism for new controls (a mixin in `src/scss/_mixins.scss`; none exists today, and the chip draws a hand-written `::before`) and a check for the rest: axe's `target-size` rule in the sweep. I did not confirm that `tests/e2e/axe.ts` enables it; the audit lane added it by hand. A mixin cannot reach a control that never calls it, so the sweep is the backstop.                                                                                                                                                                                                                                                   | MC.21 |
-| R3  | Every list a person can reorder by dragging has Move Up and Move Down buttons, and they come from the shared grip handle, so no caller draws a drag-only handle.                                                                         | AX-3                                                    | `.claude/rules/components.md`, "Shared pieces" (the existing `GripHandle` line)                                                         | Mechanism: the buttons live inside `GripHandle`. The existing guard `sortable-wiring` checks where the dnd-kit sensors are wired and does not check for a single-press alternative. I propose it also fails a sortable list that uses no `GripHandle`.                                                                                                                                                                                                                                                                                                                                                                       | MC.29 |
-| R4  | A dialog that closes on success returns focus to its opener and writes the outcome into a status region that was already on the page. A refused submit moves focus to the error summary or the invalid field, in single-field forms too. | AX-4, AX-6                                              | `.claude/rules/components.md`, "Form inputs"                                                                                            | Check only. The existing lint rules cover `useForm` without `FormErrorSummary`; they do not see a single-field form or a dialog close. Playwright assertions on focus and on the status text, one per fixed form. A shared close helper that does both would be a mechanism; I have not designed one. AX-6 alone is Low and would not earn a rule; AX-4 is Medium and does.                                                                                                                                                                                                                                                  | MC.30 |
-| R5  | The header reflows: at a 320 px window, and with the root font at 200%, no page scrolls sideways because of the header.                                                                                                                  | AX-1                                                    | `.claude/rules/testing.md`, "What a test asserts"                                                                                       | Check only. A Playwright assertion that `scrollWidth` does not exceed `clientWidth` on one signed-in page and one public page at both settings. No existing check does this: `viewport-widths.test.ts` only keeps spec widths in step with the breakpoint file.                                                                                                                                                                                                                                                                                                                                                              | MC.28 |
-| R6  | The audit browser server's image tag and server package version equal the `@playwright/test` range in `package.json`.                                                                                                                    | SX-1                                                    | `.claude/rules/testing.md`, "Process"                                                                                                   | Guard. A test in `tests/guards/` reads `Docker/docker-compose.yaml` and `package.json` and fails when they differ. `tests/playwright-config.test.ts` checks only the endpoints, and `browser-server-packages.test.ts` is about the import graph, so neither covers it. The compose file says the match is kept by hand.                                                                                                                                                                                                                                                                                                      | MC.32 |
-| R7  | A spec that needs desktop Chromium (`page.pdf()`, `forcedColors: 'active'`, `mouse.wheel`, a fulfilled redirect, the Site nav at desktop width) skips itself in the other projects with the reason, instead of failing there.            | The tests that assume desktop Chromium (about 24 tests) | `.claude/rules/testing.md`, "Process"                                                                                                   | Guard for the engine-specific calls (`page.pdf(`, `forcedColors`, `mouse.wheel`): the spec must carry a `test.skip` on the project. A guard cannot see layout assumptions (the hidden Site nav, a collapsed "On This Page"); those stay review only. `tests/e2e/fixtures.ts` has a `CHROMIUM_PROJECTS` set, but only for coverage.                                                                                                                                                                                                                                                                                           | MC.32 |
+| Id  | Rule text (as it would appear in the rule file)                                                                                                                                                                                          | Findings prevented                                      | Target file and heading                                                                                                                 | Enforcement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Task  | Owner's Choice |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | -------------- |
+| R1  | A frame that scrolls sideways is a focusable region with a name. It comes from one shared table frame, and no component writes `data-table-frame` itself.                                                                                | AX-5                                                    | `.claude/rules/components.md`, "Shared pieces"                                                                                          | Mechanism plus guard. The shared frame sets `role="region"`, `tabIndex` and the name, so a caller cannot forget them. A guard in `tests/guards/`, in the form of `sortable-wiring`, fails a `data-table-frame` class outside the shared piece. Today four files write it (`DataTable/index.tsx:102`, `HelpOutline/order-table.tsx:159`, `HelpWidget/role-permission-table.tsx:50`, `RichTextEditor/elements.tsx:84`), and `DocumentPage/markdown.tsx` sets its own region. Axe's `scrollable-region-focusable` already finds the fault, but only on a page a sweep reaches; a phone-width spec found it, not the sweep list. | MC.31 | Adopted        |
+| R2  | A control a pointer presses has a hit area of at least 24 by 24 CSS pixels, or sits inside a sentence, or has 24 px of clear space round it. A control that looks smaller grows its hit area through one target-size mixin.              | AX-2, AX-10, AX-21                                      | `claude-docs/styling.md`, beside the target-size note on chips (line 121), with a pointer from `.claude/rules/components.md`, "Styling" | Mechanism for new controls (a mixin in `src/scss/_mixins.scss`; none exists today, and the chip draws a hand-written `::before`) and a check for the rest: axe's `target-size` rule in the sweep. I did not confirm that `tests/e2e/axe.ts` enables it; the audit lane added it by hand. A mixin cannot reach a control that never calls it, so the sweep is the backstop.                                                                                                                                                                                                                                                   | MC.21 | Adopted        |
+| R3  | Every list a person can reorder by dragging has Move Up and Move Down buttons, and they come from the shared grip handle, so no caller draws a drag-only handle.                                                                         | AX-3                                                    | `.claude/rules/components.md`, "Shared pieces" (the existing `GripHandle` line)                                                         | Mechanism: the buttons live inside `GripHandle`. The existing guard `sortable-wiring` checks where the dnd-kit sensors are wired and does not check for a single-press alternative. I propose it also fails a sortable list that uses no `GripHandle`.                                                                                                                                                                                                                                                                                                                                                                       | MC.29 | Adopted        |
+| R4  | A dialog that closes on success returns focus to its opener and writes the outcome into a status region that was already on the page. A refused submit moves focus to the error summary or the invalid field, in single-field forms too. | AX-4, AX-6                                              | `.claude/rules/components.md`, "Form inputs"                                                                                            | Check only. The existing lint rules cover `useForm` without `FormErrorSummary`; they do not see a single-field form or a dialog close. Playwright assertions on focus and on the status text, one per fixed form. A shared close helper that does both would be a mechanism; I have not designed one. AX-6 alone is Low and would not earn a rule; AX-4 is Medium and does.                                                                                                                                                                                                                                                  | MC.30 | Adopted        |
+| R5  | The header reflows: at a 320 px window, and with the root font at 200%, no page scrolls sideways because of the header.                                                                                                                  | AX-1                                                    | `.claude/rules/testing.md`, "What a test asserts"                                                                                       | Check only. A Playwright assertion that `scrollWidth` does not exceed `clientWidth` on one signed-in page and one public page at both settings. No existing check does this: `viewport-widths.test.ts` only keeps spec widths in step with the breakpoint file.                                                                                                                                                                                                                                                                                                                                                              | MC.28 | Adopted        |
+| R6  | The audit browser server's image tag and server package version equal the `@playwright/test` range in `package.json`.                                                                                                                    | SX-1                                                    | `.claude/rules/testing.md`, "Process"                                                                                                   | Guard. A test in `tests/guards/` reads `Docker/docker-compose.yaml` and `package.json` and fails when they differ. `tests/playwright-config.test.ts` checks only the endpoints, and `browser-server-packages.test.ts` is about the import graph, so neither covers it. The compose file says the match is kept by hand.                                                                                                                                                                                                                                                                                                      | MC.32 | Adopted        |
+| R7  | A spec that needs desktop Chromium (`page.pdf()`, `forcedColors: 'active'`, `mouse.wheel`, a fulfilled redirect, the Site nav at desktop width) skips itself in the other projects with the reason, instead of failing there.            | The tests that assume desktop Chromium (about 24 tests) | `.claude/rules/testing.md`, "Process"                                                                                                   | Guard for the engine-specific calls (`page.pdf(`, `forcedColors`, `mouse.wheel`): the spec must carry a `test.skip` on the project. A guard cannot see layout assumptions (the hidden Site nav, a collapsed "On This Page"); those stay review only. `tests/e2e/fixtures.ts` has a `CHROMIUM_PROJECTS` set, but only for coverage.                                                                                                                                                                                                                                                                                           | MC.32 | Adopted        |
 
 Considered and dropped:
 
 - **Muted text over art (AX-7), duplicate ids (AX-11) and a scrolling dialog body (AX-8):** each is Low, and axe already finds the last two. A guard would repeat the sweep.
 - **Generic link names, the required-marker key and skip links:** candidates only.
 
-Each rule's check rides in the task named in its row. These lines are to be added to that task's criteria if you approve the rule:
-
-- MC.21 (addition): axe's `target-size` is enabled in the sweep, and the target-size mixin exists and is used by the three controls.
-- MC.28: the Playwright reflow check already in its criteria is R5.
-- MC.29: `GripHandle` carries the buttons, and `sortable-wiring` fails a sortable list without it (R3).
-- MC.30: the focus and status assertions already in its criteria are R4.
-- MC.31: one shared table frame replaces the hand-written ones, and a guard fails a new one (R1).
-- MC.32: the version guard (R6) and the engine-call guard (R7), each seen failing once with the fault put back.
+Each rule's check, and a criterion that adds its text to the file and heading in its row, are folded into the criteria of the task named in its row: R1 in MC.31, R2 in MC.21 (addition), R3 in MC.29, R4 in MC.30, R5 in MC.28, and R6 and R7 in MC.32. A code guard's criterion says it was seen failing once with the fault put back and that its allowlist is empty.
 
 ## Left As It Is
 
