@@ -29,7 +29,7 @@ const IconTip = ({
   );
   // Asked as the tip opens, so a hover's wait that ends with the menu open opens nothing.
   const canOpen = useCallback(() => !menuOpen(), [menuOpen]);
-  const { open, show, showSoon, hide, anchor, bubble, bubbleStyle } = useTip(
+  const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip(
     canOpen,
     SIDES[placement],
     TIMING,
@@ -71,7 +71,8 @@ const IconTip = ({
       ref={setWrapper}
       className={`icon-tip icon-tip--${placement}`}
       onMouseEnter={showSoon}
-      onMouseLeave={hide}
+      // A tip a press opens keeps to the shared rule that a focused control holds its tip open.
+      onMouseLeave={opensOnPress ? hideSoon : hide}
       // Not for a focus inside the control's own menu, which bubbles here too: the open menu says what the control does.
       onFocus={(event) => {
         if (!(event.target as Element).closest('[role="menu"]')) show();

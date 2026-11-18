@@ -15,6 +15,7 @@ import type { userAccessPauses } from '../../modules/identity/schema/user-access
 import type { workspaceMemberPauses } from '../../modules/coven/schema/workspace-member-pauses';
 import type { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import type { auditColumns, users } from '../../modules/identity/schema/users';
+import type { deities } from '../../modules/vocabulary/schema/deities';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type {
@@ -218,6 +219,11 @@ export interface JoinedRow<TRow, TJoined> {
   row: TRow;
   joined: TJoined | null;
 }
+
+export type IngredientDeityLink = JoinedRow<
+  typeof ingredientDeities.$inferSelect,
+  typeof deities.$inferSelect
+>;
 
 export interface Derived<TRow extends Record<string, unknown>> {
   source: SQL;

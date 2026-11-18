@@ -732,3 +732,70 @@ $replaces-gap: space(5);
     margin-block-end: 1.0625rem;
   }
 }
+
+// The anchor is inline, not the mixin's flex box, so a long value wraps between its words like the text around it.
+.ingredient-entry__value-anchor {
+  @include tip-anchor;
+
+  display: inline;
+  vertical-align: baseline;
+}
+
+.ingredient-entry__value {
+  cursor: default;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2em;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// Placed by `useTip`, one layer above ordinary tips; inside the anchor, so the pointer can rest on it.
+.ingredient-entry__value-card {
+  @include tip-card(layer('floating'));
+
+  // A floor, so a card with one short name is not a sliver beside the others.
+  min-width: 12rem;
+}
+
+.ingredient-entry__card-eyebrow {
+  line-height: 1.65;
+}
+
+.ingredient-entry__card-eyebrow,
+.ingredient-entry__card-section,
+.ingredient-entry__card-label,
+.ingredient-entry__card-list,
+.ingredient-entry__card-item {
+  display: block;
+}
+
+.ingredient-entry__card-title {
+  @include tip-card-title;
+}
+
+.ingredient-entry__card-section {
+  margin-block-start: space(2);
+}
+
+.ingredient-entry__card-label {
+  color: $text-muted;
+  font-size: type-size('overline');
+  font-weight: 500;
+}
+
+.ingredient-entry__card-list--chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  margin-block-start: space(1);
+}
+
+.ingredient-entry__card-chip {
+  @include chip($text-primary, $text-primary, $state: quiet);
+}

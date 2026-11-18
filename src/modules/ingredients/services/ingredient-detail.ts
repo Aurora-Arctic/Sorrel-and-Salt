@@ -2,6 +2,7 @@ import 'server-only';
 import { answerOf, Forbidden, NotFound } from '../../../lib/errors';
 import { NO_INGREDIENT } from './messages';
 import type { Session } from '../../../lib/session';
+import { deityDetailsOf } from './deity-details';
 import { getCupboardEntry, heldCompendiumEntry, isRetired } from './cupboard-entries';
 import {
   categoriesOf,
@@ -14,19 +15,12 @@ import {
   substitutesOfVariants,
   variantsOf,
 } from './ingredient-children';
-import {
-  categoryGroupsOf,
-  deityOtherNamesOf,
-  deityTraditionsOf,
-  formChoicesOf,
-  formGroupsOf,
-} from '@/modules/vocabulary';
+import { categoryGroupsOf, formChoicesOf, formGroupsOf } from '@/modules/vocabulary';
 import { type Membership, assertMembership } from '@/modules/coven';
 import type {
   CategoryDetail,
   CupboardEntryRow,
   CategoryRow,
-  DeityDetail,
   IngredientDetail,
   IngredientRow,
   SubstituteDetail,
@@ -75,8 +69,7 @@ export async function ingredientDetailOf(
     ingredientId,
     workspaceId,
   }));
-  const picked = deities.flatMap(({ deity }) => deity ?? []);
-  const [variantCategories, variantSubstitutes, variantReferences, traditions, otherNames, forms] =
+  const [variantCategories, variantSubstitutes, variantReferences, deityDetails, forms] =
     await Promise.all([
       categoriesOfVariants(session, variantRefs, heldBy).then((answers) =>
         answers.map((a) => answerOf(a)),
@@ -87,8 +80,7 @@ export async function ingredientDetailOf(
       referencesOfVariants(session, variantRefs, heldBy).then((answers) =>
         answers.map((a) => answerOf(a)),
       ),
-      deityTraditionsOf(picked.map((deity) => deity.traditionId)),
-      deityOtherNamesOf(picked.map((deity) => deity.id)),
+      deityDetailsOf(deities),
       formChoicesOf(variants.flatMap(({ formId }) => formId ?? [])),
     ]);
 
@@ -120,9 +112,6 @@ export async function ingredientDetailOf(
       const group = groupOf.get(category.groupId);
       return group ? [{ category, group }] : [];
     });
-
-  const traditionOf = new Map(picked.map((deity, i) => [deity.id, nameOf(traditions[i])]));
-  const otherNamesOf = new Map(picked.map((deity, i) => [deity.id, otherNames[i]]));
 
   // A form's icon is its curated form's group's; an uncurated form has none,
   // and neither does one whose form or group has since been retired.
@@ -161,11 +150,7 @@ export async function ingredientDetailOf(
     cupboardEntry,
     folkNames: folkNames.map(({ name }) => name),
     categories: withGroup(categories),
-    deities: deities.map(({ name, deity }): DeityDetail => ({
-      name,
-      tradition: deity ? (traditionOf.get(deity.id) ?? null) : null,
-      otherNames: deity ? (otherNamesOf.get(deity.id) ?? []) : [],
-    })),
+    deities: deityDetails,
     substitutes: substitutes.map(toSubstitute),
     references,
     variants: variants.map((variant, i): VariantDetail => {
@@ -204,8 +189,4 @@ async function retiredEntryHeld(
   const held = await heldCompendiumEntry(membership, entry.id);
   if (!held) throw new NotFound(NO_INGREDIENT);
   return { membership, cupboardEntry: held.cupboardEntry };
-}
-
-function nameOf(group: { name: string } | Error | undefined): string | null {
-  return group === undefined || group instanceof Error ? null : group.name;
 }

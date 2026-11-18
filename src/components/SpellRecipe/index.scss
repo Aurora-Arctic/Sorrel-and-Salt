@@ -81,7 +81,8 @@
   // The page's `section` rule (_layout.scss) outweighs the panels' class alone and widens this to
   // space(4).
   > .comparison-panel,
-  > .spell-inventory {
+  > .spell-inventory,
+  > .spell-recipe__correspondences {
     gap: space(2);
     margin-block: 0;
   }
@@ -436,7 +437,8 @@
 
 .spell-recipe .spell-recipe__steps,
 .spell-recipe .comparison-panel,
-.spell-recipe .spell-inventory {
+.spell-recipe .spell-inventory,
+.spell-recipe .spell-recipe__correspondences {
   scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 }
 

@@ -45,7 +45,7 @@ export const SpellRecipeSkeleton = () => (
     </div>
     <PageNav
       label="On This Page"
-      entries={recipeMenu({ steps: true, aside: true, workings: true })}
+      entries={recipeMenu({ steps: true, aside: true, correspondences: true, workings: true })}
       pending
     />
     <div className="spell-recipe__columns">

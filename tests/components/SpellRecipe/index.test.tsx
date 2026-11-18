@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import SpellWorkings from '@/components/SpellWorkings';
@@ -7,6 +7,8 @@ import SpellRecipe from '@/components/SpellRecipe';
 import SpellRecipeBody from '@/components/SpellRecipe/body';
 import SpellRecipeSummary from '@/components/SpellRecipe/summary';
 import type { RecipeStep, SpellRecipeProps } from '@/components/SpellRecipe';
+import { sourcedCorrespondences } from '@/components/IngredientEntry/blocks';
+import type { Row } from '@/components/IngredientEntry/blocks';
 import { expectBefore, isBefore } from '../../support/interact';
 
 vi.mock('next/navigation', async () => ({
@@ -386,6 +388,199 @@ describe('SpellRecipe', () => {
     it('keeps Steps and Workings when there is no side column', () => {
       render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], workings })} />);
       expect(linksOf().map((link) => link.textContent)).toEqual(['Steps', 'Workings']);
+    });
+  });
+});
+
+describe("the side column's Correspondences", () => {
+  const ROOT = 'Testroot (Testform)';
+  const BARK = 'Testbark (Testform)';
+  const MOSS = 'Fixture Moss (Dried Leaf)';
+  const ROWS = sourcedCorrespondences(
+    {
+      elements: [{ value: 'fire', sources: [ROOT] }],
+      celestialBodies: [],
+      zodiacSigns: [],
+      colors: [
+        { value: 'blue', sources: [ROOT, BARK, MOSS] },
+        { value: 'green', sources: [BARK] },
+      ],
+    },
+    [
+      {
+        value: {
+          name: 'Fixtura',
+          tradition: 'Fixture Pantheon',
+          otherNames: ['Fixtra', 'Testura'],
+        },
+        sources: [BARK, ROOT],
+      },
+      { value: { name: 'Testis', tradition: null, otherNames: [] }, sources: [MOSS] },
+    ],
+  );
+  const drawn = (correspondences: Row[]) =>
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [instruction('s1', 'Stir.')],
+          aside: (
+            <SpellRecipeAside
+              steps={[]}
+              doors={[]}
+              intended={[]}
+              groups={[]}
+              correspondences={correspondences}
+            />
+          ),
+        })}
+      />,
+    );
+  const block = () => within(screen.getByRole('region', { name: 'Correspondences' }));
+  const itemsOf = (tip: HTMLElement, name: string) =>
+    within(within(tip).getByRole('list', { name }))
+      .getAllByRole('listitem')
+      .map((item) => item.textContent);
+
+  it('draws the block in the side column under a Correspondences heading, after In the Cupboard', () => {
+    drawn(ROWS);
+    const side = within(screen.getByRole('complementary', { name: 'The Cupboard' }));
+    const region = side.getByRole('region', { name: 'Correspondences' });
+    expect(
+      within(region).getByRole('heading', { level: 2, name: 'Correspondences' }),
+    ).toBeVisible();
+    expectBefore(side.getByRole('region', { name: 'In the Cupboard' }), region);
+    expect(
+      within(region)
+        .getAllByRole('definition')
+        .map((value) => value.textContent),
+    ).toEqual([
+      expect.stringContaining('Fire'),
+      expect.stringMatching(/Blue.*Green/),
+      expect.stringMatching(/Fixtura.*Testis/),
+    ]);
+  });
+
+  it('leaves out a row no ingredient gives a value', () => {
+    drawn(ROWS);
+    expect(
+      block()
+        .getAllByRole('term')
+        .map((term) => term.textContent),
+    ).toEqual(['Elements', 'Colours', 'Deities']);
+  });
+
+  it('draws no Correspondences heading when every row is empty', () => {
+    drawn(ROWS.map((row) => ({ ...row, values: [], sources: [] })));
+    // The side column is drawn, so the block's absence is its own.
+    expect(screen.getByRole('region', { name: 'In the Cupboard' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Correspondences' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Correspondences' })).toBeNull();
+  });
+
+  it('makes each value a control whose card names it and lists under Given By the ingredients that gave it, in step order', () => {
+    drawn(ROWS);
+    const blue = block().getByRole('button', { name: 'Blue' });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+
+    act(() => blue.focus());
+
+    expect(blue).toHaveFocus();
+    const tip = screen.getByRole('tooltip');
+    expect(within(tip).getByText('Blue')).toBeInTheDocument();
+    expect(itemsOf(tip, 'Given By')).toEqual([ROOT, BARK, MOSS]);
+    act(() => blue.blur());
+    act(() => block().getByRole('button', { name: 'Fire' }).focus());
+    expect(itemsOf(screen.getByRole('tooltip'), 'Given By')).toEqual([ROOT]);
+  });
+
+  it('names a deity by its name and tradition alone, its card giving the tradition, each other name under Also Called, and the ingredients that gave it', () => {
+    drawn(ROWS);
+    // The exact name: the other names are in the card, not the row.
+    const fixtura = block().getByRole('button', { name: 'Fixtura (Fixture Pantheon)' });
+
+    act(() => fixtura.focus());
+
+    const tip = screen.getByRole('tooltip');
+    expectBefore(within(tip).getByText('Fixture Pantheon'), within(tip).getByText('Fixtura'));
+    expect(itemsOf(tip, 'Also Called')).toEqual(['Fixtra', 'Testura']);
+    expect(itemsOf(tip, 'Given By')).toEqual([BARK, ROOT]);
+  });
+
+  it('gives a deity with no tradition and no other names a card of its name and the ingredients that gave it alone', () => {
+    drawn(ROWS);
+    const testis = block().getByRole('button', { name: 'Testis' });
+
+    act(() => testis.focus());
+
+    const tip = screen.getByRole('tooltip');
+    expect(within(tip).getByText('Testis')).toBeInTheDocument();
+    expect(itemsOf(tip, 'Given By')).toEqual([MOSS]);
+    expect(within(tip).queryByRole('list', { name: 'Also Called' })).toBeNull();
+  });
+
+  it("describes each value by its closed card, for a screen reader: the ingredients that gave it, and a deity's tradition and other names", () => {
+    drawn(ROWS);
+    const blue = block().getByRole('button', { name: 'Blue' });
+    const fixtura = block().getByRole('button', { name: 'Fixtura (Fixture Pantheon)' });
+
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    for (const source of [ROOT, BARK, MOSS]) {
+      expect(blue).toHaveAccessibleDescription(expect.stringContaining(source));
+    }
+    for (const part of ['Fixture Pantheon', 'Fixtra', 'Testura', BARK, ROOT]) {
+      expect(fixtura).toHaveAccessibleDescription(expect.stringContaining(part));
+    }
+  });
+
+  describe('in the jump menu', () => {
+    const linksOf = () =>
+      within(screen.getByRole('navigation', { name: 'On This Page' })).getAllByRole('link');
+    const workings = (
+      <SpellWorkings workings={[]} completeAction={() => null} editAction={() => null} />
+    );
+    const withBlock = (correspondences: boolean) =>
+      render(
+        <SpellRecipe
+          {...props({
+            steps: [instruction('s1', 'Stir.')],
+            workings,
+            correspondences,
+            aside: (
+              <SpellRecipeAside
+                steps={[]}
+                doors={[]}
+                intended={[]}
+                groups={[]}
+                correspondences={correspondences ? ROWS : []}
+              />
+            ),
+          })}
+        />,
+      );
+
+    it('lists Correspondences after In the Cupboard, its link pointing at the block', () => {
+      withBlock(true);
+      expect(linksOf().map((link) => link.textContent)).toEqual([
+        'Steps',
+        'Category Match',
+        'In the Cupboard',
+        'Correspondences',
+        'Workings',
+      ]);
+      const link = screen.getByRole('link', { name: 'Correspondences' });
+      const target = document.getElementById(link.getAttribute('href')!.slice(1));
+      expect(target).toBe(screen.getByRole('region', { name: 'Correspondences' }));
+    });
+
+    it('lists no Correspondences entry when the spell has none', () => {
+      withBlock(false);
+      // The side column's other entries are listed, so the missing one is the block's doing.
+      expect(linksOf().map((link) => link.textContent)).toEqual([
+        'Steps',
+        'Category Match',
+        'In the Cupboard',
+        'Workings',
+      ]);
     });
   });
 });

@@ -66,13 +66,15 @@ git show --stat HEAD
 npm test -- tests/path/to/the-file.test.ts
 ```
 
-Run only the test files the layer touches. A good result: the commit touches only files under `tests/`; every criterion has a test; and the run fails for the reason the criterion names (a missing function or a wrong result), not a syntax error or an unrelated failure. Read each test and ask whether it would still pass with the feature removed. If so, it proves nothing (`CLAUDE.md`, "Testing"). Under Claude Code, Vitest prints nothing unless you run it with `env -u CLAUDECODE npm test -- <file>`.
+Run only the test files the layer touches. A good result: the commit touches only files under `tests/`, plus the empty shells described below; every criterion has a test; and the run fails for the reason the criterion names (a missing function or a wrong result), not a syntax error or an unrelated failure. Read each test and ask whether it would still pass with the feature removed. If so, it proves nothing (`CLAUDE.md`, "Testing"). Under Claude Code, Vitest prints nothing unless you run it with `env -u CLAUDECODE npm test -- <file>`.
+
+**Empty shells.** The pre-commit hook and a lower layer's checks both run the type check, so a test that names a function, type, or prop that does not exist yet cannot be committed as it stands. The tests layer therefore also carries an empty shell in `src/` for each such name: the type, an optional prop that is accepted and ignored, or a function that only throws `Not implemented`. A shell holds no logic, so every new test still fails when run. Never get past the type check with `--no-verify` or with `@ts-expect-error` in a test: a later layer must not have to edit a test.
 
 **With an agent.** Paste:
 
-> Write only the tests for the acceptance criteria of task M17.31, following `.claude/rules/testing.md`. Write no implementation. Run each new test file on its own, show me that each fails and why, commit the tests alone with `git commit`, and stop. Do not write the implementation until I say so.
+> Write only the tests for the acceptance criteria of task M17.31, following `.claude/rules/testing.md`. Write no implementation, except an empty shell for each new function, type, or prop a test names, so that the type check passes. Run each new test file on its own, show me that each fails and why, commit the tests alone with `git commit`, and stop. Do not write the implementation until I say so.
 
-The agent must not write the implementation in the same layer, and must not run the full suites (`test:coverage`, `test:stories`, the full e2e run) unless you say so.
+The agent must not write the implementation in the same layer beyond those shells, and must not run the full suites (`test:coverage`, `test:stories`, the full e2e run) unless you say so.
 
 The tests-first layer is its own pull request in a stack. It fails by design until the implementation layers land, so it is read before its tests pass and is never merged alone.
 

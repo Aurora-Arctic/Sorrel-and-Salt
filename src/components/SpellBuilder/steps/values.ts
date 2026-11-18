@@ -2,7 +2,7 @@ import { hasText } from '@/lib/text';
 import { parseQuantity, showQuantity } from '@/lib/formats';
 import type { SpellBuilderStep } from '../types';
 import type { Unit } from '@/modules/ingredients/schema/units';
-import { formLabel } from '@/modules/ingredients/validation/form-label';
+import { stepLabelOf } from '@/modules/grimoire/validation/step-label';
 import { UNMEASURABLE_UNIT, measurable } from '@/modules/grimoire/validation/step-unit';
 import type { SpellStepSend, SpellStepValue, StepCategory, StepJar } from './types';
 import type { SafetyMarkProps } from '../../SafetyNote/types';
@@ -234,7 +234,7 @@ export function stepNameOf({ name, form, body }: SpellStepValue): string {
       ? `${text.slice(0, INSTRUCTION_NAME_LENGTH).trimEnd()}…`
       : text;
   }
-  return form ? `${name} (${formLabel(form)})` : name;
+  return stepLabelOf(name, form);
 }
 
 const blankInstruction = (step: SpellStepValue): boolean =>

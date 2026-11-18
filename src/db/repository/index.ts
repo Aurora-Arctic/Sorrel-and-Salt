@@ -59,6 +59,7 @@ export {
   findWorkspaceIngredientByIdentity,
   findWorkspaceIngredientCount,
   findWorkspaceIngredientPage,
+  findDeitiesOfSpellIngredientsIncludingSoftDeleted,
 } from './ingredients';
 export { findCompendiumFacets, findWorkspaceIngredientFacets } from './ingredient-facets';
 export {
@@ -244,6 +245,7 @@ export {
 } from './sign-in-failures';
 export type { PrivilegeDeclaration } from '../types';
 export type {
+  IngredientDeityLink,
   StandingTimeout,
   WorkingDeductionRow,
   WorkingParticipantRow,

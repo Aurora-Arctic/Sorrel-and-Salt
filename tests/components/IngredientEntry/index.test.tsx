@@ -24,7 +24,13 @@ import {
 } from '@/components/IngredientEntry/lazy-forms';
 import { router } from '../../support/next-navigation';
 import { renderWithQuery } from '../../support/render-with-query';
-import { expectBefore, isBefore } from '../../support/interact';
+import { expectBefore, isBefore, press } from '../../support/interact';
+import {
+  deitiesRow,
+  expectNamedDeityCard,
+  NAMED_DEITY,
+  namedDeityButton,
+} from '../../support/deity-card';
 
 vi.mock('@/components/IngredientForm', () => ({
   default: ({
@@ -470,6 +476,76 @@ describe('IngredientEntry', () => {
       expect(beneathDetails ?? besideDetails).not.toBeNull();
     },
   );
+
+  describe("a deity's card", () => {
+    it('draws a deity with no other names, and every value of the other four rows, as plain text with no control and no tip, since one ingredient is its only source', () => {
+      renderEntry({
+        detail: detail({
+          entry: entryRow({ zodiacSigns: ['Fixture Sign'], colors: ['blue'] }),
+          deities: [
+            { name: 'Testis', tradition: 'Fixture Pantheon', otherNames: [] },
+            { name: 'Mockis', tradition: null, otherNames: ['Mockon'] },
+          ],
+        }),
+      });
+      const definitions = screen.getAllByRole('definition');
+
+      for (const text of ['Fire', 'Fixture Moon', 'Fixture Sign', 'Blue']) {
+        const value = definitions.find((definition) => definition.textContent === text);
+        expect(value, text).toBeDefined();
+        if (!value) continue;
+        expect(within(value).queryAllByRole('button')).toHaveLength(0);
+        expect(within(value).queryAllByRole('tooltip', { hidden: true })).toHaveLength(0);
+      }
+      // The row's one control is the deity with other names, so Testis is plain by its own lack of them.
+      expect(
+        within(deitiesRow())
+          .getAllByRole('button')
+          .map((button) => button.textContent),
+      ).toEqual(['Mockis']);
+      expect(deitiesRow()).toHaveTextContent(/Testis \(Fixture Pantheon\)/);
+    });
+
+    it('opens, for a deity with other names, a card of its tradition, its name and each other name under Also Called, with no Given By', () => {
+      renderEntry({ detail: detail({ deities: [NAMED_DEITY] }) });
+      expectNamedDeityCard();
+    });
+
+    it('describes the deity by its closed card, for a screen reader', () => {
+      renderEntry({ detail: detail({ deities: [NAMED_DEITY] }) });
+      const fixtura = namedDeityButton();
+
+      expect(screen.queryByRole('tooltip')).toBeNull();
+      for (const part of ['Fixture Pantheon', 'Fixtra', 'Testura']) {
+        expect(fixtura).toHaveAccessibleDescription(expect.stringContaining(part));
+      }
+    });
+
+    it('keeps the card open after a press, and closes it on a second press, a press outside, Escape or leaving the control', () => {
+      renderEntry({ detail: detail({ deities: [NAMED_DEITY] }) });
+      const fixtura = namedDeityButton();
+      const open = () => {
+        press(fixtura);
+        expect(screen.getByRole('tooltip')).toBeInTheDocument();
+      };
+
+      open();
+      fireEvent.click(fixtura);
+      expect(screen.queryByRole('tooltip')).toBeNull();
+
+      open();
+      fireEvent.pointerDown(document.body);
+      expect(screen.queryByRole('tooltip')).toBeNull();
+
+      open();
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(screen.queryByRole('tooltip')).toBeNull();
+
+      open();
+      act(() => fixtura.blur());
+      expect(screen.queryByRole('tooltip')).toBeNull();
+    });
+  });
 
   it('links a linked substitute to its page, naming the form a form link names, and leaves a typed one as text', () => {
     renderEntry();

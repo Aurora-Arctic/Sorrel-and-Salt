@@ -5,6 +5,7 @@ import type { CategoryDetail, IngredientDetail, VariantDetail } from '@/modules/
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { entryDetail } from '../../support/entry-detail';
 import { expectBefore } from '../../support/interact';
+import { deitiesRow, expectNamedDeityCard, NAMED_DEITY } from '../../support/deity-card';
 
 // claude-docs/components/ingredient-entry.md, "The details modal"
 
@@ -99,12 +100,12 @@ describe('IngredientSummary', () => {
     expect(rowOf('Deities')).toBe('Fixtura (Fixture Pantheon)');
   });
 
-  it('names each deity with its tradition and its other names', () => {
+  it('names each deity by its name and tradition, a deity with other names opening a card of them and one with none staying plain text', () => {
     render(
       <IngredientSummary
         detail={full({
           deities: [
-            { name: 'Fixtura', tradition: 'Fixture Pantheon', otherNames: ['Fixtra', 'Testura'] },
+            NAMED_DEITY,
             { name: 'Mockis', tradition: null, otherNames: ['Mockon'] },
             { name: 'Testis', tradition: null, otherNames: [] },
           ],
@@ -112,9 +113,14 @@ describe('IngredientSummary', () => {
       />,
     );
 
-    expect(rowOf('Deities')).toBe(
-      'Fixtura (Fixture Pantheon; also called Fixtra, Testura), Mockis (also called Mockon), Testis',
-    );
+    // The exact names: the other names are in the card, not the row.
+    expect(
+      within(deitiesRow())
+        .getAllByRole('button')
+        .map((button) => button.textContent),
+    ).toEqual(['Fixtura (Fixture Pantheon)', 'Mockis']);
+    expect(deitiesRow()).toHaveTextContent(/Testis/);
+    expectNamedDeityCard();
   });
 
   describe('the disclaimer', () => {
