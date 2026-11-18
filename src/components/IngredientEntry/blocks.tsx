@@ -15,10 +15,10 @@ export interface Row {
   sources?: string[][];
 }
 
-type Correspondences = Pick<
-  IngredientRow,
-  'elements' | 'celestialBodies' | 'zodiacSigns' | 'colors'
->;
+// Elements are plain text here: the spell page's combined values arrive as strings, not the column's enum.
+type Correspondences = Pick<IngredientRow, 'celestialBodies' | 'zodiacSigns' | 'colors'> & {
+  elements: readonly string[] | null;
+};
 
 export function correspondences(source: Correspondences, deities?: readonly DeityDetail[]): Row[] {
   const rows: Row[] = [

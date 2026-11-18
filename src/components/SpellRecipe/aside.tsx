@@ -1,18 +1,24 @@
 'use client';
 
 import { type ReactElement, useMemo } from 'react';
+import { CorrespondenceBlock } from '../IngredientEntry/blocks';
 import { QuickLookLink } from '../IconTip';
 import { DETAILS_PLACE, detailsHeading } from '../IngredientEntry/details';
 import { ComparisonPanel } from '../SpellBuilder/comparison-panel';
 import { InCovenInventory, type LineDoors } from '../SpellBuilder/inventory';
 import type { SpellStepValue } from '../SpellBuilder/steps/types';
-import { CATEGORY_MATCH_ID, INVENTORY_ID } from './sections';
+import {
+  CATEGORY_MATCH_ID,
+  CORRESPONDENCES_ID,
+  CORRESPONDENCES_TITLE_ID,
+  INVENTORY_ID,
+} from './sections';
 import type { SpellRecipeAsideProps } from './types';
 // The two panels' own stylesheet, which the builder's also uses; the column loads it itself
 // rather than the builder's whole stylesheet.
 import '../SpellBuilder/panels.scss';
 
-// The recipe page's side column of Category Match and In the Cupboard, read-only here, beside the text past tablet width and beneath it on a phone; a client part
+// The recipe page's side column of Category Match, In the Cupboard and Correspondences, read-only here, beside the text past tablet width and beneath it on a phone; a client part
 // (claude-docs/components/spell-recipe.md, "The side column").
 
 export default function SpellRecipeAside({
@@ -20,6 +26,7 @@ export default function SpellRecipeAside({
   doors,
   intended,
   groups,
+  correspondences = [],
 }: SpellRecipeAsideProps): ReactElement {
   const colours = useMemo(() => new Map(groups), [groups]);
   const doorsByStep = useMemo(() => new Map(doors.map((door) => [door.stepId, door])), [doors]);
@@ -38,6 +45,7 @@ export default function SpellRecipeAside({
       edit: door.stock ?? undefined,
     };
   };
+  const rows = correspondences.filter((row) => row.values.length > 0);
   return (
     <>
       {/* Category Match first, over the inventory: the builder's order reversed. */}
@@ -49,6 +57,19 @@ export default function SpellRecipeAside({
         id={CATEGORY_MATCH_ID}
       />
       <InCovenInventory id={INVENTORY_ID} steps={steps} doorsOf={doorsOf} />
+      {rows.length > 0 && (
+        <section
+          id={CORRESPONDENCES_ID}
+          className="spell-recipe__correspondences"
+          aria-labelledby={CORRESPONDENCES_TITLE_ID}
+        >
+          <CorrespondenceBlock
+            block={{ id: CORRESPONDENCES_TITLE_ID, labelledBy: CORRESPONDENCES_TITLE_ID }}
+            rows={rows}
+            level={2}
+          />
+        </section>
+      )}
     </>
   );
 }
