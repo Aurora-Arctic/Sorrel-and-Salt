@@ -2338,6 +2338,12 @@
     @include visually-hidden;
   }
 
+  // A day as `Day` draws it, `YYYY-MM-DD`, is one word to the eye: a narrow line moves it whole rather than breaking
+  // it at a hyphen.
+  .day {
+    white-space: nowrap;
+  }
+
   // A comma heard but not seen, between two parts of a name read as one, as in a dialog's "Edit Deity,
   // Testra, Greek". Drawn at no size rather than `.visually-hidden`, whose box is taken out of the
   // flow: Chrome then puts a space either side of it in the name.
