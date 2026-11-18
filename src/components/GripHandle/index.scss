@@ -1,0 +1,19 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Move Up and Move Down beside a grip: the shared icon button, its chevron turned up for Move Up. At the end of its list a
+// button stays focusable and is drawn faded, never `disabled`.
+.grip-handle__move {
+  @include icon-button;
+
+  flex: none;
+
+  &[aria-disabled='true'] {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.grip-handle__up {
+  transform: rotate(180deg);
+}

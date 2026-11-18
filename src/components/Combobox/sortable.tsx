@@ -10,6 +10,7 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove, SortableContext, type SortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { type ReactElement, useId, useRef } from 'react';
+import { SortableMoveContext } from '@/lib/sortable/move';
 import {
   MOVE_KEYS,
   SORTABLE_INSTRUCTIONS,
@@ -114,11 +115,13 @@ export function ComboboxSortableEntries({
       onDragCancel={settle}
     >
       <SortableContext items={ids} strategy={strategy}>
-        <ul ref={list} className="combobox__entries">
-          {entries.map((entry) => (
-            <SortableEntry key={entry.id} {...entry} />
-          ))}
-        </ul>
+        <SortableMoveContext value={onMove}>
+          <ul ref={list} className="combobox__entries">
+            {entries.map((entry) => (
+              <SortableEntry key={entry.id} {...entry} />
+            ))}
+          </ul>
+        </SortableMoveContext>
       </SortableContext>
     </DndContext>
   );

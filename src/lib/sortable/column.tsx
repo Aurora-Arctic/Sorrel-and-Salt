@@ -15,6 +15,7 @@ import {
   useSortableAnnouncements,
   useSortableSensors,
 } from './index';
+import { SortableMoveContext } from './move';
 
 const COLUMN_KEYS = new Set(['ArrowUp', 'ArrowDown', 'Home', 'End']);
 
@@ -94,7 +95,7 @@ export function SortableColumn({
       onDragCancel={settle}
     >
       <SortableContext items={[...ids]} strategy={verticalListSortingStrategy}>
-        {children}
+        <SortableMoveContext value={onMove}>{children}</SortableMoveContext>
       </SortableContext>
     </DndContext>
   );
