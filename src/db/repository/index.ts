@@ -245,6 +245,7 @@ export {
 } from './sign-in-failures';
 export type { PrivilegeDeclaration } from '../types';
 export type {
+  IngredientDeityLink,
   StandingTimeout,
   WorkingDeductionRow,
   WorkingParticipantRow,

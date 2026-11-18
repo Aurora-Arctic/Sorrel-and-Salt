@@ -96,7 +96,7 @@ export interface CorrespondenceLists {
   colors: readonly string[] | null;
 }
 
-/** One step's ingredient as the block reads it: the step's label, the ingredient's lists then its form's, and its deities in order. A null `deityId` is a typed name. */
+/** One step as the block reads it; a null `deityId` is a typed name. */
 export interface CorrespondenceStep {
   label: string;
   lists: readonly CorrespondenceLists[];

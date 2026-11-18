@@ -2,6 +2,7 @@ import 'server-only';
 import {
   findDeitiesOfSpellIngredientsIncludingSoftDeleted,
   findOneSpell,
+  type IngredientDeityLink,
 } from '../../../db/repository';
 import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
@@ -13,11 +14,9 @@ import { NO_SUCH_SPELL } from './spell-not-found';
 import { linkedIngredientIds, stepsInSpells } from './step-views';
 import type { CorrespondenceStep, SpellCorrespondences } from '../types';
 
-type DeityRows = Awaited<ReturnType<typeof findDeitiesOfSpellIngredientsIncludingSoftDeleted>>;
-
-/** Groups each deity row with its detail under its ingredient; `deityDetailsOf` returns one detail per row, in row order. */
+/** `deityDetailsOf` returns one detail per row, in row order, so a row and its detail share an index. */
 function deitiesGroupedByIngredient(
-  rows: DeityRows,
+  rows: readonly IngredientDeityLink[],
   details: readonly DeityDetail[],
 ): Map<string, CorrespondenceStep['deities'][number][]> {
   const grouped = new Map<string, CorrespondenceStep['deities'][number][]>();

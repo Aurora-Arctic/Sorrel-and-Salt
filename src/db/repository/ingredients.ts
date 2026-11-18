@@ -72,6 +72,7 @@ import type {
   ColumnOf,
   ReadRow,
   IngredientScoped,
+  IngredientDeityLink,
   JoinedRow,
   ListColumns,
   ListOrder,
@@ -182,7 +183,7 @@ export function findDeitiesOfIngredients(
   memberships: readonly Membership[],
   ingredientIds: readonly string[],
   heldBy?: Membership,
-): Promise<JoinedRow<typeof ingredientDeities.$inferSelect, typeof deities.$inferSelect>[]> {
+): Promise<IngredientDeityLink[]> {
   return whenIds(ingredientIds, () =>
     selectFrom(
       ingredientDeities,
@@ -200,14 +201,13 @@ export function findDeitiesOfIngredients(
 }
 
 /**
- * The live deities of the ingredients a readable spell holds, deleted ingredients' included, each beside the curated deity it links while
- * that deity is live under a live tradition, and null for a typed name or a deity since retired. Unordered; a caller sorts by `position`.
- * Two statements, as `existsIn` filters a deleted parent.
+ * The live deities of the ingredients a readable spell holds, deleted ingredients' included, unordered.
+ * Two statements, as `existsIn` filters a deleted parent (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention").
  */
 export async function findDeitiesOfSpellIngredientsIncludingSoftDeleted(
   membership: Membership,
   ingredientIds: readonly string[],
-): Promise<JoinedRow<typeof ingredientDeities.$inferSelect, typeof deities.$inferSelect>[]> {
+): Promise<IngredientDeityLink[]> {
   const held = await findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds);
   if (held.length === 0) return [];
   return selectFrom(
