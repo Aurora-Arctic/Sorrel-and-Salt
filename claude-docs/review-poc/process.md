@@ -18,7 +18,7 @@ The loop, in one screen:
 6. When a symbol is unfamiliar, you explore it.
 7. You read the diff.
 8. You annotate, and send the notes back to the agent once per layer.
-9. The layers are merged from the bottom up.
+9. The stack is merged whole, lowest layer first.
 
 Sources: this follows the owner's review brief, corrected for this repo by `verify.md` (the differences table), `stacks.md` and `graphify.md` in this folder. Where a step needs something that does not exist yet, the step says "Not available yet:" and names what unblocks it. Nothing here is an installed fact unless it says it was run.
 
@@ -71,7 +71,7 @@ Run only the test files the layer touches. A good result: the commit touches onl
 
 The agent must not write the implementation in the same layer, and must not run the full suites (`test:coverage`, `test:stories`, the full e2e run) unless you say so.
 
-**Not available yet:** the tests-first layer as its own pull request needs the stack mode of `/create-pr`, which is Draft F in `stacks.md` and waits on its Decisions 1 and 2. Until then it is a local commit that you review before telling the agent to continue, and it ships with the rest of the branch.
+**Not available yet:** the tests-first layer as its own pull request needs the stack mode of `/create-pr`, which is Draft F in `stacks.md` and waits on its Decisions 1 and 2. Until then it is a local commit that you review before telling the agent to continue, and it ships with the rest of the branch. Read the tests-first layer before its tests pass: they fail by design until the implementation layer lands, and a stack merges whole, so that layer is never merged alone.
 
 **Done when.** You have read the tests, each fails for the right reason, and you have told the agent to continue.
 
@@ -99,7 +99,7 @@ The agent must not run any `gh stack` command that writes to GitHub (`stacks.md`
 
 **Done when.** `gh stack view` lists the layers, and each layer's diff is small enough that you expect to read it in 15 minutes.
 
-## Step 4. Submit, and read only a green layer
+## Step 4. Submit, and read once the top layer is green
 
 **What it is for.** To push the layers as pull requests, so the gate (types, lint, Vitest, Playwright and the rest) runs on each layer before you spend time on it.
 
@@ -109,7 +109,7 @@ The agent must not run any `gh stack` command that writes to GitHub (`stacks.md`
 gh pr checks <pr-number>
 ```
 
-A good result: every required check is green. Do not read a layer whose gate is red; send it back to the agent.
+A good result: every required check is green on the top layer. Read a layer when the top layer's gate is green; the tests-first layer is read before its tests pass. A lower layer's green means only types, lint and format passed, and a failure is placed by the failing test's name.
 
 **With an agent.** Paste:
 
@@ -117,7 +117,7 @@ A good result: every required check is green. Do not read a layer whose gate is 
 
 The agent must not call `gh stack submit` or `link` itself: those write PRs without a `Closes`/`Refs` line, a task-id title or a board link (`stacks.md`, section 3).
 
-**Not available yet:** one pull request per layer needs Draft F (`stacks.md`). `pr-gate.yml` and `gitflow.yml` do run on an upper layer: GitHub starts them with `github.base_ref` equal to `staging`, and `gitflow.yml` passes an upper layer (proved on stand-ins, `stacks.md` section 6). Do not read a layer whose gate is red. The tests-first layer's gate is red by design until the implementation layer lands (`stacks.md`, section 6), so read its tests, not its gate. Whether a lower layer runs the full gate is Decision 3 in `stacks.md`, which is open. The gate also has no dependency-rules job (Draft B in `verify.md`), and no `oversized` label (Draft D). Until then `/create-pr` opens one PR per branch, and the gate runs as it does today.
+**Not available yet:** one pull request per layer needs Draft F (`stacks.md`). `pr-gate.yml` and `gitflow.yml` do run on an upper layer: GitHub starts them with `github.base_ref` equal to `staging`, and `gitflow.yml` passes an upper layer (proved on stand-ins, `stacks.md` section 6). The full gate on the top layer testing the whole stack's diff, and cheap checks only below it (decided, Decision 3 in `stacks.md`), need Draft C. The gate also has no dependency-rules job (Draft B in `verify.md`), and no `oversized` label (Draft D). Until then `/create-pr` opens one PR per branch, and the gate runs as it does today.
 
 **Done when.** The PR is open, linked to its task, and its required checks are green.
 
@@ -204,13 +204,15 @@ The agent must not push, merge or resolve a review thread on GitHub itself.
 
 **Done when.** Each note is resolved or answered, and you have re-read the changes.
 
-## Step 9. Merge from the bottom up
+## Step 9. Merge the whole stack
 
 **What it is for.** To land the layers in order, lowest first, so each lands on a base that has already been checked.
 
-**By hand.** You merge, through GitHub, once the layer's checks are green and you have approved it. For a stack, GitHub merges bottom-up, and a middle layer cannot merge alone (the "Merging stacked pull requests" page on `docs.github.com`); `gh stack merge` merges the whole stack atomically. When the PR merges, `close-task-on-merge.yml` closes the task named by `Closes #N`, and the board's `Done` follows (`.claude/rules/task-tracking.md`). Never close a task by hand.
+**By hand.** You merge, through GitHub, once the top layer's gate is green and you have approved every layer. Never merge a lower layer alone. GitHub merges the layers lowest first, and a middle layer cannot merge alone (the "Merging stacked pull requests" page on `docs.github.com`); `gh stack merge` on the top layer merges the whole stack. When the PR merges, `close-task-on-merge.yml` closes the task named by `Closes #N`, and the board's `Done` follows (`.claude/rules/task-tracking.md`). Never close a task by hand.
 
 **With an agent.** No prompt. The agent does not merge.
+
+A stack merges whole, never a lower layer alone (decided, Decision 3 in `stacks.md`), because a green lower layer means only the cheap checks passed. Whether a guard can enforce this is part of Draft C.
 
 **Not available yet:** the merge queue returns with a later task. `Closes #N` goes on the top layer and `Refs #N` on the layers below (decided, Decision 1 in `stacks.md`), and the close workflow fires for a layer merged when it is the lowest unmerged one, because its base is then `staging` (proved one layer at a time; layers merged in one atomic call are unproved and are in Draft G). `gh stack merge N` merges layer N and every layer below it, and the layer above is retargeted to `staging`.
 
@@ -224,11 +226,8 @@ You can ask an agent to take you through the loop one step at a time from this f
 
 ## Where a stack meets `/create-pr` and the task board
 
-`/create-pr` and the board assume one PR per task. `stacks.md` lists each place with file and line (section 5), says how a layer links to its task (section 4), and drafts the changes (Drafts F and G, and Draft C in `verify.md`). Until they exist, use one branch and one PR per task.
+`/create-pr` and the board assume one PR per task. `stacks.md` lists each place with file and line (section 5), says how a layer links to its task (section 4), and drafts the changes (Drafts C, F and G). Until they exist, use one branch and one PR per task.
 
 ## Open decisions
 
-Each is held in its record; the owner chooses.
-
-- The container build: decided, the file reading is accepted and Draft A rebuilds the image (Decision 4 in `verify.md`).
-- Decided: `Closes #N` on the top layer (Decision 1 in `stacks.md`), and stack branches are the one exception to "never rebase, never force-push" (Decision 2). Open: what the workflows do on a stack (Decision 3 in `stacks.md`; I recommend no change).
+None. Every choice is decided and recorded: the container build (Decision 4 in `verify.md`), dependency-cruiser and the glibc route (Decisions 1 and 2 there), the scratch repo (Decision 3 there), and the three stack decisions in `stacks.md`. What is still unproved is listed in `plan.md`, "Still unproved", each against the task that proves it.

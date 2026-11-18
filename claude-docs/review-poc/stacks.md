@@ -174,6 +174,10 @@ Three facts about the real gate, read from the real files and checked against th
 
 ### What the workflows need
 
+**Decided: option (2), top-only.** The full gate runs on the top layer and tests the whole stack's diff (the `changes` filters read `stack.base.sha` to head when `stack.position == stack.size`). The layers below run types, lint and format. A stack merges whole, never a lower layer alone. The owner's reason: smaller pull requests multiply gate runs, which costs minutes once the repository is private. Costs the owner accepted: a green lower layer means only the cheap checks passed; a failure is placed by the failing test's name, not by the layer; a partial merge is unsafe. Draft C below is minted for it.
+
+The table and the analysis below are what the choice was made from.
+
 GitHub already triggers the gate on every layer, with `github.base_ref` equal to `staging`, so no trigger change is needed. The open question is cost against assurance. Costs for a three-layer stack, counted in gate runs (the real gate's own jobs inside each run follow the path filter):
 
 | Option                                                                   | Runs for a submit, then a bottom amend (cascade)                         | A layer's gate red                                                                            | Bottom-up merging                                                            | Required-check names                                                                                                         |
@@ -187,9 +191,9 @@ Gate runs start in parallel on separate runners (the runs in the cascade started
 
 The gap in (3) and (4): a top layer whose own diff touches no test path skips the Vitest and Playwright jobs, although its checkout holds the layers below. The layers below ran their own jobs, so only a defect that appears from the layers together, with none of them touching the path, goes unchecked. That is the same gap a single PR has for code it does not touch.
 
-I recommend (4), no change to the workflows. The reasons: GitHub already starts the gate on every layer with the base the gate expects, the real gitflow passes an upper layer, the concurrency group cancels superseded runs per layer, runs cost nothing and run in parallel, and (2) makes a lower layer's green mean less, which breaks the rule in `process.md`, Step 4, "do not read a layer whose gate is red". If you want the whole stack tested together on its top layer, the change is to run `changes`' filters against the stack's whole diff when `stack.position == stack.size`; that is Draft C.
+Under (2) the rule in `process.md` Step 4 changes from "do not read a layer whose gate is red" to "read a layer when the top layer's gate is green; the tests-first layer is read before its tests pass". The change to the `changes` job is Draft C.
 
-The run did not show how the real gate's slow jobs behave on a stack (a stack of one real task), whether `pr-comments` writes one comment per layer without collision, or the first-`opened` gap on a real repository. Draft C's first criterion is to record those on the first real stack.
+The run did not show how the real gate's slow jobs behave on a stack (a stack of one real task), whether `pr-comments` writes one comment per layer without collision, or the first-`opened` gap on a real repository. Draft C records those on the first real stack.
 
 ### A point the options must answer: the tests-first layer
 
@@ -200,7 +204,7 @@ I checked it against the real `pr-gate.yml`, and it holds. The `changes` job's `
 What each option does with it:
 
 - (1), (3) and (4): the bottom layer's gate is red until the implementation lands, so `gh stack merge` of the bottom layer alone is refused by any required check, and the whole stack lands together (the top layer's gate is the first green one). The review reads the tests without a green gate under them.
-- (2): the bottom layer runs only the cheap checks and is green, so it could be merged alone in error. The full gate runs on the top layer only, where it is green. Under (2) the rule is "merge the stack as a whole".
+- (2), the chosen option: the bottom layer runs only the cheap checks and is green, so GitHub would let it merge alone in error. The full gate runs on the top layer only, where it is green. The rule is "merge the stack as a whole"; Draft C asks for a guard and says what is possible.
 
 Nothing in the run tested this with the real gate.
 
@@ -251,14 +255,26 @@ _Acceptance criteria:_
 - The workflow keeps reading whole-line `Closes #N` only
 - A run shows a lower layer merged alone leaving the task open when `Closes #N` is on the top layer (already proved one layer at a time; recorded again for the atomic call)
 
-**Draft C — Test the Whole Stack on Its Top Layer** · 3h (estimate; minted only if you choose option (2) or the whole-diff variant of option (4) in Decision 3; see also `verify.md`, Draft C)
+**Draft C — Test the Whole Stack on Its Top Layer** · 4h (estimate; the guard criterion may take longer, see it below)
 
-See `verify.md`, Draft C, for the acceptance criteria.
+_Story:_ As a reviewer of a stacked pull request, I want the top layer's gate to run every job the whole stack's diff needs and the layers below to run only the cheap checks, so that a stack costs one full gate, not one per layer, and code from lower layers is tested together before anything merges.
+
+Depends on Decision 3 (decided: top-only). GitHub already starts the gate and `gitflow` on every layer with `github.base_ref` equal to `staging`, and the real `gitflow.yml` passes an upper layer, so the trigger needs no change. The change is in the `changes` job, which today reads only each layer's own files.
+
+_Acceptance criteria:_
+
+- When `github.event.pull_request.stack` is present and `stack.position == stack.size`, `changes` computes its filters from the diff between `stack.base.sha` and the head, so the top layer runs every job the whole stack's files need
+- When the stack is present and the layer is below the top, only `format`, lint and types run; the Vitest, Playwright, story, workshop and build jobs report skipped
+- A pull request that is not in a stack behaves exactly as today, shown by a run on a single-PR branch that lists the same jobs as before the change
+- The aggregate check names stay unchanged, and a skipped job still reports skipped (MB.39)
+- `process.md` Step 4's rule is reworded to "read a layer when the top layer's gate is green; the tests-first layer is read before its tests pass"
+- A guard against merging a lower layer alone: either a check on lower layers that is green only once the top layer's gate is green, or the record says plainly that none is possible and the rule stays a process rule. Nothing in the run proves a guard works: required checks on `staging` could not be set up with the scratch token, and a check that depends on another PR's run needs a re-run call back from the top layer. The task builds it only if a scratch-repo run shows it works, and says so if not
+- A run on a real stack records the number of runs and the billable time for it, with the figures from a private run once one exists (`gh api repos/<owner>/<repo>/actions/runs/<run id>/timing`), in `claude-docs/ci/`
 
 ## Decisions
 
-Decisions 1 and 2 are decided. Decision 3 is open; the owner has said a last message will follow for it.
+All three decisions are decided.
 
 1. **Where `Closes #N` goes on a stack. Decided: Y.** The top layer carries `Closes #N`; every layer below carries `Refs #N`. Draft G proves the atomic whole-stack merge.
 2. **`/create-pr`'s "never rebase, never force-push" rules. Decided: X.** Stack branches are the one exception to `SKILL.md:55` and `SKILL.md:90`; `gh stack` owns them, and one session owns a whole stack. Draft F writes it into the skill.
-3. **What the workflows do on a stack. Open.** Section 6, options (1) to (4). I need you to choose (1), (2), (3) or (4). I recommend (4), no change: GitHub already runs the gate on every layer against `staging`, `gitflow.yml` passes an upper layer, and the concurrency group cancels per layer. Choosing (2) or a whole-diff top-layer filter mints Draft C.
+3. **What the workflows do on a stack. Decided: option (2), top-only.** The full gate runs on the top layer and tests the whole stack's diff; the layers below run types, lint and format; a stack merges whole, never a lower layer alone. Reason: smaller pull requests multiply gate runs, which costs minutes once the repository is private. Accepted costs: a green lower layer means only the cheap checks passed; a failure is placed by the failing test's name; a partial merge is unsafe. Draft C writes it.

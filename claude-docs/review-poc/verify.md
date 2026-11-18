@@ -302,19 +302,7 @@ _Acceptance criteria:_
 - The `swc` parser is set in the config, which excludes `src/modules/documents/jobs/document-mailing.ts` (the one file `swc` rejects) with a comment saying why, and a test fails when a new file breaks the parser
 - A mechanical guard for the new mechanism lands in the same commit (`CLAUDE.md`, "The sweep-task rule")
 
-**Draft C — Test the Whole Stack on Its Top Layer** · 3h (estimate). Minted only if you choose option (2), or the whole-diff variant of option (4), in `stacks.md` Decision 3
-
-_Story:_ As a reviewer of a stacked pull request, I want the top layer's gate to run every job the whole stack's diff needs, so that code from lower layers is tested together before the last layer merges.
-
-The run showed that GitHub already starts the gate and `gitflow` on every layer with `github.base_ref` equal to `staging`, and that the real `gitflow.yml` passes an upper layer. So the trigger needs no change. What is open is the `changes` job: it reads only each layer's own files, so a top layer that touches no test path skips Vitest and Playwright even though its checkout holds the lower layers.
-
-_Acceptance criteria:_
-
-- When `github.event.pull_request.stack` is present and `stack.position == stack.size`, `changes` computes its filters from the diff between `stack.base.sha` and the head, and in every other case it behaves as today
-- A layer with no stack, and every layer below the top, run exactly the jobs they run today
-- The aggregate check names stay unchanged, and a skipped job still reports skipped (MB.39)
-- A run on a real two-layer stack records which jobs ran on each layer, in `claude-docs/ci/`
-- If you choose option (2), the lower layers run only format, lint and types, and `process.md` Step 4's "do not read a layer whose gate is red" is reworded to match
+**Draft C — Test the Whole Stack on Its Top Layer** · 4h (estimate). The full entry is in `stacks.md`, "Drafted implementation tasks".
 
 **Draft D — Label Oversized Pull Requests** · 2h (estimate)
 
