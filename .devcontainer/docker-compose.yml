@@ -6,7 +6,7 @@
 # `--project-directory`, so the first `-f` file's directory wins, and
 # `Docker/.env` is auto-loaded for `${...}`.
 #
-# `devcontainer` mirrors `app` (build target, bind mount, DATABASE_URL,
+# `devcontainer` mirrors `app` (bind mount, DATABASE_URL,
 # postgres health gate) with its own node_modules volume, and lives here so a
 # bare `make docker-up` carries nothing editor-specific.
 
@@ -23,17 +23,23 @@ services:
     build:
       context: ..
       dockerfile: Docker/Dockerfile.node
-      target: development
-    image: sorrel-node:development
+      # `development` plus the review tools (difftastic, Plannotator); its own
+      # tag, so the `app` service keeps the plain `development` image.
+      target: devcontainer
+    image: sorrel-node:devcontainer
     working_dir: /app
     volumes:
       - ..:/app:cached
       - node_modules_devcontainer:/app/node_modules
-      # Claude Code's per-user state, a bind mount (the only host mount besides
-      # /app) to git-ignored Docker/claude-home so it survives `make
+      # Claude Code's per-user state, a bind mount to git-ignored Docker/claude-home so it survives `make
       # docker-rebuild`; `initializeCommand` creates it host-side so Compose
       # does not make it root-owned.
       - ./claude-home:/home/node/.claude:cached
+      # Plannotator's drafts, plan history and config.json, kept the same way.
+      - ./plannotator-home:/home/node/.plannotator:cached
+      # Where `npx skills add --global` keeps a skill's files; ~/.claude/skills
+      # holds only a link to each, which a rebuild would leave pointing nowhere.
+      - ./agents-home:/home/node/.agents:cached
     init: true
     tty: true
     # ensure-deps.sh first (see Docker/docker-compose.yaml); `entrypoint` clears
@@ -47,6 +53,9 @@ services:
       # A failed `npm ci` (offline, say) prints a warning and starts anyway, so
       # the editor still opens; every other service stops on a failed install.
       ENSURE_DEPS_ON_FAILURE: warn
+      # Plannotator's daily usage ping, off. Set here and not in the
+      # `plannotator` wrapper, so its plugin inside Claude Code reads it too.
+      NO_ANON_PING: '1'
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # From `make docker-update-token`, via git-ignored Docker/.env; `:-`
       # keeps a missing file quiet and the CLI falls back to `/login`.
@@ -78,3 +87,125 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_healthy
+
+  # Builds graphify's code graph into git-ignored graphify-out/, then rebuilds
+  # it a few seconds after each change. Its first build takes about a minute.
+  # The repo is mounted read-only, and graphify-out/ alone is writable;
+  # `initializeCommand` creates that folder host-side so Compose does not
+  # make it root-owned. No AI model is called: there is no API key here.
+  # A failed build is retried three times, then left stopped with its log.
+  # The limits are estimates until `docker stats` is recorded in docker.md.
+  graphify-watch:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.graphify
+    image: sorrel-graphify
+    init: true
+    restart: on-failure:3
+    cpus: 2
+    mem_limit: 3g
+    environment:
+      # graphify sizes its parser pool by the machine's CPU count, not the
+      # `cpus` limit, and every worker loads all its parsers.
+      GRAPHIFY_MAX_WORKERS: '2'
+      # Otherwise each rebuild after the first of the day copies the graph
+      # into a dated folder that is never pruned; the graph is rebuilt from
+      # source, so the copy saves nothing.
+      GRAPHIFY_NO_BACKUP: '1'
+    volumes:
+      - ..:/app:ro
+      - ../graphify-out:/app/graphify-out
+    command:
+      [
+        'sh',
+        '-c',
+        'graphify extract /app --code-only && graphify cluster-only /app && exec graphify watch /app',
+      ]
+
+  # The graph over MCP, at http://graphify:8080/mcp (.mcp.json). No port is
+  # published, so only containers on this compose network reach it. It has
+  # no API key: it only reads, and what it serves comes from this public
+  # repo. Each tool call checks graph.json's modified time and reloads it when
+  # `graphify-watch` has rewritten it; before the first build, a call answers
+  # "graph.json not found".
+  graphify:
+    image: sorrel-graphify
+    init: true
+    cpus: 1
+    mem_limit: 1536m
+    volumes:
+      - ../graphify-out:/data:ro
+    command:
+      [
+        'graphify-mcp',
+        '/data/graph.json',
+        '--transport',
+        'http',
+        '--host',
+        '0.0.0.0',
+        '--port',
+        '8080',
+      ]
+    # Started, not healthy: waiting for the first build would hold up every
+    # `docker compose up`, the editor's included, and none of the three
+    # services that read the graph needs it to exist when it starts.
+    depends_on:
+      - graphify-watch
+
+  # The graph's pages for a browser: http://localhost:8090/graph.html (the
+  # interactive graph) and /GRAPH_REPORT.md. Published on the host's loopback
+  # only, so nothing else on the network can open it.
+  # This and `graphify-views` are in the `graph-pages` profile, so they start
+  # only when asked for (claude-docs/docker.md); nothing else depends on them.
+  graphify-web:
+    image: sorrel-graphify
+    profiles: ['graph-pages']
+    init: true
+    cpus: 0.25
+    mem_limit: 128m
+    volumes:
+      - ../graphify-out:/data:ro
+    ports:
+      - '127.0.0.1:8090:8090'
+    command: ['python', '-m', 'http.server', '8090', '--bind', '0.0.0.0', '--directory', '/data']
+    depends_on:
+      - graphify-watch
+
+  # Rebuilds the smaller views whenever graph.json changes, which
+  # `graphify watch` does not do itself: the folder tree, /GRAPH_TREE.html,
+  # and, from Docker/graphify-views.py, the map of src/ by folder,
+  # /view/graph.html, and the wiki of one page per folder, /wiki/index.html.
+  # The tree goes to a temporary file first so the page never serves half a
+  # copy. The MCP server reads only the full graph.json, which this leaves alone.
+  # Each version of graph.json is tried once, so a failing view logs once
+  # instead of rerunning every 10 seconds. The first check after a start
+  # always rebuilds, so views left stale while it was stopped catch up.
+  graphify-views:
+    image: sorrel-graphify
+    profiles: ['graph-pages']
+    init: true
+    cpus: 1
+    mem_limit: 1g
+    working_dir: /app
+    volumes:
+      - ..:/app:ro
+      - ../graphify-out:/app/graphify-out
+    command:
+      - sh
+      - -c
+      - |
+        last=""
+        while true; do
+          now="$$(stat -c %Y graphify-out/graph.json 2>/dev/null)"
+          if [ -n "$$now" ] && [ "$$now" != "$$last" ]; then
+            last="$$now"
+            if graphify tree --graph graphify-out/graph.json --output graphify-out/.tree.tmp.html --label 'Sorrel & Salt' > /dev/null && mv graphify-out/.tree.tmp.html graphify-out/GRAPH_TREE.html && python Docker/graphify-views.py graphify-out/graph.json graphify-out; then
+              echo "views rebuilt"
+            else
+              echo "views failed; trying again when graph.json next changes"
+            fi
+          fi
+          sleep 10
+        done
+    depends_on:
+      - graphify-watch

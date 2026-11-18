@@ -33,6 +33,7 @@ Turn the current branch's work into a pull request against a Gitflow-appropriate
 
      Any _other_ target, such as another `feature/*` branch, has no source restriction.
 
+   - **If the owner asks for a stack of layered PRs for the task, stop here and read [reference-stack.md](reference-stack.md) instead.** Offer a stack only when asked; otherwise carry on with one PR. A `hotfix/*` branch is never stacked.
    - **If the source branch is `hotfix/*`, stop here and read [reference-hotfix.md](reference-hotfix.md) instead.** It covers steps 3–10 for the multi-target case. The rest of this step, and steps 5–9, assume a single target.
    - Otherwise, classify the source branch by prefix:
      - `feature/*` → `staging`, plus any other existing `feature/*` branch.
@@ -52,7 +53,7 @@ Turn the current branch's work into a pull request against a Gitflow-appropriate
    - If yes, stage the relevant files (never `git add -A`) and commit with a concise message focused on why, passed with a HEREDOC. No `Co-Authored-By` trailer and no "Generated with Claude Code" line, in the commit or the PR body.
 
 5. **Merge the target branch into the source branch before pushing.**
-   - Run `git fetch origin <target>`, then `git merge origin/<target>`. Never a rebase.
+   - Run `git fetch origin <target>`, then `git merge origin/<target>`. Never a rebase. The one exception is a stack branch: `gh stack` owns it and rebases it, one session owns a whole stack, and no other session runs `gh stack` on it ([reference-stack.md](reference-stack.md)).
    - If it completes cleanly, including "already up to date", continue.
    - If it conflicts, run `git merge --abort`, tell the user which files conflicted, and stop. Don't resolve conflicts automatically.
 
@@ -87,7 +88,7 @@ Turn the current branch's work into a pull request against a Gitflow-appropriate
 ## Notes
 
 - `.claude/settings.json` puts `git push` and `gh pr create/view/comment/list` under `permissions.ask`; expect a confirmation prompt and don't suppress it. `task-board.mjs` may prompt too.
-- Never force-push, never push to `main`, and never use `--no-verify`.
+- Never force-push, never push to `main`, and never use `--no-verify`. The one exception to the force-push rule is a stack branch: `gh stack` owns it and force-pushes it with a lease check, one session owns a whole stack, and no other session runs `gh stack` on it ([reference-stack.md](reference-stack.md)). Every other branch keeps the rule.
 - A `hotfix/*` branch is never asked about `main` or `staging`, only about an optional third `release/*` target ([reference-hotfix.md](reference-hotfix.md)).
 - `/create-main-sync` and `/create-release` open their own PRs; this skill handles `main-sync/*` so that re-running it from a sync branch still proposes `staging`.
 - If the user asked only for a summary, skip `gh pr create` and present step 7's summary.

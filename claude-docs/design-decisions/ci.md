@@ -707,13 +707,13 @@ Part 2, in `checks.yml`:
 
 ## The CI images carry no source layer
 
-**Status:** decided. Live home: `claude-docs/ci/composite-actions.md` and `claude-docs/docker.md`; the guard is `tests/guards/image-source-layer.test.ts`.
+**Status:** decided. Live home: `claude-docs/ci/composite-actions.md` and `claude-docs/docker.md`. No test guards it.
 
 ### Decision
 
 - **Neither CI image carries source.** `Dockerfile.node` and `Dockerfile.e2e` copy in the manifests, run `npm ci` and stop; `headed` copies `Docker/playwright-entrypoint.sh` alone. Source arrives from outside: the `..:/app` bind mount in every compose service and the devcontainer, or `checkout-to-app`'s `cp -a` in CI.
 - **`checkout-to-app` is checkout plus copy.** It has no clean step and runs no git in `/app`.
-- **`tests/guards/image-source-layer.test.ts` allowlists each Dockerfile's `COPY` and `ADD` sources.** A new `COPY` is a decision recorded in the diff that adds it.
+- **A new `COPY` or `ADD` source in a Dockerfile is a decision for review**, recorded in the diff that adds it. No test checks it.
 - **`/app` stays `node`-owned and vitest still runs as root in CI.** The guards `test-location`, `lint-db-client-boundary` and `slug-rule` keep `git -c safe.directory=*` for that reason.
 
 ### Why

@@ -34,6 +34,9 @@ Docker/.env
 
 # Local database and container state
 Docker/claude-home
+Docker/plannotator-home
+Docker/agents-home
+graphify-out/
 pgdata
 docker-data
 *.dump
@@ -94,3 +97,7 @@ ds-bundle/
 /.swc
 /.workflow-data
 /.workflow-vitest
+
+# The local review's generated files: `npm run review:affected` writes the
+# affected-modules graph here.
+.review/
