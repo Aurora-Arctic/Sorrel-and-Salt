@@ -796,7 +796,7 @@ $footer-height: 2rem + 2rem + 0.5rem + $footer-tagline-line;
 $footer-height-phone: 2rem + $footer-brand-line + 0.5rem + 2rem + 0.5rem + 2 * $footer-tagline-line;
 // The step of air is space(8), spelled in rem because the steps are defined further down.
 // Plus the footer's 1px top border, which sits outside its min-height: left out, a page that fits scrolls by 1px.
-$footer-space: $footer-height + 4rem + 1px;
+$footer-space: calc(#{$footer-height + 4rem} + 1px);
 $footer-space-phone: $footer-height-phone + 4rem;
 
 // The one width the admin tables stack into cards at, so a page changes shape once rather than twice. A screen width, where
