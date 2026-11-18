@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { SiteLink } from '../AppShell/types';
 
 export interface AccountMenuProps {
@@ -12,4 +13,12 @@ export interface AccountMenuProps {
   pendingInvitations?: number;
   assignedSupport?: number;
   waitingSupport?: number;
+  lead?: AccountMenuLead;
+}
+
+/** A control the bar has no room for, shown as the panel's first item (claude-docs/components/account-menu.md). */
+export interface AccountMenuLead {
+  label: string;
+  icon: ReactNode;
+  onSelect: () => void;
 }

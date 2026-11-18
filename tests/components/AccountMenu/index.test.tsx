@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const pathname = vi.fn<() => string>();
@@ -95,6 +95,53 @@ describe('AccountMenu', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Your Account' }));
 
     expect(button()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  describe('with a control folded into it from the bar', () => {
+    const lead = (onSelect = vi.fn()) => ({ label: 'Add Ingredient', icon: null, onSelect });
+
+    it('shows the folded control as the panel’s first item', async () => {
+      render(<AccountMenu name="Fixture Owner" verified lead={lead()} />);
+      await openPanel(button());
+
+      const panel = document.getElementById(button().getAttribute('aria-controls') ?? '')!;
+      const [first] = within(panel).getAllByRole('listitem');
+      expect(first).toContainElement(screen.getByRole('button', { name: 'Add Ingredient' }));
+      expect(within(panel).getByRole('link', { name: 'Your Account' })).toBeInTheDocument();
+    });
+
+    it('runs the folded control’s action, closing the panel with the focus back on the account button', async () => {
+      const onSelect = vi.fn();
+      render(<AccountMenu name="Fixture Owner" verified lead={lead(onSelect)} />);
+      await openPanel(button());
+      const item = screen.getByRole('button', { name: 'Add Ingredient' });
+      item.focus();
+
+      fireEvent.click(item);
+
+      expect(onSelect).toHaveBeenCalledTimes(1);
+      expect(button()).toHaveAttribute('aria-expanded', 'false');
+      expect(button()).toHaveFocus();
+    });
+
+    it('closes on Escape from the folded control, giving the focus back to the account button', async () => {
+      render(<AccountMenu name="Fixture Owner" verified lead={lead()} />);
+      await openPanel(button());
+      screen.getByRole('button', { name: 'Add Ingredient' }).focus();
+
+      fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+
+      expect(button()).toHaveAttribute('aria-expanded', 'false');
+      expect(button()).toHaveFocus();
+    });
+
+    it('has no such item when nothing is folded', async () => {
+      render(<AccountMenu name="Fixture Owner" verified />);
+      await openPanel(button());
+
+      expect(screen.queryByRole('button', { name: 'Add Ingredient' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Sign Out' })).toBeInTheDocument();
+    });
   });
 
   it('offers an unverified account Sign Out and the Compendium, the one site link open to everyone', async () => {
