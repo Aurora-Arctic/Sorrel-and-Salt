@@ -22,7 +22,7 @@ decisions:
 
 1. **What a spell holds.** `findIngredientsInSpellsIncludingSoftDeleted` and
    `findManyOfSpellIngredientsIncludingSoftDeleted` read an ingredient past its
-   tombstone, and `findFormsInSpellsIncludingSoftDeleted` its forms past theirs,
+   tombstone, `findDeitiesOfSpellIngredientsIncludingSoftDeleted` reads its deities, and `findFormsInSpellsIncludingSoftDeleted` its forms past theirs,
    and nothing else past one, for a member who may read a spell holding it
    (["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)).
 2. **The ingredient a substitute links.** `findSubstitutesIncludingSoftDeleted`

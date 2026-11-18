@@ -59,6 +59,7 @@ export {
   findWorkspaceIngredientByIdentity,
   findWorkspaceIngredientCount,
   findWorkspaceIngredientPage,
+  findDeitiesOfSpellIngredientsIncludingSoftDeleted,
 } from './ingredients';
 export { findCompendiumFacets, findWorkspaceIngredientFacets } from './ingredient-facets';
 export {

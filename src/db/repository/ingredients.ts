@@ -55,6 +55,7 @@ import {
 } from './predicates';
 import { cites, citesNothing } from './references';
 import { existsByKey, existsIn, selectFrom, selectOne, whenIds } from './select';
+import { findIngredientsInSpellsIncludingSoftDeleted } from './spells';
 import { sourcingScoreExpression } from './sourcing-score';
 import { curated } from './vocabularies';
 import { weightedSearch } from './weighted-search';
@@ -195,6 +196,33 @@ export function findDeitiesOfIngredients(
         on: and(eq(deities.id, ingredientDeities.deityId), curated(deities)) as SQL,
       },
     ),
+  );
+}
+
+/**
+ * The live deities of the ingredients a readable spell holds, deleted ingredients' included, each beside the curated deity it links while
+ * that deity is live under a live tradition, and null for a typed name or a deity since retired. Unordered; a caller sorts by `position`.
+ * Two statements, as `existsIn` filters a deleted parent.
+ */
+export async function findDeitiesOfSpellIngredientsIncludingSoftDeleted(
+  membership: Membership,
+  ingredientIds: readonly string[],
+): Promise<JoinedRow<typeof ingredientDeities.$inferSelect, typeof deities.$inferSelect>[]> {
+  const held = await findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds);
+  if (held.length === 0) return [];
+  return selectFrom(
+    ingredientDeities,
+    and(
+      notSoftDeleted(ingredientDeities),
+      inArray(
+        ingredientDeities.ingredientId,
+        held.map((row) => row.id),
+      ),
+    ),
+    {
+      leftJoin: deities,
+      on: and(eq(deities.id, ingredientDeities.deityId), curated(deities)) as SQL,
+    },
   );
 }
 

@@ -87,3 +87,18 @@ export interface SpellCorrespondences {
   colors: Sourced<string>[];
   deities: Sourced<DeityDetail>[];
 }
+
+/** The four lists an ingredient or a form carries; a list never set is null. */
+export interface CorrespondenceLists {
+  elements: readonly string[] | null;
+  celestialBodies: readonly string[] | null;
+  zodiacSigns: readonly string[] | null;
+  colors: readonly string[] | null;
+}
+
+/** One step's ingredient as the block reads it: the step's label, the ingredient's lists then its form's, and its deities in order. A null `deityId` is a typed name. */
+export interface CorrespondenceStep {
+  label: string;
+  lists: readonly CorrespondenceLists[];
+  deities: readonly { deityId: string | null; detail: DeityDetail }[];
+}

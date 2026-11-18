@@ -42,6 +42,7 @@ Eight finders read through it, six of them in `spells.ts`:
 | `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients a readable spell holds ("What a spell holds", below)           |
 | `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | those ingredients' folk names or category links                                |
 | `findFormsInSpellsIncludingSoftDeleted(membership, ingredientIds)`                 | those ingredients' forms, deleted or not                                       |
+| `findDeitiesOfSpellIngredientsIncludingSoftDeleted(membership, ingredientIds)`     | those ingredients' deities, each beside the curated deity it links             |
 
 One writer reads through the same rule: `write.softDeleteSpell(membership, spellId)`
 marks a spell deleted only where `readableSpells` admits it, so a member deleting

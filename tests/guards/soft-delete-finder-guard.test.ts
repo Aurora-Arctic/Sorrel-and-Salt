@@ -12,6 +12,7 @@ const ESCAPE_HATCHES = [
   'findIngredientsInSpellsIncludingSoftDeleted',
   'findFormsInSpellsIncludingSoftDeleted',
   'findManyOfSpellIngredientsIncludingSoftDeleted',
+  'findDeitiesOfSpellIngredientsIncludingSoftDeleted',
   'findSubstitutesIncludingSoftDeleted',
   'findCoMemberNamesIncludingSoftDeleted',
   'findCupboardEntryIncludingSoftDeleted',
