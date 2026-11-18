@@ -5,16 +5,14 @@ import { PendingLink } from '../../lib/navigation';
 import { SignInLink, SignInLinkWithQuery } from './sign-in-link';
 import ThemeToggle from '../ThemeToggle';
 import SiteNav from '../AppShell/site-nav';
-import type { SiteLink } from '../AppShell/types';
+import { COMPENDIUM_LINK } from '../AppShell/compendium-link';
 import type { PublicFrameProps } from './types';
 import '../AppShell/index.scss';
 import './index.scss';
 
 // A server component, so the nav is in the HTML a crawler receives (claude-docs/components/public-frame.md).
 
-const COMPENDIUM_LINK: readonly SiteLink[] = [
-  { label: 'Compendium', href: '/compendium', base: '/compendium' },
-];
+const NAV_LINKS = [COMPENDIUM_LINK];
 
 const PublicFrame = ({ configured, children }: PublicFrameProps): ReactElement => (
   <div className="public-frame">
@@ -26,7 +24,7 @@ const PublicFrame = ({ configured, children }: PublicFrameProps): ReactElement =
         <PendingLink href="/" className="public-frame__brand">
           <BrandName block="public-frame" />
         </PendingLink>
-        <SiteNav links={COMPENDIUM_LINK} />
+        <SiteNav links={NAV_LINKS} />
         <div className="public-frame__end">
           <Suspense fallback={<SignInLink />}>
             <SignInLinkWithQuery configured={configured} />

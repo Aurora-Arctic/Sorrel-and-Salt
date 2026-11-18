@@ -6,6 +6,7 @@ import ThemeToggle from '../ThemeToggle';
 import { ViewerIdProvider } from '../../lib/viewer-id';
 import AddIngredientButton from './add-ingredient-button';
 import BrandName from './brand-name';
+import { COMPENDIUM_LINK } from './compendium-link';
 import MainBody from './main-body';
 import NewSpellElsewhere from './new-spell-elsewhere';
 import PausedNotice from './paused-notice';
@@ -21,9 +22,8 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
   // The Compendium is public, so its link is everyone's, an unverified account's included. Your Coven is a
   // verified account's who belongs to a coven or curates (a curator or keeper in none is sent to /coven).
   // Curator and Keepers are a verified curator's or admin's alone.
-  const compendium: SiteLink = { label: 'Compendium', href: '/compendium', base: '/compendium' };
   const curates = viewer.verified && viewer.canCurate;
-  const links: SiteLink[] = [compendium];
+  const links: SiteLink[] = [COMPENDIUM_LINK];
   if (viewer.verified && (workspaces.length > 0 || viewer.canCurate)) {
     links.push({
       label: workspaces.length > 1 ? 'Your Covens' : 'Your Coven',

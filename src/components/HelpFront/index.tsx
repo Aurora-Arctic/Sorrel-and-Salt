@@ -17,34 +17,17 @@ const LiveBody = ({ className, children }: { className: string; children: ReactN
 
 // The public help pages' header, mounted once by their layout, so moving between them changes only what is beneath
 // it and a search under way keeps its words and spinner (claude-docs/components/help-front.md).
-const HelpFront = ({
-  signedIn = false,
-  staffHelp = false,
-  children,
-}: HelpFrontProps): ReactElement => (
+const HelpFront = ({ staffHelp = false, children }: HelpFrontProps): ReactElement => (
   <HelpFrontShell
     body={LiveBody}
     head={
       <HelpFrontHead
         action={
-          (signedIn || staffHelp) && (
-            <span className="help-front__links">
-              {signedIn && (
-                <PendingLink
-                  className="back-link back-link--forward help-front__compendium"
-                  href="/compendium"
-                >
-                  Compendium
-                  <BackChevron direction="forward" />
-                </PendingLink>
-              )}
-              {staffHelp && (
-                <PendingLink className="back-link back-link--forward" href={STAFF_HELP as Route}>
-                  Staff Help
-                  <BackChevron direction="forward" />
-                </PendingLink>
-              )}
-            </span>
+          staffHelp && (
+            <PendingLink className="back-link back-link--forward" href={STAFF_HELP as Route}>
+              Staff Help
+              <BackChevron direction="forward" />
+            </PendingLink>
           )
         }
         // No Suspense boundary: its fallback would stand in the page sent to a reader with no script, an empty box on
