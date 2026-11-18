@@ -27,8 +27,7 @@ const CreateInvitationDocument = graphql(`
 /** The roles on offer, least first. Steward is not one: the schema's enum has no such value. */
 const ROLES: readonly InviteRole[] = ['viewer', 'member'];
 
-const STEWARDSHIP_NOTE =
-  'A steward can make them a steward from the members page once they have joined.';
+const STEWARDSHIP_NOTE = 'A Steward can promote them once they join.';
 
 const INVITE_LABEL = 'Invite';
 const INVITE_TITLE = 'Invite Someone';

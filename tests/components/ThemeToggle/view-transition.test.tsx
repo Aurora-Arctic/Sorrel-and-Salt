@@ -6,7 +6,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 // swap where it does not or reduced motion is asked for (claude-docs/components/theme-toggle.md). happy-dom
 // has no View Transitions API, so each test states which browser it stands for.
 
-const toggle = () => screen.getByRole('button', { name: 'Toggle light and dark mode' });
+const toggle = () => screen.getByRole('button', { name: 'Toggle Light and Dark Mode' });
 const theme = () => document.documentElement.getAttribute('data-theme');
 
 /** A `matchMedia` answering the reduced-motion query as given, and nothing else. */

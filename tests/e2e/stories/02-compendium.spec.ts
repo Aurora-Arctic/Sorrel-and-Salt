@@ -433,7 +433,7 @@ test(
     await page.goto(`/coven/${coven.slug}/ingredients`);
     const dialog = await openAddIngredient(page);
     const name = dialog.getByRole('textbox', { name: 'Name', exact: true });
-    const warning = dialog.getByRole('status', { name: 'Possible duplicates' });
+    const warning = dialog.getByRole('status', { name: 'Possible Duplicates' });
     const matches = warning.getByRole('link');
 
     await test.step('Cats Claw names the near matches, each by its formal name, and opens the one it links', async () => {

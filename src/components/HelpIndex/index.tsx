@@ -97,7 +97,7 @@ const HelpIndex = ({
                 <a
                   className="help-index__faq-self"
                   href={`#${entry.slug}`}
-                  aria-label={`Link to ${entry.title}`}
+                  aria-label="Link to This Answer"
                 />
               </h3>
               {answers[index]}

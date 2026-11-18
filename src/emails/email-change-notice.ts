@@ -55,7 +55,7 @@ function EmailChangeNotice({
     h(
       Paragraph,
       null,
-      'If this was not you, sign in to Sorrel & Salt, change your email address back and remove any sign-in method you do not recognise.',
+      'If this was not you, sign in to Sorrel & Salt, change your email address back and remove any sign-in method you do not recognise. This email has no link on purpose, so that nobody else can use it: open the site yourself.',
     ),
     h(IgnoreNote, { when: 'If this was you' }),
   );

@@ -32,7 +32,7 @@ const HelpGlossary = ({ terms, editHref }: HelpGlossaryProps): ReactElement => {
               <a
                 className="help-glossary__self"
                 href={`#${term.slug}`}
-                aria-label={`Link to ${term.title}`}
+                aria-label="Link to This Term"
               />
             </dt>
             <dd>{definitions[index]}</dd>

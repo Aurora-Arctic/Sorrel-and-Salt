@@ -67,7 +67,7 @@ const SupportList = ({
                 {request.subject}
               </OpenModalLink>
               {request.status === 'waiting_on_sender' && (
-                <span className="support-list__dot" role="img" aria-label="Waiting on you" />
+                <span className="support-list__dot" role="img" aria-label="Waiting on You" />
               )}
               <div className="support-list__meta">
                 <span className={statusBadgeClass(request.status)}>

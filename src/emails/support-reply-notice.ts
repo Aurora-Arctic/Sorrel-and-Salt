@@ -6,7 +6,7 @@ import type { SupportReplyNoticeProps } from './types';
 // Carries none of the reply: it is read behind the sender's sign-in.
 
 const titleOf = (requestSubject: string): string =>
-  supportTitle('Reply to your support request', requestSubject);
+  supportTitle('Reply to Your Support Request', requestSubject);
 
 function SupportReplyNotice({
   url,

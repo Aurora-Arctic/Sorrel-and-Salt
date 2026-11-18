@@ -32,7 +32,7 @@ const Page = ({
           ) : (
             <Notice kind="warn" quiet>
               Creating a coven needs an invitation from someone already using Sorrel &amp; Salt, or
-              a keeper&rsquo;s approval.
+              a Keeper&rsquo;s approval.
             </Notice>
           )}
         </div>

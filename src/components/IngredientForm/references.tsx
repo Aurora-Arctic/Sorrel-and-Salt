@@ -512,7 +512,7 @@ export function ReferencesField({
         onKeep={() => setRemoving(null)}
       />
       {/* Labelled, so that it is told from the box's own status region. */}
-      <output className="visually-hidden" aria-label="References changes">
+      <output className="visually-hidden" aria-label="References Changes">
         {announcement}
       </output>
     </fieldset>

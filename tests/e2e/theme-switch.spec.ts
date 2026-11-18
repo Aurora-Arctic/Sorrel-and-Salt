@@ -15,7 +15,7 @@ for (const width of [PHONE_WIDTH, DESKTOP_WIDTH]) {
     await page.setViewportSize({ width, height: 800 });
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.goto('/compendium');
-    const toggle = page.getByRole('button', { name: 'Toggle light and dark mode' });
+    const toggle = page.getByRole('button', { name: 'Toggle Light and Dark Mode' });
     await expect(toggle).toBeVisible();
     const before = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
 
@@ -24,7 +24,7 @@ for (const width of [PHONE_WIDTH, DESKTOP_WIDTH]) {
       const frame = () => new Promise((done) => requestAnimationFrame(done));
       const was = document.documentElement.getAttribute('data-theme');
       document
-        .querySelector<HTMLButtonElement>('button[aria-label="Toggle light and dark mode"]')!
+        .querySelector<HTMLButtonElement>('button[aria-label="Toggle Light and Dark Mode"]')!
         .click();
       // The swap may wait on the cross-fade's capture of the old page, so wait for it, then for the
       // styles it changed to be computed.

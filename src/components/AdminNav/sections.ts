@@ -70,7 +70,7 @@ export const ADMIN_PAGES = {
     icon: 'invitations',
     adminOnly: true,
     description:
-      'The admin invitations waiting, the printed invitation cards, and who arrived by them.',
+      'The Keeper invitations waiting, the printed invitation cards, and who arrived by them.',
     tabs: [
       { href: '/keepers/invitations', label: 'Invitations' },
       { href: '/keepers/invitation-cards', label: 'Invitation Cards' },

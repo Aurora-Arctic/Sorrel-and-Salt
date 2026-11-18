@@ -13,7 +13,7 @@ import type { SupportResolvedProps } from './types';
 // Names the request and carries none of the thread.
 
 const titleOf = (requestSubject: string): string =>
-  supportTitle('Your support request is resolved', requestSubject);
+  supportTitle('Your Support Request Is Resolved', requestSubject);
 
 function SupportResolved({
   url,

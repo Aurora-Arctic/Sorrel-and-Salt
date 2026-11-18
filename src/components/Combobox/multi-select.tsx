@@ -230,7 +230,7 @@ export function ComboboxMultiSelect({
         </ul>
       </Popup>
       {/* Labelled, so that it is told from any other status on the page. */}
-      <output className="visually-hidden" aria-label={`${label} changes`}>
+      <output className="visually-hidden" aria-label={`${label} Changes`}>
         {isOpen && left.length === 0 ? EVERY_CHOICE : announcement}
       </output>
     </div>

@@ -548,7 +548,7 @@ test(
     await expect(rows.first().getByRole('cell').nth(3)).toHaveText('Manual fix');
 
     const listed = await userRow(page, subjectEmail);
-    const history = listed.getByRole('link', { name: 'Privilege changes for Ledger Fixturewort' });
+    const history = listed.getByRole('link', { name: 'Privilege Changes for Ledger Fixturewort' });
     await history.hover();
     await expect(page.getByRole('tooltip')).toBeVisible();
     // Sweep gap: the privilege-changes tooltip open over a user's history link, in each theme.

@@ -67,7 +67,7 @@ const box = (name: string) => screen.getByRole('combobox', { name });
 const removeButton = (value: string) => screen.getByRole('button', { name: `Remove ${value}` });
 const changes = (legend: string) =>
   within(screen.getByRole('group', { name: legend })).getByRole('status', {
-    name: `${legend} changes`,
+    name: `${legend} Changes`,
   });
 const typedRow = (text: string) =>
   screen.queryByRole('option', { name: `Use what you typed: ${text}` });

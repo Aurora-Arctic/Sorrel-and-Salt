@@ -134,7 +134,7 @@ describe('SupportList', () => {
         counts={none}
       />,
     );
-    const dots = screen.getAllByRole('img', { name: 'Waiting on you' });
+    const dots = screen.getAllByRole('img', { name: 'Waiting on You' });
     expect(dots).toHaveLength(1);
     expect(dots[0]!.closest('li')).toHaveTextContent('Waiting one');
   });
