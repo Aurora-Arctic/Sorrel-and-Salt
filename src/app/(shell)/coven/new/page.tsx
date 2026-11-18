@@ -47,7 +47,7 @@ export default async function NewCovenPage({
       ) : (
         <Notice kind="warn" quiet>
           Creating a coven needs an invitation from someone already using Sorrel &amp; Salt, or a
-          keeper&rsquo;s approval.
+          Keeper&rsquo;s approval.
         </Notice>
       )}
     </NarrowPanelPage>
