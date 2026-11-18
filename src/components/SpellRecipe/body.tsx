@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { useId, type ReactElement } from 'react';
 import CategoryChips from '../CategoryChips';
 import { QuickLookLink } from '../IconTip';
 import { DETAILS_PLACE, detailsHeading } from '../IngredientEntry/details';
@@ -9,7 +9,7 @@ import { SafetyMark } from '../SafetyNote';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
 import { spellNameOf } from '../SpellCard/untitled';
 import { VerdictMark } from '../SpellBuilder/verdict-mark';
-import { STEPS_ID, STEPS_TITLE_ID } from './sections';
+import { STEPS_ID } from './sections';
 import type {
   IngredientRecipeStep,
   RecipeStep,
@@ -87,6 +87,7 @@ export const SpellRecipeRest = ({
   level = 2,
 }: SpellRecipeRestProps): ReactElement => {
   const Heading = level === 3 ? 'h3' : 'h2';
+  const stepsTitleId = useId();
   const facts = (
     [
       ['Jar', jarDescription],
@@ -123,11 +124,16 @@ export const SpellRecipeRest = ({
       {/* The steps under their heading, the Ingredients summary's twin: shown where the summary is,
           on paper and in the Preview pane, and on screen read only by a screen reader. */}
       <section className="spell-recipe__steps-section">
-        <Heading id={STEPS_TITLE_ID}>Steps</Heading>
+        <Heading id={stepsTitleId}>Steps</Heading>
         {steps.length === 0 ? (
           <p className="meta">This spell has no steps yet.</p>
         ) : (
-          <ol id={STEPS_ID} className="spell-recipe__steps" aria-labelledby={STEPS_TITLE_ID}>
+          <ol
+            // The page's menu jumps to this id; the preview, drawn one level down beside that page, must not repeat it.
+            id={level === 2 ? STEPS_ID : undefined}
+            className="spell-recipe__steps"
+            aria-labelledby={stepsTitleId}
+          >
             {steps.map((step: RecipeStep, i) =>
               step.kind === 'instruction' ? (
                 <StepRow

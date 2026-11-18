@@ -1,13 +1,13 @@
-import type { ReactElement } from 'react';
+import { useId, type ReactElement } from 'react';
 import { plainQuantity } from '@/lib/quantity';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import { needOf } from '../SpellBuilder/steps/supply';
 import { labelOf } from './body';
-import { SUMMARY_TITLE_ID } from './sections';
 import type { IngredientRecipeStep, SpellRecipeSummaryProps } from './types';
 
 const SpellRecipeSummary = ({ steps, level = 2 }: SpellRecipeSummaryProps): ReactElement | null => {
   const Heading = level === 3 ? 'h3' : 'h2';
+  const titleId = useId();
   const laid = steps.filter((step): step is IngredientRecipeStep => step.kind === 'ingredient');
   const lines = laid.filter(
     (step, index) =>
@@ -16,8 +16,8 @@ const SpellRecipeSummary = ({ steps, level = 2 }: SpellRecipeSummaryProps): Reac
   if (lines.length === 0) return null;
   return (
     <section className="spell-recipe__summary">
-      <Heading id={SUMMARY_TITLE_ID}>Ingredients</Heading>
-      <ul aria-labelledby={SUMMARY_TITLE_ID}>
+      <Heading id={titleId}>Ingredients</Heading>
+      <ul aria-labelledby={titleId}>
         {lines.map((step) => {
           const same =
             step.variantId === null ? [step] : laid.filter((o) => o.variantId === step.variantId);

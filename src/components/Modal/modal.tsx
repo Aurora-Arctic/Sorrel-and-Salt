@@ -345,6 +345,8 @@ const Modal = ({
           aria-busy={loading || undefined}
           // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrolling body must take a Tab stop so a keyboard can scroll it
           tabIndex={readingBody ? 0 : undefined}
+          role={readingBody ? 'region' : undefined}
+          aria-labelledby={readingBody ? titleId : undefined}
         >
           <CloseGuardContext.Provider value={guard}>
             <HeaderSlotContext.Provider value={headerSlot}>
