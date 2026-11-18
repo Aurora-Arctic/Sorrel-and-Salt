@@ -1,6 +1,6 @@
 ## MC — Cleanup
 
-MC ids hold grouped clean-up work from three audits: M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)) for MC.1 → MC.9, and M17.10's test performance audit ([`audits/test-performance.md`](../audits/test-performance.md)) for MC.10 → MC.14, and M17.7's design and UX audit ([`audits/design-ux.md`](../audits/design-ux.md)) for MC.15 → MC.27. They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
+MC ids hold grouped clean-up work from four audits: M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)) for MC.1 → MC.9, and M17.10's test performance audit ([`audits/test-performance.md`](../audits/test-performance.md)) for MC.10 → MC.14, and M17.7's design and UX audit ([`audits/design-ux.md`](../audits/design-ux.md)) for MC.15 → MC.27, and M17.9's accessibility audit ([`audits/accessibility.md`](../audits/accessibility.md)) for MC.28 → MC.32 and additions to MC.20 and MC.21. They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
 
 **MC.1 — Tidy the Test Support and Scripts** · 16.25h
 
@@ -354,15 +354,16 @@ _Acceptance criteria:_
 - `.claude/rules/components.md` lists the named red controls as Impersonate, Pause Admin Changes, Revoke Batch, Email Every Account, Delete Coven and Decline Invitation, and says a page's other deletes use the delete icon.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 
-**MC.20 — Fix Dialog, Sheet And Page Spacing** · 7h
+**MC.20 — Fix Dialog, Sheet And Page Spacing** · 7.5h
 
 _Story:_ As a steward, I want the Leave and Record a Working dialogs to name actions clearly, so that I know what each button does. As a person on a phone, I want sheets and dialogs to fit, so that I can reach every control. As a person using dialogs and long pages, I want even spacing, so that the screen looks finished.
 
-Minted from the design and UX audit (M17.7). Findings: F-11, F-18, F-22, F-30, F-31, F-32, F-33, F-34, F-35, F-36, F-37, F-63, F-77; each is in `claude-docs/audits/design-ux.md`. It joins these parts: Fix The Leave And Record A Working Dialogs; Fix 375 Layout Faults In Sheets And Dialogs; Even Out Dialog And Page Spacing.
+Minted from the design and UX audit (M17.7). Findings: F-11, F-18, F-22, F-30, F-31, F-32, F-33, F-34, F-35, F-36, F-37, F-63, F-77; each is in `claude-docs/audits/design-ux.md`. It also holds AX-9 (the Save Working part), from `claude-docs/audits/accessibility.md`. It joins these parts: Fix The Leave And Record A Working Dialogs; Fix 375 Layout Faults In Sheets And Dialogs; Even Out Dialog And Page Spacing.
 
 _Acceptance criteria:_
 
 - Promote and Leave stays enabled with New Steward empty; pressing it flags that field and moves focus to it.
+- Save Working stays enabled once the people field has text with a required field empty; pressing it flags the empty field and moves focus to it.
 - The complete action is named Complete in both steps of Record a Working, and the dialog tells the user what completing does.
 - The confirm step is titled for the action it confirms.
 - The Filters sheet has an X button in its header and keeps Close at the bottom.
@@ -377,17 +378,23 @@ _Acceptance criteria:_
 - The gap between the intro and the first heading on the terms and privacy pages matches the other document pages.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 
-**MC.21 — Fix Empty Cells And Small Hit Areas** · 3h
+**MC.21 — Fix Empty Cells And Small Hit Areas** · 5h
 
 _Story:_ As a steward or keeper reading a table, I want an empty cell to say it is empty, so that a gap is not read as a fault. As a person on a phone, I want small buttons to be easy to press, so that I do not miss.
 
-Minted from the design and UX audit (M17.7). Findings: F-16, F-21; each is in `claude-docs/audits/design-ux.md`. It joins these parts: Show One Mark In Empty Cells; Grow Small Buttons To A 24 Pixel Hit Area.
+Minted from the design and UX audit (M17.7). Findings: F-16, F-21; each is in `claude-docs/audits/design-ux.md`. It also holds AX-2, AX-10 and AX-21, from `claude-docs/audits/accessibility.md`. It joins these parts: Show One Mark In Empty Cells; Grow Small Buttons To A 24 Pixel Hit Area.
 
 _Acceptance criteria:_
 
 - An empty table cell shows a dash, and a card label with no value shows a dash.
 - Small buttons on the sign-in methods page and the other screens listed have a hit area of at least 24 by 24 CSS pixels, grown by padding.
 - Button labels no longer wrap at 375.
+- The help search submit button is at least 24 by 24 CSS pixels on the 13 help screens, and the input reserves room for it, at desktop and 375.
+- The date range quick picks in the keeper date range field are at least 24 CSS pixels tall at 375, with a gap between them.
+- The "Edited just now" control that `card-click.spec.ts` measures at lines 233 and 321 is at least 24 CSS pixels tall in Firefox.
+- A Playwright check measures these three controls at 24 by 24 CSS pixels or larger, so the fault cannot return unseen (a regression test, because the three faults are shipped behaviour).
+- Axe's `target-size` rule is enabled in the sweep in `tests/e2e/axe.ts`, and a target-size mixin exists in `src/scss/_mixins.scss` and is used by the help search button, the date range quick picks and the "Edited just now" control (R2).
+- The R2 rule text is added to `claude-docs/styling.md`, beside the target-size note on chips, with a pointer from `.claude/rules/components.md`, "Styling".
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 
 **MC.22 — Fix The Compendium Pages** · 4h
@@ -473,4 +480,88 @@ _Acceptance criteria:_
 - The pagination guard fails a page that passes `HELP_PAGE_LIMIT` or a literal `limit:` to a service read.
 - The help glossary, the help front page and the staff help index each have a recorded exemption in the guard, with the reason.
 - The guard fails once with a fixed limit put back on the search page, after help search has its pager.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.28 — Let The App Header Wrap At 320 Pixels And Large Text** · 3h
+
+_Story:_ As a person who reads at a large text size or on a narrow screen, I want the header controls to stay on screen, so that I never scroll sideways to reach them.
+
+Minted from the accessibility audit (M17.9). Findings: AX-1 (A-2); each is in `claude-docs/audits/accessibility.md`. The header end blocks (`app-shell__end` in `AppShell` and `public-frame__end` in `PublicFrame`) do not wrap, so at a 320 px window and at a 200% root font the page scrolls sideways and header controls leave the screen. The section nav's More overflow follows the viewport width, not the font size.
+
+_Acceptance criteria:_
+
+- At a window 320 px wide, no signed-in or public page scrolls sideways because of the header.
+- With the root font at 200% at 1280 px, the header and the section nav do not scroll the page sideways, and the section nav's More overflow follows the font size.
+- Every header control stays reachable by keyboard and by pointer at both settings.
+- A Playwright check fails on sideways page scroll at 320 px and at 200% root font, on one signed-in page and one public page (R5).
+- The R5 rule text is added to `.claude/rules/testing.md`, "What a test asserts".
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.29 — Add Move Up And Move Down To Reorder Handles** · 5h
+
+_Story:_ As a person who cannot hold and drag, I want to move a list item up or down with a tap, so that I can reorder without dragging.
+
+Minted from the accessibility audit (M17.9). Findings: AX-3 (C-1); each is in `claude-docs/audits/accessibility.md`. A list a person reorders by dragging offers only a drag, or the keyboard, and no single press. `src/components/GripHandle/index.tsx` is the one shared handle behind the combobox chips, the help outline guides and rows, and the spell builder steps, so one change covers all three.
+
+_Acceptance criteria:_
+
+- `GripHandle` offers Move Up and Move Down as single presses, beside drag and keyboard, which keep working.
+- The combobox chips, the help outline guides and rows, and the spell builder steps all use it.
+- Move Up is unavailable on the first item and Move Down on the last, without losing focus.
+- Moving an item announces its new position.
+- A component test, with role and label queries, proves that pressing Move Down changes the order (a regression test, because the missing route is shipped behaviour).
+- The `sortable-wiring` guard also fails a sortable list that uses no `GripHandle`, was seen failing once with a drag-only handle put back, and its allowlist is empty (R3).
+- The R3 rule text is added to `.claude/rules/components.md`, "Shared pieces", on the existing `GripHandle` line.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.30 — Move Focus To Errors And Announce Outcomes** · 5h
+
+_Story:_ As a person using a keyboard or a screen reader, I want a form to tell me what went wrong and what worked, so that I do not have to look for it.
+
+Minted from the accessibility audit (M17.9). Findings: AX-4 (A-16), AX-6 (A-14) and AX-9 (A-15, sign-in part); each is in `claude-docs/audits/accessibility.md`. After Send Invitation succeeds and after the account name saves, nothing is announced to a screen reader. A refused submit in the single-field email forms does not move focus to the error. Sign In is disabled while a required field is empty, which breaks the rule that Save is disabled only when there is nothing to save.
+
+_Acceptance criteria:_
+
+- After Send Invitation succeeds, focus returns to the Invite button and "Invitation sent" is written into a status region that existed before the text.
+- "Your name was saved." is written into a status region that existed before the text.
+- On forgot-password, the account email form, Send Invitation and the keeper invite, a refused submit moves focus to the error summary or to the invalid field.
+- Sign In stays enabled once any field has text; pressing it with the password empty flags the field and moves focus to it.
+- Regression tests: one per fixed behaviour, asserting the focus target or the status text, by role and label (R4, a check only).
+- The R4 rule text is added to `.claude/rules/components.md`, "Form inputs".
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.31 — Fix Names, Roles And Contrast Found By The Scans** · 5h
+
+_Story:_ As a person using a screen reader or a keyboard, I want every control and table to have a name and be reachable, so that I can read and use it. As a reader on the privacy, terms and compendium pages, I want the small muted text to be readable.
+
+Minted from the accessibility audit (M17.9). Findings: AX-5 (Suite A1), AX-7 (A-4), AX-8 (A-9), AX-11 (A-10) and AX-12 (A-11, Suite A2); each is in `claude-docs/audits/accessibility.md`. Five small faults found by the axe sweeps and the keyboard passes: a sideways-scrolling table frame takes no Tab stop, a scrolling dialog body has no role or name, the spell preview opens with duplicate ids, the curator compendium table loses its header text at 375, and the small muted text over the background art falls under 4.5:1.
+
+_Acceptance criteria:_
+
+- One shared table frame, which sets `role="region"`, `tabIndex` and a name itself, replaces the hand-written frames in `DataTable/index.tsx`, `HelpOutline/order-table.tsx`, `HelpWidget/role-permission-table.tsx`, `RichTextEditor/elements.tsx` and `DocumentPage/markdown.tsx`, and `help-widgets.spec.ts:92` passes at phone width.
+- A guard in `tests/guards/`, in the form of `sortable-wiring`, fails a `data-table-frame` class written outside the shared piece (R1). It was seen failing once with a hand-written frame put back, and its allowlist is empty.
+- The R1 rule text is added to `.claude/rules/components.md`, "Shared pieces".
+- A scrolling dialog body (`readingBody`) has a role and a name from the dialog title.
+- The spell preview opens with no duplicate ids.
+- The curator compendium table keeps its header text in the accessibility tree at 375.
+- `.document-page__updated` and `.eyebrow` text keeps 4.5:1 against the art in light and dark at desktop and 375.
+- Regression tests: the axe sweeps for the pages and dialogs named above report none of these rules.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.32 — Make The Audit Suites Run In WebKit, Firefox And Phone** · 8h
+
+_Story:_ As a developer, I want `npm run e2e:audit` and `npm run test:stories:audit` to run and pass, so that I can see a real failure in another engine.
+
+Minted from the accessibility audit (M17.9). Findings: SX-1, SX-2, and the suite failures in "Audit Suite Results"; each is in `claude-docs/audits/accessibility.md`. `npm run e2e:audit` and `npm run test:stories:audit` do not run cleanly. The audit browser server image is pinned behind the Playwright client (`Docker/docker-compose.yaml`), `scripts/e2e-servers.ts` skips its build when a port already answers, and about 24 tests assume desktop Chromium. The run in "Audit Suite Results" also left 14 e2e tests and 11 stories unexplained.
+
+_Acceptance criteria:_
+
+- The audit server image tag and server package in `Docker/docker-compose.yaml` take their version from one place, or a check fails when they differ from the `@playwright/test` range in `package.json`.
+- `scripts/e2e-servers.ts` rebuilds when the first port answers, or refuses with a message naming what is on that port.
+- Each test in "Tests That Assume Desktop Chromium" either runs only in the projects where it is valid, with the reason in the skip, or asserts something true in every engine. The phone tests that click the Site nav open the AccountMenu first.
+- A guard in `tests/guards/` reads `Docker/docker-compose.yaml` and `package.json` and fails when the audit image tag or server package differs from the `@playwright/test` range (R6). It was seen failing once with a mismatch put back, and its allowlist is empty.
+- A guard fails a spec that calls `page.pdf(`, sets `forcedColors` or calls `mouse.wheel` without a `test.skip` on the project (R7). It was seen failing once with the skip removed, and its allowlist is empty. Layout assumptions stay review only.
+- The R6 and R7 rule texts are added to `.claude/rules/testing.md`, "Process".
+- The 14 unknown e2e tests and 11 unknown stories are traced once each, and each is fixed or recorded with its cause.
+- The owner runs the two audit suites once; every failure left is listed with its cause.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
