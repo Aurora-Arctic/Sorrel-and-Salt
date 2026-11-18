@@ -1,0 +1,238 @@
+# How stacked pull requests fit `/create-pr` and the task board
+
+Record for M17.33 (issue #1724). It answers the stack questions from GitHub's current documentation, from `gh stack --help` and from a run on a scratch repository, and lists every place the repo assumes one pull request per task. Nothing in the repo was changed: no skill, rule, script or workflow.
+
+**What was run.** On 2026-11-18 I ran `gh stack` on a public scratch repository, `Aurora-Arctic/stack-scratch-m17-31`, which the owner created. It held throwaway files and stand-in workflows (`gate`, `gitflow`, `close-on-merge`, `probe`, `meta`) that copy the trigger shapes of `pr-gate.yml`, `gitflow.yml` and `close-task-on-merge.yml`: `pull_request` types `opened`, `synchronize`, `reopened`, `edited`, `closed`, and `branches: [main, staging, 'release/**']`. The token was read from a file for each command and never stored. "Proved" below means seen in that run. The scratch repository is public, as the real repository is until the organisation moves to a paid plan, so the private-repository case was not run (`verify.md`, checks 6 and 7). The run used stand-ins, so nothing below says how the real gate's slow jobs behave on a stack; section 6 says exactly what that leaves open.
+
+Sources, cited by page title, all on `docs.github.com`:
+
+- **Stacked PRs** is "Stacked pull requests" (the reference page).
+- **CI** is "Optimizing CI for stacked pull requests".
+- **Merging** is "Merging stacked pull requests".
+- **CLI** is "Stacked pull requests CLI commands".
+- **Webhooks** is "Stacked pull requests APIs and webhooks".
+
+## 1. Which layers get a preview deployment
+
+None, by the repo's own rules, and no change from stacking.
+
+- `vercel.json` lines 3 to 7 turn off Vercel's Git integration (`deploymentEnabled` is `false` for `**`).
+- `.github/workflows/deploy.yml` deploys only on a push to `main`, a push to `staging`, and a pull request into `main` whose head branch starts with `hotfix/` (lines 16 to 23 and 40 to 44). A feature PR, stacked or not, never gets a preview today.
+- The one exception is a hotfix. The run proved that a workflow on `pull_request` with `branches: [staging]` ran for upper layers whose own base was another branch, and that `github.base_ref` was `staging` for every layer (section 6). For a stack of `hotfix/*` branches on `main`, `deploy.yml` would therefore start a preview for each layer. I did not copy `deploy.yml`'s head-branch condition into the scratch repository, so the preview itself is inferred, not run.
+
+I recommend that hotfixes are never stacked. A hotfix is small and goes to two branches already (`.claude/skills/create-pr/reference-hotfix.md`), and a stack on top of that doubles the previews.
+
+## 2. Rebases, force-pushes, worktrees and parallel sessions
+
+What the documentation says:
+
+- `gh stack sync` fetches, fast-forwards the trunk, cascade-rebases each layer onto its updated parent, and pushes every branch atomically "using --force-with-lease after a rebase" (CLI, `gh stack sync --help`). A rebase conflict restores all branches and asks you to run `gh stack rebase` (same page).
+- `gh stack push` and `gh stack submit` push atomically by default; `--no-atomic`, or the `GH_STACK_NO_ATOMIC` env var, allows partial updates (CLI, "Environment variables").
+- Worktrees (CLI, "Worktree support" and `gh stack modify --help`): branches of one stack may be checked out in different worktrees; "Foreign worktrees are never switched to different branches. Changes are never autostashed, and no worktrees are created or removed." Every worktree a command needs must be clean.
+- GitHub's own rebase of a stack: "Rebasing the stack generates signed commits", and a rebase that does not change the diff keeps approvals even with "Dismiss stale pull request approvals" on (Stacked PRs, "Rebasing").
+
+What the run proved, with a three-layer stack and a second worktree holding the middle layer's branch:
+
+- **Dirty foreign worktree.** With uncommitted changes in the second worktree, `gh stack rebase` and `gh stack sync` both stopped with "uncommitted changes in worktree <path>; commit or stash them before continuing", exit code 1. Nothing changed locally or on GitHub.
+- **Clean foreign worktree.** After the second worktree was committed clean, `gh stack sync` rebased the middle and top layers (the worktree's branch was rebased in place, not switched), pushed all three branches and reported "Stack on GitHub is up to date with 3 PRs".
+- **`gh stack rebase`** rebases every layer onto the one below it and onto the updated `staging`, locally only. It prints "To push up your changes, run `gh stack push`". GitHub did not change.
+- **`gh stack push`** force-pushes every layer with a lease check in one atomic push, after the local rebase. It changes no PR.
+- **A bottom-layer amend**, then `rebase` and `push`, produced a new head commit on every layer, and GitHub started one gate run per layer (three runs, section 6).
+- **Review comment.** A review comment added to a layer before the force-push was still on the PR afterwards.
+
+What that means for this repo, which works in worktrees and in parallel sessions:
+
+- Every layer is a branch pushed with a lease-checked force-push. A second session with a dirty checkout of a layer makes `rebase` and `sync` refuse without changing anything, which is a safe failure. The lease protects against overwriting another session's push; it does not merge.
+- `/create-pr` forbids both ends of this. Step 5 (`SKILL.md:55`) says "Never a rebase" and merges the target in; `SKILL.md:90` says "Never force-push". A stack kept up to date with `gh stack sync` breaks both rules by design. See Decision 2.
+- The repo's own convention that one session owns one task and one worktree (`CLAUDE.md`, "One task per PR") fits a stack of one task, if the stack lives in one worktree. I recommend that one session owns a whole stack, and no second session runs `gh stack` commands on it.
+
+Not proved: a conflict during `gh stack rebase` (the run had no conflicting layers), and a second session's push racing the lease.
+
+## 3. Which `gh stack` commands write to GitHub outside `/create-pr` and `task-board.mjs`
+
+"Writes" means a change on GitHub, not on the local disk. The `rebase`, `push`, `sync`, `submit` and `merge` rows are from the run; the others are from `gh stack --help` and the CLI page.
+
+| Command                                                                                    | Writes to GitHub?                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `init`, `add`, `view`, `up`, `down`, `top`, `bottom`, `trunk`, `switch`, `alias`, `modify` | No for `init`, `add`, `modify` (local branches and local stack tracking; `modify` says "run `gh stack submit` afterward to push changes, update PRs, and recreate the stack on GitHub"). `view` reads. Navigation is local                                                                                                         |
+| `checkout`                                                                                 | Reads stacks from GitHub (it lists remote-only stacks); pulls branches down. No write                                                                                                                                                                                                                                              |
+| `submit`                                                                                   | Yes. Pushes all branches, creates PRs, updates base branches, creates or updates the stack. With `--auto` it is non-interactive: each PR is a draft (unless `--open`), its title is the layer's commit subject, and its body holds only a stack footer. No `Closes`, no `Refs`, no task id. `--open` also marks existing PRs ready |
+| `push`                                                                                     | Yes. Force-pushes every layer with a lease check, atomically; no PR change                                                                                                                                                                                                                                                         |
+| `sync`                                                                                     | Yes. Fetches, rebases, force-pushes every layer, and syncs PR state; reports "Stack on GitHub is up to date"                                                                                                                                                                                                                       |
+| `rebase`                                                                                   | No. Local only, and it says to run `gh stack push` next                                                                                                                                                                                                                                                                            |
+| `link`                                                                                     | Yes (documentation only; not run). Pushes branches, creates PRs for branches that have none, and creates or extends the stack                                                                                                                                                                                                      |
+| `unstack` (alias `delete`)                                                                 | Yes (documentation only; not run). Removes the stack on GitHub through the API; merged, merging or queued PRs stay in it. `--local` only removes local tracking                                                                                                                                                                    |
+| `merge`                                                                                    | Yes. `gh stack merge <PR number> --yes --merge` merged that PR and every PR below it, and no PR above it. It says "Merging #N into staging via merge" and prints the merge commit. It checks only that a PR is open and not a draft, so a draft PR must be marked ready first. Bypassing merge requirements is not supported       |
+
+Two of these write what `/create-pr` and `task-board.mjs` also write: `submit` and `link` create PRs and set their titles and bodies, which is `/create-pr` steps 8 and 9 (`SKILL.md:68` to `SKILL.md:78`). A PR made by `gh stack submit` has no `Closes #N` or `Refs #N` line, no `<ID> — ` title, no tally and no board link unless something adds them (proved: the body was the footer alone).
+
+## 4. How each layer links to its task, and when the task moves to In Review
+
+Facts from the repo:
+
+- A merged PR closes a task only through `.github/workflows/close-task-on-merge.yml`: it runs on `pull_request` `closed`, base `staging` (line 12), `merged == true` (line 20), and reads whole-line `Closes #N` in the body (lines 34 to 37).
+- `Refs #N` closes nothing and is never linked (`SKILL.md:78`).
+
+What the run proved, with the stand-in `close-on-merge` (the real one's filter and whole-line regex) and the `probe` workflow that prints the closed event's bases:
+
+- **Closes on the bottom layer, `Refs` on the others.** `gh stack merge` of the bottom PR merged only that PR. The stand-in then closed the task ("Closed by stand-in for PR #2"). The other two layers were still open, so the task closed with two layers unmerged.
+- **Closes on the top layer, `Refs` on the others.** Merging the middle layer left the second task open. After the middle layer merged, the top layer's base was already `staging`. Merging the top layer then closed the task, by the stand-in.
+- **The closed event's bases.** For a layer merged when it was the lowest unmerged one, `pull_request.base.ref` and `github.base_ref` were both `staging`.
+- **After the bottom layer merges, GitHub retargets the layer above it to `staging`** (the pull request list showed base `staging` for it at once). The layer two above stayed on the retargeted layer's branch until that layer merged. The retarget starts a gate run on the retargeted PR (`edited`).
+- **GitHub's own keyword did not fire.** The task's event list holds one close, by the Actions bot, with no commit. `staging` is not the default branch, so `Closes #N` in a PR into `staging` closes nothing by itself, and `close-task-on-merge.yml` stays the only closer.
+
+Not proved: the `closed` event of layers merged together in one atomic call. I merged one PR at a time, bottom-up, so every layer was already the lowest unmerged one. M17.40 includes that run.
+
+What is decided:
+
+- A task is one stack. Every layer's title opens `<ID> — `, as `SKILL.md:69` requires, so the tally still counts the id (`.claude/skills/project-progress/tally.mjs`).
+- Decided: the **top** layer's body opens with `Closes #N`; every layer below it opens with `Refs #N`. Reason: the task closes only when the last layer lands, and the run showed the top layer reports base `staging` when it is merged last.
+- The task moves to `In Review` once, when the first (bottom) PR is opened, with one comment listing every layer's PR number (the same shape as the hotfix comment in `reference-hotfix.md`). Later layers add a comment and leave the status alone, as `SKILL.md:84` already says for an updated PR.
+
+**Decided: Y.** `Closes #N` goes on the top layer. The alternative, the bottom layer, closes the task at the first merge with layers unmerged (proved). Layers merged one at a time, bottom-up, are proved; layers merged in one atomic call are unproved, and Draft G proves them before the first real stack is merged.
+
+## 5. Where the repo assumes one pull request per task
+
+Each row is an assumption a stack breaks, with its file and line.
+
+| File and line                                  | Assumption                                                                                                                                                                                             |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.claude/skills/create-pr/SKILL.md:10`         | The skill opens one PR for the current branch                                                                                                                                                          |
+| `SKILL.md:23`                                  | The existing-PR check lists open PRs by one head branch                                                                                                                                                |
+| `SKILL.md:25` to `SKILL.md:48`                 | One target branch is chosen; the table and the prefix rules propose `staging` or another `feature/*`, never "the branch below in a stack"; the rest of the skill "assume[s] a single target" (line 36) |
+| `SKILL.md:55`                                  | The target is merged in, "Never a rebase"; a stack is kept current by rebasing                                                                                                                         |
+| `SKILL.md:60` and `SKILL.md:64`                | "Nothing ahead of the target" and the diff are measured against the target; for an upper layer the useful diff is against the layer below                                                              |
+| `SKILL.md:61`                                  | `git push -u origin <source>` pushes one branch                                                                                                                                                        |
+| `SKILL.md:65` and `SKILL.md:66`                | One task id from one branch slug, one `find` call                                                                                                                                                      |
+| `SKILL.md:69`                                  | The title opens with the task's id, which every layer of one task would repeat                                                                                                                         |
+| `SKILL.md:70`                                  | One `Closes #N` per task a PR finishes; no rule for several PRs for one task                                                                                                                           |
+| `SKILL.md:72`                                  | One tally per PR body                                                                                                                                                                                  |
+| `SKILL.md:76` and `SKILL.md:77`                | `gh pr create --base <target>` creates one PR; `gh stack submit` creates the PRs itself                                                                                                                |
+| `SKILL.md:78`                                  | `link-pr` is run once per task on the `Closes` lines; "a PR into `main` needs no call"; nothing for several PRs on one task                                                                            |
+| `SKILL.md:83` and `SKILL.md:84`                | One comment "PR opened into <target>", status to `In Review` once; "updated" means one PR                                                                                                              |
+| `SKILL.md:90`                                  | "Never force-push", which `gh stack sync` and `push` do                                                                                                                                                |
+| `.claude/rules/task-tracking.md:44`            | `In Review` is "The PR is open", singular                                                                                                                                                              |
+| `.claude/rules/task-tracking.md:47`            | "A PR closed without merging sends its task back to `In Progress`"; with a stack, one closed layer is not a closed task                                                                                |
+| `.claude/rules/task-tracking.md:55`            | "A PR body opens with a single `Closes #N` line" and one `link-pr` call per PR                                                                                                                         |
+| `scripts/task-board.mjs:4`, `:994`, `:1035`    | `link-pr <ID> <PR number>` takes one PR                                                                                                                                                                |
+| `scripts/task-board.mjs:241`                   | The `Done` refusal says "a PR body naming `Closes #N` closes the issue on merge"                                                                                                                       |
+| `scripts/task-board.mjs:246`                   | The step-back message says "A PR closed without merging goes back to `In Progress`"                                                                                                                    |
+| `scripts/task-board.mjs:888` to `:892`         | `linkPullRequest` says "feature PRs target `staging`"; an upper layer's base is a `feature/*` branch                                                                                                   |
+| `.github/workflows/close-task-on-merge.yml:12` | Only base `staging` closes; a layer merged when it is the lowest unmerged one reports `staging` (section 4), so this holds for bottom-up merges one at a time                                          |
+
+Also touching the same assumption, outside the three files named in the brief: `claude-docs/task-tracking.md` (the "Status" section and the `link-pr` row of the command table) and `.claude/skills/create-pr/reference-hotfix.md`.
+
+Not an assumption: `task-board.mjs` has no per-PR state. `find`, `status`, `comment` and `estimate` take only a task id, so the board needs no change to hold several PRs for one task.
+
+## 6. What the run showed about workflows, and what the workflows need for stacks
+
+### What a run on a layer can know
+
+Quotes are from CI ("Optimizing CI for stacked pull requests"); values are from the `meta` and `probe` stand-ins on a three-layer stack whose base is `staging`.
+
+| Expression                                                                          | Docs say                                                                                                                                             | Value in the run                                                                                                                       |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `github.base_ref`                                                                   | "GitHub Actions workflows trigger as if each pull request in the stack targets the base of the stack."                                               | `staging` on every layer and every event                                                                                               |
+| `github.event.pull_request.base.ref`                                                | Not stated                                                                                                                                           | The layer below (`feature/<lower>`), `staging` for the bottom layer                                                                    |
+| `github.ref`                                                                        | Not stated                                                                                                                                           | `refs/pull/<N>/merge` on every layer                                                                                                   |
+| `github.event.pull_request.stack.number`, `.size`, `.position`, `.base.ref`, `.sha` | "Stack metadata is available in workflow expressions via `github.event.pull_request.stack`", "present only when the pull request belongs to a stack" | `{base: {ref: staging, sha}, id, number, position, size}` for position 2 and 3 of 3. `null` on the bottom layer's first `opened` event |
+
+How a workflow tells the layers apart, from the same page: the lowest unmerged layer is where `stack.base.ref` equals `pull_request.base.ref`; the top layer is where `stack.position` equals `stack.size`; the original bottom is `stack.position == 1`. In the run, the stack object was present on `opened` for the top layer, on `synchronize` for the top and on `edited` for the middle, and `null` on the bottom layer's `opened`, which fired before the stack existed. A workflow must test `stack != null` before reading a field, as the page says.
+
+### What gets checked out, and what the merge ref is merged against
+
+`pull_request` checks out `refs/pull/<N>/merge`. For an upper layer it is the layer's head merged into the layer below's head (the log showed `Merge <top> into <middle head>` for the top layer, `Merge <middle> into <bottom head>` for the middle one). The bottom layer merges into the current `staging`. So the top layer's run holds the code of the whole stack (the log listed all three layer commits and `staging`'s history), a middle layer's run holds the layers up to it, and no run holds `staging` merged with the whole stack as one change.
+
+### What started a run, per event
+
+One "run" is one run of one workflow on one PR; the gate and gitflow stand-ins each started once per layer, so the counts below are per workflow.
+
+| Event                                                           | Runs started                                                                                                                                                           |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gh stack submit`, first stack (two layers, then a third added) | One run each for the first two layers; none for the third layer's `opened`                                                                                             |
+| `gh stack submit`, second stack (three layers)                  | Bottom and top: one each. Middle: none                                                                                                                                 |
+| A push to the top layer only                                    | 1 (the top)                                                                                                                                                            |
+| A bottom-layer amend, `rebase`, `push`                          | 3 (one per layer)                                                                                                                                                      |
+| A second amend, then `sync`                                     | 3                                                                                                                                                                      |
+| A title edit of the middle PR                                   | 1 (that PR)                                                                                                                                                            |
+| Two bottom amends pushed 8 seconds apart (a 60-second job)      | 6 started: the first push's 3 were cancelled, the second's 3 finished                                                                                                  |
+| `gh stack merge` of the bottom layer                            | The `closed` runs on the merged PR, then one gate and one gitflow run on the layer above it, because the merge retargets it to `staging`. The top layer started no run |
+
+An `opened` event of an upper layer did not always start a run: in the second stack the middle layer got none, and in the first stack the third layer got none. I do not know why. Every later event on a layer (push, edit, `sync`) did start its run, so an upper layer is checked from its first push after submit, not from its `opened`. My reading, not proved: `opened` fires before the stack exists, when the layer's own base does not match the `branches` filter.
+
+### The real gate, and what its concurrency does
+
+`pr-gate.yml` has `concurrency.group: ${{ github.workflow }}-${{ github.event.pull_request.number }}` and `cancel-in-progress: ${{ github.event.action != 'edited' }}`. The key is the PR number, so each layer is its own group: a push to one layer cancels only that layer's earlier run, and nothing cancels across layers. The run proved that on the `meta` stand-in, which has the same group shape: after a cascade of two force-pushes, the first cascade's three runs were cancelled and the second's three finished. `checks` and `gitflow` carry their own per-PR groups, so the same holds inside a run.
+
+Its jobs, from the file: `changes` (path filter), `build-image`, `checks` (lint, typecheck, build, destructive DDL, migration order), `build-db-image`, `vitest`, `build-e2e-image`, `playwright`, `stories`, `playwright-coverage`, `workshop`, `pr-comments`, and `gitflow`. `format` and `audit` are named in the header as always running. The slow ones are the Vitest and Playwright jobs, the story suite and the builds. `claude-docs/ci/aggregating-workflows.md` says the gate "takes ten minutes", and `claude-docs/ci/runner-budget.md` sets a test step's budget at 7 minutes and says runs "cost nothing" on a public repo, so the count matters only for how long a developer waits. No per-job duration table exists in the CI docs; I give none.
+
+Three facts about the real gate, read from the real files and checked against the stand-ins:
+
+- **The real `gitflow.yml` reads `github.event.pull_request.base.ref`**, which is the layer below for an upper layer. Its `case` has an empty pattern for any base that is not `main`, `staging` or `release/*`, and an empty pattern passes. An upper layer therefore passes gitflow with no change, and only the bottom layer is checked against `staging`'s rule.
+- **`pr-gate.yml` line 299 passes `github.base_ref`** to the migration-order check, which is `staging` for every layer, so each layer's migrations are compared with `staging`.
+- **`changes` lists the PR's files through the API** (`dorny/paths-filter`), and the PR files API returned only each layer's own file (one file per layer in the run). The real gate therefore already runs, on each layer, the jobs whose paths that layer's own diff touches, though the top layer's checkout holds the whole stack's code.
+
+### What the workflows need
+
+**Decided: option (2), top-only.** The full gate runs on the top layer and tests the whole stack's diff (the `changes` filters read `stack.base.sha` to head when `stack.position == stack.size`). The layers below run types, lint and format. A stack merges whole, never a lower layer alone. The owner's reason: smaller pull requests multiply gate runs, which costs minutes once the repository is private. Costs the owner accepted: a green lower layer means only the cheap checks passed; a failure is placed by the failing test's name, not by the layer; a partial merge is unsafe. Draft C below is minted for it.
+
+The table and the analysis below are what the choice was made from.
+
+GitHub already triggers the gate on every layer, with `github.base_ref` equal to `staging`, so no trigger change is needed. The open question is cost against assurance. Costs for a three-layer stack, counted in gate runs (the real gate's own jobs inside each run follow the path filter):
+
+| Option                                                                   | Runs for a submit, then a bottom amend (cascade)                         | A layer's gate red                                                                            | Bottom-up merging                                                            | Required-check names                                                                                                         |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| (1) Full gate on every layer, every push                                 | 3 full gates, then 3 more                                                | Means that layer's code, with the layers below it, failed in full                             | Each layer merges after its own full gate                                    | Unchanged                                                                                                                    |
+| (2) Full gate on the top layer only; types, lint and format below        | 1 full and 2 cheap, then 1 full and 2 cheap                              | A lower layer's green means only the cheap checks passed; the full result is on the top layer | A lower layer merges having passed the full checks only as part of the whole | Unchanged if the skipped jobs report skipped (the repo's `if:` design already does, MB.39); the rule is written with `stack` |
+| (3) Full gate on every layer, only the jobs the layer's own diff touches | Today's behaviour: each layer runs what its own files need               | Means the layer's own paths passed, with lower layers as context                              | A layer merges after the checks its own change needs                         | Unchanged                                                                                                                    |
+| (4) No change                                                            | Same as (3), because the path filter already uses each layer's own files | Same as (3)                                                                                   | Same as (3)                                                                  | Unchanged                                                                                                                    |
+
+Gate runs start in parallel on separate runners (the runs in the cascade started in the same second), so a cascade over three layers waits one gate, about ten minutes by the CI docs, not three. Runner capacity under three parallel gates was not measured.
+
+The gap in (3) and (4): a top layer whose own diff touches no test path skips the Vitest and Playwright jobs, although its checkout holds the layers below. The layers below ran their own jobs, so only a defect that appears from the layers together, with none of them touching the path, goes unchecked. That is the same gap a single PR has for code it does not touch.
+
+Under (2) the rule in `process.md` Step 4 changes from "do not read a layer whose gate is red" to "read a layer when the top layer's gate is green; the tests-first layer is read before its tests pass". The change to the `changes` job is M17.39.
+
+The run did not show how the real gate's slow jobs behave on a stack (a stack of one real task), whether `pr-comments` writes one comment per layer without collision, or the first-`opened` gap on a real repository. M17.39 records those on the first real stack.
+
+### A point the options must answer: the tests-first layer
+
+This is reasoning, not something the run proved. `process.md` Step 2 makes the tests-first layer the bottom layer, and its tests fail by design until the implementation layer above it lands. Under per-layer gating (options 1, 3 and 4) the bottom layer's gate is therefore red at review time, and it cannot merge alone, because merging it would put failing tests on `staging`.
+
+I checked it against the real `pr-gate.yml`, and it holds. The `changes` job's `vitest` filter (lines 199 to 215) lists `tests/**` (excluding `tests/e2e/**/*.spec.ts`) and `src/**`. A layer that adds only `tests/modules/<x>.test.ts` therefore sets `vitest` to true, and the `vitest` job (line 307, `vitest.yml`) runs the files it adds and fails. A tests-only layer for Playwright specs would also trigger `playwright` through the `tests/e2e/**` filters.
+
+What each option does with it:
+
+- (1), (3) and (4): the bottom layer's gate is red until the implementation lands, so `gh stack merge` of the bottom layer alone is refused by any required check, and the whole stack lands together (the top layer's gate is the first green one). The review reads the tests without a green gate under them.
+- (2), the chosen option: the bottom layer runs only the cheap checks and is green, so GitHub would let it merge alone in error. The full gate runs on the top layer only, where it is green. The rule is "merge the stack as a whole"; M17.39 asks for a guard and says what is possible.
+
+Nothing in the run tested this with the real gate.
+
+### Cost drivers on a private repository
+
+Runs on a public repository are free (`claude-docs/ci/runner-budget.md`), so this is about the day the repository goes private. From the run, with no minute figures invented:
+
+- **Runs per cascade.** A change to the bottom layer starts one gate run per layer, so a three-layer stack runs 3 gates per cascade. A push to the top layer alone starts 1.
+- **Retarget re-run.** Merging the bottom layer retargets the layer above to `staging` and starts one gate run on it. A stack of N layers merged bottom-up one at a time starts N-1 such re-runs in all, and each re-run is a new run on an already-green commit.
+- **Cancelled runs.** A superseded run is cancelled, and a cancelled run still bills the minutes it ran.
+- **Billed minutes per gate run are not stated** in the CI docs, which hold no per-job durations. The command that reports one run's billable time is `gh api repos/<owner>/<repo>/actions/runs/<run id>/timing`. I made that single read-only call on one recent `pr-gate` run of this repository. It returned a billable figure of 0 ms over 2 jobs (`UBUNTU`, public repository) and a run duration of 8 seconds, while `gh run view` listed 12 jobs for that run. That run was a short one, so it says nothing about a full gate, and the figure is 0 because the repository is public. A private-repository figure needs a private run.
+
+## Merge queue
+
+Stacks work with a merge queue: all PRs enter in order, and one that is ejected takes everything above it out (Merging, "Merging using a merge queue"). The repo has no merge queue today: `.github/workflows/gitflow.yml` says `merge-queue.yml` was deleted and returns later, and `claude-docs/ci/aggregating-workflows.md:120` says there is no `merge_group` workflow. Nothing to do now.
+
+## Required checks on `staging`
+
+I tried to mark the `gate` stand-in as a required check on `staging`, through a branch protection rule and through a repository ruleset. GitHub refused both with HTTP 403, "Resource not accessible by personal access token". The token lacks the repository permission for branch rules, so how a required check behaves on a stack's upper layers, and whether `gh stack merge` is blocked by a red required check, is not proved. The documentation says required checks are evaluated as if each PR targets the stack base (Stacked PRs), and `gh stack merge` says "GitHub evaluates branch protection and repository rules when the merge runs".
+
+## Implementation tasks
+
+The tasks that build these decisions are in `plan.md`: "Open Stacks From `/create-pr` and Close Tasks Whole" (M17.40) and "Make the Gate Fit Stacked Pull Requests" (M17.39).
+
+## Decisions
+
+All three decisions are decided.
+
+1. **Where `Closes #N` goes on a stack. Decided: Y.** The top layer carries `Closes #N`; every layer below carries `Refs #N`. M17.40 proves the atomic whole-stack merge.
+2. **`/create-pr`'s "never rebase, never force-push" rules. Decided: X.** Stack branches are the one exception to `SKILL.md:55` and `SKILL.md:90`; `gh stack` owns them, and one session owns a whole stack. M17.40 writes it into the skill.
+3. **What the workflows do on a stack. Decided: option (2), top-only.** The full gate runs on the top layer and tests the whole stack's diff; the layers below run types, lint and format; a stack merges whole, never a lower layer alone. Reason: smaller pull requests multiply gate runs, which costs minutes once the repository is private. Accepted costs: a green lower layer means only the cheap checks passed; a failure is placed by the failing test's name; a partial merge is unsafe. Draft C writes it.
