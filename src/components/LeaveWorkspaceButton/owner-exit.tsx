@@ -106,7 +106,7 @@ const Options = ({
   const ownerBox = useRef<HTMLInputElement>(null);
   const ownerField = fieldDescription({
     id: `${id}-owner`,
-    error: missing ? 'Choose who becomes the steward.' : undefined,
+    error: missing ? 'Choose who becomes the Steward' : undefined,
   });
   const only = successors.length === 1 ? successors[0] : undefined;
   const [way, setWay] = useState<WayOut>('hand');
