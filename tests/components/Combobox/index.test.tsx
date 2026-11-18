@@ -21,6 +21,8 @@ import {
 } from '../../support/sortable';
 import type { HarnessProps } from './types';
 import { expectBefore } from '../../support/interact';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { announced as statusText } from '../../support/click-feedback';
 
 // Downshift's `useCombobox` (claude-docs/components/combobox.md).
 
@@ -1052,6 +1054,57 @@ describe('Combobox', () => {
       await dragByPointer(handle('Mars'), 245);
 
       expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 2);
+    });
+
+    describe('by Move Up and Move Down', () => {
+      const moveUp = (value: string) => screen.getByRole('button', { name: `Move Up ${value}` });
+      const moveDown = (value: string) =>
+        screen.getByRole('button', { name: `Move Down ${value}` });
+      const renderAnnounced = (onMove = vi.fn()) => {
+        render(
+          <StatusRegionProvider>
+            <Harness
+              entries={<ComboboxSortableEntries entries={celestialBodies()} onMove={onMove} />}
+            />
+          </StatusRegionProvider>,
+        );
+        return onMove;
+      };
+
+      // Regression: an entry moved only by a drag or the keyboard, never by a single press.
+      it('moves an entry one place later with a single press of Move Down, and says its new place', () => {
+        const onMove = renderAnnounced();
+
+        fireEvent.click(moveDown('Mars'));
+
+        expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 1);
+        expect(statusText()).toMatch(/Mars\D+2\D+3/);
+      });
+
+      it('moves an entry one place earlier with a single press of Move Up', () => {
+        const onMove = renderAnnounced();
+
+        fireEvent.click(moveUp('Saturn'));
+
+        expect(onMove).toHaveBeenCalledExactlyOnceWith(2, 1);
+      });
+
+      // aria-disabled rather than disabled: a disabled button drops the focus in a browser.
+      it('offers no Move Up on the first entry and no Move Down on the last, keeping the focus on the button pressed', () => {
+        const onMove = renderAnnounced();
+
+        // The precondition: the middle entry offers both.
+        expect(moveUp('Venus')).not.toHaveAttribute('aria-disabled', 'true');
+        expect(moveDown('Venus')).not.toHaveAttribute('aria-disabled', 'true');
+        for (const end of [moveUp('Mars'), moveDown('Saturn')]) {
+          expect(end).toHaveAttribute('aria-disabled', 'true');
+          expect(end).not.toBeDisabled();
+          act(() => end.focus());
+          fireEvent.click(end);
+          expect(end).toHaveFocus();
+        }
+        expect(onMove).not.toHaveBeenCalled();
+      });
     });
 
     it('moves nothing on a press that does not drag, or a lift put straight back down', async () => {

@@ -5,7 +5,9 @@ import { router } from '../../support/next-navigation';
 import type { HelpOrderList, HelpOrderRow } from '@/components/HelpOutline/types';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
-import { moveByKeyboard } from '../../support/sortable';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { announced } from '../../support/click-feedback';
+import { GRIP_NAME, moveByKeyboard } from '../../support/sortable';
 
 // The outline's sortable tables, a guide's sub pages and the FAQ: a grip on every row, and a drop saved at once in the
 // whole order, the rows the filter leaves out among it (claude-docs/components/help-outline.md, "Ordering").
@@ -51,18 +53,20 @@ afterEach(() => {
 
 const table = (list: HelpOrderList = { kind: 'subPages', guideId: 'g1' }, rows = ROWS) =>
   render(
-    <HelpOrderTable
-      aria-label="Sub Pages of Testwort Basics"
-      list={list}
-      order={ORDER}
-      columns={[{ heading: 'Sub Page', rowHeader: true }, { heading: 'Audience' }]}
-      rows={rows}
-      empty="Testwort Basics has no sub pages."
-    />,
+    <StatusRegionProvider>
+      <HelpOrderTable
+        aria-label="Sub Pages of Testwort Basics"
+        list={list}
+        order={ORDER}
+        columns={[{ heading: 'Sub Page', rowHeader: true }, { heading: 'Audience' }]}
+        rows={rows}
+        empty="Testwort Basics has no sub pages."
+      />
+    </StatusRegionProvider>,
   );
 
 const grid = () => within(screen.getByRole('table', { name: /Sub Pages|FAQ/ }));
-const grips = () => grid().getAllByRole('button', { name: /^Move / });
+const grips = () => grid().getAllByRole('button', { name: GRIP_NAME });
 const gripNames = () => grips().map((grip) => grip.getAttribute('aria-label'));
 const positionOf = (title: string) =>
   within(grid().getByRole('rowheader', { name: title }).closest('tr') as HTMLElement).getAllByRole(
@@ -82,7 +86,6 @@ describe('HelpOrderTable', () => {
       'Move Testwort Closing',
     ]);
     expect(positionOf('Testwort Middle')).toHaveTextContent('3');
-    expect(grid().queryByRole('button', { name: /Move Up|Move Down/ })).toBeNull();
   });
 
   it('saves a sub page’s drop at once as the guide’s whole order, the left-out sub page kept in its place', async () => {
@@ -107,6 +110,73 @@ describe('HelpOrderTable', () => {
       'Move Testwort Opening',
       'Move Testwort Closing',
     ]);
+  });
+
+  it('moves a row down one place with a single press of Move Down, saves the whole order and says the new place', async () => {
+    const sent: unknown[] = [];
+    mockGraphQLMutation(
+      'OrderHelpSubPages',
+      (variables: { id: string; input: { childIds: string[] } }) => {
+        sent.push(variables);
+        return { updateHelpArticle: { id: variables.id } };
+      },
+    );
+    table();
+
+    fireEvent.click(grid().getByRole('button', { name: 'Move Down Testwort Opening' }));
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]).toEqual({ id: 'g1', input: { childIds: ['s2', 's3', 's1', 's4'] } });
+    expect(gripNames()).toEqual([
+      'Move Testwort Middle',
+      'Move Testwort Opening',
+      'Move Testwort Closing',
+    ]);
+    expect(announced()).toMatch(/Testwort Opening.*position 3/);
+  });
+
+  it('moves a row up with a single press of Move Up, the left-out row kept in its place', async () => {
+    const sent: string[][] = [];
+    mockGraphQLMutation('OrderHelpFaq', (variables: { ids: string[] }) => {
+      sent.push(variables.ids);
+      return { orderHelpFaq: variables.ids.map((id) => ({ id })) };
+    });
+    table({ kind: 'faq' });
+
+    fireEvent.click(grid().getByRole('button', { name: 'Move Up Testwort Closing' }));
+
+    await waitFor(() => expect(sent).toEqual([['s1', 's2', 's4', 's3']]));
+  });
+
+  // aria-disabled rather than disabled: a disabled button drops the focus in a browser.
+  it('offers no Move Up on the first row and no Move Down on the last, keeping the focus on the button pressed', () => {
+    const sent: unknown[] = [];
+    mockGraphQLMutation('OrderHelpSubPages', (variables: { id: string }) => {
+      sent.push(variables);
+      return { updateHelpArticle: { id: variables.id } };
+    });
+    table();
+    const up = grid().getByRole('button', { name: 'Move Up Testwort Opening' });
+    const down = grid().getByRole('button', { name: 'Move Down Testwort Closing' });
+
+    // The precondition: the rows between offer both.
+    expect(grid().getByRole('button', { name: 'Move Up Testwort Middle' })).not.toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(grid().getByRole('button', { name: 'Move Down Testwort Middle' })).not.toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    for (const end of [up, down]) {
+      expect(end).toHaveAttribute('aria-disabled', 'true');
+      expect(end).not.toBeDisabled();
+      act(() => end.focus());
+      fireEvent.click(end);
+      expect(end).toHaveFocus();
+    }
+    expect(sent).toEqual([]);
+    expect(gripNames()[0]).toBe('Move Testwort Opening');
   });
 
   it('saves an FAQ drop through the FAQ’s own write, listing every entry', async () => {

@@ -185,9 +185,8 @@ test('a keeper drops a sub page above another, and the guide keeps the order', a
   await nav(page).getByRole('link', { name: ASH }).click();
   const table = page.getByRole('table', { name: `Sub Pages of ${ASH}` });
   const titles = () => table.getByRole('rowheader').allTextContents();
-  // Precondition: Kindling first, and no Move Up or Move Down left to press.
+  // Precondition: Kindling first.
   await expect.poll(async () => mine(await titles())).toEqual([ASH_ONE, ASH_TWO]);
-  await expect(table.getByRole('button', { name: /Move Up|Move Down/ })).toHaveCount(0);
   // Sweep gap: a sub page table in Reorder Mode
   await assertNoAccessibilityViolations(page);
 

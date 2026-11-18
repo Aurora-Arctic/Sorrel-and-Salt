@@ -12,7 +12,7 @@ import type {
 import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
 import { sortableModule } from '@/components/Combobox/lazy-sortable';
 import { press, type } from '../../support/interact';
-import { layOutChips, moveByKeyboard } from '../../support/sortable';
+import { GRIP_NAME, layOutChips, moveByKeyboard } from '../../support/sortable';
 import type { Variant } from './types';
 
 // claude-docs/components/ingredient-form.md, "Stories and tests"
@@ -533,7 +533,7 @@ describe('ListField', () => {
 
       const handles = (list: Variant) =>
         within(group(list.legend))
-          .queryAllByRole('button', { name: /^Move / })
+          .queryAllByRole('button', { name: GRIP_NAME })
           .map((button) => button.getAttribute('aria-label'));
       expect(handles(ORDERED)).toEqual(['Move First Fixture', 'Move Second Fixture']);
       expect(handles(PLAIN)).toEqual([]);

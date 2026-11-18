@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { describe, expect, inject, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
@@ -29,4 +29,57 @@ describe('sortable wiring', () => {
       expect(users.sort()).toEqual(ALLOWED);
     },
   );
+});
+
+// A sortable item is moved through the one shared handle, GripHandle, which offers the drag, the keyboard and the
+// single-press Move Up and Move Down; a hand-made handle would offer the drag alone. No file is excepted.
+const GRIP_HANDLE = 'src/components/GripHandle/index.tsx';
+const EXCEPTIONS: string[] = [];
+const read = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
+
+/** The listed sources `file` imports by a relative path. */
+function importedFiles(file: string, files: string[]): string[] {
+  const paths = [...read(file).matchAll(/from '(\.{1,2}\/[^']+)'/g)].map((match) =>
+    posix.join(posix.dirname(file), match[1]),
+  );
+  return files.filter((listed) =>
+    paths.some((path) => [`${path}.tsx`, `${path}.ts`, `${path}/index.tsx`].includes(listed)),
+  );
+}
+
+describe('sortable handles', () => {
+  it('lets only GripHandle spread dnd-kit’s listeners onto a handle', () => {
+    const spreads = /setActivatorNodeRef|\{\s*\.\.\.(?:\w+\.)?listeners\s*\}/;
+    // Precondition: the scan finds the shared handle's own spread, so an empty result could not pass.
+    expect(spreads.test(read(GRIP_HANDLE))).toBe(true);
+
+    const handMade = sources().filter(
+      (file) => file !== GRIP_HANDLE && !EXCEPTIONS.includes(file) && spreads.test(read(file)),
+    );
+
+    expect(handMade).toEqual([]);
+  });
+
+  it('hands every useSortable item to a GripHandle, in its own file or the one it renders the item with', () => {
+    const files = sources();
+    const sortables = files.filter((file) => /\buseSortable\(/.test(read(file)));
+    // Precondition: the three sortable lists are found.
+    expect(sortables).toEqual(
+      expect.arrayContaining([
+        'src/components/Combobox/sortable.tsx',
+        'src/components/HelpOutline/sortable.tsx',
+        'src/components/SpellBuilder/steps/step-row.tsx',
+      ]),
+    );
+
+    const rendersGrip = (file: string) => /<GripHandle\b[^>]*?\bsortable=/s.test(read(file));
+    const withoutGrip = sortables.filter(
+      (file) =>
+        !EXCEPTIONS.includes(file) &&
+        !rendersGrip(file) &&
+        !(/\bsortable=\{/.test(read(file)) && importedFiles(file, files).some(rendersGrip)),
+    );
+
+    expect(withoutGrip).toEqual([]);
+  });
 });

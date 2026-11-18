@@ -11,8 +11,10 @@ import type {
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
-import { moveByKeyboard } from '../../support/sortable';
+import { GRIP_NAME, moveByKeyboard } from '../../support/sortable';
 import { expectBefore } from '../../support/interact';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { announced } from '../../support/click-feedback';
 
 // The keepers' Guides bar: the guides under their audience, Public, then Staff, then Keeper, once each, and Reorder
 // Mode, where every live guide is a row to move among its own audience's and each move saves as it happens
@@ -79,13 +81,13 @@ const bar = (guides = GUIDES, order = ORDER) =>
   render(<HelpGuidesBar guides={guides} order={order} others={OTHERS} />);
 
 const nav = () => within(screen.getByRole('navigation', { name: 'Help Outline' }));
-const grips = () => nav().getAllByRole('button', { name: /^Move / });
+const grips = () => nav().getAllByRole('button', { name: GRIP_NAME });
 const gripNames = () => grips().map((grip) => grip.getAttribute('aria-label'));
 const reorder = () => fireEvent.click(nav().getByRole('button', { name: 'Reorder' }));
 const audienceLists = () => nav().getAllByRole('list', { name: /^(Public|Staff|Keeper)$/ });
 const gripsIn = (list: HTMLElement) =>
   within(list)
-    .getAllByRole('button', { name: /^Move / })
+    .getAllByRole('button', { name: GRIP_NAME })
     .map((grip) => grip.getAttribute('aria-label'));
 
 describe('HelpGuidesBar at rest', () => {
@@ -278,6 +280,52 @@ describe('HelpGuidesBar in Reorder Mode', () => {
     ]);
     expect(gripsIn(audienceLists()[1])).toEqual(['Move Testwort Queue Notes']);
     await waitFor(() => expect(sent).toEqual([['g2', 'g3', 'g1', 'g4']]));
+  });
+
+  it('moves a guide down one place among its audience with a single press of Move Down, and says the new place', async () => {
+    const sent = sentOrders();
+    render(
+      <StatusRegionProvider>
+        <HelpGuidesBar guides={GUIDES} order={ORDER} others={OTHERS} />
+      </StatusRegionProvider>,
+    );
+    reorder();
+
+    fireEvent.click(nav().getByRole('button', { name: 'Move Down Testwort Basics' }));
+
+    await waitFor(() => expect(sent).toEqual([['g2', 'g1', 'g3', 'g4']]));
+    expect(gripsIn(audienceLists()[0])).toEqual([
+      'Move Testwort Shy Guide',
+      'Move Testwort Basics',
+      'Move Testwort Roots',
+    ]);
+    expect(announced()).toMatch(/Testwort Basics.*position 2/);
+  });
+
+  // aria-disabled rather than disabled: a disabled button drops the focus in a browser.
+  it('offers no Move Up on an audience’s first guide and no Move Down on its last, keeping the focus on the button pressed', () => {
+    const sent = sentOrders();
+    bar();
+    reorder();
+    const ends = [
+      nav().getByRole('button', { name: 'Move Up Testwort Basics' }),
+      nav().getByRole('button', { name: 'Move Down Testwort Roots' }),
+      nav().getByRole('button', { name: 'Move Up Testwort Queue Notes' }),
+      nav().getByRole('button', { name: 'Move Down Testwort Queue Notes' }),
+    ];
+
+    // The precondition: a guide between the ends offers both.
+    for (const name of ['Move Up Testwort Shy Guide', 'Move Down Testwort Shy Guide']) {
+      expect(nav().getByRole('button', { name })).not.toHaveAttribute('aria-disabled', 'true');
+    }
+    for (const end of ends) {
+      expect(end).toHaveAttribute('aria-disabled', 'true');
+      expect(end).not.toBeDisabled();
+      act(() => end.focus());
+      fireEvent.click(end);
+      expect(end).toHaveFocus();
+    }
+    expect(sent).toEqual([]);
   });
 
   it('saves a move with no Save press, stays in the mode, announces it and refreshes', async () => {

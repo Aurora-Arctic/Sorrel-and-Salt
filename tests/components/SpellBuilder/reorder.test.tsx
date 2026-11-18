@@ -11,6 +11,8 @@ import { offerCategories } from '../../support/msw/ingredient-lookups';
 import { TOUCH_DRAG_DELAY_MS } from '@/lib/sortable';
 import {
   dragVertically,
+  GRIP_NAME,
+  gripItem,
   layOutRows,
   moveByKeyboard,
   press,
@@ -18,6 +20,7 @@ import {
 } from '../../support/sortable';
 import { renderWithQuery } from '../../support/render-with-query';
 import { save, submitForm } from '../../support/interact';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
@@ -123,16 +126,17 @@ function acceptUpdateEchoingSteps() {
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   offerCategories([]);
-  const view = renderWithQuery(<SpellBuilder workspaceId="w1" spell={SPELL} {...props} />);
+  const view = renderWithQuery(
+    <StatusRegionProvider>
+      <SpellBuilder workspaceId="w1" spell={SPELL} {...props} />
+    </StatusRegionProvider>,
+  );
   fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
   return view;
 }
 
 const steps = () => screen.getByRole('list', { name: 'Steps' });
-const order = () =>
-  within(steps())
-    .getAllByRole('button', { name: /^Move / })
-    .map((handle) => handle.getAttribute('aria-label')?.replace(/^Move /, ''));
+const order = () => within(steps()).getAllByRole('button', { name: GRIP_NAME }).map(gripItem);
 const handle = (name: string) => screen.getByRole('button', { name: `Move ${name}` });
 /** Everything the page's status regions say: dnd-kit's own is one. */
 const announced = () =>
@@ -247,6 +251,78 @@ describe('the spell builder’s step order', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove Testwort' }));
     expect(announced()).toContain('Removed Testwort, from position 2 of 4.');
     expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Fixture Glimmerseed']);
+  });
+});
+
+describe('the spell builder’s Move Up and Move Down', () => {
+  beforeEach(() => layOutRows());
+  afterEach(() => vi.restoreAllMocks());
+
+  const moveUp = (name: string) => screen.getByRole('button', { name: `Move Up ${name}` });
+  const moveDown = (name: string) => screen.getByRole('button', { name: `Move Down ${name}` });
+
+  // Regression: a step moved only by a drag or the keyboard, never by a single press.
+  it('moves a step down one place with a single press of Move Down, and says its new place', () => {
+    renderBuilder();
+    expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']);
+
+    fireEvent.click(moveDown('Testwort'));
+
+    expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']);
+    expect(announced()).toMatch(/Testwort\D*position 3 of 3/);
+    expect(save()).toBeEnabled();
+  });
+
+  it('moves a step up with a single press of Move Up, and sends the new order on save', async () => {
+    const calls = acceptUpdate();
+    renderBuilder();
+
+    fireEvent.click(moveUp('Stir thrice'));
+    expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']);
+    submitForm();
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input.steps).toEqual([SENT.rosewort, SENT.stir, SENT.testwort]);
+  });
+
+  it('keeps the focus on Move Down as the step moves, until the step is last and Move Down is unavailable', () => {
+    renderBuilder();
+    act(() => moveDown(ROSEWORT).focus());
+
+    fireEvent.click(moveDown(ROSEWORT));
+    expect(moveDown(ROSEWORT)).toHaveFocus();
+    fireEvent.click(moveDown(ROSEWORT));
+
+    expect(order()).toEqual(['Testwort', 'Stir thrice', ROSEWORT]);
+    expect(moveDown(ROSEWORT)).toHaveFocus();
+    expect(moveDown(ROSEWORT)).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  // aria-disabled rather than disabled: a disabled button drops the focus in a browser.
+  it('offers no Move Up on the first step and no Move Down on the last, and a press there moves nothing', () => {
+    renderBuilder();
+
+    // The precondition: the middle step offers both.
+    expect(moveUp('Testwort')).not.toHaveAttribute('aria-disabled', 'true');
+    expect(moveDown('Testwort')).not.toHaveAttribute('aria-disabled', 'true');
+    for (const end of [moveUp(ROSEWORT), moveDown('Stir thrice')]) {
+      expect(end).toHaveAttribute('aria-disabled', 'true');
+      expect(end).not.toBeDisabled();
+      act(() => end.focus());
+      fireEvent.click(end);
+      expect(end).toHaveFocus();
+    }
+    expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']);
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
+  });
+
+  it('keeps the drag handle beside the two buttons, still moving the step by keyboard', async () => {
+    renderBuilder();
+    expect(moveUp('Testwort')).toBeTruthy();
+
+    await moveByKeyboard(handle('Testwort'), 'ArrowUp');
+
+    expect(order()).toEqual(['Testwort', ROSEWORT, 'Stir thrice']);
   });
 });
 
