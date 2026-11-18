@@ -80,7 +80,7 @@ case "$TARGETARCH" in
     fetch "$DEBIAN/gcc-14/libgcc-s1_14.2.0-19_arm64.deb" libgcc-s1.deb 1108bc87879833d6d9a145f22a4a15cddb34e065b4b5f4b97bee586adbac2851
     fetch "$DEBIAN/gcc-14/libstdc%2B%2B6_14.2.0-19_arm64.deb" libstdc++6.deb 6669b0c52a2e7c6af9adfdabce3ff6e286065cdfbc7b85280862b5f799daebee
     # No musl build for aarch64; the glibc one runs on the base's libc6-compat.
-    fetch "$DIFFT/difft-aarch64-unknown-linux-gnu.tar.gz" difft.tar.gz 0993a82a6708a24adc6c6b8de366924728ed08f537a5b488940082c8edc79353
+    fetch "$DIFFT/difft-0.72.0-aarch64-unknown-linux-gnu.tar.gz" difft.tar.gz 0993a82a6708a24adc6c6b8de366924728ed08f537a5b488940082c8edc79353
     fetch "$PLANNOTATOR/$ASSET" "$ASSET" 9b363302ded9719e5e7eb359e54a63a6d3d79fa77d629276cf7fc581567927cb
     fetch "$PLANNOTATOR/$ASSET.sha256" plannotator.sha256 691de1b0e9dee7e66aafefce1bf626520f52c63cf183d31170be9aced49418e7
     ;;
@@ -89,7 +89,7 @@ case "$TARGETARCH" in
     fetch "$DEBIAN/glibc/libc6_2.41-12%2Bdeb13u4_amd64.deb" libc6.deb 967aa62605721081c3eb2a17650611a792aa802d76a6511d1840242623d204c9
     fetch "$DEBIAN/gcc-14/libgcc-s1_14.2.0-19_amd64.deb" libgcc-s1.deb 3c71917b490d1a17aed43196a2787a256ecf060526cdb20216a74bedc061b150
     fetch "$DEBIAN/gcc-14/libstdc%2B%2B6_14.2.0-19_amd64.deb" libstdc++6.deb ab1fa05837aa7a92aae748fd07a18a35f7d18bb4a71c4724fe2bbf0e32089de0
-    fetch "$DIFFT/difft-x86_64-unknown-linux-musl.tar.gz" difft.tar.gz 27b9c1fe038a95682eed241265a3cacb781227730f106104b617e10067d38ff4
+    fetch "$DIFFT/difft-0.72.0-x86_64-unknown-linux-musl.tar.gz" difft.tar.gz 27b9c1fe038a95682eed241265a3cacb781227730f106104b617e10067d38ff4
     fetch "$PLANNOTATOR/$ASSET" "$ASSET" 39335905cd9539442d7ae83094a464c7969ee55628bb89105016e497f7e687eb
     fetch "$PLANNOTATOR/$ASSET.sha256" plannotator.sha256 b5693fe827f12914ec83be9d53a7453dc06f38f1c78568c8b01c1c9d001c43cd
     ;;
@@ -110,13 +110,92 @@ done
 install -m 755 "$ASSET" /opt/plannotator/plannotator
 tar -xzf difft.tar.gz -C /opt/review-bin difft
 
-cat > /opt/review-bin/plannotator <<WRAPPER
+# Plannotator re-runs its own executable path (`plannotator inbox`), so that path
+# must be the real binary, not the glibc loader. Two edits inside the ELF
+# headers, with the file size unchanged (a longer interpreter or RUNPATH makes
+# the tool that grows the file corrupt the bundle appended to it):
+#  - PT_INTERP becomes /opt/glibc/ld.so, a symlink to the glibc loader;
+#  - the unused DT_DEBUG entry becomes DT_RUNPATH = $ORIGIN, whose string sits
+#    in the old interpreter's bytes, and each library the binary needs is
+#    symlinked beside it. No LD_LIBRARY_PATH, so the git and shells it starts
+#    keep the system's musl, and the Alpine gcompat shim in /lib is not picked.
+ln -s /opt/glibc/$LOADER /opt/glibc/ld.so
+node - /opt/plannotator/plannotator /opt/glibc/ld.so /opt/glibc/usr/lib/$TRIPLET <<'JS'
+const fs = require('fs');
+const [file, interp, libs] = process.argv.slice(2);
+const runpath = '$ORIGIN';
+const fd = fs.openSync(file, 'r+');
+const read = (len, pos) => {
+  const b = Buffer.alloc(len);
+  fs.readSync(fd, b, 0, len, pos);
+  return b;
+};
+const h = read(64, 0);
+const phoff = Number(h.readBigUInt64LE(32));
+const phsz = h.readUInt16LE(54);
+const phn = h.readUInt16LE(56);
+const ph = [];
+for (let i = 0; i < phn; i++) {
+  const p = read(phsz, phoff + i * phsz);
+  ph.push({
+    t: p.readUInt32LE(0),
+    off: Number(p.readBigUInt64LE(8)),
+    va: p.readBigUInt64LE(16),
+    fsz: Number(p.readBigUInt64LE(32)),
+  });
+}
+const I = ph.find((p) => p.t === 3);
+const D = ph.find((p) => p.t === 2);
+if (!I || !D) throw new Error('no PT_INTERP or PT_DYNAMIC');
+const strs = Buffer.from(interp + '\0' + runpath + '\0');
+if (strs.length > I.fsz) throw new Error('interpreter and RUNPATH need ' + strs.length + ' bytes, PT_INTERP has ' + I.fsz);
+const d = read(D.fsz, D.off);
+let strtab = null;
+let strsz = 0;
+let dbg = -1;
+const needed = [];
+for (let j = 0; j < D.fsz; j += 16) {
+  const tag = Number(d.readBigInt64LE(j));
+  const val = d.readBigUInt64LE(j + 8);
+  if (tag === 0) break;
+  if (tag === 5) strtab = val;
+  if (tag === 10) strsz = Number(val);
+  if (tag === 21) dbg = j;
+  if (tag === 1) needed.push(Number(val));
+}
+if (strtab === null || dbg < 0) throw new Error('no DT_STRTAB or DT_DEBUG');
+// The dynamic string table is mapped at its own address, so read it from the
+// segment that contains it.
+const seg = ph.find((p) => p.t === 1 && p.va <= strtab && strtab < p.va + BigInt(p.fsz));
+const stroff = Number(strtab - seg.va) + seg.off;
+const names = needed.map((o) => {
+  const b = read(256, stroff + o);
+  return b.toString('latin1', 0, b.indexOf(0));
+});
+const pad = Buffer.alloc(I.fsz);
+strs.copy(pad);
+fs.writeSync(fd, pad, 0, I.fsz, I.off);
+// DT_RUNPATH (29), pointing at the string just written, as an offset from the
+// string table (it wraps, because the string lies below the table).
+const e = Buffer.alloc(16);
+e.writeBigInt64LE(29n, 0);
+e.writeBigUInt64LE((I.va + BigInt(interp.length + 1) - strtab) & 0xffffffffffffffffn, 8);
+fs.writeSync(fd, e, 0, 16, D.off + dbg);
+const dir = file.replace(/\/[^/]*$/, '');
+for (const n of names) {
+  if (!fs.existsSync(libs + '/' + n)) throw new Error('glibc has no ' + n);
+  fs.symlinkSync(libs + '/' + n, dir + '/' + n);
+}
+JS
+
+cat > /opt/review-bin/plannotator <<'WRAPPER'
 #!/bin/sh
-# Plannotator is built for glibc and has no musl build, so it runs through the
-# glibc loader in /opt/glibc. The loader's --library-path, not
-# LD_LIBRARY_PATH, so the git and shells it starts keep the system's musl.
+# Plannotator is built for glibc and has no musl build; its interpreter and
+# library path are patched in the binary itself (above), so this only sets the
+# environment and runs it directly.
 export PLANNOTATOR_REMOTE=1 PLANNOTATOR_PORT=19432 PLANNOTATOR_SHARE=disabled
-exec /opt/glibc/$LOADER --library-path /opt/glibc/usr/lib/$TRIPLET:/opt/glibc/usr/lib /opt/plannotator/plannotator "\$@"
+export PLANNOTATOR_UPDATE_CHECK=0 PLANNOTATOR_JINA=0
+exec /opt/plannotator/plannotator "$@"
 WRAPPER
 chmod 755 /opt/review-bin/plannotator /opt/review-bin/difft
 EOF
@@ -128,4 +207,11 @@ FROM development AS devcontainer
 COPY --from=review-tools /opt/glibc /opt/glibc
 COPY --from=review-tools /opt/plannotator /opt/plannotator
 COPY --from=review-tools /opt/review-bin/ /usr/local/bin/
+USER root
+# Plannotator’s code navigation runs `rg` from PATH.
+RUN apk add --no-cache ripgrep
+# The dft alias, in the system config: writing ~/.gitconfig here or at container
+# create stops VS Code copying the host’s name and email into the container.
+RUN printf '[alias]\n\tdft = -c diff.external=difft diff\n' >> /etc/gitconfig
+USER node
 EXPOSE 19432

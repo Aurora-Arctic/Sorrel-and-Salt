@@ -5,7 +5,7 @@
   "workspaceFolder": "/app",
   "shutdownAction": "stopCompose",
   "overrideCommand": false,
-  "initializeCommand": "mkdir -p \"${localWorkspaceFolder}/Docker/claude-home\" \"${localWorkspaceFolder}/graphify-out\"",
+  "initializeCommand": "mkdir -p \"${localWorkspaceFolder}/Docker/claude-home\" \"${localWorkspaceFolder}/Docker/plannotator-home\" \"${localWorkspaceFolder}/graphify-out\"",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -16,8 +16,8 @@
     },
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
-  "postCreateCommand": "sudo apk add --no-cache github-cli && git config --global alias.dft '-c diff.external=difft diff' && { gh extension install github/gh-stack || echo 'gh-stack was not installed; run: gh extension install github/gh-stack'; }",
-  "forwardPorts": [8000, 8001, 4983, 3456, 9229, 9230, 9231, 9323, 9324, 51204, 7900, 19432],
+  "postCreateCommand": "sudo apk add --no-cache github-cli && { gh extension install github/gh-stack || echo 'gh-stack was not installed; run: gh extension install github/gh-stack'; }",
+  "forwardPorts": [8000, 8001, 4983, 3456, 9229, 9230, 9231, 9323, 9324, 51204, 7900, 19432, 43501],
   "portsAttributes": {
     "8000": { "label": "next dev" },
     "8001": { "label": "next start (production build)" },

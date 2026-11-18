@@ -31,11 +31,12 @@ services:
     volumes:
       - ..:/app:cached
       - node_modules_devcontainer:/app/node_modules
-      # Claude Code's per-user state, a bind mount (the only host mount besides
-      # /app) to git-ignored Docker/claude-home so it survives `make
+      # Claude Code's per-user state, a bind mount to git-ignored Docker/claude-home so it survives `make
       # docker-rebuild`; `initializeCommand` creates it host-side so Compose
       # does not make it root-owned.
       - ./claude-home:/home/node/.claude:cached
+      # Plannotator's drafts, plan history and config.json, kept the same way.
+      - ./plannotator-home:/home/node/.plannotator:cached
     init: true
     tty: true
     # ensure-deps.sh first (see Docker/docker-compose.yaml); `entrypoint` clears
@@ -49,6 +50,9 @@ services:
       # A failed `npm ci` (offline, say) prints a warning and starts anyway, so
       # the editor still opens; every other service stops on a failed install.
       ENSURE_DEPS_ON_FAILURE: warn
+      # Plannotator's daily usage ping, off. Set here and not in the
+      # `plannotator` wrapper, so its plugin inside Claude Code reads it too.
+      NO_ANON_PING: '1'
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # From `make docker-update-token`, via git-ignored Docker/.env; `:-`
       # keeps a missing file quiet and the CLI falls back to `/login`.
