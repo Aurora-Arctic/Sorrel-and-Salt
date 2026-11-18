@@ -7,6 +7,8 @@ import { insertSpell, insertStep, localIngredient, seedCoven, withSql } from './
 import { BAND_WIDTHS, DESKTOP_WIDTH, PHONE_WIDTH } from '../breakpoints';
 import { requiredDelay, settledBox } from '../waits';
 import { makeVariant } from '../../support/fixtures/ingredient';
+import { curatedDeityId } from '../../support/db/curated-ids';
+import { insertDeityLink } from '../../support/db/insert-ingredient';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -480,7 +482,7 @@ test(
   },
 );
 
-/** Two ingredients with different correspondences, sharing Silver, in a spell a viewer opens; returns the block. */
+/** Two ingredients with different correspondences, sharing Silver, the first also giving a keeper-listed deity with another name, in a spell a viewer opens; returns the block. */
 async function openCorrespondences(page: Page, name: string, domain: string): Promise<Locator> {
   const coven = await seedCoven(page, name, domain, {
     A: 'owner',
@@ -502,6 +504,8 @@ async function openCorrespondences(page: Page, name: string, domain: string): Pr
       colors: ['Silver'],
       variants: [makeVariant({ form: 'Leaf' })],
     });
+    // Hecate is the standard seed's, listed with the other name Hekate.
+    await insertDeityLink(sql, ember.ingredientId, await curatedDeityId(sql, 'Hecate'), 0, A);
     const id = await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', A, 'complete');
     await insertStep(sql, id, ember, { quantity: 2, unit: 'g', position: 0 }, A);
     await insertStep(sql, id, tide, { quantity: 3, unit: 'g', position: 1 }, A);
@@ -531,12 +535,20 @@ test(
     const silver = block.getByRole('button', { name: 'Silver' });
     await expect(silver).toHaveCount(1);
 
+    const givenBy = page.getByRole('tooltip').getByRole('list', { name: 'Given By' });
     await fire.focus();
-    await expect(page.getByRole('tooltip')).toHaveText('Fixture Emberwort (Root)');
+    await expect(givenBy.getByRole('listitem')).toHaveText(['Fixture Emberwort (Root)']);
     await silver.focus();
-    await expect(page.getByRole('tooltip')).toHaveText(
-      'Fixture Emberwort (Root) and Fixture Tidewort (Leaf)',
-    );
+    await expect(givenBy.getByRole('listitem')).toHaveText([
+      'Fixture Emberwort (Root)',
+      'Fixture Tidewort (Leaf)',
+    ]);
+
+    await block.getByRole('button', { name: /^Hecate\b/ }).focus();
+    await expect(
+      page.getByRole('tooltip').getByRole('list', { name: 'Also Called' }).getByRole('listitem'),
+    ).toHaveText(['Hekate']);
+    await expect(givenBy.getByRole('listitem')).toHaveText(['Fixture Emberwort (Root)']);
     await assertNoAccessibilityViolations(page);
   },
 );
@@ -559,7 +571,10 @@ test.describe('on a touch phone', () => {
       // 150ms close delay a stray close after the tap would take.
       await requiredDelay(500, 'a tip staying open fires no event to wait on');
       await expect(tip).toBeVisible();
-      await expect(tip).toHaveText('Fixture Emberwort (Root) and Fixture Tidewort (Leaf)');
+      await expect(tip.getByRole('list', { name: 'Given By' }).getByRole('listitem')).toHaveText([
+        'Fixture Emberwort (Root)',
+        'Fixture Tidewort (Leaf)',
+      ]);
     },
   );
 });
