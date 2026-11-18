@@ -733,15 +733,16 @@ $replaces-gap: space(5);
   }
 }
 
-// `button-reset` keeps the surroundings' ink and font, so the value reads as text until hover or focus.
+// The anchor is inline, not the mixin's flex box, so a long value wraps between its words like the text around it.
 .ingredient-entry__source-anchor {
   @include tip-anchor;
 
+  display: inline;
   vertical-align: baseline;
 }
 
 .ingredient-entry__source-value {
-  @include button-reset(default);
+  cursor: default;
 
   &:hover,
   &:focus-visible {
