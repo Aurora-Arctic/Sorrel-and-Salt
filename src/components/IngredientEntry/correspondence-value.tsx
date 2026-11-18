@@ -3,17 +3,11 @@
 import type { ReactElement } from 'react';
 import { joinList } from '@/lib/join-list';
 import TipAnchor from '../InfoTip/tip-anchor';
+import type { CorrespondenceValueProps } from './types';
 import './index.scss';
 
-// One correspondence value that has sources, a button named by the value whose tip names the ingredients
-// that gave it. A client part so the rows stay server-drawn (claude-docs/components/ingredient-entry.md, "Correspondences").
-const CorrespondenceValue = ({
-  value,
-  sources,
-}: {
-  value: string;
-  sources: readonly string[];
-}): ReactElement => (
+// A client part so the rows stay server-drawn (claude-docs/components/ingredient-entry.md, "Correspondence source tips").
+const CorrespondenceValue = ({ value, sources }: CorrespondenceValueProps): ReactElement => (
   <TipAnchor
     className="ingredient-entry__source-anchor"
     bubbleClass="ingredient-entry__source-tip"

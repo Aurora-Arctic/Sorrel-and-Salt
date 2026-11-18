@@ -249,3 +249,24 @@ export interface SourcedValue<T = string> {
   value: T;
   sources: readonly string[];
 }
+
+/** The spell page's lists: each value with the ingredients that gave it. */
+export interface SourcedCorrespondences {
+  elements: readonly SourcedValue[];
+  celestialBodies: readonly SourcedValue[];
+  zodiacSigns: readonly SourcedValue[];
+  colors: readonly SourcedValue[];
+}
+
+// Elements are plain text: the spell page's combined values arrive as strings, not the column's enum.
+export interface PlainCorrespondences {
+  elements: readonly string[] | null;
+  celestialBodies: readonly string[] | null;
+  zodiacSigns: readonly string[] | null;
+  colors: readonly string[] | null;
+}
+
+export interface CorrespondenceValueProps {
+  value: string;
+  sources: readonly string[];
+}

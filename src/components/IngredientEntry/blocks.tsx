@@ -2,7 +2,7 @@ import { Fragment, type ReactElement, type ReactNode } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { capitalise, hasText } from '../../lib/text';
 import CorrespondenceValue from './correspondence-value';
-import type { SourcedValue } from './types';
+import type { PlainCorrespondences, SourcedCorrespondences, SourcedValue } from './types';
 import type { CategoryDetail, DeityDetail } from '@/modules/ingredients';
 import './index.scss';
 import { cx } from '@/lib/class-names';
@@ -13,18 +13,6 @@ export interface Row {
   /** Parallel to `values`: the ingredients that gave each one. */
   sources?: string[][];
 }
-
-// Elements are plain text here: the spell page's combined values arrive as strings, not the column's enum.
-interface Correspondences<T> {
-  elements: readonly T[];
-  celestialBodies: readonly T[];
-  zodiacSigns: readonly T[];
-  colors: readonly T[];
-}
-
-type PlainCorrespondences = {
-  [K in keyof Correspondences<string>]: readonly string[] | null;
-};
 
 /** One row. A blank value goes and takes its sources with it, so `sources[i]` always belongs to `values[i]`. */
 function rowOf(
@@ -41,7 +29,7 @@ function rowOf(
 }
 
 function rowsOf(
-  source: Correspondences<SourcedValue>,
+  source: SourcedCorrespondences,
   deities?: readonly SourcedValue<DeityDetail>[],
 ): Row[] {
   const rows = [
@@ -64,7 +52,6 @@ function rowsOf(
 const unsourced = (values: readonly string[] | null): SourcedValue[] =>
   (values ?? []).map((value) => ({ value, sources: [] }));
 
-/** The ingredient page's rows: no value has sources, so none is a button. */
 export function correspondences(
   source: PlainCorrespondences,
   deities?: readonly DeityDetail[],
@@ -80,7 +67,6 @@ export function correspondences(
   );
 }
 
-/** The spell page's rows: each value keeps the ingredients that gave it. */
 export const sourcedCorrespondences = rowsOf;
 
 /** A deity as the Deities row names it: its tradition and other names in brackets, parted by a semicolon because the row joins its values with commas. */

@@ -733,8 +733,7 @@ $replaces-gap: space(5);
   }
 }
 
-// A correspondence value with sources: text until pointed at or focused. The button takes the
-// surroundings' ink and font; the dotted underline on hover and focus marks it as one you can ask.
+// `button-reset` keeps the surroundings' ink and font, so the value reads as text until hover or focus.
 .ingredient-entry__source-anchor {
   @include tip-anchor;
 
