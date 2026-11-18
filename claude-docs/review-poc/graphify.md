@@ -2,7 +2,7 @@
 
 Discovery record for M17.32. It lists every Graphify piece, records the checks run from inside the dev container, answers questions from Graphify's current docs, reassesses Graphify against other tools, weighs three end states, records the owner's choice of A, and drafts the tasks for each. Nothing was removed, installed, started or stopped. The survey ran inside the dev container on 2026-11-17 and 2026-11-18, so every claim below comes from a command run there or from a cited page. Hour figures are estimates.
 
-**The owner chose end state A (the sidecar, with the branch reworked). Tasks G1 to G4 are the ones to mint. Nothing for you to do in this file except mint them.**
+**The owner chose end state A (the sidecar, with the branch reworked). The task that builds it is in `plan.md` (M17.41). Nothing for you to do in this file.**
 
 ## Summary
 
@@ -13,7 +13,7 @@ Discovery record for M17.32. It lists every Graphify piece, records the checks r
 - `graphify prs` needs an authenticated `gh`. Graphify's docs do not say whether it handles a stack of pull requests.
 - Installing the Graphify CLI in the Alpine aarch64 dev container would need a compiler: the package index has no musl aarch64 wheel for the TypeScript parser or the parser core. This is metadata, not a test.
 - Tools already in the planned setup cover most of Graphify's jobs. What they do not cover is a symbol graph with an overview (most-connected symbols, communities) and a graph-based view of a pull request's impact.
-- **The owner chose A:** the sidecar, with the branch reworked. The reason: the POC's keep-or-drop rule measures Graphify during the POC, which needs it running. My recommendation before the choice was C (no Graphify); the evidence behind it is kept in "The cost of A" as the stated cost. Draft tasks G1 to G4 carry A out. The B and C drafts are under "Not chosen".
+- **The owner chose A:** the sidecar, with the branch reworked. The reason: the POC's keep-or-drop rule measures Graphify during the POC, which needs it running. My recommendation before the choice was C (no Graphify); the evidence behind it is kept in "The cost of A" as the stated cost. The task in `plan.md` (M17.41) carries A out. B and C are under "Not chosen".
 
 ## Inventory
 
@@ -142,7 +142,7 @@ wiki/         Nov 17 20:41   empty
    - A row `Up` means the service runs. `Exited` means it stopped. No row means it was never created, or was removed. From inside the container I saw that `graphify`, `graphify-web` and `graphify-views` resolve and `graphify-watch` does not.
 5. **Docker images.** I could not check because the container has no `docker`.
    - Command: `docker images --format '{{.Repository}} {{.Size}}' | grep -i graphify`
-   - A row gives the sidecar image's size, which task G3 records. No row means the image was removed.
+   - A row gives the sidecar image's size, which M17.41 records. No row means the image was removed.
 6. **Why the graph folder was emptied.** Optional.
    - Command: `docker logs --since 2026-11-17T20:00:00 $(docker ps -aq --filter name=graphify-watch) 2>&1 | tail -40`
    - Output showing a rebuild or a cleanup near 20:41 on 2026-11-17 is the cause. No container or empty output means the logs are gone and the cause stays unknown.
@@ -242,67 +242,18 @@ Sources: the package index and npm registry JSON for each package (fetched 2026-
 
 ## The cost of A
 
-The owner chose A. I had recommended C. The evidence behind that recommendation is the cost A carries, and tasks G1 to G4 answer each point.
+The owner chose A. I had recommended C. The evidence behind that recommendation is the cost A carries, and M17.41 answers each point.
 
-- **The sidecar has never served a graph.** It is running and Claude Code connected in all 10 logged sessions, but `graph_stats` returns "graph.json not found" because the graph folder is empty (checks 2 to 4). G2 builds the graph.
-- **`graphify-watch` does not resolve by name**, so nothing is currently building the graph. G2 gets it running.
-- **Planned tools cover most jobs** (the job table), and Graphify's `prs` stack support is undocumented. G3 measures whether the graph is consulted at all.
-- **Four always-running containers**, with a cost I could not measure. G4 records it.
-- **The branch carries nine unrelated `src/` and `tests/` edits**, one of which removes `role="status"`. G1 takes them off.
-- **If the graph goes unused,** the POC's rule drops it ("Keep Graphify if the graph was consulted on at least 1 in 4 reviews"), and Draft C3's alternative tool is the fallback.
+- **The sidecar has never served a graph.** It is running and Claude Code connected in all 10 logged sessions, but `graph_stats` returns "graph.json not found" because the graph folder is empty (checks 2 to 4). M17.41 builds the graph.
+- **`graphify-watch` does not resolve by name**, so nothing is currently building the graph. M17.41 gets it running.
+- **Planned tools cover most jobs** (the job table), and Graphify's `prs` stack support is undocumented. M17.41 measures whether the graph is consulted at all.
+- **Four always-running containers**, with a cost I could not measure. M17.41 records it.
+- **The branch carries nine unrelated `src/` and `tests/` edits**, one of which removes `role="status"`. M17.41 takes them off.
+- **If the graph goes unused,** the POC's rule drops it ("Keep Graphify if the graph was consulted on at least 1 in 4 reviews"), and the alternative tool of C3 under "Not chosen" is the fallback.
 
-## Draft tasks
+## Implementation tasks
 
-These are drafts. None is minted, and the ids `G1` onwards are placeholders. Hour figures are my estimates.
-
-### Chosen: end state A, sidecar with the branch reworked
-
-**Draft G1 — Rework the Graphify Sidecar Branch** · 2h (estimate)
-
-_Story:_ As the owner, I want the Graphify sidecar branch to hold only Graphify, so that I can merge it without changing the app.
-
-_Acceptance criteria:_
-
-- A new branch off `staging`, or the existing branch reset by the owner, carries the Graphify files and no `src/` or `tests/` file
-- The nine unrelated `src/` and `tests/` edits are off the branch; `unit-converter.tsx` keeps `role="status"`
-- `.gitignore` on the branch ignores `graphify-out/`, so it is ignored once merged to staging
-- `CLAUDE.md`'s "no Python" line says the sidecar image's Python is outside the rule
-- `claude-docs/docker.md` describes the sidecar, and no other doc is wrong
-- The old branch is closed unmerged once the reworked one is on a pull request
-
-**Draft G2 — Build the Graph and Get the Watch Service Running** · 2h (estimate)
-
-_Story:_ As the owner, I want a real graph in `graphify-out/` kept current, so that the MCP server has something to answer from.
-
-_Acceptance criteria:_
-
-- `graphify-watch` is running and resolves by its compose service name (it does not today)
-- `graphify-out/graph.json` exists and covers this repository's TypeScript and TSX; the record says how many nodes and files it holds
-- `graph_stats` through the MCP server returns counts instead of "graph.json not found"
-- The first build time is recorded, and `.graphifyignore` still leaves out `compendium/`
-- If the build fails, the record gives the error and stops
-
-**Draft G3 — Prove the Agent Uses the Graph and Measure It** · 2h (estimate)
-
-_Story:_ As the owner, I want to know whether the graph was consulted on each review, so that the POC's keep-or-drop rule has data.
-
-_Acceptance criteria:_
-
-- From a dev container session, the agent calls `query_graph`, `shortest_path` and `graph_stats` and gets results; the record notes that no `explain` tool exists and `get_node` and `get_neighbors` are the nearest
-- The POC log gets one field per review: "graph consulted: yes or no", set from the session's tool calls, so the 1-in-4 rule can be applied
-- The record states what the host-side session shows for the `graphify` entry
-- `.mcp.json` still holds `next-devtools` unchanged
-
-**Draft G4 — Record the Sidecar's Cost and Clear the Leftovers** · 1.5h (estimate)
-
-_Story:_ As the owner, I want the sidecar's size and memory written down and the stray files removed, so that I can judge the cost and the working copy matches the setup.
-
-_Acceptance criteria:_
-
-- The owner's `docker images` and `docker stats` output for the sidecar is recorded, with no addresses or tokens
-- `claude-docs/docker.md` gives the figures and the one command that stops the four services
-- `.reports/graphify-view.py.old` is deleted, or kept on the owner's say-so
-- Nothing else is removed
+The task that builds the chosen end state is "Set Up the Graphify Sidecar" (M17.41) in `plan.md`.
 
 ## Not chosen
 
@@ -399,8 +350,8 @@ _Acceptance criteria:_
 **The owner chose A:** the sidecar, with the branch reworked.
 
 - **Reason:** the POC's keep-or-drop rule ("Keep Graphify if the graph was consulted on at least 1 in 4 reviews") measures Graphify during the POC, and that needs it running.
-- **Tasks to mint:** G1 (2h), G2 (2h), G3 (2h) and G4 (1.5h), all estimates.
+- **Task to mint:** "Set Up the Graphify Sidecar" (M17.41, 8h estimate), in `plan.md`.
 - **The branch:** reworked or reset so it holds only Graphify, then merged. It is not merged as it is, because it carries nine unrelated `src/` and `tests/` edits, one of which removes `role="status"`.
 - **If the graph goes unused,** the POC's rule drops Graphify, and Draft C3 under "Not chosen" is the fallback.
 
-Nothing for you to do here except mint G1 to G4. Separately, I need you to run the host checks in "Checks for the owner to run on the host"; host checks 4 and 5 give the sidecar's real cost for G4.
+The host checks in "Checks for the owner to run on the host" are still for you to run; host checks 4 and 5 give the sidecar's real cost for M17.41.

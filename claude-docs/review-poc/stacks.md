@@ -81,7 +81,7 @@ What the run proved, with the stand-in `close-on-merge` (the real one's filter a
 - **After the bottom layer merges, GitHub retargets the layer above it to `staging`** (the pull request list showed base `staging` for it at once). The layer two above stayed on the retargeted layer's branch until that layer merged. The retarget starts a gate run on the retargeted PR (`edited`).
 - **GitHub's own keyword did not fire.** The task's event list holds one close, by the Actions bot, with no commit. `staging` is not the default branch, so `Closes #N` in a PR into `staging` closes nothing by itself, and `close-task-on-merge.yml` stays the only closer.
 
-Not proved: the `closed` event of layers merged together in one atomic call. I merged one PR at a time, bottom-up, so every layer was already the lowest unmerged one. Draft G includes that run.
+Not proved: the `closed` event of layers merged together in one atomic call. I merged one PR at a time, bottom-up, so every layer was already the lowest unmerged one. M17.40 includes that run.
 
 What is decided:
 
@@ -191,9 +191,9 @@ Gate runs start in parallel on separate runners (the runs in the cascade started
 
 The gap in (3) and (4): a top layer whose own diff touches no test path skips the Vitest and Playwright jobs, although its checkout holds the layers below. The layers below ran their own jobs, so only a defect that appears from the layers together, with none of them touching the path, goes unchecked. That is the same gap a single PR has for code it does not touch.
 
-Under (2) the rule in `process.md` Step 4 changes from "do not read a layer whose gate is red" to "read a layer when the top layer's gate is green; the tests-first layer is read before its tests pass". The change to the `changes` job is Draft C.
+Under (2) the rule in `process.md` Step 4 changes from "do not read a layer whose gate is red" to "read a layer when the top layer's gate is green; the tests-first layer is read before its tests pass". The change to the `changes` job is M17.39.
 
-The run did not show how the real gate's slow jobs behave on a stack (a stack of one real task), whether `pr-comments` writes one comment per layer without collision, or the first-`opened` gap on a real repository. Draft C records those on the first real stack.
+The run did not show how the real gate's slow jobs behave on a stack (a stack of one real task), whether `pr-comments` writes one comment per layer without collision, or the first-`opened` gap on a real repository. M17.39 records those on the first real stack.
 
 ### A point the options must answer: the tests-first layer
 
@@ -204,7 +204,7 @@ I checked it against the real `pr-gate.yml`, and it holds. The `changes` job's `
 What each option does with it:
 
 - (1), (3) and (4): the bottom layer's gate is red until the implementation lands, so `gh stack merge` of the bottom layer alone is refused by any required check, and the whole stack lands together (the top layer's gate is the first green one). The review reads the tests without a green gate under them.
-- (2), the chosen option: the bottom layer runs only the cheap checks and is green, so GitHub would let it merge alone in error. The full gate runs on the top layer only, where it is green. The rule is "merge the stack as a whole"; Draft C asks for a guard and says what is possible.
+- (2), the chosen option: the bottom layer runs only the cheap checks and is green, so GitHub would let it merge alone in error. The full gate runs on the top layer only, where it is green. The rule is "merge the stack as a whole"; M17.39 asks for a guard and says what is possible.
 
 Nothing in the run tested this with the real gate.
 
@@ -225,56 +225,14 @@ Stacks work with a merge queue: all PRs enter in order, and one that is ejected 
 
 I tried to mark the `gate` stand-in as a required check on `staging`, through a branch protection rule and through a repository ruleset. GitHub refused both with HTTP 403, "Resource not accessible by personal access token". The token lacks the repository permission for branch rules, so how a required check behaves on a stack's upper layers, and whether `gh stack merge` is blocked by a red required check, is not proved. The documentation says required checks are evaluated as if each PR targets the stack base (Stacked PRs), and `gh stack merge` says "GitHub evaluates branch protection and repository rules when the merge runs".
 
-## Drafted implementation tasks
+## Implementation tasks
 
-Drafts only; nothing is minted until the owner approves. Hours are my estimates, not measurements. The earlier Draft E (prove stacks on a scratch repository) is done by the run above and is dropped.
-
-**Draft F — Open a Stack of PRs from `/create-pr`** · 6h (estimate)
-
-_Story:_ As a developer with an oversized task, I want `/create-pr` to open the task as a stack of layered PRs that all link to the task, so that each layer is reviewed on its own.
-
-Decisions 1 (`Closes #N` on the top layer) and 2 (stack branches are the one exception to the never-rebase and never-force-push rules) are decided, and this task writes them into the skill. One session owns a whole stack.
-
-_Acceptance criteria:_
-
-- `/create-pr` offers a stack only when the owner asks for one, and otherwise opens one PR as today
-- Each layer's title opens `<ID> — `; the top layer's body opens with `Closes #N` and every layer below it opens with `Refs #N`; `gh stack submit --auto` is followed by editing each PR's title and body, because `submit` writes a commit-subject title and a footer-only body
-- Layers are marked ready only when the owner says so (`submit --auto` creates drafts, and `gh stack merge` refuses a draft)
-- The task moves to `In Review` once, with one comment listing every layer's PR
-- `task-board.mjs link-pr` is run for the layer carrying `Closes`, and the existing one-PR flow is unchanged and covered by the skill's own checks
-- `SKILL.md:55` and `SKILL.md:90` state that stack branches are the one exception: `gh stack` owns them and rebases and force-pushes them, one session owns a whole stack, and no other session runs `gh stack` on it; the rules for every other branch are unchanged, and and `.claude/rules/task-tracking.md` and `claude-docs/task-tracking.md` are corrected in the same PR
-
-**Draft G — Close a Task When Its Whole Stack Merges** · 3h (estimate)
-
-_Story:_ As the owner, I want a task to close exactly when its last layer merges, so that a stack merged in one call or one layer at a time never leaves a task open or closes it early.
-
-_Acceptance criteria:_
-
-- This proves the atomic whole-stack merge that Decision 1 (`Closes #N` on the top layer) leaves unproved. A run on a throwaway public repository merges a three-layer stack in one `gh stack merge` call and records the `closed` event's `base.ref` for each layer
-- `close-task-on-merge.yml` closes the task named by `Closes #N` for that run; if an upper layer's closed event reports a base other than `staging`, the base filter is changed and the change is explained in the workflow
-- The workflow keeps reading whole-line `Closes #N` only
-- A run shows a lower layer merged alone leaving the task open when `Closes #N` is on the top layer (already proved one layer at a time; recorded again for the atomic call)
-
-**Draft C — Test the Whole Stack on Its Top Layer** · 4h (estimate; the guard criterion may take longer, see it below)
-
-_Story:_ As a reviewer of a stacked pull request, I want the top layer's gate to run every job the whole stack's diff needs and the layers below to run only the cheap checks, so that a stack costs one full gate, not one per layer, and code from lower layers is tested together before anything merges.
-
-Depends on Decision 3 (decided: top-only). GitHub already starts the gate and `gitflow` on every layer with `github.base_ref` equal to `staging`, and the real `gitflow.yml` passes an upper layer, so the trigger needs no change. The change is in the `changes` job, which today reads only each layer's own files.
-
-_Acceptance criteria:_
-
-- When `github.event.pull_request.stack` is present and `stack.position == stack.size`, `changes` computes its filters from the diff between `stack.base.sha` and the head, so the top layer runs every job the whole stack's files need
-- When the stack is present and the layer is below the top, only `format`, lint and types run; the Vitest, Playwright, story, workshop and build jobs report skipped
-- A pull request that is not in a stack behaves exactly as today, shown by a run on a single-PR branch that lists the same jobs as before the change
-- The aggregate check names stay unchanged, and a skipped job still reports skipped (MB.39)
-- `process.md` Step 4's rule is reworded to "read a layer when the top layer's gate is green; the tests-first layer is read before its tests pass"
-- A guard against merging a lower layer alone: either a check on lower layers that is green only once the top layer's gate is green, or the record says plainly that none is possible and the rule stays a process rule. Nothing in the run proves a guard works: required checks on `staging` could not be set up with the scratch token, and a check that depends on another PR's run needs a re-run call back from the top layer. The task builds it only if a scratch-repo run shows it works, and says so if not
-- A run on a real stack records the number of runs and the billable time for it, with the figures from a private run once one exists (`gh api repos/<owner>/<repo>/actions/runs/<run id>/timing`), in `claude-docs/ci/`
+The tasks that build these decisions are in `plan.md`: "Open Stacks From `/create-pr` and Close Tasks Whole" (M17.40) and "Make the Gate Fit Stacked Pull Requests" (M17.39).
 
 ## Decisions
 
 All three decisions are decided.
 
-1. **Where `Closes #N` goes on a stack. Decided: Y.** The top layer carries `Closes #N`; every layer below carries `Refs #N`. Draft G proves the atomic whole-stack merge.
-2. **`/create-pr`'s "never rebase, never force-push" rules. Decided: X.** Stack branches are the one exception to `SKILL.md:55` and `SKILL.md:90`; `gh stack` owns them, and one session owns a whole stack. Draft F writes it into the skill.
+1. **Where `Closes #N` goes on a stack. Decided: Y.** The top layer carries `Closes #N`; every layer below carries `Refs #N`. M17.40 proves the atomic whole-stack merge.
+2. **`/create-pr`'s "never rebase, never force-push" rules. Decided: X.** Stack branches are the one exception to `SKILL.md:55` and `SKILL.md:90`; `gh stack` owns them, and one session owns a whole stack. M17.40 writes it into the skill.
 3. **What the workflows do on a stack. Decided: option (2), top-only.** The full gate runs on the top layer and tests the whole stack's diff; the layers below run types, lint and format; a stack merges whole, never a lower layer alone. Reason: smaller pull requests multiply gate runs, which costs minutes once the repository is private. Accepted costs: a green lower layer means only the cheap checks passed; a failure is placed by the failing test's name; a partial merge is unsafe. Draft C writes it.

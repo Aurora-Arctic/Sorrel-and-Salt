@@ -126,7 +126,7 @@ The brief's two jobs are separate, and the repo already does one of them.
 - `tests/guards/lint-db-client-boundary.test.ts`, `lint-loader-boundary.test.ts`, `lint-job-boundary.test.ts` and `app-imports.test.ts` prove those rules fail on a probe under `tests/support/lint-probes/`.
 - `npm run typecheck` (`tsc --noEmit`) fails an import that does not resolve.
 
-A dependency-cruiser copy of these would duplicate them, so Draft B drops job (a).
+A dependency-cruiser copy of these would duplicate them, so the dependency-cruiser task (M17.38) drops job (a).
 
 **Job (b), the affected-modules Mermaid graph.** Tested in the scratchpad, never in the repo.
 
@@ -267,57 +267,13 @@ Result: pass.
 | Test `gh stack` on a private scratch repo                                                   | A public scratch repo, created by the owner and used on 2026-11-18 (check 6); the real repo is public until the organisation moves to a paid plan | Check 6 ran on a public repo only; Decision 3 (done)                                                                                             |
 | `git dft` alias, `scripts/review-graph.sh`, `depcruise:check` and `review:affected` scripts | None exist in the repo (`package.json` has no dependency-cruiser)                                                                                 | They are new files; see the drafted tasks                                                                                                        |
 
-## Drafted implementation tasks
+## Implementation tasks
 
-Drafts only. Nothing is minted until the owner approves them. Hours are my estimates, not measurements.
-
-**Draft A — Make the Dev Container Able to Run the Review Tools** · 3h (estimate)
-
-_Story:_ As the owner, I want the review tools to run inside the dev container, so that the local review loop works the same for every session.
-
-Covers Decision 2 (decided: V, the private glibc prefix with a wrapper). Fallback if V fails in the image: W, Plannotator on the host.
-
-_Acceptance criteria:_
-
-- difftastic is in the dev container image and `difft --version` runs on the Alpine image, with the binary fetched from its release page and checked against its published checksum
-- Plannotator is never installed with `install.sh`. The binary is fetched from the release and checked against its `.sha256`
-- The three glibc libraries (`libc6`, `libgcc-s1`, `libstdc++6`, about 26 MB) are fetched at image build with pinned checksums and unpacked into a private prefix, outside the system paths
-- A `plannotator` wrapper on `PATH` runs the binary through the prefix's loader and sets `PLANNOTATOR_REMOTE=1`, `PLANNOTATOR_PORT=19432` and `PLANNOTATOR_SHARE=disabled`
-- Port 19432 is in `forwardPorts` in `.devcontainer/devcontainer.json`
-- The dev container image is rebuilt with `docker compose build` on the host, which check 1 only read from files (Decision 4, decided)
-- A test shows `plannotator --version` and an HTTP 200 on port 19432 in the container, and the exact commands are in `claude-docs/`
-- `claude-docs/commands.md` lists the new commands
-- No tool is installed into the repo's `package.json` unless Draft B says so
-
-**Draft B — Show the Affected Modules in the Review** · 2h (estimate)
-
-_Story:_ As a reviewer, I want a graph of the modules a pull request changes and the modules that import them, so that I see the reach of a change before reading the diff.
-
-Covers Decision 1 (decided: X, dependency-cruiser with the `swc` parser; fallback Y, the `tsc` parser with a second TypeScript 6). The import rules are not in this task: Oxlint already owns them, including cycles (`import/no-cycle`, `no-restricted-imports`, `sorrel/module-boundaries`, proved by `tests/guards/`; check 5). Draft B adds only the graph, and reports no cycles.
-
-_Acceptance criteria:_
-
-- `--affected` is given `origin/staging` (its default is `main`, which does not exist in this flow), and the script fails if it cruises zero modules, so the silent failure in check 5 cannot recur
-- The graph is Mermaid, written by one script that `npm run review:affected` calls, and it is advisory: it never fails `pr-gate.yml`
-- The `swc` parser is set in the config, which excludes `src/modules/documents/jobs/document-mailing.ts` (the one file `swc` rejects) with a comment saying why, and a test fails when a new file breaks the parser
-- A mechanical guard for the new mechanism lands in the same commit (`CLAUDE.md`, "The sweep-task rule")
-
-**Draft C — Test the Whole Stack on Its Top Layer** · 4h (estimate). The full entry is in `stacks.md`, "Drafted implementation tasks".
-
-**Draft D — Label Oversized Pull Requests** · 2h (estimate)
-
-_Story:_ As a reviewer, I want a pull request over a size limit labelled, so that I know to ask for a stack.
-
-_Acceptance criteria:_
-
-- The limit (changed lines, excluding lockfiles, `src/gql/` and generated files) is stated once, in one file
-- A workflow adds an `oversized` label above it and removes the label when a later push brings it under; a PR for one task is never failed for size
-- The workflow runs on `pull_request` and writes only the label, with `pull-requests: write` and nothing else
-- A test or a run on a scratch PR shows both the add and the removal
+The tasks that build these decisions are in `plan.md`: "Set Up the Review Tools in the Dev Container" (M17.38), "Make the Gate Fit Stacked Pull Requests" (M17.39) and "Prove the Review Setup and Write Down the Process" (M17.42).
 
 ## Decisions
 
-Items 1, 2 and 3 are decided. I need you to choose for item 4 only.
+All four items are decided.
 
 1. **The affected-modules graph, and dependency-cruiser. Decided: X.** Dependency-cruiser's default parser does not support the repo's TypeScript 7.0.2 and fails silently. The import rules are already enforced by Oxlint and `tests/guards/` (check 5), so only the graph is open. Options:
    - **X, the `swc` parser.** Proved on the real `src/`: 2145 modules; needs one file excluded (`using` syntax) and is deprecated and experimental. No second TypeScript.
@@ -325,7 +281,7 @@ Items 1, 2 and 3 are decided. I need you to choose for item 4 only.
    - **Z, hold until dependency-cruiser supports TypeScript 7.1 or above.** No graph meanwhile; docs only.
    - **madge, skott or a small script.** Docs only, untested; I list them only in case X, Y and Z are all rejected.
 
-   Decided: X, the `swc` parser, with Y as the stated fallback if the `swc` route breaks. The reason: the graph only informs a reviewer and never gates, so the experimental parser's limits cost little, and X adds no second TypeScript. Draft B is the task for it.
+   Decided: X, the `swc` parser, with Y as the stated fallback if the `swc` route breaks. The reason: the graph only informs a reviewer and never gates, so the experimental parser's limits cost little, and X adds no second TypeScript. M17.38 is the task for it.
 
 2. **Plannotator in the dev container. Decided: V.** The binary does not start on Alpine and no musl build is published. Options:
    - **V, a private glibc prefix with a wrapper.** Proved in the container without root: `--version`, and HTTP 200 on port 19432. Costs 26 MB, a wrapper script, a build step that fetches three Debian packages, and the `forwardPorts` line. Not proved: the host browser and the full review flow.
@@ -337,7 +293,7 @@ Items 1, 2 and 3 are decided. I need you to choose for item 4 only.
    Decided: V, a private glibc prefix with a wrapper, with W (run on the host) as the fallback. The reason: it is the only route proved to start the server in the container, it changes no base image, and it keeps the glibc libraries out of the system. Draft A is the task for it.
 
 3. **The scratch repo for `gh stack`. Decided and done.** The owner created `stack-scratch-m17-31` under `Aurora-Arctic` as a public repository. Checks 6 and 7 and the `stacks.md` questions ran on it on 2026-11-18, as a public repo only (check 6 explains why). Nothing for you to do except delete the repository when you no longer want it.
-4. **The container build. Decided: Y.** The dev container has no `docker`, so the build in check 1 is read from files only; the owner accepts the file reading, and Draft A rebuilds the image.
+4. **The container build. Decided: Y.** The dev container has no `docker`, so the build in check 1 is read from files only; the owner accepts the file reading, and M17.38 rebuilds the image.
 
 ## Status of the scratch repo and the extension
 

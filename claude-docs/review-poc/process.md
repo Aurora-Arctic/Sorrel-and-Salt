@@ -71,7 +71,7 @@ Run only the test files the layer touches. A good result: the commit touches onl
 
 The agent must not write the implementation in the same layer, and must not run the full suites (`test:coverage`, `test:stories`, the full e2e run) unless you say so.
 
-**Not available yet:** the tests-first layer as its own pull request needs the stack mode of `/create-pr`, which is Draft F in `stacks.md` and waits on its Decisions 1 and 2. Until then it is a local commit that you review before telling the agent to continue, and it ships with the rest of the branch. Read the tests-first layer before its tests pass: they fail by design until the implementation layer lands, and a stack merges whole, so that layer is never merged alone.
+**Not available yet:** the tests-first layer as its own pull request needs the stack mode of `/create-pr`, which is the `/create-pr` stacks task in `plan.md` (M17.40) and its Decisions 1 and 2 are decided. Until then it is a local commit that you review before telling the agent to continue, and it ships with the rest of the branch. Read the tests-first layer before its tests pass: they fail by design until the implementation layer lands, and a stack merges whole, so that layer is never merged alone.
 
 **Done when.** You have read the tests, each fails for the right reason, and you have told the agent to continue.
 
@@ -95,7 +95,7 @@ A good result: `gh stack view` lists every layer in order, and each layer's diff
 
 The agent must not run any `gh stack` command that writes to GitHub (`stacks.md`, section 3, lists them), and must not rebase or force-push by hand.
 
-**Not available yet:** `gh stack` works (proved on a scratch repo, `verify.md` checks 6 and 7), but the extension is not installed in the dev container, and stack branches are the one exception to `/create-pr`'s "never rebase, never force-push" rules (decided, Decision 2 in `stacks.md`): `gh stack` owns them and one session owns a whole stack. Draft F writes that into the skill. Until it lands, work as a single branch.
+**Not available yet:** `gh stack` works (proved on a scratch repo, `verify.md` checks 6 and 7), but the extension is not installed in the dev container, and stack branches are the one exception to `/create-pr`'s "never rebase, never force-push" rules (decided, Decision 2 in `stacks.md`): `gh stack` owns them and one session owns a whole stack. M17.40 (`plan.md`) writes that into the skill, and M17.38 installs the extension. Until they land, work as a single branch.
 
 **Done when.** `gh stack view` lists the layers, and each layer's diff is small enough that you expect to read it in 15 minutes.
 
@@ -117,7 +117,7 @@ A good result: every required check is green on the top layer. Read a layer when
 
 The agent must not call `gh stack submit` or `link` itself: those write PRs without a `Closes`/`Refs` line, a task-id title or a board link (`stacks.md`, section 3).
 
-**Not available yet:** one pull request per layer needs Draft F (`stacks.md`). `pr-gate.yml` and `gitflow.yml` do run on an upper layer: GitHub starts them with `github.base_ref` equal to `staging`, and `gitflow.yml` passes an upper layer (proved on stand-ins, `stacks.md` section 6). The full gate on the top layer testing the whole stack's diff, and cheap checks only below it (decided, Decision 3 in `stacks.md`), need Draft C. The gate also has no dependency-rules job (Draft B in `verify.md`), and no `oversized` label (Draft D). Until then `/create-pr` opens one PR per branch, and the gate runs as it does today.
+**Not available yet:** one pull request per layer needs the `/create-pr` stacks task (M17.40). `pr-gate.yml` and `gitflow.yml` do run on an upper layer: GitHub starts them with `github.base_ref` equal to `staging`, and `gitflow.yml` passes an upper layer (proved on stand-ins, `stacks.md` section 6). The full gate on the top layer testing the whole stack's diff, and cheap checks only below it (decided, Decision 3 in `stacks.md`), need M17.39. The gate also has no impact graph (M17.38) and no `oversized` label (M17.39). Until then `/create-pr` opens one PR per branch, and the gate runs as it does today.
 
 **Done when.** The PR is open, linked to its task, and its required checks are green.
 
@@ -139,7 +139,7 @@ A good result: you can name each module under `src/modules/` that the change tou
 
 The agent must not offer an opinion on the code. It only lists.
 
-**Not available yet:** the graph from `npm run review:affected` (dependency-cruiser with the `swc` parser, `--affected origin/staging`, Mermaid output) needs Draft B (`verify.md`); the route is decided (Decision 1). The import rules are not part of it: Oxlint and `tests/guards/` already enforce them.
+**Not available yet:** the graph from `npm run review:affected` (dependency-cruiser with the `swc` parser, `--affected origin/staging`, Mermaid output) needs M17.38 (`plan.md`); the route is decided (Decision 1). The import rules are not part of it: Oxlint and `tests/guards/` already enforce them.
 
 **Done when.** You can list the modules the layer reaches.
 
@@ -161,7 +161,7 @@ A good result: you find its definition and callers. With Graphify in place, `gra
 
 The agent must not offer a review of the symbol. Where the Graphify MCP server is working, it may use `query_graph`, `shortest_path`, `get_node` and `get_neighbors` for this (`graphify.md`).
 
-**Not available yet:** Graphify is not usable today. The sidecar's graph is empty, and no `graphify` command exists in the dev container (`graphify.md`, "Summary"). The form is the sidecar (end state A): the agent uses the MCP tools, and you have no `graphify` command in the dev container's own terminal. Unblocked by Drafts G1 to G4 in `graphify.md`.
+**Not available yet:** Graphify is not usable today. The sidecar's graph is empty, and no `graphify` command exists in the dev container (`graphify.md`, "Summary"). The form is the sidecar (end state A): the agent uses the MCP tools, and you have no `graphify` command in the dev container's own terminal. Unblocked by M17.41 (`plan.md`).
 
 **Done when.** You can say what the symbol does and what uses it, or you decided it does not matter for the review.
 
@@ -176,7 +176,7 @@ git diff --stat origin/staging...HEAD
 git diff origin/staging...HEAD -- src
 ```
 
-For a stack, replace `origin/staging` with the layer below. A good result: you can say, for every hunk, what it does and whether it meets a criterion from step 1. The structural diff `difft` ignores reformatting; it parses TSX (`verify.md`, check 10), but it is not in the dev container image (Draft A), so you can run it only after fetching its binary yourself, or on the host.
+For a stack, replace `origin/staging` with the layer below. A good result: you can say, for every hunk, what it does and whether it meets a criterion from step 1. The structural diff `difft` ignores reformatting; it parses TSX (`verify.md`, check 10), but it is not in the dev container image (M17.38), so you can run it only after fetching its binary yourself, or on the host.
 
 **With an agent.** Paste:
 
@@ -184,7 +184,7 @@ For a stack, replace `origin/staging` with the layer below. A good result: you c
 
 The agent must not review, approve or summarise the change as "fine". It only shows and describes.
 
-**Not available yet:** `git dft` is not an alias in the repo, and difftastic in the image is Draft A (`verify.md`).
+**Not available yet:** `git dft` is not an alias in the repo, and difftastic in the image is M17.38 (`plan.md`).
 
 **Done when.** You have read every changed file of the layer.
 
@@ -200,7 +200,7 @@ The agent must not review, approve or summarise the change as "fine". It only sh
 
 The agent must not push, merge or resolve a review thread on GitHub itself.
 
-**Not available yet:** `/plannotator-review` does not run in this dev container directly, because the binary does not start on Alpine. The route is decided (Decision 2: a private glibc prefix and a wrapper, proved in `verify.md`, check 8), but no wrapper exists until Draft A (`verify.md`) is built. Until then, annotate on GitHub or in a file.
+**Not available yet:** `/plannotator-review` does not run in this dev container directly, because the binary does not start on Alpine. The route is decided (Decision 2: a private glibc prefix and a wrapper, proved in `verify.md`, check 8), but no wrapper exists until M17.38 (`plan.md`) is built. Until then, annotate on GitHub or in a file.
 
 **Done when.** Each note is resolved or answered, and you have re-read the changes.
 
@@ -212,9 +212,9 @@ The agent must not push, merge or resolve a review thread on GitHub itself.
 
 **With an agent.** No prompt. The agent does not merge.
 
-A stack merges whole, never a lower layer alone (decided, Decision 3 in `stacks.md`), because a green lower layer means only the cheap checks passed. Whether a guard can enforce this is part of Draft C.
+A stack merges whole, never a lower layer alone (decided, Decision 3 in `stacks.md`), because a green lower layer means only the cheap checks passed. Whether a guard can enforce this is part of M17.39.
 
-**Not available yet:** the merge queue returns with a later task. `Closes #N` goes on the top layer and `Refs #N` on the layers below (decided, Decision 1 in `stacks.md`), and the close workflow fires for a layer merged when it is the lowest unmerged one, because its base is then `staging` (proved one layer at a time; layers merged in one atomic call are unproved and are in Draft G). `gh stack merge N` merges layer N and every layer below it, and the layer above is retargeted to `staging`.
+**Not available yet:** the merge queue returns with a later task. `Closes #N` goes on the top layer and `Refs #N` on the layers below (decided, Decision 1 in `stacks.md`), and the close workflow fires for a layer merged when it is the lowest unmerged one, because its base is then `staging` (proved one layer at a time; layers merged in one atomic call are unproved and are in M17.40). `gh stack merge N` merges layer N and every layer below it, and the layer above is retargeted to `staging`.
 
 **Done when.** The PR is merged into `staging`, and the task shows `Done` on the board.
 
@@ -226,7 +226,7 @@ You can ask an agent to take you through the loop one step at a time from this f
 
 ## Where a stack meets `/create-pr` and the task board
 
-`/create-pr` and the board assume one PR per task. `stacks.md` lists each place with file and line (section 5), says how a layer links to its task (section 4), and drafts the changes (Drafts C, F and G). Until they exist, use one branch and one PR per task.
+`/create-pr` and the board assume one PR per task. `stacks.md` lists each place with file and line (section 5), says how a layer links to its task (section 4), and the tasks that make the changes (M17.39 and M17.40). Until they exist, use one branch and one PR per task.
 
 ## Open decisions
 
