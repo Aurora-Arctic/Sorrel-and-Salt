@@ -1,6 +1,6 @@
 import { type ReactElement, useId } from 'react';
 import BusyButton from '../BusyButton';
-import IconTip from '../IconTip';
+import IconTip, { BinButton } from '../IconTip';
 import type { FormActionsProps } from './types';
 
 /**
@@ -71,9 +71,9 @@ export function FormActions({
         </button>
       )}
       {onDelete && (
-        <button type="button" className="btn btn--destructive form__aside" onClick={onDelete}>
-          {`Delete ${noun}`}
-        </button>
+        <div className="form__aside">
+          <BinButton verb={`Delete ${noun}`} name="" onClick={onDelete} />
+        </div>
       )}
       {aside && <div className="form__aside">{aside}</div>}
     </div>
