@@ -732,3 +732,32 @@ $replaces-gap: space(5);
     margin-block-end: 1.0625rem;
   }
 }
+
+// A correspondence value with sources: text until pointed at or focused. The button takes the
+// surroundings' ink and font; the dotted underline on hover and focus marks it as one you can ask.
+.ingredient-entry__source-anchor {
+  @include tip-anchor;
+
+  vertical-align: baseline;
+}
+
+.ingredient-entry__source-value {
+  @include button-reset(default);
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2em;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// Placed by `useTip`; the bubble takes no pointer, as the value it describes is the hover target.
+.ingredient-entry__source-tip {
+  @include tip-above(layer('floating'));
+
+  pointer-events: none;
+}

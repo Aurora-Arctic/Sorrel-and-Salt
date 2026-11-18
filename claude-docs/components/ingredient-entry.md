@@ -155,3 +155,9 @@ The entry takes the frame's wide column (`$wide-column`).
 - The notes section (v2): References is the last child so one can be appended after it.
 - Linking a coven's own entry to a compendium entry: `similar` and `replaces` are display only.
 - Tests: `tests/components/IngredientEntry/`, `tests/app/(shell)/coven/ingredient.test.tsx`, `tests/e2e/entry-stock.spec.ts`, `compendium-entry.spec.ts` (axe, 375px url wrap), `compendium-entry-cupboard.spec.ts`, `cupboard-screens.spec.ts`, `ingredient-details-modal.spec.ts`.
+
+## Correspondence source tips
+
+- A `Row` may carry `sources`, parallel to `values`: `sources[i]` names the ingredients that gave `values[i]`. `correspondences()` takes each list as plain strings or as `{ value, sources }`, drops a blank value together with its sources, and so keeps the two aligned.
+- A value with at least one source is drawn by `CorrespondenceValue` (`correspondence-value.tsx`, a client part so the rows stay server-drawn) as a button named by the value, inside a `TipAnchor`. Its tip says the source names joined by `joinList(names, 'and')`, and opens on focus, a tap, or a hover resting 300ms. A value with no sources is plain text, so the ingredient page, which passes none, is unchanged.
+- The button looks like the text around it until hover or focus, when it gains a dotted underline and the shared focus ring. The tip is hidden in print, so the block prints as plain text.

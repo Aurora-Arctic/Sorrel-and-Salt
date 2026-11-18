@@ -1,12 +1,10 @@
-import type { ReactElement, ReactNode } from 'react';
+import { Fragment, type ReactElement, type ReactNode } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { capitalise, hasText } from '../../lib/text';
-import type { CategoryDetail, DeityDetail, IngredientRow } from '@/modules/ingredients';
+import CorrespondenceValue from './correspondence-value';
+import type { CategoryDetail, DeityDetail } from '@/modules/ingredients';
 import './index.scss';
 import { cx } from '@/lib/class-names';
-
-const listed = (values: readonly string[] | null | undefined): string[] =>
-  (values ?? []).filter(hasText);
 
 export interface Row {
   label: string;
@@ -15,22 +13,51 @@ export interface Row {
   sources?: string[][];
 }
 
-// Elements are plain text here: the spell page's combined values arrive as strings, not the column's enum.
-type Correspondences = Pick<IngredientRow, 'celestialBodies' | 'zodiacSigns' | 'colors'> & {
-  elements: readonly string[] | null;
-};
+/** A value beside the ingredients that gave it. */
+export interface SourcedValue<T = string> {
+  value: T;
+  sources: readonly string[];
+}
 
-export function correspondences(source: Correspondences, deities?: readonly DeityDetail[]): Row[] {
+type Entry<T = string> = T | SourcedValue<T>;
+type Entries<T = string> = readonly Entry<T>[] | null | undefined;
+
+// Elements are plain text here: the spell page's combined values arrive as strings, not the column's enum.
+interface Correspondences {
+  elements: Entries;
+  celestialBodies: Entries;
+  zodiacSigns: Entries;
+  colors: Entries;
+}
+
+const sourced = <T,>(entry: Entry<T>): SourcedValue<T> =>
+  typeof entry === 'object' && entry !== null && 'sources' in entry && 'value' in entry
+    ? entry
+    : { value: entry as T, sources: [] };
+
+/** One row. A blank value goes and takes its sources with it, so `sources[i]` always belongs to `values[i]`. */
+function rowOf(label: string, entries: Entries, format: (value: string) => string = (v) => v): Row {
+  const kept = (entries ?? []).map(sourced).filter(({ value }) => hasText(value));
+  return {
+    label,
+    values: kept.map(({ value }) => format(value)),
+    sources: kept.map(({ sources }) => [...sources]),
+  };
+}
+
+export function correspondences(source: Correspondences, deities?: Entries<DeityDetail>): Row[] {
   const rows: Row[] = [
-    { label: 'Elements', values: listed(source.elements).map(capitalise) },
-    { label: 'Celestial Bodies', values: listed(source.celestialBodies) },
-    { label: 'Zodiac Signs', values: listed(source.zodiacSigns) },
-    { label: 'Colours', values: listed(source.colors).map(capitalise) },
+    rowOf('Elements', source.elements, capitalise),
+    rowOf('Celestial Bodies', source.celestialBodies),
+    rowOf('Zodiac Signs', source.zodiacSigns),
+    rowOf('Colours', source.colors, capitalise),
   ];
   if (deities) {
+    const found = deities.map(sourced);
     rows.push({
       label: 'Deities',
-      values: deities.map(deityMention),
+      values: found.map(({ value }) => deityMention(value)),
+      sources: found.map(({ sources }) => [...sources]),
     });
   }
   // A group with no value is left out, so a block never draws an empty line.
@@ -106,7 +133,21 @@ export function CorrespondenceBlock({
         {rows.map((row) => (
           <div key={row.label}>
             <dt>{row.label}</dt>
-            <dd>{row.values.join(', ')}</dd>
+            <dd>
+              {row.values.map((value, index) => {
+                const sources = row.sources?.[index] ?? [];
+                return (
+                  <Fragment key={value}>
+                    {index > 0 && ', '}
+                    {sources.length > 0 ? (
+                      <CorrespondenceValue value={value} sources={sources} />
+                    ) : (
+                      value
+                    )}
+                  </Fragment>
+                );
+              })}
+            </dd>
           </div>
         ))}
       </dl>
