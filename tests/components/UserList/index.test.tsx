@@ -200,7 +200,7 @@ describe('UserList', () => {
       for (const user of props().users) {
         const row = screen.getByRole('row', { name: new RegExp(user.name) });
         const link = within(row).getByRole('link', {
-          name: `Privilege changes for ${user.name}`,
+          name: `Privilege Changes for ${user.name}`,
         });
         expect(link).toHaveAttribute(
           'href',
@@ -215,7 +215,7 @@ describe('UserList', () => {
       render(<UserList {...props({ users: [{ ...ADA, email: 'Ada@Users.Test' }] })} />);
 
       expect(
-        screen.getByRole('link', { name: 'Privilege changes for Ada Fixturewort' }),
+        screen.getByRole('link', { name: 'Privilege Changes for Ada Fixturewort' }),
       ).toHaveAttribute('href', '/keepers/privilege-changes?query=ada%40users.test');
     });
   });

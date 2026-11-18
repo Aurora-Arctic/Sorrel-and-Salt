@@ -320,7 +320,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
           onKeep={() => setRemoving(null)}
         />
         {/* Labelled, so that it is told from the box's own status region. */}
-        <output className="visually-hidden" aria-label="Forms changes">
+        <output className="visually-hidden" aria-label="Forms Changes">
           {announcement}
         </output>
       </fieldset>

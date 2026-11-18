@@ -167,7 +167,7 @@ const PausePanel = ({
                   · <Until until={standing.until} />
                 </>
               ) : (
-                '· none'
+                'none'
               )}
             </span>
           </span>

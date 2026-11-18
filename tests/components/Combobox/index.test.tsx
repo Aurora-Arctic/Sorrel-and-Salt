@@ -1448,7 +1448,7 @@ describe('Combobox', () => {
 
     it('says what each change did, for a screen reader', () => {
       render(<MultiHarness initial={['earth']} />);
-      const changes = () => screen.getByRole('status', { name: 'Element changes' });
+      const changes = () => screen.getByRole('status', { name: 'Element Changes' });
 
       fireEvent.click(elements());
       pick('Spirit');
@@ -1462,7 +1462,7 @@ describe('Combobox', () => {
 
     it('says every choice is made, in an open list with no options, once there is nothing left to offer', () => {
       render(<MultiHarness initial={['earth', 'air', 'fire', 'water']} />);
-      const status = () => screen.getByRole('status', { name: 'Element changes' });
+      const status = () => screen.getByRole('status', { name: 'Element Changes' });
 
       fireEvent.click(elements());
       expect(offered()).toEqual(['Spirit']);

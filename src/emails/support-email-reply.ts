@@ -13,7 +13,7 @@ import type { SupportEmailReplyProps } from './types';
 // Carries none of the reply: it is read on the page behind the link.
 
 const titleOf = (requestSubject: string): string =>
-  supportTitle('Reply to your support request', requestSubject);
+  supportTitle('Reply to Your Support Request', requestSubject);
 
 function SupportEmailReply({
   url,

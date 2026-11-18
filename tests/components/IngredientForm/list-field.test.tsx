@@ -109,7 +109,7 @@ const entries = (legend: string) =>
     .queryAllByRole('button', { name: /^Remove / })
     .map((button) => button.getAttribute('aria-label'));
 const changes = (legend: string) =>
-  within(group(legend)).getByRole('status', { name: `${legend} changes` });
+  within(group(legend)).getByRole('status', { name: `${legend} Changes` });
 const removeButton = (value: string) => screen.getByRole('button', { name: `Remove ${value}` });
 const addButton = (entry: string) => screen.getByRole('button', { name: `Add ${entry}` });
 const add = ({ entry, pickOnly }: Omit<Variant, 'variant'>, value: string) => {

@@ -19,7 +19,7 @@ const HistoryLink = ({ email, name }: HistoryLinkProps): ReactElement => (
       <a
         className="user-list__history-link"
         href={privilegeLedgerHref({ query: email.toLowerCase() })}
-        aria-label={`Privilege changes for ${name}`}
+        aria-label={`Privilege Changes for ${name}`}
         onFocus={show}
         onBlur={hide}
       >

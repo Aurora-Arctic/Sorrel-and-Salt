@@ -195,7 +195,7 @@ export function CopyFromIngredient({
         </button>
       </IconTip>
       {announce === undefined && (
-        <output className="visually-hidden" aria-label={`${FIELD_NOUNS[field].label} copy`}>
+        <output className="visually-hidden" aria-label={`${FIELD_NOUNS[field].label} Copy`}>
           {news}
         </output>
       )}
@@ -254,7 +254,7 @@ export function SkippedNotice({
       // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- this live region holds block content, which an output element would restyle
       role="status"
       className="ingredient-form__copy-skipped"
-      aria-label="Substitute Ingredients skipped"
+      aria-label="Substitute Ingredients Skipped"
     >
       {skipped && (
         <Notice kind="warn" block inRegion>

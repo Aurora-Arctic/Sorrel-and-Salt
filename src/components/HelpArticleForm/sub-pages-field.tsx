@@ -148,7 +148,7 @@ export function HelpSubPagesField({
       )}
       <FieldError id={errorId} message={error} />
       {/* Labelled, so that it is told from the box's own status region. */}
-      <output className="visually-hidden" aria-label="Sub Pages changes">
+      <output className="visually-hidden" aria-label="Sub Pages Changes">
         {announcement}
       </output>
     </fieldset>

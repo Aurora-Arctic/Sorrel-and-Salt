@@ -111,7 +111,7 @@ const shownIn = (item: HTMLElement) => {
   copy.querySelectorAll('[hidden], [role="tooltip"]').forEach((node) => node.remove());
   return copy.textContent;
 };
-const changes = () => within(references()).getByRole('status', { name: 'References changes' });
+const changes = () => within(references()).getByRole('status', { name: 'References Changes' });
 const panel = () => referencePanel(references());
 const noPanel = () =>
   expect(within(references()).queryByRole('group', { name: 'New Reference' })).toBeNull();
@@ -562,7 +562,7 @@ describe('ReferencesField', () => {
         expect(within(list).queryByRole('button', { name: `Edit ${NOTES_SHORT}` })).toBeNull();
       }
       expect(
-        within(ingredient()).getByRole('status', { name: 'References changes' }),
+        within(ingredient()).getByRole('status', { name: 'References Changes' }),
       ).not.toBeEmptyDOMElement();
       expect(editSource(RENAMED_SHORT)).toHaveFocus();
 

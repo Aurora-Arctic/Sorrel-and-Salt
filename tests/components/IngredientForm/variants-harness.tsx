@@ -227,7 +227,7 @@ export const filled = (): IngredientFormValues => {
 };
 
 export const skippedNotice = (scope: HTMLElement) =>
-  within(scope).getByRole('status', { name: 'Substitute Ingredients skipped' });
+  within(scope).getByRole('status', { name: 'Substitute Ingredients Skipped' });
 
 export const addVariant = (form: string) => {
   typeInScope(document.body, 'New Form', form);

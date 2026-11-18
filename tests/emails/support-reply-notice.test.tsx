@@ -26,7 +26,7 @@ describe('supportReplyNoticeMessage', () => {
       requestSubject: 'The jar will not open',
     });
 
-    const named = 'Reply to your support request: The jar will not open';
+    const named = 'Reply to Your Support Request: The jar will not open';
     expect(message.subject).toBe(named);
     // The paragraph continues past the title, so a text node that ends at it is the heading.
     expect(message.html).toContain(`>${named}<`);
@@ -41,7 +41,7 @@ describe('supportReplyNoticeMessage', () => {
     });
 
     expect(message.subject.length).toBeLessThanOrEqual(120);
-    expect(message.subject).toMatch(/^Reply to your support request: x+…$/);
+    expect(message.subject).toMatch(/^Reply to Your Support Request: x+…$/);
     expect(message.html).not.toContain('x'.repeat(200));
     expect(message.text).not.toContain('x'.repeat(200));
   });

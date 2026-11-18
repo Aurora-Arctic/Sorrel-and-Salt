@@ -74,7 +74,7 @@ const typeInBox = (text: string) => fireEvent.change(box(), { target: { value: t
 const option = (name: string) => screen.getByRole('option', { name: new RegExp(`^${name}`) });
 const removeButton = (name: string) => screen.getByRole('button', { name: `Remove ${name}` });
 const entry = (name: string) => removeButton(name).closest('li')!;
-const changes = () => screen.getByRole('status', { name: 'Categories changes' });
+const changes = () => screen.getByRole('status', { name: 'Categories Changes' });
 
 describe('CategoryPicker', () => {
   it('is a group named by its legend, holding one box named for an entry', () => {

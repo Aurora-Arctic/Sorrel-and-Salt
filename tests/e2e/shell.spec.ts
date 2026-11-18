@@ -171,7 +171,7 @@ test('at a phone the coven nav is the bottom bar and the keyboard reaches the wh
 
   const account = page.getByRole('banner').getByRole('button', { name: 'Fixture Person' });
   await expect(
-    page.getByRole('banner').getByRole('button', { name: 'Toggle light and dark mode' }),
+    page.getByRole('banner').getByRole('button', { name: 'Toggle Light and Dark Mode' }),
   ).toBeVisible();
 
   await page.reload();
@@ -265,7 +265,7 @@ for (const [edge, width] of [
       const bar = page.getByRole('banner');
       await expect(bar.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeVisible();
       await expect(bar.getByRole('button', { name: 'Choose Where to Add' })).toBeVisible();
-      await expect(bar.getByRole('button', { name: 'Toggle light and dark mode' })).toBeVisible();
+      await expect(bar.getByRole('button', { name: 'Toggle Light and Dark Mode' })).toBeVisible();
       await assertNoSidewaysScroll(page, { width });
     });
   }

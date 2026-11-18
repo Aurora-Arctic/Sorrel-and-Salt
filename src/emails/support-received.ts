@@ -13,7 +13,7 @@ import type { SupportReceivedProps } from './types';
 // Carries none of what the sender wrote.
 
 const titleOf = (requestSubject: string): string =>
-  supportTitle('We have your support request', requestSubject);
+  supportTitle('We Have Your Support Request', requestSubject);
 
 function SupportReceived({
   url,
