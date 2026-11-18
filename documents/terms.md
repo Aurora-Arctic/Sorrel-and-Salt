@@ -7,7 +7,7 @@ published: 2026-11-02
 
 When these terms change, the site asks you to agree to the new version before you use it again.
 
-These terms include two other pages, and agreeing to these terms is agreeing to them too. The [Disclaimer](/disclaimer) says what the site's information is and is not. The [Code of Ethics](/code-of-ethics) says what the site stands for: its section "What Everyone Agrees To" binds every account, and its sections for curators, keepers, developers and the owner bind whoever holds that role.
+These terms include two other pages, and agreeing to these terms is agreeing to them too. The [Disclaimer](/disclaimer) says what the site's information is and is not. The [Code of Ethics](/code-of-ethics) says what the site stands for: its section **What Everyone Agrees To** binds every account, and its sections for curators, keepers, developers and the owner bind whoever holds that role.
 
 ## The Short Version
 
@@ -41,7 +41,7 @@ The compendium is written and checked by the site's keepers and curators. Every 
 
 ### How to Treat Each Other
 
-The [Code of Ethics](/code-of-ethics) says what the site stands for. Its section "What Everyone Agrees To" binds every account, and agreeing to these terms is agreeing to it. In short: no bigotry, in any form, towards anyone.
+The [Code of Ethics](/code-of-ethics) says what the site stands for. Its section **What Everyone Agrees To** binds every account, and agreeing to these terms is agreeing to it. In short: no bigotry, in any form, towards anyone.
 
 The Code of Ethics goes on to ask more of the people who run the site. Its sections for curators, for keepers and for the site's owner each add to the one before, and bind whoever holds that role for as long as they hold it.
 
@@ -99,14 +99,14 @@ You may stop using the site at any time. You can leave any coven from its page. 
 
 [^2]: United States. _Children's Online Privacy Protection Rule_, 16 C.F.R. part 312, §§ 312.1 and 312.2. Legal Information Institute, Cornell Law School. Accessed 2 November 2026. https://www.law.cornell.edu/cfr/text/16/part-312.
 
-[^3]: Washington State Legislature. _Revised Code of Washington_, 19.86.020, "Unfair competition, practices, declared unlawful", and 19.86.090, "Civil action for damages". Accessed 2 November 2026. https://app.leg.wa.gov/RCW/default.aspx?cite=19.86.020, https://app.leg.wa.gov/RCW/default.aspx?cite=19.86.090.
+[^3]: Washington State Legislature. _Revised Code of Washington_, 19.86.020, “Unfair competition, practices, declared unlawful”, and 19.86.090, “Civil action for damages”. Accessed 2 November 2026. https://app.leg.wa.gov/RCW/default.aspx?cite=19.86.020, https://app.leg.wa.gov/RCW/default.aspx?cite=19.86.090.
 
-[^4]: Washington State Legislature. _Revised Code of Washington_, 62A.2-719, "Contractual modification or limitation of remedy". Accessed 2 November 2026. https://app.leg.wa.gov/RCW/default.aspx?cite=62A.2-719.
+[^4]: Washington State Legislature. _Revised Code of Washington_, 62A.2-719, “Contractual modification or limitation of remedy”. Accessed 2 November 2026. https://app.leg.wa.gov/RCW/default.aspx?cite=62A.2-719.
 
-[^5]: Washington State Legislature. _Revised Code of Washington_, 7.04A.030, "When chapter applies", and 7.04A.060, "Validity of agreement to arbitrate" (Uniform Arbitration Act). Accessed 2 November 2026. https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.030, https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.060.
+[^5]: Washington State Legislature. _Revised Code of Washington_, 7.04A.030, “When chapter applies”, and 7.04A.060, “Validity of agreement to arbitrate” (Uniform Arbitration Act). Accessed 2 November 2026. https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.030, https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.060.
 
 [^6]: Washington Courts. _General Rule 34: Waiver of Court and Clerk's Fees and Charges in Civil Matters on the Basis of Indigency_, (a)(3)–(4). Adopted 28 December 2010, amended 1 January 2023. Accessed 2 November 2026. https://www.courts.wa.gov/court_rules/pdf/GR/GA_GR_34_00_00.pdf.
 
-[^7]: Washington Courts. "Court Directory: Spokane County." Accessed 2 November 2026. https://www.courts.wa.gov/court_dir/orgs/291.html.
+[^7]: Washington Courts. “Court Directory: Spokane County.” Accessed 2 November 2026. https://www.courts.wa.gov/court_dir/orgs/291.html.
 
-[^8]: Washington State Legislature. _Revised Code of Washington_, 4.84.185, "Prevailing party to receive expenses for opposing frivolous action or defense". Accessed 2 November 2026. https://app.leg.wa.gov/RCW/default.aspx?cite=4.84.185.
+[^8]: Washington State Legislature. _Revised Code of Washington_, 4.84.185, “Prevailing party to receive expenses for opposing frivolous action or defense”. Accessed 2 November 2026. https://app.leg.wa.gov/RCW/default.aspx?cite=4.84.185.

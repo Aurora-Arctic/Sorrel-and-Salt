@@ -22,25 +22,25 @@ describe('helpViewerOffers', () => {
   it('offers a signed-out reader nothing', async () => {
     getSession.mockResolvedValue(null);
 
-    expect(await helpViewerOffers()).toEqual({ staffHelp: false, edit: false });
+    expect(await helpViewerOffers()).toEqual({ signedIn: false, staffHelp: false, edit: false });
   });
 
   it('offers a member nothing', async () => {
     as('user');
 
-    expect(await helpViewerOffers()).toEqual({ staffHelp: false, edit: false });
+    expect(await helpViewerOffers()).toEqual({ signedIn: true, staffHelp: false, edit: false });
   });
 
   it('offers a curator Staff Help, and no Edit, as only a keeper writes help', async () => {
     as('curator');
 
-    expect(await helpViewerOffers()).toEqual({ staffHelp: true, edit: false });
+    expect(await helpViewerOffers()).toEqual({ signedIn: true, staffHelp: true, edit: false });
   });
 
   it('offers a keeper Staff Help and Edit', async () => {
     as('admin');
 
-    expect(await helpViewerOffers()).toEqual({ staffHelp: true, edit: true });
+    expect(await helpViewerOffers()).toEqual({ signedIn: true, staffHelp: true, edit: true });
   });
 
   it.each(['curator', 'admin'] as const)(
@@ -48,7 +48,7 @@ describe('helpViewerOffers', () => {
     async (role) => {
       as(role, false);
 
-      expect(await helpViewerOffers()).toEqual({ staffHelp: false, edit: false });
+      expect(await helpViewerOffers()).toEqual({ signedIn: true, staffHelp: false, edit: false });
       // Precondition: the same role verified is offered something.
       as(role);
       expect((await helpViewerOffers()).staffHelp).toBe(true);

@@ -205,8 +205,20 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     line-height: 0;
   }
 
+  // The tap area is a 24 by 24 pixel box centred on the marker, so the superscript keeps its size and the line its height.
   .document-page__marks a {
+    position: relative;
     padding-inline: space(1);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: 50%;
+      inline-size: 24px;
+      block-size: 24px;
+      transform: translate(-50%, -50%);
+    }
   }
 
   .document-page__marks a,

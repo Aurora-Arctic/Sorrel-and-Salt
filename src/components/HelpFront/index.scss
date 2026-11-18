@@ -3,6 +3,20 @@
 
 $-wide: page-with-nav-wide($document-menu-column, $measure);
 
+// The links end the title row. The Compendium one is drawn only where the signed-in bar has moved its links into the
+// account menu.
+.help-front__links {
+  display: inline-flex;
+  align-items: center;
+  gap: space(4);
+}
+
+@include above-tablet {
+  .help-front__compendium {
+    display: none;
+  }
+}
+
 .help-front__head {
   // The Staff Help link ends the title row at every width: the h1 is one short word, so the site rule that drops a
   // header action under a narrow title would leave the link on a line of its own.

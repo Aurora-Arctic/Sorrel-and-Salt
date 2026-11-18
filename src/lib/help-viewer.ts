@@ -4,6 +4,8 @@ import { curates } from './site-roles';
 
 /** What a help reader page offers its viewer beyond the text. */
 export interface HelpViewerOffers {
+  /** Any account is signed in: the page offers the Compendium link its bar holds only above a tablet's width. */
+  signedIn: boolean;
   /** The link to Staff Help: a verified curator's or keeper's. */
   staffHelp: boolean;
   /** Edit on an article: a verified keeper's, as only a keeper writes help. */
@@ -17,6 +19,7 @@ export interface HelpViewerOffers {
  */
 export async function helpViewerOffers(): Promise<HelpViewerOffers> {
   const session = await getSession();
-  if (!session || !(await sessionIsVerified())) return { staffHelp: false, edit: false };
-  return { staffHelp: curates(session.role), edit: session.role === 'admin' };
+  if (!session) return { signedIn: false, staffHelp: false, edit: false };
+  if (!(await sessionIsVerified())) return { signedIn: true, staffHelp: false, edit: false };
+  return { signedIn: true, staffHelp: curates(session.role), edit: session.role === 'admin' };
 }
