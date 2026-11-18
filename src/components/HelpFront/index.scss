@@ -11,8 +11,9 @@ $-wide: page-with-nav-wide($document-menu-column, $measure);
   gap: space(4);
 }
 
+// Two classes, through the parent: this beats `.back-link`'s own `display` (one class) whichever stylesheet loads last.
 @include above-tablet {
-  .help-front__compendium {
+  .help-front__links .help-front__compendium {
     display: none;
   }
 }
