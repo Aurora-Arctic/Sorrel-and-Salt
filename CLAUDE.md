@@ -127,6 +127,7 @@ The issues of `Aurora-Arctic/Sorrel-and-Salt`, under two org Projects, **Sorrel 
 - A passing run prints only its verdict; on a failure read the failing part (`tail`, `grep`, `jq`). Read a file over ~300 lines by section.
 - Never mask an exit code with a pipe: log to `.reports/<name>.log`, print `exit $?`, then tail the log.
 - Verify once: run the specs a change touches, named together in one command so the servers start once; the full suites only when the owner says so.
+- **Ask the code graph before a broad search.** For what calls a function, what a module reaches or how two symbols connect, use the `graphify` MCP tools, then read the files they name; search text with `grep` (`claude-docs/review-workflow.md`, "How an agent uses the tools").
 - At a task boundary, suggest `/clear` to the owner. Each rule gives way when the owner asks otherwise, or when following it would thin a test (claude-docs/token-efficiency.md).
 
 ## Out of scope for v1

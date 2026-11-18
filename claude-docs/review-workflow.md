@@ -1,6 +1,6 @@
 # The local code review workflow
 
-This is how code that an agent wrote is reviewed by hand, on your own machine. No model does the review: you read the code, and the tools only show you what changed, what it reaches, and where your notes go. An agent may run the commands and explain the output, but the judgement of the code is yours.
+This is how code that an agent wrote is reviewed by hand, on your own machine. No model does the review: you read the code, and the tools only show you what changed, what it reaches, and where your notes go. An agent may run the commands and explain the output, and a guide may put the diff in a reading order (step 7), but the judgement of the code is yours.
 
 Who does what:
 
@@ -26,7 +26,8 @@ Rules that apply to every step:
 - The package manager is npm and the source folder is `src/`.
 - Never push, open a pull request, or write to the task board by any route other than `/create-pr` and `node scripts/task-board.mjs`.
 - `/security-review` is run only when the owner asks, on a risky layer: authentication, workspace scoping, or a database migration. It consumes Claude usage. No script, hook, or workflow runs it.
-- The Claude Code GitHub Action and a hosted AI reviewer are not part of this process.
+- The Claude Code GitHub Action and a hosted AI reviewer are not part of this process. Nor are Plannotator's Review Agents, which post a model's review comments on the diff: they are switched on by the same setting as guides, and are not used.
+- Plannotator shows one page at a time, on port 19432: a plan review, a code review, or an annotation. A second one started while the first is open fails on the port, so finish the open one in its page first.
 
 The records behind the choices (what was checked, what stacks change, what Graphify offers) are in `claude-docs/review-poc/`.
 
@@ -50,6 +51,8 @@ A good result: `find` names exactly one issue, and the entry has an `_Acceptance
 The agent must not rewrite the criteria unasked, start work, or move the task's status.
 
 **Done when.** Each acceptance criterion is written and checkable, and you have read it.
+
+**When the agent plans first.** An agent asked to plan a task writes the plan in plan mode. When it leaves plan mode, the plan opens in Plannotator, in the host browser on port 19432. Write notes on the lines you want changed, then approve the plan or request changes; the decision goes back to the agent's session as a message. A revised plan opens in the same page with a diff against the version before it. The agent does not open the plan in the editor as well.
 
 ## Step 2. Tests first, reviewed before the implementation
 
@@ -161,7 +164,7 @@ A good result: you find its definition and callers.
 
 > Find where `NAME` is defined and list what calls it and what it calls. Report file and line for each. Do not change any file and do not say whether the code is good. Stop and wait for me.
 
-The agent may use the Graphify MCP tools (`query_graph`, `shortest_path`, `get_node`, `get_neighbors`, `graph_stats`) for this. Graphify builds a graph of the code and calls no model. It runs as a sidecar, beside the dev container, so there is no `graphify` command in the dev container's terminal. The sidecar is described in `claude-docs/docker.md`. The agent must not offer a review of the symbol.
+The agent uses the Graphify MCP tools (`query_graph`, `shortest_path`, `get_node`, `get_neighbors`, `graph_stats`) for this, and for any question of the same shape outside a review ("How an agent uses the tools", below). Graphify builds a graph of the code and calls no model. It runs as a sidecar, beside the dev container, so there is no `graphify` command in the dev container's terminal. The sidecar is described in `claude-docs/docker.md`. The agent must not offer a review of the symbol.
 
 **Done when.** You can say what the symbol does and what uses it, or you decided it does not matter for the review.
 
@@ -186,11 +189,13 @@ The agent must not review, approve, or summarise the change as "fine". It only s
 
 **Done when.** You have read every changed file of the layer.
 
+**A guide, as a reading aid.** In the Plannotator review page (step 8), **Guide** has a model sort the diff into chapters, the heart of the change first, each with a short overview beside the real diff. Use it to choose the order you read in, on a layer too large to hold in your head. It does not replace reading every changed file, and its overview is not a finding. It consumes Claude usage, at least the size of the diff, so open the review against the layer's base first: a guide on a review opened against `main` reads everything `staging` has as well.
+
 ## Step 8. Annotate and send notes back
 
 **What it is for.** To record what you found, and send it to the coding agent once per layer, because each send uses Claude usage.
 
-**By hand.** Run `/plannotator-review` in Claude Code. Plannotator is a browser page for writing line notes on a diff; it opens on the host at port 19432. Write each note with a file and line. Send the notes to the coding agent in one message. A good result: every note names a file and line, and says what you want changed. You can also write the notes as review comments on GitHub, or in a file of your own.
+**By hand.** Run `/plannotator-review --base origin/staging` in the coding agent's Claude Code session; for a stack, name the layer below in place of `origin/staging`. Without `--base` the page compares against `main`. Plannotator is a browser page for writing line notes on a diff; it opens on the host at port 19432. Write each note on its line, then press Send Feedback once: the notes arrive in that session as one message, each with its file and line. A good result: every note says what you want changed. You can also write the notes as review comments on GitHub, or in a file of your own.
 
 **With an agent.** Paste:
 
@@ -212,6 +217,21 @@ There is no merge queue today.
 
 **Done when.** The pull requests are merged into `staging`, and the task shows `Done` on the board.
 
+## How an agent uses the tools
+
+What an agent does without being asked, in any task, not only in a review:
+
+| When                                                                                      | The agent                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| It needs to know what calls a function, what a module reaches, or how two symbols connect | Asks the code graph first (`query_graph`, `get_neighbors`, `shortest_path`), then reads the files it names. The graph is rebuilt after each change to the code, so a symbol written minutes ago may not be in it yet.             |
+| It needs a piece of text: a string, a class name, a config key                            | Searches with `grep`. The graph holds code structure, not text.                                                                                                                                                                   |
+| It finishes a plan                                                                        | Leaves plan mode, which opens the plan in Plannotator (step 1).                                                                                                                                                                   |
+| It has a question that does not stop the rest of the work                                 | Posts it to the Plannotator Inbox, a standing page where questions from every session wait for you, and carries on. The answer arrives in its session as a message. A question that blocks everything is still asked in the chat. |
+| It is told to open something for review                                                   | Opens it in Plannotator: a diff with `plannotator review --base <ref>`, a document with `plannotator annotate <file>`.                                                                                                            |
+| It wants the shape of a change before reading it                                          | Runs `BASE=<ref> npm run review:affected` and reads `.review/affected.md` (step 5), and `git dft <ref>...HEAD` for the diff itself (step 7).                                                                                      |
+
+The agent never starts a guide, Ask AI, or a Review Agent in Plannotator: those spend usage on the reviewer's behalf, and only the reviewer presses them. The Inbox is at `http://localhost:43501` on the host; `/plannotator-inbox` starts it and prints its address (`claude-docs/commands.md`, "The local review").
+
 ## Walking through it with an agent
 
 You can ask an agent to take you through the loop one step at a time. The agent stops after each step and waits for you. Paste:
@@ -232,19 +252,19 @@ Each tool comes out on its own, with no effect on the app.
 
 ## Acceptance checks
 
-These checks prove the setup works. **They have not been run.** The owner runs them after a full container rebuild, on a stack of three test layers, and records pass or fail in the last column, with the actual output on a fail. A failed row stops the run and is reported, not worked around. The test stack is closed without merging, and its branches are deleted.
+These checks prove the setup works. The container rows were run after a full container rebuild; **the GitHub rows, and `gh stack view`, have not been run**, because they need a stack of three test layers. Each row records pass or fail in the last column, with the actual output on a fail. A failed row stops the run and is reported, not worked around. The test stack is closed without merging, and its branches are deleted.
 
-| Where     | Check                                                       | Passes when                                                                                                      | Result |
-| --------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------ |
-| Container | `git dft HEAD~1` on a commit that touches a `.tsx` file     | A structural diff with no parse-failure notice                                                                   |        |
-| Container | `BASE=origin/staging npm run review:affected` on a branch   | `.review/affected.md` renders a Mermaid graph of the changed modules and the modules that reach them             |        |
-| GitHub    | Open the three-layer test stack                             | The top layer runs the full gate on the whole stack's diff; the two layers below run only format, lint and types |        |
-| GitHub    | Push a test layer above the size limit                      | The pull request gets the `oversized` label, and loses it when a later push brings it under                      |        |
-| Container | `gh stack view` on the test stack                           | All layers are listed                                                                                            |        |
-| Container | `/plannotator-review` in Claude Code                        | The review opens in the host browser on port 19432                                                               |        |
-| Container | `git status` after a review run                             | Nothing under `.review/` is tracked or listed as untracked                                                       |        |
-| Container | `graph_stats` through the MCP server                        | Counts, not "graph.json not found"                                                                               |        |
-| Container | Commit a small change, then check `graphify-out/graph.json` | The file's modified time is after the commit; the watch service does this, not a git hook                        |        |
+| Where     | Check                                                       | Passes when                                                                                                      | Result                                                                                                                           |
+| --------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Container | `git dft HEAD~1` on a commit that touches a `.tsx` file     | A structural diff with no parse-failure notice                                                                   | Pass                                                                                                                             |
+| Container | `BASE=origin/staging npm run review:affected` on a branch   | `.review/affected.md` renders a Mermaid graph of the changed modules and the modules that reach them             | Pass, against `origin/main`; this branch changes nothing under `src/`, so against `origin/staging` the command stops and says so |
+| GitHub    | Open the three-layer test stack                             | The top layer runs the full gate on the whole stack's diff; the two layers below run only format, lint and types |                                                                                                                                  |
+| GitHub    | Push a test layer above the size limit                      | The pull request gets the `oversized` label, and loses it when a later push brings it under                      |                                                                                                                                  |
+| Container | `gh stack view` on the test stack                           | All layers are listed                                                                                            |                                                                                                                                  |
+| Container | `/plannotator-review` in Claude Code                        | The review opens in the host browser on port 19432                                                               | Pass                                                                                                                             |
+| Container | `git status` after a review run                             | Nothing under `.review/` is tracked or listed as untracked                                                       | Pass                                                                                                                             |
+| Container | `graph_stats` through the MCP server                        | Counts, not "graph.json not found"                                                                               | Pass                                                                                                                             |
+| Container | Commit a small change, then check `graphify-out/graph.json` | The file's modified time is after the commit; the watch service does this, not a git hook                        | Pass: rebuilt 36 seconds after a source file was added                                                                           |
 
 Rows from the original brief that are not run, and why:
 

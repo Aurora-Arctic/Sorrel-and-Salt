@@ -13,9 +13,12 @@
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-jobs docker-all docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token playwright-server-up playwright-server-down playwright-audit-up playwright-audit-down lighthouse-up lighthouse-down docker-codegen \
+	devcontainer-build graphify-up graphify-down graphify-pages-up graphify-pages-down graphify-logs \
 	act-image act-cache-checkout act-check act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
+# The dev container and the code graph's services are in the overlay file.
+COMPOSE_DEV := $(COMPOSE) -f .devcontainer/docker-compose.yml
 
 ## Print this list of targets
 help:
@@ -221,6 +224,30 @@ lighthouse-up:
 ## Stop the Lighthouse Chromium
 lighthouse-down:
 	$(COMPOSE) --profile audit stop lighthouse-chrome
+
+## Build the dev container image; then "Dev Containers: Rebuild Container" in VS Code
+devcontainer-build:
+	$(COMPOSE_DEV) build devcontainer
+
+## Start the code graph: the builder and its MCP server (graphify)
+graphify-up:
+	$(COMPOSE_DEV) up -d graphify-watch graphify
+
+## Stop all four code graph services, leaving the rest of the stack running
+graphify-down:
+	$(COMPOSE_DEV) --profile graph-pages stop graphify-watch graphify graphify-web graphify-views
+
+## Also start the code graph's pages on 8090 (compose profile: graph-pages)
+graphify-pages-up:
+	$(COMPOSE_DEV) --profile graph-pages up -d graphify-web graphify-views
+
+## Stop the code graph's pages
+graphify-pages-down:
+	$(COMPOSE_DEV) --profile graph-pages stop graphify-web graphify-views
+
+## Follow the code graph builder's log, one entry per rebuild
+graphify-logs:
+	$(COMPOSE_DEV) logs -f graphify-watch
 
 # `sorrel-app`, not `app`: browsers HSTS-preload the `app` gTLD.
 ## Record a Playwright spec on the browser server's display (:7900) — pass NAME=<spec>
