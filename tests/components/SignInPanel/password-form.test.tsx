@@ -203,7 +203,7 @@ describe('SignInPanel, email and password', () => {
     const notice = screen.getByRole('status');
     expect(notice).toHaveTextContent(/someone@password-form\.test/);
     expect(notice).toHaveFocus();
-    expect(submit('Sign In')).toBeDisabled();
+    expect(submit('Sign In')).toBeEnabled();
     expect(field('Email Address')).toHaveValue('someone@password-form.test');
     expect(field('Password')).toHaveValue('');
   });

@@ -1,11 +1,13 @@
 'use client';
 
+import { useAnnounce } from '../ClickFeedback/status-region';
 import { usePendingNavigation } from '../../lib/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { emailFailure } from '../../lib/email-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { useFormSend } from '../../lib/use-form-send';
+import { useResultFocus } from '../../lib/use-result-focus';
 import { EmailField, FormActions, RadioGroupField } from '../Field';
 import { WORKSPACE_ROLE_ACCESS, workspaceRoleLabel } from '../MemberList/roles';
 import { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
@@ -38,10 +40,12 @@ const INVITE_TITLE = 'Invite Someone';
  */
 const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement => {
   const { refresh } = usePendingNavigation();
+  const announce = useAnnounce();
 
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<InviteRole>('viewer');
   const { sending, failure, setFailure, send } = useFormSend(['email']);
+  const { ref, settle } = useResultFocus<HTMLFormElement>();
   const [sentTo, setSentTo] = useState<string>();
 
   const discard = useDiscardGuard(sentTo === undefined && email !== '');
@@ -49,75 +53,80 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const refused = emailFailure(email);
-    if (refused) return setFailure(refused);
+    if (refused) {
+      setFailure(refused);
+      return settle();
+    }
     const address = email.trim();
 
     const sent = await send(() =>
       graphqlRequest(CreateInvitationDocument, { workspaceId, email: address, role }),
     );
-    if (!sent) return;
+    if (!sent) return settle();
     setSentTo(address);
+    announce('Invitation sent');
     // The pending list behind the dialog reads again, so the new invitation is on it.
     refresh();
   }
 
-  if (sentTo !== undefined) {
-    return (
-      <div className="form">
-        <Notice kind="success">
+  return (
+    <>
+      {sentTo !== undefined && (
+        // The page's status region says it; the notice itself carries no role, so it is heard once.
+        <Notice kind="success" block inRegion>
           Invitation sent to <strong>{sentTo}</strong>. The link in it lasts seven days, and only an
           account that has confirmed this address can accept it.
         </Notice>
+      )}
+      {sentTo !== undefined ? (
         <div className="modal__actions">
           <button className="btn btn--solid" type="button" onClick={close}>
             Done
           </button>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <form className="form" noValidate onSubmit={(event) => void submit(event)}>
-      {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <EmailField
-        name="email"
-        value={email}
-        error={failure.field?.message}
-        disabled={sending}
-        // The address is someone else's, so the browser must not offer the signed-in person's own.
-        autoComplete="off"
-        ignorePasswordManagers
-        onChange={(next) => {
-          setEmail(next);
-          if (failure.field) setFailure({});
-        }}
-      />
-      <RadioGroupField
-        legend="Role"
-        name="invite-role"
-        options={ROLES.map((value) => ({
-          value,
-          label: workspaceRoleLabel(value),
-          description: WORKSPACE_ROLE_ACCESS[value],
-        }))}
-        value={role}
-        onChange={setRole}
-        disabled={sending}
-        note={STEWARDSHIP_NOTE}
-      />
-      <FormActions
-        noun="Invitation"
-        label="Send Invitation"
-        busyLabel="Sending"
-        dirty={email.trim() !== ''}
-        submitting={sending}
-        holdCancel
-        onCancel={() => discard.request(close)}
-      />
-      {/* Over the form, its buttons beneath. */}
-      {discard.asking && <DiscardQuestion guard={discard} />}
-    </form>
+      ) : (
+        <form className="form" noValidate ref={ref} onSubmit={(event) => void submit(event)}>
+          {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
+          <EmailField
+            name="email"
+            value={email}
+            error={failure.field?.message}
+            disabled={sending}
+            // The address is someone else's, so the browser must not offer the signed-in person's own.
+            autoComplete="off"
+            ignorePasswordManagers
+            onChange={(next) => {
+              setEmail(next);
+              if (failure.field) setFailure({});
+            }}
+          />
+          <RadioGroupField
+            legend="Role"
+            name="invite-role"
+            options={ROLES.map((value) => ({
+              value,
+              label: workspaceRoleLabel(value),
+              description: WORKSPACE_ROLE_ACCESS[value],
+            }))}
+            value={role}
+            onChange={setRole}
+            disabled={sending}
+            note={STEWARDSHIP_NOTE}
+          />
+          <FormActions
+            noun="Invitation"
+            label="Send Invitation"
+            busyLabel="Sending"
+            dirty={email.trim() !== ''}
+            submitting={sending}
+            holdCancel
+            onCancel={() => discard.request(close)}
+          />
+          {/* Over the form, its buttons beneath. */}
+          {discard.asking && <DiscardQuestion guard={discard} />}
+        </form>
+      )}
+    </>
   );
 };
 

@@ -121,7 +121,7 @@ describe('InviteDialog', () => {
     fireEvent.click(within(dialog()).getByRole('radio', { name: /Practitioner/ }));
     fireEvent.click(send());
 
-    const sent = await screen.findByRole('status');
+    const sent = await screen.findByText(/Invitation sent to/);
     expect(calls).toEqual([{ workspaceId: WORKSPACE, email: 'ada@example.test', role: 'member' }]);
     expect(sent).toHaveTextContent('ada@example.test');
     expect(router.refresh).toHaveBeenCalledTimes(1);
@@ -140,7 +140,7 @@ describe('InviteDialog', () => {
     fireEvent.click(send());
     expectNothingToCopy();
 
-    await screen.findByRole('status');
+    await screen.findByText(/Invitation sent to/);
     expectNothingToCopy();
   });
 
@@ -160,7 +160,7 @@ describe('InviteDialog', () => {
     open();
     typeAddress('ada@example.test');
     fireEvent.click(send());
-    await screen.findByRole('status');
+    await screen.findByText(/Invitation sent to/);
 
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Done' }));
 
@@ -235,7 +235,7 @@ describe('InviteDialog', () => {
     open();
     typeAddress('ada@example.test');
     fireEvent.click(send());
-    await screen.findByRole('status');
+    await screen.findByText(/Invitation sent to/);
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
 

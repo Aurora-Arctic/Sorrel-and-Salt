@@ -5,6 +5,7 @@ import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { emailFailure } from '../../lib/email-failure';
 import { useFormSend } from '../../lib/use-form-send';
+import { useResultFocus } from '../../lib/use-result-focus';
 import { EmailField, FormActions, RadioGroupField, ReasonField, useReasonNote } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
@@ -49,6 +50,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
   const [siteRole, setSiteRole] = useState<InvitableSiteRole>(SITE_ROLES[0]);
   const reason = useReasonNote();
   const { sending, failure, setFailure, send } = useFormSend(['email']);
+  const { ref, settle } = useResultFocus<HTMLFormElement>();
 
   const discard = useDiscardGuard(email !== '' || siteRole !== SITE_ROLES[0] || reason.note !== '');
 
@@ -56,8 +58,11 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
     event.preventDefault();
     const noteOk = reason.check();
     const refused = emailFailure(email);
-    if (refused) return setFailure(refused);
-    if (!noteOk) return;
+    if (refused) {
+      setFailure(refused);
+      return settle();
+    }
+    if (!noteOk) return settle();
     const address = email.trim();
     const sent = await send(() =>
       graphqlRequest(CreateAdminInvitationDocument, {
@@ -66,13 +71,13 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         note: reason.note.trim() || undefined,
       }),
     );
-    if (!sent) return;
+    if (!sent) return settle();
     onSent(address);
     close();
   }
 
   return (
-    <form className="form" noValidate onSubmit={(event) => void submit(event)}>
+    <form className="form" noValidate ref={ref} onSubmit={(event) => void submit(event)}>
       <p>
         We&apos;ll email them a link that lasts seven days. Only an account that has confirmed this
         address can accept it.

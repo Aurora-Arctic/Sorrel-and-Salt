@@ -63,7 +63,7 @@ describe('NameForm', () => {
     fireEvent.change(nameField(), { target: { value: ' Ada Renamed ' } });
     submitForm();
 
-    expect(await screen.findByRole('status')).toBeVisible();
+    expect(await screen.findByText('Your name was saved.')).toBeVisible();
     expect(calls).toEqual([{ name: ' Ada Renamed ' }]);
     expect(nameField()).toHaveValue('Ada Renamed');
     expect(save()).toBeDisabled();

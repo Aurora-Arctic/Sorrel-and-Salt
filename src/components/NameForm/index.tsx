@@ -50,7 +50,14 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
   return (
     <div className="name-form">
       {alert && <Notice kind="error">{alert}</Notice>}
-      {savedMessage && <Notice kind="success">Your name was saved.</Notice>}
+      {/* Present and empty before a save, so a screen reader is already listening when the text arrives. */}
+      <div role="status" aria-label="Name Status">
+        {savedMessage && (
+          <Notice kind="success" block inRegion>
+            Your name was saved.
+          </Notice>
+        )}
+      </div>
       {/* `noValidate`: every refusal is the shared rule's or the server's, worded and
           placed like the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>

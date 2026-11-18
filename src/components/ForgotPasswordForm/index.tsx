@@ -45,7 +45,7 @@ const ForgotPasswordForm = (): ReactElement => {
     if (!ready) return;
     const invalid = validateEmailAddress(email.trim());
     setEmailError(invalid?.message);
-    if (invalid) return;
+    if (invalid) return settle();
     void request(email.trim());
   };
 

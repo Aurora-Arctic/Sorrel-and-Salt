@@ -4,6 +4,7 @@ import { EMAIL_TITLE } from './head';
 import type { Route } from 'next';
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useEffect, useState } from 'react';
+import { useResultFocus } from '../../lib/use-result-focus';
 import { validateEmailAddress } from '../../lib/email-address';
 import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
@@ -68,6 +69,7 @@ const EmailForm = ({
   const [sentTo, setSentTo] = useState<string>();
   const [alert, setAlert] = useState(error);
   const [fieldError, setFieldError] = useState<string>();
+  const { ref, settle } = useResultFocus<HTMLDivElement>();
   // When the submit may be pressed again, as a clock time so a tab left in the
   // background counts the real wait.
   const [cooldownUntil, setCooldownUntil] = useState<number | undefined>(() =>
@@ -101,6 +103,7 @@ const EmailForm = ({
       const { field, alert: message } = readGraphqlFailure(failure, ['email']);
       setFieldError(field?.message);
       setAlert(message);
+      settle();
     },
   });
 
@@ -112,7 +115,7 @@ const EmailForm = ({
     setAlert(undefined);
     const invalid = validateEmailAddress(normalise(value));
     setFieldError(invalid?.message);
-    if (invalid) return;
+    if (invalid) return settle();
     mutation.mutate(value);
   };
 
@@ -150,7 +153,7 @@ const EmailForm = ({
   const nothingToDo = verified && normalise(value) === email;
 
   return (
-    <div className="email-form">
+    <div className="email-form" ref={ref}>
       {head(statusLine(email, verified))}
       {alert && <Notice kind="error">{alert}</Notice>}
       {sentTo && (

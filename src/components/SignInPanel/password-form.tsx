@@ -80,8 +80,11 @@ const PasswordForm = ({
   const { ref, settle } = useResultFocus<HTMLDivElement>();
 
   const signingUp = mode === 'sign-up';
+  // Sign In is enabled once anything is typed, so pressing it with a field empty can say which one; a sign-up still waits for all three.
   const ready =
-    email.trim() !== '' && password !== '' && (!signingUp || name.trim() !== '') && !pending;
+    (signingUp
+      ? email.trim() !== '' && password !== '' && name.trim() !== ''
+      : email.trim() !== '' || password !== '') && !pending;
 
   const switchTo = (to: SignInMode): void => {
     onModeChange(to);
@@ -94,8 +97,13 @@ const PasswordForm = ({
     // A disabled submit stops a click, not Enter in a field.
     if (!ready) return;
     const invalid = validateEmailAddress(email.trim());
-    if (invalid) {
-      setProblem({ email: invalid.message });
+    const missing: Refusal = {
+      ...(invalid && { email: invalid.message }),
+      ...(password === '' && { password: 'Enter your password' }),
+    };
+    if (Object.keys(missing).length > 0) {
+      setProblem(missing);
+      settle();
       return;
     }
     setPending(true);
