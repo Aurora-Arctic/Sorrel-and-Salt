@@ -602,11 +602,11 @@ describe('Issue', () => {
     });
     open(ADMIN);
     const field = within(dialog()).getByRole('textbox', { name: 'GitHub Issue' });
-    const saveAddress = within(dialog()).getByRole('button', { name: 'Save Address' });
-    expect(saveAddress).toBeDisabled();
+    const saveIssue = within(dialog()).getByRole('button', { name: 'Save Issue' });
+    expect(saveIssue).toBeDisabled();
 
     fireEvent.change(field, { target: { value: 'https://example.test/issues/4' } });
-    fireEvent.click(saveAddress);
+    fireEvent.click(saveIssue);
 
     await waitFor(() => expect(field).toHaveAttribute('aria-invalid', 'true'));
     expect(field).toHaveAccessibleDescription(/Paste a GitHub issue link/);
@@ -625,7 +625,7 @@ describe('Issue', () => {
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'GitHub Issue' }), {
       target: { value: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12' },
     });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Address' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Issue' }));
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(sent).toEqual([
       { id: 'r1', issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12' },
@@ -1086,7 +1086,7 @@ describe('Status line in the dialog', () => {
       fireEvent.change(d.getByLabelText('GitHub Issue'), {
         target: { value: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9' },
       });
-      fireEvent.click(d.getByRole('button', { name: 'Save Address' }));
+      fireEvent.click(d.getByRole('button', { name: 'Save Issue' }));
     }
     await waitFor(() => expect(status()).toHaveTextContent(message));
   });
