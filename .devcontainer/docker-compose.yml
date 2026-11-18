@@ -84,13 +84,14 @@ services:
   # The repo is mounted read-only, and graphify-out/ alone is writable;
   # `initializeCommand` creates that folder host-side so Compose does not
   # make it root-owned. No AI model is called: there is no API key here.
+  # A failed build is retried three times, then left stopped with its log.
   graphify-watch:
     build:
       context: ..
       dockerfile: Docker/Dockerfile.graphify
     image: sorrel-graphify
     init: true
-    restart: unless-stopped
+    restart: on-failure:3
     volumes:
       - ..:/app:ro
       - ../graphify-out:/app/graphify-out
