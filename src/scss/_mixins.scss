@@ -1018,6 +1018,33 @@
   }
 }
 
+// Grows a control's hit area to at least $size (WCAG 2.5.8, 24px) by padding, on the axis whose content measure is given:
+// $content-inline and $content-block are the length of what is inside (`1lh` for a line of text, a rem for a mark). $edge is the
+// border each side adds and $floor the padding it keeps at least. $pull takes the growth back out of the layout with an
+// equal negative margin, for a control that sits in a line of text or beside a field and must not move its neighbours.
+// `min-*-size` catches a sub-pixel shortfall (23.98px) that the padding alone leaves.
+@mixin target-size(
+  $content-inline: null,
+  $content-block: null,
+  $size: $icon-size,
+  $edge: 0px,
+  $floor: 0px,
+  $pull: false
+) {
+  @each $axis, $content in (inline: $content-inline, block: $content-block) {
+    @if $content {
+      $grow: string.unquote('max(#{$floor}, calc((#{$size} - #{$content} - #{2 * $edge}) / 2))');
+
+      padding-#{$axis}: $grow;
+      min-#{$axis}-size: $size;
+
+      @if $pull {
+        margin-#{$axis}: calc(#{$grow} * -1);
+      }
+    }
+  }
+}
+
 // A WCAG 2.2 target around its mark, muted until pointed at or focused. A mark that explains rather than presses takes a round
 // `$radius` and the help `$cursor` (claude-docs/components/icon-tip.md, "Styling").
 @mixin icon-button(

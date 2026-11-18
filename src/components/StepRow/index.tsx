@@ -1,5 +1,6 @@
 import type { MouseEvent, ReactElement, ReactNode } from 'react';
 import { plainQuantity } from '@/lib/quantity';
+import EmptyMark from '../EmptyMark';
 import FormIcon from '../FormIcon';
 import './index.scss';
 import type { StepRowProps } from './types';
@@ -15,7 +16,7 @@ import { cx } from '@/lib/class-names';
  */
 export const amountOf = (quantity?: string | null, unit?: string | null): ReactNode => {
   if (!quantity && !unit) return null;
-  const number = quantity ? plainQuantity(quantity) : <span className="step-row__dash">—</span>;
+  const number = quantity ? plainQuantity(quantity) : <EmptyMark />;
   return unit ? (
     <>
       {number} {unit}

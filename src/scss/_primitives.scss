@@ -199,9 +199,12 @@
     gap: space(2);
     // A small button sits in a strip, not beside a field; the control height would make it full again.
     min-height: 0;
-    padding: space(1) space(3);
+    padding-inline: space(3);
     border-width: 1px;
     font-size: type-size('caption');
+    // Padding grows it to a 24px hit area (WCAG 2.5.8); the label never wraps, so the button keeps its height at 375.
+    white-space: nowrap;
+    @include target-size($content-block: 1lh, $edge: 1px, $floor: space(1));
   }
 
   .btn--medium {

@@ -21,7 +21,10 @@ export async function accessibilityFindings(
   await expect(page).toHaveTitle(/\S/);
   await settleTransitions(page);
   const scan = async () => {
-    const builder = new AxeBuilder({ page });
+    // `target-size` (WCAG 2.5.8) is off in axe's default set, so it is switched on here.
+    const builder = new AxeBuilder({ page }).options({
+      rules: { 'target-size': { enabled: true } },
+    });
     if (onlyRules) builder.withRules(onlyRules);
     return (await builder.disableRules(skipRules).analyze()).violations;
   };

@@ -11,7 +11,7 @@
   .input {
     flex: 1;
     min-width: 0;
-    padding-inline-start: calc(#{space(3)} + 1.25rem + #{space(2)});
+    padding-inline-start: calc(#{space(3)} + #{$icon-size} + #{space(2)});
   }
 
   &--hero {
@@ -30,6 +30,8 @@
     padding: 0;
     border: 0;
     background: none;
+    // 24px wide to press (the magnifier is 20), the growth pulled out so the mark stays where it was; the input reserves the room.
+    @include target-size($content-inline: 1.25rem, $pull: true);
     color: $text-muted;
     cursor: pointer;
 

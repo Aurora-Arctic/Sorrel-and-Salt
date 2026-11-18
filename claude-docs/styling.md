@@ -120,6 +120,8 @@ Decorative, so held to no contrast ratio. A row in `tests/scss/tokens.test.ts` a
 
 `chip()` takes `$size: regular | compact`. **Compact** is for a table cell (the admin Compendium's Categories column): no block padding and 7px inline, and the card's `overline` text size. The wash, the 1px border and the label's colour mix are unchanged, so the contrast figures below hold. A compact chip measures about 18.8px tall in Chromium. The shared chip row takes it as `compact` (`category-chips--compact`: `claude-docs/components/category-chips.md`); a compact +N button keeps a 24px hit area through a transparent pseudo-element (WCAG 2.5.8) without growing its pill.
 
+**A control a pointer presses has a hit area of at least 24 by 24 CSS pixels (WCAG 2.5.8), or sits inside a sentence, or has 24px of clear space round it.** A control that looks smaller grows its hit area through the `target-size` mixin in `src/scss/_mixins.scss`: it pads the axis out to 24px from the content's own length, and `$pull` takes the growth back out of the layout with an equal negative margin where a neighbour must not move. `.btn--small`, the help search magnifier, the date range quick picks and the "Edited" line use it. Axe's `target-size` rule is on in the sweep (`tests/e2e/axe.ts`), as the backstop for a control that never calls the mixin.
+
 **Why the ink is stirred in.** A wash of a group's own colour cannot hold 4.5:1 for the colour as text: pure colour on its wash falls under 4.5:1 for some groups (Mind & Spirit light 3.56). Mixing 30% of the body ink into the label lifts every seeded group to 5.37:1 or better on both surfaces of both themes. The lowest ratio in each:
 
 | Theme | Surface | Lowest | Group            |
