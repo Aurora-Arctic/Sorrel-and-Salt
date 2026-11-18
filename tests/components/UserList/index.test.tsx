@@ -16,7 +16,7 @@ import type { FilterFormSubject } from '../../support/types';
 import { leavingAtEachLoad, stubLocationAssign } from '../../support/location';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
-import { rowCells } from '../../support/table';
+import { emptyCellMark, rowCells } from '../../support/table';
 import { router } from '../../support/next-navigation';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
@@ -281,6 +281,15 @@ describe('UserList', () => {
     expect(screen.getByRole('cell', { name: 'Email & Password' })).toBe(
       cellUnder('Bo Fixturewort', 'Logins'),
     );
+  });
+
+  it('draws the shared empty mark under Logins for a user with no way in, as any empty cell does', () => {
+    const mark = emptyCellMark();
+    expect(mark.trim()).not.toBe('');
+
+    render(<UserList {...props({ users: [{ ...BO, providers: [], hasPasskey: false }] })} />);
+
+    expect(cellUnder('Bo Fixturewort', 'Logins').textContent).toBe(mark);
   });
 
   it('draws no table when no user matches', () => {
