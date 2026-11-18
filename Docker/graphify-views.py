@@ -222,7 +222,7 @@ def write_wiki(g: Graph, out: Path) -> None:
             continue
         a = g.area_by_id.get(link["source"])
         if a and a != b:
-            uses[a][b].append((source["label"], target["label"], link["relation"]))
+            uses[a][b].append((source["label"], target["label"]))
         elif not a and (source.get("source_file") or "").startswith("tests/"):
             tested[b][source["source_file"]].add(target["label"])
 
@@ -239,14 +239,14 @@ def write_wiki(g: Graph, out: Path) -> None:
         return f"<a class='mono' href='{names[area]}'>{html.escape(area)}</a>"
 
     def call_list(calls: list) -> str:
-        shown = Counter((s, t) for s, t, _ in calls).most_common(MAX_CALLS)
+        shown = Counter(calls).most_common(MAX_CALLS)
         items = "".join(
             f"<li class='mono'>{html.escape(s)} → {html.escape(t)}"
             + (f" <span class='muted'>×{n}</span>" if n > 1 else "")
             + "</li>"
             for (s, t), n in shown
         )
-        more = len({(s, t) for s, t, _ in calls}) - len(shown)
+        more = len(set(calls)) - len(shown)
         tail = f"<li class='muted'>and {more} more</li>" if more > 0 else ""
         return f"<ul>{items}{tail}</ul>"
 
