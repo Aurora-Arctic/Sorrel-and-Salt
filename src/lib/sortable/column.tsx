@@ -28,12 +28,15 @@ export function SortableColumn({
   names,
   onMove,
   unequalHeights = false,
+  saysMove = false,
   children,
 }: {
   ids: readonly string[];
   names: readonly string[];
   onMove: (from: number, to: number) => void;
   unequalHeights?: boolean;
+  /** True when the list announces a move itself, so the grip's Move Up and Move Down stay quiet. */
+  saysMove?: boolean;
   children: ReactNode;
 }): ReactElement {
   // dnd-kit numbers its regions from a module counter unless given an id, which a server render and the browser's would number apart.
@@ -95,7 +98,7 @@ export function SortableColumn({
       onDragCancel={settle}
     >
       <SortableContext items={[...ids]} strategy={verticalListSortingStrategy}>
-        <SortableMoveContext value={onMove}>{children}</SortableMoveContext>
+        <SortableMoveContext value={{ onMove, saysMove }}>{children}</SortableMoveContext>
       </SortableContext>
     </DndContext>
   );

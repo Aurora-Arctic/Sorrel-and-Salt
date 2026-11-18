@@ -115,7 +115,7 @@ export function ComboboxSortableEntries({
       onDragCancel={settle}
     >
       <SortableContext items={ids} strategy={strategy}>
-        <SortableMoveContext value={onMove}>
+        <SortableMoveContext value={{ onMove, saysMove: false }}>
           <ul ref={list} className="combobox__entries">
             {entries.map((entry) => (
               <SortableEntry key={entry.id} {...entry} />

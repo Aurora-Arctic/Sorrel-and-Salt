@@ -153,6 +153,7 @@ const HelpOrderTable = ({
       {failed && <MoveFailedNotice move={failed} onRetry={() => void save(failed)} />}
       {/* Round the table, not its body: dnd-kit draws its instructions in a div, which a table may not hold. */}
       <SortableColumn
+        saysMove
         ids={listed.map((row) => row.id)}
         names={listed.map((row) => row.title)}
         onMove={onMove}

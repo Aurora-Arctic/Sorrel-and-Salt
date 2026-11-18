@@ -226,6 +226,7 @@ const HelpGuidesBar = ({
                 </p>
                 {/* One sortable per audience, so neither a pointer nor a key carries a guide out of its own. */}
                 <SortableColumn
+                  saysMove
                   ids={entries.map((entry) => entry.id)}
                   names={entries.map((entry) => entry.title)}
                   onMove={(from, to) => onMove(audience, from, to)}

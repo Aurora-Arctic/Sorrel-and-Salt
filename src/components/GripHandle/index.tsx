@@ -22,16 +22,17 @@ export default function GripHandle({
   children,
 }: GripHandleProps): ReactElement {
   const { setActivatorNodeRef, listeners, attributes, index, items } = sortable;
-  const move = useContext(SortableMoveContext);
+  const moving = useContext(SortableMoveContext);
   const announce = useAnnounce();
   // The button's own role stands; dnd-kit's would make it a second one. Its instructions follow `describedBy`.
   const { role: _role, 'aria-describedby': instructions, ...rest } = attributes;
 
   const unavailable = (by: -1 | 1) => disabled || index + by < 0 || index + by >= items.length;
   const press = (by: -1 | 1) => {
-    if (!move || unavailable(by)) return;
-    move(index, index + by);
-    announce(`${name} moved to position ${index + by + 1} of ${items.length}.`);
+    if (!moving || unavailable(by)) return;
+    moving.onMove(index, index + by);
+    if (!moving.saysMove)
+      announce(`${name} moved to position ${index + by + 1} of ${items.length}.`);
   };
   // aria-disabled, not disabled: a disabled button drops the focus a press at the end of the list had.
   const mover = (by: -1 | 1, label: string) => (
@@ -63,7 +64,7 @@ export default function GripHandle({
         <GripIcon />
         {children}
       </button>
-      {move && (
+      {moving && (
         <>
           {mover(-1, 'Move Up')}
           {mover(1, 'Move Down')}
