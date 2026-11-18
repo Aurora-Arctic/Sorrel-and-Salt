@@ -470,10 +470,16 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   @include focus-ring;
 }
 
+// A dialog's row of answers stacks, full width and in order, where its body is under the narrow column,
+// as a narrow form's does, so no button's label wraps beside another's. A form in the body stacks its own.
 @include container-to(modal-main, #{$narrow-column + $modal-padding}) {
-  .confirm-overlay__card .modal__actions {
+  .modal__actions {
     flex-direction: column;
     align-items: stretch;
+
+    > * {
+      margin-inline: 0;
+    }
   }
 }
 
