@@ -72,7 +72,7 @@ const AdminCards = ({
   <section className="admin-cards" aria-label="Invitation Cards">
     <ListFrame>
       {/* Keyed by the filter shown, so another one starts the form again from it. */}
-      <CardsFilterForm key={JSON.stringify(filter)} filter={filter} />
+      <CardsFilterForm filter={filter} />
       <ListBody skeleton={<AdminCardsBodySkeleton />}>
         <StackTable
           columns={[

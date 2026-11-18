@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
+import { useSearchDraft } from '../FilterForm/use-filter-draft';
 import { SearchField } from '../Field/search-field';
 import FilterForm from '../FilterForm';
 import { ARRIVALS_PATH, arrivalsHref } from './href';
@@ -8,7 +9,7 @@ import type { ArrivalsFilterProps } from './types';
 
 // Before hydration the form submits natively (query=).
 const ArrivalsFilterForm = ({ filter }: ArrivalsFilterProps): ReactElement => {
-  const [query, setQuery] = useState(filter.query);
+  const [query, setQuery] = useSearchDraft(filter.query);
 
   return (
     <FilterForm

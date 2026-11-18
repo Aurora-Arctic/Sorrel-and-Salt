@@ -2,6 +2,7 @@
 
 import { useCombobox, type UseComboboxStateChangeOptions } from 'downshift';
 import {
+  type ChangeEvent,
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
@@ -38,6 +39,7 @@ import type {
 } from './types';
 import './index.scss';
 import { cx } from '@/lib/class-names';
+import { SEARCH_TEXT_ATTRIBUTE } from '../Field/search-submit';
 
 export { ComboboxEntry } from './entry';
 export { ComboboxMultiSelect } from './multi-select';
@@ -199,6 +201,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   spellCheck,
   autoCapitalize,
   enterKeyHint,
+  searchText,
   required,
   qualifier,
   typedIcon,
@@ -283,7 +286,11 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     itemToString: (item) => item?.value ?? '',
     itemToKey: (item) => (item === null ? null : keyOf(item)),
     stateReducer: keepText(keepOpen),
-    onInputValueChange: ({ inputValue }) => onChange(inputValue ?? ''),
+    // A keystroke reaches `onChange` from the input's own handler below: Downshift reports it from an effect, a render
+    // late, and a controlled input then loses its caret to the end of the text.
+    onInputValueChange: ({ inputValue, type }) => {
+      if (type !== useCombobox.stateChangeTypes.InputChange) onChange(inputValue ?? '');
+    },
     onIsOpenChange: ({ isOpen: open }) => setWantsOpen(open),
     onSelectedItemChange: ({ selectedItem }) => {
       if (!selectedItem) return;
@@ -424,6 +431,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                   spellCheck,
                   autoCapitalize,
                   enterKeyHint,
+                  [SEARCH_TEXT_ATTRIBUTE]: searchText || undefined,
                   'aria-required': required || undefined,
                   // One character wide of its own, so that the slot, not the
                   // browser's default of twenty, decides how wide the text is.
@@ -443,7 +451,10 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                   onKeyDown,
                   // Typing always wants the list: Downshift's open callback alone misses a key landing just after a pick closed it, before that render committed
                   // (claude-docs/components/combobox.md, "Typing always wants the list").
-                  onChange: () => setWantsOpen(true),
+                  onChange: (event: ChangeEvent<HTMLInputElement>) => {
+                    setWantsOpen(true);
+                    onChange(event.target.value);
+                  },
                   onFocus: () => {
                     tip.current?.show();
                     onFocus?.();

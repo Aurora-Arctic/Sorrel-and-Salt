@@ -9,10 +9,13 @@ import {
   useLayoutEffect,
   useRef,
 } from 'react';
+import { SEARCH_TEXT_ATTRIBUTE } from '../Field/search-submit';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useListNavigation } from '../ListFrame';
+import { announceApply } from './use-filter-draft';
 import type { FilterFormProps, FilterValue } from './types';
 import { cx } from '@/lib/class-names';
+import { FIELD_CONTROLS, useShutRow } from '@/lib/use-shut-row';
 
 // A list's filter, a toolbar that applies as it changes: a select or switch on change, a type-ahead once
 // a choice settles, the search on submit or Enter, each opening the first page softly through
@@ -25,18 +28,14 @@ const isSet = (value: FilterValue): boolean =>
       ? value.length > 0
       : value === true;
 
-const FIELD_CONTROLS =
-  'input:not([type="hidden"]), select, textarea, button, a[href], [role="combobox"]';
-
-/** What would change a field or press a control, each refused while a list is on its way. */
-const PRESSES = ['keydown', 'beforeinput', 'mousedown', 'click', 'paste', 'drop'] as const;
-
 /**
  * The row's control to focus again once the list a filter opened arrives, by its place among the row's
  * controls (`-1` for none), as the row that applied is thrown away. Module state, since the handlers sit
  * above the FilterForm; one list navigates at a time.
  */
 const refocus = { wanted: false, at: -1 };
+
+const SEARCH_TEXT = `[${SEARCH_TEXT_ATTRIBUTE}]`;
 
 const controlsOf = (row: Element) => [...row.querySelectorAll<HTMLElement>(FIELD_CONTROLS)];
 
@@ -46,13 +45,16 @@ const controlsOf = (row: Element) => [...row.querySelectorAll<HTMLElement>(FIELD
  * runs its own guard (`src/app/(shell)/keepers/layout.tsx`).
  */
 export function useApplyFilter(): (href: Route) => void {
-  const { go } = useListNavigation();
+  const { go, pending } = useListNavigation();
   return useCallback(
     (href: Route) => {
+      // Nothing is sent while a list loads, so the draft is not marked as sent either.
+      if (pending) return;
       refocus.wanted = true;
+      announceApply();
       go(href, 'soft');
     },
-    [go],
+    [go, pending],
   );
 }
 
@@ -92,25 +94,8 @@ const FilterForm = ({
 
   // While a list is on its way the fields are `aria-disabled`, so focus stays put as it would not on a
   // `disabled` field, and every key but Tab, press and edit is refused. Set on the controls, which the
-  // caller draws; Clear carries it already.
-  useLayoutEffect(() => {
-    const row = form.current;
-    if (!pending || !row) return;
-    const marked = [...row.querySelectorAll<HTMLElement>(FIELD_CONTROLS)].filter(
-      (control) => !control.hasAttribute('aria-disabled'),
-    );
-    for (const control of marked) control.setAttribute('aria-disabled', 'true');
-    const refuse = (event: Event) => {
-      if (event instanceof KeyboardEvent && event.key === 'Tab') return;
-      event.preventDefault();
-      event.stopPropagation();
-    };
-    for (const type of PRESSES) row.addEventListener(type, refuse, true);
-    return () => {
-      for (const control of marked) control.removeAttribute('aria-disabled');
-      for (const type of PRESSES) row.removeEventListener(type, refuse, true);
-    };
-  }, [pending]);
+  // caller draws; Clear carries it already. The search text box is the exception, so typing is never dropped.
+  useShutRow(form, pending, SEARCH_TEXT);
 
   // Always offered: the same text again reads the list again, harmless, where a disabled submit
   // read as dead.

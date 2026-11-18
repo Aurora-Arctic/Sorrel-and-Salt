@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
+import { useSearchDraft } from '../FilterForm/use-filter-draft';
 import { oneOf } from '../../lib/search-params';
 import { FilterSelectField } from '../Field/filter-select-field';
 import { SearchField } from '../Field/search-field';
@@ -13,7 +14,7 @@ import type { PrivilegeLedgerFilter, PrivilegeLedgerFilterProps } from './types'
 // dropdown applies as picked. Before hydration the native select submits "All Privileges" as `privilege=`, read as none.
 const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactElement => {
   const query = filter.query ?? '';
-  const [draftQuery, setDraftQuery] = useState(query);
+  const [draftQuery, setDraftQuery] = useSearchDraft(query);
   const apply = useApplyFilter();
   const hrefWith = (privilege: PrivilegeLedgerFilter['privilege']) =>
     privilegeLedgerHref({ query: draftQuery.trim(), privilege });

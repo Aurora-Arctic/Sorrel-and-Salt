@@ -89,6 +89,7 @@ export async function publicCupboardOf(
   return {
     covens,
     defaultWorkspaceId: writable[0].id,
+    holding: holding.map(({ name }) => name),
     annotate: { closeHref: own, opened },
   };
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
+import { useSearchDraft } from './use-filter-draft';
 import { SearchField } from '../Field/search-field';
 import FilterForm from './index';
 import type { NameFilterProps } from './types';
@@ -15,7 +16,7 @@ const NameFilter = ({
   shown = [],
   children,
 }: NameFilterProps): ReactElement => {
-  const [draftQuery, setDraftQuery] = useState(query);
+  const [draftQuery, setDraftQuery] = useSearchDraft(query);
 
   return (
     <FilterForm

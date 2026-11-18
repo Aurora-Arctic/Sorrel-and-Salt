@@ -28,6 +28,7 @@ import {
   mockGraphQLPendingMutation,
 } from '../../support/msw/graphql';
 import { choose } from '../../support/interact';
+import { filterForm } from '../../support/filter-form';
 import { rowCells } from '../../support/table';
 import { router } from '../../support/next-navigation';
 
@@ -1475,5 +1476,28 @@ describe('The assignee picker', () => {
     open(ADMIN, { assignee: { id: 'curator-1', name: 'Curtis', paused: false } });
     chooseAssignee('Unassigned');
     await waitFor(() => expect(sent).toEqual([{ id: 'r1', assigneeId: null }]));
+  });
+});
+
+describe('The error number search', () => {
+  const FILTER = { about: 'bug', view: 'mine', errorCode: '', sender: '' } as const;
+  const box = () => screen.getByRole('searchbox', { name: 'Error #' });
+
+  // Regression: the box went back to the number searched when its results arrived, losing what was typed meanwhile.
+  it('keeps the number typed after a search is sent when that search arrives', () => {
+    router.push.mockClear();
+    const { rerender } = render(
+      <SupportRequests requests={[ROW]} viewer={ADMIN} filter={FILTER} />,
+    );
+    fireEvent.change(box(), { target: { value: '500' } });
+    fireEvent.submit(filterForm('Filter Support Requests'));
+    expect(router.push).toHaveBeenLastCalledWith(supportHref({ ...FILTER, errorCode: '500' }));
+
+    fireEvent.change(box(), { target: { value: '5004' } });
+    rerender(
+      <SupportRequests requests={[ROW]} viewer={ADMIN} filter={{ ...FILTER, errorCode: '500' }} />,
+    );
+
+    expect(box()).toHaveValue('5004');
   });
 });

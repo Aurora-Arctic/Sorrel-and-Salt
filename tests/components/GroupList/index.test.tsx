@@ -83,6 +83,7 @@ describe('GroupList, searched by name', () => {
       },
     ],
     searched: `${path}?query=Two+words`,
+    searchedList: <GroupList kind="tradition" groups={[WARDS]} filter={{ query: 'Two words' }} />,
   };
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));

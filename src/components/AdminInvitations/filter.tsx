@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
+import { useSearchDraft } from '../FilterForm/use-filter-draft';
 import { SearchField } from '../Field/search-field';
 import { SwitchField } from '../Field/switch-field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
@@ -11,7 +12,7 @@ import type { AdminInvitationsFilterProps } from './types';
 // the magnifier or Enter sends it, the Expires in 24 Hrs switch applies as it changes, both opening the
 // first page softly. Before hydration the form submits natively (`email=`, `expiring=`); the list keys this by the filter shown.
 const AdminInvitationsFilter = ({ filter }: AdminInvitationsFilterProps): ReactElement => {
-  const [draftEmail, setDraftEmail] = useState(filter.email);
+  const [draftEmail, setDraftEmail] = useSearchDraft(filter.email);
   const apply = useApplyFilter();
   const hrefWith = (expiringSoon: boolean) =>
     invitationsHref({ email: draftEmail.trim(), expiringSoon });

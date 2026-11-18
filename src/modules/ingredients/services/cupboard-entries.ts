@@ -57,7 +57,7 @@ import {
 import {
   type Membership,
   assertMembership,
-  byCovenName,
+  covensByName,
   liveMembershipsOf,
   tryMembership,
 } from '@/modules/coven';
@@ -594,8 +594,7 @@ export async function covensHoldingEntry(
     memberships.map(({ workspace }) => workspace.id),
     [ingredientId],
   );
-  return memberships
-    .filter(({ workspace }) => held.get(workspace.id)?.has(ingredientId))
-    .map(({ workspace: { id, slug, name } }) => ({ id, slug, name }))
-    .sort(byCovenName);
+  return covensByName(
+    memberships.filter(({ workspace }) => held.get(workspace.id)?.has(ingredientId)),
+  );
 }

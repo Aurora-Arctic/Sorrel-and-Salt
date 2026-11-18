@@ -128,7 +128,7 @@ const AdminInvitations = ({
       )}
       <ListFrame>
         {/* Keyed by the filter shown, so another one starts the form again from it. */}
-        <AdminInvitationsFilter key={`${filter.email}\n${filter.expiringSoon}`} filter={filter} />
+        <AdminInvitationsFilter key={String(filter.expiringSoon)} filter={filter} />
         <ListBody skeleton={<AdminInvitationsBodySkeleton />}>
           {/* Each cell on one line, the table scrolling in its frame. */}
           <StackTable

@@ -220,6 +220,19 @@ describe('CompendiumList filter', () => {
     ]);
   });
 
+  // Regression: the box went back to the name searched when its results arrived, losing what was typed meanwhile.
+  it('keeps the name typed after a search is sent when that search arrives', () => {
+    const { rerender } = render(<FilterRow {...props({ filter: SHOWN })} />);
+    fireEvent.change(nameBox(), { target: { value: 'rose' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(pushed().get('query')).toBe('rose');
+
+    fireEvent.change(nameBox(), { target: { value: 'rosemary' } });
+    rerender(<FilterRow {...props({ filter: { ...SHOWN, query: 'rose' } })} />);
+
+    expect(nameBox()).toHaveValue('rosemary');
+  });
+
   describe('picking a name from the dropdown', () => {
     const PAGE = { after: 'cursor-x' };
     const TESTWORT = {
@@ -298,7 +311,7 @@ describe('CompendiumList filter', () => {
     });
   });
 
-  it('keeps the same form through a facet change, and draws a new one for a new name', async () => {
+  it('keeps the same form through a facet change, and shows the name searched with the facet kept', async () => {
     render(<RoutedCompendium />);
     const before = row();
 
@@ -318,7 +331,6 @@ describe('CompendiumList filter', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     });
-    expect(row()).not.toBe(before);
     expect(nameBox()).toHaveValue('test');
     openPanel();
     expect(unsourcedSwitch()).toBeChecked();

@@ -41,5 +41,6 @@ export async function plusCovensOf(
     workspaceId: covens.find(({ id }) => id === current)?.id ?? covens[0].id,
     covens,
     heldIn: covens.filter(({ id }) => held.has(id)).map(({ id }) => id),
+    holding: holding.map(({ name }) => name),
   };
 }

@@ -88,6 +88,8 @@ export interface PublicCupboardProps {
   covens: CupboardPlace[];
   /** The coven Add Ingredient would choose: the confirmations start on it where it may. */
   defaultWorkspaceId: string;
+  /** Names of every coven of the viewer’s holding the entry, a view-only one included, for the plus’s count. */
+  holding?: string[];
   annotate: {
     closeHref: Route;
     opened?: { workspaceId: string; overrides: CupboardOverrides; revision: number | null };

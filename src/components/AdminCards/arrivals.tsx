@@ -43,7 +43,7 @@ const AdminArrivals = ({
   <section className="admin-cards" aria-label="Card Sign-Ups">
     <ListFrame>
       {/* Keyed by the filter shown, so another one starts the form again from it. */}
-      <ArrivalsFilterForm key={JSON.stringify(filter)} filter={filter} />
+      <ArrivalsFilterForm filter={filter} />
       <ListBody skeleton={<CardArrivalsBodySkeleton />}>
         <StackTable
           columns={[

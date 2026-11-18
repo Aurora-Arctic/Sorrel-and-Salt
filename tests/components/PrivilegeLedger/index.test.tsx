@@ -102,6 +102,9 @@ describe('PrivilegeLedger', () => {
         },
       ],
       searched: privilegeLedgerHref({ query: 'Two words', privilege: 'admin' }),
+      searchedList: (
+        <PrivilegeLedger changes={[GRANT]} filter={{ query: 'Two words', privilege: 'admin' }} />
+      ),
     };
 
     it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));

@@ -197,6 +197,9 @@ describe('GroupedValueList', () => {
         },
       ],
       searched: `${path}?query=Two+words&${group(groups[0].slug)}`,
+      searchedList: (
+        <GroupedValueList {...props({ filter: { query: 'Two words', group: groups[0].slug } })} />
+      ),
     };
 
     it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));

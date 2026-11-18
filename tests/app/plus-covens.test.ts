@@ -45,7 +45,19 @@ describe('plusCovensOf', () => {
         { id: MEMBER.id, name: MEMBER.name },
       ],
       heldIn: [MEMBER.id],
+      holding: [MEMBER.name],
     });
+  });
+
+  // Regression: the plus beside an entry's pencil carried no count, where the card's plus counts every coven holding it.
+  it('names every coven of the viewer’s holding the entry for its count, one they only view included', async () => {
+    // Why the viewer's coven could have been left out: the plus offers no add there.
+    inCovens({ [OWNED.id]: 'owner', [MEMBER.id]: 'member', [VIEWER.id]: 'viewer' });
+
+    const plus = await plusCovensOf([{ ...MEMBER }, { ...VIEWER }]);
+
+    expect(plus?.covens.map(({ id }) => id)).toEqual([OWNED.id, MEMBER.id]);
+    expect(plus?.holding).toEqual([MEMBER.name, VIEWER.name]);
   });
 
   it('defaults to the coven whose page it is where that coven may add, and to the first otherwise', async () => {

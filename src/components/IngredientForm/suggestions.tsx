@@ -36,7 +36,7 @@ import type {
   UseSuggestions,
 } from './types';
 import { COMPENDIUM_HEADING, YOUR_INGREDIENTS, draftOf, renamedTo, tierOf } from './values';
-import { bracketedName } from '../../lib/ingredient-name';
+import { plural } from '../../lib/text';
 
 // The lookups on the form's boxes: each waits for the typing to settle, asks /api/graphql for a
 // page and shapes the answer into the combobox's rows. None asks until its box has been focused, so
@@ -187,8 +187,7 @@ const SUGGESTION_ROWS = 10;
 
 function usedBy(claimants: Claimant[]): string | undefined {
   if (claimants.length === 0) return undefined;
-  const names = claimants.map(({ name, canonicalName }) => bracketedName(name, canonicalName));
-  return `Used by ${names.join(', ')}`;
+  return `Used by ${claimants.length} ${plural(claimants.length, 'ingredient', 'ingredients')}`;
 }
 
 const qualified = (value: string, by: string | null | undefined): string =>

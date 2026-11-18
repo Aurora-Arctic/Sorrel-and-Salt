@@ -50,6 +50,15 @@ export function byCovenName(
   return Number(a.demo ?? false) - Number(b.demo ?? false) || a.name.localeCompare(b.name);
 }
 
+/** The covens of these seats as id, slug and name, in `byCovenName` order. Sorted before the map, which drops `demo`. */
+export function covensByName(
+  memberships: readonly { workspace: { id: string; slug: string; name: string; demo?: boolean } }[],
+): { id: string; slug: string; name: string }[] {
+  return [...memberships]
+    .sort((a, b) => byCovenName(a.workspace, b.workspace))
+    .map(({ workspace: { id, slug, name } }) => ({ id, slug, name }));
+}
+
 /** Passes over a coven whose access is paused; the first when every one is. */
 export async function firstCovenSlugOf(session: Session): Promise<string | undefined> {
   const [memberships] = await membershipsOf(session, [session.userId]);

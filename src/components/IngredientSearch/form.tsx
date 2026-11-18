@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, createContext, useContext, useState } from 'react';
+import { type ReactElement, createContext, useContext } from 'react';
+import { useSearchDraft } from '../FilterForm/use-filter-draft';
 import FilterForm from '../FilterForm';
 import IngredientSearchBox from './search-box';
 import IngredientSearchIdleBox from './idle-box';
@@ -31,7 +32,7 @@ export const IngredientSearchForm = ({
   idle = false,
   children,
 }: IngredientSearchFormProps): ReactElement => {
-  const [text, setText] = useState(query);
+  const [text, setText] = useSearchDraft(query);
   return (
     <SearchText.Provider value={text}>
       <FilterForm

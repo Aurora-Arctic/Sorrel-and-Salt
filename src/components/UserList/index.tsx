@@ -161,7 +161,7 @@ const UserList = ({
 }: UserListProps): ReactElement => (
   <ListFrame className="user-list">
     <UserListFilter
-      key={`${query}\n${role ?? ''}\n${awaitingApproval}\n${timedOut}\n${paused}`}
+      key={`${role ?? ''}\n${awaitingApproval}\n${timedOut}\n${paused}`}
       query={query}
       awaitingApproval={awaitingApproval}
       role={role}

@@ -315,6 +315,12 @@ describe('AdminInvitations filter', () => {
       },
     ],
     searched: '/keepers/invitations?email=Two+words&expiring',
+    searchedList: (
+      <AdminInvitations
+        invitations={INVITATIONS}
+        filter={{ email: 'Two words', expiringSoon: true }}
+      />
+    ),
   };
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));

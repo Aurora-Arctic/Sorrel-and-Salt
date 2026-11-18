@@ -21,22 +21,24 @@ export const SkeletonContextRow = (): ReactElement => (
 // the compendium or from another area). The section's own layout is not mounted yet, so this draws
 // the context row it will have and the frame its body keeps, so the
 // page's head stands where it will and nothing jumps when the section arrives.
-const frames = new Map<ComponentType, ComponentType>();
+const frames = new Map<ComponentType, Map<string, ComponentType>>();
 
-/** The page's skeleton inside the frame of the section `host` names, one component per skeleton. */
-export function framed(host: SkeletonHost, Page: ComponentType): ComponentType {
+/** The page's skeleton inside the frame of the section `host` names, one component per skeleton (and per `query`, the words the help header's box shows). */
+export function framed(host: SkeletonHost, Page: ComponentType, query = ''): ComponentType {
   if (host === 'main') return Page;
-  const known = frames.get(Page);
+  const byQuery = frames.get(Page) ?? new Map<string, ComponentType>();
+  frames.set(Page, byQuery);
+  const known = byQuery.get(query);
   if (known) return known;
   if (host === 'help') {
     const InHelp = (): ReactElement => (
       <PageColumn as="div">
-        <HelpFrontSkeleton>
+        <HelpFrontSkeleton query={query}>
           <Page />
         </HelpFrontSkeleton>
       </PageColumn>
     );
-    frames.set(Page, InHelp);
+    byQuery.set(query, InHelp);
     return InHelp;
   }
   const className = host === 'coven' ? 'coven-layout' : 'page-column';
@@ -48,6 +50,6 @@ export function framed(host: SkeletonHost, Page: ComponentType): ComponentType {
       </div>
     </>
   );
-  frames.set(Page, Framed);
+  byQuery.set(query, Framed);
   return Framed;
 }

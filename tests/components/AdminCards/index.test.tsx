@@ -831,6 +831,7 @@ describe('AdminCards filter', () => {
       },
     ],
     searched: `${PATH}?batch=Two+words&status=live&mintedFrom=2026-10-01&mintedTo=2026-10-31&expiresFrom=2026-11-01&expiresTo=2026-12-31`,
+    searchedList: <AdminCards batches={BATCHES} filter={{ ...FILTER, batch: 'Two words' }} />,
   };
 
   const inFlight = (ui: ReactNode) => render(<Navigating push={router.push}>{ui}</Navigating>);
@@ -993,6 +994,7 @@ describe('AdminArrivals filter', () => {
       },
     ],
     searched: `${PATH}?query=Two+words`,
+    searchedList: <AdminArrivals arrivals={[]} filter={{ query: 'Two words' }} />,
   };
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));

@@ -277,6 +277,26 @@ describe('GrimoireList', () => {
     expect(sent(form)).toBe('query=hearth&visibility=');
   });
 
+  // Regression: the box went back to the title searched when its results arrived, losing what was typed meanwhile.
+  it('keeps the title typed after a search is sent when that search arrives', () => {
+    const titleBox = () => screen.getByRole('combobox', { name: 'Title' });
+    const { rerender } = renderWithQuery(<List {...props()} />);
+    fireEvent.change(titleBox(), { target: { value: 'rose' } });
+    fireEvent.submit(filterForm('Filter the Grimoire'));
+    expect(
+      new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams.get('query'),
+    ).toBe('rose');
+
+    fireEvent.change(titleBox(), { target: { value: 'rosemary' } });
+    rerender(
+      <List
+        {...props({ filter: { query: 'rose', categories: [], categoryMode: 'all', ...OPEN } })}
+      />,
+    );
+
+    expect(titleBox()).toHaveValue('rosemary');
+  });
+
   it('applies a category picked in the panel to the tab address, as its slug', async () => {
     renderWithQuery(
       <Navigating push={router.push}>

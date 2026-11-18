@@ -1,8 +1,10 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { expect, onTestFinished } from 'vitest';
+import { Navigating } from './navigating';
 import type { FilterFormCase, FilterFormSubject } from './types';
 
 // The rows every FilterForm list runs with `it.each` (claude-docs/components/filter-form.md).
@@ -104,4 +106,98 @@ export const FILTER_ROWS: FilterFormCase[] = [
       expect(sent(form(subject))).toBe(subject.none.sends);
     },
   ],
+  // Regression: the box went back to the text searched when its results arrived, losing what was typed meanwhile.
+  [
+    'keeps the text typed after a search is sent when that search arrives',
+    (subject) => {
+      const { rerender } = render(subject.shown.list);
+      fireEvent.change(searchbox(subject), { target: { value: 'Two words' } });
+      fireEvent.submit(form(subject));
+      expect(subject.push.mock.calls).toEqual([[subject.searched]]);
+
+      fireEvent.change(searchbox(subject), { target: { value: 'Two words more' } });
+      rerender(subject.searchedList);
+
+      expect(searchbox(subject)).toHaveValue('Two words more');
+    },
+  ],
+  [
+    'takes typing in the search box while the search sent is on its way, Enter sending nothing more, and keeps it when that search arrives',
+    async (subject) => {
+      const { box, user, rerender, arrive } = await searchOnItsWay(subject);
+
+      await user.type(box(), ' more', {
+        skipClick: true,
+        initialSelectionStart: 'Two words'.length,
+        initialSelectionEnd: 'Two words'.length,
+      });
+      expect(box()).toHaveValue('Two words more');
+      expect(box()).not.toHaveAttribute('aria-disabled', 'true');
+      await user.keyboard('{Enter}');
+      expect(subject.push).toHaveBeenCalledTimes(1);
+
+      await act(async () => rerender(subject.searchedList));
+      await act(async () => arrive());
+
+      expect(form(subject)).not.toHaveAttribute('aria-busy', 'true');
+      expect(box()).toHaveValue('Two words more');
+    },
+  ],
+  [
+    'refuses every other control in the row while a search is on its way, each left as it was',
+    async (subject) => {
+      const { box, user } = await searchOnItsWay(subject);
+      const row = within(form(subject));
+      const others = [
+        ...row.queryAllByRole('button'),
+        ...row.queryAllByRole('link'),
+        ...row.queryAllByRole('switch'),
+        ...row.queryAllByRole('checkbox'),
+        ...row.queryAllByRole('combobox'),
+      ].filter((control) => control !== box());
+      // Precondition: the row holds more than the box, at least the magnifier.
+      expect(others.length).toBeGreaterThan(0);
+
+      for (const control of others) {
+        expect(control).toHaveAttribute('aria-disabled', 'true');
+        const checked = (control as HTMLInputElement).checked;
+        const value = (control as HTMLSelectElement).value;
+        await user.click(control);
+        expect((control as HTMLInputElement).checked).toBe(checked);
+        expect((control as HTMLSelectElement).value).toBe(value);
+      }
+      expect(subject.push).toHaveBeenCalledTimes(1);
+    },
+  ],
 ];
+
+/**
+ * The row with "Two words" searched and its list still on its way, the box focused as Enter leaves it. `rerender`
+ * draws another list in the same wait, and `arrive` settles it.
+ */
+async function searchOnItsWay(subject: FilterFormSubject) {
+  let arrive = () => {};
+  const arrives = new Promise<void>((resolve) => (arrive = resolve));
+  const page = (list: ReactElement) => (
+    <Navigating push={subject.push} arrives={arrives}>
+      {list}
+    </Navigating>
+  );
+  const user = userEvent.setup();
+  const view = render(page(subject.shown.list));
+  const box = () => searchbox(subject);
+  fireEvent.change(box(), { target: { value: 'Two words' } });
+  act(() => box().focus());
+  await act(async () => {
+    fireEvent.submit(form(subject));
+  });
+  // Precondition: the search was sent and its list is on its way.
+  expect(subject.push.mock.calls).toEqual([[subject.searched]]);
+  expect(form(subject)).toHaveAttribute('aria-busy', 'true');
+  return {
+    box,
+    user,
+    arrive,
+    rerender: (list: ReactElement) => view.rerender(page(list)),
+  };
+}

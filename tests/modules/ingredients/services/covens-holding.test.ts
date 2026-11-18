@@ -94,6 +94,24 @@ describe('covensHoldingEntry', () => {
     }
   });
 
+  // Regression: the demo coven sorted by name among the rest here, where the viewer's list and the cards put it last.
+  it('names the demo coven last, as the viewer’s own list does', async () => {
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${WORKSPACE_X_ID}, ${B.id}, 'member', ${D.id}, ${D.id})`;
+    await sql`update workspaces set demo = true where id = ${WORKSPACE_X_ID}`;
+    try {
+      // Why X could come first: its name sorts before W’s.
+      const [w, x] = [await coven(WORKSPACE_W_ID), await coven(WORKSPACE_X_ID)];
+      expect(x.name.localeCompare(w.name)).toBeLessThan(0);
+
+      expect(await covensHoldingEntry(asUser(B), both)).toEqual([w, x]);
+    } finally {
+      await sql`update workspaces set demo = false where id = ${WORKSPACE_X_ID}`;
+      await sql`delete from workspace_members where workspace_id = ${WORKSPACE_X_ID} and user_id = ${B.id}`;
+    }
+  });
+
   it('leaves out a coven that removed the entry, and gives nothing for one no coven holds', async () => {
     expect(await covensHoldingEntry(asUser(A), removed)).toEqual([]);
     expect(await covensHoldingEntry(asUser(A), free)).toEqual([]);

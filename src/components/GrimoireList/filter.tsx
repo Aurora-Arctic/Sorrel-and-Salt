@@ -4,7 +4,8 @@ import type { Route } from 'next';
 import { moonPhaseIcon } from '../MoonPhaseIcon/for-phase';
 import FacetCombobox from '../FacetCombobox';
 import CardDensitySwitch from '../CardDensitySwitch';
-import { type ReactElement, useMemo, useState } from 'react';
+import { type ReactElement, useMemo } from 'react';
+import { useFilterDraft } from '../FilterForm/use-filter-draft';
 import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
 import { stuckChoice } from '../FacetPanel/stuck-choice';
@@ -209,12 +210,7 @@ const GrimoireFilterRow = ({
   // The panel as held: the filter shown until something in it is changed, and the filter
   // shown again whenever a new list arrives (Back, Apply, Clear All).
   const shown = heldOf(filter);
-  const [held, setHeld] = useState(shown);
-  const [seen, setSeen] = useState(JSON.stringify(shown));
-  if (seen !== JSON.stringify(shown)) {
-    setSeen(JSON.stringify(shown));
-    setHeld(shown);
-  }
+  const [held, setHeld] = useFilterDraft(shown);
   return (
     <IngredientSearchForm
       label="Filter the Grimoire"
@@ -283,9 +279,7 @@ const GrimoireFilter = ({
   );
   return (
     <>
-      {/* Keyed by the text searched, so another one starts the box again from it. */}
       <GrimoireFilterRow
-        key={filter.query}
         path={path}
         workspaceId={workspaceId}
         cursor={cursor}
