@@ -337,14 +337,14 @@ export default function RecordWorkingForm({
       >
         {!complete && completeButton}
       </FormActions>
-      {/* Text rather than a tip, since a disabled button takes no focus to show one. */}
-      {/* Text rather than a tip, like the wait below, so the button's description is on screen; while it waits for its day, that reason describes it instead. */}
+      {/* Text rather than a tip, so the button's description is on screen; while it waits for its day, the reason below describes it instead. */}
       {!complete && !waitFor && (
         <p id={`${ids}-effect`} className="meta">
           Completing takes the ingredients from the coven’s jars, and a complete working cannot go
           back to a draft.
         </p>
       )}
+      {/* Text rather than a tip, since a disabled button takes no focus to show one. */}
       {!complete && waitFor && (
         <p id={`${ids}-wait`} className="meta">
           {waitFor}
