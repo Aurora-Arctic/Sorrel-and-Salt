@@ -15,17 +15,6 @@
   gap: space(2);
 }
 
-// The caution and its disclaimer are one stack item, so the disclaimer sits space(2) under the
-// caution (its own margin) and not a stack gap further.
-.ingredient-summary__caution {
-  display: block;
-
-  // With no caution it is empty, and an empty flex item would still take a gap.
-  &:empty {
-    display: none;
-  }
-}
-
 // The heading stands off its text by the stack gap alone, space(2), as every other heading in the
 // modal does. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-summary .safety-note__heading {
