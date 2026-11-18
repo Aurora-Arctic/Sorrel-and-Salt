@@ -95,7 +95,7 @@ A good result: `gh stack view` lists every layer in order, and each layer's diff
 
 The agent must not run any `gh stack` command that writes to GitHub (`stacks.md`, section 3, lists them), and must not rebase or force-push by hand.
 
-**Not available yet:** `gh stack` works (proved on a scratch repo, `verify.md` checks 6 and 7), but the extension is not installed in the dev container, and whether stack branches are exempt from `/create-pr`'s "never rebase, never force-push" rules is open (Decision 2 in `stacks.md`). Until then work as a single branch.
+**Not available yet:** `gh stack` works (proved on a scratch repo, `verify.md` checks 6 and 7), but the extension is not installed in the dev container, and stack branches are the one exception to `/create-pr`'s "never rebase, never force-push" rules (decided, Decision 2 in `stacks.md`): `gh stack` owns them and one session owns a whole stack. Draft F writes that into the skill. Until it lands, work as a single branch.
 
 **Done when.** `gh stack view` lists the layers, and each layer's diff is small enough that you expect to read it in 15 minutes.
 
@@ -117,7 +117,7 @@ A good result: every required check is green. Do not read a layer whose gate is 
 
 The agent must not call `gh stack submit` or `link` itself: those write PRs without a `Closes`/`Refs` line, a task-id title or a board link (`stacks.md`, section 3).
 
-**Not available yet:** one pull request per layer needs Draft F (`stacks.md`). `pr-gate.yml` and `gitflow.yml` do run on an upper layer: GitHub starts them with `github.base_ref` equal to `staging`, and `gitflow.yml` passes an upper layer (proved on stand-ins, `stacks.md` section 6). Do not read a layer whose gate is red; whether a lower layer runs the full gate is Decision 3 in `stacks.md`, and I recommend it does. The gate also has no dependency-rules job (Draft B in `verify.md`), and no `oversized` label (Draft D). Until then `/create-pr` opens one PR per branch, and the gate runs as it does today.
+**Not available yet:** one pull request per layer needs Draft F (`stacks.md`). `pr-gate.yml` and `gitflow.yml` do run on an upper layer: GitHub starts them with `github.base_ref` equal to `staging`, and `gitflow.yml` passes an upper layer (proved on stand-ins, `stacks.md` section 6). Do not read a layer whose gate is red. The tests-first layer's gate is red by design until the implementation layer lands (`stacks.md`, section 6), so read its tests, not its gate. Whether a lower layer runs the full gate is Decision 3 in `stacks.md`, which is open. The gate also has no dependency-rules job (Draft B in `verify.md`), and no `oversized` label (Draft D). Until then `/create-pr` opens one PR per branch, and the gate runs as it does today.
 
 **Done when.** The PR is open, linked to its task, and its required checks are green.
 
@@ -212,7 +212,7 @@ The agent must not push, merge or resolve a review thread on GitHub itself.
 
 **With an agent.** No prompt. The agent does not merge.
 
-**Not available yet:** the merge queue returns with a later task. Where `Closes #N` goes on a stack is Decision 1 in `stacks.md`, and the close workflow fires for a layer merged when it is the lowest unmerged one, because its base is then `staging` (proved one layer at a time; layers merged in one atomic call are unproved and are in Draft G). `gh stack merge N` merges layer N and every layer below it, and the layer above is retargeted to `staging`.
+**Not available yet:** the merge queue returns with a later task. `Closes #N` goes on the top layer and `Refs #N` on the layers below (decided, Decision 1 in `stacks.md`), and the close workflow fires for a layer merged when it is the lowest unmerged one, because its base is then `staging` (proved one layer at a time; layers merged in one atomic call are unproved and are in Draft G). `gh stack merge N` merges layer N and every layer below it, and the layer above is retargeted to `staging`.
 
 **Done when.** The PR is merged into `staging`, and the task shows `Done` on the board.
 
@@ -230,7 +230,5 @@ You can ask an agent to take you through the loop one step at a time from this f
 
 Each is held in its record; the owner chooses.
 
-- The container build: Decision 4 in `verify.md`.
-- Where `Closes #N` goes on a stack: Decision 1 in `stacks.md`.
-- Whether stack branches are exempt from "never rebase, never force-push": Decision 2 in `stacks.md`.
-- What the workflows do on a stack (I recommend no change): Decision 3 in `stacks.md`.
+- The container build: decided, the file reading is accepted and Draft A rebuilds the image (Decision 4 in `verify.md`).
+- Decided: `Closes #N` on the top layer (Decision 1 in `stacks.md`), and stack branches are the one exception to "never rebase, never force-push" (Decision 2). Open: what the workflows do on a stack (Decision 3 in `stacks.md`; I recommend no change).

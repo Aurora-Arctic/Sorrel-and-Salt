@@ -284,6 +284,7 @@ _Acceptance criteria:_
 - The three glibc libraries (`libc6`, `libgcc-s1`, `libstdc++6`, about 26 MB) are fetched at image build with pinned checksums and unpacked into a private prefix, outside the system paths
 - A `plannotator` wrapper on `PATH` runs the binary through the prefix's loader and sets `PLANNOTATOR_REMOTE=1`, `PLANNOTATOR_PORT=19432` and `PLANNOTATOR_SHARE=disabled`
 - Port 19432 is in `forwardPorts` in `.devcontainer/devcontainer.json`
+- The dev container image is rebuilt with `docker compose build` on the host, which check 1 only read from files (Decision 4, decided)
 - A test shows `plannotator --version` and an HTTP 200 on port 19432 in the container, and the exact commands are in `claude-docs/`
 - `claude-docs/commands.md` lists the new commands
 - No tool is installed into the repo's `package.json` unless Draft B says so
@@ -348,7 +349,7 @@ Items 1, 2 and 3 are decided. I need you to choose for item 4 only.
    Decided: V, a private glibc prefix with a wrapper, with W (run on the host) as the fallback. The reason: it is the only route proved to start the server in the container, it changes no base image, and it keeps the glibc libraries out of the system. Draft A is the task for it.
 
 3. **The scratch repo for `gh stack`. Decided and done.** The owner created `stack-scratch-m17-31` under `Aurora-Arctic` as a public repository. Checks 6 and 7 and the `stacks.md` questions ran on it on 2026-11-18, as a public repo only (check 6 explains why). Nothing for you to do except delete the repository when you no longer want it.
-4. **The container build.** The dev container has no `docker`, so the build in check 1 is read from files only. I need you to choose X or Y: X, you run `docker compose build` for the dev container on the host and paste the result; or Y, accept the file reading. I recommend Y, because nothing in this task builds the image.
+4. **The container build. Decided: Y.** The dev container has no `docker`, so the build in check 1 is read from files only; the owner accepts the file reading, and Draft A rebuilds the image.
 
 ## Status of the scratch repo and the extension
 
