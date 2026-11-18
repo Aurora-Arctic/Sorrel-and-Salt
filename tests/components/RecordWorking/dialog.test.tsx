@@ -22,6 +22,7 @@ import { server } from '../../support/msw/server';
 import { WORKSPACE_ID } from '../../support/constants';
 import { router } from '../../support/next-navigation';
 import { renderWithQuery } from '../../support/render-with-query';
+import { type } from '../../support/interact';
 
 // claude-docs/components/record-working.md
 
@@ -320,14 +321,13 @@ describe('Record a Working', () => {
   describe('with a name typed into Participants and not added', () => {
     const TYPED = 'Guest Witness';
     const people = () => within(dialog()).getByRole('combobox', { name: 'Participants' });
-    const type = (text: string) => fireEvent.change(people(), { target: { value: text } });
 
     it.each(['Save Working', 'Complete'])(
       'sends nothing on %s, flags Participants and focuses it',
       async (name) => {
         const calls = mockRecording();
         openButton();
-        type(TYPED);
+        type('Participants', TYPED);
 
         fireEvent.click(within(dialog()).getByRole('button', { name }));
 
@@ -344,7 +344,7 @@ describe('Record a Working', () => {
     it('sends the name once Enter has added it', async () => {
       const calls = mockRecording();
       openButton();
-      type(TYPED);
+      type('Participants', TYPED);
       fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
       await waitFor(() => expect(people()).toBeInvalid());
 
@@ -360,11 +360,11 @@ describe('Record a Working', () => {
     it('drops the flag once the text is cleared, and then sends', async () => {
       const calls = mockRecording();
       openButton();
-      type(TYPED);
+      type('Participants', TYPED);
       fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
       await waitFor(() => expect(people()).toBeInvalid());
 
-      type('');
+      type('Participants', '');
       expect(people()).not.toBeInvalid();
       fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
 
@@ -448,14 +448,14 @@ describe('Edit Working', () => {
         onClose={vi.fn()}
       />,
     );
-    const save = within(dialog()).getByRole('button', { name: 'Save Working' });
-    expect(save).toBeDisabled();
+    const saveButton = within(dialog()).getByRole('button', { name: 'Save Working' });
+    expect(saveButton).toBeDisabled();
 
     fireEvent.change(within(dialog()).getByRole('combobox', { name: 'Participants' }), {
       target: { value: 'Mocka' },
     });
 
-    expect(save).toBeEnabled();
+    expect(saveButton).toBeEnabled();
   });
 
   it('sends nothing on Save Working while a typed name is not added, and flags Participants', async () => {
