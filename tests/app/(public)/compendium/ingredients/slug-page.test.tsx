@@ -47,7 +47,7 @@ vi.mock('@/components/IngredientEntry', () => ({
       <>
         <p>{props.detail.entry.name}</p>
         {props.hiddenFromPublic && (
-          <p>Hidden in the Compendium. Only curators and keepers can see this page.</p>
+          <p>Hidden in the Compendium. Only Curators and Keepers can see this page.</p>
         )}
       </>
     );
@@ -85,7 +85,7 @@ describe('the public entry page for a hidden entry', () => {
     expect(readCompendiumEntryAsCurator).toHaveBeenCalled();
     expect(shown).toHaveBeenCalled();
     expect(
-      screen.getByText('Hidden in the Compendium. Only curators and keepers can see this page.'),
+      screen.getByText('Hidden in the Compendium. Only Curators and Keepers can see this page.'),
     ).toBeInTheDocument();
   });
 

@@ -28,7 +28,7 @@ const EmptyCupboard = ({ covenSlug, filter, canAdd }: EmptyCupboardProps): React
             <PendingLink href={INGREDIENTS_GUIDE}>Learn More</PendingLink>
           </>
         }
-        detail={canAdd ? undefined : 'A practitioner or steward of this coven can add them.'}
+        detail={canAdd ? undefined : 'A Practitioner or Steward of this coven can add them.'}
       >
         {emptyList('ingredients')}
       </EmptyState>

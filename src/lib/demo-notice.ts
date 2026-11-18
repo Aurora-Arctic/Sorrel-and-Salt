@@ -6,7 +6,7 @@ import type { WorkspaceRole } from '@/modules/coven';
 export const DEMO_NOTICE =
   'This is a demo coven, so you can see how Sorrel & Salt works. You can look at everything and change nothing. A coven of your own starts with an invitation from someone who has one.';
 export const DEMO_OWNER_NOTICE =
-  'You are a steward of this coven as a Keeper: what you change here is what every new account sees.';
+  'You are a Steward of this coven as a Keeper: what you change here is what every new account sees.';
 
 /** The notice a coven page shows its viewer: none outside the demo coven, and in it one for its stewards and one for everyone else. */
 export function demoNoticeOf(

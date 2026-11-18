@@ -31,7 +31,7 @@ export default async function AccessPausedPage() {
       ) : (
         <p>
           Access to this account is paused, with no end date. The rest of the site opens again once
-          a keeper lifts the pause.
+          a Keeper lifts the pause.
         </p>
       )}
       {/* Timed out, the page leaves out the Support dialog link, since the dialog could send nothing. */}

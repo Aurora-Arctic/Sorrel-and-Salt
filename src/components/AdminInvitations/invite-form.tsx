@@ -32,7 +32,7 @@ const SITE_ROLES: readonly InvitableSiteRole[] = ['user', 'curator', 'admin'];
 // Accepting a `user` invitation is itself the approval the shared description says a user waits for.
 const ACCESS: Record<InvitableSiteRole, string> = {
   ...SITE_ROLE_ACCESS,
-  user: 'Creates covens and uses the site through them, with no curator or keeper access.',
+  user: 'Creates covens and uses the site through them, with no Curator or Keeper access.',
 };
 
 /** A `user` invitation grants coven creation, not the role, so it is named for that. */

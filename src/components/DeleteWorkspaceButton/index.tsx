@@ -31,7 +31,7 @@ const DeleteWorkspaceButton = ({
       question={
         <>
           Delete <strong>{name}</strong>? Its ingredients and its grimoire become inaccessible to
-          every member{onlyOwner ? '' : ', other stewards included'}.
+          every member{onlyOwner ? '' : ', other Stewards included'}.
         </>
       }
       warning="Nothing is destroyed, but only an administrator with database access can restore it."

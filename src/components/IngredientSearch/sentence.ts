@@ -224,7 +224,7 @@ export function buildSearchSentence({
   if (admin && (filter.reviewed === 'reviewed' || filter.reviewed === 'needs_review')) {
     flagClause(
       'reviewed',
-      filter.reviewed === 'reviewed' ? 'reviewed by a curator' : 'needing review',
+      filter.reviewed === 'reviewed' ? 'reviewed by a Curator' : 'needing review',
       filter.reviewed,
     );
   }

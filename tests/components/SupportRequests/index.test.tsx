@@ -1073,7 +1073,7 @@ describe('Status line in the dialog', () => {
 
   it.each([
     ['assign', 'AssignSupportRequest', 'Request assigned.'],
-    ['share', 'SetSupportRequestCuratorVisible', 'Request shared with curators.'],
+    ['share', 'SetSupportRequestCuratorVisible', 'Request shared with Curators.'],
     ['link', 'SetSupportRequestIssueUrl', 'Issue address saved.'],
   ])('announces %s', async (action, operation, message) => {
     mockGraphQLMutation(operation, () => ({ saved: { __typename: 'Saved', id: 'r1' } }));

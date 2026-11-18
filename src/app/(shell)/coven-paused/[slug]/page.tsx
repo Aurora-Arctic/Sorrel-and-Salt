@@ -51,7 +51,7 @@ export default async function CovenPausedPage({ params }: CovenPausedPageProps) 
       }
     >
       <p>
-        You can still ask the coven’s steward, or <SupportLink>Support</SupportLink>, about it.
+        You can still ask the coven’s Steward, or <SupportLink>Support</SupportLink>, about it.
       </p>
       {/* Leaving is the one thing a paused member may still do in the coven: quiet, its confirm the red. A
         steward is never paused, so the plain confirmation serves and no successors are read. */}
