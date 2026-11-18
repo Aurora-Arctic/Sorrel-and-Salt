@@ -1,0 +1,8 @@
+// While a modal dialog is open the page behind it holds still: the overflow is CSS, so no listener can
+// leave the page locked, and the room the scrollbar took is given back as padding, `--scrollbar-width`,
+// which `holdPage` sets (claude-docs/components/modal.md, "Styling"). `:modal` matches only a dialog opened
+// with `showModal()`, so the Filters panel, a plain overlay from the tablet width up, leaves the page scrolling.
+:root:has(:is(.modal-dialog, .spell-preview, .facet-panel):modal) {
+  overflow: hidden;
+  padding-inline-end: var(--scrollbar-width, 0);
+}

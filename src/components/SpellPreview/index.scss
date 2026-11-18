@@ -42,14 +42,6 @@ $preview-foot: 2.5rem;
   }
 }
 
-// While the pane is open only it scrolls: the page behind holds still, as it does under a modal, and the
-// room the page's scrollbar took is given back as padding, `--scrollbar-width`, which `holdPage` sets
-// (claude-docs/components/modal.md, "Styling").
-:root:has(.spell-preview:modal) {
-  overflow: hidden;
-  padding-inline-end: var(--scrollbar-width, 0);
-}
-
 // The controls sit in a row above the title, at the end, and scroll away with the content. A row and
 // not a float, so a long title never wraps around them.
 .spell-preview__bar {

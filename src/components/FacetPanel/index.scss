@@ -204,6 +204,8 @@ $sheet-slide: 250ms ease-out;
   background-color: $surface-page;
   border-left: $hairline-border;
   overflow-y: auto;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: scrolling past the end of the sheet moves the page behind it, not yet Baseline
+  overscroll-behavior: contain;
   scroll-padding-block-end: calc(2 * #{space(7)});
 
   // It slides in from and back out to the right edge while the backdrop fades. In is CSS alone,
