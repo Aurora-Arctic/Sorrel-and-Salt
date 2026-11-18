@@ -153,6 +153,8 @@ export interface FilterFormSubject {
   shown: FilterShown;
   alone: readonly FilterShown[];
   searched: string;
+  /** The list as the page draws it once `searched` arrives: the filter shown, its text now "Two words". */
+  searchedList: ReactElement;
 }
 
 export type FilterFormCase = [

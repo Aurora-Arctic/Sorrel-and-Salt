@@ -70,7 +70,7 @@ The approved masks are `phoneMask` (`src/lib/phone-number.ts`), on the Business 
 
 - The server and the hydrating render draw a native `<select>` whose first choice, `all` ("All Roles"), is blank, so a press on the magnifier before the script loads sends `role=` and the page reads no filter. A change to that select applies nothing until the magnifier is pressed.
 - Once hydrated (`useHydrated()`, `src/lib/hydrated.ts`) it is one of Combobox's boxes, so every closed set in the row looks alike.
-- It calls `onChange` only for a different choice from `defaultValue` (a type-ahead's once it settles), since the list keys its filter by the filter shown ([`filter-form.md`](filter-form.md)). `onChange` hands over the raw string; a caller narrowing it uses `oneOf` (`src/lib/search-params.ts`).
+- It calls `onChange` only for a different choice from `defaultValue` (a type-ahead's once it settles), since a list starts its filter again from the filter shown ([`filter-form.md`](filter-form.md)). `onChange` hands over the raw string; a caller narrowing it uses `oneOf` (`src/lib/search-params.ts`).
 - Every form stands in `filter-row__choice`, one width, so the swap moves nothing. It is not `SelectField`: a filter has no form state, and its select must submit natively.
 
 ## Character count

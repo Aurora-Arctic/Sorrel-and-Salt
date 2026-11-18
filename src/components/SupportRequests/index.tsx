@@ -101,10 +101,7 @@ const SupportRequests = ({
   return (
     <section className="support-requests" aria-label="Support Requests">
       <ListFrame>
-        <SupportRequestsFilter
-          key={`${filter.about}\n${filter.view}\n${filter.errorCode}`}
-          filter={filter}
-        />
+        <SupportRequestsFilter filter={filter} />
         <ListBody skeleton={<SupportListBodySkeleton />}>
           <output className="visually-hidden">
             {requests.length} {plural(requests.length, 'Request', 'Requests')}

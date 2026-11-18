@@ -1,9 +1,11 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import type { Route } from 'next';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import HelpOutline from '@/components/HelpOutline';
 import type { HelpOutlineChosen, HelpOutlineGuide } from '@/components/HelpOutline/types';
+import { filterForm } from '../../support/filter-form';
+import { router } from '../../support/next-navigation';
 
 // The keeper help outline's guides: the count of a guide's sub pages in the chosen guide's facts, and none at all for a
 // guide that holds none; the Guides bar and the phone's Guide select carry no count (claude-docs/components/help-outline.md).
@@ -44,16 +46,17 @@ const CHOSEN: HelpOutlineChosen = {
   addSubPageHref: '/keepers/help/new?parent=empty' as Route,
 };
 
-const outline = (chosen: HelpOutlineChosen = CHOSEN) =>
-  render(
-    <HelpOutline
-      filter={{ query: '', kind: '', audience: '', shown: 'shown' }}
-      guides={GUIDES}
-      others={[]}
-      order={GUIDES.map(({ id, title, audience, shown }) => ({ id, title, audience, shown }))}
-      pane={{ kind: 'guide', guide: chosen }}
-    />,
-  );
+const outlineOf = (chosen: HelpOutlineChosen = CHOSEN, query = '') => (
+  <HelpOutline
+    filter={{ query, kind: '', audience: '', shown: 'shown' }}
+    guides={GUIDES}
+    others={[]}
+    order={GUIDES.map(({ id, title, audience, shown }) => ({ id, title, audience, shown }))}
+    pane={{ kind: 'guide', guide: chosen }}
+  />
+);
+
+const outline = (chosen: HelpOutlineChosen = CHOSEN) => render(outlineOf(chosen));
 
 const guideLink = (title: string) =>
   within(screen.getByRole('navigation', { name: 'Help Outline' })).getByRole('link', {
@@ -174,5 +177,27 @@ describe('HelpOutline FAQ and glossary panes', () => {
       'href',
       '/help/glossary',
     );
+  });
+});
+
+describe('HelpOutline search', () => {
+  afterEach(() => {
+    router.push.mockReset();
+  });
+
+  // Regression: the box went back to the words searched when their results arrived, losing what was typed meanwhile.
+  it('keeps the words typed after a search is sent when that search arrives', () => {
+    const box = () => screen.getByRole('searchbox', { name: 'Search Help' });
+    const { rerender } = render(outlineOf());
+    fireEvent.change(box(), { target: { value: 'rose' } });
+    fireEvent.submit(filterForm('Filter Help'));
+    expect(new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams.get('q')).toBe(
+      'rose',
+    );
+
+    fireEvent.change(box(), { target: { value: 'rosemary' } });
+    rerender(outlineOf(CHOSEN, 'rose'));
+
+    expect(box()).toHaveValue('rosemary');
   });
 });

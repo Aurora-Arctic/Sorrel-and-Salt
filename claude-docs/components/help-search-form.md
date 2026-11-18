@@ -4,7 +4,9 @@
 
 A changed `query` is copied into the box by an effect, not by remounting the input with a `key`, so the box the help header holds keeps its spinner through a search ([`help-front.md`](help-front.md)).
 
-With JavaScript, a search with words in the box does not load the page the browser's way, which would leave the old page standing with nothing to show the wait. The form stops that load and goes to `/help/search?q=<words>` through the site's navigation (`usePendingNavigation`, `src/lib/navigation`), with the words trimmed. So the page bar runs, the search page's skeleton covers the old page at once, and the magnifier carries `aria-busy="true"` and turns into the `Spinner` ring in the same space after the usual 100ms, as a chain-icon link does ([`loading.md`](../loading.md), "Control"). The `action` and `method` stay for a reader without JavaScript.
+With JavaScript, a search with words in the box does not load the page the browser's way, which would leave the old page standing with nothing to show the wait. The form stops that load and goes to `/help/search?q=<words>` through the site's navigation (`usePendingNavigation`, `src/lib/navigation`), with the words trimmed. So the page bar runs, the search page's skeleton covers the old page at once, and the magnifier carries `aria-busy="true"` and turns into the `Spinner` ring in the same space after the usual 100ms, as a chain-icon link does ([`loading.md`](../loading.md), "Control"). The `action` and `method` stay for a reader without JavaScript. On a staff help page a search sent leaves the layout, so the box is shut (`aria-disabled`, `useShutRow`) until the results arrive, as is the box in the placeholder ([`help-front.md`](help-front.md)); on a public help page it stays open to typing.
+
+A blank search goes to the index of the pages it is on (`helpHomeOf` in `src/lib/navigation/staff-help.ts`): `/help/staff` from a staff help page, `/help` from a public one, and nowhere when the page is that index already.
 
 The shared rules, addresses and ids are in [`help-pages.md`](help-pages.md).
 

@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
+import { useSearchDraft } from '../FilterForm/use-filter-draft';
 import { oneOf } from '../../lib/search-params';
 import { FilterSelectField } from '../Field/filter-select-field';
 import { SearchField } from '../Field/search-field';
@@ -19,7 +20,7 @@ const UserListFilter = ({
   timedOut = false,
   paused = false,
 }: UserListFilterProps): ReactElement => {
-  const [draftQuery, setDraftQuery] = useState(query);
+  const [draftQuery, setDraftQuery] = useSearchDraft(query);
   const apply = useApplyFilter();
   const hrefWith = (change: Partial<UserListFilterValue>) =>
     userListHref({ query: draftQuery.trim(), awaitingApproval, role, timedOut, paused, ...change });

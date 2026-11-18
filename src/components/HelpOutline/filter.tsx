@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
+import { useSearchDraft } from '../FilterForm/use-filter-draft';
 import { SearchField } from '../Field/search-field';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
 import FilterForm, { useApplyFilter } from '../FilterForm';
@@ -37,7 +38,7 @@ const SHOWN_OPTIONS: readonly { value: Exclude<HelpOutlineShown, 'all'> | ''; la
 ];
 
 const HelpOutlineFilterRow = ({ filter }: { filter: HelpOutlineFilter }): ReactElement => {
-  const [query, setQuery] = useState(filter.query);
+  const [query, setQuery] = useSearchDraft(filter.query);
   const apply = useApplyFilter();
   const next = (change: Partial<HelpOutlineFilter>) =>
     keepersHelpHref({ ...filter, query, ...change });

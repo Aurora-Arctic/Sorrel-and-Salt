@@ -16,7 +16,6 @@ import HelpOrderTable from './order-table';
 import { HelpOutlineBodySkeleton } from './skeleton';
 import type {
   HelpOutlineChosen,
-  HelpOutlineFilter,
   HelpOutlineHit,
   HelpOrderColumn,
   HelpOrderRow,
@@ -244,12 +243,9 @@ const SearchPane = ({
   </>
 );
 
-const filterKey = (filter: HelpOutlineFilter): string =>
-  [filter.query, filter.kind, filter.audience, filter.shown].join('\n');
-
 const HelpOutline = ({ filter, guides, others, order, pane }: HelpOutlineProps): ReactElement => (
   <ListFrame>
-    <HelpOutlineFilterRow key={filterKey(filter)} filter={filter} />
+    <HelpOutlineFilterRow filter={filter} />
     <ListBody skeleton={<HelpOutlineBodySkeleton />}>
       <div className="help-outline">
         <HelpGuidesBar

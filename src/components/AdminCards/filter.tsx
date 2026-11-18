@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useId } from 'react';
+import { useFilterDraft, useSearchDraft } from '../FilterForm/use-filter-draft';
 import { ComboboxSelect } from '../Combobox/select';
 import { isoDay } from '../DateField/day';
 import DateRangeField from '../DateRangeField';
@@ -124,9 +125,8 @@ const StatusFilter = ({
 };
 
 const CardsFilterForm = ({ filter }: CardsFilterProps): ReactElement => {
-  const [draftBatch, setDraftBatch] = useState(filter.batch);
-  // Started from the filter shown; the tab keys this form by it, so a new list starts it again.
-  const [held, setHeld] = useState(() => heldOf(filter));
+  const [draftBatch, setDraftBatch] = useSearchDraft(filter.batch);
+  const [held, setHeld] = useFilterDraft(heldOf(filter));
   const apply = useApplyFilter();
   const changed = JSON.stringify(held) !== JSON.stringify(heldOf(filter));
   const hold = (patch: Partial<Held>) => setHeld({ ...held, ...patch });

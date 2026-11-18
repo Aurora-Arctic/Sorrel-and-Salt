@@ -1,4 +1,4 @@
-import { type ReactNode, Suspense, use, useState } from 'react';
+import { type ReactNode, Suspense, useState } from 'react';
 import { NavigationProvider } from '@/lib/navigation';
 import type { NavigatingProps } from './types';
 
@@ -8,8 +8,13 @@ import type { NavigatingProps } from './types';
 
 const never = new Promise<never>(() => undefined);
 
+const settled = new WeakSet<Promise<void>>();
+
 function Hang({ until }: { until: Promise<void> }): ReactNode {
-  use(until);
+  if (!settled.has(until)) {
+    void until.then(() => settled.add(until));
+    throw until;
+  }
   return null;
 }
 

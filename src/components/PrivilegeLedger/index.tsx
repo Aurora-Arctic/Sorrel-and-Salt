@@ -66,7 +66,7 @@ const PrivilegeLedger = ({
   position,
 }: PrivilegeLedgerProps): ReactElement => (
   <ListFrame className="privilege-ledger">
-    <LedgerFilterForm key={`${filter.query ?? ''}\n${filter.privilege ?? ''}`} filter={filter} />
+    <LedgerFilterForm key={filter.privilege ?? ''} filter={filter} />
 
     <ListBody skeleton={<PrivilegeLedgerBodySkeleton />}>
       <StackTable

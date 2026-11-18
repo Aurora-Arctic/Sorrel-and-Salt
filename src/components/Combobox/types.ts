@@ -71,6 +71,8 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   autoCapitalize?: AutoCapitalize;
   /** The label on a phone keyboard's Enter key. */
   enterKeyHint?: EnterKeyHint;
+  /** Marks the box as a search text box, which a filter row leaves typeable while its list loads. */
+  searchText?: boolean;
   required?: boolean;
   qualifier?: ComboboxQualifier;
   listAnchor?: HTMLElement | null;

@@ -39,13 +39,7 @@ const GroupedValueList = ({
     // The kind's modifier, so a rule one kind's rows need — the category
     // chip's padding — stays that kind's.
     <ListFrame className={`grouped-value-list--${kind}`}>
-      {/* Keyed by the filter shown, so another one starts the form again from it. */}
-      <GroupedValueListFilter
-        key={`${filter.query}\n${filter.group}`}
-        kind={kind}
-        filter={filter}
-        groups={groups}
-      />
+      <GroupedValueListFilter key={filter.group} kind={kind} filter={filter} groups={groups} />
 
       <ListBody skeleton={<GroupedValueListBodySkeleton kind={kind} />}>
         {/* A flat kind has no group column. Roomy for the categories alone,

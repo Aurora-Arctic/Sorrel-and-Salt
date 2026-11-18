@@ -1,6 +1,6 @@
 import 'server-only';
 import type { Session } from '../../../lib/session';
-import { assertMembership, byCovenName, liveMembershipsOf } from '@/modules/coven';
+import { assertMembership, covensByName, liveMembershipsOf } from '@/modules/coven';
 import type { HoldingCoven, IngredientRow } from '../types';
 import { heldCompendiumEntry, isRetired } from './cupboard-entries';
 
@@ -12,10 +12,9 @@ export async function covensOpeningEntry(
   session: Session,
   entry: Pick<IngredientRow, 'id' | 'workspaceId' | 'deletedAt'>,
 ): Promise<readonly HoldingCoven[]> {
-  const covens = (await liveMembershipsOf(session))
-    .map(({ workspace: { id, slug, name } }) => ({ id, slug, name }))
-    .filter(({ id }) => entry.workspaceId === null || id === entry.workspaceId)
-    .sort(byCovenName);
+  const covens = covensByName(await liveMembershipsOf(session)).filter(
+    ({ id }) => entry.workspaceId === null || id === entry.workspaceId,
+  );
   if (!isRetired(entry)) return covens;
   const held = await Promise.all(
     covens.map(async ({ id }) =>

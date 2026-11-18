@@ -2,7 +2,8 @@
 
 import { covenPath } from '@/lib/coven-path';
 import type { Route } from 'next';
-import { type ReactElement, useMemo, useState } from 'react';
+import { type ReactElement, useMemo } from 'react';
+import { useFilterDraft } from '../FilterForm/use-filter-draft';
 import { INGREDIENT_ELEMENTS } from '@/modules/ingredients/schema/ingredient-enums';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
 import type { SearchSentenceLabels } from '../IngredientSearch/types';
@@ -215,12 +216,7 @@ const CompendiumListFilterRow = ({
   // shown again whenever a new list arrives (Back, Apply, Clear All). The row is not drawn
   // afresh for a facet, so the open panel and the focus in it survive.
   const shown = panelOf(filter, coven, audience === 'admin');
-  const [panel, setPanel] = useState(shown);
-  const [seen, setSeen] = useState(JSON.stringify(shown));
-  if (seen !== JSON.stringify(shown)) {
-    setSeen(JSON.stringify(shown));
-    setPanel(shown);
-  }
+  const [panel, setPanel] = useFilterDraft(shown);
 
   return (
     <IngredientSearchForm
@@ -337,9 +333,7 @@ const CompendiumListFilterWithSentence = ({
   );
   return (
     <>
-      {/* Keyed by the name searched, so another one starts the box again from it. */}
       <CompendiumListFilterRow
-        key={filter.query}
         filter={filter}
         facets={facets}
         categories={categories}

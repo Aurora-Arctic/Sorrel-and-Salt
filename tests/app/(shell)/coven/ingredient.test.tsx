@@ -367,6 +367,21 @@ describe('the coven ingredient page’s plus', () => {
     expect(screen.getByRole('button', { name: /^In Every Cupboard: / })).toBeInTheDocument();
   });
 
+  // Regression: the check beside the pencil dropped the count of covens holding the entry, which the card's check carries.
+  it('counts and names the holding covens on the check, as the card does', async () => {
+    plusCovensOf.mockResolvedValue({
+      workspaceId: WORKSPACE.id,
+      covens: [{ id: WORKSPACE.id, name: WORKSPACE.name }],
+      heldIn: [WORKSPACE.id],
+      holding: [WORKSPACE.name, OTHER.name],
+    });
+    await open(compendiumRow());
+
+    expect(screen.getByRole('button', { name: /^In Every Cupboard: / })).toHaveAccessibleName(
+      new RegExp(`\\. In 2 covens: ${WORKSPACE.name}, ${OTHER.name}$`),
+    );
+  });
+
   it("asks nothing for the coven's own entry, which takes neither plus nor check", async () => {
     // Why it could have drawn one: a compendium entry given the same covens does (above).
     plusCovensOf.mockResolvedValue({

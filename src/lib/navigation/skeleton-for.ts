@@ -3,6 +3,7 @@ import { framed } from '../../components/SkeletonFrame';
 import { skeletons } from '../../app/skeletons';
 import { ADMIN_PAGES } from '../../components/AdminNav/sections';
 import { covenSlugOf } from '../coven-path';
+import { isPublicHelp } from './staff-help';
 import { matchRoute } from './route-match';
 
 /** Which body draws a page's skeleton: the shell's `main`, a coven's body, an admin area's body or the public help pages' body. */
@@ -10,17 +11,15 @@ export type SkeletonHost = 'main' | 'coven' | 'admin' | 'help';
 
 const pathOf = (href: string): string => href.split(/[?#]/)[0] ?? href;
 
+/** The words of the address's `q` parameter, decoded, or empty when it has none. */
+const queryWords = (href: string): string =>
+  new URLSearchParams(href.split('#')[0]?.split('?')[1] ?? '').get('q') ?? '';
+
 /** The area an admin address is in (`curator` or `keepers`); each area has its own layout and so its own host. */
 const adminAreaOf = (pathname: string): string | null => {
   const [, first] = pathname.split('/');
   return first === 'curator' || first === 'keepers' ? first : null;
 };
-
-/** A public help page: the help layout's header stands over it. The staff pages have a layout of their own. */
-const isPublicHelp = (pathname: string): boolean =>
-  (pathname === '/help' || pathname.startsWith('/help/')) &&
-  pathname !== '/help/staff' &&
-  !pathname.startsWith('/help/staff/');
 
 /** Pages whose content is their query, so a new query on the same page draws the page's skeleton again. */
 const QUERY_PAGES: ReadonlySet<string> = new Set(['/help/search']);
@@ -68,6 +67,7 @@ export function skeletonFor(
     { host: SkeletonHost; Skeleton: ComponentType } | undefined;
   if (!entry) return null;
   const standing = entry.host !== 'main' && hostStands(entry.host, pathname, destination);
-  if (body === 'main') return standing ? null : framed(entry.host, entry.Skeleton);
+  if (body === 'main')
+    return standing ? null : framed(entry.host, entry.Skeleton, queryWords(href));
   return entry.host === body && standing ? entry.Skeleton : null;
 }

@@ -248,6 +248,7 @@ const IngredientSearchBox = ({
       id={controlId}
       label={wording.label}
       name="query"
+      searchText
       value={text}
       onChange={onText}
       onFocus={() => setActive(true)}

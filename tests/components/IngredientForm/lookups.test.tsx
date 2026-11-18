@@ -152,7 +152,7 @@ describe('FormField', () => {
     expect(calls[1]).toEqual({ workspaceId: WORKSPACE_ID, query: 'wax', first: 10 });
   });
 
-  it('offers the vocabulary first, each with its group and who claims it, then forms in use', async () => {
+  it('offers the vocabulary first, each with its group and how many claim it, then forms in use', async () => {
     renderField();
     const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE, RHIZOMES]);
 
@@ -160,15 +160,38 @@ describe('FormField', () => {
 
     const curated = await screen.findByRole('group', { name: 'From Compendium' });
     expect(within(curated).getByRole('option', { name: /^Wax \(Animal\)/ })).toHaveTextContent(
-      'Testwort (Fixtura testalis)',
+      /\b1\b/,
     );
     expect(within(curated).getByRole('option', { name: /^Wax \(Substance\)/ })).toHaveTextContent(
       'Candle and poppet wax.',
     );
     const inUse = screen.getByRole('group', { name: 'From Coven' });
-    expect(within(inUse).getByRole('option', { name: /^Rhizomes/ })).toHaveTextContent('Mockleaf');
+    expect(within(inUse).getByRole('option', { name: /^Rhizomes/ })).toHaveTextContent(/\b1\b/);
     const rows = within(screen.getByRole('listbox', { name: 'Form suggestions' }));
     expect(rows.getAllByRole('option')[0]).toHaveAccessibleName(expect.stringContaining('wax'));
+  });
+
+  // Regression: the note named every ingredient using the form, so a form in wide use ran to a paragraph.
+  it('counts the ingredients that use a form in its note, naming none of them', async () => {
+    renderField();
+    const calls = offerForms([
+      {
+        ...WAX_ANIMAL,
+        claimants: [
+          { name: 'Testwort', canonicalName: 'Fixtura testalis' },
+          { name: 'Mockleaf', canonicalName: null },
+          { name: 'Fixturebloom', canonicalName: null },
+        ],
+      },
+    ]);
+
+    await lookUp('Form', calls, 'wax');
+
+    const option = await screen.findByRole('option', { name: /^Wax \(Animal\)/ });
+    expect(option).toHaveTextContent(/\b3\b/);
+    for (const name of ['Testwort', 'Fixtura testalis', 'Mockleaf', 'Fixturebloom']) {
+      expect(option).not.toHaveTextContent(name);
+    }
   });
 
   // The text alone reads the same for both Waxes; the group tells which was picked, and the id records it.
@@ -353,14 +376,15 @@ describe('LookupListField', () => {
     ]);
   });
 
-  it('suggests the folk names in use, with who claims them, and a pick adds an entry', async () => {
+  it('suggests the folk names in use, with how many claim them, and a pick adds an entry', async () => {
     renderList(FOLK_NAMES);
     const calls = offerNames([HEDGE]);
 
     await lookUp('Folk Name', calls, 'hedge');
 
     const option = await screen.findByRole('option', { name: /^Hedge Fixture/ });
-    expect(option).toHaveTextContent('Testwort (Fixtura testalis)');
+    expect(option).toHaveTextContent(/\b1\b/);
+    expect(option).not.toHaveTextContent('Testwort');
     // One bucket: there is no curated vocabulary of common names.
     expect(screen.queryByRole('group', { name: 'From Compendium' })).not.toBeInTheDocument();
     fireEvent.click(option);

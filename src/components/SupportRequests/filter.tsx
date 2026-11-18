@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
+import { useSearchDraft } from '../FilterForm/use-filter-draft';
 import { FilterSelectField } from '../Field/filter-select-field';
 import { SearchField } from '../Field/search-field';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
@@ -37,7 +38,7 @@ const SENDER_OPTIONS = [
 ];
 
 const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactElement => {
-  const [draftCode, setDraftCode] = useState(filter.errorCode);
+  const [draftCode, setDraftCode] = useSearchDraft(filter.errorCode);
   const apply = useApplyFilter();
   const code = draftCode.trim();
 

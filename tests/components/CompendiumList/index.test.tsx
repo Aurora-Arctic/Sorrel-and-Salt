@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useEffect } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { router } from '../../support/next-navigation';
@@ -22,6 +23,7 @@ import {
 import { waitFor } from '../../support/ingredient-form';
 import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
+import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { RouteModal, RouteModalProvider } from '@/components/Modal';
 import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
 import { rowCells } from '../../support/table';
@@ -397,8 +399,9 @@ describe('the list while a filter is on its way', () => {
       </Navigating>,
     );
     openPanel();
-    // The panel shuts as the navigation starts, so only the row's own controls are read after.
-    const controls = () => [nameBox(), screen.getByRole('button', { name: 'Search' })];
+    // The panel shuts as the navigation starts, so only the row's own controls are read after. The name
+    // box is left open to typing, so it is not among them.
+    const controls = () => [screen.getByRole('button', { name: 'Search' })];
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(row()).not.toHaveAttribute('aria-busy');
 
@@ -411,6 +414,7 @@ describe('the list while a filter is on its way', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(row()).toHaveAttribute('aria-busy', 'true');
     for (const control of controls()) expect(control).toHaveAttribute('aria-disabled', 'true');
+    expect(nameBox()).not.toHaveAttribute('aria-disabled', 'true');
 
     fireEvent.submit(row());
     expect(router.push).toHaveBeenCalledTimes(1);
@@ -422,6 +426,75 @@ describe('the list while a filter is on its way', () => {
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(row()).not.toHaveAttribute('aria-busy');
     expect(controls().filter((control) => control.hasAttribute('aria-disabled'))).toEqual([]);
+  });
+
+  it('takes typing in the name box while the name searched is on its way, and keeps it when that search arrives', async () => {
+    mockGraphQLQuery('IngredientSearchMatches', () => ({
+      compendium: { pageInfo: { hasNextPage: false }, edges: [] },
+    }));
+    let arrive = () => {};
+    const arrives = new Promise<void>((resolve) => {
+      arrive = resolve;
+    });
+    const page = (filter: CompendiumListFilter) => (
+      <Navigating push={router.push} arrives={arrives}>
+        <CompendiumList {...props({ filter })} />
+      </Navigating>
+    );
+    const user = userEvent.setup();
+    const { rerender } = render(page(NO_FILTER));
+    fireEvent.change(nameBox(), { target: { value: 'rose' } });
+    act(() => nameBox().focus());
+    await act(async () => {
+      fireEvent.submit(row());
+    });
+    // Precondition: the search was sent and its list is on its way.
+    expect(
+      new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams.get('query'),
+    ).toBe('rose');
+    expect(row()).toHaveAttribute('aria-busy', 'true');
+
+    await user.type(nameBox(), 'mary', {
+      skipClick: true,
+      initialSelectionStart: 'rose'.length,
+      initialSelectionEnd: 'rose'.length,
+    });
+    expect(nameBox()).toHaveValue('rosemary');
+
+    await act(async () => rerender(page({ ...NO_FILTER, query: 'rose' })));
+    await act(async () => arrive());
+
+    expect(row()).not.toHaveAttribute('aria-busy');
+    expect(nameBox()).toHaveValue('rosemary');
+  });
+
+  it('keeps the caret where a character is typed in the middle of the name while the name searched is on its way', async () => {
+    mockGraphQLQuery('IngredientSearchMatches', () => ({
+      compendium: { pageInfo: { hasNextPage: false }, edges: [] },
+    }));
+    const page = (
+      <Navigating push={router.push}>
+        <CompendiumList {...props()} />
+      </Navigating>
+    );
+    const user = userEvent.setup();
+    render(page);
+    fireEvent.change(nameBox(), { target: { value: 'rosemary' } });
+    act(() => nameBox().focus());
+    await act(async () => {
+      fireEvent.submit(row());
+    });
+    expect(row()).toHaveAttribute('aria-busy', 'true');
+
+    await user.type(nameBox(), 'X', {
+      skipClick: true,
+      initialSelectionStart: 4,
+      initialSelectionEnd: 4,
+    });
+
+    expect(nameBox()).toHaveValue('roseXmary');
+    expect((nameBox() as HTMLInputElement).selectionStart).toBe(5);
+    expect((nameBox() as HTMLInputElement).selectionEnd).toBe(5);
   });
 
   it('leaves the list in place while the name is typed in', () => {

@@ -22,5 +22,12 @@ export function SearchSubmit({
   );
 }
 
+/** Marks a search text box, which a filter row leaves typeable while its list loads (`FilterForm`). */
+export const SEARCH_TEXT_ATTRIBUTE = 'data-search-text';
+
 /** What every search input says about itself: a search box, and not a sign-in field, which 1Password documents this attribute to leave alone. */
-export const SEARCH_INPUT_ATTRIBUTES = { type: 'search', 'data-1p-ignore': true } as const;
+export const SEARCH_INPUT_ATTRIBUTES = {
+  type: 'search',
+  'data-1p-ignore': true,
+  [SEARCH_TEXT_ATTRIBUTE]: true,
+} as const;

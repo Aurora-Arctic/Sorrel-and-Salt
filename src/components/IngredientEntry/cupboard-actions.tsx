@@ -35,6 +35,7 @@ import type {
 const plusOfPlaces = (
   places: readonly CupboardPlace[],
   defaultWorkspaceId: string,
+  holding?: readonly string[],
 ): CupboardPlus | undefined => {
   const adders = placesFor.add(places);
   return adders.length > 0
@@ -42,6 +43,7 @@ const plusOfPlaces = (
         workspaceId: startOn(adders, defaultWorkspaceId),
         covens: adders.map(({ workspaceId, name }) => ({ id: workspaceId, name })),
         heldIn: adders.filter(({ held }) => held).map(({ workspaceId }) => workspaceId),
+        holding,
       }
     : undefined;
 };
@@ -68,7 +70,7 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
       opened,
       name: props.compendium.name,
       removedHref: undefined,
-      plus: plusOfPlaces(props.covens, props.defaultWorkspaceId),
+      plus: plusOfPlaces(props.covens, props.defaultWorkspaceId, props.holding),
     };
   }
   const { workspaceId, covenSlug, held, canAdd, canAnnotate, canRemove, canMakeOurs } = props;

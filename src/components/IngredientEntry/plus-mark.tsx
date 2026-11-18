@@ -21,6 +21,6 @@ export default function PlusMark({
   return plus.covens.some(({ id }) => !plus.heldIn.includes(id)) ? (
     <AddIcon {...plus} ingredientId={ingredientId} name={name} />
   ) : (
-    <HeldMark name={name} />
+    <HeldMark name={name} holding={plus.holding} />
   );
 }

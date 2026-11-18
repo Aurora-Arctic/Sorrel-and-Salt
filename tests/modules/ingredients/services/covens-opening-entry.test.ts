@@ -115,6 +115,26 @@ describe('covensOpeningEntry', () => {
     }
   });
 
+  // Regression: the demo coven sorted by name among the rest here, where the viewer’s own list puts it last.
+  it('names the demo coven last, as the viewer’s own list does', async () => {
+    await sql`update workspaces set demo = true where id = ${WORKSPACE_X_ID}`;
+    try {
+      // Why X could come first: its name sorts before W’s.
+      const names = await sql<{ id: string; name: string }[]>`
+        select id, name from workspaces where id in (${WORKSPACE_W_ID}, ${WORKSPACE_X_ID})`;
+      const nameOf = (id: string) => names.find((n) => n.id === id)!.name;
+      expect(nameOf(WORKSPACE_X_ID).localeCompare(nameOf(WORKSPACE_W_ID))).toBeLessThan(0);
+
+      const opening = await covensOpeningEntry(asUser(B), await row(live));
+      expect(opening.map(({ slug }) => slug)).toEqual([
+        await slugOf(WORKSPACE_W_ID),
+        await slugOf(WORKSPACE_X_ID),
+      ]);
+    } finally {
+      await sql`update workspaces set demo = false where id = ${WORKSPACE_X_ID}`;
+    }
+  });
+
   it('gives a keeper or a curator in no coven nothing', async () => {
     expect(await slugsFor(E, live)).toEqual([]);
     expect(await slugsFor(F, live)).toEqual([]);

@@ -428,6 +428,17 @@ describe('UserList filter', () => {
       },
     ],
     searched: '/keepers/users?query=Two+words&awaiting&role=admin&timed-out&paused',
+    searchedList: (
+      <UserList
+        {...props({
+          query: 'Two words',
+          role: 'admin',
+          awaitingApproval: true,
+          timedOut: true,
+          paused: true,
+        })}
+      />
+    ),
   };
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
