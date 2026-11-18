@@ -2,6 +2,8 @@
 @use '../../scss/mixins' as *;
 
 $account-menu-avatar: 2rem;
+// The window's edge either side (Floating UI's 8px) and the panel's 1px border.
+$panel-window-room: 18px;
 
 .account-menu {
   position: relative;
@@ -105,14 +107,12 @@ $account-menu-avatar: 2rem;
   @include chevron-flip("[aria-expanded='true'] >");
 }
 
+// Placed by Floating UI (index.tsx), so no wider than the window less its edges at any text size.
 .account-menu__panel {
   box-sizing: content-box;
-  position: absolute;
-  top: calc(100% + #{space(2)});
-  right: 0;
   z-index: layer('floating');
-  min-width: max(#{$panel-min-width}, 100%);
-  max-width: max(#{$panel-max-width}, 100%);
+  min-width: min(#{$panel-min-width}, 100vw - #{$panel-window-room});
+  max-width: min(#{$panel-max-width}, 100vw - #{$panel-window-room});
   @include floating-panel;
   @include list-reset;
   // The fade, as the section nav's More sheet does it: `hidden` is display none,
@@ -266,22 +266,46 @@ $account-menu-avatar: 2rem;
   border-radius: 0 0 calc(#{radius('surface')} - 1px) calc(#{radius('surface')} - 1px);
 }
 
-@include tablet-down {
-  .account-menu__button {
+// The avatar alone: at a tablet's width, and wherever the bar has no room for the name (`--compact`).
+@mixin avatar-only($scope) {
+  #{$scope} .account-menu__button {
     justify-content: center;
     width: $control-height;
     padding: 0;
   }
 
-  .account-menu__name {
+  #{$scope} .account-menu__name {
     @include visually-hidden;
   }
 
-  .account-menu__chevron {
+  #{$scope} .account-menu__chevron {
     display: none;
   }
+}
+
+@include tablet-down {
+  @include avatar-only('');
 
   .account-menu__link {
     display: block;
+  }
+}
+
+@include avatar-only('.account-menu--compact');
+
+// A control folded in from the bar leads the panel, set off from the account's own rows by a hairline below it.
+.account-menu__lead {
+  border-bottom: $hairline-border;
+
+  > .account-menu__item {
+    gap: space(2);
+    font-weight: 500;
+  }
+
+  svg {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    color: $accent;
   }
 }

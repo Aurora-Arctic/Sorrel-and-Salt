@@ -125,7 +125,7 @@
 .section-nav {
   flex: 1 1 0;
   // One tab and More at a doubled text size: under it the context row wraps the nav onto its own line.
-  min-width: 16rem;
+  min-width: min(16rem, 100%);
 }
 
 // Before the script has fitted the row, whatever outruns it is clipped rather than scrolled.

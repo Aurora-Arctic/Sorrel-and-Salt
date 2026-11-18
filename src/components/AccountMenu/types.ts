@@ -14,6 +14,8 @@ export interface AccountMenuProps {
   assignedSupport?: number;
   waitingSupport?: number;
   lead?: AccountMenuLead;
+  /** The avatar alone, the name kept for a screen reader: the bar has no room for the name. */
+  compact?: boolean;
 }
 
 /** A control the bar has no room for, shown as the panel's first item (claude-docs/components/account-menu.md). */

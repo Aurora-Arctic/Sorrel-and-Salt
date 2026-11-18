@@ -1,4 +1,6 @@
 @use '../../scss/frame-bar' as *;
+@use '../../scss/mixins' as *;
+@use '../../scss/variables' as *;
 
 // Same measurements as the shell's bar, so a signed-in visitor meets the same bar (claude-docs/components/public-frame.md).
 
@@ -8,4 +10,20 @@
 // does not take: the links stay in the bar (the shell moves them into the account panel).
 .public-frame .app-shell__nav {
   display: block;
+}
+
+// A phone's bar holds the brand, the nav, Sign In and the disc on one line only with the spacing drawn in a step
+// (claude-docs/components/public-frame.md, "Styling"). Sign In keeps a 24px hit area.
+@include phone-down {
+  .public-frame .app-shell__nav a {
+    padding-inline: space(1);
+  }
+
+  .public-frame__end {
+    gap: space(1);
+  }
+
+  .public-frame__end > .btn {
+    padding-inline: space(2);
+  }
 }

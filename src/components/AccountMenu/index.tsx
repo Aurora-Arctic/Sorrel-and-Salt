@@ -1,7 +1,9 @@
 'use client';
 
 import { type ReactElement, useId, useRef, useState } from 'react';
+import { cx } from '../../lib/class-names';
 import { useDismiss } from '../../lib/use-dismiss';
+import { useListPosition } from '../Combobox/position';
 import { ChevronIcon } from '../IconTip/icons';
 import { accountCounts, countText } from './counts';
 import { initialsOf } from './initials';
@@ -13,6 +15,8 @@ import './index.scss';
 // when there are any, Help, Support and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
 // roving and a typeahead this lacks (claude-docs/components/account-menu.md).
 
+const PANEL_GAP_PX = 8;
+
 const AccountMenu = ({
   name,
   verified,
@@ -20,6 +24,8 @@ const AccountMenu = ({
   pendingInvitations = 0,
   assignedSupport = 0,
   waitingSupport = 0,
+  lead,
+  compact = false,
 }: AccountMenuProps): ReactElement => {
   const [open, setOpen] = useState(false);
   const { pending, staffCount, senderCount, invitations } = accountCounts({
@@ -41,6 +47,13 @@ const AccountMenu = ({
   const panelId = useId();
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
+  // Beneath the button, its right edge on the button's, and moved in where that would put it past the window: at a
+  // large text size the panel is wider than the room left of the button.
+  const { setControl, setList, listStyle } = useListPosition(open, undefined, {
+    matchWidth: false,
+    placement: 'bottom-end',
+    gap: PANEL_GAP_PX,
+  });
 
   const close = (): void => setOpen(false);
 
@@ -60,9 +73,12 @@ const AccountMenu = ({
   });
 
   return (
-    <div ref={root} className="account-menu">
+    <div ref={root} className={cx('account-menu', compact && 'account-menu--compact')}>
       <button
-        ref={button}
+        ref={(node) => {
+          button.current = node;
+          setControl(node);
+        }}
         type="button"
         className="account-menu__button"
         aria-expanded={open}
@@ -81,7 +97,31 @@ const AccountMenu = ({
         <ChevronIcon className="account-menu__chevron" />
       </button>
       {/* Always mounted and hidden when shut, so it can fade (the stylesheet). */}
-      <ul id={panelId} className="account-menu__panel" hidden={!open}>
+      <ul
+        ref={setList}
+        id={panelId}
+        className="account-menu__panel"
+        hidden={!open}
+        style={listStyle}
+      >
+        {/* A control the bar had no room for. The focus goes to the account button before its action runs, so a
+            dialog it opens gives the focus back there, the item having gone with the panel. */}
+        {lead && (
+          <li className="account-menu__lead">
+            <button
+              type="button"
+              className="account-menu__item"
+              onClick={() => {
+                close();
+                button.current?.focus();
+                lead.onSelect();
+              }}
+            >
+              {lead.icon}
+              {lead.label}
+            </button>
+          </li>
+        )}
         <Panel
           verified={verified}
           links={links}

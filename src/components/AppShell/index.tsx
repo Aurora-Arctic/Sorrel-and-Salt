@@ -1,21 +1,18 @@
 import { PendingLink } from '../../lib/navigation';
 import type { ReactElement } from 'react';
 import { covenHome } from '../../lib/shell-home';
-import AccountMenu from '../AccountMenu';
-import ThemeToggle from '../ThemeToggle';
 import { ViewerIdProvider } from '../../lib/viewer-id';
-import AddIngredientButton from './add-ingredient-button';
 import BrandName from './brand-name';
 import { COMPENDIUM_LINK } from './compendium-link';
 import MainBody from './main-body';
-import NewSpellElsewhere from './new-spell-elsewhere';
 import PausedNotice from './paused-notice';
+import ShellEnd from './shell-end';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
 import './index.scss';
 
 // The frame around every signed-in page: a skip link, the global bar and the page. The layouts render
-// the context row, as only they know the area. A server component: only the account menu and the
+// the context row, as only they know the area. A server component: only the bar's end block and the
 // current-page marking are client code (claude-docs/components/app-shell.md).
 
 const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
@@ -50,23 +47,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
             {brand}
           </PendingLink>
           <SiteNav links={links} />
-          <div className="app-shell__end">
-            {/* The shell’s one global action; its target follows the area (add-ingredient-button.tsx). */}
-            <AddIngredientButton viewer={viewer} workspaces={workspaces} />
-            <NewSpellElsewhere />
-            <AccountMenu
-              name={viewer.name}
-              verified={viewer.verified}
-              links={links}
-              pendingInvitations={viewer.pendingInvitations}
-              assignedSupport={viewer.assignedSupport}
-              waitingSupport={viewer.waitingSupport}
-            />
-            {/* In the bar at every width. */}
-            <span className="app-shell__theme">
-              <ThemeToggle variant="inline" />
-            </span>
-          </div>
+          <ShellEnd viewer={viewer} workspaces={workspaces} links={links} />
         </div>
       </header>
       {/* The skip link's target: an empty span just before the page, which owns

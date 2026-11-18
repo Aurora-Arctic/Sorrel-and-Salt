@@ -9,7 +9,8 @@ $switcher-min-width: 12rem;
 // The coven's name as the context row's lead: the name in the display face with a chevron inside a hairline, so the
 // name is the control. The Combobox's select is restyled from here; `.input.combobox__control` is outweighed by one more class.
 .workspace-switcher {
-  min-width: $switcher-min-width;
+  // Never wider than the row, which a large text size in a phone's window would make it.
+  min-width: min(#{$switcher-min-width}, 100%);
   max-width: 100%;
 
   @include phone-down {

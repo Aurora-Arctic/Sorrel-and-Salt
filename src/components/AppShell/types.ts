@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import type { Route } from 'next';
 import type { ShellViewer, ShellWorkspace } from '../../lib/types';
 
@@ -20,9 +20,25 @@ export interface SiteNavProps {
   links: readonly SiteLink[];
 }
 
+/** How the bar has room to show Add Ingredient: its label, a plus, or nothing, folded into the account panel. */
+export type AddIngredientForm = 'label' | 'plus' | 'folded';
+
+/** What the account panel's folded item calls: the button's main action. */
+export interface AddIngredientHandle {
+  add: () => void;
+}
+
 export interface AddIngredientButtonProps {
   viewer: ShellViewer;
   workspaces: readonly ShellWorkspace[];
+  form?: AddIngredientForm;
+  handle?: Ref<AddIngredientHandle>;
+}
+
+export interface ShellEndProps {
+  viewer: ShellViewer;
+  workspaces: readonly ShellWorkspace[];
+  links: readonly SiteLink[];
 }
 
 export type AddDestination =

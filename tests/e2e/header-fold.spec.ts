@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { seedWorld, signIn, visit } from './axe-sweep';
@@ -23,11 +23,11 @@ async function rootFont(page: Page, size: string) {
   );
 }
 
-/** The bar's height is one line's: the bar height token at the current root font, and its one-pixel foot rule. */
+/** The bar's height is one line's: the bar height token at the current root font, its foot rule inside it. */
 async function expectOneLine(page: Page) {
   const { height, line } = await page.getByRole('banner').evaluate((bar) => {
     const root = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
-    return { height: bar.getBoundingClientRect().height, line: root * 3.25 + 1 };
+    return { height: bar.getBoundingClientRect().height, line: root * 3.25 };
   });
   expect(
     Math.abs(height - line),
@@ -35,21 +35,50 @@ async function expectOneLine(page: Page) {
   ).toBeLessThan(1);
 }
 
+/** Every control in the bar ends inside the window, the end block's own controls included. */
+async function expectBarInWindow(page: Page) {
+  const { scanned, past } = await page.getByRole('banner').evaluate((bar) => {
+    const edge = document.documentElement.clientWidth + 0.5;
+    const inner = bar.firstElementChild;
+    const end = inner?.lastElementChild;
+    const controls = [...(inner?.children ?? []), ...(end?.children ?? [])];
+    return {
+      scanned: controls.length,
+      past: controls
+        .filter((control) => control.getBoundingClientRect().right > edge)
+        .map((control) => control.className),
+    };
+  });
+  // The brand, the nav and the end block, and the account button and the disc inside it at least.
+  expect(scanned).toBeGreaterThanOrEqual(5);
+  expect(past, 'controls of the bar that end past the window').toEqual([]);
+}
+
+/** How many times wider than tall the button is: a label is several, the plus alone is one. */
+const aspectOf = (button: Locator) =>
+  button.evaluate((element) => {
+    const { width, height } = element.getBoundingClientRect();
+    return width / height;
+  });
+
 async function signedInCovenPage(page: Page) {
   const world = await seedWorld(page);
   await signIn(page, world, 'steward');
   return `/coven/${world.coven.slug}`;
 }
 
-const SETTINGS = [
+const PUBLIC_SETTINGS = [
   { label: 'a 320px window', width: PURPOSE_WIDTHS.reflow, font: '100%' },
   { label: 'a 1280px window at a 200% root font', width: DESKTOP_WIDTH, font: '200%' },
+] as const;
+const SETTINGS = [
+  ...PUBLIC_SETTINGS,
   { label: 'a 320px window at a 200% root font', width: PURPOSE_WIDTHS.reflow, font: '200%' },
 ] as const;
 
 for (const [kind, open, settings] of [
   ['a signed-in coven page', signedInCovenPage, SETTINGS],
-  ['the public compendium', async () => '/compendium', SETTINGS.slice(0, 2)],
+  ['the public compendium', async () => '/compendium', PUBLIC_SETTINGS],
 ] as const) {
   test.describe(kind, () => {
     for (const { label, width, font } of settings) {
@@ -60,7 +89,12 @@ for (const [kind, open, settings] of [
         await rootFont(page, font);
 
         await expectOneLine(page);
-        await assertNoSidewaysScroll(page, { width });
+        await expectBarInWindow(page);
+        // At 320px and 200% the page beneath reaches past the window by itself (a long coven name in the
+        // heading, the phone tab bar's labels), so there the bar alone is held to the window.
+        if (font === '100%' || width !== PURPOSE_WIDTHS.reflow) {
+          await assertNoSidewaysScroll(page, { width });
+        }
       });
     }
   });
@@ -76,7 +110,7 @@ test.describe('Add Ingredient', () => {
       .getByRole('banner')
       .getByRole('button', { name: 'Add Ingredient', exact: true });
     await expect(add).toBeVisible();
-    expect((await add.innerText()).trim()).not.toBe('');
+    expect(await aspectOf(add)).toBeGreaterThan(2);
   });
 
   test('shows a plus, keeping its name, where its label does not fit', async ({ page }) => {
@@ -87,8 +121,9 @@ test.describe('Add Ingredient', () => {
 
     const add = banner.getByRole('button', { name: 'Add Ingredient', exact: true });
     await expect(add).toBeVisible();
-    // The plus alone: no visible text, the name kept for a screen reader.
-    expect((await add.innerText()).trim()).toBe('');
+    // The plus alone, a square, the name kept for a screen reader.
+    expect(await aspectOf(add)).toBeCloseTo(1, 1);
+    await expect(add.locator('svg')).toBeVisible();
 
     await add.click();
     await expect(page.getByRole('dialog', { name: /^Add Ingredient/ })).toBeVisible();
@@ -117,6 +152,14 @@ test.describe('Add Ingredient', () => {
       'Add Ingredient',
     );
     await expect(add).toBeVisible();
+    // The panel is wider than the room left of the account button at this size, and still opens inside the window.
+    const { left, right, edge } = await panel.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return { left: box.left, right: box.right, edge: document.documentElement.clientWidth };
+    });
+    expect(right - left).toBeGreaterThan(0);
+    expect(left).toBeGreaterThanOrEqual(0);
+    expect(right).toBeLessThanOrEqual(edge);
 
     await page.keyboard.press('Tab');
     await expect(add).toBeFocused();

@@ -3,7 +3,7 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import type { Route } from 'next';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { type ReactElement, Suspense, useRef, useState } from 'react';
+import { type ReactElement, Suspense, useImperativeHandle, useRef, useState } from 'react';
 import { isAtPath } from '../../lib/at-path';
 import { covenSlugOf, covenPath } from '../../lib/coven-path';
 import { sectionsFor } from '../MenuButton/sections';
@@ -19,6 +19,7 @@ import { ADD_INGREDIENT_TITLE, NEW, askedCoven, closedHref, openHref } from './a
 import AddIngredientMenu from './add-ingredient-menu';
 import type { AddDestination, AddIngredientButtonProps } from './types';
 import { compendiumEntryPath } from '@/lib/compendium-path';
+import { PlusIcon } from '../IconTip/icons';
 
 // The form's code loads the first time the dialog opens; the dialog's frame draws first.
 const loadForm = () => import('../IngredientForm');
@@ -29,6 +30,7 @@ const loadForm = () => import('../IngredientForm');
 
 const CLASSES = 'btn btn--solid btn--medium app-shell__add';
 const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
+const PLUS_CLASSES = `${CLASSES} app-shell__add--plus`;
 
 /** True on the curator and keepers pages, where the add button files into the compendium. */
 function onCuratedPage(pathname: string): boolean {
@@ -123,9 +125,19 @@ function destinationsOf(
   };
 }
 
+/** The viewer has somewhere to add an ingredient, so the bar offers Add Ingredient. */
+export function addsIngredient(
+  viewer: AddIngredientButtonProps['viewer'],
+  workspaces: AddIngredientButtonProps['workspaces'],
+): boolean {
+  return viewer.verified && destinationsOf(viewer, workspaces, '').initial !== undefined;
+}
+
 const AddIngredientButton = ({
   viewer,
   workspaces,
+  form: shape = 'label',
+  handle,
 }: AddIngredientButtonProps): ReactElement | null => {
   const pathname = usePathname();
   const params = useSearchParams();
@@ -165,9 +177,6 @@ const AddIngredientButton = ({
   const adding = asking ?? created;
   const form = useLazyModule(loadForm, adding !== null);
 
-  if (!viewer.verified) return null;
-  if (!initial) return null;
-
   const go = (destination: AddDestination): void => {
     // The compendium's dialog is the admin page's own, drawn for a direct
     // request: the route-modal provider that would open it at once sits below
@@ -197,17 +206,36 @@ const AddIngredientButton = ({
     }
   };
 
+  useImperativeHandle(handle, () => ({ add: () => initial && go(initial) }));
+
+  if (!viewer.verified) return null;
+  if (!initial) return null;
+
   return (
     <>
       {saved && <output className="app-shell__saved">{saved}</output>}
-      <span className="app-shell__add-group">
-        <button ref={main} type="button" className={CLASSES} onClick={() => go(initial)}>
-          {ADD_INGREDIENT_TITLE}
-        </button>
-        {all.length > 1 && (
-          <AddIngredientMenu sections={sections} className={MORE_CLASSES} onChoose={go} />
-        )}
-      </span>
+      {shape !== 'folded' && (
+        <span className="app-shell__add-group">
+          <button
+            ref={main}
+            type="button"
+            className={shape === 'plus' ? PLUS_CLASSES : CLASSES}
+            onClick={() => go(initial)}
+          >
+            {shape === 'plus' ? (
+              <>
+                <PlusIcon />
+                <span className="visually-hidden">{ADD_INGREDIENT_TITLE}</span>
+              </>
+            ) : (
+              ADD_INGREDIENT_TITLE
+            )}
+          </button>
+          {all.length > 1 && (
+            <AddIngredientMenu sections={sections} className={MORE_CLASSES} onChoose={go} />
+          )}
+        </span>
+      )}
       {adding && (
         <Modal
           // Another coven's address is another form.
@@ -217,7 +245,7 @@ const AddIngredientButton = ({
           onClose={close}
           loading={!form}
           // Focus returns to the bar's main part: the menu item that opened this goes with the
-          // menu.
+          // menu. Folded, there is no main part; the account panel's item focuses the account button first.
           returnTo={() => main.current}
         >
           {(done) => (
