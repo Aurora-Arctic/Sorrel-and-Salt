@@ -4,7 +4,7 @@ import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 import { insertSpell, insertStep, localIngredient, seedCoven, withSql } from './coven-ingredients';
-import { BAND_WIDTHS, DESKTOP_WIDTH, PHONE_WIDTH } from '../breakpoints';
+import { BAND_WIDTHS, DESKTOP_WIDTH, PHONE_TOUCH, PHONE_WIDTH } from '../breakpoints';
 import { requiredDelay, settledBox } from '../waits';
 import { makeVariant } from '../../support/fixtures/ingredient';
 import { curatedDeityId } from '../../support/db/curated-ids';
@@ -554,7 +554,7 @@ test(
 );
 
 test.describe('on a touch phone', () => {
-  test.use({ viewport: { width: PHONE_WIDTH, height: 844 }, hasTouch: true, isMobile: true });
+  test.use(PHONE_TOUCH);
 
   test(
     'a tap on a correspondence value opens its tip and leaves it open',

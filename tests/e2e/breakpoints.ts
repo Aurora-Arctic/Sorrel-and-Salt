@@ -54,3 +54,10 @@ export const PURPOSE_WIDTHS = {
   // Screenshot size: the help articles' pictures are captured at this width, so the product images depend on it.
   helpScreenshot: 1024,
 };
+
+// A touch phone, for `test.use`: a tap, not a click, so a tip opened by touch is tested as a phone opens it.
+export const PHONE_TOUCH = {
+  viewport: { width: PHONE_WIDTH, height: 844 },
+  hasTouch: true,
+  isMobile: true,
+};
