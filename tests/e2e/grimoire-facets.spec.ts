@@ -4,7 +4,7 @@ import { recreateE2eDatabase } from './database';
 import { assertNoSidewaysScroll } from './axe';
 import { signInAgainAs } from './session';
 import { insertSpell, openFilters, seedCoven, withSql } from './stories/coven-ingredients';
-import { PHONE_WIDTH } from './breakpoints';
+import { DESKTOP_WIDTH, PHONE_WIDTH } from './breakpoints';
 
 // The grimoire's Moon Phases, Days of the Week, Visibility and Coven Members facets and its Compact switch: the GET
 // form filters by address before hydration, the maker is read as created_by, and a hidden spell's phase is
@@ -208,7 +208,7 @@ test('at 375px the page behind the open Filters sheet does not scroll, and scrol
 test('at the desktop width the page still scrolls while the Filters panel is open', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 500 });
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 500 });
   const coven = await seedLongGrimoire(page, 'Fixture Coven Wide', 'grimoire-wide.test');
   await page.goto(`/coven/${coven.slug}/grimoire`);
   await openFilters(page);
