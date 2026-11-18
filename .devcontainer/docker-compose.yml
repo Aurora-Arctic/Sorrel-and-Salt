@@ -148,8 +148,11 @@ services:
   # The graph's pages for a browser: http://localhost:8090/graph.html (the
   # interactive graph) and /GRAPH_REPORT.md. Published on the host's loopback
   # only, so nothing else on the network can open it.
+  # This and `graphify-views` are in the `graph-pages` profile, so they start
+  # only when asked for (claude-docs/docker.md); nothing else depends on them.
   graphify-web:
     image: sorrel-graphify
+    profiles: ['graph-pages']
     init: true
     cpus: 0.25
     mem_limit: 128m
@@ -168,9 +171,11 @@ services:
   # The tree goes to a temporary file first so the page never serves half a
   # copy. The MCP server reads only the full graph.json, which this leaves alone.
   # Each version of graph.json is tried once, so a failing view logs once
-  # instead of rerunning every 10 seconds.
+  # instead of rerunning every 10 seconds. The first check after a start
+  # always rebuilds, so views left stale while it was stopped catch up.
   graphify-views:
     image: sorrel-graphify
+    profiles: ['graph-pages']
     init: true
     cpus: 1
     mem_limit: 1g

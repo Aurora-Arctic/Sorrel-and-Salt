@@ -1,6 +1,6 @@
 # graphify: a code graph of this repo, served to Claude Code over MCP.
 # .devcontainer/docker-compose.yml runs it as four services: `graphify-watch`
-# rebuilds the graph, `graphify` serves it, and `graphify-web` and
+# rebuilds the graph, `graphify` serves it, and, when asked for, `graphify-web` and
 # `graphify-views` serve and rebuild its pages. claude-docs/docker.md is the
 # walkthrough.
 #
