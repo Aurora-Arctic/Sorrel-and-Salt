@@ -469,6 +469,19 @@ describe("the side column's Correspondences", () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent(/^Testroot \(Testform\)$/);
   });
 
+  it('describes each value by its tip, for a screen reader, while the tip is closed', () => {
+    drawn(ROWS);
+    const blue = within(screen.getByRole('region', { name: 'Correspondences' })).getByRole(
+      'button',
+      { name: 'Blue' },
+    );
+
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(blue).toHaveAccessibleDescription(
+      'Testroot (Testform), Testbark (Testform), and Fixture Moss (Dried Leaf)',
+    );
+  });
+
   describe('in the jump menu', () => {
     const linksOf = () =>
       within(screen.getByRole('navigation', { name: 'On This Page' })).getAllByRole('link');
