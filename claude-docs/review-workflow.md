@@ -190,7 +190,7 @@ The agent must not review, approve, or summarise the change as "fine". It only s
 
 **What it is for.** To record what you found, and send it to the coding agent once per layer, because each send uses Claude usage.
 
-**By hand.** Run `/plannotator-review` in Claude Code. Plannotator is a browser page for writing line notes on a diff; it opens on the host at port 19432. Write each note with a file and line. Send the notes to the coding agent in one message. A good result: every note names a file and line, and says what you want changed. Review output goes to `.review/`, which git ignores. You can also write the notes as review comments on GitHub, or in a file of your own.
+**By hand.** Run `/plannotator-review` in Claude Code. Plannotator is a browser page for writing line notes on a diff; it opens on the host at port 19432. Write each note with a file and line. Send the notes to the coding agent in one message. A good result: every note names a file and line, and says what you want changed. You can also write the notes as review comments on GitHub, or in a file of your own.
 
 **With an agent.** Paste:
 
