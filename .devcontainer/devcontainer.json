@@ -17,6 +17,8 @@
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
   "postCreateCommand": "sudo apk add --no-cache github-cli && { gh extension install github/gh-stack || echo 'gh-stack was not installed; run: gh extension install github/gh-stack'; }",
+  // Starts the Plannotator Inbox with the container, so agents can post to it from the first session.
+  "postStartCommand": "plannotator inbox --background --no-open || echo 'The Plannotator Inbox did not start; run: plannotator inbox --background --no-open'",
   "forwardPorts": [
     8000, 8001, 4983, 3456, 9229, 9230, 9231, 9323, 9324, 51204, 7900, 19432, 19433, 19434, 19435,
     19436, 43501

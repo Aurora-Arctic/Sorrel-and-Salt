@@ -230,7 +230,7 @@ What an agent does without being asked, in any task, not only in a review:
 | It is told to open something for review                                                   | Opens it in Plannotator: a diff with `plannotator review --base <ref>`, a document with `plannotator annotate <file>`.                                                                                                            |
 | It wants the shape of a change before reading it                                          | Runs `BASE=<ref> npm run review:affected` and reads `.review/affected.md` (step 5), and `git dft <ref>...HEAD` for the diff itself (step 7).                                                                                      |
 
-The agent never starts a guide, Ask AI, or a Review Agent in Plannotator: those spend usage on the reviewer's behalf, and only the reviewer presses them. The Inbox is at `http://localhost:43501` on the host; `/plannotator-inbox` starts it and prints its address (`claude-docs/commands.md`, "The local review").
+The agent never starts a guide, Ask AI, or a Review Agent in Plannotator: those spend usage on the reviewer's behalf, and only the reviewer presses them. The Inbox is at `http://localhost:43501` on the host; it starts with the container, and `/plannotator-inbox` starts it again and prints its address if it has stopped (`claude-docs/commands.md`, "The local review").
 
 ## Walking through it with an agent
 
