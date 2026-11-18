@@ -25,6 +25,12 @@ import {
 import { router } from '../../support/next-navigation';
 import { renderWithQuery } from '../../support/render-with-query';
 import { expectBefore, isBefore, press } from '../../support/interact';
+import {
+  deitiesRow,
+  expectNamedDeityCard,
+  NAMED_DEITY,
+  namedDeityButton,
+} from '../../support/deity-card';
 
 vi.mock('@/components/IngredientForm', () => ({
   default: ({
@@ -472,19 +478,6 @@ describe('IngredientEntry', () => {
   );
 
   describe("a deity's card", () => {
-    const FIXTURA = {
-      name: 'Fixtura',
-      tradition: 'Fixture Pantheon',
-      otherNames: ['Fixtra', 'Testura'],
-    };
-    const deitiesOf = () => {
-      const term = screen.getAllByRole('term').find((found) => found.textContent === 'Deities')!;
-      const definition = term.nextElementSibling as HTMLElement;
-      expect(definition).toHaveRole('definition');
-      return definition;
-    };
-    const fixturaButton = () => screen.getByRole('button', { name: 'Fixtura (Fixture Pantheon)' });
-
     it('draws a deity with no other names, and every value of the other four rows, as plain text with no control and no tip, since one ingredient is its only source', () => {
       renderEntry({
         detail: detail({
@@ -506,34 +499,21 @@ describe('IngredientEntry', () => {
       }
       // The row's one control is the deity with other names, so Testis is plain by its own lack of them.
       expect(
-        within(deitiesOf())
+        within(deitiesRow())
           .getAllByRole('button')
           .map((button) => button.textContent),
       ).toEqual(['Mockis']);
-      expect(deitiesOf()).toHaveTextContent(/Testis \(Fixture Pantheon\)/);
+      expect(deitiesRow()).toHaveTextContent(/Testis \(Fixture Pantheon\)/);
     });
 
     it('opens, for a deity with other names, a card of its tradition, its name and each other name under Also Called, with no Given By', () => {
-      renderEntry({ detail: detail({ deities: [FIXTURA] }) });
-      // The exact name: the other names are in the card, not the row.
-      const fixtura = fixturaButton();
-      expect(screen.queryByRole('tooltip')).toBeNull();
-
-      act(() => fixtura.focus());
-
-      const tip = screen.getByRole('tooltip');
-      expectBefore(within(tip).getByText('Fixture Pantheon'), within(tip).getByText('Fixtura'));
-      expect(
-        within(within(tip).getByRole('list', { name: 'Also Called' }))
-          .getAllByRole('listitem')
-          .map((item) => item.textContent),
-      ).toEqual(['Fixtra', 'Testura']);
-      expect(within(tip).queryByRole('list', { name: 'Given By' })).toBeNull();
+      renderEntry({ detail: detail({ deities: [NAMED_DEITY] }) });
+      expectNamedDeityCard();
     });
 
     it('describes the deity by its closed card, for a screen reader', () => {
-      renderEntry({ detail: detail({ deities: [FIXTURA] }) });
-      const fixtura = fixturaButton();
+      renderEntry({ detail: detail({ deities: [NAMED_DEITY] }) });
+      const fixtura = namedDeityButton();
 
       expect(screen.queryByRole('tooltip')).toBeNull();
       for (const part of ['Fixture Pantheon', 'Fixtra', 'Testura']) {
@@ -542,8 +522,8 @@ describe('IngredientEntry', () => {
     });
 
     it('keeps the card open after a press, and closes it on a second press, a press outside, Escape or leaving the control', () => {
-      renderEntry({ detail: detail({ deities: [FIXTURA] }) });
-      const fixtura = fixturaButton();
+      renderEntry({ detail: detail({ deities: [NAMED_DEITY] }) });
+      const fixtura = namedDeityButton();
       const open = () => {
         press(fixtura);
         expect(screen.getByRole('tooltip')).toBeInTheDocument();
