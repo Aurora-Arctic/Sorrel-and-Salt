@@ -15,13 +15,13 @@ import type { UserRow } from '../types';
 // the service writes no ledger row. Rules: claude-docs/design-decisions/auth.md, "Granting and revoking admin" and design-decisions/auth.md, "A third site role, `curator`";
 // shape: claude-docs/auth/admin-users.md, "Changing a site role".
 
-const REFUSAL = 'Only a site keeper may change a site role';
+const REFUSAL = 'Only a site Keeper may change a site role';
 
-/** A site role with its article, for a sentence: 'an admin'. */
+/** A site role with its article, for a sentence: 'a Keeper'. */
 export const ROLE_NOUNS: Record<UserRole, string> = {
   user: 'a user',
-  curator: 'a curator',
-  admin: 'an admin',
+  curator: 'a Curator',
+  admin: 'a Keeper',
 };
 
 /** Sets the creation flag too, since the users CHECK refuses a curator or a keeper without it. */
@@ -63,11 +63,11 @@ async function writeRole(
     // Read again under the lock: a revoke that committed while this one
     // waited has already taken its row out.
     const target = keepers.find((row) => row.id === user.id);
-    if (!target) throw new Forbidden(`${user.name} is not a keeper, so there is nothing to revoke`);
+    if (!target) throw new Forbidden(`${user.name} is not a Keeper, so there is nothing to revoke`);
     if (isPrimaryAdmin(target)) throw new Forbidden(PRIMARY_ADMIN_REFUSAL);
     if (keepers.length === 1) {
       throw new Forbidden(
-        `${user.name} is the last keeper, and the site needs one. Make someone else a keeper first.`,
+        `${user.name} is the last Keeper, and the site needs one. Make someone else a Keeper first.`,
       );
     }
   }

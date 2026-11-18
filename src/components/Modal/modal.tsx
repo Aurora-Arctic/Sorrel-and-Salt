@@ -18,6 +18,7 @@ import { firstShownField } from './fields';
 import { useOnTurnedOn } from './use-on-turned-on';
 import { pageHeading } from './page-heading';
 import { holdPage } from './page-hold';
+import CloseButton from '../CloseButton';
 import { HeaderNoteContext, HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
@@ -258,11 +259,7 @@ const Modal = ({
       )}
     </h2>
   );
-  const closeButton = (
-    <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
-      <span aria-hidden="true">×</span>
-    </button>
-  );
+  const closeButton = <CloseButton className="modal-dialog__close" onClick={request} />;
 
   // The backdrop's click is the pointer's alone; Escape is its keyboard equivalent, handled above.
   // oxlint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
@@ -312,7 +309,7 @@ const Modal = ({
             </p>
           )}
           {destination && !eyebrow && (
-            <p id={eyebrowId} className="eyebrow">
+            <p id={eyebrowId} className="eyebrow modal-dialog__destination">
               <span className="spoken-separator">to</span> {destination}
             </p>
           )}

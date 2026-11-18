@@ -17,7 +17,7 @@ export const workspaceRoleRank = (role: WorkspaceRole): number =>
 
 export const WORKSPACE_ROLE_ACCESS: Record<WorkspaceRole, string> = {
   owner:
-    'Everything a practitioner can do, plus renaming the coven, inviting, pausing and removing people, changing roles, and deleting the coven.',
+    'Everything a Practitioner can do, plus renaming the coven, inviting, pausing and removing people, changing roles, and deleting the coven.',
   member: 'Reads and writes the ingredients and the grimoire, and sees who else is in the coven.',
-  viewer: 'Reads only. An observer writes nothing.',
+  viewer: 'Reads only.',
 };

@@ -15,9 +15,11 @@ export function SignInLinkWithQuery({
   configured,
 }: {
   configured: readonly ProviderId[];
-}): ReactElement {
+}): ReactElement | null {
   const pathname = usePathname();
   const query = useSearchParams().toString();
+  // The sign-in page is where this link leads, so there it would open the page already open.
+  if (pathname === signInPath(undefined)) return null;
   return (
     <SignInDialog
       next={query ? `${pathname}?${query}` : pathname}

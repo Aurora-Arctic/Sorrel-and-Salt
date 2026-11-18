@@ -156,7 +156,7 @@ const title = (label: string): ReferenceFieldSpec => ({
   name: 'title',
   label,
   required: true,
-  placeholder: 'Add a title',
+  placeholder: 'Add a Title',
 });
 const container = (label: string, required: boolean, placeholder: string): ReferenceFieldSpec => ({
   name: 'container',
@@ -172,7 +172,7 @@ const AUTHORS: ReferenceFieldSpec = {
 const CONTRIBUTORS: ReferenceFieldSpec = {
   name: 'contributors',
   label: 'Contributors',
-  placeholder: 'Add contributors',
+  placeholder: 'Add Contributors',
 };
 const EDITION: ReferenceFieldSpec = {
   name: 'edition',
@@ -187,7 +187,7 @@ const VOLUMES: ReferenceFieldSpec = {
 const SERIES: ReferenceFieldSpec = {
   name: 'series',
   label: 'Series',
-  placeholder: 'Add a series',
+  placeholder: 'Add a Series',
 };
 const PLACE: ReferenceFieldSpec = {
   name: 'place',
@@ -197,7 +197,7 @@ const PLACE: ReferenceFieldSpec = {
 const PUBLISHER: ReferenceFieldSpec = {
   name: 'publisher',
   label: 'Publisher',
-  placeholder: 'Add a publisher',
+  placeholder: 'Add a Publisher',
 };
 const published = (required = false): ReferenceFieldSpec => ({
   name: 'published',
@@ -233,7 +233,7 @@ const accessed = (required = false): ReferenceFieldSpec => ({
 const NOTE: ReferenceFieldSpec = {
   name: 'note',
   label: 'Note',
-  placeholder: 'Add a note',
+  placeholder: 'Add a Note',
 };
 
 const ONLINE = [HOST, url(), MODIFIED, accessed(), NOTE];
@@ -274,8 +274,8 @@ const FIELDS_OF: Record<ReferenceKind, readonly ReferenceFieldSpec[]> = {
     title('Article Title'),
     container('Journal', true, 'Name the journal'),
     AUTHORS,
-    { name: 'volume', label: 'Volume', placeholder: 'Add a volume' },
-    { name: 'issue', label: 'Issue', placeholder: 'Add an issue' },
+    { name: 'volume', label: 'Volume', placeholder: 'Add a Volume' },
+    { name: 'issue', label: 'Issue', placeholder: 'Add an Issue' },
     published(),
     PAGES,
     ...ONLINE,
@@ -633,7 +633,7 @@ function PanelForm({
           <SelectField<ReferenceFormValues>
             name="kind"
             label="Kind"
-            placeholder="Choose a kind"
+            placeholder="Choose a Kind"
             options={KIND_OPTIONS}
             required
             // A kind decides which fields are refused, so a change revalidates them.

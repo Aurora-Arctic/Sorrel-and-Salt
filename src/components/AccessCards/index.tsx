@@ -20,7 +20,7 @@ const AccessCards = ({ roles, rows }: AccessCardsProps): ReactElement => {
   const id = useId();
   return (
     <div className="access-cards">
-      <ul className="access-cards__key" aria-label="How to read the marks">
+      <ul className="access-cards__key" aria-label="How to Read the Marks">
         {(Object.keys(MARK_WORD) as AccessMark[]).map((mark) => (
           <li key={mark}>
             <Mark mark={mark} />

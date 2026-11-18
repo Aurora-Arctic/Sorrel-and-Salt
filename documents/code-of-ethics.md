@@ -5,7 +5,7 @@ lede: What Sorrel & Salt values, and how it handles the cultures, sourcing and a
 published: 2026-11-02
 ---
 
-This code is part of the [Terms of Use](/terms). Its section "What Everyone Agrees To" binds every account that agrees to the terms, and its sections for curators, keepers, developers, and the owner bind whoever holds that role.
+This code is part of the [Terms of Use](/terms). Its section **What Everyone Agrees To** binds every account that agrees to the terms, and its sections for curators, keepers, developers, and the owner bind whoever holds that role.
 
 ## The Short Version
 

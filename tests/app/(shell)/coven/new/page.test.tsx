@@ -16,6 +16,7 @@ vi.mock('@/lib/viewer', () => ({ viewerOf }));
 vi.mock('next/navigation', async () => ({
   ...(await import('../../../../support/next-navigation')),
   usePathname: () => '/coven/new',
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 const { default: NewCovenPage } = await import('@/app/(shell)/coven/new/page');
@@ -94,6 +95,22 @@ describe('the /coven/new page', () => {
     expect(screen.queryByRole('textbox', { name: 'Name' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create Coven' })).not.toBeInTheDocument();
     expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
+  it('gives a user without the right a link to Support, and one holding it none', async () => {
+    // The Support dialog over this page, or the /support page.
+    const supportHref = /^\/support(\?|$)|[?&]support=/;
+    const supportLink = () => screen.queryByRole('link', { name: /^Support$/i });
+
+    await renderPage(false);
+    // The precondition: the waiting page, with no form.
+    expect(screen.queryByRole('textbox', { name: 'Name' })).not.toBeInTheDocument();
+    expect(supportLink()).toHaveAttribute('href', expect.stringMatching(supportHref));
+
+    cleanup();
+    await renderPage(true);
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
+    expect(supportLink()).not.toBeInTheDocument();
   });
 
   it('says what an accepted card gave, only to one who arrived by it and can create', async () => {

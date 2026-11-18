@@ -4,7 +4,8 @@ import LocalTime from '../LocalTime';
 interface SupportThreadEntry {
   id: string;
   name?: string;
-  tag: string;
+  // Left out when the name already says who wrote it.
+  tag?: string;
   internal?: boolean;
   at: Date;
   body: string;
@@ -30,15 +31,17 @@ const SupportThread = ({
           <li key={entry.id} className="support-detail__entry">
             <div className="support-detail__meta">
               {entry.name && <strong>{entry.name}</strong>}
-              <span className="support-detail__tag">
-                {entry.internal ? (
-                  <>
-                    {entry.tag} · <span className="support-detail__internal">Internal</span>
-                  </>
-                ) : (
-                  entry.tag
-                )}
-              </span>
+              {entry.tag !== undefined && (
+                <span className="support-detail__tag">
+                  {entry.internal ? (
+                    <>
+                      {entry.tag} · <span className="support-detail__internal">Internal</span>
+                    </>
+                  ) : (
+                    entry.tag
+                  )}
+                </span>
+              )}
               <LocalTime at={entry.at} short="minute" />
             </div>
             <p>{entry.body}</p>

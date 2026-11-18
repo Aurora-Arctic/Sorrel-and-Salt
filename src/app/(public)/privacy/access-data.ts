@@ -6,7 +6,7 @@ export const PRIVACY_ACCESS_ROWS: AccessRow[] = [
     cells: [
       { mark: 'yes', text: 'Yes, for everyone in the coven' },
       { mark: 'yes', text: 'Yes, for everyone in the coven' },
-      { mark: 'no', text: 'No: an observer does not see the list of members' },
+      { mark: 'no', text: 'No: an Observer does not see the list of members' },
       { mark: 'yes', text: 'Yes, as the name beside a compendium edit' },
       { mark: 'yes', text: 'Yes, for every account' },
       { mark: 'yes', text: 'Yes' },
@@ -100,7 +100,7 @@ export const PRIVACY_ACCESS_ROWS: AccessRow[] = [
       { mark: 'no', text: 'No' },
       {
         mark: 'part',
-        text: "Only requests a keeper marked for curators or assigned to them, without the requestor's email or the coven named in the page address",
+        text: "Only requests a Keeper marked for Curators or assigned to them, without the requestor's email or the coven named in the page address",
       },
       { mark: 'yes', text: 'Yes, with your email' },
       { mark: 'yes', text: 'Yes' },

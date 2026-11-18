@@ -7,6 +7,8 @@ export interface NarrowPanelPageProps {
   contextRow?: ReactNode;
   title: string;
   lede?: ReactNode;
+  /** A class added to the frame round the panel, such as `page-frame--in-column` inside a layout's column. */
+  frameClassName?: string;
   /** A class added to the panel after its own. */
   className?: string;
   children: ReactNode;

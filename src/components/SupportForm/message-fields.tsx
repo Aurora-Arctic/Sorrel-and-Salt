@@ -33,7 +33,7 @@ export const SupportMessageFields = ({
       name="subject"
       label="Subject"
       required
-      placeholder="Add a subject"
+      placeholder="Add a Subject"
       autoComplete="off"
       limit={SUBJECT_MAX_LENGTH}
       disabled={disabled}
@@ -48,7 +48,7 @@ export const SupportMessageFields = ({
       required
       multiline
       rows={6}
-      placeholder="Write a message"
+      placeholder="Write a Message"
       note={
         <span className="field__warning">
           Don’t include passwords, payment details or other private information.

@@ -1,10 +1,9 @@
 import { Fragment, createElement as h } from 'react';
-import { EmailLayout, IgnoreNote, Paragraph, defineMessage } from './parts/layout';
+import { EmailLayout, IgnoreNote, LinkedParagraph, Paragraph, defineMessage } from './parts/layout';
 import { inUtc } from '@/lib/utc';
 import type { EmailChangeNoticeProps } from './types';
 
-// Sent to the address an account is leaving, on the request and on the completion. It carries no action: a link here would be one a thief could
-// press, and the cure for a change nobody meant is signing in and changing the address back (claude-docs/auth/admin-bootstrap.md, "The email page").
+// Sent to the address an account is leaving, on the request and on the completion. It has no button: the one link beside the wordmark is the account page, where the reader signs in, and it never carries a token that acts on the account (claude-docs/auth/admin-bootstrap.md, "The email page").
 
 const SUBJECT = {
   requested: 'A New Email Address Was Requested',
@@ -22,6 +21,7 @@ function EmailChangeNotice({
   at,
   url,
   origin = new URL(url).origin,
+  part,
 }: EmailChangeNoticeProps) {
   const what =
     stage === 'requested'
@@ -52,11 +52,13 @@ function EmailChangeNotice({
       origin,
     },
     what,
-    h(
-      Paragraph,
-      null,
-      'If this was not you, sign in to Sorrel & Salt, change your email address back and remove any sign-in method you do not recognise.',
-    ),
+    h(LinkedParagraph, {
+      before: 'If this was not you, ',
+      linkText: 'sign in to Sorrel & Salt',
+      after: ', change your email address back and remove any sign-in method you do not recognise.',
+      href: `${origin}/account`,
+      part,
+    }),
     h(IgnoreNote, { when: 'If this was you' }),
   );
 }

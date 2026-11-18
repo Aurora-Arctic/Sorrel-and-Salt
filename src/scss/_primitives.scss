@@ -199,9 +199,12 @@
     gap: space(2);
     // A small button sits in a strip, not beside a field; the control height would make it full again.
     min-height: 0;
-    padding: space(1) space(3);
+    padding-inline: space(3);
     border-width: 1px;
     font-size: type-size('caption');
+    // Padding grows it to a 24px hit area (WCAG 2.5.8); the label never wraps, so the button keeps its height at 375.
+    white-space: nowrap;
+    @include target-size($content-block: 1lh, $edge: 1px, $floor: space(1));
   }
 
   .btn--medium {
@@ -915,6 +918,8 @@
   // container a `.data-table--stack` table stacks by. The frame must sit as a block or stretched flex item, never in a row
   // that shrinks to its content (size containment).
   .data-table-frame {
+    // The containing block for the table's absolutely positioned hidden labels, so its clip holds them and the page never scrolls sideways.
+    position: relative;
     overflow-x: auto;
     container: data-table / inline-size;
   }
@@ -1461,6 +1466,11 @@
       flex-direction: column;
     }
 
+    // A delete icon in the aside keeps to the row's end, as it does above this width, rather than stretching with the buttons.
+    .form .form__aside > .icon-tip {
+      align-self: flex-end;
+    }
+
     // A form whose row holds only Save and Cancel keeps them on one line; wrapping still catches a narrower row.
     .form.form--inline-actions .form__actions {
       flex-direction: row;
@@ -1608,8 +1618,9 @@
     color: $secondary;
   }
 
+  // A caution beside a field, in the warning ochre: a hint is never drawn in the error style.
   .field__warning {
-    color: $secondary;
+    color: $warning;
   }
 
   .form-error-summary__heading {
@@ -1626,8 +1637,9 @@
     --list-marker-ink: #{$secondary};
   }
 
-  // Out of flow while empty, so the always-drawn live region adds no gap to the field.
-  .field__error:empty {
+  // Out of flow while empty, so an always-drawn live region (the error, the character count) adds no gap to the field.
+  .field__error:empty,
+  .field__hint:empty {
     position: absolute;
   }
 
@@ -1921,6 +1933,12 @@
     }
   }
 
+  // In a form's column nothing stands beside the switch to line up with, so its row is the track's own height and the
+  // toggle sits the field's gap under its label, as a text box does.
+  .form .switch .switch__control {
+    min-height: 0;
+  }
+
   // A list filter's search box, `SearchField`. Here after `.input` rather than in the Field folder, so it outweighs
   // its padding without compounding, where Combobox writes `.input.combobox__control`.
   .search-field {
@@ -2113,8 +2131,8 @@
     @include surface-box($surface-page);
     @include state-fade(border-color, background-color);
 
-    &:hover:not(:has(input:disabled)) {
-      border-color: $accent;
+    // Hover tints the fill only: the accent border and highlight fill are what a checked card looks like.
+    &:hover:not(:has(input:disabled, input:checked)) {
       background-color: $surface-card-hover;
     }
 
@@ -2138,10 +2156,11 @@
       }
     }
 
+    // Label above description at every width, so a short description never sits inline on one screen and wraps on another.
     .radio__text {
-      flex-flow: row wrap;
-      align-items: baseline;
-      gap: space(2);
+      flex-flow: column;
+      align-items: flex-start;
+      gap: space(1);
     }
 
     .radio__description {
@@ -2329,6 +2348,12 @@
   // clip rather than `display: none`, which would take it from the reader too.
   .visually-hidden {
     @include visually-hidden;
+  }
+
+  // A day as `Day` draws it, `YYYY-MM-DD`, is one word to the eye: a narrow line moves it whole rather than breaking
+  // it at a hyphen.
+  .day {
+    white-space: nowrap;
   }
 
   // A comma heard but not seen, between two parts of a name read as one, as in a dialog's "Edit Deity,

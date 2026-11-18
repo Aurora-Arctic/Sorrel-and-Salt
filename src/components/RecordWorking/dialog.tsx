@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 import Modal from '../Modal';
 import RecordWorkingForm from './form';
 import type { RecordWorkingDialogProps } from './types';
@@ -12,13 +12,15 @@ export default function RecordWorkingDialog({
   returnTo,
   ...rest
 }: RecordWorkingDialogProps): ReactElement {
+  // The form tells the dialog which step it is on, so the confirm step is titled for the action it confirms.
+  const [confirming, setConfirming] = useState(false);
   return (
     <Modal
-      title={rest.working ? 'Edit Working' : 'Record a Working'}
+      title={confirming ? 'Complete Working' : rest.working ? 'Edit Working' : 'Record a Working'}
       onClose={onClose}
       returnTo={returnTo}
     >
-      {(close) => <RecordWorkingForm {...rest} close={close} />}
+      {(close) => <RecordWorkingForm {...rest} close={close} onConfirming={setConfirming} />}
     </Modal>
   );
 }

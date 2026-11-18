@@ -30,9 +30,9 @@ const LiftDocument = graphql(`
 
 const copyFor = (name: string): PausePanelCopy => ({
   noteHint: 'Seen by staff only.',
-  notePlaceholder: 'Why, for staff',
+  notePlaceholder: 'Why, for Staff',
   messageLabel: 'Message to User',
-  messagePlaceholder: 'For them',
+  messagePlaceholder: 'For Them',
   pauseQuestion: (end) =>
     end
       ? `They can reach only Support until ${longMinuteInZone(end)}, and are signed out now. You can lift it sooner.`

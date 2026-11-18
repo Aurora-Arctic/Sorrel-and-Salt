@@ -25,6 +25,7 @@ const Right = ({ children }: { children: ReactElement }) => (
 );
 
 const LINKS = [
+  { label: 'Compendium', href: '/compendium' as const, base: '/compendium', open: true },
   { label: 'Your Coven', href: route('/coven/fixture-coven'), base: '/coven' },
   { label: 'Keepers', href: '/keepers' as const, base: '/keepers' },
 ];

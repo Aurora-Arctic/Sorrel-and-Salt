@@ -204,13 +204,13 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
             value="1"
             checked={request.curatorVisible}
             busy={visible.busy}
-            hint="Any curator can read it, not only the assignee."
+            hint="Any Curator can read it, not only the assignee."
             onChange={(checked) =>
               void visible.run(
                 () => graphqlRequest(CuratorVisibleDocument, { id: request.id, visible: checked }),
                 checked
-                  ? 'Request shared with curators.'
-                  : 'Request no longer shared with curators.',
+                  ? 'Request shared with Curators.'
+                  : 'Request no longer shared with Curators.',
               )
             }
           />

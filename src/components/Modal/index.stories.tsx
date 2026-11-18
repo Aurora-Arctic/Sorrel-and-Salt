@@ -341,7 +341,7 @@ const WithPickersView = () => {
                 value={group}
                 onChange={setGroup}
                 choices={PICKS}
-                placeholder="Choose a group"
+                placeholder="Choose a Group"
               />
             </div>
             <div className="field">
@@ -355,7 +355,7 @@ const WithPickersView = () => {
                 values={colours}
                 onChange={setColours}
                 choices={PICKS}
-                placeholder="Add a colour"
+                placeholder="Add a Colour"
               />
             </div>
           </form>

@@ -234,7 +234,7 @@ async function requireOwnResend(ctx: HookContext): Promise<void> {
   if (!session || session.user.email.toLowerCase() !== email) {
     throw new APIError('UNAUTHORIZED', {
       code: 'SIGN_IN_TO_RESEND',
-      message: 'Sign in to this account to send its confirmation again.',
+      message: 'Sign in to this account to send its confirmation again',
     });
   }
 }
@@ -253,7 +253,7 @@ function pinPasskeyOrigin(ctx: HookContext): void {
   if (origin !== new URL(ctx.context.baseURL).origin) {
     throw new APIError('FORBIDDEN', {
       code: 'PASSKEY_ORIGIN_MISMATCH',
-      message: 'Use a passkey from a page on this site.',
+      message: 'Use a passkey from a page on this site',
     });
   }
 }
@@ -276,7 +276,7 @@ async function keepAWayIn(ctx: HookContext) {
   if (outcome === 'last-way-in') {
     throw new APIError('BAD_REQUEST', {
       code: 'LAST_SIGN_IN_METHOD',
-      message: 'This passkey is the only way to sign in to this account, so it cannot be removed.',
+      message: 'This passkey is the only way to sign in to this account, so it cannot be removed',
     });
   }
   return ctx.json({ status: true });
@@ -358,7 +358,7 @@ async function mailResetLink({
 
 const PASSWORD_SIGN_IN_PAUSED = {
   code: 'PASSWORD_SIGN_IN_PAUSED',
-  message: 'Password sign-in is paused for this account.',
+  message: 'Password sign-in is paused for this account',
 };
 
 // The account a password sign-in, or an endpoint checking a held password, names, and whether its lock was on when the

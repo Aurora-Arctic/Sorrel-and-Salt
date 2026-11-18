@@ -75,7 +75,7 @@ The site runs on other companies' services. Each one handles some of your data t
 | Service                              | What It Does                             | What It Handles                                                                                                        |
 | ------------------------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Vercel                               | Hosts the site and runs its code         | Every request, including your network address, and the server's logs, which carry an error reference when a page fails |
-| Neon                                 | Holds the database                       | Everything listed under "What Is Stored"                                                                               |
+| Neon                                 | Holds the database                       | Everything listed under **What Is Stored**                                                                             |
 | Resend                               | Sends the site's mail                    | Your email and the mail's text: verification links, invitations, notices                                               |
 | Discord, Google, Microsoft, Facebook | Sign you in, when you choose one of them | They learn that you signed in to Sorrel & Salt, and hand the site your name, email and picture                         |
 
@@ -100,7 +100,7 @@ The record that an email about a document change was sent to you is kept indefin
 
 ### How to Ask for Removal
 
-There is no "delete my account" button yet, and no self-service export. Until those are built, write to the site keepers through the [support form](?support=privacy). You can send one without an account. Say what you want erased, and a site keeper will do it and tell you when it is done.
+There is no **Delete My Account** button yet, and no self-service export. Until those are built, write to the site keepers through the [support form](?support=privacy). You can send one without an account. Say what you want erased, and a site keeper will do it and tell you when it is done.
 
 You can leave a coven yourself from the coven's page, and a coven's steward can delete the coven. Both are soft deletes.
 

@@ -37,7 +37,7 @@ export default function StockFields<V extends FieldValues = StockFormValues>({
         labelSuffix={form}
         disabled={disabled}
         hint="Changing the unit keeps the numbers as typed. It does not convert them."
-        placeholder="Choose a unit"
+        placeholder="Choose a Unit"
         options={UNIT_OPTIONS}
       />
       <TextField<V>
@@ -48,7 +48,7 @@ export default function StockFields<V extends FieldValues = StockFormValues>({
         inputMode="decimal"
         format={formatQuantity}
         hint="The jar is badged Low Stock at this amount or below. Zero turns the badge off."
-        placeholder="Add a level"
+        placeholder="Add a Level"
         autoComplete="off"
         spellCheck={false}
         enterKeyHint="done"

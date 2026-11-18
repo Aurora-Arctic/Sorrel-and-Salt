@@ -52,11 +52,11 @@ describe('SupportSenderRequest', () => {
     expect(error).toHaveTextContent(/^Error500$/);
   });
 
-  it('shows the sender their own message tagged You', () => {
+  it('names the sender of their own message once, as You', () => {
     render(<SupportSenderRequest request={request()} />);
     const thread = screen.getByRole('region', { name: 'Thread' });
     const [own] = within(thread).getAllByRole('listitem');
-    expect(within(own!).getAllByText('You')).toHaveLength(2);
+    expect(within(own!).getAllByText('You')).toHaveLength(1);
     expect(within(own!).getByText('I was sent a card.')).toBeInTheDocument();
   });
 
@@ -95,7 +95,7 @@ describe('SupportSenderRequest', () => {
     expect(screen.getByText('/coven/whitethorn')).toBeInTheDocument();
   });
 
-  it('puts the sender’s own follow-ups in the thread in order, tagged You', () => {
+  it('puts the sender’s own follow-ups in the thread in order, each naming You once', () => {
     render(
       <SupportSenderRequest
         request={request({
@@ -129,7 +129,7 @@ describe('SupportSenderRequest', () => {
       'The red one.',
       'Thanks.',
     ]);
-    expect(within(items[2]!).getAllByText('You')).toHaveLength(2);
+    expect(within(items[2]!).getAllByText('You')).toHaveLength(1);
     expect(within(items[3]!).getByText('Staff')).toBeInTheDocument();
   });
 

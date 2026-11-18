@@ -31,12 +31,10 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     line-height: 1.3;
   }
 
-  // On a phone the folded menu sits one stack step above the text, so the first heading's own top
-  // margin, which would add four steps more, is dropped.
-  @include phone-down {
-    > .page-nav + .document-page__body > :first-child {
-      margin-block-start: 0;
-    }
+  // The column's gap alone stands between the head (on a phone, the folded menu) and the text, as on
+  // the help front, so the first heading's own top margin, which would add four steps more, is dropped.
+  > .document-page__body > :first-child {
+    margin-block-start: 0;
   }
 
   // The menu scrolls inside itself, capped at the room under its unstuck top (the bar plus the
@@ -205,8 +203,20 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     line-height: 0;
   }
 
+  // The tap area is a 24 by 24 pixel box centred on the marker, so the superscript keeps its size and the line its height.
   .document-page__marks a {
+    position: relative;
     padding-inline: space(1);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: 50%;
+      inline-size: 24px;
+      block-size: 24px;
+      transform: translate(-50%, -50%);
+    }
   }
 
   .document-page__marks a,

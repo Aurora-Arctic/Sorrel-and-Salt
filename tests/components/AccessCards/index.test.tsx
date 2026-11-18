@@ -82,7 +82,7 @@ describe('AccessCards', () => {
 
   it('explains the three marks and names the roles in column order', () => {
     render(<AccessCards roles={ROLES} rows={ROWS} />);
-    const key = screen.getByRole('list', { name: 'How to read the marks' });
+    const key = screen.getByRole('list', { name: 'How to Read the Marks' });
     expect(
       within(key)
         .getAllByRole('listitem')

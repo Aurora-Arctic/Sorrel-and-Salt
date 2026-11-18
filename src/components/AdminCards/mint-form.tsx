@@ -49,7 +49,7 @@ const CreateInvitationCardsDocument = graphql(`
 const SHEETS_HINT = `A Letter sheet holds ${CARDS_PER_SHEET} cards.`;
 
 const NOTE_HINT =
-  'Shown to keepers beside the batch on the Invitation Cards tab, and searchable there.';
+  'Shown to Keepers beside the batch on the Invitation Cards tab, and searchable there.';
 
 export const MINT_TITLE = 'Mint Cards';
 
@@ -212,7 +212,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         hint={NOTE_HINT}
         multiline
         rows={3}
-        placeholder="Add a note"
+        placeholder="Add a Note"
         limit={MAX_NOTE_LENGTH}
         value={note}
         disabled={minting}

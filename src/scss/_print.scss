@@ -97,6 +97,12 @@
       .combobox__indicators {
         display: none;
       }
+
+      // On paper there is no chevron to make room for, so the name is printed whole.
+      .combobox__value {
+        overflow: visible;
+        white-space: normal;
+      }
     }
 
     .spell-recipe {

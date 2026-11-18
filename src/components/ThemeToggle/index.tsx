@@ -115,7 +115,7 @@ const ThemeToggle = ({ variant = 'corner' }: ThemeToggleProps): ReactElement => 
       ref={buttonRef}
       type="button"
       className={`theme-toggle theme-toggle--${variant}`}
-      aria-label="Toggle light and dark mode"
+      aria-label="Toggle Light and Dark Mode"
       aria-pressed={false}
       onClick={handleToggle}
     >

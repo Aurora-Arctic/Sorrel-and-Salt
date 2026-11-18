@@ -8,7 +8,7 @@ The Support link is a [`SupportLink`](support-form.md#support-link) drawn as the
 
 The layout wraps the page and footer in `.site-frame`, a column at least one window tall (`100dvh` less the top inset). The footer's top margin is `auto`, so on a short page the footer sits at the window's foot and on a long one it follows the content. The air above it (`space(8)`) is the bottom margin of whatever precedes it, so the gap is never smaller.
 
-A centred `.page-frame` is shorter by the footer's height (`$footer-space`, `$footer-space-phone`) so page and footer fit one window without scrolling. The footer's fixed minimum height (`$footer-height`, `$footer-height-phone`) makes that arithmetic hold: wide 5.71875rem, phone 9.2375rem. A tagline wrapping to a third line on a very narrow phone would exceed the phone figure.
+A centred `.page-frame` is shorter by the footer's height (`$footer-space`, `$footer-space-phone`) so page and footer fit one window without scrolling. The footer's fixed minimum height (`$footer-height`, `$footer-height-phone`) makes that arithmetic hold: wide 5.71875rem, phone 9.2375rem. A tagline wrapping to a third line on a very narrow phone would exceed the phone figure. The wide `$footer-space` also counts the footer's 1px top border, which sits outside that minimum height.
 
 The home page is the exception: its frame (`.page-frame.welcome-page`) takes the whole window height, so the footer always follows below the fold, and `.site-frame > .welcome-page:has(+ .site-footer)` drops the air above (`margin-block-end: 0`), so one footer-height of scroll reveals it.
 

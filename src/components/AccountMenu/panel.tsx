@@ -94,8 +94,9 @@ export default function AccountMenuPanel({
           )}
         </li>
       )}
-      {verified &&
-        links.map(({ label, href, base }) => {
+      {links
+        .filter(({ open }) => verified || open)
+        .map(({ label, href, base }) => {
           const counted = base === '/keepers' && staffCount > 0;
           const { shown, tip } = supportTip(staffCount, 'Assigned to You');
           return (

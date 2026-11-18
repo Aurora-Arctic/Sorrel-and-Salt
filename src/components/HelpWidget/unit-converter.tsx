@@ -6,6 +6,7 @@ import { formatQuantity, parseQuantity } from '@/lib/formats';
 import { QUANTITY_HINT, quantityProblem } from '@/lib/quantity-rule';
 import { unitConvert } from '@/modules/ingredients/validation/unit-convert';
 import { ComboboxSelect } from '../Combobox';
+import EmptyMark from '../EmptyMark';
 import { PlainTextField } from '../Field';
 import { unitLabel } from '../StockFields/units';
 import { CONVERSION_REFUSALS } from './conversion-refusals';
@@ -36,8 +37,6 @@ function answer(amount: string, from: Unit, to: Unit): Answer {
     : { kind: 'refused', sentence: CONVERSION_REFUSALS[converted.reason] };
 }
 
-const Dash = (): ReactElement => <span className="help-widget__none">—</span>;
-
 /**
  * The answer as an equation, "1 tbsp = 3 tsp", which a screen reader skips for the sentence, "1 tbsp is 3 tsp.": a
  * read "equals" would make the figure harder to hear, not easier. The left side and the sign hold together, so a narrow
@@ -60,11 +59,11 @@ const Result = ({ amount, from, to }: { amount: string; from: Unit; to: Unit }):
       <span className="visually-hidden">{sentence}</span>
       <span className="help-widget__equation" aria-hidden="true">
         <span className="help-widget__side">
-          {usable ? shown : <Dash />} {unitLabel(from)}{' '}
+          {usable ? shown : <EmptyMark />} {unitLabel(from)}{' '}
           <span className="help-widget__equals">=</span>
         </span>{' '}
         <span className="help-widget__side">
-          {result.kind === 'converted' ? `${result.value} ${unitLabel(to)}` : <Dash />}
+          {result.kind === 'converted' ? `${result.value} ${unitLabel(to)}` : <EmptyMark />}
         </span>
       </span>
       {result.kind === 'refused' && (

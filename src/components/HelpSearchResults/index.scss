@@ -43,6 +43,9 @@
   @include card-link;
 
   font-size: $nav-link-size;
+
+  // Its line is under 24px tall; the padding grows the hit area and the negative margin keeps the card as it was.
+  @include target-size($content-block: 1lh, $pull: true);
 }
 
 .help-results__labels {

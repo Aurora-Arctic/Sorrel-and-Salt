@@ -12,6 +12,8 @@ const redirect = vi.fn((_to: string): never => {
 vi.mock('next/navigation', async () => ({
   ...(await import('../../../support/next-navigation')),
   redirect,
+  usePathname: () => '/coven',
+  useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 const viewerOf = vi.fn();
@@ -43,6 +45,9 @@ beforeEach(() => {
 });
 
 const notice = () => screen.queryByRole('status');
+// The Support dialog over this page, or the /support page.
+const SUPPORT_HREF = /^\/support(\?|$)|[?&]support=/;
+const supportLink = () => screen.queryByRole('link', { name: /^Support$/i });
 
 describe('the /coven landing', () => {
   it('sends a member to the first coven the switcher lists, whatever they may create', async () => {
@@ -104,5 +109,25 @@ describe('the /coven landing', () => {
     );
     // The list itself is the account page's, never drawn here.
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  it('gives someone left waiting, with no invitation and no right to create, a link to Support', async () => {
+    asViewer(false);
+
+    render(await CovenLandingPage());
+
+    // The precondition: this is the waiting page, with nothing else to press.
+    expect(screen.queryByRole('link', { name: 'Create Coven' })).not.toBeInTheDocument();
+    expect(notice()).not.toBeInTheDocument();
+    expect(supportLink()).toHaveAttribute('href', expect.stringMatching(SUPPORT_HREF));
+  });
+
+  it('offers no Support link to someone who may start a coven', async () => {
+    asViewer(true);
+
+    render(await CovenLandingPage());
+
+    expect(screen.getByRole('link', { name: 'Create Coven' })).toBeInTheDocument();
+    expect(supportLink()).not.toBeInTheDocument();
   });
 });

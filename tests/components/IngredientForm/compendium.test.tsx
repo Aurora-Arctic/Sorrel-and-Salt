@@ -715,7 +715,7 @@ describe('IngredientForm on the compendium', () => {
 
       type('Name', 'Testworth');
       await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
-      const warning = screen.getByRole('status', { name: 'Possible duplicates' });
+      const warning = screen.getByRole('status', { name: 'Possible Duplicates' });
       await waitFor(() => within(warning).getByRole('link', { name: /^Testworts/ }));
       expect(within(warning).queryByRole('link', { name: /Testwort \(/ })).not.toBeInTheDocument();
       noButton('Create Anyway');

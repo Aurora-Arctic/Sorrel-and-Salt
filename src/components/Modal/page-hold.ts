@@ -1,6 +1,8 @@
-// While a modal is open the page behind it holds still: CSS hides the root's scroll (index.scss) and
+// While a modal is open the page behind it holds still: CSS hides the root's scroll (page-hold.scss) and
 // this publishes the scrollbar's width as `--scrollbar-width`, measured only where there is one
 // (claude-docs/components/modal.md, "Styling").
+
+import './page-hold.scss';
 
 const SCROLLBAR_WIDTH = '--scrollbar-width';
 

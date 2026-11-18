@@ -793,6 +793,48 @@ export const rules = {
     },
   },
 
+  // A Delete is the delete icon (`BinButton`), never a text button; Delete Coven is a named red control and stays text
+  // (.claude/rules/components.md, "Destructive controls"). Reads the first words of a `btn` element's text or `label`.
+  'delete-is-the-bin': {
+    create: (context) => {
+      const file = fileOf(context);
+      if (!isComponentFile(file) || !file.startsWith('src/components/')) return {};
+      const firstText = (element) => {
+        for (const child of element.children) {
+          if (child.type === 'JSXText') {
+            if (child.value.trim() !== '') return child.value.trim();
+          } else if (child.type === 'JSXExpressionContainer') {
+            const { expression } = child;
+            if (expression.type === 'Literal' && typeof expression.value === 'string') {
+              return expression.value.trim();
+            }
+            if (expression.type === 'TemplateLiteral')
+              return expression.quasis[0].value.cooked.trim();
+            return '';
+          } else {
+            return '';
+          }
+        }
+        return '';
+      };
+      return {
+        JSXElement(node) {
+          const opening = node.openingElement;
+          const classes = literalValue(jsxAttribute(opening, 'className'));
+          if (typeof classes !== 'string' || !/(^|\s)btn(\s|-|$)/.test(classes)) return;
+          const label = literalValue(jsxAttribute(opening, 'label'));
+          const text = typeof label === 'string' ? label.trim() : firstText(node);
+          if (!/^Delete\b/.test(text) || /^Delete Coven\b/.test(text)) return;
+          context.report({
+            node: opening,
+            message:
+              'A Delete is the delete icon: use BinButton from @/components/IconTip, not a text button (MC.19, .claude/rules/components.md "Destructive controls")',
+          });
+        },
+      };
+    },
+  },
+
   // A class name is joined by `cx` (src/lib/class-names.ts), not by `.filter(Boolean).join(' ')` or a `className` added by a
   // ternary. Two shapes only: the same join building an id list or a sentence, and a template with an optional part, are other jobs.
   'class-names-joined-through-cx': {

@@ -16,7 +16,7 @@ import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
 import FormalName from './formal-name';
 import LinkHint, { LinkIconHint } from '../LinkHint';
-import SafetyNote, { ToxicMark } from '../SafetyNote';
+import { SafetyNoteWithDisclaimer, ToxicMark } from '../SafetyNote';
 import DisclaimerNotice from '../DisclaimerNotice';
 import { slugify } from '../../lib/slugify';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -98,7 +98,7 @@ function FormSection({
 }): ReactElement {
   const { variant, icon, categories, substitutes } = detail;
   const nameId = `${anchor}-name`;
-  const rows = correspondences(variant).filter((row) => row.values.length > 0);
+  const rows = correspondences(variant);
   const hasLists = rows.length > 0 || categories.length > 0 || substitutes.length > 0;
   const addsNothing =
     !hasText(variant.description) &&
@@ -116,8 +116,7 @@ function FormSection({
         {hasText(variant.description) && (
           <p className="ingredient-entry__description">{variant.description}</p>
         )}
-        <SafetyNote safetyNotes={variant.safetyNotes} level={4} />
-        <DisclaimerNotice />
+        <SafetyNoteWithDisclaimer safetyNotes={variant.safetyNotes} level={4} />
         {addsNothing && (
           <p className="ingredient-entry__empty">
             {variant.toxic
@@ -185,7 +184,7 @@ function ReplacesBlock({
   return (
     <div className="ingredient-entry__block ingredient-entry__replaces">
       <div className="ingredient-entry__heading-row">
-        <h3 id={block.id}>{heading}</h3>
+        <h2 id={block.id}>{heading}</h2>
         <InfoTip id={whyId} label={heading}>
           {replaces.tip}
         </InfoTip>
@@ -240,6 +239,7 @@ const IngredientEntry = ({
   const caution = [shown.safetyNotes, ...variants.map(({ variant }) => variant.safetyNotes)].some(
     hasText,
   );
+  const sideRows = correspondences(shown, deities);
   const anchors = formAnchors(variants);
   const notes = referenceNotes(
     detail,
@@ -336,7 +336,7 @@ const IngredientEntry = ({
         )}
         {hiddenFromPublic && (
           <Notice kind="warn" quiet block>
-            Hidden in the Compendium. Only curators and keepers can see this page.
+            Hidden in the Compendium. Only Curators and Keepers can see this page.
           </Notice>
         )}
         {movedAway && (
@@ -409,24 +409,27 @@ const IngredientEntry = ({
             ) : (
               <p className="ingredient-entry__empty">No description recorded.</p>
             )}
-            <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
-            <DisclaimerNotice />
+            <SafetyNoteWithDisclaimer safetyNotes={shown.safetyNotes} level={3} />
             <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
+            {/* The details' one disclaimer: after the text here when there is no caution; the caution carries its own. */}
+            {!hasText(shown.safetyNotes) && <DisclaimerNotice />}
           </div>
         </section>
         {/* A plain div, not an aside: one complementary landmark per section would be noise. */}
         <div className="ingredient-entry__side">
           {replaces && <ReplacesBlock replaces={replaces} />}
           {similar && <ReplacesBlock replaces={similar} heading="Similar in the Compendium" />}
-          <CorrespondenceBlock
-            block={blockOf('details', 'correspondences')}
-            rows={correspondences(shown, deities)}
-            level={3}
-          />
+          {sideRows.length > 0 && (
+            <CorrespondenceBlock
+              block={blockOf('details', 'correspondences')}
+              rows={sideRows}
+              level={2}
+            />
+          )}
           <ListBlock
             block={blockOf('details', 'folk-names')}
             title="Folk Names"
-            level={3}
+            level={2}
             empty="No folk names recorded."
           >
             {folkNames.map((name) => (
@@ -436,7 +439,7 @@ const IngredientEntry = ({
           <ListBlock
             block={blockOf('details', 'categories')}
             title="Categories"
-            level={3}
+            level={2}
             empty="No categories recorded."
             className="ingredient-entry__chips"
           >
@@ -445,7 +448,7 @@ const IngredientEntry = ({
           <ListBlock
             block={blockOf('details', 'substitutes')}
             title="Substitutes"
-            level={3}
+            level={2}
             empty="No substitutes recorded."
           >
             {substituteItems(substitutes, hrefOf)}

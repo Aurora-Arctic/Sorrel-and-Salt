@@ -29,7 +29,7 @@ import {
 } from '../../support/msw/graphql';
 import { choose } from '../../support/interact';
 import { filterForm } from '../../support/filter-form';
-import { rowCells } from '../../support/table';
+import { emptyCellMark, rowCells } from '../../support/table';
 import { router } from '../../support/next-navigation';
 
 // claude-docs/components/support-requests.md
@@ -173,6 +173,14 @@ describe('Error detail', () => {
 });
 
 describe('Reply', () => {
+  it('tells the keeper the sender is emailed that a reply is waiting', () => {
+    open(ADMIN);
+    chooseReply();
+    expect(
+      within(dialog()).getByRole('textbox', { name: /^Your Reply/ }),
+    ).toHaveAccessibleDescription(/sender is emailed that a reply is waiting/);
+  });
+
   it('counts the reply against 4000 characters without cutting what is typed', () => {
     open(ADMIN);
     chooseReply();
@@ -602,11 +610,11 @@ describe('Issue', () => {
     });
     open(ADMIN);
     const field = within(dialog()).getByRole('textbox', { name: 'GitHub Issue' });
-    const saveAddress = within(dialog()).getByRole('button', { name: 'Save Address' });
-    expect(saveAddress).toBeDisabled();
+    const saveIssue = within(dialog()).getByRole('button', { name: 'Save Issue' });
+    expect(saveIssue).toBeDisabled();
 
     fireEvent.change(field, { target: { value: 'https://example.test/issues/4' } });
-    fireEvent.click(saveAddress);
+    fireEvent.click(saveIssue);
 
     await waitFor(() => expect(field).toHaveAttribute('aria-invalid', 'true'));
     expect(field).toHaveAccessibleDescription(/Paste a GitHub issue link/);
@@ -625,7 +633,7 @@ describe('Issue', () => {
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'GitHub Issue' }), {
       target: { value: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12' },
     });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Address' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Issue' }));
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(sent).toEqual([
       { id: 'r1', issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12' },
@@ -684,12 +692,12 @@ describe('An anonymised request', () => {
     return rowCells(row)[column];
   };
 
-  it('leaves the Sender cell empty in its row, and names the link by the subject alone', () => {
+  it('shows the shared empty mark in place of the Sender, and names the link by the subject alone', () => {
     render(<SupportRequests requests={[ROW, ANONYMISED]} viewer={ADMIN} />);
     const ordinary = screen.getByRole('row', { name: /moon icon/ });
     const anonymised = screen.getByRole('row', { name: /Anonymised support request/ });
     expect(senderCell(ordinary)).not.toBeEmptyDOMElement();
-    expect(senderCell(anonymised)).toBeEmptyDOMElement();
+    expect(senderCell(anonymised).textContent).toBe(emptyCellMark());
     expect(
       within(anonymised).getByRole('link', { name: 'Anonymised support request.' }),
     ).toBeInTheDocument();
@@ -1073,7 +1081,7 @@ describe('Status line in the dialog', () => {
 
   it.each([
     ['assign', 'AssignSupportRequest', 'Request assigned.'],
-    ['share', 'SetSupportRequestCuratorVisible', 'Request shared with curators.'],
+    ['share', 'SetSupportRequestCuratorVisible', 'Request shared with Curators.'],
     ['link', 'SetSupportRequestIssueUrl', 'Issue address saved.'],
   ])('announces %s', async (action, operation, message) => {
     mockGraphQLMutation(operation, () => ({ saved: { __typename: 'Saved', id: 'r1' } }));
@@ -1086,7 +1094,7 @@ describe('Status line in the dialog', () => {
       fireEvent.change(d.getByLabelText('GitHub Issue'), {
         target: { value: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9' },
       });
-      fireEvent.click(d.getByRole('button', { name: 'Save Address' }));
+      fireEvent.click(d.getByRole('button', { name: 'Save Issue' }));
     }
     await waitFor(() => expect(status()).toHaveTextContent(message));
   });

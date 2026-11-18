@@ -13,7 +13,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     title: 'Create Coven',
-    lede: 'Start a coven of your own. You will be its steward.',
+    lede: 'Start a coven of your own. You will be its Steward.',
     children: <p>The page&rsquo;s form.</p>,
   },
 };

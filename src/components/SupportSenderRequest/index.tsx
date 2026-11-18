@@ -30,14 +30,13 @@ const SupportSenderRequest = ({
           {
             id: request.id,
             name: 'You',
-            tag: 'You',
             at: request.createdAt,
             body: request.message,
           },
           ...request.replies.map((reply) => ({
             id: reply.id,
             name: reply.fromSender ? 'You' : SITE_NAME,
-            tag: reply.fromSender ? 'You' : 'Staff',
+            tag: reply.fromSender ? undefined : 'Staff',
             at: reply.createdAt,
             body: reply.body,
           })),

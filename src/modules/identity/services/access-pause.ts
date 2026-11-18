@@ -28,8 +28,8 @@ import { NO_SUCH_USER } from './admin-changes';
 // Setting one ends every session the user holds; every signed-in request reads `standingAccessPause` through
 // src/lib/request-session.ts (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access").
 
-const REFUSAL = 'Only a site keeper may pause or lift a user’s access';
-const PRIMARY_REFUSAL = 'The primary keeper’s access cannot be paused';
+const REFUSAL = 'Only a site Keeper may pause or lift a user’s access';
+const PRIMARY_REFUSAL = 'The primary Keeper’s access cannot be paused';
 const SELF_REFUSAL = 'You cannot pause your own access';
 const STAND_IN_REFUSAL = 'This account is not a person, so its access cannot be paused';
 const ALREADY_PAUSED = 'This user is already paused; lift the pause first';

@@ -55,10 +55,26 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     expect(graphqlRequest).not.toHaveBeenCalled();
   });
 
-  it('searches the other members by name, each with their role, and offers a hand-over only once one is chosen', async () => {
+  it('keeps Promote and Leave enabled with New Steward empty; pressing it flags that field and focuses it, sending nothing', async () => {
+    const dialog = await openDialog();
+    const box = within(dialog).getByRole('combobox', { name: 'New Steward' });
+    expect(handOver(dialog)).toBeChecked();
+    expect(box).toHaveValue('');
+    expect(box).not.toBeInvalid();
+    const promote = within(dialog).getByRole('button', { name: 'Promote and Leave' });
+    expect(promote).toBeEnabled();
+
+    fireEvent.click(promote);
+
+    await waitFor(() => expect(box).toHaveFocus());
+    expect(box).toBeInvalid();
+    expect(graphqlRequest).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('searches the other members by name, each with their role, and offers the chosen one for the hand-over', async () => {
     const dialog = await openDialog();
     const promote = within(dialog).getByRole('button', { name: 'Promote and Leave' });
-    expect(promote).toBeDisabled();
 
     const box = within(dialog).getByRole('combobox', { name: 'New Steward' });
     fireEvent.focus(box);

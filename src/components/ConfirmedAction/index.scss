@@ -10,7 +10,7 @@
 }
 
 // The Reason field: the warning's step of room above and 2rem below. A wrapper round the field's shell,
-// which takes no class; the invite form's reason takes the same class.
+// which takes no class. A form's own Reason field leaves it off, as the form's gap spaces it.
 .confirmed-action__note {
   margin-block: space(5) space(6);
 }

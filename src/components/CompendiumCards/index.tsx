@@ -1,8 +1,9 @@
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
-import { emptyText } from '../CompendiumList';
-import { facetChoices, vocabulariesOf } from '../CompendiumList/facets';
+import { hasActiveFilter } from '../CompendiumList/has-filter';
+import { PUBLIC_COMPENDIUM_PATH } from '../CompendiumList/href';
 import EmptyState from '../EmptyState';
+import NoMatches from '../EmptyState/no-matches';
 import { CompendiumEditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
 import { CardCategoryVocabulary } from '../IngredientCard/category-vocabulary';
@@ -17,8 +18,7 @@ import CompendiumCardMore from './card-more';
 import { HeldMark } from './held-mark';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import { compendiumEntryPath } from '@/lib/compendium-path';
-// The empty sentence (`emptyText`, `.compendium-list__empty`) and the filter are CompendiumList's
-// own, so its stylesheet comes with them; the cards have no stylesheet of their own.
+// The filter is CompendiumList's own, so its stylesheet comes with it; the cards have no stylesheet of their own.
 import '../CompendiumList/index.scss';
 
 // The public compendium's list: the filter row, a grid of cards and the pager. Render-only: the page
@@ -125,14 +125,14 @@ const CompendiumCards = ({
     position={position}
   >
     {entries.length === 0 ? (
-      <EmptyState size="compact" label="No Ingredients">
-        {emptyText(
-          filter,
-          categories,
-          facetChoices(counts, vocabulariesOf(categories, vocabulary)),
-          emptyList('ingredients'),
-        )}
-      </EmptyState>
+      // The search sentence names the query, so a filter that matched nothing says only what to do.
+      hasActiveFilter(filter) ? (
+        <NoMatches clearHref={PUBLIC_COMPENDIUM_PATH} />
+      ) : (
+        <EmptyState size="compact" label="No Ingredients">
+          {emptyList('ingredients')}
+        </EmptyState>
+      )
     ) : (
       <CardCategoryVocabulary categories={categories}>
         <IngredientCardList label="Compendium">

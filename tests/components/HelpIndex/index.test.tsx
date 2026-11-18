@@ -42,7 +42,7 @@ describe('HelpIndex', () => {
         level: 3,
         name: new RegExp(entry.title.replace('?', '\\?')),
       });
-      expect(within(heading).getByRole('link', { name: `Link to ${entry.title}` })).toHaveAttribute(
+      expect(within(heading).getByRole('link', { name: 'Link to This Answer' })).toHaveAttribute(
         'href',
         `#${entry.slug}`,
       );

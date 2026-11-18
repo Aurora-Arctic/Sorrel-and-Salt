@@ -125,6 +125,14 @@ describe('PublicFrame', () => {
     expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in');
   });
 
+  it('offers no Sign In on the sign-in page itself, which would open the page already open', () => {
+    pathname.mockReturnValue('/sign-in');
+    frame();
+
+    expect(screen.queryByRole('link', { name: 'Sign In' })).not.toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Site' })).toBeInTheDocument();
+  });
+
   it('marks the Compendium link as the current page on and beneath /compendium', () => {
     for (const path of ['/compendium', '/compendium/ingredients/testwort']) {
       pathname.mockReturnValue(path);

@@ -15,7 +15,7 @@
     'note';
   justify-content: start;
   place-items: center start;
-  gap: 0;
+  gap: space(2);
 
   .switch__control {
     grid-area: control;

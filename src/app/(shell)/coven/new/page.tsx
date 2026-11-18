@@ -8,6 +8,7 @@ import Notice from '@/components/Notice';
 import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
 import { requireSession } from '@/lib/request-session';
 import { viewerOf } from '@/lib/viewer';
+import SupportLink from '@/components/SupportLink';
 import NarrowPanelPage from '@/components/NarrowPanelPage';
 
 export const metadata: Metadata = pageTitle(CREATE_COVEN_TITLE);
@@ -47,7 +48,7 @@ export default async function NewCovenPage({
       ) : (
         <Notice kind="warn" quiet>
           Creating a coven needs an invitation from someone already using Sorrel &amp; Salt, or a
-          keeper&rsquo;s approval.
+          Keeper&rsquo;s approval. If you are stuck, <SupportLink>Support</SupportLink> can help.
         </Notice>
       )}
     </NarrowPanelPage>

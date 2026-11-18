@@ -74,10 +74,10 @@ const person = (who: { id: string; name?: string | null } | null | undefined) =>
   who ? { id: who.id, name: who.name ?? 'Unknown' } : null;
 
 const copyFor = (name: string): PausePanelCopy => ({
-  noteHint: "Seen by the coven's stewards only.",
-  notePlaceholder: 'Why, for stewards',
+  noteHint: "Seen by the coven's Stewards only.",
+  notePlaceholder: 'Why, for Stewards',
   messageLabel: 'Message to Member',
-  messagePlaceholder: 'For them',
+  messagePlaceholder: 'For Them',
   pauseQuestion: () => (
     <>
       <strong>{name}</strong> keeps their place in this coven but cannot open it, or change anything

@@ -17,7 +17,7 @@ export async function editorNamesForCurator(
   session: Session,
   userIds: readonly string[],
 ): Promise<(EditorName | null)[]> {
-  assertCurator(session, 'Only a curator may read editor names');
+  assertCurator(session, 'Only a Curator may read editor names');
   const rows = await findManyByIds(users, [...new Set(userIds)]);
   return inIdOrder(userIds, rows, () => null).map((row) =>
     row ? { id: row.id, name: row.name } : null,

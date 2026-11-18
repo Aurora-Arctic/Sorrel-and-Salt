@@ -5,12 +5,6 @@
   @include wrap-row(space(2));
 }
 
-// The dash standing for a missing quantity, faded so the unit reads first.
-.step-row__dash {
-  color: $text-muted;
-  font-weight: 400;
-}
-
 .step-row__body {
   flex: 1 1 100%;
   white-space: pre-wrap;

@@ -333,7 +333,7 @@ export function ListField({
       <FieldError id={errorId} message={message} />
       {after}
       {/* Labelled, so that it is told from the box's own status region. */}
-      <output className="visually-hidden" aria-label={`${legend} changes`}>
+      <output className="visually-hidden" aria-label={`${legend} Changes`}>
         {announcement}
       </output>
     </fieldset>

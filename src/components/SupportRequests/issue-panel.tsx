@@ -101,7 +101,7 @@ const IssuePanel = ({
             note={ISSUE_LINK_HINT}
             type="url"
             autoComplete="off"
-            placeholder="Paste a link"
+            placeholder="Paste a Link"
             format={tidyIssueLink}
             value={address}
             disabled={busy}
@@ -117,9 +117,9 @@ const IssuePanel = ({
               className="btn btn--solid btn--medium"
               disabled={!changed || busy}
               busy={busy}
-              busyLabel="Saving Address"
+              busyLabel="Saving Issue"
             >
-              Save Address
+              Save Issue
             </BusyButton>
           </div>
           {discard.asking && <DiscardQuestion guard={discard} />}

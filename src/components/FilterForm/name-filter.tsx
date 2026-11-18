@@ -28,7 +28,7 @@ const NameFilter = ({
       <SearchField
         label="Name"
         name="query"
-        placeholder="Search names"
+        placeholder="Search Names"
         value={draftQuery}
         onChange={setDraftQuery}
       />

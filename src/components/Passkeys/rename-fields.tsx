@@ -35,7 +35,7 @@ export function RenameFields({ name, onRename, close }: RenameFieldsProps): Reac
         label="Name"
         required
         autoComplete="off"
-        placeholder="Name it"
+        placeholder="Name It"
         value={value}
         disabled={saving}
         onChange={setValue}

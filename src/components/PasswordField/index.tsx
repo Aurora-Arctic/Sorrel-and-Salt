@@ -51,7 +51,7 @@ const PasswordField = ({
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
-          placeholder={purpose === 'new' ? 'Add a password' : 'Enter password'}
+          placeholder={purpose === 'new' ? 'Add a Password' : 'Enter Password'}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           aria-required={required || undefined}

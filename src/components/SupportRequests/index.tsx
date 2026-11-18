@@ -166,7 +166,7 @@ const SupportRequests = ({
                 heading: 'Sender',
                 className: 'support-requests__sender-cell',
                 cell: (request) =>
-                  !request.anonymised && (
+                  request.anonymised ? null : (
                     // A row of its own, so the sprout centres on the name rather than sitting on the text's x-height.
                     <span className="support-requests__sender">
                       <SenderName

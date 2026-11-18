@@ -18,11 +18,11 @@ spell's, and is the spell builder's `VisibilitySwitch`: on a private spell it is
 Save Working keeps a draft, closes the dialog and refreshes the page, where the draft is a row of the
 Workings list. Complete in the form saves first, then shows the preview. The date is a `DateField` day picker. A working may be dated ahead and saved as a draft, but Complete
 is off while the date is after the browser's today, with "Complete on or after <day>" written under the buttons and describing it, since a disabled button takes no focus to show a tip. The Complete beside a
-draft's Edit pencil on the recipe page (`CompleteWorkingAction`, given `workedOn`) is `aria-disabled` instead: it keeps the focus, a press does nothing, and the same words are its tip (shown on focus, hover or press) and its description. The service refuses it too. Closing with unsaved changes asks first.
+draft's Edit pencil on the recipe page (`CompleteWorkingAction`, given `workedOn`) is `aria-disabled` instead: it keeps the focus, a press does nothing, and the same words are its tip (shown on focus, hover or press) and its description. The service refuses it too. Closing with unsaved changes asks first; text typed in Participants and not yet added counts as one, so Save is on. Pressing Save Working or Complete (both go through `submit`) with such text sends nothing, marks Participants `aria-invalid`, shows "Press Enter to add this name, or clear it" through the field's error and moves the focus to the box; the error goes when the text is added, cleared or edited. A visible line under the buttons ("Completing takes the ingredients from the coven’s jars, and a complete working cannot go back to a draft.") describes the first step's Complete, until the date reason replaces it.
 What completing a draft would skip is read from the preview query, since `SpellWorking.warnings`
 is empty outside a completion; `skipSummary` words the draft row's count.
 
-With the optional `working`, `RecordWorkingDialog` is titled "Edit Working", calls `updateWorking` and closes on Save. Only the recorder or a member named on the working may edit (the service
+With the optional `working`, `RecordWorkingDialog` is titled "Edit Working" (and "Record a Working" without it; "Complete Working" while the confirm step shows, as the form tells the dialog through `onConfirming`), calls `updateWorking` and closes on Save. Only the recorder or a member named on the working may edit (the service
 refuses anyone else), and a complete working that is shared holds the switch on and shut, since a
 complete working's visibility only widens.
 
@@ -50,14 +50,14 @@ ingredient steps in order, one line each, as the jar the recipe page's In the Cu
 A step that carries `stock` (the same `StockDialogProps` the In the Cupboard panel's line gets, so only
 for a role that may edit stock, and never for a deleted ingredient or form) wraps its name and jar in a
 `StockJarButton`, which opens Edit Stock as it does on the recipe page. Its `onSaved` then reads the
-preview again, so have, left and short by are redrawn before Mark Complete. The stock dialog is a second
+preview again, so have, left and short by are redrawn before Complete. The stock dialog is a second
 modal opened over the Record a Working one. A step without `stock` keeps a plain drawing: the
 recipe page builds `stock` from the aside's doors, and the spell cards' Record a Working carries none,
 so a card's jars are not clickable.
 
 The sentence above the list says "Completing this working takes the following from the coven’s jars.",
-or "Completing this working takes nothing from the coven’s jars." when no line takes anything. Mark Complete
-(busy "Marking Complete") runs `completeWorking`, reads the page again and shows the same list, so it reads the same
+or "Completing this working takes nothing from the coven’s jars." when no line takes anything. Complete
+(busy "Completing") runs `completeWorking`, reads the page again and shows the same list, so it reads the same
 before and after. Beside it, Keep as Draft goes back without completing: the working is already saved as a draft. The preview and the completion share one plan on the
 server (`plan-deductions.ts`), so the two agree.
 

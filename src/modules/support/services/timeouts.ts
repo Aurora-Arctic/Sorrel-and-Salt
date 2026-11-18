@@ -19,7 +19,7 @@ import type { SupportTimeoutRow, TimeoutNotifier } from '../types';
 import { mailTimedOutSender } from './timeout-start';
 import { NO_SUCH_USER } from './refusals';
 
-const REFUSAL = 'Only a site keeper may time out or restore a support sender';
+const REFUSAL = 'Only a site Keeper may time out or restore a support sender';
 const STAND_IN_REFUSAL = 'This account is not a person, so it cannot be timed out of support';
 const NO_ADDRESS_REFUSAL =
   'This request was not sent without an account, so it has no address to time out';

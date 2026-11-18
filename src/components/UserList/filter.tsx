@@ -35,7 +35,7 @@ const UserListFilter = ({
       <SearchField
         label="Name or Email"
         name="query"
-        placeholder="Search users"
+        placeholder="Search Users"
         value={draftQuery}
         onChange={setDraftQuery}
       />

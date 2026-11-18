@@ -46,7 +46,7 @@ const copyFor = (name: string): PausePanelCopy => ({
   noteHint: 'Seen by staff only.',
   notePlaceholder: 'Why',
   messageLabel: 'Message to User',
-  messagePlaceholder: 'For them',
+  messagePlaceholder: 'For Them',
   pauseQuestion: (end) =>
     end
       ? `They cannot send a support request until ${longMinuteInZone(end)}. You can lift it sooner.`

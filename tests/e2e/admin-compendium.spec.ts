@@ -466,7 +466,7 @@ test('the Categories picker filters by AND, writes repeated slugs, restores on r
   await expect(edit('Categorywort None')).toBeVisible();
 
   const box = page.getByRole('combobox', { name: 'Category' });
-  const announcer = page.getByRole('status', { name: 'Categories changes' });
+  const announcer = page.getByRole('status', { name: 'Categories Changes' });
 
   await box.fill('protection');
   await page.getByRole('option', { name: /^Protection/ }).click();

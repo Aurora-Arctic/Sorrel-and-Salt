@@ -1,0 +1,6 @@
+@use '../../scss/variables' as *;
+
+.empty-mark {
+  color: $text-muted;
+  font-weight: 400;
+}

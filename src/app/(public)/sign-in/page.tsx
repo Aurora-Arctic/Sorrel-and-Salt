@@ -33,8 +33,7 @@ function ledesFor(next: string | undefined): SignInLedes | undefined {
   return token === undefined || looksLikeCardToken(token) ? undefined : ADDRESS_LEDES;
 }
 
-// No AppShell: DESIGN.md §9 scopes it to signed-in pages, and this page is
-// reachable while signed out.
+// The (public) layout draws the site bar and holds the `main`, so the frame is a `div`; it is open to a signed-out visitor.
 export default async function SignInPage({ searchParams }: SignInPageProps) {
   const params = await searchParams;
   const next = safeReturnPath(params.next);
@@ -47,7 +46,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const configured = providersToPass();
 
   return (
-    <PageFrame narrow>
+    <PageFrame as="div" narrow className="page-frame--in-column">
       <SignInPanel
         next={next}
         error={error}
