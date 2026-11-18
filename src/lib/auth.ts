@@ -276,8 +276,7 @@ async function keepAWayIn(ctx: HookContext) {
   if (outcome === 'last-way-in') {
     throw new APIError('BAD_REQUEST', {
       code: 'LAST_SIGN_IN_METHOD',
-      message:
-        'This passkey is the only way to sign in to this account, so it cannot be removed. Add another way in first',
+      message: 'This passkey is the only way to sign in to this account, so it cannot be removed',
     });
   }
   return ctx.json({ status: true });

@@ -44,7 +44,7 @@ export const FAQ_ENTRIES = [
   faq(
     9,
     'Does my spell save automatically?',
-    `Yes. The spell builder saves as you work, and so do the ingredient form and the Annotate form. This is [[Autosave]]. The status beside the form shows **Saving…** and then **Saved <time>**. If a save fails it retries, and then offers **Retry**.`,
+    `Yes. The spell builder saves as you work, and so do the ingredient form and the Annotate form. This is [[Autosave]]. The status beside the form shows **Saving…** and then **Saved** <time>. If a save fails it retries, and then offers **Retry**.`,
   ),
   faq(
     10,

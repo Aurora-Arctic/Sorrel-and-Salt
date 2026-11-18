@@ -147,7 +147,7 @@ const documentPages = [
     'Telling every account that a document changed.',
     `Open Documents in the Keepers area. There are tabs for Terms of Use, Disclaimer, Code of Ethics, Privacy Policy and **Email Updates**. The **Email Every Account** panel lists the documents under “Changed since the last email”, and the number of accounts and days.
 
-Each changed document needs a **Summary of the <document>**: what changed in that version, in your words. Every account reads it in the email. Choose **Send Emails** to confirm. Each account may be asked to agree again at its next visit.
+Each changed document needs a **Summary of the** <document>: what changed in that version, in your words. Every account reads it in the email. Choose **Send Emails** to confirm. Each account may be asked to agree again at its next visit.
 
 A mailing pauses when the mail provider's monthly allowance is used, and **Resume Mailing** restarts it. A **Last Email** heading shows how far the last mailing got.`,
     'keeper',

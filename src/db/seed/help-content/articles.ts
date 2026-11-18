@@ -103,7 +103,7 @@ Some filters, such as Reviewed, are for [[Curator|curators]] only.`,
 
 What the [[Compendium]] says, it sources. A source is a [[Reference|reference]]: a work with a locator pointing to where in it the claim is found. A reference can also say what it supports, and the basis of a name.
 
-![The Rosemary entry page in the Compendium, signed out, showing its formal name, a Reviewed By Curator mark, its description, correspondences, folk names and categories, its two forms, Herb and Oil, with a caution on the oil, and its references](/help/screens/compendium-entry.png “An entry page, read without signing in.”)`,
+![The Rosemary entry page in the Compendium, signed out, showing its formal name, a Reviewed By Curator mark, its description, correspondences, folk names and categories, its two forms, Herb and Oil, with a caution on the oil, and its references](/help/screens/compendium-entry.png "An entry page, read without signing in.")`,
   ),
   subPage(
     compendium,
@@ -213,7 +213,7 @@ const ingredientPages = [
     'The two ways an ingredient joins your list.',
     `Choose **Add Ingredient**. The form asks for a classification and a [[Formal Name|formal name]], then folk names, a description, safety notes, a toxic mark, an element, celestial bodies, zodiac signs and categories. It is grouped into Identity, Details & Care, Correspondences, Relations and Sources. Correspondences also holds Colours and Deities, and Relations holds Categories and Substitute Ingredients.
 
-If the formal name matches a [[Compendium]] entry, the form offers **Add to My Ingredients: <name>** so you can hold the shared entry instead of a duplicate.
+If the formal name matches a [[Compendium]] entry, the form offers **Add to My Ingredients:** <name> so you can hold the shared entry instead of a duplicate.
 
 The form saves itself as you work; see **Your Spell Saves Itself** for how that works.`,
   ),
@@ -273,7 +273,7 @@ const grimoirePages = [
     'The parts of a spell and where each goes.',
     `In the spell builder, fill in **Title**, **Intent**, **Jar Description** and **Seal Wax**. Add steps. Under **When to Work It**, pick **Moon Phase** and **Day**; these are suggestions. Add a note under Notes, and assign categories.
 
-![The spell builder open on a draft spell, Hearth Protection Jar, with every section open and three steps: Rosemary, Bay Laurel and Selenite](/help/screens/spell-builder.png “The spell builder, every section open.”)`,
+![The spell builder open on a draft spell, Hearth Protection Jar, with every section open and three steps: Rosemary, Bay Laurel and Selenite](/help/screens/spell-builder.png "The spell builder, every section open.")`,
   ),
   subPage(
     grimoire,
@@ -340,7 +340,7 @@ On a spell's page, the preview has a **Screen Awake** toggle, with the tips **Ke
 
 A save starts 3 seconds after your last change, and at most 30 seconds into a long run of changes. It also saves when the tab is hidden or focus leaves the form. A copy is kept in your browser until the server confirms the save, and the browser asks before the tab closes with an unsaved change.
 
-The status shows **Saving…**, then **Saved <time>**, or “Draft saved <time>” for a draft. If a save fails it tries again after 2, 5 and 15 seconds. After that it stops at “Could not save.” with **Retry**. If someone else changed the same thing first, you can choose **Reload Latest** or **Keep My Version**. Each state looks like this:
+The status shows **Saving…**, then **Saved** <time>, or “Draft saved <time>” for a draft. If a save fails it tries again after 2, 5 and 15 seconds. After that it stops at “Could not save.” with **Retry**. If someone else changed the same thing first, you can choose **Reload Latest** or **Keep My Version**. Each state looks like this:
 
 ::widget[autosave-status]
 
