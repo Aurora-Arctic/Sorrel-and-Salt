@@ -26,9 +26,10 @@ so one mis-scoped Vercel variable is not the whole defence.
   not `production` passes, unset included.
 - The variable's row, and the rule that it is never set on Production, are in
   [`secrets.md`](../secrets.md).
-- A hotfix preview cannot finish an OAuth sign-in until MB.78's proxy lands,
-  which is post-launch work ([`waves/v1/wave-15.md`](../waves/v1/wave-15.md)),
-  so a keeper cannot yet sign in there to impersonate anyone.
+- A hotfix preview cannot finish an OAuth sign-in, since no provider has its
+  address registered, and none deploys until N7.1
+  ([`waves/v1-next/wave-07.md`](../waves/v1-next/wave-07.md)), so a keeper
+  cannot yet sign in there to impersonate anyone.
 
 ### Only the two impersonation endpoints are mounted
 

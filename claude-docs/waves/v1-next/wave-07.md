@@ -18,7 +18,7 @@
 
 **Owner steps that wait on a task.** Protecting the Neon production branch waits for N7.1: a child branch made from a protected branch gets new role passwords, and N7.1 makes the workflow read each hotfix branch's address from the branch-creation step's output instead of assuming it.
 
-**MB.78 (the OAuth proxy for hotfix previews) is retired only after N7.1's password sign-in check passes.** Password sign-in needs no provider redirect, so it can replace the proxy, but the preview does not deploy today, so that is untested. The retirement uses `task-board retire`, after the check passes.
+**MB.78 (the OAuth proxy for hotfix previews) is retired.** Password sign-in needs no provider redirect, so it replaces the proxy. The preview does not deploy today, so that is untested until N7.1's password sign-in check passes.
 
 **Tasks that already exist elsewhere.** N6.15 (Vercel Pro, 30-day logs, and spend alerts) already owns the Vercel budget. N6.3 and N6.12 → N6.14 stay as they are. ND.1 (hourly crons on Pro) is untouched.
 
