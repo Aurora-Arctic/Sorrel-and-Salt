@@ -124,6 +124,8 @@
 // four labelled tabs and More overflow from 642px.
 .section-nav {
   flex: 1 1 0;
+  // One tab and More at a doubled text size: under it the context row wraps the nav onto its own line.
+  min-width: 16rem;
 }
 
 // Before the script has fitted the row, whatever outruns it is clipped rather than scrolled.

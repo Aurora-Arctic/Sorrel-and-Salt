@@ -36,6 +36,7 @@
 
 The bar's inner row, brand, initials and end group are the mixin `frame-bar($block)` in `src/scss/_frame-bar.scss`, shared with [`PublicFrame`](public-frame.md). Measurements are tokens ([`styling.md`](../styling.md), "The application shell and the layers").
 
+- **The bar grows, the page does not scroll sideways.** The bar and its inner row have `$shell-bar-height` as a minimum, and the end group may shrink and wrap, right-aligned, so at a 320px window or a 200% root font its controls take a second line instead of pushing the page wider. `tests/e2e/header-reflow.spec.ts` checks both settings, signed in and public.
 - The bar's `margin-bottom` is zeroed (the layout layer gives every `header` one), so a context row meets the bar edge to edge and a page that fits the window does not scroll by it.
 - The current site link is told by weight and the `$rule-heavy` accent rule along the bar's foot (`nav-current`), a border and not a box-shadow so forced colours keeps it, with no fill, so a hover's quiet wash still shows.
 - `_primitives.scss` takes the bar off `.page-frame`'s height (for the public frame's bar too) and pads `.app-shell__main` for the bottom bar. The root's `scroll-padding-top` and the `scroll-margin-top` of `.page-frame__section` and the ingredient entry's sections are keyed the same way, so a jump or a focus lands below either frame's sticky bar.

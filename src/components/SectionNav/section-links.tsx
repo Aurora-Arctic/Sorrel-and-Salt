@@ -31,6 +31,8 @@ const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
 type Natural = {
   widths: number[];
+  // The first tab's own width, kept to tell a change of text size from a change of the row's width.
+  first: number;
   gap: number;
   more: number;
 };
@@ -47,6 +49,7 @@ const measureNatural = (list: HTMLElement): Natural | null => {
   const more = list.querySelector<HTMLElement>(':scope > .section-nav__more');
   return {
     widths,
+    first: items[0].offsetWidth,
     gap: pixels(getComputedStyle(list).columnGap),
     more: more?.offsetWidth ?? 0,
   };
@@ -122,16 +125,28 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
 
   // A new row width picks a count from the widths already measured; web fonts arriving change the
   // widths.
+  // A tab whose width no longer matches the measured one means the text size changed (the list's own
+  // width did not), so the tabs are measured afresh.
   const refit = useCallback(() => {
-    if (list.current && natural.current) {
-      setFit(countThatFit(natural.current, list.current.clientWidth));
+    const element = list.current;
+    const known = natural.current;
+    if (!element || !known) return;
+    const first = element.querySelector<HTMLElement>(
+      ':scope > .section-nav__item:not(.section-nav__more)',
+    );
+    if (first && first.offsetWidth !== known.first) {
+      setFit(null);
+      return;
     }
+    setFit(countThatFit(known, element.clientWidth));
   }, []);
   useEffect(() => {
     const element = list.current;
     if (!tablet || !element || typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(refit);
     observer.observe(element);
+    // The row's width does not change with the text size; its tabs' widths do.
+    element.querySelectorAll('.section-nav__item').forEach((item) => observer.observe(item));
     let current = true;
     void document.fonts?.ready.then(() => {
       if (current) setFit(null);
