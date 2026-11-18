@@ -135,17 +135,20 @@ export default function IngredientSummary({
       {/* The page's own description, cut to its first lines here. Left out
           when empty, where the page says so. */}
       {hasText(shown.description) && <SummaryDescription text={shown.description!} />}
-      <SafetyNote
-        safetyNotes={shown.safetyNotes}
-        level={3}
-        footnote={
-          cautioned.length > 0 && (
-            <p className="ingredient-summary__forms-caution">{formsCarrying(cautioned)}</p>
-          )
-        }
-      />
-      {/* One for the one caution block, however many forms it names; none without a caution. */}
-      {(hasText(shown.safetyNotes) || cautioned.length > 0) && <DisclaimerNotice />}
+      {/* The caution and its disclaimer, one unit of the stack, so the disclaimer closes the caution. */}
+      <div className="ingredient-summary__caution">
+        <SafetyNote
+          safetyNotes={shown.safetyNotes}
+          level={3}
+          footnote={
+            cautioned.length > 0 && (
+              <p className="ingredient-summary__forms-caution">{formsCarrying(cautioned)}</p>
+            )
+          }
+        />
+        {/* One for the one caution block, however many forms it names; none without a caution. */}
+        {(hasText(shown.safetyNotes) || cautioned.length > 0) && <DisclaimerNotice />}
+      </div>
       {forms}
       {/* Not drawn when every block is empty, so it adds no gap of its own. */}
       {(listed || inYourCovens) && (
