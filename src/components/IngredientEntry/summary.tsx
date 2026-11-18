@@ -3,6 +3,7 @@ import { covenPath } from '@/lib/coven-path';
 import type { ReactElement } from 'react';
 import FormIcon from '../FormIcon';
 import SafetyNote from '../SafetyNote';
+import DisclaimerNotice from '../DisclaimerNotice';
 import { StockBadge } from '../StockBadge';
 import SummaryDescription from './summary-description';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -143,6 +144,8 @@ export default function IngredientSummary({
           )
         }
       />
+      {/* One for the one caution block, however many forms it names; none without a caution. */}
+      {(hasText(shown.safetyNotes) || cautioned.length > 0) && <DisclaimerNotice />}
       {forms}
       {/* Not drawn when every block is empty, so it adds no gap of its own. */}
       {(listed || inYourCovens) && (
