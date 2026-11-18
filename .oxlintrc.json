@@ -108,6 +108,7 @@
     "sorrel/placeholder-is-short": "error",
     "sorrel/spell-name-through-spell-name-of": "error",
     "sorrel/class-names-joined-through-cx": "error",
+    "sorrel/delete-is-the-bin": "error",
     "no-unused-vars": "error",
     "no-unsafe-optional-chaining": "error",
     "react-hooks/exhaustive-deps": "error",

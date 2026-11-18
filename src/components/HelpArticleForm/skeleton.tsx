@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { RichTextEditorSkeleton } from '../RichTextEditor/skeleton';
 import { BackChevron } from '../BackLink/chevron';
 import { HelpArticlePage } from './page';
+import { BinButton } from '../IconTip';
 import PageHeader from '../PageHeader';
 import Skeleton from '../Skeleton';
 import SkeletonText from '../Skeleton/text';
@@ -136,7 +137,11 @@ const HelpArticleFormBody = ({ editing }: { editing: boolean }): ReactElement =>
           Save Article
         </button>
         <span className="btn btn--quiet">Cancel</span>
-        {editing && <span className="btn btn--destructive form__aside">Delete Article</span>}
+        {editing && (
+          <div className="form__aside">
+            <BinButton verb="Delete Article" name="" onClick={() => undefined} />
+          </div>
+        )}
       </div>
     </div>
   </div>
