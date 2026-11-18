@@ -22,7 +22,7 @@ Code, schema and prose say _workspace_; the URL prefix `/coven/` and the screens
 
 ## Commands
 
-The devcontainer has no `make`, no `docker` and **no Python**: run the npm scripts, and script with `node -e`, `jq`, `grep` or `sed`. claude-docs/commands.md is the full table.
+The devcontainer has no `make`, no `docker` and **no Python** (the graphify sidecar image has its own, outside this rule): run the npm scripts, and script with `node -e`, `jq`, `grep` or `sed`. claude-docs/commands.md is the full table.
 
 | Command                         | Purpose                                          |
 | ------------------------------- | ------------------------------------------------ |
@@ -95,6 +95,9 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 
 - **One task per PR.** Do not combine tasks, even small adjacent ones. A sub-hour fix noticed along the way rides in that task's PR and is named in its body (MB.31).
 - **The browser floor is Baseline Widely Available, and below it the app degrades, never breaks.** `package.json`'s `browserslist` is the one statement of it; the build lowers CSS to it and `npm run lint:css` refuses CSS past it. A feature past it is allowed only as a pure enhancement behind `@supports` or a `typeof`/`in` check, and says so in a comment (`.claude/rules/components.md`).
+- **Write the acceptance criteria first.** A task's criteria are written, and each can be answered yes or no, before any code (`claude-docs/review-workflow.md`, step 1).
+- **Tests go in their own layer, reviewed before the implementation.** Commit the failing tests alone and stop for the owner to read them (step 2).
+- **Write the implementation as layers of about 15 minutes of reading each**, and run `gh stack` only as step 3 describes (step 3).
 - **A table task, then a behaviour task.** Never bundle `CREATE TABLE` with the policy or service that governs it.
 - **The sweep-task rule.** A sweep over database objects lands once, after the last object, under a catalogue-introspection test. A sweep over code lands as a mechanism plus a mechanical guard as early as it can be written. The tell: can the thing be made _impossible_, or only _absent_? A code mechanism lands with its guard in the same commit, seen failing once with a copy put back, and any allowlist in the guard is empty before the PR opens.
 - **Modules:** `src/modules/<name>/` (`identity`, `coven`, `vocabulary`, `ingredients`, `grimoire`, `support`, `documents`) each own their tables and services, and another module reaches one only through `@/modules/<name>` (claude-docs/modules.md).
@@ -124,6 +127,7 @@ The issues of `Aurora-Arctic/Sorrel-and-Salt`, under two org Projects, **Sorrel 
 - A passing run prints only its verdict; on a failure read the failing part (`tail`, `grep`, `jq`). Read a file over ~300 lines by section.
 - Never mask an exit code with a pipe: log to `.reports/<name>.log`, print `exit $?`, then tail the log.
 - Verify once: run the specs a change touches, named together in one command so the servers start once; the full suites only when the owner says so.
+- **Ask the code graph before a broad search.** For what calls a function, what a module reaches or how two symbols connect, use the `graphify` MCP tools, then read the files they name; search text with `grep` (`claude-docs/review-workflow.md`, "How an agent uses the tools").
 - At a task boundary, suggest `/clear` to the owner. Each rule gives way when the owner asks otherwise, or when following it would thin a test (claude-docs/token-efficiency.md).
 
 ## Out of scope for v1

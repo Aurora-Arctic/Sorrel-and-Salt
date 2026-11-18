@@ -153,6 +153,7 @@ Two rules shape the file:
 | `DEBUG_SQL`                                        | `1` prints every statement                                                      | blank                                 |
 | `SEED_SCENARIO`                                    | `minimal`, `standard` or `demo` for `npm run db:seed`                           | `minimal`                             |
 | `WORKSHOP_API_PREFIX`                              | The API path prefix the workshop's build sets                                   | blank                                 |
+| `BASE`                                             | The ref `review:affected` compares with; unset means `origin/staging`           | blank                                 |
 | `DESTRUCTIVE_DDL_FILES`                            | The files `check:destructive-ddl` scans instead of the branch's changes         | blank                                 |
 | `LIGHTHOUSE_CDP_HOST`, `LIGHTHOUSE_CDP_PORT`       | The Chrome the Lighthouse script drives; the devcontainer sets them             | blank                                 |
 | `PLAYWRIGHT_WS_ENDPOINT`                           | The shared Playwright browser server; the devcontainer sets it                  | blank                                 |

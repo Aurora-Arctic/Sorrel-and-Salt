@@ -1,0 +1,56 @@
+name: Oversized Label
+
+# Labels a pull request `oversized` when it changes more lines than the limit
+# in `.github/scripts/label-oversized.mjs`, and removes the label when a later
+# push brings it back under. It never fails a pull request for size. The
+# pull-requests permission is the only one the job holds, and the label is the
+# only thing it writes.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout the size script
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/scripts
+
+      # The files API lists a layer's own files on a stacked pull request, so
+      # each layer is measured by what it adds alone.
+      - name: Count the changed lines
+        id: size
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          CURRENT_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" \
+            --jq '.[] | {filename, additions, deletions}' > "$RUNNER_TEMP/files.ndjson"
+          FILES_PATH="$RUNNER_TEMP/files.ndjson" node .github/scripts/label-oversized.mjs
+
+      - name: Add the label
+        if: steps.size.outputs.action == 'add'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          LABEL: ${{ steps.size.outputs.label }}
+        run: |
+          gh pr edit "$PR_NUMBER" --add-label "$LABEL"
+
+      - name: Remove the label
+        if: steps.size.outputs.action == 'remove'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          LABEL: ${{ steps.size.outputs.label }}
+        run: gh pr edit "$PR_NUMBER" --remove-label "$LABEL"

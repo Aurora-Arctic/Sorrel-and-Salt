@@ -1,0 +1,6 @@
+# Keeps graphify's code graph to code: the compendium is keeper-curated YAML data, not code.
+compendium/
+# Worktrees made inside the checkout are whole second copies of the repo.
+# .git/info/exclude leaves them out on the owner's machine, but that file is
+# local and not part of the repo.
+.claude/worktrees/

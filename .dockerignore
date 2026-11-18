@@ -30,6 +30,8 @@ playwright/.cache
 !.env.example
 Docker/.env
 Docker/claude-home
+Docker/plannotator-home
+Docker/agents-home
 pgdata
 docker-data
 *.dump

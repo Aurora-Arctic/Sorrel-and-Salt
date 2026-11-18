@@ -1,0 +1,19 @@
+# graphify: a code graph of this repo, served to Claude Code over MCP.
+# .devcontainer/docker-compose.yml runs it as four services: `graphify-watch`
+# rebuilds the graph, `graphify` serves it, and, when asked for, `graphify-web` and
+# `graphify-views` serve and rebuild its pages. claude-docs/docker.md is the
+# walkthrough.
+#
+# Installed from PyPI at a pinned version, because graphify releases almost
+# daily. The extras: `mcp` for the HTTP server, `watch` for rebuilds, and `sql`
+# so the migrations add to the graph.
+FROM python:3.12-slim
+
+# Python holds back output written to a pipe, so without this `docker logs`
+# can show nothing from a running build or watch for minutes.
+ENV PYTHONUNBUFFERED=1
+
+RUN pip install --no-cache-dir "graphifyy[mcp,watch,sql]==0.9.107"
+
+RUN useradd --create-home --uid 10001 graphify
+USER graphify

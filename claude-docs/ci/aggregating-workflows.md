@@ -108,6 +108,58 @@
   workflow-level group never cancels, because a half-run alias can leave a
   domain pointing at a dead deployment. `deploy.yml`'s `migrate` job holds a
   repo-wide `migrate` lock, so two merges never migrate at once.
+- **Stacked pull requests: the top layer carries the gate.** A stack is a chain
+  of pull requests where each layer targets the one below. GitHub starts the
+  gate on every layer with `github.base_ref` equal to `staging`, so the trigger
+  is unchanged; `changes` reads `github.event.pull_request.stack`, which is
+  present only on a pull request in a stack, and its `stack` step sets
+  `stack-role` to `none`, `top` or `lower`.
+  - `none` (no stack): `changes` behaves as it always did, and the filters read
+    the pull request's own files through the API.
+  - `top` (`stack.position` equals `stack.size`): `changes` checks out the head
+    with its history and gives `dorny/paths-filter` an empty token and
+    `stack.base.sha` as `base`, so the filters read the diff of the whole
+    stack and the top layer runs every job that diff needs. The API would list
+    only the top layer's own files.
+  - `lower`: the filters read the layer's own files, and `build`, `vitest`,
+    `playwright`, `stories` and `workshop` are forced to `false`. Those jobs
+    report skipped exactly as when no path matches, so no check name changes.
+    The format, lint, type, destructive-DDL and migration-order checks keep
+    their own-file filters. The image builds, `gitflow` and `audit` still run. The three image-build jobs (`build-image`, `build-db-image`, `build-e2e-image`) still run on a lower layer, because they run on every pull request today and the jobs that need them decide for themselves whether to run.
+
+  What the owner accepted: a green lower layer means only the cheap checks
+  passed, a failure is placed by the failing test's name, and a stack merges
+  whole. Nothing stops a lower layer being merged alone, and none is built: a
+  guard (a check on lower layers that turns green only once the top layer's
+  gate is green) has not been shown to work on a scratch repository, because
+  required checks on `staging` could not be set up with the scratch token and
+  a check that waits on another pull request's run needs a re-run call from
+  the top layer. The rule stays a process rule until a run proves a guard
+  (`claude-docs/review-poc/stacks.md`, "Required checks on `staging`").
+
+  Cost of a stack: no figure is recorded yet. The repository is public, so a run
+  bills 0 ms. When a private run of a real stack exists, record here its number
+  of gate runs and the billable time of each, from
+  `gh api repos/<owner>/<repo>/actions/runs/<run id>/timing`.
+
+- **The `oversized` label.** `oversized-label.yml` runs on `pull_request`
+  (opened, synchronize, reopened) with `pull-requests: write` and no other
+  permission. It lists the pull request's files, and
+  `.github/scripts/label-oversized.mjs` sums additions and deletions. The limit,
+  400 changed lines, is written in that file alone, and lockfiles, `src/gql/`,
+  the schema snapshot `src/graphql/schema.graphql`, and the migration snapshots
+  under `src/db/migrations/meta/` are not counted. Above the limit the workflow
+  adds the label; a later push that brings the pull request to the limit or
+  under removes it. It never fails a pull request for size. On a stack each layer
+  is counted by its own files. `tests/github/scripts/label-oversized.test.ts`
+  proves both the add and the remove decision; the label calls themselves have
+  not been run on GitHub.
+  The workflow cannot create the label, because creating a repository label
+  needs more than `pull-requests: write`. Create it once by hand:
+  `gh label create oversized --color D93F0B --description "Changes more lines than the limit; consider a stack"`.
+  Until it exists, the add step fails visibly and the pull request is not
+  blocked, since the workflow is not a required check.
+
 - **`close-task-on-merge.yml`** closes the issue a merged PR's body names with
   `Closes #N` when the PR merges into `staging`, because GitHub's own closing
   keywords fire only on the default branch.
