@@ -513,7 +513,7 @@ describe('IngredientEntry', () => {
       expect(disclaimers(oil)).toHaveLength(0);
     });
 
-    it('shows once more beside a form’s caution block, and not in a form without one', () => {
+    it('shows once in the details and once beside a form’s caution, and not in a form without one', () => {
       const { container } = renderEntry();
 
       // Preconditions: the ingredient and the root form carry no notes, the oil does.
@@ -525,12 +525,13 @@ describe('IngredientEntry', () => {
       expect(cautions()).toHaveLength(1);
 
       expect(disclaimers()).toHaveLength(2);
+      expect(disclaimers(screen.getByRole('region', { name: 'Details' }))).toHaveLength(1);
       expect(disclaimers(oil)).toHaveLength(1);
       expect(disclaimers(root)).toHaveLength(0);
     });
 
-    it('shows beside every caution block, the details’ and each form’s, and once for the page', () => {
-      renderEntry({
+    it('shows exactly once in the details and once in each form that has a caution', () => {
+      const { container } = renderEntry({
         detail: detail({
           entry: entryRow({ safetyNotes: 'Fixture caution.' }),
           variants: [
@@ -543,10 +544,16 @@ describe('IngredientEntry', () => {
       // Precondition: three caution blocks, the details' and one in each form.
       expect(cautions()).toHaveLength(3);
 
-      expect(disclaimers()).toHaveLength(4);
+      expect(disclaimers()).toHaveLength(3);
+      expect(disclaimers(screen.getByRole('region', { name: 'Details' }))).toHaveLength(1);
+      for (const slug of ['testroot', 'testoil']) {
+        expect(disclaimers(container.querySelector(`#form-${slug}`) as HTMLElement)).toHaveLength(
+          1,
+        );
+      }
     });
 
-    it('shows once more when the details carry the caution block', () => {
+    it('shows once, inside the details, when only the details carry the caution block', () => {
       renderEntry({
         detail: detail({
           entry: entryRow({ safetyNotes: 'Fixture caution.' }),
@@ -559,7 +566,8 @@ describe('IngredientEntry', () => {
       expect(within(details).getByRole('region', { name: 'Caution' })).toBeInTheDocument();
       expect(cautions()).toHaveLength(1);
 
-      expect(disclaimers()).toHaveLength(2);
+      expect(disclaimers()).toHaveLength(1);
+      expect(disclaimers(details)).toHaveLength(1);
     });
   });
 

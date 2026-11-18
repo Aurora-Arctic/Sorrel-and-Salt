@@ -96,7 +96,7 @@ test('a visitor reads an entry with its details and each form on a phone, a long
   await expect(page.getByRole('heading', { level: 1, name, exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Details' })).toBeVisible();
   await expect(page.locator(`#form-${slugify('Fixture Root')}`)).toBeVisible();
-  // The page's one disclaimer: neither the details nor the form carries a caution to sit beside.
+  // The details' one disclaimer, after its text: neither the details nor the form carries a caution.
   await expect(page.getByRole('link', { name: 'Read the Disclaimer' })).toHaveCount(1);
   const bibliography = page.getByRole('list', { name: 'Bibliography' });
   await expect(bibliography).toContainText(url);

@@ -411,11 +411,10 @@ const IngredientEntry = ({
               <p className="ingredient-entry__empty">No description recorded.</p>
             )}
             <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
-            {/* Beside the caution when there is one. */}
+            {/* The details' one disclaimer: beside the caution when there is one, else after the text. */}
             {hasText(shown.safetyNotes) && <DisclaimerNotice />}
             <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
-            {/* The page's own, whatever the cautions, after the text it speaks for. */}
-            <DisclaimerNotice />
+            {!hasText(shown.safetyNotes) && <DisclaimerNotice />}
           </div>
         </section>
         {/* A plain div, not an aside: one complementary landmark per section would be noise. */}
