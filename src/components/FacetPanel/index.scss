@@ -147,6 +147,11 @@
   @include wrap-row(space(4));
 }
 
+// The foot's Clear All is one line of text; the padding lifts it to 24px and the negative margin leaves the row as it was.
+.facet-panel__foot-clear {
+  @include target-size($content-block: 1lh, $pull: true);
+}
+
 @include width-from($shell-tablet-width) {
   .facet-panel:not(.facet-panel--static) {
     .facet-panel__head {

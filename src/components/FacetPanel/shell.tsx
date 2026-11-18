@@ -249,7 +249,7 @@ export function FacetShell({
                 >
                   Close
                 </button>
-                <a href={clearHref} onClick={clear}>
+                <a href={clearHref} className="facet-panel__foot-clear" onClick={clear}>
                   Clear All
                 </a>
               </div>
