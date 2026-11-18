@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import PageFrame from '../PageFrame';
 import PageHeader from '../PageHeader';
+import './index.scss';
 import type { NarrowPanelPageProps } from './types';
 import { cx } from '@/lib/class-names';
 
@@ -16,7 +17,7 @@ const NarrowPanelPage = ({
   <>
     {contextRow}
     <PageFrame as={as} narrow>
-      <div className={cx('page-frame__section panel', className)}>
+      <div className={cx('page-frame__section panel narrow-panel-page', className)}>
         <PageHeader
           className="card-page-header"
           headingClassName="auth-title"

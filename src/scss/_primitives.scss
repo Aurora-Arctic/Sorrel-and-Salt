@@ -1479,11 +1479,6 @@
     margin-block: space(2);
   }
 
-  // A card page's own button row (coven-paused's Leave) is centred like the invitation card's rows, so the gate cards align alike.
-  .panel > .form__actions {
-    justify-content: center;
-  }
-
   // The button apart from the rest at the row's far end, an edit's Delete. A margin, not a spacer, so a narrow
   // form's stacking rule can take it back.
   .form__aside {
