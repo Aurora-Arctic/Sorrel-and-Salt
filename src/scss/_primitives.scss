@@ -1626,8 +1626,9 @@
     --list-marker-ink: #{$secondary};
   }
 
-  // Out of flow while empty, so the always-drawn live region adds no gap to the field.
-  .field__error:empty {
+  // Out of flow while empty, so an always-drawn live region (the error, the character count) adds no gap to the field.
+  .field__error:empty,
+  .field__hint:empty {
     position: absolute;
   }
 
@@ -1919,6 +1920,12 @@
     input:is(:disabled, [aria-disabled='true']) {
       cursor: not-allowed;
     }
+  }
+
+  // In a form's column nothing stands beside the switch to line up with, so its row is the track's own height and the
+  // toggle sits the field's gap under its label, as a text box does.
+  .form .switch .switch__control {
+    min-height: 0;
   }
 
   // A list filter's search box, `SearchField`. Here after `.input` rather than in the Field folder, so it outweighs
