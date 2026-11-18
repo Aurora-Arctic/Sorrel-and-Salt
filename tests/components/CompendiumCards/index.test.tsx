@@ -288,6 +288,43 @@ describe('CompendiumCards', () => {
     expect(new URLSearchParams(sent(form)).has('withoutReferences')).toBe(false);
   });
 
+  describe('a filter matching nothing', () => {
+    const QUERY = 'Nothingwort';
+    const noMatch = () =>
+      renderWithQuery(
+        <Cards {...props({ entries: [], total: 0, filter: { ...NO_FILTER, query: QUERY } })} />,
+      );
+    // Only the regions that say something: a combobox's results announcer is a status region too.
+    const saying = () => screen.queryAllByRole('status').filter((region) => region.textContent);
+
+    it('names what matched nothing in one status region alone', () => {
+      noMatch();
+
+      // Precondition: the list is empty and the search was for the query.
+      expect(screen.queryByRole('list', { name: 'Compendium' })).toBeNull();
+
+      expect(saying().filter((region) => region.textContent?.includes(QUERY))).toHaveLength(1);
+    });
+
+    it('draws the shared no-match state with a way back to the whole compendium', () => {
+      noMatch();
+
+      expect(screen.queryByRole('status', { name: 'No Ingredients' })).toBeNull();
+      const state = screen.getByRole('status', { name: 'No Matches' });
+      expect(within(state).getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+        'href',
+        '/compendium',
+      );
+    });
+
+    it('keeps the empty state for an empty compendium with no filter', () => {
+      renderWithQuery(<Cards {...props({ entries: [], total: 0 })} />);
+
+      expect(screen.getByRole('status', { name: 'No Ingredients' })).toBeInTheDocument();
+      expect(screen.queryByRole('status', { name: 'No Matches' })).toBeNull();
+    });
+  });
+
   describe('the viewer’s covens', () => {
     const MINE = [
       { id: 'coven-w', name: 'Testhollow', paused: null },
