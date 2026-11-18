@@ -263,7 +263,7 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
           offerTyped={false}
           actionFirst
           noun="ingredient"
-          placeholder="Add an ingredient"
+          placeholder="Add an Ingredient"
           {...aria}
         />
         {/* The tray inside the frame; the open list is layered over it (z-index, Combobox). Each chip

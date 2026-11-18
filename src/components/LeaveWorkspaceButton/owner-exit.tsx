@@ -189,7 +189,7 @@ const Options = ({
               setPicked(userId);
               if (userId) setMissing(false);
             }}
-            placeholder="Search members"
+            placeholder="Search Members"
             choices={successors.map(({ userId, name: member, role }) => ({
               value: userId,
               label: member,

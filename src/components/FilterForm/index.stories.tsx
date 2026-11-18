@@ -41,7 +41,7 @@ const Bare = ({ clear, sorrel }: { clear?: boolean; sorrel?: boolean }) => {
         <SearchField
           label="Name"
           name="query"
-          placeholder="Search names"
+          placeholder="Search Names"
           value={query}
           onChange={setQuery}
         />

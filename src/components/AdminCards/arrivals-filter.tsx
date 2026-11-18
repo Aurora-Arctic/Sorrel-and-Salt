@@ -21,7 +21,7 @@ const ArrivalsFilterForm = ({ filter }: ArrivalsFilterProps): ReactElement => {
       <SearchField
         label="Name, Email or Batch"
         name="query"
-        placeholder="Search sign-ups"
+        placeholder="Search Sign-Ups"
         hint="Matches part of an account's name or email, or the start of a batch number."
         value={query}
         onChange={setQuery}

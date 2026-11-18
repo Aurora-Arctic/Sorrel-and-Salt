@@ -59,7 +59,7 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
           required
           limit={NAME_MAX_LENGTH}
           autoComplete="name"
-          placeholder="Your name"
+          placeholder="Your Name"
           value={value}
           onChange={setValue}
           error={fieldError}

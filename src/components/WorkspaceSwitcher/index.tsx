@@ -94,7 +94,7 @@ export default function WorkspaceSwitcher({
           navigate(href);
         }}
         choices={canCreate ? [...choices, CREATE] : choices}
-        placeholder="Choose a coven"
+        placeholder="Choose a Coven"
       />
     </div>
   );

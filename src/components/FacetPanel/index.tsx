@@ -128,7 +128,7 @@ export default function FacetPanel({
                 label="Forms"
                 name="forms"
                 typeahead
-                placeholder="Add a form"
+                placeholder="Add a Form"
                 removeNoun="Form"
                 loading={loading}
                 choices={facets.forms.map((form) => ({
@@ -259,7 +259,7 @@ export default function FacetPanel({
               <FacetCombobox
                 label="In My Covens"
                 name="covens"
-                placeholder="Add a coven"
+                placeholder="Add a Coven"
                 removeNoun="Coven"
                 loading={loading}
                 counts={false}
@@ -297,7 +297,7 @@ export default function FacetPanel({
           <FacetCombobox
             label="Celestial Bodies"
             name="celestialBodies"
-            placeholder="Add a body"
+            placeholder="Add a Body"
             removeNoun="Celestial Body"
             loading={loading}
             choices={facets.celestialBodies}
@@ -309,8 +309,8 @@ export default function FacetPanel({
           <FacetCombobox
             label="Zodiac"
             name="zodiac"
-            placeholder="Add a sign"
-            emptyPlaceholder="No signs"
+            placeholder="Add a Sign"
+            emptyPlaceholder="No Signs"
             removeNoun="Sign"
             loading={loading}
             choices={facets.zodiac}
@@ -326,7 +326,7 @@ export default function FacetPanel({
             label="Deities"
             name="deities"
             typeahead
-            placeholder="Add a deity"
+            placeholder="Add a Deity"
             removeNoun="Deity"
             loading={loading}
             choices={facets.deities.map((deity) => ({
@@ -343,7 +343,7 @@ export default function FacetPanel({
           <FacetCombobox
             label="Elements"
             name="elements"
-            placeholder="Add an element"
+            placeholder="Add an Element"
             removeNoun="Element"
             loading={loading}
             choices={facets.elements}

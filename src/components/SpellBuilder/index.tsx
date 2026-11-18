@@ -647,7 +647,7 @@ const SpellBuilder = ({
                 <TextField<SpellBuilderValues>
                   name="title"
                   label="Title"
-                  placeholder="Add a title"
+                  placeholder="Add a Title"
                   autoComplete="off"
                   spellCheck
                   enterKeyHint="next"
@@ -655,7 +655,7 @@ const SpellBuilder = ({
                 <TextField<SpellBuilderValues>
                   name="intent"
                   label="Intent"
-                  placeholder="Add an intent"
+                  placeholder="Add an Intent"
                   spellCheck
                   multiline
                   rows={3}
@@ -671,7 +671,7 @@ const SpellBuilder = ({
                     <TextField<SpellBuilderValues>
                       name="jarDescription"
                       label="Jar Description"
-                      placeholder="Add a description"
+                      placeholder="Add a Description"
                       autoComplete="off"
                       spellCheck
                       enterKeyHint="next"
@@ -709,7 +709,7 @@ const SpellBuilder = ({
                   name="moonPhase"
                   label="Moon Phase"
                   hint="Pick one, or write your own"
-                  placeholder="Add a phase"
+                  placeholder="Add a Phase"
                   options={MOON_PHASES}
                   icon={moonPhaseIcon}
                 />
@@ -717,7 +717,7 @@ const SpellBuilder = ({
                   name="dayOfWeek"
                   label="Day"
                   hint="Pick one, or write your own"
-                  placeholder="Add a day"
+                  placeholder="Add a Day"
                   options={DAYS_OF_THE_WEEK}
                 />
               </>,
@@ -728,7 +728,7 @@ const SpellBuilder = ({
                 <TextField<SpellBuilderValues>
                   name="note"
                   label="Note"
-                  placeholder="Add a note"
+                  placeholder="Add a Note"
                   spellCheck
                   multiline
                 />
