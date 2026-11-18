@@ -312,7 +312,7 @@ const Modal = ({
             </p>
           )}
           {destination && !eyebrow && (
-            <p id={eyebrowId} className="eyebrow">
+            <p id={eyebrowId} className="eyebrow modal-dialog__destination">
               <span className="spoken-separator">to</span> {destination}
             </p>
           )}

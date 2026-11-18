@@ -190,6 +190,12 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   text-shadow: none;
 }
 
+// "to" and its destination: the hidden word is a flex item of no size and the name a box of its own, so the
+// space after the word starts no line and a long name's wrapped lines start at one edge.
+.modal-dialog__destination {
+  display: flex;
+}
+
 // A head with a top line (`topEnd`, the details window's) stands further above what follows it,
 // `space(5)` in place of `space(4)`; it is the only head with one, so no other dialog's gap moves.
 .modal-dialog__header--topped {

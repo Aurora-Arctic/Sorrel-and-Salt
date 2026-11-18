@@ -86,7 +86,7 @@ An edit dialog says what is edited: an eyebrow naming the action and kind, then 
 
 - **`title`** is the name **as saved**, from what the page read, never the Name field's live value, so the head holds still during a rename.
 - **`qualifier`** follows the name in muted body ink where the list names it by a second thing: an ingredient's formal name, a deity's tradition ("Hecate (Greek)"). The caller sets binomial italics (`.binomial`); a mineral's formal name stays upright.
-- **`destination`** is where an add lands, in the eyebrow's place, spoken after the title through a hidden "to": "Add Ingredient to Whitethorn Coven".
+- **`destination`** is where an add lands, in the eyebrow's place, spoken after the title through a hidden "to": "Add Ingredient to Whitethorn Coven". The eyebrow is a flex row (`.modal-dialog__destination`), so the space after the hidden word starts no line and a long name wraps flush.
 - A screen reader hears eyebrow then title then qualifier, "Edit Ingredient, Mugwort, Artemisia vulgaris", with `.spoken-separator` commas (a comma drawn at no size, since `aria-labelledby` joins with a space and `.visually-hidden` text gets spaces either side in Chrome; `styling.md`).
 
 ## A title with its own end
