@@ -243,3 +243,9 @@ export interface ShownToggleProps {
   label?: string;
   accessibleName?: string;
 }
+
+/** A value beside the ingredients that gave it. */
+export interface SourcedValue<T = string> {
+  value: T;
+  sources: readonly string[];
+}

@@ -2,6 +2,7 @@ import { Fragment, type ReactElement, type ReactNode } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { capitalise, hasText } from '../../lib/text';
 import CorrespondenceValue from './correspondence-value';
+import type { SourcedValue } from './types';
 import type { CategoryDetail, DeityDetail } from '@/modules/ingredients';
 import './index.scss';
 import { cx } from '@/lib/class-names';
@@ -11,12 +12,6 @@ export interface Row {
   values: string[];
   /** Parallel to `values`: the ingredients that gave each one. */
   sources?: string[][];
-}
-
-/** A value beside the ingredients that gave it. */
-export interface SourcedValue<T = string> {
-  value: T;
-  sources: readonly string[];
 }
 
 // Elements are plain text here: the spell page's combined values arrive as strings, not the column's enum.
