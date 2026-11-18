@@ -422,27 +422,54 @@ describe('IngredientEntry', () => {
     ).toHaveLength(3);
   });
 
-  it('says each empty block and correspondence is empty, where the details modal hides them', () => {
-    renderEntry({
-      detail: detail({
-        entry: entryRow({ elements: null, celestialBodies: null, zodiacSigns: null, colors: null }),
-        folkNames: [],
-        categories: [],
-        deities: [],
-      }),
-    });
-    const details = screen.getByRole('region', { name: 'Details' });
-    const body = details.parentElement!;
+  it('says each empty list block is empty, where the details modal hides them', () => {
+    renderEntry({ detail: detail({ folkNames: [], categories: [] }) });
+    const body = screen.getByRole('region', { name: 'Details' }).parentElement!;
 
-    expect(within(body).getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
-    expect(
-      within(body).getAllByText(
-        /^No (elements|celestial bodies|zodiac signs|colours|deities) recorded\.$/,
-      ),
-    ).toHaveLength(5);
     expect(within(body).getByText('No folk names recorded.')).toBeInTheDocument();
     expect(within(body).getByText('No categories recorded.')).toBeInTheDocument();
   });
+
+  it('draws only the correspondence groups that hold a value, and no line for an empty one', () => {
+    renderEntry({
+      detail: detail({
+        entry: entryRow({
+          elements: ['fire'],
+          celestialBodies: ['Fixture Moon'],
+          zodiacSigns: [],
+          colors: null,
+        }),
+        deities: [],
+        variants: [],
+      }),
+    });
+    const body = screen.getByRole('region', { name: 'Details' }).parentElement!;
+
+    // Preconditions: two groups hold values and three (signs, colours, deities) hold none.
+    expect(within(body).getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
+    expect(within(body).getAllByRole('term')).toHaveLength(2);
+    const definitions = within(body).getAllByRole('definition');
+    expect(definitions).toHaveLength(2);
+    for (const definition of definitions) expect(definition.textContent?.trim()).not.toBe('');
+  });
+
+  // The side column's blocks either join Details' own section, a level beneath its h2, or stand
+  // beside it as h2s of their own: a level under a heading they do not sit beneath is a skip.
+  it.each(['Correspondences', 'Folk Names', 'Categories', 'Substitutes'])(
+    'heads the %s block a level beneath the section it sits in',
+    (name) => {
+      render(<IngredientEntry detail={detail({ variants: [] })} hrefOf={hrefOf} />);
+      const details = screen.getByRole('region', { name: 'Details' });
+
+      // Precondition: Details is the body's h2, and the block's heading is drawn.
+      expect(within(details).getByRole('heading', { level: 2, name: 'Details' })).toBeVisible();
+      expect(screen.getByRole('heading', { name })).toBeInTheDocument();
+
+      const beneathDetails = within(details).queryByRole('heading', { name, level: 3 });
+      const besideDetails = screen.queryByRole('heading', { name, level: 2 });
+      expect(beneathDetails ?? besideDetails).not.toBeNull();
+    },
+  );
 
   it('links a linked substitute to its page, naming the form a form link names, and leaves a typed one as text', () => {
     renderEntry();
@@ -463,24 +490,60 @@ describe('IngredientEntry', () => {
     expect(within(substitutes).queryAllByRole('link')).toHaveLength(0);
   });
 
-  it('links the disclaimer beside the safety notes of the details and of every form, notes or none', () => {
-    const { container } = renderEntry();
+  describe('the disclaimer', () => {
+    const disclaimers = (scope: HTMLElement = document.body) =>
+      within(scope).queryAllByRole('link', { name: 'Read the Disclaimer' });
+    const cautions = () => screen.queryAllByRole('region', { name: 'Caution' });
 
-    // Preconditions: the ingredient and the root form carry no notes, the oil does.
-    expect(detail().entry.safetyNotes).toBeNull();
-    const details = screen.getByRole('region', { name: 'Details' });
-    expect(within(details).queryByRole('region', { name: 'Caution' })).not.toBeInTheDocument();
-    const root = container.querySelector('#form-testroot') as HTMLElement;
-    const oil = container.querySelector('#form-testoil') as HTMLElement;
-    expect(within(root).queryByRole('region', { name: 'Caution' })).not.toBeInTheDocument();
-    expect(within(oil).getByRole('region', { name: 'Caution' })).toBeInTheDocument();
+    it('shows once on a page with no caution block, and in no form', () => {
+      const { container } = renderEntry({
+        detail: detail({ variants: [variantRow('testroot'), variantRow('testoil')] }),
+      });
 
-    for (const section of [details, root, oil]) {
-      expect(within(section).getByRole('link', { name: 'Read the Disclaimer' })).toHaveAttribute(
-        'href',
-        '/disclaimer',
-      );
-    }
+      // Preconditions: neither the ingredient nor any form carries a caution, and both forms are drawn.
+      expect(cautions()).toHaveLength(0);
+      const root = container.querySelector('#form-testroot') as HTMLElement;
+      const oil = container.querySelector('#form-testoil') as HTMLElement;
+      expect(root).toHaveRole('region');
+      expect(oil).toHaveRole('region');
+
+      expect(disclaimers()).toHaveLength(1);
+      expect(disclaimers()[0]).toHaveAttribute('href', '/disclaimer');
+      expect(disclaimers(root)).toHaveLength(0);
+      expect(disclaimers(oil)).toHaveLength(0);
+    });
+
+    it('shows once more beside a form’s caution block, and not in a form without one', () => {
+      const { container } = renderEntry();
+
+      // Preconditions: the ingredient and the root form carry no notes, the oil does.
+      expect(detail().entry.safetyNotes).toBeNull();
+      const root = container.querySelector('#form-testroot') as HTMLElement;
+      const oil = container.querySelector('#form-testoil') as HTMLElement;
+      expect(within(root).queryByRole('region', { name: 'Caution' })).not.toBeInTheDocument();
+      expect(within(oil).getByRole('region', { name: 'Caution' })).toBeInTheDocument();
+      expect(cautions()).toHaveLength(1);
+
+      expect(disclaimers()).toHaveLength(2);
+      expect(disclaimers(oil)).toHaveLength(1);
+      expect(disclaimers(root)).toHaveLength(0);
+    });
+
+    it('shows once more when the details carry the caution block', () => {
+      renderEntry({
+        detail: detail({
+          entry: entryRow({ safetyNotes: 'Fixture caution.' }),
+          variants: [variantRow('testroot')],
+        }),
+      });
+
+      // Precondition: the one caution block is the details'.
+      const details = screen.getByRole('region', { name: 'Details' });
+      expect(within(details).getByRole('region', { name: 'Caution' })).toBeInTheDocument();
+      expect(cautions()).toHaveLength(1);
+
+      expect(disclaimers()).toHaveLength(2);
+    });
   });
 
   it('gives each form a section anchored on its slug, headed by the form, after the details', () => {
