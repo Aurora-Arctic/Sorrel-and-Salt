@@ -758,6 +758,13 @@ $replaces-gap: space(5);
 // Placed by `useTip`, one layer above ordinary tips; inside the anchor, so the pointer can rest on it.
 .ingredient-entry__value-card {
   @include tip-card(layer('floating'));
+
+  // A floor, so a card with one short name is not a sliver beside the others.
+  min-width: 12rem;
+}
+
+.ingredient-entry__card-eyebrow {
+  line-height: 1.65;
 }
 
 .ingredient-entry__card-eyebrow,
@@ -772,7 +779,7 @@ $replaces-gap: space(5);
   @include tip-card-title;
 }
 
-.ingredient-entry__card-section + .ingredient-entry__card-section {
+.ingredient-entry__card-section {
   margin-block-start: space(2);
 }
 
