@@ -8,10 +8,11 @@ The audit has 13 findings. No finding is High, so none stops a search engine rea
 
 ### What The Owner Needs To Do
 
-I need you to do two things.
+I need you to do three things.
 
 1. Read the findings and the proposed tasks (SEO-1 to SEO-13) and say which to mint, change or skip. Severity is a proposal; you can change it.
 2. For SEO-7, choose between the two fixes the task names: change the Vercel AI Bots setting to Allow, or correct the recorded decision to say Log. The task is written so that either passes.
+3. For SEO-10, choose which signal `/compendium?entry=<id>` keeps: the noindex header or the canonical tag.
 
 Nothing else needs you. The audit asked nothing of Search Console, Bing Webmaster Tools or Vercel, and changed none of them.
 
@@ -20,7 +21,7 @@ Nothing else needs you. The audit asked nothing of Search Console, Bing Webmaste
 - **Routes:** every public route: `/`, `/compendium` and its entry pages, `/about`, `/terms`, `/privacy`, `/disclaimer`, `/code-of-ethics` and their version pages, the help pages (`/help`, its articles, `/help/search`), `/sign-in`, `/support`, `/llms.txt`, and the two AI catalogue addresses `/.well-known/ai-catalog.json` and `/.well-known/ard.json`.
 - **Topics:** `robots.txt`, the sitemap, canonical tags (the tag that names the address a page wants indexed), noindex headers and tags (an instruction to keep a page out of search results), titles and descriptions, share images (the picture a link shows when it is pasted into a chat or a post), structured data (JSON-LD, the machine-readable page description search engines read), internal links, the firewall's effect on crawlers, and what Google Search Console and Bing Webmaster Tools report.
 - **Decisions from the owner (2026-11-18):** the audit covers every public route, including `/about`, `/terms` and `/help/*`; `/sign-in` stays out of the search index; the audit also covers `/llms.txt` and the AI catalogue; coverage gates are read from the config, the workflow and the latest CI result, with no local full run; the audit ends with a commit and no pull request.
-- **Code base:** `staging` at `f10263de0`. Production runs `main` at `7aa9ed84c`, the commit of release v0.15.1 (the tag `v0.15.1` is 5 commits behind it). Each finding says whether it also holds on `main`. For the search-engine files the two branches differ in four places: the sign-in page's folder (`src/app/sign-in/` on `main`, `src/app/(public)/sign-in/` on `staging`), `src/app/(public)/help/search/page.tsx` (a pager on `staging`), `src/components/PublicFrame/sign-in-link.tsx` (on `staging` the header link is hidden on `/sign-in`) and the wording of four documents. `robots.ts`, `sitemap.ts`, `proxy.ts`, `page-metadata.ts`, `json-ld.ts` and the AI catalogue files are identical.
+- **Code base:** `staging` at `f10263de0`. Production runs `main` at `7aa9ed84c`, the merge of release 0.15.1. Each finding says whether it also holds on `main`. For the search-engine files the two branches differ in four places: the sign-in page's folder (`src/app/sign-in/` on `main`, `src/app/(public)/sign-in/` on `staging`), `src/app/(public)/help/search/page.tsx` (a pager on `staging`), `src/components/PublicFrame/sign-in-link.tsx` (on `staging` the header link is hidden on `/sign-in`) and the wording of four documents. `robots.ts`, `sitemap.ts`, `proxy.ts`, `page-metadata.ts`, `json-ld.ts` and the AI catalogue files are identical.
 
 ## Method
 
@@ -160,13 +161,13 @@ Read by the owner's Chrome session on 2026-11-18, signed out, against production
 | `/compendium/ingredients/alum-potassium-alum`      | 200    | 39          | 154               | yes         | 1,538 | `DefinedTerm`, `BreadcrumbList` | 74          |
 | `/about`                                           | 200    | 26          | 100               | no          | 1,760 | none                            | 65          |
 | `/terms`                                           | 200    | 30          | 103               | no          | 4,403 | none                            | 64          |
-| `/terms/versions/1`                                | 200    | 41          | 55                | no          | 4,350 | not recorded                    | 64          |
+| `/terms/versions/1`                                | 200    | 41          | 55                | no          | 4,350 | none                            | 64          |
 | `/help`                                            | 200    | 22          | 69                | no          | 3,341 | none                            | 64          |
 | `/help/your-coven/invite-someone`                  | 200    | 32          | 35                | no          | 580   | none                            | 68          |
 | `/help/account-and-security/passwords-and-lockout` | 200    | 39          | 49                | no          | 470   | none                            | 68          |
-| `/sign-in`                                         | 200    | 25          | 25                | no          | 183   | not recorded                    | 21          |
-| `/support`                                         | 200    | 25          | 44 (the default)  | yes         | 331   | not recorded                    | 63          |
-| `/help/search`                                     | 200    | 29          | 44 (the default)  | yes         | 252   | not recorded                    | 63          |
+| `/sign-in`                                         | 200    | 25          | 25                | no          | 183   | none                            | 21          |
+| `/support`                                         | 200    | 25          | 44 (the default)  | yes         | 331   | none                            | 63          |
+| `/help/search`                                     | 200    | 29          | 44 (the default)  | yes         | 252   | none                            | 63          |
 
 Other readings from the same run:
 
@@ -307,7 +308,7 @@ Over 7 days: Allowed 70.0k, Denied 5.3k, Challenged 1.7k, Logged 1.3k, Rate Limi
 
 - **Severity:** Low
 - **Where:** `src/app/(public)/compendium/page.tsx:89-100` (`canonicalPath` names the entry's own page when `?entry=` is set), `src/app/(public)/compendium/page.tsx:226-231` (the entry links), `src/proxy.ts:109-123` (`NOINDEX_PARAMS` and the header).
-- **Found:** live and code. The address answers 200 with `x-robots-tag: noindex, follow` and a canonical tag naming the entry's page. `/compendium` holds 24 entry links; whether they carry `rel="nofollow"` was not recorded in the live data. Google's "Alternate page with proper canonical tag" rows (2026-10-23) and "Excluded by 'noindex' tag" rows (2026-11-13) are the before and after of MB.289. The handoff's guess that these are old addresses is wrong: the page still builds them.
+- **Found:** live and code. The address answers 200 with `x-robots-tag: noindex, follow` and a canonical tag naming the entry's page. `/compendium` holds 24 entry links. The first carries `rel="nofollow"`; the live data did not record the `rel` of the other 23. Google's "Alternate page with proper canonical tag" rows (2026-10-23) and "Excluded by 'noindex' tag" rows (2026-11-13) are the before and after of MB.289. The handoff's guess that these are old addresses is wrong: the page still builds them.
 - **Also on `main`:** yes. Both files are identical.
 - **Why It Matters:** a page says "index the other address" and "do not index this one" at once. The audit found no evidence that either signal fails today.
 - **Recommended Fix:** keep one signal. The owner picks which: the noindex header alone, or the canonical tag alone.
@@ -362,7 +363,7 @@ One task per finding. No task has an id; an id is given when the owner approves 
 
 _Story:_ As a person sharing a link to a document or a help page, I want the link to show the site's picture, so that it looks like the site and not a bare address.
 
-Minted from SEO-1.
+From SEO-1.
 
 _Acceptance criteria:_
 
@@ -377,7 +378,7 @@ Estimate based on: MB.80 (2h). The figure is an estimate; the change is one help
 
 _Story:_ As a reader or a search engine, I want a help article's main heading to be its title, so that each article says what it is about.
 
-Minted from SEO-2.
+From SEO-2.
 
 _Acceptance criteria:_
 
@@ -393,7 +394,7 @@ Estimate based on: MB.82 (4h). The figure is an estimate; the change is one shar
 
 _Story:_ As a site keeper, I want a page to load a handful of stylesheet files, so that crawlers spend their requests on pages and not on styles.
 
-Minted from SEO-3.
+From SEO-3.
 
 _Acceptance criteria:_
 
@@ -409,7 +410,7 @@ Estimate based on: MB.84 (7h). The figure is an estimate; the cause is not known
 
 _Story:_ As a site keeper, I want crawlers to skip links that open sign-in or support, so that they spend their requests on pages with content.
 
-Minted from SEO-4.
+From SEO-4.
 
 _Acceptance criteria:_
 
@@ -424,7 +425,7 @@ Estimate based on: MB.289 (6.5h). The figure is an estimate; it is a part of wha
 
 _Story:_ As a site keeper, I want only the current version of a document to appear in search results, so that nobody finds an old copy of the terms.
 
-Minted from SEO-5.
+From SEO-5.
 
 _Acceptance criteria:_
 
@@ -439,7 +440,7 @@ Estimate based on: MB.80 (2h). The figure is an estimate; the change is one meta
 
 _Story:_ As a site keeper, I want Bing told when a page is published or changed, so that people on Bing can find new entries and help.
 
-Minted from SEO-6.
+From SEO-6.
 
 _Acceptance criteria:_
 
@@ -456,7 +457,7 @@ Estimate based on: MB.84 (7h) and MB.82 (4h). The figure is an estimate; it adds
 
 _Story:_ As a site keeper, I want the firewall and the design record to say the same thing about AI bots, so that the next person to read either is not misled.
 
-Minted from SEO-7.
+From SEO-7.
 
 _Acceptance criteria:_
 
@@ -471,7 +472,7 @@ Estimate based on: M12.2 (1.5h). The figure is an estimate; it is a dashboard ch
 
 _Story:_ As a person finding the site in Bing, I want the home page's title and description to say what the site is, so that I know whether to click.
 
-Minted from SEO-8.
+From SEO-8.
 
 _Acceptance criteria:_
 
@@ -486,7 +487,7 @@ Estimate based on: M12.2 (1.5h). The figure is an estimate; it is two strings an
 
 _Story:_ As a site keeper, I want a retired entry's address to say it was removed, so that search engines stop asking for it.
 
-Minted from SEO-9.
+From SEO-9.
 
 _Acceptance criteria:_
 
@@ -501,7 +502,7 @@ Estimate based on: MB.82 (4h). The figure is an estimate; it needs a way to tell
 
 _Story:_ As a site keeper, I want `/compendium?entry=<id>` to send search engines one instruction, so that they do not read two that disagree.
 
-Minted from SEO-10.
+From SEO-10.
 
 _Acceptance criteria:_
 
@@ -516,7 +517,7 @@ Estimate based on: MB.80 (2h). The figure is an estimate; the change is one func
 
 _Story:_ As a developer, I want a test to fail when a public page ships with no description or canonical tag, so that no page loses them unnoticed.
 
-Minted from SEO-11.
+From SEO-11.
 
 _Acceptance criteria:_
 
@@ -531,7 +532,7 @@ Estimate based on: MB.80 (2h). The figure is an estimate; the guard extends one 
 
 _Story:_ As a person searching, I want a help article or a document to describe itself to search engines, so that a result can show more than a title.
 
-Minted from SEO-12.
+From SEO-12.
 
 _Acceptance criteria:_
 
@@ -546,7 +547,7 @@ Estimate based on: MB.84 (7h). The figure is an estimate, scaled down because `s
 
 _Story:_ As an AI assistant reading `llms.txt`, I want to find the site's documents and help, so that I can answer questions about how the site works.
 
-Minted from SEO-13.
+From SEO-13.
 
 _Acceptance criteria:_
 
@@ -564,7 +565,7 @@ These were checked and need no fix.
 
 - **`/llms.txt` and the AI catalogue are built and guarded as their doc says.** Three route files (`src/app/llms.txt/route.ts`, `src/app/.well-known/ai-catalog.json/route.ts`, `src/app/.well-known/ard.json/route.ts`) are identical on `main` and `staging`. _Graph:_ all three call `listCompendiumSlugs()` (`src/modules/ingredients/services/compendium-slugs.ts:14`), as does `sitemap()` (`src/app/sitemap.ts:15`). It leaves out deleted, hidden and coven rows in SQL, and every address is built on the site's own origin. The media types are `text/markdown; charset=utf-8` and `application/ai-catalog+json`. Tests cover the layout, escaping, required fields and that hidden entries stay out (`tests/app/ai-discovery.test.ts`, `tests/app/well-known-routes.test.ts`, `tests/modules/ingredients/services/ai-discovery-files.test.ts`, `tests/modules/ingredients/services/compendium-hidden.test.ts:98`). `robots.txt` allows all three addresses. The three files were not fetched live, so what production serves there is known from code and tests only.
 - **Structured data on entries works.** An entry serves one valid JSON-LD block (`DefinedTerm` plus `BreadcrumbList`). Google's URL Inspection of the alum entry shows "Breadcrumbs: 1 valid item detected" on both the indexed result and the live test. The console's site-wide Breadcrumbs report showed 0 valid and 0 invalid on 2026-11-17. The two disagree. **No known cause;** both are recorded.
-- **`/about` is indexed.** URL Inspection says "URL is on Google", last crawl 2026-11-12. The console listed it as "Crawled - currently not indexed" from data last updated 2026-11-12. It is linked from the footer only (`src/components/SiteFooter/index.tsx:22-24`) and from two help pages.
+- **`/about` is indexed.** URL Inspection says "URL is on Google", last crawl 2026-11-12. The console listed it as "Crawled - currently not indexed" from data last updated 2026-11-12. The only link to it is the footer's (`src/components/SiteFooter/index.tsx:31`), which every public page carries; Google names two help pages as its referring pages.
 - **The sitemap is consistent.** 581 addresses (522 entries, 52 help pages, 7 others), no duplicates, none with a query, none for agarwood, all on the right host. Google read 582 on 2026-11-16 and Bing 529 on 2026-11-08; the differences are between dates.
 - **The firewall checkpoint does not reach search engines.** Bot Protection is on with action Challenge, "excluding verified bots", and its challenges began within the last day; Attack Challenge Mode is off. In 7 days of challenged and denied requests, no listed user agent contains bingbot, Googlebot or DuckDuckBot; each list stops at 50 agents. A rule named "Deny SEO Scrapers" denies SemrushBot and AhrefsBot.
 - **`/account/terms`.** The Terms of Use link to it (`documents/terms.md:88`). The link has `rel="nofollow"` (MB.289, `src/components/DocumentPage/markdown.tsx:333`), and the address redirects to sign-in. Bing's scan ran the day MB.289 merged.
@@ -582,7 +583,6 @@ These were checked and need no fix.
 - **The two draft specifications were not re-read.** `claude-docs/seo/ai-discovery.md` records them as read on 2026-10-19.
 - **No local coverage run.** The coverage gates were read from the config, the workflow and the latest CI result (owner's decision).
 - **The Amazonbot rule in `/app`.** A rule shutting out Amazonbot sits uncommitted in `/app`'s `src/app/robots.ts`, another session's work. It is in no commit, the live `robots.txt` has no such rule, and it is not part of this audit. It can be audited once committed.
-- **The plan was not stored** in `claude-docs/design-decisions/`.
 - **The Breadcrumbs mismatch.** The console's 0 against URL Inspection's "1 valid item" has no known cause (see "Left As It Is").
 - **The source of `/&`** was not found.
 - **Fixing any finding.** Each is its own task after approval.
