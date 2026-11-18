@@ -15,6 +15,7 @@ wiring behind it is [`auth/passwords.md`](../auth/passwords.md), "Reset and chan
   says "if it has an account" rather than "if it has a password", because
   Better Auth mails an account with providers alone too, and following the
   link gives that account its first password.
+- **A refused address** (the shared email rule) moves focus to the field (`useResultFocus`).
 - **Submit** is disabled until the field has something in it. The address goes
   trimmed. An accepted request replaces the form with the sent notice, which takes
   focus, with Send Again (same address) and Use a Different Address (an empty form,

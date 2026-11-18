@@ -11,6 +11,7 @@ and intro are the page's, not the component's.
 - **Save Name stays disabled until there is something to save.** The typed
   value, trimmed, must differ from the saved name, so outer whitespace alone
   is no change, since the service trims it away.
+- **The saved message is drawn inside a status region that is always in the page, empty before the save** (`<div role="status">` with `Notice` `inRegion`), so a screen reader is already listening when it arrives and the save is heard once.
 - The row is the shared `FormActions` ([`field.md`](field.md), "Form actions").
 - **The answer is the new baseline.** `setName` answers the renamed row, and
   the field and the comparison take its `name`, as stored, trimmed.
