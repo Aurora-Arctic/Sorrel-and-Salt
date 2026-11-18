@@ -45,7 +45,7 @@ export default function IngredientSummary({
   const cautioned = variants
     .filter(({ variant }) => hasText(variant.safetyNotes))
     .map(({ variant }) => formLabel(variant.form));
-  const rows = correspondences(shown, deities).filter((row) => row.values.length > 0);
+  const rows = correspondences(shown, deities);
   const listed = rows.length > 0 || folkNames.length > 0 || categories.length > 0;
   // Each form as a jar line: icon and name, then with the coven's jars its stock in a grid cell so
   // quantities end in one column; a form in no jar says "Not Stocked" to a screen reader alone

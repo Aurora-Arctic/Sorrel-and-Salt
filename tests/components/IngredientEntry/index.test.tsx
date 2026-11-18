@@ -529,6 +529,23 @@ describe('IngredientEntry', () => {
       expect(disclaimers(root)).toHaveLength(0);
     });
 
+    it('shows beside every caution block, the details’ and each form’s, and once for the page', () => {
+      renderEntry({
+        detail: detail({
+          entry: entryRow({ safetyNotes: 'Fixture caution.' }),
+          variants: [
+            variantRow('testroot', { safetyNotes: 'Fixture root caution.' }),
+            variantRow('testoil', { safetyNotes: 'Fixture oil caution.' }),
+          ],
+        }),
+      });
+
+      // Precondition: three caution blocks, the details' and one in each form.
+      expect(cautions()).toHaveLength(3);
+
+      expect(disclaimers()).toHaveLength(4);
+    });
+
     it('shows once more when the details carry the caution block', () => {
       renderEntry({
         detail: detail({
@@ -1329,7 +1346,8 @@ describe('IngredientEntry on a coven page', () => {
     expect(screen.queryByText('Testwort', { exact: true })).not.toBeInTheDocument();
     expect(screen.getByText('A fixture herb.')).toBeInTheDocument();
     expect(rowOf('Elements')).toBe('Water');
-    expect(rowOf('Celestial Bodies')).not.toBe('Fixture Moon');
+    // The emptied group is left out, not drawn as an empty line.
+    expect(screen.queryByText('Celestial Bodies', { selector: 'dt' })).not.toBeInTheDocument();
     expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
     // Annotated stands in place of Compendium; the next test is the precondition (held and unannotated shows Compendium).
     expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
@@ -1465,8 +1483,10 @@ describe('IngredientEntry stock', () => {
 
     const headings = screen
       .getAllByRole('heading', { level: 2 })
-      .map((heading) => heading.textContent);
-    expect(headings.slice(0, 3)).toEqual(['Stock', 'Details', 'Forms']);
+      .map((heading) => heading.textContent)
+      // The side column's blocks are h2s too; the sections are what is ordered here.
+      .filter((text) => ['Stock', 'Details', 'Forms'].includes(text ?? ''));
+    expect(headings).toEqual(['Stock', 'Details', 'Forms']);
 
     const nav = screen.getByRole('navigation', { name: 'On This Page' });
     expect(
