@@ -125,7 +125,7 @@
     `playwright`, `stories` and `workshop` are forced to `false`. Those jobs
     report skipped exactly as when no path matches, so no check name changes.
     The format, lint, type, destructive-DDL and migration-order checks keep
-    their own-file filters. The image builds, `gitflow` and `audit` still run.
+    their own-file filters. The image builds, `gitflow` and `audit` still run. The three image-build jobs (`build-image`, `build-db-image`, `build-e2e-image`) still run on a lower layer, because they run on every pull request today and the jobs that need them decide for themselves whether to run.
 
   What the owner accepted: a green lower layer means only the cheap checks
   passed, a failure is placed by the failing test's name, and a stack merges
@@ -154,6 +154,11 @@
   is counted by its own files. `tests/github/scripts/label-oversized.test.ts`
   proves both the add and the remove decision; the label calls themselves have
   not been run on GitHub.
+  The workflow cannot create the label, because creating a repository label
+  needs more than `pull-requests: write`. Create it once by hand:
+  `gh label create oversized --color D93F0B --description "Changes more lines than the limit; consider a stack"`.
+  Until it exists, the add step fails visibly and the pull request is not
+  blocked, since the workflow is not a required check.
 
 - **`close-task-on-merge.yml`** closes the issue a merged PR's body names with
   `Closes #N` when the PR merges into `staging`, because GitHub's own closing
