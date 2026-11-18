@@ -1608,8 +1608,9 @@
     color: $secondary;
   }
 
+  // A caution beside a field, in the warning ochre: a hint is never drawn in the error style.
   .field__warning {
-    color: $secondary;
+    color: $warning;
   }
 
   .form-error-summary__heading {
@@ -2113,8 +2114,8 @@
     @include surface-box($surface-page);
     @include state-fade(border-color, background-color);
 
-    &:hover:not(:has(input:disabled)) {
-      border-color: $accent;
+    // Hover tints the fill only: the accent border and highlight fill are what a checked card looks like.
+    &:hover:not(:has(input:disabled, input:checked)) {
       background-color: $surface-card-hover;
     }
 
@@ -2138,10 +2139,11 @@
       }
     }
 
+    // Label above description at every width, so a short description never sits inline on one screen and wraps on another.
     .radio__text {
-      flex-flow: row wrap;
-      align-items: baseline;
-      gap: space(2);
+      flex-flow: column;
+      align-items: flex-start;
+      gap: space(1);
     }
 
     .radio__description {

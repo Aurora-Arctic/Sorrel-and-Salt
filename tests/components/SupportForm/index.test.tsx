@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import SupportForm from '@/components/SupportForm';
+import { ABOUT_REQUIRED } from '@/lib/support-messages';
 import { SUPPORT_ABOUTS } from '@/lib/support-path';
 import type {
   SendSupportRequestMutation,
@@ -58,12 +59,12 @@ describe('SupportForm', () => {
     render(<SupportForm path="/a" />);
     fillText();
     fireEvent.click(send());
-    expect(aboutGroup()).toHaveAccessibleDescription('Error: Choose what this is about.');
+    expect(aboutGroup()).toHaveAccessibleDescription(`Error: ${ABOUT_REQUIRED}`);
     expect(calls).toHaveLength(0);
     expect(screen.queryByRole('status')).toBeNull();
 
     fireEvent.click(aboutRadio('Question'));
-    expect(aboutGroup()).not.toHaveAccessibleDescription('Error: Choose what this is about.');
+    expect(aboutGroup()).not.toHaveAccessibleDescription(`Error: ${ABOUT_REQUIRED}`);
   });
 
   it('shows what each about means inside its card', () => {
@@ -95,7 +96,7 @@ describe('SupportForm', () => {
 
     await waitFor(() => expect(within(aboutGroup()).getAllByRole('radio')[0]).toHaveFocus());
     expect(calls).toHaveLength(0);
-    expect(screen.getByText('Choose what this is about.')).toBeInTheDocument();
+    expect(screen.getByText(ABOUT_REQUIRED)).toBeInTheDocument();
     expect(subject()).toHaveAccessibleDescription(/Write a subject/);
     expect(message()).toHaveAccessibleDescription(/Write a message/);
     expect(subject()).toBeInvalid();

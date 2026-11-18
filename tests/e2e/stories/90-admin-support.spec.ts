@@ -92,7 +92,7 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
     await test.step('A pasted address is checked', async () => {
       const address = dialog.getByLabel('GitHub Issue');
       await address.fill('https://example.com/not-an-issue');
-      await dialog.getByRole('button', { name: 'Save Address' }).click();
+      await dialog.getByRole('button', { name: 'Save Issue' }).click();
       await expect(
         dialog
           .getByRole('alert')
@@ -101,7 +101,7 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
       ).toBeVisible();
 
       await address.fill(`${ISSUES}/4242`);
-      await dialog.getByRole('button', { name: 'Save Address' }).click();
+      await dialog.getByRole('button', { name: 'Save Issue' }).click();
       await expect(
         dialog.getByRole('link', { name: 'Aurora-Arctic/Sorrel-and-Salt#4242' }),
       ).toBeVisible();
