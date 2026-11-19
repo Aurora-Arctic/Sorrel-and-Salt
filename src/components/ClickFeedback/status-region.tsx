@@ -2,7 +2,6 @@
 
 import { createContext, useCallback, useContext, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { createPortal } from 'react-dom';
 import { repeatable } from '@/lib/repeat-announcement';
 import type { Announce } from './types';
 
@@ -27,7 +26,9 @@ interface Said {
 
 export function StatusRegionProvider({ children }: { children: ReactNode }): ReactElement {
   const [said, setSaid] = useState<Said>({ text: '', count: 0 });
-  const [slots, setSlots] = useState<HTMLElement[]>([]);
+  const home = useRef<HTMLSpanElement>(null);
+  const region = useRef<HTMLOutputElement>(null);
+  const slots = useRef<HTMLElement[]>([]);
 
   // The same sentence twice is the same text node to a screen reader, which then says nothing,
   // so `repeatable` alternates a trailing no-break space on each repeat.
@@ -35,17 +36,32 @@ export function StatusRegionProvider({ children }: { children: ReactNode }): Rea
     setSaid((last) => ({ text, count: last.text === text ? last.count + 1 : 1 }));
   }, []);
 
+  // The one element is moved, never redrawn: a new `<output>` that arrives already holding its sentence may never be
+  // read, and a portal given a new target mounts a new element. A slot's cleanup runs before React removes its dialog,
+  // so the region is out of it first.
   const claim = useCallback<ClaimSlot>((slot) => {
-    setSlots((now) => [...now, slot]);
-    return () => setSlots((now) => now.filter((each) => each !== slot));
+    const place = () => {
+      const target = slots.current[slots.current.length - 1] ?? home.current;
+      const node = region.current;
+      if (target && node && node.parentNode !== target) target.appendChild(node);
+    };
+    slots.current = [...slots.current, slot];
+    place();
+    return () => {
+      slots.current = slots.current.filter((each) => each !== slot);
+      place();
+    };
   }, []);
 
-  const region = <output className="visually-hidden">{repeatable(said.text, said.count)}</output>;
-  const slot = slots[slots.length - 1];
   return (
     <StatusRegionContext.Provider value={announce}>
       <SlotContext.Provider value={claim}>
-        {slot ? createPortal(region, slot) : region}
+        {/* The region's parent as React knows it, which never moves, so React never looks for the region elsewhere. */}
+        <span ref={home}>
+          <output ref={region} className="visually-hidden">
+            {repeatable(said.text, said.count)}
+          </output>
+        </span>
         {children}
       </SlotContext.Provider>
     </StatusRegionContext.Provider>
