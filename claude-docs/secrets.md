@@ -125,11 +125,11 @@ These steps need your own Vercel, Neon, Google, Discord, Meta, Microsoft, Resend
     2. Settings → API Tokens → Add Token, with access to that sandbox.
     3. In Vercel, add `MAIL_TRANSPORT` = `mailtrap-sandbox`, `MAILTRAP_SANDBOX_TOKEN` = the token and `MAILTRAP_SANDBOX_ID` = the id, all Preview only, the last two Sensitive.
     4. Read a preview's mail in the sandbox's own inbox in Mailtrap.
-11. **IndexNow key (Production only)**. A key is 8 to 128 letters, digits, or dashes, and IndexNow issues none. Until it is set, no ping is sent. Only the production deploy sends a ping. You never give the key to IndexNow: each ping carries it, and IndexNow checks it against `/indexnow-key.txt`.
+11. **IndexNow key (Production only)**. A key is 8 to 128 letters, digits, or dashes, and IndexNow issues none. Until it is set, no ping is sent. Only the production deploy sends a ping. You never give the key to IndexNow: each ping carries it, and IndexNow checks it against `/<your key>.txt` on the site.
     1. Make a key: `openssl rand -hex 16` prints 32 letters and digits.
     2. In Vercel, add `INDEXNOW_KEY` with that value, scoped to Production only and marked Sensitive.
     3. Redeploy production, since Vercel applies a variable only to a new deploy.
-    4. Check that `/indexnow-key.txt` on the live site shows the key and nothing else.
+    4. Open `/<your key>.txt` on the live site and check that it shows the key and nothing else.
 
 ## Every variable
 
@@ -148,7 +148,7 @@ Two rules shape the file:
 | `AUTH_SECRET`                                      | The email-link signing fallback in `src/lib/auth-secrets.ts`                    | blank                                 |
 | `ADMIN_BOOTSTRAP_EMAIL`                            | The address made keeper at its first verified sign-in                           | `placeholder@admin-bootstrap.invalid` |
 | `CRON_SECRET`                                      | The bearer Vercel Cron sends; while blank, the cron routes refuse every call    | blank                                 |
-| `INDEXNOW_KEY`                                     | The key served at `/indexnow-key.txt`; while blank, no ping is sent             | blank                                 |
+| `INDEXNOW_KEY`                                     | The key, served at `/<key>.txt`; while blank, no ping is sent                   | blank                                 |
 | `MAIL_TRANSPORT`                                   | `resend`, `mailtrap` or `mailpit`; while blank, mail is logged                  | blank                                 |
 | `MAIL_FROM`, `RESEND_API_KEY`                      | The Resend sender and key                                                       | blank                                 |
 | `MAILTRAP_SANDBOX_ID`, `MAILTRAP_SANDBOX_TOKEN`    | The Mailtrap sandbox inbox and key                                              | blank                                 |
