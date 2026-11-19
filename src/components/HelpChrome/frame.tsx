@@ -11,7 +11,6 @@ import { cx } from '../../lib/class-names';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
 import type { HelpPageHeadProps } from './types';
-import './index.scss';
 
 // Whether a help page stands under the public help header, which holds the heading and search box and stays up between
 // pages. The header's frame provides it, so a page never says which one it is in.
