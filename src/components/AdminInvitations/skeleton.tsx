@@ -2,7 +2,6 @@ import type { ReactElement } from 'react';
 import { ListBodySkeleton, ListFilterFrame } from '../ListFrame/skeleton';
 import AdminInvitationsFilter from './filter';
 import { NO_INVITATIONS_FILTER } from './href';
-import './index.scss';
 
 /** The list's rows with nothing in them yet: its table's headings over placeholder rows. */
 export const AdminInvitationsBodySkeleton = (): ReactElement => (

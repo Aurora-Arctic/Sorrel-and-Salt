@@ -1,5 +1,4 @@
 import type { ReactElement, ReactNode } from 'react';
-import './index.scss';
 
 // What a list draws with nothing in it, as a status region: the sentence, an optional explanation beneath
 // it and an optional one thing to do next. `page` is a whole list that is empty, centred; `compact` is a

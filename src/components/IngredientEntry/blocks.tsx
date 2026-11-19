@@ -10,7 +10,6 @@ import type {
   SourcedValue,
 } from './types';
 import type { CategoryDetail, DeityDetail } from '@/modules/ingredients';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 export type { Row } from './types';

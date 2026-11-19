@@ -9,7 +9,6 @@ import { useAnnounce } from '../ClickFeedback/status-region';
 import Notice from '../Notice';
 import ReviewRow from './review-row';
 import type { ReviewMarkProps } from './types';
-import './review-mark.scss';
 
 // The curator's Reviewed switch on a compendium entry: it saves on flip. A switch, not a button that flips its label,
 // so the state is the control's own to a screen reader. The service is the guard

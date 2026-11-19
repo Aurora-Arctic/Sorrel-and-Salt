@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import type { SkeletonProps } from './types';
-import './index.scss';
 
 // The one skeleton every region wait uses: a line of text or a control-sized block, repeated `count` times. The bars are
 // `aria-hidden` and the `<output>` saying "Loading" is the one announcement. Phrasing elements only, and shown at once, never

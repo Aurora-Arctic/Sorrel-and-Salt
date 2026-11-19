@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import { ConfirmLayerContext } from './confirm-layer';
 import { FIRST_FIELD } from './fields';
 import type { ConfirmOverlayProps } from './types';
-import './index.scss';
 
 // A question a form asks before it acts ("Delete this?", "Discard them?"), drawn as a card over the
 // form. In a modal it goes into the modal's layer, centred in the part of the body in view; outside

@@ -3,7 +3,6 @@ import { SITE_NAME, SITE_TAGLINE } from '../../lib/site';
 import IconTip from '../IconTip/icon-tip';
 import { SupportIcon } from '../IconTip/icons';
 import SupportLink from '../SupportLink';
-import './index.scss';
 import { PendingLink } from '../../lib/navigation';
 
 // See claude-docs/components/site-footer.md.

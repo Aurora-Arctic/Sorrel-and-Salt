@@ -8,7 +8,6 @@ import { BackChevron } from '../BackLink/chevron';
 import PageNav from '../PageNav';
 import { HelpBackLink } from './back-link';
 import type { HelpArticleViewProps } from './types';
-import './index.scss';
 
 /** A body with this many sections gains a contents menu; fewer are in view without one. */
 const MENU_FROM = 3;

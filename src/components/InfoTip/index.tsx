@@ -3,7 +3,6 @@
 import type { ReactElement } from 'react';
 import type { InfoTipProps } from './types';
 import { useTip } from './use-tip';
-import './index.scss';
 
 // A field's hint behind an ⓘ beside its label. It opens on hover, tap and the ⓘ's focus, never the
 // field's, and closes on Escape (WCAG 1.4.13), through `useTip`. The text stays in the page, faded out

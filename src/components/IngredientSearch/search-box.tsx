@@ -18,7 +18,6 @@ import type {
   IngredientSearchMatch,
   IngredientSearchOption,
 } from './types';
-import './index.scss';
 import { bracketedName } from '../../lib/ingredient-name';
 
 // The search row's first control: a type-ahead over the compendium's ranked search, with the magnifier as the form's one

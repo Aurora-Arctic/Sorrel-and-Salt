@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import type { ContextRowProps } from './types';
-import './index.scss';
 
 // A server component of two slots (claude-docs/components/context-row.md).
 const ContextRow = ({ lead, children }: ContextRowProps): ReactElement => (

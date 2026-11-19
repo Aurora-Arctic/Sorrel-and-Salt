@@ -10,7 +10,6 @@ import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import { TOO_MANY_ATTEMPTS, rateLimited } from '../../lib/auth-messages';
 import type { ResetPasswordFormProps } from './types';
-import './index.scss';
 import { PendingLink } from '../../lib/navigation';
 
 // The first reset spends the token and signs out every session the account held (claude-docs/components/reset-password-form.md).

@@ -10,7 +10,6 @@ import { SpellCardFrame } from './frame';
 import { spellNameOf } from './untitled';
 import CardRecordWorking from './record-working';
 import type { SpellCardProps } from './types';
-import './index.scss';
 
 // One spell in the grimoire's list: title, intent, Draft and Private badges, assigned categories,
 // last editor and made count, and the actions. Presentational, in IngredientCard's pattern, with no drawer; the title links where

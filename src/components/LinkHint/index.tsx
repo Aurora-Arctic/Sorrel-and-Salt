@@ -2,7 +2,6 @@
 
 import type { ReactElement } from 'react';
 import { useLinkPending } from './use-link-pending';
-import './index.scss';
 
 export { default as LinkIconHint } from './link-icon-hint';
 

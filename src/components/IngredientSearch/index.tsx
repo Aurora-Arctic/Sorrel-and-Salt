@@ -3,7 +3,6 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import StuckMark from './stuck-mark';
 import type { IngredientSearchProps } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 export { IngredientSearchForm, useSearchText } from './form';

@@ -12,7 +12,6 @@ import NewSpellElsewhere from './new-spell-elsewhere';
 import PausedNotice from './paused-notice';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
-import './index.scss';
 
 // The frame around every signed-in page: a skip link, the global bar and the page. The layouts render
 // the context row, as only they know the area. A server component: only the account menu and the

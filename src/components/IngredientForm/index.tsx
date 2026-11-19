@@ -100,7 +100,6 @@ import {
   variantsWithErrors,
 } from './values';
 import { VariantsField, useVariantFolds } from './variants';
-import './index.scss';
 import ReviewRow from '../IngredientEntry/review-row';
 import ShownToggle from '../IngredientEntry/shown-toggle';
 import { reportLeaving } from '../../lib/navigation';

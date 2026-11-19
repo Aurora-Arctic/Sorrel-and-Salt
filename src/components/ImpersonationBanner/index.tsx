@@ -6,7 +6,6 @@ import { settled } from '../../lib/auth-call';
 import BusyButton from '../BusyButton';
 import { useGuardedAction } from '../ClickFeedback/use-guarded-action';
 import type { ImpersonationBannerProps } from './types';
-import './index.scss';
 import { reportLeaving } from '../../lib/navigation';
 
 // The way out, on every page while a session is an impersonation. It cannot live in the

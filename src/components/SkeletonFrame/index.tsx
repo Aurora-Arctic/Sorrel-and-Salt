@@ -5,7 +5,6 @@ import PageColumn from '../PageColumn';
 import Skeleton from '../Skeleton';
 import { isHelpFront } from '../../lib/help-paths';
 import type { SkeletonHost } from '../../lib/navigation/skeleton-for';
-import './index.scss';
 
 /** The context row a page draws above itself, its lead a bar the size of the switcher. */
 export const SkeletonContextRow = (): ReactElement => (

@@ -11,7 +11,6 @@ import SignInPanel, { LastUsedMark, SignInBack, signInHeader } from '../SignInPa
 import { withMode } from '../SignInPanel/address';
 import type { SignInHeader } from '../SignInPanel/types';
 import type { SignInDialogProps } from './types';
-import './index.scss';
 
 const INBOX_TITLE = 'Check Your Inbox';
 const INBOX_LEDE = `${CHECK_INBOX} Its link brings you back to this page.`;

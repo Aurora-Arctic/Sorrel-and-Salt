@@ -2,7 +2,6 @@ import type { ReactElement, ReactNode } from 'react';
 import { ListFilterFrame } from '../ListFrame/skeleton';
 import CardDensitySwitch from '../CardDensitySwitch';
 import { IngredientSearchForm } from '.';
-import '../SearchSentence/index.scss';
 
 /**
  * The search row of an ingredient or spell list with nothing in it yet: the search box, the Filters

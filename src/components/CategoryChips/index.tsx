@@ -5,7 +5,6 @@ import CategoryMore from './category-more';
 import { chipTip } from './chip-tip';
 import { CATEGORY_CHIP_LIMIT } from './constants';
 import type { CategoryChipsProps } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // An entry's categories as a row of full chips, then a +N button holding the rest in a floating panel. Shared by the

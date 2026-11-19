@@ -4,7 +4,6 @@ import { HELD_ALL_TIP } from '../AddIcon/wording';
 import IconTip, { CheckIcon } from '../IconTip';
 // The held check's look lives with the plus's, whose place it takes
 // (claude-docs/components/add-icon.md).
-import '../AddIcon/index.scss';
 
 /**
  * The check: every coven the viewer may write in holds this entry. A status mark, not a link, tipped

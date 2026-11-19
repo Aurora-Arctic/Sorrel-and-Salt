@@ -5,7 +5,6 @@ import { PendingLink } from '../../lib/navigation';
 import { HelpBackLink } from '../HelpArticleView/back-link';
 import { emphasise } from './emphasis';
 import type { HelpSearchResultsProps } from './types';
-import './index.scss';
 import { plural } from '@/lib/text';
 
 const KIND = { faq: 'Question', term: 'Term' } as const;

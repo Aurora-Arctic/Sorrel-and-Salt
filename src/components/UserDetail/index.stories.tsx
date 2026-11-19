@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Modal from '../Modal';
 import { InModal } from '../../../.storybook/in-modal';
-import '../UserList/index.scss';
 import UserDetail from '.';
 import type { UserCoven, UserDetailUser } from './types';
 

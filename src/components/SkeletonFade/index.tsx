@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { ARRIVE_MS } from '../../lib/navigation/timing';
 import { forgetScroll, listenForTraversals, saveScroll } from './back-scroll';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // The skeleton's way out: the bodies keep the last skeleton over the arrived page and fade it away, as an out-of-layout overlay, not by wrapping the page

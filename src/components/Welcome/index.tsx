@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import PageHeader from '../PageHeader';
 import type { WelcomeProps } from './types';
-import './index.scss';
 import { PendingLink } from '../../lib/navigation';
 import { SITE_LEDE } from '../../lib/site';
 

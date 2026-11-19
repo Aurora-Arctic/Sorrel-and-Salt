@@ -9,7 +9,6 @@ import { helpHomeOf, leavesStaffHelp } from '../../lib/navigation/staff-help';
 import { useShutRow } from '@/lib/use-shut-row';
 import { SEARCH_INPUT_ATTRIBUTES, SearchSubmit } from '../Field/search-submit';
 import type { HelpSearchFormProps } from './types';
-import './index.scss';
 
 // A GET form, so search works without JavaScript and makes no request while someone types; with script the submit
 // goes through the site's navigation instead, as the browser's own page load would show nothing until the results

@@ -4,10 +4,6 @@ import PageNav from '../PageNav';
 import Skeleton from '../Skeleton';
 import SkeletonText, { SkeletonWords } from '../Skeleton/text';
 import { CATEGORY_MATCH_TITLE, INVENTORY_TITLE, WORKINGS_TITLE, recipeMenu } from './sections';
-import '../LinkHint/index.scss';
-import './index.scss';
-import '../SpellBuilder/panels.scss';
-import '../SpellWorkings/index.scss';
 
 // A spell's page: the recipe's own frame, with its fixed words drawn (the back link, the menu, the
 // side column's and Workings' headings) and bars for the spell's own text. The action is sized for

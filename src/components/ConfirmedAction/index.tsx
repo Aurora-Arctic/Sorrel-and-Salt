@@ -9,7 +9,6 @@ import Modal, { ConfirmOverlay } from '../Modal';
 import Notice from '../Notice';
 import ConfirmAnswersRow from '../ConfirmDialog/answers';
 import type { ConfirmedActionProps, ConfirmStep } from './types';
-import './index.scss';
 
 // An action that asks first, in a modal: the confirm sends the write and stays busy until the
 // page is read again. A refusal closes the modal and says why in a callout under the button.

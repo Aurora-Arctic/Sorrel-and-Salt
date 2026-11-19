@@ -1,7 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { HELP_LEDE } from '../../lib/help-pages';
 import { HelpFrontTitle } from './title';
-import './index.scss';
 
 /** The word Help, the lede and the search box, one for the page and its skeleton so the two cannot differ. */
 export const HelpFrontHead = ({

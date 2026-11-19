@@ -2,8 +2,6 @@
 // this publishes the scrollbar's width as `--scrollbar-width`, measured only where there is one
 // (claude-docs/components/modal.md, "Styling").
 
-import './page-hold.scss';
-
 const SCROLLBAR_WIDTH = '--scrollbar-width';
 
 // Modals holding the page: a confirmation or second modal opens over the first, when the

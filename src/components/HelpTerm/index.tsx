@@ -14,7 +14,6 @@ import type { Route } from 'next';
 import { PendingLink } from '../../lib/navigation';
 import TipAnchor, { type TipControls } from '../InfoTip/tip-anchor';
 import type { HelpTermProps } from './types';
-import './index.scss';
 
 // A glossary term marked in a help body: a link to the term in the glossary that opens the term's definition. It
 // is the tooltip behaviour of InfoTip (`TipAnchor`) on a link in running text rather than an ⓘ button, so the link

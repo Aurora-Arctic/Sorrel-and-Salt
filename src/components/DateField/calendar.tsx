@@ -6,7 +6,6 @@ import { useDismiss } from '../../lib/use-dismiss';
 import type { ChevronProps, ClassNames, DropdownProps } from 'react-day-picker';
 import { ComboboxSelect } from '../Combobox/select';
 import { ChevronIcon } from '../IconTip/icons';
-import './calendar.scss';
 
 // What a day field and a day-range field share: the calendar popover's placing and closing, the
 // day picker's class names and parts, and the look they give it (claude-docs/components/date-field.md).

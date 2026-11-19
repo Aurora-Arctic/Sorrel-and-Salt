@@ -4,7 +4,6 @@ import { ListBodySkeleton, ListFilterFrame } from '../ListFrame/skeleton';
 import Skeleton from '../Skeleton';
 import { SkeletonWords } from '../Skeleton/text';
 import HelpOutlineFilterRow from './filter';
-import './index.scss';
 
 /**
  * The outline with nothing in it yet, laid as the page lays it: the guides' pane (on a phone the Guide select), then the

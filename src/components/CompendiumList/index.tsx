@@ -25,7 +25,6 @@ import type {
   CompendiumListProps,
 } from './types';
 import NoMatches from '../EmptyState/no-matches';
-import './index.scss';
 
 // `/curator/compendium`'s filter, table and pager. Render-only: the page reads one page under the
 // address's filter, and each Edit is an address, so a modal can be linked to and Back closes it

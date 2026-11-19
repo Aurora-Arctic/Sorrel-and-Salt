@@ -1,8 +1,6 @@
 import type { ReactElement } from 'react';
 import { ButtonFace } from '../ActionFace';
 import Skeleton from '../Skeleton';
-import './index.scss';
-import './skeleton.scss';
 
 // One field: its label row and its control, in the field's own block.
 const FieldFace = (): ReactElement => (

@@ -3,7 +3,6 @@ import { HelpHeading, HelpPageHead } from '../HelpChrome';
 import { BackChevron } from '../BackLink/chevron';
 import { SkeletonWords } from '../Skeleton/text';
 import { HelpBackLinkSkeleton } from './back-link';
-import './index.scss';
 
 /** A guide's step at the foot, its label real and its page's title to come; a span, as a skeleton links nowhere. */
 const Step = ({ next = false }: { next?: boolean }) => (

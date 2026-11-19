@@ -14,7 +14,6 @@ import Notice from '../Notice';
 import Skeleton from '../Skeleton';
 import { stockState } from '../StockBadge/stock-state';
 import { formatQuantity } from '@/lib/quantity';
-import './index.scss';
 import type { WorkingCompletionProps, WorkingStep } from './types';
 import { SKIP_REASON } from './warnings';
 

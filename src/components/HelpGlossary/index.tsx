@@ -5,7 +5,6 @@ import HashTarget from '../HashTarget';
 import { HelpBackLink } from '../HelpArticleView/back-link';
 import { HelpArticleTitle } from '../HelpChrome';
 import type { HelpGlossaryProps } from './types';
-import './index.scss';
 
 // The glossary, beneath the help layout's header: one term and definition per row, each anchored by its slug so /help/glossary#steward lands on it
 // (claude-docs/components/help-pages.md).

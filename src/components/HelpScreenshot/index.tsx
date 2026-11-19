@@ -3,7 +3,6 @@
 import type { ReactElement } from 'react';
 import { ModalButton } from '../Modal';
 import type { HelpScreenshotProps } from './types';
-import './index.scss';
 
 /** Both themes' pictures, each with an empty alt; the `.screenshot` primitive shows the one for the reader's theme. */
 function Pictures({ src, dark }: Omit<HelpScreenshotProps, 'alt'>): ReactElement {

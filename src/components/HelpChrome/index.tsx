@@ -3,7 +3,6 @@ import type { ReactElement } from 'react';
 import { EditLink } from '../IconTip';
 import { HelpHeading } from './frame';
 import type { HelpArticleTitleProps } from './types';
-import './index.scss';
 
 /** A help page's title with a keeper's pencil beside it. */
 export function HelpArticleTitle({

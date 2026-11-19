@@ -11,7 +11,6 @@ import JarLines from '../JarLines';
 import { covenCardActions } from './actions';
 import EmptyCupboard from './empty';
 import type { CovenCardsProps } from './types';
-import '../CompendiumList/index.scss';
 import { covenPath } from '@/lib/coven-path';
 
 // A coven's Ingredients list, the twin of CompendiumCards: the filter row in coven mode, compact cards and the pager.

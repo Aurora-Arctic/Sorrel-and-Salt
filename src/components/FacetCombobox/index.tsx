@@ -8,8 +8,6 @@ import { FieldShell } from '../Field/shell';
 import { NativeGroupedSelect } from './native-select';
 import { FacetTypeahead } from './typeahead';
 import type { FacetComboboxProps } from './types';
-import '../Combobox/index.scss';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // A filter's closed set with each value's count: the multi-select box, a value with none left out, the

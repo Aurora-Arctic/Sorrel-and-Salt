@@ -6,7 +6,6 @@ import { BackChevron } from '../BackLink/chevron';
 import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
 import PageNav from '../PageNav';
 import { SkeletonWords } from '../Skeleton/text';
-import './index.scss';
 
 /** Each stand-in guide's title and summary lengths, in words, so the cards vary as the real ones do. */
 const GUIDES = [
