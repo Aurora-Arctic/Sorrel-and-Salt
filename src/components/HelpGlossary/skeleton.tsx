@@ -19,7 +19,7 @@ const ROWS = [
 export const HelpGlossarySkeleton = (): ReactElement => (
   <div className="help-page help-glossary">
     <HelpBackLinkSkeleton>Back to Help</HelpBackLinkSkeleton>
-    <h2>Glossary</h2>
+    <h1 className="help-heading--2">Glossary</h1>
     <dl>
       {ROWS.map(([term, definition], n) => (
         <div key={n} className="help-glossary__entry">

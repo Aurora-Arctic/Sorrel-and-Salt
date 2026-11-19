@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { HelpPageHead } from '../HelpChrome';
+import { HelpHeading, HelpPageHead } from '../HelpChrome';
 import { BackChevron } from '../BackLink/chevron';
 import { SkeletonWords } from '../Skeleton/text';
 import { HelpBackLinkSkeleton } from './back-link';
@@ -41,9 +41,9 @@ export const HelpArticleSkeleton = ({
       <HelpBackLinkSkeleton>
         {parent ? <SkeletonWords count={3} /> : `Back to ${heading}`}
       </HelpBackLinkSkeleton>
-      <h2>
+      <HelpHeading level={2}>
         <SkeletonWords count={3} />
-      </h2>
+      </HelpHeading>
     </div>
     <div className="help-article__body">
       <p>
@@ -52,9 +52,9 @@ export const HelpArticleSkeleton = ({
       <p>
         <SkeletonWords count={24} />
       </p>
-      <h3 className="help-article__pending-heading">
+      <HelpHeading level={3} className="help-article__pending-heading">
         <SkeletonWords count={3} />
-      </h3>
+      </HelpHeading>
       <p>
         <SkeletonWords count={30} />
       </p>

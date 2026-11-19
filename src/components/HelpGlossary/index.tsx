@@ -22,7 +22,7 @@ const HelpGlossary = ({ terms, editHref }: HelpGlossaryProps): ReactElement => {
   return (
     <div className="help-page help-glossary">
       <HelpBackLink href="/help" title="Help" />
-      <HelpArticleTitle title="Glossary" editHref={editHref} editName="Glossary" />
+      <HelpArticleTitle level="h1" title="Glossary" editHref={editHref} editName="Glossary" />
       <dl>
         {terms.map((term, index) => (
           <div key={term.slug} id={term.slug} className="help-glossary__entry">
