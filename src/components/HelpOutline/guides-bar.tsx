@@ -130,7 +130,9 @@ const HelpGuidesBar = ({
     clearFailed();
     setFocusBack(from);
     setReordering(true);
-    announce('Reorder mode. Drag a guide by its handle, or focus it and press Space.');
+    announce(
+      'Reorder mode. Drag a guide by its handle, press its Move Up or Move Down button, or focus its handle and press Space.',
+    );
   };
   const close = () => {
     clearFailed();
