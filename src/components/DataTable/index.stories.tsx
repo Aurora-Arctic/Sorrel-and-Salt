@@ -48,13 +48,20 @@ const Frame = ({ children }: { children: ReactNode }) => (
 
 const defaultNode = (
   <Frame>
-    <StackTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
+    <StackTable
+      aria-label="Herbs"
+      columns={COLUMNS}
+      rows={ROWS}
+      rowKey={(row) => row.id}
+      empty=""
+    />
   </Frame>
 );
 
 const roomyNode = (
   <Frame>
     <StackTable
+      aria-label="Herbs"
       columns={COLUMNS}
       rows={ROWS}
       rowKey={(row) => row.id}
@@ -67,6 +74,7 @@ const roomyNode = (
 const emptyNode = (
   <Frame>
     <StackTable
+      aria-label="Herbs"
       columns={COLUMNS}
       rows={[]}
       rowKey={(row) => row.id}
@@ -78,6 +86,7 @@ const emptyNode = (
 const noMatchesNode = (
   <Frame>
     <StackTable
+      aria-label="Herbs"
       columns={COLUMNS}
       rows={[]}
       rowKey={(row) => row.id}
@@ -160,7 +169,13 @@ const SORTED_COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
 
 const sortedNode = (
   <Frame>
-    <StackTable columns={SORTED_COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
+    <StackTable
+      aria-label="Herbs"
+      columns={SORTED_COLUMNS}
+      rows={ROWS}
+      rowKey={(row) => row.id}
+      empty=""
+    />
   </Frame>
 );
 
@@ -168,6 +183,7 @@ const sortedPhoneNode = (
   <div style={{ inlineSize: '24rem' }}>
     <Frame>
       <StackTable
+        aria-label="Herbs"
         columns={SORTED_COLUMNS}
         rows={ROWS}
         rowKey={(row) => row.id}

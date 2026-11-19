@@ -27,7 +27,15 @@ const ROWS: Row[] = [
 
 describe('StackTable', () => {
   it("heads each body row with its first column's cell, and leaves the rest as cells", () => {
-    render(<StackTable columns={columns} rows={ROWS} rowKey={(row) => row.name} empty="None" />);
+    render(
+      <StackTable
+        aria-label="Herbs"
+        columns={columns}
+        rows={ROWS}
+        rowKey={(row) => row.name}
+        empty="None"
+      />,
+    );
 
     const headers = screen.getAllByRole('rowheader');
     expect(headers.map((header) => header.textContent)).toEqual(['Testwort', 'Fixturebane']);
@@ -61,7 +69,15 @@ describe('StackTable', () => {
         { name: 'Falsewort', note: false },
         { name: 'Blankwort', note: '' },
       ];
-      render(<StackTable columns={sparse} rows={ROWS} rowKey={(row) => row.name} empty="None" />);
+      render(
+        <StackTable
+          aria-label="Herbs"
+          columns={sparse}
+          rows={ROWS}
+          rowKey={(row) => row.name}
+          empty="None"
+        />,
+      );
 
       for (const { name } of ROWS) {
         const cell = valueOf(name);
@@ -77,6 +93,7 @@ describe('StackTable', () => {
 
       render(
         <StackTable
+          aria-label="Herbs"
           columns={sparse}
           rows={[
             { name: 'Keptwort', note: 'Kept dry' },
@@ -98,6 +115,7 @@ describe('StackTable', () => {
       type Stamped = { name: string } & UpdatedStamp;
       render(
         <StackTable
+          aria-label="Herbs"
           columns={[
             { heading: 'Name', cell: (row: Stamped) => row.name },
             updatedColumn<Stamped>(),
@@ -113,7 +131,15 @@ describe('StackTable', () => {
   });
 
   it('says there are no rows in a status region, and draws no table', () => {
-    render(<StackTable columns={columns} rows={[]} rowKey={(row) => row.name} empty="None" />);
+    render(
+      <StackTable
+        aria-label="Herbs"
+        columns={columns}
+        rows={[]}
+        rowKey={(row) => row.name}
+        empty="None"
+      />,
+    );
 
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.getByRole('status')).toHaveTextContent('None');

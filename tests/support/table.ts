@@ -21,6 +21,7 @@ export function emptyCellMark(): string {
       rows: [{ name: 'Testwort' }],
       rowKey: (row) => row.name,
       empty: 'None',
+      'aria-label': 'Herbs',
     }),
   );
   const mark = within(container).getByRole('cell').textContent ?? '';

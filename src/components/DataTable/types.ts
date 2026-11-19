@@ -54,7 +54,8 @@ export interface StackTableProps<Row> {
   emptyAction?: ReactNode;
   /** Leaves the empty state without a status role, where the page already announces its count. */
   emptyQuiet?: boolean;
-  'aria-label'?: string;
+  /** The table's name, which its scrolling region is announced by too; no two on a page share one. */
+  'aria-label': string;
   className?: string;
   /** Orders beside the sortable columns', offered first in the phone's sort select: a search's Best Match. */
   otherOrders?: readonly OtherOrder[];

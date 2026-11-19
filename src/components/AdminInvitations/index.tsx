@@ -132,6 +132,7 @@ const AdminInvitations = ({
         <ListBody skeleton={<AdminInvitationsBodySkeleton />}>
           {/* Each cell on one line, the table scrolling in its frame. */}
           <StackTable
+            aria-label="Invitation List"
             columns={[
               { heading: 'Email', cell: (invitation) => invitation.email },
               { heading: 'Role', cell: (invitation) => invitationRoleLabel(invitation.siteRole) },

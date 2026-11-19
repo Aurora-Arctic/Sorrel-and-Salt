@@ -70,6 +70,7 @@ const PrivilegeLedger = ({
 
     <ListBody skeleton={<PrivilegeLedgerBodySkeleton />}>
       <StackTable
+        aria-label="Privilege Changes"
         columns={COLUMNS}
         rows={changes}
         rowKey={(change) => change.id}

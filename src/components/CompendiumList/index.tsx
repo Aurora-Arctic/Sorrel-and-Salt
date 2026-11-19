@@ -200,6 +200,7 @@ const CompendiumList = ({
         <NoMatches clearHref={compendiumHref({})} />
       ) : (
         <StackTable
+          aria-label="Compendium"
           columns={columnsFor(filter)}
           otherOrders={bestMatch(filter)}
           rows={entries}

@@ -175,6 +175,7 @@ const UserList = ({
     <ListBody skeleton={<UserListBodySkeleton canImpersonate={canImpersonate} />}>
       {/* Roomy, and each cell on one line, the table scrolling in its frame. */}
       <StackTable
+        aria-label="Users"
         columns={columns(canImpersonate)}
         rows={users}
         rowKey={(user) => user.id}

@@ -118,7 +118,7 @@ function StackTable<Row>({
   const shown = columns.filter((column): column is StackColumn<Row> => Boolean(column));
   const sorting = shown.some((column) => column.sort) && sortChoices(shown, otherOrders);
   return (
-    <TableFrame label={label ?? 'Table'}>
+    <TableFrame label={label}>
       {/* Inside the frame, as the container query that shows it at phone width asks of the frame. */}
       {sorting && (
         <SortSelect choices={sorting.choices} current={sorting.current} disabled={pending} />

@@ -107,6 +107,7 @@ const SupportRequests = ({
             {requests.length} {plural(requests.length, 'Request', 'Requests')}
           </output>
           <StackTable
+            aria-label="Request List"
             columns={[
               { heading: 'About', cell: (request) => labelOf(ABOUT_OPTIONS, request.about) },
               {

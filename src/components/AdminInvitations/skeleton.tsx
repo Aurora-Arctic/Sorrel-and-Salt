@@ -7,7 +7,7 @@ import './index.scss';
 /** The list's rows with nothing in them yet: its table's headings over placeholder rows. */
 export const AdminInvitationsBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
-    label="Keeper Invitations"
+    label="Invitation List"
     rowKind="keeper-invitations"
     tableClassName="data-table--nowrap"
     headings={['Email', 'Role', 'Reason', 'Expires', 'Revoke']}

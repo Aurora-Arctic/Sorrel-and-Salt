@@ -7,7 +7,7 @@ import SupportRequestsFilter from './filter';
 /** The support list's rows with nothing in them yet: the table's headings over blank rows. */
 export const SupportListBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
-    label="Support Requests"
+    label="Request List"
     rowKind="support"
     tableClassName="data-table--nowrap"
     headings={[

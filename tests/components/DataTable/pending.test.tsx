@@ -16,6 +16,7 @@ describe('StackTable pending rows', () => {
   it('draws the real headings over placeholder rows, hidden from assistive technology, with no row data or controls', () => {
     render(
       <StackTable
+        aria-label="Herbs"
         columns={columns}
         rows={[]}
         rowKey={(r) => r.name}
@@ -35,6 +36,7 @@ describe('StackTable pending rows', () => {
   it('draws the rows it is given when nothing is pending', () => {
     render(
       <StackTable
+        aria-label="Herbs"
         columns={columns}
         rows={[{ name: 'Testwort' }]}
         rowKey={(r) => r.name}
