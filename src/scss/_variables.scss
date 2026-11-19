@@ -568,6 +568,14 @@ $quote-mark-size: 3.25em;
   @return map.get($type-sizes, $role);
 }
 
+// A phone tab's label, set inside a tab that is a size container: at a large text size it shrinks to its tab, so the widest
+// label ("Ingredients" in the current tab's weight, 5.85em) fits whole, and never below its size at the default 16px text.
+$tab-label-size: clamp(
+  #{math.div(type-size('tab'), 1rem) * 16px},
+  100cqi / 6.5,
+  #{type-size('tab')}
+);
+
 // Kept apart from $type-sizes, which runs below body copy by role. h1 is fluid between its two ends, so a phone's title does not
 // take the whole screen. A component that sets a name in the heading face takes its size from here too.
 $heading-sizes: (
@@ -577,12 +585,26 @@ $heading-sizes: (
   4: 1.5rem,
 );
 
+// Each level's cap: its own size in a 320px window at the default 16px text (2.15rem is 34.4px, 10.75vw there). A larger text
+// size or a narrower window shrinks the heading so an ordinary word fits whole, never below the body text; at a phone's or a
+// desktop's width at the default text the cap is never reached.
+$heading-fit: (
+  1: 12.5vw,
+  2: 10.75vw,
+  3: 9vw,
+  4: 7.5vw,
+);
+
 @function heading-size($level) {
   @if not map.has-key($heading-sizes, $level) {
     @error 'Unknown heading size "#{$level}". The sizes are: #{map.keys($heading-sizes)}.';
   }
 
-  @return map.get($heading-sizes, $level);
+  @return clamp(
+    #{type-size('body')},
+    #{map.get($heading-fit, $level)},
+    #{map.get($heading-sizes, $level)}
+  );
 }
 
 // Not a level of $heading-sizes, which a heading takes: this is a name set in the heading face outside a heading, between h4 and

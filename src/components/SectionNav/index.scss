@@ -252,9 +252,11 @@
     padding: 0;
   }
 
+  // A size container, so a label's size can follow its own tab's width; the tab's width never follows its label.
   .section-nav .section-nav__list > li {
     flex: 1 1 0;
     min-width: 0;
+    container-type: inline-size;
   }
 
   .section-nav .section-nav__list > .section-nav__item--apart {
@@ -272,10 +274,10 @@
     gap: space(1);
     padding-inline: 0;
     border-radius: 0;
-    font-size: type-size('tab');
+    font-size: $tab-label-size;
     line-height: 1.2;
-    // At a large text size a label is wider than its fifth of the bar: it wraps under its icon, hyphenated where
-    // the language allows, so no label runs into the next tab.
+    // A label still too wide for its tab at that floor wraps under its icon, hyphenated where the language allows, so
+    // no label runs into the next tab.
     white-space: normal;
     text-align: center;
     overflow-wrap: anywhere;
