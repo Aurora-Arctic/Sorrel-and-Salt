@@ -47,6 +47,7 @@ design is in [`ui.md`, "The navigation shell is a slim bar, a context row and a 
 
 - [`ingredient-search.md`](ingredient-search.md) — The list shell for finding ingredients by name: a debounced dropdown, filters, action, pager.
 - [`table-frame.md`](table-frame.md) — The named, focusable region a table scrolls sideways in, used by every table frame.
+- [`reorder-mode.md`](reorder-mode.md) — A sortable list's Reorder toggle, which shows each grip's Move Up and Move Down while it is on.
 - [`category-chips.md`](category-chips.md) — The row of category chips with its +N panel, shared by the card and the admin table.
 - [`ingredient-card.md`](ingredient-card.md) — One ingredient in a list: its name as the one link, formal name and forms, marks, caution, a jar-line slot.
 - [`ingredient-card-list.md`](ingredient-card-list.md) — The grid of ingredient cards every list page shares, with its card skeleton.
