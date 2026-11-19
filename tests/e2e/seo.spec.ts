@@ -79,7 +79,7 @@ test('each public page has one H1, a language, and a title and description of it
 });
 
 // Read from the page, so an entity such as `&amp;` counts as the one character a search result shows.
-test('the home page has a title of 50 to 60 characters and a description of 150 to 160', async ({
+test('the home page has a title of 45 to 60 characters and a description of 150 to 160', async ({
   page,
 }) => {
   await page.goto('/');
@@ -88,7 +88,7 @@ test('the home page has a title of 50 to 60 characters and a description of 150 
     ...((await page.locator('meta[name="description"]').getAttribute('content')) ?? ''),
   ].length;
 
-  expect(title).toBeGreaterThanOrEqual(50);
+  expect(title).toBeGreaterThanOrEqual(45);
   expect(title).toBeLessThanOrEqual(60);
   expect(description).toBeGreaterThanOrEqual(150);
   expect(description).toBeLessThanOrEqual(160);

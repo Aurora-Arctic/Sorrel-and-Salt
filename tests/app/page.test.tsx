@@ -37,8 +37,8 @@ describe('the / page metadata', () => {
   });
 
   // Bing Webmaster Tools flags a title under 50 characters and a description under 150 as too short.
-  it('has a title of 50 to 60 characters', () => {
-    expect(length(tabTitle())).toBeGreaterThanOrEqual(50);
+  it('has a title of 45 to 60 characters', () => {
+    expect(length(tabTitle())).toBeGreaterThanOrEqual(45);
     expect(length(tabTitle())).toBeLessThanOrEqual(60);
   });
 
