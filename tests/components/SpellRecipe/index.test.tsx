@@ -10,6 +10,7 @@ import type { RecipeStep, SpellRecipeProps } from '@/components/SpellRecipe';
 import { sourcedCorrespondences } from '@/components/IngredientEntry/blocks';
 import type { Row } from '@/components/IngredientEntry/blocks';
 import { expectBefore, isBefore } from '../../support/interact';
+import { RANKED_EXTRAS, colouredGroups } from '../../support/spell-step-values';
 
 vi.mock('next/navigation', async () => ({
   ...(await import('../../support/next-navigation')),
@@ -389,6 +390,27 @@ describe('SpellRecipe', () => {
       render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], workings })} />);
       expect(linksOf().map((link) => link.textContent)).toEqual(['Steps', 'Workings']);
     });
+  });
+});
+
+describe("the side column's Category Match", () => {
+  it('orders the Extra row by how many ingredients add each category, as the builder does', () => {
+    render(
+      <SpellRecipeAside
+        steps={[...RANKED_EXTRAS.steps]}
+        doors={[]}
+        intended={[...RANKED_EXTRAS.intended]}
+        groups={[...colouredGroups(RANKED_EXTRAS.names)]}
+      />,
+    );
+    const match = screen.getByRole('region', { name: 'Category Match' });
+    const extra = within(match).getByText('Extra', { selector: 'dt' })
+      .nextElementSibling as HTMLElement;
+    expect(
+      within(extra)
+        .getAllByRole('button')
+        .map((chip) => chip.textContent),
+    ).toEqual(RANKED_EXTRAS.order);
   });
 });
 

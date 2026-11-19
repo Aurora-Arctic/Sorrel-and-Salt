@@ -69,7 +69,27 @@ export function compareJar(intendedIds: readonly string[], steps: readonly Spell
       categoryIds: step.categories.map(({ id }) => id),
     })),
   );
-  return compareSpellCategories(intendedIds, present);
+  const gaps = compareSpellCategories(intendedIds, present);
+  // Counts distinct ingredients, so one laid in several steps counts once.
+  const adders = new Map<string, Set<string>>();
+  for (const { ingredientId, categories } of steps) {
+    if (ingredientId === null) continue;
+    for (const { id } of categories) {
+      adders.set(id, (adders.get(id) ?? new Set()).add(ingredientId));
+    }
+  }
+  const count = (id: string): number => adders.get(id)?.size ?? 0;
+  // The Extra row folds its tail, so the order is most ingredients first; `categoryGaps` keeps compare's order.
+  const names = new Map(
+    steps.flatMap((step) => step.categories.map(({ id, name }) => [id, name] as const)),
+  );
+  const nameOf = (id: string): string => names.get(id) ?? id;
+  return {
+    ...gaps,
+    presentNotIntended: [...gaps.presentNotIntended].sort(
+      (a, b) => count(b) - count(a) || nameOf(a).localeCompare(nameOf(b), 'en'),
+    ),
+  };
 }
 
 export function ComparisonPanel({

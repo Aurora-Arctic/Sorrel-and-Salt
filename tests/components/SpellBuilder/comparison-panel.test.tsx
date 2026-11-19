@@ -4,37 +4,16 @@ import { ComparisonPanel } from '@/components/SpellBuilder/comparison-panel';
 import type { SpellStepValue } from '@/components/SpellBuilder/steps/types';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 import { renderWithQuery } from '../../support/render-with-query';
+import {
+  RANKED_EXTRAS,
+  categoryNamed as cat,
+  colouredGroups,
+  stepValue as step,
+} from '../../support/spell-step-values';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-const cat = (name: string) => ({ id: `c-${name}`, name });
-
-function step(name: string, categories: string[], extra: Partial<SpellStepValue> = {}) {
-  return {
-    stepId: null,
-    ingredientId: `i-${name}`,
-    variantId: `v-${name}`,
-    name,
-    form: null,
-    quantity: '',
-    unit: '',
-    savedUnit: null,
-    body: null,
-    icon: null,
-    categories: categories.map(cat),
-    jarUnit: null,
-    safety: null,
-    jar: null,
-    ...extra,
-  } satisfies SpellStepValue;
-}
-
-const groups = new Map(
-  ['Prosperity', 'Love', 'Cleansing', 'Psychic Work'].map((name) => [
-    `c-${name}`,
-    { colorDark: '#8fb8de', colorLight: '#2f5d86' },
-  ]),
-);
+const groups = colouredGroups(['Prosperity', 'Love', 'Cleansing', 'Psychic Work']);
 
 const panel = () => screen.getByRole('region', { name: 'Category Match' });
 const row = (label: 'Carried' | 'Missing' | 'Extra') => {
@@ -70,12 +49,9 @@ describe('ComparisonPanel', () => {
   describe('the Extra row past eight chips', () => {
     const many = (count: number) => {
       const names = Array.from({ length: count }, (_, i) => `Fixture Extra ${i + 1}`);
-      const wide = new Map(
-        names.map((name) => [`c-${name}`, { colorDark: '#8fb8de', colorLight: '#2f5d86' }]),
-      );
       render(
         <ComparisonPanel
-          groups={wide}
+          groups={colouredGroups(names)}
           intended={[cat('Prosperity')]}
           steps={[step('Fixture Mugwort', names)]}
         />,
@@ -122,6 +98,65 @@ describe('ComparisonPanel', () => {
     expect(within(extra).getByText('Cleansing')).toBeVisible();
     expect(within(extra).getAllByRole('button')).toHaveLength(1);
     expect(row('Carried')).toHaveTextContent('Prosperity');
+  });
+
+  describe('the Extra row’s order', () => {
+    // Each case is built so the steps' first-met order, and plain name order, differ from the order asked for.
+    const extraOrder = () =>
+      within(row('Extra') as HTMLElement)
+        .getAllByRole('button')
+        .map((chip) => chip.textContent);
+    const drawn = (steps: readonly SpellStepValue[], names: readonly string[]) =>
+      render(
+        <ComparisonPanel
+          groups={colouredGroups(names)}
+          intended={[cat('Prosperity')]}
+          steps={steps}
+        />,
+      );
+
+    it('puts the category the most ingredients add first', () => {
+      drawn(RANKED_EXTRAS.steps, RANKED_EXTRAS.names);
+      expect(extraOrder()).toEqual(RANKED_EXTRAS.order);
+    });
+
+    it('counts an ingredient laid in two steps once', () => {
+      // Fixture Basil is laid three times, in two forms: counted by steps Testbane would lead, counted by ingredients it trails.
+      const basil = (variantId: string) => step('Fixture Basil', ['Testbane'], { variantId });
+      drawn(
+        [
+          basil('v-dried'),
+          basil('v-fresh'),
+          basil('v-dried'),
+          step('Fixture Mugwort', ['Testcalm']),
+          step('Fixture Rue', ['Testcalm']),
+        ],
+        ['Testbane', 'Testcalm'],
+      );
+      expect(extraOrder()).toEqual(['Testcalm', 'Testbane']);
+    });
+
+    it('orders categories added by as many ingredients by name', () => {
+      drawn(
+        [
+          step('Fixture Basil', ['Testzephyr', 'Testmoss']),
+          step('Fixture Mugwort', ['Testamber', 'Testmoss']),
+        ],
+        ['Testzephyr', 'Testamber', 'Testmoss'],
+      );
+      expect(extraOrder()).toEqual(['Testmoss', 'Testamber', 'Testzephyr']);
+    });
+
+    it('folds the categories the fewest ingredients add, past eight chips', () => {
+      const names = Array.from({ length: 9 }, (_, i) => `Fixture Extra ${i + 1}`);
+      // Fixture Extra 1 is met first and sorts first by name, but one ingredient adds it and two add each of the rest.
+      drawn([step('Fixture Basil', names), step('Fixture Mugwort', names.slice(1))], names);
+      const extra = within(row('Extra') as HTMLElement);
+      expect(extra.getByRole('button', { name: /1 more category for Extra/ })).toBeVisible();
+      expect(extraOrder().filter((text) => text?.startsWith('Fixture Extra'))).toEqual(
+        names.slice(1),
+      );
+    });
   });
 
   it('tells every chip what it is from, to a screen reader, on focus, and on a tap', () => {
@@ -285,5 +320,68 @@ describe('the panel in the builder', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove Fixture Rosewort (Dried Leaf)' }));
     await waitFor(() => expect(row('Extra')).toBeNull());
     expect(row('Missing')).toHaveTextContent('Testward');
+  });
+
+  it('orders the Extra row by how many ingredients add each category, as the spell page does', async () => {
+    // RANKED_EXTRAS laid as a saved spell, the jar the spell page's side column is tested with too.
+    const id = (n: number) => `00000000-0000-4000-8000-0000000000${String(n).padStart(2, '0')}`;
+    const group = { id: id(1), name: 'Fixtures', colorDark: '#8fb8de', colorLight: '#2f5d86' };
+    const [intent, bane, calm, ward] = ['Testintent', 'Testbane', 'Testcalm', 'Testward'].map(
+      (name, i) => ({ id: id(10 + i), name }),
+    );
+    offerCategories(
+      [intent, bane, calm, ward].map((c) => ({ ...c, description: 'A fixture.', group })),
+    );
+    const laid = (n: number, name: string, categories: { id: string; name: string }[]) => ({
+      id: id(20 + n),
+      name,
+      form: null,
+      quantity: null,
+      unit: null,
+      body: null,
+      ingredient: { id: id(30 + n), toxic: false, safetyNotes: null, categories, stock: [] },
+      variant: {
+        id: id(40 + n),
+        toxic: false,
+        safetyNotes: null,
+        categories: [],
+        formChoice: null,
+      },
+    });
+    renderWithQuery(
+      <SpellBuilder
+        workspaceId="w1"
+        spell={{
+          id: 's9',
+          revision: 1,
+          title: 'Hedge Ward',
+          intent: null,
+          jarDescription: null,
+          sealWaxColor: null,
+          moonPhase: null,
+          dayOfWeek: null,
+          note: null,
+          visibility: 'workspace',
+          categoryIds: [intent.id],
+          steps: [
+            laid(1, 'Fixture Basil', [bane, calm]),
+            laid(2, 'Fixture Mugwort', [ward, calm]),
+            laid(3, 'Fixture Rue', [ward]),
+            laid(4, 'Fixture Sage', [ward]),
+          ],
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+    await waitFor(() =>
+      expect(
+        within(row('Extra') as HTMLElement).getByRole('button', { name: 'Testbane' }),
+      ).toBeVisible(),
+    );
+    expect(
+      within(row('Extra') as HTMLElement)
+        .getAllByRole('button')
+        .map((chip) => chip.textContent),
+    ).toEqual(RANKED_EXTRAS.order);
   });
 });
