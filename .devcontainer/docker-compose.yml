@@ -59,7 +59,7 @@ services:
     init: true
     tty: true
     # The Plannotator Inbox, for a host with no editor attached. The container
-    # side is 43502, the socat forwarder `postStartCommand` starts: the Inbox
+    # side is 43502, the forwarder Docker/devcontainer-start.sh starts: the Inbox
     # itself listens on the container's loopback, which a published port never
     # reaches. The host side stays 43501, the address the Inbox accepts.
     # 8001 is the review server `next dev --hostname 0.0.0.0 --port 8001` serves
@@ -71,9 +71,9 @@ services:
     # ensure-deps.sh first (see Docker/docker-compose.yaml); `entrypoint` clears
     # the image's CMD, so the command is named below.
     entrypoint: ['sh', '/app/Docker/ensure-deps.sh']
-    # Idle PID 1; the editor runs `npm run dev` itself. Sticks only because
-    # devcontainer.json sets `overrideCommand: false`.
-    command: ['sleep', 'infinity']
+    # Starts the Inbox's forwarder, then idles; the editor runs `npm run dev`
+    # itself. Sticks only because devcontainer.json sets `overrideCommand: false`.
+    command: ['sh', '/app/Docker/devcontainer-start.sh']
     environment:
       NODE_ENV: development
       # A failed `npm ci` (offline, say) prints a warning and starts anyway, so
