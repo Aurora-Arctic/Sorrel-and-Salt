@@ -51,7 +51,7 @@ The pane is a page burning from its bottom-right corner, as a spell card does un
 
 ## Styling
 
-The steps take their Recipe Card look from `SpellRecipe/index.scss`, which `SpellRecipeBody` imports, so the pane and the recipe page share one set of step rules. The glow is theme red at 0.12 (light, wax red) and 0.08 (dark, ember red).
+The steps take their Recipe Card look from `SpellRecipe/index.scss`, which `SpellRecipeBody` imports, so the pane and the recipe page share one set of step rules. The glow is theme red at 0.12 (light, wax red) and 0.11 (dark, ember red).
 
 ## Not here
 
