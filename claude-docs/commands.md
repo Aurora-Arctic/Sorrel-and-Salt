@@ -196,7 +196,7 @@ The editor extension `bierner.markdown-mermaid` draws the Mermaid block in VS Co
 
 **Why the Plannotator binary is patched.** It is built for glibc and Alpine is musl. Plannotator starts itself again for some commands (`plannotator inbox`), so its own executable path must be the real binary: running it as an argument of the glibc loader makes that path the loader, and the restart fails. The `review-tools` stage instead edits the ELF headers in place, leaving the file size unchanged (a tool that grows the file breaks the bundle appended to it): the interpreter becomes the symlink `/opt/glibc/ld.so`, and `DT_RUNPATH` becomes `$ORIGIN`, with symlinks to the glibc libraries beside the binary. No `LD_LIBRARY_PATH` is set, so the git and shells Plannotator starts keep musl. A new Plannotator release needs the patch step run against it (the build fails if the headers have no room).
 
-**Rebuilding the container.** "Dev Containers: Rebuild Container" in VS Code builds the image and starts a container from it; no separate build is needed first:
+**Rebuilding the container.** "Dev Containers: Rebuild Container" in VS Code builds the image and starts a container from it; no separate build is needed first. Without VS Code, `make devcontainer-up` on the host does the same, and the checks in step 2 hold for its container too:
 
 1. Run "Dev Containers: Rebuild Container" in VS Code. To read a failing build in a terminal instead, run `make devcontainer-build` on the host, from the repository root; the devcontainer has no `docker`.
 2. Inside the rebuilt container, each of these should work:
@@ -208,20 +208,21 @@ The editor extension `bierner.markdown-mermaid` draws the Mermaid block in VS Co
 
 ## The local stack (host only)
 
-| `make`                     | Purpose                                                                                                                                                                                           |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `make docker-up`           | App + Postgres 18 locally, no Neon connection needed; the one-shot `db-init` container migrates and seeds before the app starts (M1.24)                                                           |
-| `make docker-workshop`     | Also brings up the Storybook workshop, on **61000**                                                                                                                                               |
-| `make docker-studio`       | Also brings up Drizzle Studio, on **4983**                                                                                                                                                        |
-| `make docker-all`          | App + Postgres + workshop + studio + the Playwright browser server (`:7900`, MB.23), all at once — `e2e` itself stays opt-in via `make docker-e2e`                                                |
-| `make docker-e2e`          | The Playwright suite once, against the dedicated e2e image                                                                                                                                        |
-| `make playwright-audit-up` | The WebKit/Firefox/phone browser server for `npm run e2e:audit`, Microsoft's image on the `audit` profile (M10.25); `playwright-audit-down` stops it                                              |
-| `make lighthouse-up`       | The Chromium with a DevTools port that `npm run lighthouse:seo` drives from the devcontainer, on the `audit` profile (MB.84); `lighthouse-down` stops it                                          |
-| `make devcontainer-build`  | Builds the dev container's image in a terminal, to read a failing build; "Dev Containers: Rebuild Container" in VS Code builds it too, so this is never a required step                           |
-| `make graphify-up`         | The code graph's builder and its MCP server ([`docker.md`](docker.md)); `graphify-down` stops all four of its services and leaves the rest running, and `graphify-logs` follows the builder's log |
-| `make graphify-pages-up`   | Also the code graph's pages, on **8090**, on the `graph-pages` profile; `graphify-pages-down` stops them                                                                                          |
-| `make docker-down`         | Stops and removes the stack, named volumes kept; `make docker-rebuild` tears down with the volumes and starts again                                                                               |
-| `make act-check`           | Runs a check locally via `act`; `act-check CHECK=<leg>` picks a `checks.yml` leg, and `make act-test` chains every locally runnable one                                                           |
+| `make`                     | Purpose                                                                                                                                                                                            |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `make docker-up`           | App + Postgres 18 locally, no Neon connection needed; the one-shot `db-init` container migrates and seeds before the app starts (M1.24)                                                            |
+| `make docker-workshop`     | Also brings up the Storybook workshop, on **61000**                                                                                                                                                |
+| `make docker-studio`       | Also brings up Drizzle Studio, on **4983**                                                                                                                                                         |
+| `make docker-all`          | App + Postgres + workshop + studio + the Playwright browser server (`:7900`, MB.23), all at once — `e2e` itself stays opt-in via `make docker-e2e`                                                 |
+| `make docker-e2e`          | The Playwright suite once, against the dedicated e2e image                                                                                                                                         |
+| `make playwright-audit-up` | The WebKit/Firefox/phone browser server for `npm run e2e:audit`, Microsoft's image on the `audit` profile (M10.25); `playwright-audit-down` stops it                                               |
+| `make lighthouse-up`       | The Chromium with a DevTools port that `npm run lighthouse:seo` drives from the devcontainer, on the `audit` profile (MB.84); `lighthouse-down` stops it                                           |
+| `make devcontainer-build`  | Builds the dev container's image in a terminal, to read a failing build; "Dev Containers: Rebuild Container" in VS Code builds it too, so this is never a required step                            |
+| `make graphify-up`         | The code graph's builder and its MCP server ([`docker.md`](docker.md)); `graphify-down` stops all three of its services and leaves the rest running, and `graphify-logs` follows the builder's log |
+| `make graphify-pages-up`   | Also the code graph's pages, on **8090**, on the `graph-pages` profile; `graphify-pages-down` stops them                                                                                           |
+| `make devcontainer-up`     | Starts the dev container and every service without a profile, with VS Code closed, through the Dev Containers CLI ([`docker.md`](docker.md), "The dev container")                                  |
+| `make docker-down`         | Stops and removes the stack, the dev container and the code graph included, named volumes kept; `make docker-rebuild` tears down with the volumes and starts again                                 |
+| `make act-check`           | Runs a check locally via `act`; `act-check CHECK=<leg>` picks a `checks.yml` leg, and `make act-test` chains every locally runnable one                                                            |
 
 ### Destructive DDL check
 

@@ -354,8 +354,7 @@ $formal-line: $icon-size;
 
 // The page-level side column's headings are h2s for the outline and keep the h3 size they were drawn at.
 .ingredient-entry__body > .ingredient-entry__side .ingredient-entry__block > h2 {
-  font-size: heading-size(3);
-  line-height: 1.2;
+  @include heading-level(3);
 }
 
 .ingredient-entry__description {
@@ -495,8 +494,7 @@ $replaces-gap: space(5);
   > h2 {
     display: inline;
     margin: 0;
-    font-size: heading-size(3);
-    line-height: 1.2;
+    @include heading-level(3);
 
     &::after {
       content: '\2060';

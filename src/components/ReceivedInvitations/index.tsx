@@ -9,7 +9,6 @@ import LocalTime from '../LocalTime';
 import AcceptControl from './accept-control';
 import DeclineControl from './decline-control';
 import type { ReceivedInvitationsProps } from './types';
-import './index.scss';
 
 // The coven invitations addressed to the signed-in account, in the account page's Invitations
 // section, with Accept and Decline on each. The service filters to the session's verified address;

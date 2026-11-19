@@ -5,7 +5,7 @@
 Facts the types (`DocumentPageProps`) cannot say:
 
 - `updatedOn` is a `Date` shown in UTC, so no server zone moves it.
-- `body` is the document's markdown, rendered on the server: `##` and `###` headings, paragraphs, lists, tables and footnotes. Raw HTML is shown as text. A link that is not a site path, `#`, `?`, `https:` or `mailto:` is dropped to its text, and a link into `/account` carries `rel="nofollow"`.
+- `body` is the document's markdown, rendered on the server: `##` and `###` headings, paragraphs, lists, tables and footnotes. Raw HTML is shown as text. A link that is not a site path, `#`, `?`, `https:` or `mailto:` is dropped to its text, and a link into `/account`, or one with a `?support=` parameter (it only opens the support dialog), carries `rel="nofollow"`.
 
 ## Contracts
 
@@ -38,7 +38,7 @@ The article is `.page-with-nav` ([`page-nav.md`](page-nav.md), "Where it stands"
 ### The text
 
 - **Each document's text lives in a markdown file under `documents/`**, which `npm run db:seed:documents` writes to the database as a new published version when the text differs. The public routes read the database: `/<key>` shows the current version and `/<key>/versions/<n>` one earlier version. The About Us page is the exception: it has no version pages (`UNVERSIONED_DOCUMENT_KEYS` in `src/lib/unversioned-documents.ts`), so it passes `DocumentPage` neither `number` nor `history`, and also no `updatedOn`, so the head has no "Last updated" line and no earlier-versions list. `updatedOn` is optional; the line is drawn only when it is given.
-- **A version page is titled with the document and its number**, such as "Terms of Use, Version 1". Its canonical address, the one a search engine treats as the real page, is the document page while it is the current version, and itself once a newer version is published (`versionDocumentMetadata` in `src/app/(public)/_documents.tsx`).
+- **A version page is titled with the document and its number**, such as "Terms of Use, Version 1". Its canonical address, the one a search engine treats as the real page, is the document page while it is the current version, and itself once a newer version is published; a version that is not the current one is also `noindex, follow`, and the current one carries no robots value (`versionDocumentMetadata` in `src/app/(public)/_documents.tsx`).
 - **A document that cites a source lists it at its end in Chicago form**, as the compendium's references are. A source is a markdown footnote.
   - Its number in the text is a superscript link written `#N` with `aria-label="Source N"`.
   - The list is headed "Sources". Each entry carries one return arrow per place that cites it, labelled "Back to citation 1", "Back to citation 2" when there are several and "Back to the text" when there is one.

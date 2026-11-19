@@ -2,7 +2,6 @@ import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import PageWithNav from '../PageWithNav';
 import Skeleton from '../Skeleton';
-import './index.scss';
 
 // A site document with its text still to come: the page's own article box, head and jump menu, the
 // title the document already has and bars where its date, lede, menu and text go.

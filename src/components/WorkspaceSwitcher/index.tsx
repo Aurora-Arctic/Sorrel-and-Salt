@@ -10,7 +10,6 @@ import { pauseNote } from '../../lib/pause-note';
 import { ComboboxSelect } from '../Combobox';
 import { useCovenSwitchRegistration } from '../CovenSwitchTargets/context';
 import type { WorkspaceSwitcherProps } from './types';
-import './index.scss';
 
 // A select over the viewer's workspaces (covens on screen); the current one is read off the
 // address, a coven's own pages or its paused page, so two tabs do not interfere. A viewer who may create gets a last choice whose value is

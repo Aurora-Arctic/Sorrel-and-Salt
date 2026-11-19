@@ -13,6 +13,8 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
+import { compendiumEntryPath } from '../../../lib/compendium-path';
+import { pingIndexNowAfterResponse } from '../../../lib/indexnow';
 import { fieldRefusal, NotFound, ValidationError } from '../../../lib/errors';
 import { NO_COMPENDIUM_ENTRY, NO_INGREDIENT, assertRowId } from './messages';
 import type { Session } from '../../../lib/session';
@@ -160,6 +162,18 @@ export async function getIngredient(
 }
 
 /**
+ * Tells IndexNow the public address of each entry that had a page before a write or has one after: a hidden entry has no
+ * page, so a write to one that stays hidden says nothing. Called once the write has committed, beside `expireCompendium`.
+ */
+async function pingEntryPages(
+  ...entries: ReadonlyArray<Pick<IngredientRow, 'slug' | 'shown'> | undefined>
+): Promise<void> {
+  await pingIndexNowAfterResponse(
+    entries.flatMap((entry) => (entry?.shown ? [compendiumEntryPath(entry.slug)] : [])),
+  );
+}
+
+/**
  * Curated values are written in their rows' spelling (claude-docs/db/compendium-writes.md, "Compendium service details").
  *
  * @throws {Forbidden} the caller is neither a curator nor a keeper, checked before the input is read.
@@ -194,6 +208,7 @@ export async function createCompendiumEntry(
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug, undefined));
   expireCompendium();
+  await pingEntryPages(written);
   return written;
 }
 
@@ -255,6 +270,8 @@ export async function updateCompendiumEntry(
     return touched ?? row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug, id));
   expireCompendium();
+  // The old address first: an entry whose slug moved or that went hidden is told along with the page it moved to.
+  await pingEntryPages(current, written);
   return written;
 }
 
@@ -293,6 +310,8 @@ export async function promoteCompendiumFolkName(
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug, id));
   expireCompendium();
+  // The old address first: an entry whose slug moved or that went hidden is told along with the page it moved to.
+  await pingEntryPages(current, written);
   return written;
 }
 
@@ -336,6 +355,8 @@ export async function setCompendiumEntryShown(
     return row;
   });
   expireCompendium();
+  // Hiding or showing changes the page either way, so it is told whichever way the mark went.
+  await pingEntryPages({ ...written, shown: true });
   return written;
 }
 
@@ -550,10 +571,13 @@ async function retireSlug(
  */
 export async function deleteCompendiumEntry(session: Session, id: string): Promise<void> {
   const curator = assertCurator(session);
+  assertRowId(id, NO_COMPENDIUM_ENTRY);
+  const current = await findOneIngredient([], id);
   await softDeleteIngredient(session, id, NO_COMPENDIUM_ENTRY, (write) =>
     write.softDeleteByIdInCompendium(curator, ingredients, id),
   );
   expireCompendium();
+  await pingEntryPages(current);
 }
 
 /**

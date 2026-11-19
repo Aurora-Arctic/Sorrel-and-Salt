@@ -20,7 +20,6 @@ import CardsFilterForm from './filter';
 import { NO_CARDS_FILTER, cardsHref } from './href';
 import MintForm, { MINT_TITLE } from './mint-form';
 import type { AdminCardsProps, CardsFilter, MintCardsProps } from './types';
-import './index.scss';
 
 // (claude-docs/components/admin-cards.md)
 

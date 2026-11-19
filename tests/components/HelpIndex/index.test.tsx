@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import HelpIndex from '@/components/HelpIndex';
+import { HelpFrame } from '@/components/HelpChrome';
 import { hrefs } from '../../support/links';
 import { expectBefore } from '../../support/interact';
 
@@ -211,5 +212,23 @@ describe('HelpIndex Edit FAQ', () => {
     index();
 
     expect(screen.queryByRole('link', { name: 'Edit FAQ' })).not.toBeInTheDocument();
+  });
+});
+
+// The index stands under the public help header, whose Help is the page's one level-one heading.
+describe('HelpIndex under the public help header', () => {
+  it('draws no level-one heading of its own, its sections staying beneath the header', () => {
+    render(
+      <HelpFrame>
+        <HelpIndex faq={FAQ} articles={ARTICLES} />
+      </HelpFrame>,
+    );
+
+    // Precondition: the index drew its two sections under their own headings.
+    expect(screen.getByRole('heading', { level: 2, name: 'Guides' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Frequently Asked Questions' }),
+    ).toBeInTheDocument();
+    expect(screen.queryAllByRole('heading', { level: 1 })).toEqual([]);
   });
 });

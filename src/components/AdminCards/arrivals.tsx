@@ -16,7 +16,6 @@ import ArrivalsFilterForm from './arrivals-filter';
 import DownloadCsv from './download-csv';
 import { NO_ARRIVALS_FILTER } from './href';
 import type { AdminArrivalsProps, ArrivalsActionsProps, ArrivalsFilter } from './types';
-import './index.scss';
 
 // (claude-docs/components/admin-cards.md)
 

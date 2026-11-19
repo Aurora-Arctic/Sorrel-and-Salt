@@ -6,7 +6,6 @@ import Hint from './hint';
 import { CheckIcon, CrossIcon } from '../IconTip/icons';
 import { EmailPasswordIcon, PasskeyIcon } from './icons';
 import type { MarkProps, OwnLoginMarkProps, ProviderLogoProps, SignInMarksProps } from './types';
-import './index.scss';
 
 // The table's two drawn facts, shared with the user's modal so the
 // two cannot drift. Their styles are the list's own, imported here so a

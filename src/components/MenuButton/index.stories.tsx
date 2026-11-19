@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { fn } from 'storybook/test';
 import { usePressOnMount } from '../../../.storybook/press';
 import { CheckIcon } from '../IconTip';
-import '../AddIcon/index.scss';
 import MenuButton from '.';
 import { sectionsFor } from './sections';
 import type { MenuButtonItem } from './types';

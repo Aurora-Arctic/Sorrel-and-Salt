@@ -17,7 +17,7 @@ first:
   default the wrong way; nothing else may bypass the filter, so a second bypass is
   a decision argued for in the diff.
 
-There are further named hatches, each ending `…IncludingSoftDeleted`, from five
+There are further named hatches, each ending `…IncludingSoftDeleted`, from six
 decisions:
 
 1. **What a spell holds.** `findIngredientsInSpellsIncludingSoftDeleted` and
@@ -52,6 +52,7 @@ decisions:
    ([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "When the
    compendium retires the entry").
 5. **The coven's Ingredients list**, under "The cupboard's internal finders" below.
+6. **A deleted entry's address.** `findDeletedCompendiumSlugsIncludingSoftDeleted` reads the slugs of deleted compendium entries that were shown when deleted, and skips the entry's own tombstone filter alone: it keeps the compendium tier and the shown flag, and leaves out a slug a live entry holds or a live entry's unexpired redirect runs from. Only `listDeletedCompendiumSlugs` may call it, which the guard pins ([`seo/ai-discovery.md`](../seo/ai-discovery.md), "A deleted entry's address").
 
 `findSubstitutesIncludingSoftDeleted` reads each substitute and its linked
 ingredient in one statement, through `selectFrom`'s left join: a `LeftJoin` option
@@ -111,7 +112,7 @@ are read off the index itself, so a new finder is checked without being listed. 
 each hatch still filters — the spell hatches skip the ingredient's tombstone alone,
 the substitute hatch the linked ingredient's alone, the co-member hatch the
 asked-about user's seat and row alone, the cupboard hatch and the list's scope the
-compendium entry's alone — is its service's READS table's to prove
+compendium entry's alone, the address hatch the deleted entry's alone — is its service's READS table's to prove
 ([`testing/layer-ownership.md`](../testing/layer-ownership.md), "The owning
 layer").
 

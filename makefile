@@ -13,7 +13,7 @@
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-jobs docker-all docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token playwright-server-up playwright-server-down playwright-audit-up playwright-audit-down lighthouse-up lighthouse-down docker-codegen \
-	devcontainer-build graphify-up graphify-down graphify-pages-up graphify-pages-down graphify-logs \
+	devcontainer-build devcontainer-up graphify-up graphify-down graphify-pages-up graphify-pages-down graphify-logs \
 	act-image act-cache-checkout act-check act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
@@ -182,9 +182,9 @@ docker-all:
 docker-e2e:
 	$(COMPOSE) --profile e2e run --rm e2e
 
-## Stop and remove the local stack, workshop/studio/jobs/e2e/audit profiles included (named volumes kept)
+## Stop and remove the local stack, the dev container and the code graph included (named volumes kept)
 docker-down:
-	$(COMPOSE) --profile workshop --profile studio --profile jobs --profile e2e --profile audit down
+	$(COMPOSE_DEV) --profile workshop --profile studio --profile jobs --profile e2e --profile audit --profile graph-pages down
 
 ## Tear down including volumes, then rebuild and start the app
 docker-rebuild:
@@ -229,21 +229,25 @@ lighthouse-down:
 devcontainer-build:
 	$(COMPOSE_DEV) build devcontainer
 
+## Start the dev container and the whole stack with VS Code closed (Dev Containers CLI)
+devcontainer-up:
+	npx --yes @devcontainers/cli up --workspace-folder .
+
 ## Start the code graph: the builder and its MCP server (graphify)
 graphify-up:
 	$(COMPOSE_DEV) up -d graphify-watch graphify
 
-## Stop all four code graph services, leaving the rest of the stack running
+## Stop all three code graph services, leaving the rest of the stack running
 graphify-down:
-	$(COMPOSE_DEV) --profile graph-pages stop graphify-watch graphify graphify-web graphify-views
+	$(COMPOSE_DEV) --profile graph-pages stop graphify-watch graphify graphify-pages
 
 ## Also start the code graph's pages on 8090 (compose profile: graph-pages)
 graphify-pages-up:
-	$(COMPOSE_DEV) --profile graph-pages up -d graphify-web graphify-views
+	$(COMPOSE_DEV) --profile graph-pages up -d graphify-pages
 
 ## Stop the code graph's pages
 graphify-pages-down:
-	$(COMPOSE_DEV) --profile graph-pages stop graphify-web graphify-views
+	$(COMPOSE_DEV) --profile graph-pages stop graphify-pages
 
 ## Follow the code graph builder's log, one entry per rebuild
 graphify-logs:

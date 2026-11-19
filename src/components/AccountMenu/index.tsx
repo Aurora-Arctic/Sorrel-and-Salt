@@ -9,7 +9,6 @@ import { accountCounts, countText } from './counts';
 import { initialsOf } from './initials';
 import Panel from './panel';
 import type { AccountMenuProps } from './types';
-import './index.scss';
 
 // The account button in the shell's bar and its panel: Your Account, a link to pending invitations
 // when there are any, Help, Support and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key

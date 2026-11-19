@@ -6,8 +6,6 @@ import PublicEnd from './public-end';
 import SiteNav from '../AppShell/site-nav';
 import { COMPENDIUM_LINK } from '../AppShell/compendium-link';
 import type { PublicFrameProps } from './types';
-import '../AppShell/index.scss';
-import './index.scss';
 
 // A server component, so the nav is in the HTML a crawler receives (claude-docs/components/public-frame.md).
 

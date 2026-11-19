@@ -2,7 +2,6 @@ import type { ReactElement } from 'react';
 import PagerEndContent from './end-content';
 import PagerLink from './pager-link';
 import type { PagerEndProps, PagerProps } from './types';
-import './index.scss';
 
 // An end with no page is disabled rather than hidden (claude-docs/components/pager.md).
 

@@ -1,6 +1,6 @@
 import type { Element, ElementContent, Root, RootContent } from 'hast';
 import type { Root as MarkdownRoot, RootContent as MarkdownContent } from 'mdast';
-import type { ReactNode } from 'react';
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import * as runtime from 'react/jsx-runtime';
 import rehypeReact from 'rehype-react';
 import remarkGfm from 'remark-gfm';
@@ -10,7 +10,10 @@ import { unified } from 'unified';
 import { MARK, shownText, type HelpTerms } from '../../lib/help-marks';
 import { widgetOf, type HelpWidgetName } from '../../lib/help-widgets';
 import { OPENABLE_ADDRESS } from '../../lib/link-address';
+import { SITE_ORIGIN } from '../../lib/site';
+import { SUPPORT_PARAM } from '../../lib/support-path';
 import { slugify } from '../../lib/slugify';
+import { HelpHeading } from '../HelpChrome/frame';
 import HelpScreenshot from '../HelpScreenshot';
 import HelpTerm from '../HelpTerm';
 import TableFrame from '../TableFrame';
@@ -254,12 +257,23 @@ function shapeFigures(children: ElementContent[]): ElementContent[] {
   });
 }
 
-function reactProcessorFor(placeholders: DocumentPlaceholders, widgets: HelpWidgets) {
+/** The headings of a help article body: written one level down (h3 for a `##`), drawn one level up again under the public help header. */
+const HELP_HEADINGS = {
+  h3: (props: ComponentPropsWithoutRef<'h3'>) => <HelpHeading level={3} {...props} />,
+  h4: (props: ComponentPropsWithoutRef<'h4'>) => <HelpHeading level={4} {...props} />,
+};
+
+function reactProcessorFor(
+  placeholders: DocumentPlaceholders,
+  widgets: HelpWidgets,
+  headings: typeof HELP_HEADINGS | object,
+) {
   return unified().use(rehypeReact, {
     Fragment: runtime.Fragment,
     jsx: runtime.jsx,
     jsxs: runtime.jsxs,
     components: {
+      ...headings,
       [PLACEHOLDER_TAG]: ({ name }: { name: string }) => placeholders[name],
       [TERM_TAG]: HelpTerm,
       [SCREENSHOT_TAG]: HelpScreenshot,
@@ -326,6 +340,11 @@ function shapeFootnotes(node: Element): void {
   }
 }
 
+/** A link that only opens the support dialog over the page it names; the base lets a bare `?support=` parse. */
+function opensSupport(href: string): boolean {
+  return new URL(href, SITE_ORIGIN).searchParams.has(SUPPORT_PARAM);
+}
+
 function openableLinks(children: ElementContent[]): ElementContent[] {
   return children.flatMap((child) => {
     if (!isElement(child)) return [child];
@@ -333,7 +352,7 @@ function openableLinks(children: ElementContent[]): ElementContent[] {
     if (child.tagName !== 'a') return [child];
     const href = child.properties.href;
     if (typeof href !== 'string' || !OPENABLE_ADDRESS.test(href)) return child.children;
-    if (ACCOUNT_ADDRESS.test(href)) child.properties.rel = ['nofollow'];
+    if (ACCOUNT_ADDRESS.test(href) || opensSupport(href)) child.properties.rel = ['nofollow'];
     return [child];
   });
 }
@@ -420,8 +439,9 @@ export function renderMarkdown(
   placeholders: DocumentPlaceholders = {},
   // Ids a heading must not take, for a page that anchors other elements by id.
   reserved: readonly string[] = [],
-  // A body drawn beneath a page title of its own: every heading moves down a level (h2 becomes h3).
-  lowerHeadings = false,
+  // A body drawn beneath a page title of its own: every heading moves down a level (h2 becomes h3). `help` is that, and
+  // draws each heading one level up again where the page stands under the public help header (`HelpHeading`).
+  lowerHeadings: boolean | 'help' = false,
   // The glossary a help body marks its terms from. A caller that passes none (site documents) leaves `[[…]]` as text
   // and a callout as the blockquote it is written as.
   terms?: HelpTerms,
@@ -449,7 +469,11 @@ export function renderMarkdown(
     });
   }
   return {
-    content: reactProcessorFor(placeholders, widgets).stringify(tree) as ReactNode,
+    content: reactProcessorFor(
+      placeholders,
+      widgets,
+      lowerHeadings === 'help' ? HELP_HEADINGS : {},
+    ).stringify(tree) as ReactNode,
     entries,
   };
 }

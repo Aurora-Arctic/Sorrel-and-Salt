@@ -13,7 +13,6 @@ import { PasskeyRow } from './passkey-row';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import { refusal } from './refusal';
 import type { PasskeysProps } from './types';
-import './index.scss';
 
 // Every call is the passkey plugin's own route (claude-docs/components/passkeys.md).
 

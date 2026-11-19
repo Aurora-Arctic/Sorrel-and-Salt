@@ -11,7 +11,6 @@ import { HelpBackLink } from '../HelpArticleView/back-link';
 import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
 import type { HelpIndexProps } from './types';
-import './index.scss';
 
 // The two sections the jump menu names. An answer's heading never takes these ids; a question's slug could only if it
 // were titled "Guides" or "FAQ", which no question is.

@@ -26,7 +26,6 @@ import Notice from '../Notice';
 import WorkingCompletion from './completion';
 import { today } from '../DateField/day';
 import { completeReason } from './day';
-import './index.scss';
 import { DeleteWorkingQuestion } from '../SpellWorkings/delete-working';
 import type { RecordWorkingDialogProps, WorkingParticipantValue } from './types';
 

@@ -6,7 +6,6 @@ import { clockTime } from '../LastEdit/relative';
 import Notice from '../Notice';
 import Spinner from '../Spinner';
 import type { SaveStatusProps } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // Where an autosaving form says how its saves go: inline beside the primary action, never a toast.

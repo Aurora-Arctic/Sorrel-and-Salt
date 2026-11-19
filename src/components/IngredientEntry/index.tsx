@@ -44,7 +44,6 @@ import PausedNotice from '../AppShell/paused-notice';
 import SourcingScore from '../SourcingScore';
 import type { IngredientEntryProps } from './types';
 import { blockOf, categoryItems, CorrespondenceBlock, correspondences, ListBlock } from './blocks';
-import './index.scss';
 
 // An ingredient's page body, the same on the public compendium and a coven's: its fields, then a section
 // per form. No hook, so a server page renders it; ids come from the entry's data, not `useId`

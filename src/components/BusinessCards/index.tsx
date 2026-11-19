@@ -15,7 +15,6 @@ import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { BusinessCardSchema } from './schema';
 import type { BusinessCardValues } from './types';
-import './index.scss';
 
 const EMPTY: BusinessCardValues = { name: '', email: '', phone: '' };
 

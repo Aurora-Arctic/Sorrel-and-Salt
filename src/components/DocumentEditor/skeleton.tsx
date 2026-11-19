@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import { RichTextEditorSkeleton } from '../RichTextEditor/skeleton';
 import Skeleton from '../Skeleton';
-import './index.scss';
 
 // The editor's head while it loads: the editor's own classes around bars, so its title, lede, toolbar,
 // text box and buttons stand where the real ones will.

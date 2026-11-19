@@ -34,7 +34,6 @@ import type {
   SupportRequestsProps,
   SupportStatus,
 } from './types';
-import './index.scss';
 
 // The Support page, `/keepers/support`: a filter, a page of requests (about, subject, status, sender,
 // assignee, curator visibility, error number), the pager, and the request `?request=` opens over them

@@ -29,13 +29,13 @@ export function SignInLinkWithQuery({
 }): ReactElement | null {
   const next = useSignInReturn();
   if (next === null) return null;
-  return <SignInDialog next={next} configured={configured} label="Sign In" />;
+  return <SignInDialog next={next} configured={configured} label="Sign In" nofollow />;
 }
 
 /** The bare link a statically drawn bar shows until the query string is read. */
 export function SignInLink(): ReactElement {
   return (
-    <PendingLink className="btn btn--solid btn--medium" href={signInPath(undefined)}>
+    <PendingLink className="btn btn--solid btn--medium" href={signInPath(undefined)} rel="nofollow">
       Sign In
     </PendingLink>
   );

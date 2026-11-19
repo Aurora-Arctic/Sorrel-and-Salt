@@ -3,7 +3,6 @@ import type { ReactElement } from 'react';
 import DisclaimerNotice from '../DisclaimerNotice';
 import SafetyNote from './safety-note';
 import type { SafetyNoteProps } from './types';
-import './index.scss';
 
 // A caution and its one disclaimer as a single item, so the disclaimer closes the caution by its own
 // margin and not a flow gap further. Nothing is drawn, not even the wrapper, when there is no caution.

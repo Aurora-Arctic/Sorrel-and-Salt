@@ -16,7 +16,6 @@ import type {
   PrivilegeLedgerFilter,
   PrivilegeLedgerProps,
 } from './types';
-import './index.scss';
 
 // `/keepers/privilege-changes`' filter, table and pager. Render-only: the page reads one page of the ledger through
 // the identity service (claude-docs/components/privilege-ledger.md).

@@ -21,30 +21,25 @@
   }
 
   h1 {
-    font-size: heading-size(1);
-    line-height: 1.1;
+    @include heading-level(1);
   }
 
   h2 {
-    font-size: heading-size(2);
-    line-height: 1.15;
+    @include heading-level(2);
   }
 
   // An h1 set at the h2 size so a long title fits the narrow card.
   .auth-title {
     text-align: center;
-    font-size: heading-size(2);
-    line-height: 1.15;
+    @include heading-level(2);
   }
 
   h3 {
-    font-size: heading-size(3);
-    line-height: 1.2;
+    @include heading-level(3);
   }
 
   h4 {
-    font-size: heading-size(4);
-    line-height: 1.25;
+    @include heading-level(4);
   }
 
   // Looser than the headings and a control's text: a paragraph is read at length, and the thin face

@@ -48,6 +48,7 @@ export async function generateMetadata({ params }: CompendiumEntryParams): Promi
     title,
     entryDescription(title, entry.description),
     compendiumEntryPath(entry.slug),
+    { shareImage: false },
   );
   // A hidden entry is a curator's to see here, and is never indexed.
   return entry.shown ? metadata : { ...metadata, robots: { index: false, follow: false } };

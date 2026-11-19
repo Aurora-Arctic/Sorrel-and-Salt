@@ -2,7 +2,6 @@ import type { MouseEvent, ReactElement, ReactNode } from 'react';
 import { plainQuantity } from '@/lib/quantity';
 import EmptyMark from '../EmptyMark';
 import FormIcon from '../FormIcon';
-import './index.scss';
 import type { StepRowProps } from './types';
 import { cx } from '@/lib/class-names';
 

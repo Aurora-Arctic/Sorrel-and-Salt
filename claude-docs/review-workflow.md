@@ -197,6 +197,8 @@ The agent must not review, approve, or summarise the change as "fine". It only s
 
 **What it is for.** To record what you found, and send it to the coding agent once per layer, because each send uses Claude usage.
 
+**When the agent stops for you to read.** The agent sends the layer to its Plannotator Inbox thread as a guided review: the diff of that layer alone, beside a guide the agent writes that sorts the change into chapters. Comment on lines, then press Approve or Send feedback; the verdict and every comment come back to the agent as a reply in the thread. This is how the failing tests (step 2) and each implementation layer (step 3) reach you.
+
 **By hand.** Run `/plannotator-review --gate --base origin/staging` in the coding agent's Claude Code session; for a stack, name the layer below in place of `origin/staging`. Without `--base` the page compares against `main`. Without `--gate` an approval with no notes closes the page and never reaches the agent. Plannotator is a browser page for writing line notes on a diff; it opens on the host at port 19432. Write each note on its line, then press Send Feedback once: the notes arrive in that session as one message, each with its file and line. A good result: every note says what you want changed. You can also write the notes as review comments on GitHub, or in a file of your own.
 
 **With an agent.** Paste:
@@ -229,10 +231,10 @@ What an agent does without being asked, in any task, not only in a review:
 | It needs a piece of text: a string, a class name, a config key                            | Searches with `grep`. The graph holds code structure, not text.                                                                                                                                                                   |
 | It finishes a plan                                                                        | Leaves plan mode, which opens the plan in Plannotator (step 1).                                                                                                                                                                   |
 | It has a question that does not stop the rest of the work                                 | Posts it to the Plannotator Inbox, a standing page where questions from every session wait for you, and carries on. The answer arrives in its session as a message. A question that blocks everything is still asked in the chat. |
-| It is told to open something for review                                                   | Opens it in Plannotator: a diff with `plannotator review --gate --base <ref>`, a document with `plannotator annotate <file>`.                                                                                                     |
+| It is told to open something for review                                                   | Sends a diff to its Inbox thread as a guided review (`submit_guide` with `review: true`, step 8), and opens a document with `plannotator annotate <file>`.                                                                        |
 | It wants the shape of a change before reading it                                          | Runs `BASE=<ref> npm run review:affected` and reads `.review/affected.md` (step 5), and `git dft <ref>...HEAD` for the diff itself (step 7).                                                                                      |
 
-The agent never starts a guide, Ask AI, or a Review Agent in Plannotator: those spend usage on the reviewer's behalf, and only the reviewer presses them. The Inbox is at `http://localhost:43501` on the host; it starts with the container, and `/plannotator-inbox` starts it again and prints its address if it has stopped (`claude-docs/commands.md`, "The local review").
+The agent never starts a guide, Ask AI, or a Review Agent in the Plannotator review page: those spend usage on the reviewer's behalf, and only the reviewer presses them. The Inbox is at `http://localhost:43501` on the host; it starts with the container, and `/plannotator-inbox` starts it again and prints its address if it has stopped (`claude-docs/commands.md`, "The local review").
 
 ## Walking through it with an agent
 

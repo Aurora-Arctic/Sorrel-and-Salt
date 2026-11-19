@@ -23,8 +23,7 @@ $bar-height: 0.5rem;
 .sourcing-score__heading {
   margin: 0;
   // The h4 size at any level, so the panel looks the same under the dialog's h3 and the page's h1.
-  font-size: heading-size(4);
-  line-height: 1.25;
+  @include heading-level(4);
 }
 
 .sourcing-score__bar {

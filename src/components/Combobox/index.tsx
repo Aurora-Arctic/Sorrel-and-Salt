@@ -38,7 +38,6 @@ import type {
   Suggestions,
   TypedRow,
 } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 import { SEARCH_TEXT_ATTRIBUTE } from '../Field/search-submit';
 

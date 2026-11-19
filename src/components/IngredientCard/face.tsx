@@ -13,7 +13,6 @@ import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
 import { useNamedCategories } from './category-vocabulary';
 import { IngredientCardFrame } from './frame';
 import type { IngredientCardProps } from './types';
-import './index.scss';
 
 // The card as drawn, in the browser: a client component, so the page sends its props once rather than
 // its whole drawn markup beside the HTML. `index.tsx` hands it the props it needs and no more.

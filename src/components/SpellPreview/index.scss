@@ -85,24 +85,77 @@ $preview-foot: 2.5rem;
   }
 }
 
-// The background: the page smouldering from its bottom-right corner as a spell card does, a hearth glow and rising
-// embers (claude-docs/components/spell-preview.md, "The background"). The ember rim and glow breathe by `opacity`,
-// since the card's `box-shadow` and `filter` frames repaint every frame on a phone kept awake.
+// The background: the page burning from its bottom-right corner as a spell card does, a hearth glow and rising embers
+// (claude-docs/components/spell-preview.md, "The background"). After the burn-in, every loop runs by `opacity` or
+// `transform` on a layer outside the displacement filter: a change inside the filter redraws the turbulence every frame.
 
-$preview-ember-opacity: 0.4;
-// The pane's burn is bigger than a card's: it runs twice as far along the bottom and eats half as
-// deep again. The corner's curve, the spill under it and the edge embers' places are scaled by the
-// same two factors, so the curve keeps its proportions and the embers still leave the charred edge.
+// The pane's burn runs twice as far along the bottom as a card's and eats three and a half times as deep. The corner's
+// curve is scaled by the same two factors, so it keeps the card's proportions.
 $preview-burn-scale-x: 2;
-$preview-burn-scale-y: 1.5;
+$preview-burn-scale-y: 3.5;
 $preview-burn-length: card.$burn-length * $preview-burn-scale-x;
 $preview-burn-depth: card.$burn-depth * $preview-burn-scale-y;
 $preview-burn-corner-radius: (list.nth(card.$burn-corner-radius, 1) * $preview-burn-scale-x)
   (list.nth(card.$burn-corner-radius, 2) * $preview-burn-scale-y);
+$preview-burn-duration: 3.5s;
+$preview-burn-easing: cubic-bezier(0.6, 0.05, 0.4, 1);
+// The rim's rings reach past the window on every side; a mask round the corner keeps them to the burn.
+$preview-burn-reach: ellipse ($preview-burn-length + 12rem)
+  (list.nth($preview-burn-corner-radius, 2) + 8rem) at 100% 100%;
+$preview-glow-opacity: 0.6;
 $preview-rim-duration: card.$burn-ember-duration;
-$preview-embers-duration: $pulse-duration * 1.85;
 $preview-warmth-duration: card.$burn-warmth-duration;
+$preview-heat-duration: $pulse-duration * 2.2;
 $preview-hearth-duration: 11s;
+$preview-heats-fade: 2s;
+$preview-late-fade: 1.5s;
+
+@function preview-rings($inset, $rings...) {
+  $out: ();
+
+  @each $ring in $rings {
+    @if $inset {
+      $out: list.append($out, inset $ring, comma);
+    } @else {
+      $out: list.append($out, $ring, comma);
+    }
+  }
+
+  @return $out;
+}
+
+@function preview-rim($inset) {
+  @return preview-rings(
+    $inset,
+    0 0 0 2.5px rgba($burn-candle, 0.95),
+    0 0 0 6.5px rgba($burn-ember, 0.85),
+    0 0 2px 9.5px $preview-char,
+    0 0 0.5px 11.5px $preview-char-line,
+    0 0 18px 13px $preview-scorch
+  );
+}
+
+@function preview-heat-rim($inset) {
+  @return preview-rings(
+    $inset,
+    0 0 0 4px $preview-heat-line,
+    0 0 0 8px $burn-ember,
+    0 0 16px 9px $preview-ember-halo
+  );
+}
+
+$preview-hot-shapes: (
+  polygon(12% 30%, 34% 6%, 58% 14%, 80% 0, 100% 38%, 86% 70%, 60% 100%, 36% 82%, 10% 88%, 0 56%),
+  polygon(26% 0, 60% 10%, 74% 30%, 100% 44%, 82% 86%, 50% 100%, 30% 78%, 0 70%, 10% 34%),
+  polygon(0 24%, 30% 14%, 48% 0, 88% 18%, 100% 58%, 72% 74%, 62% 100%, 22% 92%, 14% 60%),
+  polygon(20% 8%, 52% 0, 70% 22%, 100% 30%, 90% 72%, 58% 84%, 40% 100%, 6% 80%, 0 42%)
+);
+$preview-flake-shapes: (
+  polygon(0 34%, 22% 8%, 40% 16%, 58% 0, 96% 14%, 100% 58%, 74% 70%, 62% 100%, 28% 84%, 8% 90%),
+  polygon(4% 14%, 36% 20%, 56% 0, 100% 30%, 84% 62%, 92% 96%, 48% 80%, 18% 100%, 0 60%),
+  polygon(12% 0, 48% 12%, 86% 4%, 100% 46%, 80% 58%, 88% 92%, 42% 100%, 30% 74%, 0 62%),
+  polygon(0 44%, 18% 10%, 46% 22%, 70% 0, 100% 40%, 82% 56%, 94% 84%, 60% 100%, 36% 78%, 14% 96%)
+);
 
 @keyframes spell-preview-burn-hole {
   from {
@@ -120,23 +173,17 @@ $preview-hearth-duration: 11s;
 @keyframes spell-preview-burn-curve {
   from {
     border-bottom-right-radius: 0 0;
-    clip-path: inset(0 0 0.6rem 0);
+    clip-path: inset(0 0 $burn-curve-clip 0);
   }
 }
 
-@keyframes spell-preview-burn-glow {
-  from {
-    width: 0;
-    opacity: 0;
-  }
-}
-
-@keyframes spell-preview-burn-show {
+@keyframes spell-preview-fade-in {
   from {
     opacity: 0;
   }
 }
 
+// Each loop starts and ends on the value its layer rests at, so nothing steps when the burn-in hands over to it.
 @keyframes spell-preview-rim {
   0%,
   100% {
@@ -144,7 +191,7 @@ $preview-hearth-duration: 11s;
   }
 
   27% {
-    opacity: 0.72;
+    opacity: 0.6;
   }
 
   46% {
@@ -152,37 +199,34 @@ $preview-hearth-duration: 11s;
   }
 
   71% {
-    opacity: 0.6;
-  }
-}
-
-@keyframes spell-preview-embers {
-  0%,
-  100% {
-    opacity: 0.9;
-  }
-
-  41% {
-    opacity: 0.6;
-  }
-
-  67% {
-    opacity: 1;
+    opacity: 0.5;
   }
 }
 
 @keyframes spell-preview-warmth {
   0%,
   100% {
-    opacity: $preview-ember-opacity * 0.82;
+    opacity: $preview-glow-opacity;
   }
 
   38% {
-    opacity: $preview-ember-opacity * 0.5;
+    opacity: 0.42;
   }
 
   64% {
-    opacity: $preview-ember-opacity;
+    opacity: 0.75;
+  }
+}
+
+@keyframes spell-preview-heat {
+  0%,
+  55%,
+  100% {
+    opacity: 0.08;
+  }
+
+  22% {
+    opacity: 1;
   }
 }
 
@@ -194,6 +238,22 @@ $preview-hearth-duration: 11s;
 
   50% {
     opacity: 0.7;
+  }
+}
+
+@keyframes spell-preview-flare {
+  0%,
+  38%,
+  100% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: var(--peak);
+  }
+
+  22% {
+    opacity: calc(var(--peak) * 0.45);
   }
 }
 
@@ -221,10 +281,10 @@ $preview-hearth-duration: 11s;
   }
 }
 
-// Ash tumbling: a flake turns over, so it thins to an edge and widens again.
+// A flake rocks rather than flipping right over, so it never turns edge-on and blinks out.
 @keyframes spell-preview-tumble {
   0% {
-    transform: translate(0, 0) rotate(0deg);
+    transform: translate(0, 0) rotate(0deg) rotateX(0deg);
     opacity: 0;
   }
 
@@ -233,11 +293,11 @@ $preview-hearth-duration: 11s;
   }
 
   35% {
-    transform: translate(var(--sway), -30vh) rotate(160deg) scaleX(0.4);
+    transform: translate(var(--sway), -30vh) rotate(70deg) rotateX(62deg);
   }
 
   65% {
-    transform: translate(calc(var(--sway) * -0.5), -62vh) rotate(290deg) scaleX(1);
+    transform: translate(calc(var(--sway) * -0.5), -62vh) rotate(150deg) rotateX(-40deg);
   }
 
   85% {
@@ -245,11 +305,12 @@ $preview-hearth-duration: 11s;
   }
 
   100% {
-    transform: translate(var(--sway), -94vh) rotate(420deg) scaleX(0.5);
+    transform: translate(var(--sway), -94vh) rotate(210deg) rotateX(58deg);
     opacity: 0;
   }
 }
 
+// An edge ember rises the same height for each stretch of its life, so it crosses each stop at one speed.
 @keyframes spell-preview-float-edge {
   0% {
     transform: translate(0, 0) rotate(0deg);
@@ -261,47 +322,85 @@ $preview-hearth-duration: 11s;
   }
 
   30% {
-    transform: translate(calc(var(--sway) * -0.6), -14vh) rotate(60deg);
+    transform: translate(calc(var(--sway) * -0.6), -21.6vh) rotate(60deg);
     opacity: calc(var(--peak) * 0.9);
   }
 
   65% {
-    transform: translate(var(--sway), -32vh) rotate(150deg);
+    transform: translate(var(--sway), -46.8vh) rotate(150deg);
     opacity: calc(var(--peak) * 0.45);
   }
 
   100% {
-    transform: translate(calc(var(--sway) * -0.3), -50vh) rotate(230deg);
+    transform: translate(calc(var(--sway) * -0.3), -72vh) rotate(230deg);
     opacity: 0;
   }
 }
 
-@keyframes spell-preview-cool {
-  0%,
-  18% {
-    opacity: 1;
+@keyframes spell-preview-tumble-edge {
+  0% {
+    transform: translate(0, 0) rotate(0deg) rotateX(0deg);
+    opacity: 0;
   }
 
-  60% {
-    opacity: 0.35;
+  5% {
+    opacity: var(--peak);
+  }
+
+  30% {
+    transform: translate(calc(var(--sway) * -0.6), -21.6vh) rotate(50deg) rotateX(60deg);
+    opacity: calc(var(--peak) * 0.9);
+  }
+
+  65% {
+    transform: translate(var(--sway), -46.8vh) rotate(120deg) rotateX(-38deg);
+    opacity: calc(var(--peak) * 0.5);
   }
 
   100% {
+    transform: translate(calc(var(--sway) * -0.3), -72vh) rotate(190deg) rotateX(55deg);
     opacity: 0;
   }
 }
 
-@keyframes spell-preview-cool-edge {
-  0%,
-  12% {
+// The white-hot core flickering as it cools, in one keyframe set so each ember animates one layer.
+@keyframes spell-preview-cool {
+  0% {
     opacity: 1;
   }
 
-  45% {
-    opacity: 0.4;
+  7% {
+    opacity: 0.55;
   }
 
-  80%,
+  13% {
+    opacity: 1;
+  }
+
+  22% {
+    opacity: 0.5;
+  }
+
+  30% {
+    opacity: 0.9;
+  }
+
+  41% {
+    opacity: 0.35;
+  }
+
+  52% {
+    opacity: 0.6;
+  }
+
+  66% {
+    opacity: 0.2;
+  }
+
+  80% {
+    opacity: 0.3;
+  }
+
   100% {
     opacity: 0;
   }
@@ -321,22 +420,28 @@ $preview-hearth-duration: 11s;
 }
 
 .spell-preview__glow {
-  inset: auto (-(card.$burn-glow-overhang)) (-(card.$burn-glow-drop) * $preview-burn-scale-y) auto;
-  width: calc(#{$preview-burn-length} + #{card.$burn-glow-lead});
-  height: card.$burn-glow-height * $preview-burn-scale-y;
+  inset: auto -2rem -2rem auto;
+  width: 27rem;
+  height: 21rem;
   border-radius: 50%;
-  background: card.burn-glow-gradient();
-  filter: blur(card.$burn-glow-blur);
-  opacity: $preview-ember-opacity;
+  background: radial-gradient(
+    ellipse 60% 62% at 72% 78%,
+    rgba($burn-candle, 0.95),
+    rgba($burn-ember, 0.6) 55%,
+    rgba($burn-ember, 0) 100%
+  );
+  filter: blur(1.875rem);
+  opacity: $preview-glow-opacity;
   animation:
-    spell-preview-burn-glow card.$burn-duration card.$burn-easing both,
-    spell-preview-warmth $preview-warmth-duration ease-in-out card.$burn-duration infinite;
+    spell-preview-fade-in $preview-burn-duration $preview-burn-easing both,
+    spell-preview-warmth $preview-warmth-duration ease-in-out $preview-burn-duration infinite;
 }
 
+// One drop-shadow on the paper: the glow stands in for the lift shadow, which only ever showed at the burnt edge.
 .spell-preview__face {
   inset: 0;
   overflow: hidden;
-  filter: drop-shadow(#{$shadow-floating});
+  filter: drop-shadow(0 0 9px $preview-halo);
 }
 
 .spell-preview__face-paper,
@@ -350,9 +455,9 @@ $preview-hearth-duration: 11s;
 .spell-preview__burn-corner,
 .spell-preview__burn-curve {
   position: absolute;
-  inset: -1rem;
+  inset: -($burn-corner-overhang);
   border-bottom-right-radius: $preview-burn-corner-radius;
-  animation: spell-preview-burn-corner card.$burn-duration card.$burn-easing both;
+  animation: spell-preview-burn-corner $preview-burn-duration $preview-burn-easing both;
 }
 
 .spell-preview__face-corner,
@@ -363,12 +468,12 @@ $preview-hearth-duration: 11s;
 .spell-preview__face-hole,
 .spell-preview__burn-hole {
   position: absolute;
-  right: 0.5rem;
-  bottom: 0.5rem;
+  right: $burn-hole-inset;
+  bottom: $burn-hole-inset;
   width: $preview-burn-length;
   height: $preview-burn-depth;
-  border-top-left-radius: 45% 100%;
-  animation: spell-preview-burn-hole card.$burn-duration card.$burn-easing both;
+  border-top-left-radius: $burn-hole-radius;
+  animation: spell-preview-burn-hole $preview-burn-duration $preview-burn-easing both;
 }
 
 // The paper is the hole's shadow, so the hole's rounding carves it. A spread shadow rounds its far
@@ -380,7 +485,14 @@ $preview-hearth-duration: 11s;
 
 .spell-preview__hearth {
   inset: 0;
-  background: radial-gradient(ellipse 58% 46% at 78% 104%, $preview-glow, transparent 70%);
+  background:
+    radial-gradient(
+      ellipse 22rem 24rem at 100% 100%,
+      $preview-heat-near,
+      $preview-heat-far 42%,
+      transparent 74%
+    ),
+    radial-gradient(ellipse 58% 46% at 78% 104%, $preview-glow, transparent 70%);
   animation: spell-preview-hearth $preview-hearth-duration ease-in-out infinite;
 }
 
@@ -389,24 +501,32 @@ $preview-hearth-duration: 11s;
 }
 
 .spell-preview__burn {
+  position: absolute;
   inset: 0;
   overflow: hidden;
-  animation: spell-preview-burn-show $motion-medium ease both;
+}
+
+// The rim's pulse is on this outer layer, so the filter inside it is drawn once. `:where()` keeps these selectors as weak as
+// the reduced-motion rule below, which then wins by coming later.
+:where(.spell-preview__scene) > .spell-preview__burn {
+  animation:
+    spell-preview-fade-in $motion-medium ease both,
+    spell-preview-rim $preview-rim-duration ease-in-out $preview-burn-duration infinite;
+}
+
+:where(.spell-preview__scene) > .spell-preview__burn,
+.spell-preview__heats {
+  mask-image: radial-gradient($preview-burn-reach, $text-primary 68%, transparent 100%);
 }
 
 .spell-preview__burn-hole {
-  box-shadow: card.ember-rim(false, 0, 1.5px, 0.95, 3px, 0.85, 3.5px);
-  animation:
-    spell-preview-burn-hole card.$burn-duration card.$burn-easing both,
-    spell-preview-rim $preview-rim-duration ease-in-out card.$burn-duration infinite;
+  box-shadow: preview-rim(false);
 }
 
 .spell-preview__burn-curve {
-  box-shadow: card.ember-rim(true, 0, 1.5px, 0.95, 3px, 0.85, 3.5px);
-  clip-path: inset(0 0 calc(0.6rem + #{$preview-burn-depth}) 0);
-  animation:
-    spell-preview-burn-curve card.$burn-duration card.$burn-easing both,
-    spell-preview-rim $preview-rim-duration ease-in-out card.$burn-duration infinite;
+  box-shadow: preview-rim(true);
+  clip-path: inset(0 0 calc(#{$burn-curve-clip} + #{$preview-burn-depth}) 0);
+  animation: spell-preview-burn-curve $preview-burn-duration $preview-burn-easing both;
 }
 
 .spell-preview__burn-hole::before {
@@ -414,10 +534,67 @@ $preview-hearth-duration: 11s;
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: card.burn-embers-gradient();
+  background: linear-gradient(
+    to right,
+    rgba($burn-candle, 0.75),
+    rgba($burn-ember, 0.5) 3rem,
+    rgba($burn-ember, 0.2) 45%,
+    transparent 70%
+  );
   // Only the mask's alpha counts, so any opaque token does.
-  mask-image: linear-gradient(to bottom, $text-primary, transparent 0.25rem);
-  animation: spell-preview-embers $preview-embers-duration ease-in-out card.$burn-duration infinite;
+  mask-image: linear-gradient(to bottom, $text-primary, transparent 1.75rem);
+}
+
+// Travelling heat: still copies of the burn with hotter lines, each masked to one stretch of the rim and lit in turn.
+// The copies hold their burnt-in shape from the first frame and stay hidden until the burn has reached them.
+.spell-preview__heats {
+  inset: 0;
+  overflow: hidden;
+  animation: spell-preview-fade-in $preview-heats-fade ease $preview-burn-duration both;
+}
+
+.spell-preview__heat {
+  position: absolute;
+  inset: 0;
+  opacity: 0.4;
+  mask-image: radial-gradient(
+    ellipse 9rem 8rem at calc(100% - var(--r)) calc(100% - var(--b)),
+    $text-primary 25%,
+    transparent 72%
+  );
+  animation: spell-preview-heat $preview-heat-duration ease-in-out var(--delay) infinite;
+
+  .spell-preview__burn-corner,
+  .spell-preview__burn-hole,
+  .spell-preview__burn-curve {
+    animation: none;
+  }
+
+  .spell-preview__burn-hole {
+    box-shadow: preview-heat-rim(false);
+  }
+
+  .spell-preview__burn-hole::before {
+    content: none;
+  }
+
+  .spell-preview__burn-curve {
+    box-shadow: preview-heat-rim(true);
+  }
+}
+
+// What sits on the edge (its embers and flecks) appears as the burn reaches it.
+.spell-preview__late {
+  animation: spell-preview-fade-in $preview-late-fade ease $preview-burn-duration both;
+}
+
+.spell-preview__fleck {
+  position: absolute;
+  border-radius: 50%;
+  background: $preview-ember;
+  box-shadow: 0 0 3px 0 $preview-ember-glow;
+  opacity: 0;
+  animation: spell-preview-flare var(--d) ease-out var(--delay) infinite;
 }
 
 // An ember: placed and timed by the custom properties `embers.ts` sets. The path runs `linear`: an easing applies
@@ -427,50 +604,81 @@ $preview-hearth-duration: 11s;
   inset: auto auto -2% var(--x);
   width: var(--w);
   height: var(--h);
-  border-radius: var(--br);
   opacity: 0;
   will-change: transform, opacity;
   animation: spell-preview-float var(--d) linear var(--delay) infinite;
 }
 
+// A hot ember: a soft round glow, a jagged body, and a white-hot core that cools as it rises.
 .spell-preview__ember--hot {
   --peak: 0.85;
 
-  background: radial-gradient(circle at 40% 40%, $preview-ember 0%, $preview-ember-char 75%);
+  border-radius: 50%;
+  background: $preview-ember-glow;
+  box-shadow: 0 0 8px 2px $preview-ember-halo;
 
-  &::before {
+  &::before,
+  &::after {
     content: '';
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
+    inset: -6%;
+    clip-path: var(--shape);
+  }
+
+  &::before {
     background: radial-gradient(
-      circle at 40% 40%,
-      $preview-ember-core 0%,
-      $preview-ember 45%,
-      transparent 80%
+      circle at 42% 48%,
+      $preview-ember-core 0,
+      $preview-ember 30%,
+      $preview-ember-char 78%
+    );
+  }
+
+  &::after {
+    background: radial-gradient(
+      circle at 42% 48%,
+      $preview-ember-white-hot 0,
+      $preview-ember-core 20%,
+      transparent 46%
     );
     animation: spell-preview-cool var(--d) linear var(--delay) infinite;
   }
 }
 
+// Ash: a flat flake of burnt paper with one lighter edge.
 .spell-preview__ember--ash {
-  --peak: 0.8;
+  --peak: 0.9;
 
-  background: $preview-ash;
+  background: linear-gradient(140deg, $preview-ash-edge 0 16%, $preview-ash 36%);
   animation-name: spell-preview-tumble;
 }
 
+@each $shape in $preview-hot-shapes {
+  .spell-preview__ember--hot.spell-preview__ember--shape-#{list.index($preview-hot-shapes, $shape)
+    -
+    1} {
+    --shape: #{$shape};
+  }
+}
+
+@each $shape in $preview-flake-shapes {
+  .spell-preview__ember--ash.spell-preview__ember--shape-#{list.index($preview-flake-shapes, $shape)
+    -
+    1} {
+    clip-path: $shape;
+  }
+}
+
 .spell-preview__ember--edge {
-  inset: auto calc(var(--r) * #{$preview-burn-scale-x}) calc(var(--b) * #{$preview-burn-scale-y})
-    auto;
+  inset: auto var(--r) var(--b) auto;
   animation-name: spell-preview-float-edge;
 
   &.spell-preview__ember--hot {
     --peak: 1;
+  }
 
-    &::before {
-      animation-name: spell-preview-cool-edge;
-    }
+  &:where(.spell-preview__ember--ash) {
+    animation-name: spell-preview-tumble-edge;
   }
 }
 
@@ -478,7 +686,8 @@ $preview-hearth-duration: 11s;
 // does not rise is a speck on the page.
 @include reduced-motion {
   .spell-preview__scene *,
-  .spell-preview__scene *::before {
+  .spell-preview__scene *::before,
+  .spell-preview__scene *::after {
     animation: none;
   }
 }

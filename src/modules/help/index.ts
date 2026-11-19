@@ -9,6 +9,7 @@ export {
 } from './services/help-writes';
 export {
   countHelpSearch,
+  listHelpArticleLinks,
   listHelpArticlePaths,
   listKeeperHelpArticles,
   listStaffHelpArticles,
@@ -25,6 +26,7 @@ export { helpChildrenByParent } from './loaders/help-children';
 export * from './graphql/help';
 export type {
   HelpArticle,
+  HelpArticleLink,
   HelpArticleWithChildren,
   HelpAudience,
   HelpArticleKind,

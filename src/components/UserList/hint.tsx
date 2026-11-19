@@ -2,7 +2,6 @@
 
 import type { ReactElement, ReactNode } from 'react';
 import TipAnchor from '../InfoTip/tip-anchor';
-import './index.scss';
 
 // A mark or logo with a hover-only tip bubble, placed by `useTip`, hidden from assistive technology, taking no pointer
 // (claude-docs/components/user-list.md, "Contracts").

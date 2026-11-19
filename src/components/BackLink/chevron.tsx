@@ -1,5 +1,4 @@
 import type { ReactElement } from 'react';
-import './index.scss';
 
 // Beside the link and outside IngredientEntry's client one, so a server-drawn "Back to …" link takes the chevron and its look
 // without shipping the history-reading link.

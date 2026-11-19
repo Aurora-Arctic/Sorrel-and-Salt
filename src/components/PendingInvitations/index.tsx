@@ -8,7 +8,6 @@ import { emptyList } from '../../lib/text';
 import LocalTime from '../LocalTime';
 import InvitationAction from './invitation-action';
 import type { PendingInvitationsProps } from './types';
-import './index.scss';
 
 // The page draws it for stewards only; nothing here decides who may see it (claude-docs/components/pending-invitations.md).
 

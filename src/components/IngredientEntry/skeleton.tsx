@@ -2,8 +2,6 @@ import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import Skeleton from '../Skeleton';
 import SkeletonText from '../Skeleton/text';
-import './index.scss';
-import './formal-name.scss';
 
 // The entry page's own frame with bars in place of the text: the formal name's eyebrow over the
 // heading and its action, the menu beside, the sections beneath. Both entry pages' skeletons draw it,

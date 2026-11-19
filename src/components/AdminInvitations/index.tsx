@@ -22,7 +22,6 @@ import type {
   AdminInvitationsProps,
   InviteAdminProps,
 } from './types';
-import './index.scss';
 
 // The People page's Invitations tab, `/keepers/invitations`: a filter, a page of pending invitations
 // (address, site role, reason, expiry, Revoke), the pager, and the invite form `?invite` opens. While

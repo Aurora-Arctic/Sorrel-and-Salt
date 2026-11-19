@@ -1,5 +1,4 @@
 import type { ReactElement } from 'react';
-import './index.scss';
 import { PendingLink } from '../../lib/navigation';
 
 // A `note`, so a screen reader hears it as an aside (claude-docs/components/document-page.md).

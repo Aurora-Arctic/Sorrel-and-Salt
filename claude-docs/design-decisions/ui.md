@@ -4,7 +4,7 @@ How the interface is styled, navigated and given feedback, and the design review
 
 ## Component styling is global Sass with BEM names, not CSS Modules
 
-**Decided:** every component keeps a plain `index.scss`, imported as a global stylesheet, with BEM class names (`block__element--modifier`) that stylelint enforces. No `.module.scss`. The summary is [`styling.md`](../styling.md), "Binding rules", and DESIGN.md §9, "Componentized Sass". The record rides in M6.14's PR as an along-the-way fix, because the choice needed writing down rather than a task.
+**Decided:** every component keeps a plain `index.scss`, loaded as a global stylesheet through one aggregate (below), with BEM class names (`block__element--modifier`) that stylelint enforces. No `.module.scss`. The summary is [`styling.md`](../styling.md), "Binding rules", and DESIGN.md §9, "Componentized Sass". The record rides in M6.14's PR as an along-the-way fix, because the choice needed writing down rather than a task.
 
 ### Why
 
@@ -14,10 +14,11 @@ The owner asked why the components do not use CSS Modules. They were a recorded 
 
 **What Modules would buy is already held by a linter.** Modules hash class names so that two files cannot collide. Here the BEM prefix does that, and `.stylelintrc.json`'s `selector-class-pattern` refuses any class that is not `block__element--modifier`, so a collision is a lint failure rather than a convention. Tests select by role and label only, never by class, so hashing would change nothing for them.
 
-**Per-route CSS does not depend on Modules.** Next chunks CSS from the import graph with `experimental.cssChunking` on by default, for global stylesheets and modules alike. The production build in `.next-e2e` at the time of writing emitted 44 CSS chunks, and the one prerendered page, the not-found page, linked three of them: the fonts with `globals.scss`, and two small per-component chunks. A component's `index.scss` reaches only the routes that render the component either way.
+**Per-route CSS does not depend on Modules.** Next chunks CSS from the import graph, for global stylesheets and modules alike, and merges a global stylesheet only with others used by exactly the same set of routes. A component's own sheet reaches only the routes that render it either way. Why that is not wanted here is in "One aggregate stylesheet" below.
 
 ### What it rules out
 
+- A component file importing a stylesheet that `src/scss/components.scss` already loads, in `src` or `.storybook`.
 - A `.module.scss` anywhere under `src/components` or `src/app`. A component that needs a class another component also uses takes it from `_primitives.scss` as a mixin emitted once, the way `data-table--roomy` is, not from a shared module import.
 - Any second scoping system beside BEM. The lint rule is the guard; a class that does not fit it is renamed, not exempted.
 
@@ -25,7 +26,19 @@ The owner asked why the components do not use CSS Modules. They were a recorded 
 
 `experimental.cssChunking: 'graph'`, Turbopack's cost-based grouping, trades more requests for less unused CSS per route. `next.config.ts` leaves it unset, and nothing measured calls for it. Turning it on is a config change, not a styling change, and this record does not need revisiting for it.
 
-## The browser floor
+## One aggregate stylesheet for every component
+
+**Decided:** no component imports its own stylesheet. `src/scss/components.scss` `@use`s every component sheet, once each, and is imported from the root layout (after `globals.scss`) and from `.storybook/preview.tsx`. It is hand-written, not generated: the order is a decision (below), and a guard checks the list is complete. The guard is `tests/guards/component-stylesheets.test.ts`: it fails when a component sheet is missing from the aggregate, and when any file in `src` or `.storybook` imports a sheet the aggregate loads.
+
+### Why
+
+The bundler merges a global stylesheet only with others used by exactly the same set of routes. Components are used by overlapping but different sets of routes, so almost none merge, and a page loaded one stylesheet file per component it used: 77 files on `/compendium`, 75 on an entry and 66 on `/terms`, each a separate request. No `cssChunking` setting or bundler changed that. One aggregate gives 2 files on each page (the fonts, and the aggregate), each still served `public,max-age=31536000,immutable`. The price is that every page loads every component's rules: on `/compendium` the stylesheets rose from 299 KB to 419 KB raw and fell from 75 KB to 64 KB gzipped (the sum of each file's gzip size), because fewer, larger files compress better.
+
+### The rule
+
+- A new component's sheet is added to `components.scss` in the same change, after the sheets of the components it renders. Where two rules of equal specificity meet, the outer component then wins, as it did when each sheet loaded after the sheets it imported.
+- A component's `index.tsx` does not import its `index.scss`. A story that needs a component's styles gets them from the preview.
+- A sheet a story alone uses (`index.stories.scss`) is not a component sheet and stays imported by its story.
 
 ### Decision
 

@@ -1,6 +1,6 @@
 # SignInDialog
 
-`src/components/SignInDialog/` is a link to sign in that opens the sign-in panel in a dialog over the page it is on, so a visitor signs in or creates an account without leaving the page. The public bar's Sign In ([`public-frame.md`](public-frame.md)) and a signed-out invitation's two choices, Create Account and Sign In ([`invitation-acceptance.md`](invitation-acceptance.md)), are its users. Props: `SignInDialogProps` in `types.ts`. `/sign-in` stays a page of its own, for shared links and for a browser without the script.
+`src/components/SignInDialog/` is a link to sign in that opens the sign-in panel in a dialog over the page it is on, so a visitor signs in or creates an account without leaving the page. The public bar's Sign In ([`public-frame.md`](public-frame.md)) and a signed-out invitation's two choices, Create Account and Sign In ([`invitation-acceptance.md`](invitation-acceptance.md)), are its users. Props: `SignInDialogProps` in `types.ts`. `nofollow` puts `rel="nofollow"` on the link and is off by default: the bar sets it, as robots.txt blocks `/sign-in`, and the invitation's choices do not. `/sign-in` stays a page of its own, for shared links and for a browser without the script.
 
 ## Contracts
 

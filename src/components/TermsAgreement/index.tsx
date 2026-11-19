@@ -11,7 +11,6 @@ import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { TermsAgreementProps } from './types';
-import './index.scss';
 import { reportLeaving } from '../../lib/navigation';
 
 // The server refuses a version no longer in force (claude-docs/auth/admin-bootstrap.md, "The terms page").

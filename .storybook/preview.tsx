@@ -16,6 +16,7 @@ import './story-frame.scss';
 import './typography.scss';
 import './layout.scss';
 import './primitives.scss';
+import '../src/scss/components.scss';
 
 // The class the three sheets above hang off; the preview iframe's body holds
 // only the story, so the app's own `body` rules can apply here unchanged.

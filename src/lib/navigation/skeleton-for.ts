@@ -68,6 +68,6 @@ export function skeletonFor(
   if (!entry) return null;
   const standing = entry.host !== 'main' && hostStands(entry.host, pathname, destination);
   if (body === 'main')
-    return standing ? null : framed(entry.host, entry.Skeleton, queryWords(href));
+    return standing ? null : framed(entry.host, entry.Skeleton, queryWords(href), destination);
   return entry.host === body && standing ? entry.Skeleton : null;
 }

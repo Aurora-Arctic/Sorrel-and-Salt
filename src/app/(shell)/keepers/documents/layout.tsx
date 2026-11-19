@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import TabbedPage from '@/components/TabbedPage';
 import { withSkeletons } from '@/components/AdminNav/skeleton';
 import { ADMIN_PAGES } from '@/components/AdminNav/sections';
-import '@/components/DocumentEditor/index.scss';
 
 const { label, tabs } = ADMIN_PAGES.documents;
 

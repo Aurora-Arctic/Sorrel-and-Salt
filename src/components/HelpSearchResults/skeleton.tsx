@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
 import { SkeletonWords } from '../Skeleton/text';
-import './index.scss';
 
 // The search page with its results still to come, beneath the help header: the way back and the title, then the count
 // and the result cards, each a title with its kind chip at the row's end over a summary, as bars.

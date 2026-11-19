@@ -22,7 +22,6 @@ import CloseButton from '../CloseButton';
 import { StatusRegionSlot } from '../ClickFeedback/status-region';
 import { HeaderNoteContext, HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // A dialog on the native element's modal mode: `showModal()` gives the top layer, the inert page

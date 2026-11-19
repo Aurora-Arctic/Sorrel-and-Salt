@@ -22,7 +22,13 @@ import { trimmedOrUndefined } from '@/lib/text';
 import { isRowId } from '@/lib/validation';
 import { assertCurator, assertSiteAdmin } from '@/modules/identity';
 import { helpArticles } from '../schema/help-articles';
-import type { HelpArticle, HelpArticleWithChildren, HelpKeeperFilter, HelpReach } from '../types';
+import type {
+  HelpArticle,
+  HelpArticleLink,
+  HelpArticleWithChildren,
+  HelpKeeperFilter,
+  HelpReach,
+} from '../types';
 import { reachOf } from './reach';
 import { HELP_LIST_LIMIT, NO_HELP_ARTICLE, toHelpArticles } from './rows';
 
@@ -80,15 +86,20 @@ async function publicGlossary(page: PageRequest) {
   return mapPage(await findHelpGlossaryPage(page), 'public');
 }
 
-async function publicPaths(): Promise<string[]> {
+async function publicLinks(): Promise<HelpArticleLink[]> {
   const entries = await findHelpArticlePathPage({ limit: HELP_LIST_LIMIT, inverted: false });
   const rows = entries.map((entry) => entry.node);
   const topLevel = new Map(rows.filter((row) => !row.parentId).map((row) => [row.id, row.slug]));
-  return rows.flatMap((row) => {
-    if (!row.parentId) return [`/help/${row.slug}`];
-    const parent = topLevel.get(row.parentId);
-    return parent ? [`/help/${parent}/${row.slug}`] : [];
+  return rows.flatMap(({ parentId, slug, title, summary }) => {
+    const link = (path: string) => [{ path, title, summary }];
+    if (!parentId) return link(`/help/${slug}`);
+    const parent = topLevel.get(parentId);
+    return parent ? link(`/help/${parent}/${slug}`) : [];
   });
+}
+
+async function publicPaths(): Promise<string[]> {
+  return (await publicLinks()).map((link) => link.path);
 }
 
 async function publicArticle(slug: string): Promise<HelpArticleWithChildren> {
@@ -103,6 +114,9 @@ const cachedPaths = cachedHelpRead('help-paths', publicPaths);
 export function listHelpArticlePaths(): Promise<string[]> {
   return cachedPaths();
 }
+
+/** Each public article and public sub page with its title and summary, which llms.txt lists. Takes no session. */
+export const listHelpArticleLinks = cachedHelpRead('help-links', publicLinks);
 
 /** The public FAQ entries, in position order. */
 export const readHelpFaq = cachedHelpRead('help-faq', publicFaq);

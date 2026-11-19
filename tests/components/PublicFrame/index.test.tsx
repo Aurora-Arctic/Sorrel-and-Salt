@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PublicFrame from '@/components/PublicFrame';
+import { SignInLink } from '@/components/PublicFrame/sign-in-link';
 import { Navigating } from '../../support/navigating';
 import { router } from '../../support/next-navigation';
 import { expectSignInDialogProviders } from '../../support/interact';
@@ -104,6 +105,25 @@ describe('PublicFrame', () => {
       '/sign-in?next=' +
         encodeURIComponent('/compendium/ingredients/achiote-bixa-orellana?entry=2&q=rose'),
     );
+  });
+
+  // robots.txt blocks the sign-in page, so a crawler that followed the link would report a blocked page.
+  it('asks a crawler not to follow Sign In, and follows the Compendium', () => {
+    frame();
+
+    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('rel', 'nofollow');
+    expect(
+      within(screen.getByRole('navigation', { name: 'Site' })).getByRole('link', {
+        name: 'Compendium',
+      }),
+    ).not.toHaveAttribute('rel');
+  });
+
+  // The served HTML can hold this stand-in until the address is read, so a crawler may meet it instead.
+  it('asks a crawler not to follow the Sign In shown before the address is read', () => {
+    render(<SignInLink />);
+
+    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('rel', 'nofollow');
   });
 
   it('opens the sign-in dialog over the page from Sign In, with the providers the server has', async () => {

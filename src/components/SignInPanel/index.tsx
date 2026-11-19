@@ -25,7 +25,6 @@ import PasskeyButton from './passkey-button';
 import type { ProviderId } from '../../lib/types';
 import { LastUsedMark, SignInBack, signInHeader } from './header';
 import type { SignInAttempt, SignInMode, SignInPanelProps, SignInView } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 export { LastUsedMark, SignInBack, signInHeader } from './header';

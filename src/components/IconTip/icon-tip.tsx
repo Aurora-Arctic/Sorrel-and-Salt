@@ -5,7 +5,6 @@ import { useTip } from '../InfoTip/use-tip';
 import type { IconTipProps } from './types';
 
 const SIDES = { side: 'left', above: 'top', below: 'bottom-end' } as const;
-import './index.scss';
 
 // A word above an icon control, "Edit" over a pencil, for a sighted user who cannot tell what the mark does; it is `aria-hidden` decoration,
 // opens after a rest or on focus, and shuts while the control's own menu is open (claude-docs/components/icon-tip.md, "Contracts").

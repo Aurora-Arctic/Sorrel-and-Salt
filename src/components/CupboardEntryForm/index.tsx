@@ -41,7 +41,6 @@ import type {
   CupboardOverrides,
   TextField,
 } from './types';
-import './index.scss';
 
 // The coven's override form for a compendium entry it holds: seven fields, each with a "Restore Original". Null (the
 // compendium's) and an empty list (cleared) are told apart in `changes.ts`; it saves as it is edited

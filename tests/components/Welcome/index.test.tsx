@@ -12,6 +12,14 @@ describe('Welcome', () => {
     expect(screen.queryByRole('link', { name: 'Continue' })).not.toBeInTheDocument();
   });
 
+  // robots.txt blocks the sign-in page, so a crawler that followed the link would report a blocked page.
+  it('asks a crawler not to follow Sign In, and follows the compendium', () => {
+    render(<Welcome />);
+
+    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('rel', 'nofollow');
+    expect(screen.getByRole('link', { name: 'Browse the Compendium' })).not.toHaveAttribute('rel');
+  });
+
   it('offers a signed-in visitor the landing instead of asking them to sign in again', () => {
     render(<Welcome landing="/coven" />);
 

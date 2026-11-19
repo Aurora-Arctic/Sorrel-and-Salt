@@ -2,7 +2,6 @@ import type { ReactElement } from 'react';
 import { JarDrawing, ONE_OFF_HELD, pickJarShape } from '../JarShelf';
 import { StockJarButton } from '../StockDialog';
 import type { JarLineProps } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // A jar you can press beside its name and words: the recipe page's In the Cupboard and the

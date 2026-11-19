@@ -2,7 +2,7 @@
 
 A share card is the picture a chat app or a social site shows under a pasted link. Each public page names one in its `og:image` and `twitter:image` tags, and Next draws it to a PNG on the server with `next/og`'s `ImageResponse` (`node_modules/next/dist/docs/01-app/03-api-reference/04-functions/image-response.md`). `/` and `/compendium` show the site card; each compendium entry shows its own. Nothing else has a card: the rest of the site is behind sign-in, and a link preview fetches with no cookie.
 
-The code is `src/lib/share-card/`: `cards.tsx` lays the two cards out, `shelf.tsx` draws the jar shelf, `fonts.ts` loads the faces, `palette.ts` holds the colours and `index.tsx` turns a card into an `ImageResponse`. What an entry's card shows is read by `readCompendiumShareCard` in `src/modules/ingredients/services/share-card.ts`.
+The code is `src/lib/share-card/`: `cards.tsx` lays the two cards out, `shelf.tsx` draws the jar shelf, `fonts.ts` loads the faces, `palette.ts` holds the colours, `size.ts` holds the card's size and type (apart from the rest so `page-metadata.ts` can import them without the fonts) and `index.tsx` turns a card into an `ImageResponse`. What an entry's card shows is read by `readCompendiumShareCard` in `src/modules/ingredients/services/share-card.ts`.
 
 ### The design
 
@@ -42,7 +42,7 @@ Next's `opengraph-image.tsx` file convention (`node_modules/next/dist/docs/01-ap
 - `src/app/(public)/compendium/opengraph-image.tsx`: the site card again, for `/compendium`. The compendium page sets its own `openGraph` tags, and a page's own `openGraph` replaces its parent segment's, image included, so the root file's card does not reach it. Inside a route group, Next adds a hash to the route's folder name, so it is served at `/compendium/opengraph-image-<hash>`.
 - `src/app/(public)/compendium/ingredients/[slug]/opengraph-image.tsx`: an entry's card, at `/compendium/ingredients/<slug>/opengraph-image-<hash>/card`. Its `generateImageMetadata` gives the card the id `card` and the entry's name as its alt text, so the path ends in that id.
 
-`src/lib/page-metadata.ts` sets `twitter:card` to `summary_large_image` and leaves the images to these files; Twitter's tags take the Open Graph image. Next writes each address absolute against the layout's `metadataBase`, with the image's width, height, type and alt.
+Every other public page (`/about`, `/sign-in`, the documents, `/help` and the rest) has no card file, and its own `openGraph` replaces the root's, so `publicPageMetadata` in `src/lib/page-metadata.ts` names the site card itself: `/opengraph-image` with the card's size, type and the site name as alt text, in both `openGraph` and `twitter`. Next uses a card file only when the page's metadata names no `openGraph.images` or `twitter.images` (`mergeStaticMetadata`), so the three pages with a file pass `shareImage: false` and the helper leaves the image out. `twitter:card` is `summary_large_image`; Twitter's tags take the Open Graph image. Next writes each address absolute against the layout's `metadataBase`, with the image's width, height, type and alt.
 
 **Which addresses answer.** An entry's card is a 404 wherever the public entry read finds no entry: an unknown slug, a coven's own entry's slug, a hidden entry (the `shown` column), and an old address the page would redirect from. The read filters coven rows and hidden rows in SQL. At build time Next asks `generateImageMetadata` with no slug, and it answers with no cards, so no entry is drawn ahead of its first request.
 

@@ -11,7 +11,6 @@ import { SPELL_LOOK_PLACE } from '../SpellCard';
 import { spellNameOf } from '../SpellCard/untitled';
 import SpellMarks from '../SpellMarks';
 import type { SpellLookDialogProps } from './types';
-import './index.scss';
 
 // The Quick Look modal a grimoire card's eye opens: the spell body, last edit, the Draft and Private
 // badges, Edit for a role that may, and a link to the recipe page; no Delete, which lives in Edit Spell.

@@ -6,9 +6,6 @@ import { BinButton } from '../IconTip';
 import PageHeader from '../PageHeader';
 import Skeleton from '../Skeleton';
 import SkeletonText from '../Skeleton/text';
-import '../FacetPanel/choice-chip.scss';
-import '../IconTip/index.scss';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // The form while it loads, drawn from the form's own classes and fixed words: a guide's fields, as an article opens on, so

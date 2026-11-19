@@ -15,7 +15,6 @@ import { EmailField, FormActions } from '../Field';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { EmailFormProps } from './types';
-import './index.scss';
 import { PendingLink } from '../../lib/navigation';
 
 // The `/account/email` page's form and the account page's Email section (`embedded`): the address, its

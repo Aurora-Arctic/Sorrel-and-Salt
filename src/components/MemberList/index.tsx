@@ -9,7 +9,6 @@ import OpenModalLink from '../Modal/open-modal-link';
 import UntilMark from '../UserList/until-mark';
 import { WORKSPACE_ROLE_ACCESS, workspaceRoleLabel } from './roles';
 import type { MemberListEntry, MemberListProps } from './types';
-import './index.scss';
 
 // A coven's members, one row each, drawn as the admin user list is. Render-only, with no row actions: a name opens the
 // member's modal (claude-docs/components/member-list.md).
