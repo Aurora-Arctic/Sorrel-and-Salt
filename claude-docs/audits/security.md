@@ -204,7 +204,7 @@ The agents did not find this. The owner raised it on 2026-11-19, after reading t
 - **Not settled:** whether staging and previews sit behind Vercel Deployment Protection, and whether `ENABLE_IMPERSONATION` is set on Preview.
 - **How sure:** 7. Code. Verifier: confirmed.
 - **Sources:** B-2, D-10.
-- **Recommended Fix:** refuse a soft-deleted or bootstrap target, and allow impersonation only where the environment is positively staging, a preview, or local.
+- **Recommended Fix:** refuse a soft-deleted or bootstrap target, and allow impersonation only where the environment is positively staging, a preview, local, or a test run.
 
 ### SEC-9 Most Text, List And Id Arguments Have No Size Cap
 
@@ -645,7 +645,7 @@ From SEC-8.
 
 _Acceptance criteria:_
 
-- Impersonation runs only where the flag is set and the environment is positively staging, a preview, or local; anywhere else it is refused, production included.
+- Impersonation runs only where the flag is set and the environment is positively staging, a preview, local, or a test run; anywhere else it is refused, production included.
 - Impersonating a soft-deleted user or the seed's bootstrap user is refused.
 - Impersonating a Keeper is still refused.
 - The owner has recorded whether previews sit behind Deployment Protection.
