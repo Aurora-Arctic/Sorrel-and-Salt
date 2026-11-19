@@ -21,7 +21,7 @@
 - **Badge size.** The badges in `step-row__marks` (Caution, Toxic, One-Off) take the `small` badge size.
 - **The narrow list.** The builder's list is a size container (`spell-steps`, declared on `.spell-steps__list` in SpellBuilder's stylesheet). At `$narrow-column` (28rem) or narrower, a card's badges and marks take their own line under the name, so the name, the eye, the pencil and Remove always fit the first line; the opened fields stack; and a closed instruction shows two lines instead of one. The recipe page is unaffected.
 
-The move handle's own style (`.spell-step__handle`, its grip drawn 8 by 16 px with a `::before` that widens the hit area to 24 by 44 px) is in SpellBuilder's stylesheet, which owns the handle.
+The move handle's own style (`.spell-step__handle`, its grip drawn 8 by 16 px with a `::before` that widens the hit area to 24 by 44 px round the grip itself; the grip is positioned so its hit area never reaches over Move Up or Move Down beside it, and the move buttons are positioned so they are drawn over it where the two meet) is in SpellBuilder's stylesheet, which owns the handle.
 
 ## Not here
 

@@ -7,6 +7,9 @@
   @include icon-button;
 
   flex: none;
+  // Positioned, and after the grip, so it is drawn over the grip's grown hit area where the two meet (stacked at
+  // phone width) and takes the click there.
+  position: relative;
 
   &[aria-disabled='true'] {
     opacity: 0.4;

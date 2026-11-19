@@ -64,6 +64,8 @@
   align-items: center;
   border-radius: radius('sharp');
   touch-action: none;
+  // The hit area below is measured from the grip, not from the row's handle cell, which holds Move Up and Move Down too.
+  position: relative;
 
   // The grip is drawn 8 by 16 px; its hit area reaches 24 px wide and 44 px tall around it (WCAG
   // 2.5.8, the control floor) without changing the drawing. The row positions the handle.
