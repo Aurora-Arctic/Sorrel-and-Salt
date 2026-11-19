@@ -340,10 +340,18 @@ function openableLinks(children: ElementContent[]): ElementContent[] {
 
 /**
  * Seats each table in the scrolling frame the page's styles give a wide table, so it never widens the page.
- * The frame takes focus and is named for the heading above it, so a keyboard can scroll it.
+ * The frame takes focus and is named for the heading above it, so a keyboard can scroll it. A second table under one
+ * heading is numbered, since two regions of one name are one landmark too many in a screen reader's list.
  */
 function frameTables(children: ElementContent[]): ElementContent[] {
   let heading = '';
+  const seen = new Map<string, number>();
+  const nameOf = (base: string): string => {
+    const count = (seen.get(base) ?? 0) + 1;
+    seen.set(base, count);
+    if (count === 1) return base;
+    return base === 'Table' ? `Table ${count}` : `${base}, Table ${count}`;
+  };
   const frame = (nodes: ElementContent[]): ElementContent[] =>
     nodes.map((child) => {
       if (!isElement(child)) return child;
@@ -357,7 +365,7 @@ function frameTables(children: ElementContent[]): ElementContent[] {
         type: 'element',
         tagName: TABLE_FRAME_TAG,
         properties: {
-          label: heading || 'Table',
+          label: nameOf(heading || 'Table'),
         },
         children: [child],
       };

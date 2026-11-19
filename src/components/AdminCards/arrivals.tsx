@@ -45,6 +45,7 @@ const AdminArrivals = ({
       <ArrivalsFilterForm filter={filter} />
       <ListBody skeleton={<CardArrivalsBodySkeleton />}>
         <StackTable
+          aria-label="Card Sign-Ups"
           columns={[
             {
               heading: 'Name',

@@ -34,6 +34,7 @@ import {
   type PlateElementProps,
   type RenderNodeWrapper,
   type PlateLeafProps,
+  useEditorSelector,
 } from 'platejs/react';
 import { Children, type ReactElement } from 'react';
 import remarkGfm from 'remark-gfm';
@@ -79,11 +80,27 @@ function Link(
   );
 }
 
+/** Every table in the editor's value, in reading order. */
+function tablesIn(nodes: readonly unknown[]): unknown[] {
+  return nodes.flatMap((node) => {
+    if (typeof node !== 'object' || node === null) return [];
+    const { type, children } = node as { type?: unknown; children?: unknown };
+    if (type === KEYS.table) return [node];
+    return Array.isArray(children) ? tablesIn(children) : [];
+  });
+}
+
 function Table(props: PlateElementProps): ReactElement {
   const [head, ...body] = Children.toArray(props.children);
+  // Numbered by place, so two tables are two regions of different names; read from the whole value, since a table
+  // added above this one renumbers it without changing it.
+  const place = useEditorSelector(
+    (editor) => tablesIn(editor.children).indexOf(props.element) + 1,
+    [props.element],
+  );
   return (
     <PlateElement {...props}>
-      <TableFrame label="Table">
+      <TableFrame label={`Table ${place}`}>
         <table className="data-table">
           <thead>{head}</thead>
           <tbody>{body}</tbody>

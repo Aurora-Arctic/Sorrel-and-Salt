@@ -130,6 +130,7 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
         </LoadingStatus>
       ) : (
         <StackTable
+          aria-label={`Refused Tries on ${batchName(batchId)}`}
           columns={[
             {
               heading: 'Name',

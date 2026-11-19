@@ -74,6 +74,7 @@ const AdminCards = ({
       <CardsFilterForm filter={filter} />
       <ListBody skeleton={<AdminCardsBodySkeleton />}>
         <StackTable
+          aria-label="Card Batches"
           columns={[
             {
               heading: 'Batch',
