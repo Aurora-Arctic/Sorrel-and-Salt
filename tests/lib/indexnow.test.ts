@@ -1,10 +1,11 @@
 import { http, HttpResponse } from 'msw';
 import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { INDEXNOW_KEY_PATH, pingIndexNow } from '@/lib/indexnow';
+import { pingIndexNow } from '@/lib/indexnow';
 import { server } from '../support/msw/server';
 
-// The IndexNow protocol (indexnow.org/documentation): one JSON POST names the host, the key, where the key file is,
-// and every changed address. The key is invented; the real one is set only on the deploy.
+// The IndexNow protocol (indexnow.org/documentation): one JSON POST names the host, the key and every changed address.
+// No `keyLocation`: the key file is `/<key>.txt` at the root, where IndexNow looks when none is named.
+// The key is invented; the real one is set only on the deploy.
 const ENDPOINT = 'https://api.indexnow.org/indexnow';
 const KEY = 'fixture0indexnow0key0001';
 
@@ -40,7 +41,7 @@ afterEach(() => {
 });
 
 describe('pingIndexNow', () => {
-  it('sends every address in one request, with the host, the key and where the key file is', async () => {
+  it('sends every address in one request, with the host and the key, and leaves the key file to its default address', async () => {
     const sent = indexNow();
 
     await pingIndexNow(['/compendium/ingredients/testwort', '/help/fixture-guide']);
@@ -51,7 +52,6 @@ describe('pingIndexNow', () => {
         body: {
           host: 'sorrelandsalt.com',
           key: KEY,
-          keyLocation: `https://sorrelandsalt.com${INDEXNOW_KEY_PATH}`,
           urlList: [
             'https://sorrelandsalt.com/compendium/ingredients/testwort',
             'https://sorrelandsalt.com/help/fixture-guide',
@@ -59,6 +59,7 @@ describe('pingIndexNow', () => {
         },
       },
     ]);
+    expect(sent[0].body).not.toHaveProperty('keyLocation');
     expect(logged).not.toHaveBeenCalled();
   });
 

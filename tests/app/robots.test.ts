@@ -14,6 +14,9 @@ vi.mock('@/modules/help', () => ({
   ]),
 }));
 
+// Invented; the real key is set only on the deploy.
+const KEY = 'testwort-key-0000';
+
 afterEach(() => vi.unstubAllEnvs());
 
 describe('robots', () => {
@@ -46,8 +49,8 @@ describe('robots', () => {
       '/code-of-ethics',
       '/help',
       '/llms.txt',
-      '/indexnow-key.txt',
       '/robots.txt',
+      '/*.txt$',
       '/.well-known/ai-catalog.json',
       '/.well-known/ard.json',
       '/sitemap.xml',
@@ -57,10 +60,16 @@ describe('robots', () => {
   });
 
   // The matching a crawler does (RFC 9309, 2.2.2 and 2.2.3): the longest matching
-  // rule wins, an allow beating an equal disallow, and `$` ends a pattern.
+  // rule wins, an allow beating an equal disallow, `*` stands for any run of characters, and `$` ends a pattern.
   const allowed = (path: string) => {
-    const matches = (rule: string) =>
-      rule.endsWith('$') ? path === rule.slice(0, -1) : path.startsWith(rule);
+    const matches = (rule: string) => {
+      const anchored = rule.endsWith('$');
+      const pattern = (anchored ? rule.slice(0, -1) : rule)
+        .split('*')
+        .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+        .join('.*');
+      return new RegExp(`^${pattern}${anchored ? '$' : ''}`).test(path);
+    };
     const best = Math.max(0, ...CRAWLABLE_PATHS.filter(matches).map((rule) => rule.length));
     return best >= 1;
   };
@@ -87,8 +96,8 @@ describe('robots', () => {
     // Fetchable so a crawler reads the page's own noindex.
     ['/help/search', true],
     ['/llms.txt', true],
-    // IndexNow reads the key file to trust a ping.
-    ['/indexnow-key.txt', true],
+    // IndexNow reads the key file, named after the key, to trust a ping.
+    [`/${KEY}.txt`, true],
     ['/robots.txt', true],
     ['/.well-known/ai-catalog.json', true],
     ['/.well-known/ard.json', true],
@@ -102,6 +111,15 @@ describe('robots', () => {
     ['/api/graphql', false],
   ])('treats %s as crawlable: %s', (path, expected) => {
     expect(allowed(path)).toBe(expected);
+  });
+
+  // robots.txt is public, so a rule naming the key file would hand anyone the key; a pattern lets a crawler fetch it unnamed.
+  it('lets a crawler fetch the key file without robots.txt naming the key', () => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+    vi.stubEnv('INDEXNOW_KEY', KEY);
+
+    expect(allowed(`/${KEY}.txt`)).toBe(true);
+    expect(JSON.stringify(robots())).not.toContain(KEY);
   });
 
   // `Disallow: /` once blocked the very sitemap robots.txt named, so the two are tied together:

@@ -1,3 +1,5 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { NextRequest, type NextResponse } from 'next/server';
 import {
   getRedirectUrl,
@@ -6,6 +8,7 @@ import {
 } from 'next/experimental/testing/server';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { isPublic } from '@/lib/public-routes';
 import type { Session } from '@/lib/session';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
 import { ORIGIN, USER_ID } from './support/constants';
@@ -387,6 +390,106 @@ describe('a deleted compendium entry', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('x-middleware-next')).toBe('1');
+  });
+});
+
+// IndexNow's key file is `/<key>.txt` at the root, so only someone who already knows the key can read it. The address
+// comes from the environment, and no route in src/app can be named after it, so the proxy answers it.
+describe('the IndexNow key file', () => {
+  // Invented; the real key is set only on the deploy.
+  const KEY = 'testwort-key-0000';
+  const KEY_FILE = `/${KEY}.txt`;
+
+  beforeEach(() => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+    vi.stubEnv('INDEXNOW_KEY', KEY);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  /** Whether the proxy answered with the key itself, rather than passing the request on. */
+  async function servesKey(path: string, cookie?: string): Promise<boolean> {
+    const response = await proxy(request(path, cookie));
+    return (
+      response.status === 200 &&
+      response.headers.get('x-middleware-next') === null &&
+      (await response.text()) === KEY
+    );
+  }
+
+  it('answers the key as the whole body, in plain UTF-8 text, signed out', async () => {
+    expect(matches(KEY_FILE)).toBe(true);
+
+    const response = await proxy(request(KEY_FILE));
+
+    expect(response.headers.get('x-middleware-next')).toBeNull();
+    expect(getRedirectUrl(response)).toBeNull();
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toMatch(/^text\/plain;\s*charset=utf-8$/i);
+    expect(await response.text()).toBe(KEY);
+  });
+
+  it('answers the key to a signed-in request too', async () => {
+    expect(await servesKey(KEY_FILE, `${SESSION_COOKIE}=t.s`)).toBe(true);
+  });
+
+  it('no longer serves the key at the old fixed address, /indexnow-key.txt', async () => {
+    // Why the old address alone is refused: the key is set, and its own address serves it.
+    expect(await servesKey(KEY_FILE)).toBe(true);
+
+    expect(await servesKey('/indexnow-key.txt')).toBe(false);
+    expect(isPublic('/indexnow-key.txt')).toBe(false);
+  });
+
+  // Each passes on to routing as it did before the key file existed, so `/robots.txt` stays the robots file.
+  it.each([
+    ['the robots file', '/robots.txt'],
+    ['llms.txt', '/llms.txt'],
+    ['another key', '/testwort-key-0001.txt'],
+    ['the key in other letter case', '/TESTWORT-KEY-0000.txt'],
+    ['the key with no extension', `/${KEY}`],
+    ['the key file with a further extension', `${KEY_FILE}.bak`],
+    ['the key file beneath a folder', `/compendium${KEY_FILE}`],
+  ])('passes %s through without the key', async (_what, path) => {
+    // Why this address alone differs: the key is set, and its own address serves it.
+    expect(await servesKey(KEY_FILE)).toBe(true);
+
+    const response = await proxy(request(path));
+
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+    expect(await response.text()).not.toContain(KEY);
+  });
+
+  it.each([
+    ['unset', undefined],
+    ['empty', ''],
+  ])('serves nothing new while the key is %s', async (_what, unset) => {
+    // Why nothing is served: the same address serves the key while one is set.
+    expect(await servesKey(KEY_FILE)).toBe(true);
+    vi.stubEnv('INDEXNOW_KEY', unset);
+
+    for (const path of [KEY_FILE, '/.txt', '/undefined.txt']) {
+      const response = await proxy(request(path));
+      expect(response.headers.get('x-middleware-next')).toBe('1');
+      expect(response.headers.get('content-type')).toBeNull();
+    }
+  });
+
+  // A route under src/app answers at a fixed address anyone can guess, which is what naming the file after the key ends.
+  it('is read by no route or page under src/app', () => {
+    const files = readdirSync('src/app', { recursive: true, encoding: 'utf8' }).filter((file) =>
+      /\.tsx?$/.test(file),
+    );
+    // Why an empty answer means something: the scan reads the app's files.
+    expect(files).toContain('robots.ts');
+
+    const readers = files.filter((file) =>
+      /\bindexNowKey\b|\bINDEXNOW_KEY\b/.test(readFileSync(join('src/app', file), 'utf8')),
+    );
+
+    expect(readers).toEqual([]);
   });
 });
 
