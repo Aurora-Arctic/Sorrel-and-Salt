@@ -105,6 +105,31 @@ for (const [kind, open, settings] of [
   });
 }
 
+test('lists the public site links and Sign In in a menu lying wholly inside a 320px window at a 200% root font', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: PURPOSE_WIDTHS.reflow, height: 812 });
+  await visit(page, '/compendium');
+  await rootFont(page, '200%');
+  const banner = page.getByRole('banner');
+  await expect(banner.getByRole('navigation', { name: 'Site' })).toBeHidden();
+
+  await banner.getByRole('button', { name: 'Menu' }).click();
+  const menu = page.getByRole('menu', { name: 'Menu' });
+  await expect(menu.getByRole('menuitem', { name: 'Compendium' })).toBeVisible();
+  await expect(menu.getByRole('menuitem', { name: 'Sign In' })).toBeVisible();
+  // Settled, so a fade's motion is not mistaken for the menu's place.
+  await expect(menu).toHaveCSS('opacity', '1');
+  const box = await menu.evaluate((element) => {
+    const { left, right, top, bottom } = element.getBoundingClientRect();
+    return { left, right, top, bottom, width: window.innerWidth, height: window.innerHeight };
+  });
+  expect(box.left, 'the menu starts inside the window').toBeGreaterThanOrEqual(0);
+  expect(box.right, 'the menu ends inside the window').toBeLessThanOrEqual(box.width);
+  expect(box.top).toBeGreaterThanOrEqual(0);
+  expect(box.bottom).toBeLessThanOrEqual(box.height);
+});
+
 test('moves the site links into the account panel where even the folded bar has no room for them', async ({
   page,
 }) => {
