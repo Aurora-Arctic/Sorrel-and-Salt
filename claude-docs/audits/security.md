@@ -4,9 +4,9 @@
 
 This is the audit of the site's security, for task M17.34. It looks for ways a person could read or change data that is not theirs, take over an account, or weaken the site's defences. It changes no code. Each finding is proposed as a follow-up task, and a task is minted only after the owner approves it.
 
-The audit has 20 findings: 1 Medium, 16 Low and 3 Informational. None is High.
+The audit has 21 findings: 2 Medium, 16 Low, and 3 Informational. None is High. The agents found 20 of them. The owner raised the twenty-first, SEC-21, after reading the findings.
 
-In the code it read, the audit found no way for a person to read or change another coven's data, and no way round the service checks or the `Membership` proof they return. The `Membership` proof is the branded value that `assertMembership` hands back and that every workspace-scoped repository function demands. The Medium finding (SEC-1) is about a secret shared across environments whose strength the audit could not read.
+In the code it read, the audit found no way for a person to read or change another coven's data, and no way round the service checks or the `Membership` proof they return. The `Membership` proof is the branded value that `assertMembership` hands back and that every workspace-scoped repository function demands. The two Medium findings are about what sits outside production: a sign-in secret shared across environments, whose strength the audit could not read (SEC-1), and copies of production's data in the staging and hotfix preview databases (SEC-21).
 
 ### What The Owner Needs To Do
 
@@ -89,6 +89,7 @@ Read on 2026-11-19 by the research agent. "Status" is as it stands at the end of
 | ID     | Severity      | Finding                                                                                      | Confidence |
 | ------ | ------------- | -------------------------------------------------------------------------------------------- | ---------- |
 | SEC-1  | Medium        | One short sign-in secret is shared by production, staging and previews                       | 7          |
+| SEC-21 | Medium        | Staging and every hotfix preview hold a copy of production's data                            | 6          |
 | SEC-2  | Low           | The deploy job builds pull-request code with repository secrets                              | 6          |
 | SEC-3  | Low           | Staff user ids are readable without signing in                                               | 8          |
 | SEC-4  | Low           | Password-reset tokens are stored unhashed                                                    | 8          |
@@ -118,6 +119,21 @@ Read on 2026-11-19 by the research agent. "Status" is as it stands at the end of
 - **How sure:** 7. Code for the sharing; Inference for the guessing step. The owner can settle it by checking the value's length and how it was made. Verifier: confirmed, understated. It becomes High if the value is guessable.
 - **Sources:** D-15, D-9, D-13 context, verifier D-15.
 - **Recommended Fix:** generate a new random value for production and a different one for Preview, following the rotation steps in `claude-docs/secrets.md`.
+
+### SEC-21 Staging And Every Hotfix Preview Hold A Copy Of Production's Data
+
+The agents did not find this. The owner raised it on 2026-11-19, after reading the findings, and the coordinator read the docs named below. It is numbered last and placed here because it is Medium and bears on SEC-1.
+
+- **Severity:** Medium
+- **Where:** `claude-docs/design-decisions/data.md`, "Neon branch strategy: persistent staging vs. ephemeral hotfix branches" (`staging` is made by hand as a child branch of the production database, and each hotfix preview gets a branch made automatically). `claude-docs/design-decisions/ci.md`, "Hosting on Vercel Pro and Neon Launch", the owner's decision 1 ("The hotfix preview's Neon branch is a child of the production branch"). `claude-docs/secrets.md`, on `BETTER_AUTH_SECRET` (the two-factor secrets and the providers' tokens are encrypted under it).
+- **Found:** a child branch of a database starts as a copy of its parent. So each hotfix preview's database holds production's rows as they were when the preview was made: real accounts, real coven data, and production's session rows. `staging` held such a copy on the day it was made. The audit read no workflow step that clears or replaces any of those rows on a copy.
+- **How it could be used:** two paths, each with a precondition.
+  - A person who can open a preview and sign in there reads real data outside production's settings. Whether previews sit behind Vercel Deployment Protection is not settled (see "Not Checked"). Impersonation can be switched on for Preview (SEC-8), and on a copy the accounts are real ones.
+  - Code that runs in a hotfix preview holds that preview's database address and the shared secret (SEC-1, SEC-2). If session tokens are stored unhashed, such code could build a session cookie that production accepts. It needs write access to the repository.
+- **How sure:** 6. The docs show the copying; no workflow or setting was read to confirm how a branch is made today. Inference for both paths. What would settle it: the Neon console's parent for the `staging` branch and for a hotfix branch; whether the `sessions` table holds tokens unhashed (not checked); and the Deployment Protection setting.
+- **Bears on SEC-1:** with separate secrets, a copy of production cannot decrypt the two-factor secrets and provider tokens written under production's secret, so a person with two-factor on could not pass the second step on a hotfix preview. The fix for SEC-1 has to say what happens to those rows on a copy.
+- **Source:** the owner's question; the coordinator's read of the three docs.
+- **Recommended Fix:** the deploy clears the sign-in rows on each new copy (sessions, pending verifications, two-factor secrets, and provider tokens) and adds a test Keeper. A second step replaces names and addresses on the copy with invented ones.
 
 ### SEC-2 The Deploy Job Builds Pull-Request Code With Repository Secrets
 
@@ -184,11 +200,11 @@ Read on 2026-11-19 by the research agent. "Status" is as it stands at the end of
 
 - **Severity:** Low
 - **Where:** `src/lib/impersonation.ts:16`: `env.ENABLE_IMPERSONATION === 'true' && env.VERCEL_ENV !== 'production'`. `claude-docs/auth/impersonation.md:70-90`.
-- **Found:** where the two conditions hold, a Keeper can act as another user. There is no check on the target. Production never runs it, because the flag is never set there and `VERCEL_ENV` blocks it. Where this runs outside Vercel production (including non-Vercel production), only the flag stands in the way.
+- **Found:** where the two conditions hold, a Keeper can act as another user who is not a Keeper. A Keeper cannot impersonate another Keeper, the primary Keeper included: `allowImpersonatingAdmins` stays off (`src/lib/impersonation.ts:21`), and the installed plugin refuses at `node_modules/better-auth/dist/plugins/admin/routes.mjs:598`. Beyond the role there is no check on the target: the plugin looks the target up by id, so it would hand over a soft-deleted user or the seed's bootstrap user (`claude-docs/auth/impersonation.md`, "Who may impersonate whom"). Production never runs it, because the flag is never set there and `VERCEL_ENV` blocks it. Where this runs outside Vercel production (including non-Vercel production), only the flag stands in the way.
 - **Not settled:** whether staging and previews sit behind Vercel Deployment Protection, and whether `ENABLE_IMPERSONATION` is set on Preview.
 - **How sure:** 7. Code. Verifier: confirmed.
 - **Sources:** B-2, D-10.
-- **Recommended Fix:** refuse impersonating a Keeper, and refuse it unless the environment is named `staging` or `preview` positively.
+- **Recommended Fix:** refuse a soft-deleted or bootstrap target, and allow impersonation only where the environment is positively staging, a preview, or local.
 
 ### SEC-9 Most Text, List And Id Arguments Have No Size Cap
 
@@ -250,7 +266,9 @@ Read on 2026-11-19 by the research agent. "Status" is as it stands at the end of
 - **How it could be used:** No exploit path shown. It matters only if a script injection is found elsewhere.
 - **How sure:** 9. Code. Verifier: confirmed.
 - **Source:** D-1.
-- **Recommended Fix:** a nonce through `src/proxy.ts`, about 6h; it makes pages dynamic, so it needs a decision on caching.
+- **Recommended Fix:** a nonce (a random value made per request that marks the scripts the page may run) needs each page rendered per request, so a nonce on every page costs the public pages their caching (`node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md`, "Static vs Dynamic Rendering with CSP"). Two ways keep the caching:
+  - A nonce on the signed-in pages only, which already render per request. The public pages keep today's policy.
+  - Hashes in place of a nonce. Next.js has a hash-based mode that keeps static pages (the same doc, "Subresource Integrity"). The doc marks it experimental and says it cannot handle scripts generated at request time. The audit did not test it against the site's four inline scripts.
 
 ### SEC-12 Several Response Headers Are Not Set By The Repository
 
@@ -274,13 +292,13 @@ Read on 2026-11-19 by the research agent. "Status" is as it stands at the end of
   - Actions are pinned to tags, not commit ids, for example `actions/checkout@v7`, `dorny/paths-filter@v4` and `docker/*`.
   - The project's own action `Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main` is used in 16 steps.
   - The Vercel CLI is installed as `vercel@59`, outside the lockfile: `deploy.yml:201` and `:414`, `migrate.yml:87`, and `seed-environment.yml` per lane D.
-  - `npm audit` never fails CI: `checks.yml:397` ends `|| true`, comment at `:370`.
+  - `npm audit` runs in CI and cannot fail it (`checks.yml:397` ends `|| true`, comment at `:370`). The owner confirmed on 2026-11-19 that this is by design, so it is not part of the finding.
   - No `npm audit signatures` (0 matches in `.github`).
   - Install scripts are allowed for `@swc/core`, `esbuild`, `@esbuild-kit/core-utils/esbuild`, `drizzle-kit/esbuild`, `pre-commit` (dev), and the optional `@parcel/watcher`, `cbor-extract` and `fsevents`.
 - **How it could be used:** a compromised action tag or CLI release runs in a job that holds deploy secrets. No attack was seen.
 - **How sure:** 7. Code. Verifier: confirmed.
 - **Sources:** D-11, G-6.
-- **Recommended Fix:** pin third-party actions to commit ids, pin the CLI in the lockfile, and make `npm audit` fail the build at a set level.
+- **Recommended Fix:** pin third-party actions to commit ids, pin the CLI in the lockfile, and run `npm audit signatures`.
 
 ### SEC-14 Mail Contents Can Be Logged, Against A Code Comment
 
@@ -621,14 +639,15 @@ Estimate based on: MB.80 (2h), scaled down. The figure is an estimate.
 
 ### Tighten The Impersonation Gate · 2h
 
-_Story:_ As the site owner, I want impersonation limited to named environments and to non-Keeper targets, so that a mistaken flag cannot expose staff accounts.
+_Story:_ As the site owner, I want impersonation limited to named environments and to live, ordinary accounts, so that a mistaken flag cannot switch it on anywhere else.
 
 From SEC-8.
 
 _Acceptance criteria:_
 
-- Impersonation is allowed only where `VERCEL_ENV` is `preview`, or staging by name, and the flag is set.
-- Impersonating a Keeper is refused.
+- Impersonation runs only where the flag is set and the environment is positively staging, a preview, or local; anywhere else it is refused, production included.
+- Impersonating a soft-deleted user or the seed's bootstrap user is refused.
+- Impersonating a Keeper is still refused.
 - The owner has recorded whether previews sit behind Deployment Protection.
 - A test fails with each refusal removed.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
@@ -702,7 +721,7 @@ Estimate based on: MB.80 (2h). The figure is an estimate.
 
 ### Harden The Supply Chain In CI · 5h
 
-_Story:_ As the site owner, I want pinned actions, a locked CLI and an audit that can fail the build, so that a poisoned release cannot reach a job holding secrets.
+_Story:_ As the site owner, I want pinned actions, a locked CLI, and checked package signatures, so that a poisoned release cannot reach a job holding secrets.
 
 From SEC-13.
 
@@ -710,7 +729,8 @@ _Acceptance criteria:_
 
 - Third-party actions are pinned to commit ids, and the own action is pinned too.
 - The Vercel CLI is installed from the lockfile in the four workflows.
-- `npm audit` fails the build at a set level, and `npm audit signatures` runs.
+- `npm audit signatures` runs in CI and fails the job on a bad signature.
+- `npm audit` stays as it is: it reports and does not fail the build, by the owner's decision.
 - `npm run format:check` and `npm run lint` pass.
 
 Estimate based on: MB.82 (4h). The figure is an estimate.
