@@ -87,7 +87,7 @@ Turn the current branch's work into a pull request against a Gitflow-appropriate
 
 ## Notes
 
-- `.claude/settings.json` puts `git push` and `gh pr create/view/comment/list` under `permissions.ask`; expect a confirmation prompt and don't suppress it. `task-board.mjs` may prompt too.
+- `.claude/settings.json` has no `permissions.ask` rules, because a project `ask` rule asks again in the terminal after the Plannotator Inbox has answered. A push or `gh pr` command may still raise an ordinary permission prompt; don't suppress it. `task-board.mjs` may prompt too.
 - Never force-push, never push to `main`, and never use `--no-verify`. The one exception to the force-push rule is a stack branch: `gh stack` owns it and force-pushes it with a lease check, one session owns a whole stack, and no other session runs `gh stack` on it ([reference-stack.md](reference-stack.md)). Every other branch keeps the rule.
 - A `hotfix/*` branch is never asked about `main` or `staging`, only about an optional third `release/*` target ([reference-hotfix.md](reference-hotfix.md)).
 - `/create-main-sync` and `/create-release` open their own PRs; this skill handles `main-sync/*` so that re-running it from a sync branch still proposes `staging`.
