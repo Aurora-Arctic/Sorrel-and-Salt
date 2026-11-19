@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
+import { SHARE_CARD_SIZE, SHARE_CARD_TYPE } from './share-card';
 import { SITE_NAME, SITE_TITLE_NAME, TITLE_SEPARATOR, siteUrl } from './site';
 
-// The search-result text of a public page, pure so the three compendium pages share one wording. No image
-// tag: each segment's `opengraph-image` names its share card.
+// The search-result text of a public page, pure so the three compendium pages share one wording. A page's own
+// `openGraph` replaces its parent segment's whole, so the site's share card is named here; a page with its own
+// `opengraph-image` file asks for no image, because Next uses a file's card only when the metadata names none.
 
 /** The Twitter card that shows the share card full width above the title. */
 const TWITTER_CARD = 'summary_large_image';
@@ -27,10 +29,17 @@ export function entryDescription(title: string, description: string | null): str
 }
 
 /** Open Graph is not run through the layout's title template, so `title` here is the full title. */
-function social(title: string, description: string, url: string): Metadata {
+function social(title: string, description: string, url: string, shareImage: boolean): Metadata {
+  const image = shareImage
+    ? {
+        images: [
+          { url: '/opengraph-image', ...SHARE_CARD_SIZE, type: SHARE_CARD_TYPE, alt: SITE_NAME },
+        ],
+      }
+    : {};
   return {
-    openGraph: { title, description, url, siteName: SITE_NAME, type: 'website' },
-    twitter: { card: TWITTER_CARD, title, description },
+    openGraph: { title, description, url, siteName: SITE_NAME, type: 'website', ...image },
+    twitter: { card: TWITTER_CARD, title, description, ...image },
   };
 }
 
@@ -42,14 +51,23 @@ export function publicPageMetadata(
   title: string,
   description: string,
   path: string,
-  { absolute = false, noIndex = false }: { absolute?: boolean; noIndex?: boolean } = {},
+  {
+    absolute = false,
+    noIndex = false,
+    shareImage = true,
+  }: { absolute?: boolean; noIndex?: boolean; shareImage?: boolean } = {},
 ): Metadata {
   const url = siteUrl(path);
   return {
     title: absolute ? { absolute: title.replace(SITE_NAME, SITE_TITLE_NAME) } : title,
     description,
     alternates: { canonical: url },
-    ...social(absolute ? title : `${title}${TITLE_SEPARATOR}${SITE_NAME}`, description, url),
+    ...social(
+      absolute ? title : `${title}${TITLE_SEPARATOR}${SITE_NAME}`,
+      description,
+      url,
+      shareImage,
+    ),
     ...(noIndex && { robots: { index: false, follow: true } }),
   };
 }

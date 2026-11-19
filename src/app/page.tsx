@@ -15,6 +15,7 @@ const DESCRIPTION = 'A compendium, ingredient store and grimoire.';
 
 export const metadata: Metadata = publicPageMetadata(SITE_NAME, DESCRIPTION, '/', {
   absolute: true,
+  shareImage: false,
 });
 
 async function continueTarget(session: Session): Promise<Route> {
