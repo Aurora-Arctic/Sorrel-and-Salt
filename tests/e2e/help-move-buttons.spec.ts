@@ -1,6 +1,7 @@
 import { insertHelpArticle } from '../support/db/insert-help-article';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase, withE2eSql } from './database';
+import { isSeen } from './hit-target';
 import { signInAs } from './session';
 
 // Move Up and Move Down on a reorderable list, in a real browser: a keyed reorder moves the focused button's row in
@@ -54,7 +55,6 @@ test('Move Up keeps the focus on the moved row’s button, and each end of the l
     );
   // Precondition: Bark first, Pith second, and each end's outward move is unavailable.
   await expect.poll(titles).toEqual([FIRST, SECOND]);
-  await page.getByRole('button', { name: `Reorder Sub Pages of ${GUIDE}` }).click();
   await expect(table.getByRole('button', { name: `Move Up ${FIRST}` })).toHaveAttribute(
     'aria-disabled',
     'true',
@@ -76,6 +76,8 @@ test('Move Up keeps the focus on the moved row’s button, and each end of the l
   // Pith is now the first row, so its Move Up is the unavailable one, and it still holds the focus.
   await expect(up).toHaveAttribute('aria-disabled', 'true');
   await expect(up).toBeFocused();
+  // The focus inside the moved row keeps its buttons on screen.
+  await expect.poll(() => isSeen(up)).toBe(true);
   await expect(table.getByRole('button', { name: `Move Down ${FIRST}` })).toHaveAttribute(
     'aria-disabled',
     'true',

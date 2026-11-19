@@ -3,6 +3,7 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
 import { PHONE_WIDTH } from './breakpoints';
+import { hitTarget } from './hit-target';
 
 // At phone width a step's controls stay inside its card, its handle is a 24 by 24 target at
 // least, and a closed instruction shows two lines: real layout jsdom does not draw.
@@ -40,22 +41,9 @@ test('a step at phone width keeps its controls inside the card and shows two lin
     );
   }
   // The grip is drawn smaller than its target, so the target is measured where a press lands on it.
-  const target = await page
-    .getByRole('button', { name: 'Move Testwort (Dried Root)', exact: true })
-    .evaluate((handle) => {
-      const box = handle.getBoundingClientRect();
-      const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
-      const lands = (dx: number, dy: number) => {
-        const hit = document.elementFromPoint(x + dx, y + dy);
-        return hit !== null && handle.contains(hit);
-      };
-      const reach = (dx: number, dy: number) => {
-        let n = 0;
-        while (n < 40 && lands(dx * (n + 1), dy * (n + 1))) n++;
-        return n;
-      };
-      return { width: reach(-1, 0) + reach(1, 0) + 1, height: reach(0, -1) + reach(0, 1) + 1 };
-    });
+  const target = await hitTarget(
+    page.getByRole('button', { name: 'Move Testwort (Dried Root)', exact: true }),
+  );
   expect(target.width).toBeGreaterThanOrEqual(24);
   expect(target.height).toBeGreaterThanOrEqual(24);
 

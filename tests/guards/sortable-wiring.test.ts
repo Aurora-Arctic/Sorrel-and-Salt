@@ -84,25 +84,9 @@ describe('sortable handles', () => {
   });
 });
 
-// Move Up and Move Down show only while a list's Reorder toggle is on. The mode is one shared piece, ReorderMode: a
-// list's state, its toggle, and `useReorderMode`, which reads off outside a ReorderMode, so no list shows the buttons
-// unconditionally. No file is excepted.
+// Every list shows its Move Up and Move Down with no mode to turn on; only the Guides list keeps a Reorder Mode, one
+// shared piece, ReorderMode, with its toggle in the same file. No file is excepted.
 const REORDER_MODE = 'src/components/ReorderMode/index.tsx';
-const COMBOBOX = 'src/components/Combobox/index.tsx';
-
-/** The listed sources that import `file`, by a relative path or the `@/` alias. */
-function importersOf(file: string, files: string[]): string[] {
-  const resolves = (path: string) =>
-    [`${path}.tsx`, `${path}.ts`, `${path}/index.tsx`].includes(file);
-  return files.filter(
-    (other) =>
-      other !== file &&
-      (importedFiles(other, files).includes(file) ||
-        [...read(other).matchAll(/from '@\/([^']+)'/g)].some((match) =>
-          resolves(`src/${match[1]}`),
-        )),
-  );
-}
 
 describe('reorder mode', () => {
   const rendersMode = (file: string) => /<ReorderMode\b/.test(read(file));
@@ -119,57 +103,18 @@ describe('reorder mode', () => {
     expect(elsewhere).toEqual([]);
   });
 
-  it('has GripHandle draw them only while its list’s reorder mode is on', () => {
-    const handle = read(GRIP_HANDLE);
+  it('keeps a ReorderMode only around the Guides list, every other list showing its Move buttons with no mode', () => {
+    const modes = sources().filter((file) => file !== REORDER_MODE && rendersMode(file));
+    // Precondition: the Guides list's mode is found, so an empty scan could not pass.
+    expect(modes).toContain('src/components/HelpOutline/guides-bar.tsx');
 
-    expect(sources()).toContain(REORDER_MODE);
-    expect(handle).toMatch(/\buseReorderMode\(/);
-    expect(handle).toMatch(/\breordering\s*&&/);
-  });
-
-  it('puts every sortable list inside a ReorderMode, in its own file or one that imports it', () => {
-    const files = sources();
-    const lists = files.filter(
-      (file) =>
-        !file.endsWith('.stories.tsx') &&
-        /<(?:SortableColumn|ComboboxSortableEntries|LazySortableEntries)\b/.test(read(file)),
-    );
-    // Precondition: the three lists' wirings are found.
-    expect(lists).toEqual(
-      expect.arrayContaining([
-        'src/components/HelpOutline/guides-bar.tsx',
-        'src/components/HelpOutline/order-table.tsx',
-        'src/components/SpellBuilder/steps/sortable.tsx',
-        'src/components/IngredientForm/fields.tsx',
-      ]),
-    );
-
-    // An ordered combobox's chips are handed to the Combobox, which draws the label and so holds the mode.
-    const handedToCombobox = (file: string) =>
-      /<(?:ComboboxSortableEntries|LazySortableEntries)\b/.test(read(file)) &&
-      /<Combobox\b/.test(read(file)) &&
-      rendersMode(COMBOBOX);
-    const outside = lists.filter(
-      (file) =>
-        !EXCEPTIONS.includes(file) &&
-        !rendersMode(file) &&
-        !handedToCombobox(file) &&
-        !importersOf(file, files).some(rendersMode),
-    );
-
-    expect(outside).toEqual([]);
+    expect(modes).toEqual(['src/components/HelpOutline/guides-bar.tsx']);
   });
 
   it('gives every ReorderMode its ReorderToggle in the same file', () => {
     const modes = sources().filter((file) => file !== REORDER_MODE && rendersMode(file));
-    // Precondition: the three lists' modes are found.
-    expect(modes).toEqual(
-      expect.arrayContaining([
-        'src/components/HelpOutline/guides-bar.tsx',
-        'src/components/SpellBuilder/steps/index.tsx',
-        COMBOBOX,
-      ]),
-    );
+    // Precondition: the Guides list's mode is found.
+    expect(modes).toContain('src/components/HelpOutline/guides-bar.tsx');
 
     const withoutToggle = modes.filter(
       (file) => !EXCEPTIONS.includes(file) && !/<ReorderToggle\b/.test(read(file)),

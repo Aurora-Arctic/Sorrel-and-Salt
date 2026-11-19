@@ -137,8 +137,7 @@ export async function touchDragVertically(handle: HTMLElement, y: number, holdMs
   await advance(60);
 }
 
-/** A drag handle is named "Move <item>"; this matches it and not the Move Up and Move Down buttons beside it. */
-export const GRIP_NAME = /^Move (?!Up |Down )/;
+export { GRIP_NAME } from './grip-name';
 
 /** The item a drag handle moves, read from its name. */
 export const gripItem = (grip: HTMLElement) =>
