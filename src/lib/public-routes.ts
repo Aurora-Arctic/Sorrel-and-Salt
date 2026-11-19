@@ -34,7 +34,6 @@ const PUBLIC_ROUTES = [
   '/robots.txt',
   '/sitemap.xml',
   '/llms.txt',
-  '/indexnow-key.txt', // the key file IndexNow fetches to check a ping came from this site
   '/.well-known/*', // ai-catalog.json and ard.json
   '/favicon.ico',
   '/icon.png',

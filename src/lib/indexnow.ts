@@ -1,12 +1,9 @@
 /* oxlint-disable no-console -- the log is how a ping that did not land is seen */
 import { SITE_ORIGIN, siteUrl } from '@/lib/site';
 
-/** Where the IndexNow key file is served, sent to IndexNow as `keyLocation`; at the root, so the key covers every address. */
-export const INDEXNOW_KEY_PATH = '/indexnow-key.txt';
-
 const ENDPOINT = 'https://api.indexnow.org/indexnow';
 
-/** Read where it is used, never through `requiredInProduction`: only the production deploy sets it, and a preview must still build. */
+/** The key file is `/<key>.txt` at the root, which IndexNow looks for when no `keyLocation` is sent (served by `src/proxy.ts`). Read where it is used, never through `requiredInProduction`: only the production deploy sets it, and a preview must still build. */
 export function indexNowKey(): string | undefined {
   return process.env.INDEXNOW_KEY || undefined;
 }
@@ -23,7 +20,6 @@ export async function pingIndexNow(paths: readonly string[]): Promise<void> {
       body: JSON.stringify({
         host: new URL(SITE_ORIGIN).host,
         key,
-        keyLocation: siteUrl(INDEXNOW_KEY_PATH),
         urlList: [...new Set(paths)].map(siteUrl),
       }),
     });
