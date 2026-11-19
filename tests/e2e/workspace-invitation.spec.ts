@@ -171,6 +171,48 @@ test('an invite address typed with spaces and a capitalised domain is tidied on 
   expect((await latestMessageTo(tidy)).text).toContain('/invite/');
 });
 
+// Regression: after a send the focus fell to the page, and the one region the sentence reached lay outside the modal
+// dialog, which `showModal()` makes inert.
+test('after a send, the focus is on Done and "Invitation sent" is said once, in a region inside the open dialog that was there before it', async ({
+  page,
+}) => {
+  await signInAgainAs(page, ownerId);
+  await page.goto(`/coven/${COVEN_SLUG}/members`);
+  await page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('textbox', { name: 'Email Address' }).fill(address('announced'));
+
+  // Every live region on the page now, marked, so a later read can tell a region that was already listening from one
+  // drawn with the sentence in it.
+  const marked = await page.evaluate(() => {
+    const regions = [...document.querySelectorAll('output, [role="status"], [aria-live]')];
+    regions.forEach((region) => region.setAttribute('data-region-before', ''));
+    return regions.length;
+  });
+  expect(marked).toBeGreaterThan(0);
+
+  await dialog.getByRole('button', { name: 'Send Invitation' }).click();
+  const done = dialog.getByRole('button', { name: 'Done' });
+  await expect(done).toBeFocused();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('output, [role="status"], [aria-live]')]
+          .filter((region) => region.textContent?.includes('Invitation sent'))
+          .map((region) => ({
+            before: region.hasAttribute('data-region-before'),
+            inOpenModal: region.closest('dialog')?.matches(':modal') ?? false,
+            inert: region.closest('[inert]') !== null,
+          })),
+      ),
+    )
+    .toEqual([{ before: true, inOpenModal: true, inert: false }]);
+  // The positive beside it: the dialog is still the open modal, so everything outside it is inert.
+  await expect(dialog).toBeVisible();
+  expect(await dialog.evaluate((element) => element.matches(':modal'))).toBe(true);
+});
+
 // Last in the file: it deletes the coven every walk above shares; workers take a file's tests in order.
 test.describe('a deleted coven’s invitation', () => {
   test('F’s link is refused for a reason of its own once the coven is deleted', async ({

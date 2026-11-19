@@ -176,8 +176,8 @@ describe('InviteDialog', () => {
         <InviteDialog workspaceId={WORKSPACE} />
       </StatusRegionProvider>,
     );
-    const before = statusRegionsNow();
     fireEvent.click(trigger());
+    const before = statusRegionsNow();
     typeAddress('ada@example.test');
 
     fireEvent.click(send());
@@ -190,6 +190,21 @@ describe('InviteDialog', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(trigger()).toHaveFocus();
+  });
+
+  // Regression: Send Invitation, holding the focus, was replaced by Done, and the focus fell out of the dialog.
+  it('moves the focus to Done once the invitation is sent', async () => {
+    mockSending();
+    open();
+    typeAddress('ada@example.test');
+    send().focus();
+    // Precondition: the focus was on the button the send removes.
+    expect(send()).toHaveFocus();
+
+    fireEvent.click(send());
+
+    const done = await within(dialog()).findByRole('button', { name: 'Done' });
+    await waitFor(() => expect(done).toHaveFocus());
   });
 
   // Regression: the refusal showed while the focus stayed on Send Invitation.
