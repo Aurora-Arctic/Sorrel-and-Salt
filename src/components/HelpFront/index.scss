@@ -16,8 +16,7 @@ $-wide: page-with-nav-wide($document-menu-column, $measure);
     flex-basis: auto;
     margin: 0;
     top: 0;
-    font-size: heading-size(1);
-    line-height: 1.1;
+    @include heading-level(1);
   }
 
   > .lede {

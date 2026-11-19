@@ -1409,8 +1409,7 @@
   }
 
   .card-landing__title > .page-title__greeting {
-    font-size: heading-size(3);
-    line-height: 1.2;
+    @include heading-level(3);
   }
 
   .card-landing__part > ul > li {

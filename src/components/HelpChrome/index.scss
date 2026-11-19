@@ -29,19 +29,9 @@
   margin-block-start: space(6);
 }
 
-// A help heading drawn one level up under the public help header keeps the size of the level it was written at, so the
-// page looks as it did when its title was an h2 and its sections h3s (HelpHeading).
-.help-heading--2 {
-  font-size: heading-size(2);
-  line-height: 1.15;
-}
-
-.help-heading--3 {
-  font-size: heading-size(3);
-  line-height: 1.2;
-}
-
-.help-heading--4 {
-  font-size: heading-size(4);
-  line-height: 1.25;
+// A help heading drawn one level up under the public help header keeps the size of the level it was written at (HelpHeading).
+@each $level in 2, 3, 4 {
+  .help-heading--#{$level} {
+    @include heading-level($level);
+  }
 }

@@ -27,8 +27,7 @@
 
     h3 {
       margin: 0;
-      font-size: heading-size(4);
-      line-height: 1.25;
+      @include heading-level(4);
     }
 
     .specimen__badges {
