@@ -1,9 +1,8 @@
-import { type ReactElement, Suspense } from 'react';
+import type { ReactElement } from 'react';
 import BrandName from '../AppShell/brand-name';
 import MainBody from '../AppShell/main-body';
 import { PendingLink } from '../../lib/navigation';
-import { SignInLink, SignInLinkWithQuery } from './sign-in-link';
-import ThemeToggle from '../ThemeToggle';
+import PublicEnd from './public-end';
 import SiteNav from '../AppShell/site-nav';
 import { COMPENDIUM_LINK } from '../AppShell/compendium-link';
 import type { PublicFrameProps } from './types';
@@ -25,15 +24,7 @@ const PublicFrame = ({ configured, children }: PublicFrameProps): ReactElement =
           <BrandName block="public-frame" />
         </PendingLink>
         <SiteNav links={NAV_LINKS} />
-        <div className="public-frame__end">
-          <Suspense fallback={<SignInLink />}>
-            <SignInLinkWithQuery configured={configured} />
-          </Suspense>
-          {/* The shell’s wrapper (AppShell/index.scss). */}
-          <span className="app-shell__theme">
-            <ThemeToggle variant="inline" />
-          </span>
-        </div>
+        <PublicEnd configured={configured} links={NAV_LINKS} />
       </div>
     </header>
     {/* The skip link's target, as the shell's is: an empty span before the page, focusable by

@@ -62,12 +62,24 @@
     display: none;
   }
 
+  // Measured, so the bar stays one line (app-shell.md, "The end block"); what may give up width inside it can.
   .#{$block}__end {
     display: flex;
-    flex: none;
+    flex: 0 1 auto;
     align-items: center;
     gap: space(2);
+    min-width: 0;
     margin-left: auto;
+  }
+
+  // Before the browser has measured it, the server's render, and a browser without script, clip what outruns the bar
+  // rather than widen the page. While measuring, every item keeps its own width.
+  .#{$block}__end:not([data-fit], [data-measuring]) {
+    overflow: hidden;
+  }
+
+  .#{$block}__end[data-measuring] > * {
+    flex: none;
   }
 
   @include phone-down {

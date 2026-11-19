@@ -5,6 +5,7 @@ import { type ReactElement, useRef } from 'react';
 import { useHydrated } from '../../lib/hydrated';
 import { useMeasuredFit } from '../../lib/use-measured-fit';
 import AccountMenu from '../AccountMenu';
+import { firstFitting, navWidth, pixels, watched } from './bar-room';
 import { PlusIcon } from '../IconTip/icons';
 import ThemeToggle from '../ThemeToggle';
 import { ADD_INGREDIENT_TITLE } from './add-href';
@@ -24,8 +25,6 @@ const STEPS: readonly { form: AddIngredientForm; compact: boolean; links: boolea
   { form: 'folded', compact: true, links: false },
   { form: 'folded', compact: true, links: true },
 ];
-
-const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
 type Natural = {
   // The width each step needs: the block's, and the site nav's beside it while the nav is in the bar.
@@ -82,47 +81,12 @@ const measureEnd = (end: HTMLElement): Natural | null => {
   };
 };
 
-// The site nav's width and the gap after it, or 0 where it is not in the bar (a tablet's width).
-const navWidth = (end: HTMLElement): number => {
-  const nav = end.parentElement?.querySelector<HTMLElement>(':scope > .app-shell__nav');
-  if (!nav || nav.offsetWidth === 0 || !end.parentElement) return 0;
-  return nav.offsetWidth + pixels(getComputedStyle(end.parentElement).columnGap);
-};
-
-// The room the block and the site nav share: from the end of whatever precedes them in the bar, and a gap, to the
-// bar's inner edge. The nav is passed over, so hiding it at the last step does not change the room.
-const roomFor = (end: HTMLElement): number => {
-  const row = end.parentElement;
-  if (!row) return Infinity;
-  const style = getComputedStyle(row);
-  const box = row.getBoundingClientRect();
-  let start = box.left + pixels(style.paddingLeft);
-  for (let before = end.previousElementSibling; before; before = before.previousElementSibling) {
-    const edge = before.getBoundingClientRect();
-    if (edge.width > 0 && !before.matches('.app-shell__nav')) {
-      start = edge.right + pixels(style.columnGap);
-      break;
-    }
-  }
-  return box.right - pixels(style.paddingRight) - start;
-};
-
-const chooseForm = ({ widths }: Natural, end: HTMLElement): number => {
-  const room = roomFor(end) + 0.5;
-  const at = widths.findIndex((width) => width <= room);
-  return at === -1 ? STEPS.length - 1 : at;
-};
+const chooseForm = ({ widths }: Natural, end: HTMLElement): number => firstFitting(widths, end);
 
 const textSizeChanged = ({ disc, group }: Natural, end: HTMLElement): boolean => {
   const now = end.querySelector<HTMLElement>('.app-shell__theme');
   if (now !== null && now.offsetWidth !== disc) return true;
   return !group && end.querySelector(':scope > .app-shell__add-group') !== null;
-};
-
-// The bar itself and what sits in it before the block change the room; the block's own items change with the text.
-const watched = (end: HTMLElement): Element[] => {
-  const row = end.parentElement;
-  return [...(row ? [row, ...row.children] : []), ...end.children];
 };
 
 const ShellEnd = ({ viewer, workspaces, links }: ShellEndProps): ReactElement => {

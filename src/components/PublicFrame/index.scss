@@ -12,6 +12,26 @@
   display: block;
 }
 
+// The end block's later steps list the site links in its menu instead (public-end.tsx).
+.public-frame__bar-inner:has(> .public-frame__end:is([data-fit='1'], [data-fit='2']))
+  > .app-shell__nav {
+  display: none;
+}
+
+// The menu is a square as tall as the bar's controls, which may give up width, as the account button does, where
+// even the last step outruns the room.
+.public-frame__end > .menu-button {
+  display: inline-flex;
+  min-width: 0;
+}
+
+.public-frame__menu {
+  @include icon-button($control-height, $glyph-size-large);
+  @include icon-button-edit;
+
+  max-width: 100%;
+}
+
 // A phone's bar holds the brand, the nav, Sign In and the disc on one line only with the spacing drawn in a step
 // (claude-docs/components/public-frame.md, "Styling"). Sign In keeps a 24px hit area.
 @include phone-down {

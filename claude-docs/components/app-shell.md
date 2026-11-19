@@ -47,6 +47,7 @@ The theme disc and the account button never fold. New Spell has no control in th
 - **It measures, so it follows the text size.** A rem media query does not follow a root font set on the page, and the block measures in pixels, so it re-measures when the disc's own width changes (a text-size change), when Add Ingredient appears after the first measure, once the web fonts load, and on a navigation (the current link's weight changes the room). A change of the window re-chooses from the measured widths through a `ResizeObserver` on the bar's row and its items.
 - **The measuring render is never painted.** It marks the block `data-measuring`, where every item keeps its full width. Before hydration, and without script, the block is not measured: the stylesheet clips it (`overflow: hidden`) so the page still does not scroll sideways.
 - **The block may shrink** (`min-width: 0`) while the disc keeps its width, so the account button gives way before the disc would pass the window.
+- **The room and the clip are shared with the public bar.** `AppShell/bar-room.ts` holds the room between the brand and the bar's edge (`roomFor`), the site nav's width (`navWidth`), what to observe (`watched`) and the first step that fits (`firstFitting`); the end block's shrink, clip and measuring rules are in the `frame-bar` mixin. [`PublicFrame`](public-frame.md#the-end-block) folds its own end block with them.
 
 ## Styling
 

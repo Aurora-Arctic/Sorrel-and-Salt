@@ -183,21 +183,6 @@
 
 // The shell's end block may give up width, which only the account button can, inside its own box: at its last step
 // the block may still outrun a 320px bar at a large text size by a few pixels (shell-end.tsx).
-.app-shell__end {
-  flex: 0 1 auto;
-  min-width: 0;
-}
-
-// Before the browser has measured it, the server's render, and a browser without script, clip what outruns the bar
-// rather than widen the page. While measuring, every item keeps its own width.
-.app-shell__end:not([data-fit], [data-measuring]) {
-  overflow: hidden;
-}
-
-.app-shell__end[data-measuring] > * {
-  flex: none;
-}
-
 // Add Ingredient as a plus: a square as tall as the label's button, its name kept for a screen reader. The icon's
 // box is a line tall, as the label is, and its padding draws the plus at 1rem inside it. Two classes: `.btn--medium`'s
 // padding comes later in the cascade.
