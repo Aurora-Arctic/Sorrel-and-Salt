@@ -52,7 +52,7 @@ Downshift's open callback fires only when the open state differs from the props 
 `useListPosition` (`position.ts`) places the open list on Floating UI's `useFloating`.
 
 - **As wide as its anchor**: `listAnchor`, else the control.
-- **Never off the screen.** It flips above when there is more room there, sits 8px from the screen's edge, and is no taller than the room it has: `size` sets `--combobox-list-room` and the stylesheet caps the list at `min(20rem, that)`, which holds the eight seeded category groups without a scroll.
+- **Never off the screen.** It flips above when there is more room there, sits 8px from the screen's edge, and is no taller than the room it has: `size` sets `--combobox-list-room` and the stylesheet caps the list at `min(20rem, that)`, which holds the eight seeded category groups without a scroll. It also sets `--combobox-list-width-room`, the window's width less both 8px edges, which the menus placed by `useListPosition` (`MenuButton`, the account panel) cap their width at, so a menu whose minimum width in rem outgrows a 320px window at a 200% text size still lies wholly inside it.
 - **Followed only while open** (`autoUpdate`). Every box's closed list stays in the page, as Downshift asks, and is not followed. A pending lookup never closes an open list, which keeps its last rows or shows the loading row, so typing never subscribes again and never reads the page's layout inside the keystroke.
 - **Fixed, not absolute**, so a scrolling ancestor such as a modal cannot clip it.
 - **Placed by a transform unless told not to.** `transform: false` places it by left and top instead, for a list holding a fixed tip that its own scroll must not clip: a transform would make the list the tip's containing block. The account panel uses it.

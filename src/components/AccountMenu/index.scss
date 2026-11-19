@@ -2,8 +2,8 @@
 @use '../../scss/mixins' as *;
 
 $account-menu-avatar: 2rem;
-// The window's edge either side (Floating UI's 8px) and the panel's 1px border.
-$panel-window-room: 18px;
+// The room the placement measured across the window, less the panel's 1px border either side.
+$panel-window-room: calc(var(--combobox-list-width-room, calc(100vw - 16px)) - 2px);
 
 .account-menu {
   position: relative;
@@ -111,8 +111,8 @@ $panel-window-room: 18px;
 .account-menu__panel {
   box-sizing: content-box;
   z-index: layer('floating');
-  min-width: min(#{$panel-min-width}, 100vw - #{$panel-window-room});
-  max-width: min(#{$panel-max-width}, 100vw - #{$panel-window-room});
+  min-width: min(#{$panel-min-width}, #{$panel-window-room});
+  max-width: min(#{$panel-max-width}, #{$panel-window-room});
   // No taller than the room the placement measured above the phone's bottom bar; the count tips are fixed and the
   // panel has no transform, so this scroll does not clip them.
   max-height: var(--combobox-list-room, none);

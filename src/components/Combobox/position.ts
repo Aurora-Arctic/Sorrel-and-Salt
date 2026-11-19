@@ -92,10 +92,17 @@ export function useListPosition(
       }),
       size((state) => ({
         padding: edges(state),
-        // As wide as the anchor unless told not to be, no taller than the room it has.
+        // As wide as the anchor unless told not to be, no taller than the room it has. `--combobox-list-width-room` is the
+        // window less both edges, so a list whose own minimum is wider than a narrow window at a large text size is capped
+        // to it in its stylesheet, and the shift above can then keep it whole.
         apply({ rects, availableHeight, elements: { floating } }) {
           if (matchWidth) setStyle(floating, 'width', `${rects.reference.width}px`);
           setStyle(floating, '--combobox-list-room', `${Math.max(0, availableHeight)}px`);
+          setStyle(
+            floating,
+            '--combobox-list-width-room',
+            `${Math.max(0, document.documentElement.clientWidth - 2 * EDGE_PX)}px`,
+          );
         },
       })),
     ],

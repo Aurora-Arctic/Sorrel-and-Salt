@@ -22,7 +22,12 @@
 .menu-button__menu {
   box-sizing: content-box;
   z-index: layer('floating');
-  min-width: $menu-min-width;
+  // No wider than the room the placement measured across the window, less this box's own padding and border.
+  min-width: min(
+    #{$menu-min-width},
+    var(--combobox-list-width-room, 100vw) - #{2 * space(1)} - 2px
+  );
+  max-width: calc(var(--combobox-list-width-room, 100vw) - #{2 * space(1)} - 2px);
   // A step of air all round, so an item's hover, focus and chosen fill sits inset from the
   // panel's edge and is never cut by it. The panel needs no clipping: nothing touches its
   // corners.
