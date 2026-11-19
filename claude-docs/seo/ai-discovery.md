@@ -81,3 +81,17 @@ absolute `siteUrl` address.
 ### Keeping copies out of search
 
 Noindex: entry opens Quick Look over the compendium and support the support dialog over any page, so each makes an address a copy of a real page; kept out of search results with links still followed. Anything but a production deploy tells search engines to index nothing because staging is a public URL that would otherwise be indexed as a duplicate of the compendium. VERCEL_ENV, not NODE_ENV, which is production on every deploy, staging included (the test impersonation uses, src/lib/impersonation.ts). Unset locally, so a dev server is noindex too.
+
+## A deleted entry's address
+
+A page can only answer 404, 403 or 401, so `src/proxy.ts` answers 410 Gone, with `X-Robots-Tag: noindex`, for the address of a deleted compendium entry (`/compendium/<slug>`). A 410 tells a crawler the entry is gone for good, so it drops the address sooner than it would a 404.
+
+The proxy imports no database code. It reads `GET /api/compendium/deleted-slugs`, a public list with no session, and answers 410 when the decoded slug is in it. The read times out after two seconds, and any failure passes the request on to the page, so a failed read costs a 404 and never breaks a live entry. The route is outside `/api/graphql` because it carries no application data (`.claude/rules/graphql.md`, "Access paths outside /api/graphql").
+
+`listDeletedCompendiumSlugs` holds the list in the data cache under the `compendium` tag, so a keeper write expires it. `findDeletedCompendiumSlugsIncludingSoftDeleted` builds it and keeps a slug only when:
+
+- the entry was in the compendium and was shown when deleted, because a hidden entry's address was never public;
+- no live compendium entry holds the slug now;
+- no live compendium entry has an unexpired redirect from it ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md)), because that address answers the live entry.
+
+A slug that is later reused or redirected leaves the list on the next cache expiry.
