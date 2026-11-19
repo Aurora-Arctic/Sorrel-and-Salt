@@ -65,7 +65,10 @@ describe('CompendiumList', () => {
     render(<CompendiumList {...props()} />);
 
     const rows = within(screen.getByRole('table')).getAllByRole('row');
-    const heads = screen.getAllByRole('columnheader').map((head) => head.textContent);
+    // A sortable heading also holds the copy drawn only when the table stacks, so its name is its sort link's.
+    const heads = screen
+      .getAllByRole('columnheader')
+      .map((head) => (within(head).queryByRole('link') ?? head).textContent);
     expect(heads.indexOf('Categories')).toBe(heads.indexOf('Form') + 1);
     expect(heads.indexOf('Sourcing Score')).toBe(heads.indexOf('Categories') + 1);
     const list = within(rows[1]).getByRole('list', { name: 'Categories' });
