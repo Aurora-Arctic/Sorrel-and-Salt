@@ -1,5 +1,5 @@
 /** Which heading a page's title is: `article` is a page that stands under the Help heading when it is staff help and is the page's heading under the public help header; the others are fixed. */
-export type HelpArticleTitleLevel = 'h1' | 'h2' | 'article';
+type HelpArticleTitleLevel = 'h1' | 'h2' | 'article';
 
 export interface HelpArticleTitleProps {
   title: string;
