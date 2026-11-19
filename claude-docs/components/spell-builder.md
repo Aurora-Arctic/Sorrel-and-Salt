@@ -144,7 +144,7 @@ The Jar section is one column at every width (the default dialog is 32rem of con
 
 - **Carried** is each assigned category the jar carries. **Missing** is each assigned category nothing in the jar carries, drawn hollow (`CategoryChips`' `absent`). **Extra** is each category the jar carries that was not assigned.
 - Every chip has a tip (`tipOf`) naming the ingredients carrying it (Carried, Extra) or saying nothing in the jar carries it (Missing); it is the chip's accessible description.
-- Carried and Missing draw every chip (`showAll`), each being bounded by the assigned categories. Extra draws its first eight (`EXTRA_CHIP_LIMIT`) and folds the rest into `CategoryChips`' own +N panel. The component is shared, so the builder, the spell page's side column and Quick Look fold alike.
+- Carried and Missing draw every chip (`showAll`), each being bounded by the assigned categories. Extra is ordered by how many distinct ingredients add each category, most first, ties by name; it draws the first eight (`EXTRA_CHIP_LIMIT`) and folds the rest into `CategoryChips`' own +N panel. The component is shared, so the builder, the spell page's side column and Quick Look fold alike.
 - With none of the three it says the intent and ingredients match. With no category assigned it does not list every ingredient as an extra: it asks for categories first.
 
 ## The categories, read once
