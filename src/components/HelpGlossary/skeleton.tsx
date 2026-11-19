@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { HelpHeading } from '../HelpChrome';
 import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
 import { SkeletonWords } from '../Skeleton/text';
 import './index.scss';
@@ -19,7 +20,9 @@ const ROWS = [
 export const HelpGlossarySkeleton = (): ReactElement => (
   <div className="help-page help-glossary">
     <HelpBackLinkSkeleton>Back to Help</HelpBackLinkSkeleton>
-    <h1 className="help-heading--2">Glossary</h1>
+    <HelpHeading level={2} up>
+      Glossary
+    </HelpHeading>
     <dl>
       {ROWS.map(([term, definition], n) => (
         <div key={n} className="help-glossary__entry">

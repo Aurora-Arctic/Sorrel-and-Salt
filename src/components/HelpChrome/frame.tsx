@@ -34,10 +34,16 @@ export function WhenHelpFramed({ children }: { children: ReactNode }): ReactNode
  */
 export function HelpHeading({
   level,
+  up,
   className,
   ...rest
-}: { level: 2 | 3 | 4 } & ComponentPropsWithoutRef<'h2'>): ReactElement {
-  const framed = useContext(Framed);
+}: {
+  level: 2 | 3 | 4;
+  /** Draws it one level up whether or not the page stands under the header, for a page that is public help alone (the glossary). */
+  up?: boolean;
+} & ComponentPropsWithoutRef<'h2'>): ReactElement {
+  const inFrame = useContext(Framed);
+  const framed = up ?? inFrame;
   const Tag = `h${framed ? level - 1 : level}` as 'h1' | 'h2' | 'h3';
   return <Tag className={cx(framed && `help-heading--${level}`, className)} {...rest} />;
 }

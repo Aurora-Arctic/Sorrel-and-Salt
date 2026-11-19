@@ -14,12 +14,12 @@ export function HelpArticleTitle({
 }: HelpArticleTitleProps): ReactElement {
   return (
     <div className="help-article__title">
-      {level === 'article' ? (
-        <HelpHeading level={2}>{title}</HelpHeading>
-      ) : level === 'h1' ? (
-        <h1 className="help-heading--2">{title}</h1>
-      ) : (
+      {level === 'h2' ? (
         <h2>{title}</h2>
+      ) : (
+        <HelpHeading level={2} up={level === 'h1' ? true : undefined}>
+          {title}
+        </HelpHeading>
       )}
       {editHref && <EditLink href={editHref as Route} name={editName} />}
     </div>
