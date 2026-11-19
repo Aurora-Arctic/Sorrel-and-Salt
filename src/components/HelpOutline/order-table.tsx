@@ -174,13 +174,15 @@ const HelpOrderTable = ({
             >
               <thead {...tableRole('rowgroup')}>
                 <tr {...tableRole('row')}>
-                  {/* Named Order by its label, so the toggle inside does not join the column's name. */}
+                  {/* Named Order by its label, so the toggle inside does not join the column's name; the hidden text
+                      is the header's own text, which the accessibility scan asks of every header. */}
                   <th
                     scope="col"
                     className="help-outline__grip-cell"
                     aria-label="Order"
                     {...tableRole('columnheader')}
                   >
+                    <span className="visually-hidden">Order</span>
                     <ReorderToggle />
                   </th>
                   <th scope="col" {...tableRole('columnheader')}>
