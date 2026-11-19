@@ -42,6 +42,12 @@ services:
       - ./agents-home:/home/node/.agents:cached
     init: true
     tty: true
+    # The Plannotator Inbox, for a host with no editor attached. The container
+    # side is 43502, the socat forwarder `postStartCommand` starts: the Inbox
+    # itself listens on the container's loopback, which a published port never
+    # reaches. The host side stays 43501, the address the Inbox accepts.
+    ports:
+      - '127.0.0.1:43501:43502'
     # ensure-deps.sh first (see Docker/docker-compose.yaml); `entrypoint` clears
     # the image's CMD, so the command is named below.
     entrypoint: ['sh', '/app/Docker/ensure-deps.sh']

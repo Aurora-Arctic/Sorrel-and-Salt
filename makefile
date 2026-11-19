@@ -13,7 +13,7 @@
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-jobs docker-all docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token playwright-server-up playwright-server-down playwright-audit-up playwright-audit-down lighthouse-up lighthouse-down docker-codegen \
-	devcontainer-build graphify-up graphify-down graphify-pages-up graphify-pages-down graphify-logs \
+	devcontainer-build devcontainer-up graphify-up graphify-down graphify-pages-up graphify-pages-down graphify-logs \
 	act-image act-cache-checkout act-check act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
@@ -182,9 +182,9 @@ docker-all:
 docker-e2e:
 	$(COMPOSE) --profile e2e run --rm e2e
 
-## Stop and remove the local stack, workshop/studio/jobs/e2e/audit profiles included (named volumes kept)
+## Stop and remove the local stack, the dev container and the code graph included (named volumes kept)
 docker-down:
-	$(COMPOSE) --profile workshop --profile studio --profile jobs --profile e2e --profile audit down
+	$(COMPOSE_DEV) --profile workshop --profile studio --profile jobs --profile e2e --profile audit --profile graph-pages down
 
 ## Tear down including volumes, then rebuild and start the app
 docker-rebuild:
@@ -228,6 +228,10 @@ lighthouse-down:
 ## Build the dev container image; then "Dev Containers: Rebuild Container" in VS Code
 devcontainer-build:
 	$(COMPOSE_DEV) build devcontainer
+
+## Start the dev container and the whole stack with VS Code closed (Dev Containers CLI)
+devcontainer-up:
+	npx --yes @devcontainers/cli up --workspace-folder .
 
 ## Start the code graph: the builder and its MCP server (graphify)
 graphify-up:

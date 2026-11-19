@@ -3,7 +3,8 @@
   "dockerComposeFile": ["../Docker/docker-compose.yaml", "docker-compose.yml"],
   "service": "devcontainer",
   "workspaceFolder": "/app",
-  "shutdownAction": "stopCompose",
+  // Closing VS Code leaves the stack running, as `make devcontainer-up` does; `make docker-down` stops it.
+  "shutdownAction": "none",
   "overrideCommand": false,
   "initializeCommand": "mkdir -p \"${localWorkspaceFolder}/Docker/claude-home\" \"${localWorkspaceFolder}/Docker/plannotator-home\" \"${localWorkspaceFolder}/Docker/agents-home\" \"${localWorkspaceFolder}/graphify-out\"",
   "features": {
@@ -16,9 +17,14 @@
     },
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
-  "postCreateCommand": "sudo apk add --no-cache github-cli && { gh extension install github/gh-stack || echo 'gh-stack was not installed; run: gh extension install github/gh-stack'; }",
+  "postCreateCommand": "sudo apk add --no-cache github-cli socat && { gh extension install github/gh-stack || echo 'gh-stack was not installed; run: gh extension install github/gh-stack'; }",
   // Starts the Plannotator Inbox with the container, so agents can post to it from the first session.
-  "postStartCommand": "plannotator inbox --background --no-open || echo 'The Plannotator Inbox did not start; run: plannotator inbox --background --no-open'",
+  // `forward` passes port 43502 on to the Inbox, which listens on the container's loopback alone, so
+  // the port compose publishes can reach it with no editor attached (claude-docs/docker.md).
+  "postStartCommand": {
+    "inbox": "plannotator inbox --background --no-open || echo 'The Plannotator Inbox did not start; run: plannotator inbox --background --no-open'",
+    "forward": "setsid -f socat TCP-LISTEN:43502,fork,reuseaddr TCP:127.0.0.1:43501 > /dev/null 2>&1"
+  },
   "forwardPorts": [
     8000, 8001, 4983, 3456, 9229, 9230, 9231, 9323, 9324, 51204, 7900, 19432, 19433, 19434, 19435,
     19436, 43501
