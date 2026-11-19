@@ -37,6 +37,7 @@ Compute has a dollar cost on Vercel, which is what makes an N+1 a billing bug. `
 
 - **`/api/auth/*`**: the OAuth handshake.
 - **`/llms.txt` and `/.well-known/*.json`**: sessionless public files, serving only the public compendium.
+- **`/indexnow-key.txt`**: a sessionless public file that answers the IndexNow key as plain text, or 404 while no key is set. It carries no application data (`claude-docs/seo/ai-discovery.md`, "Telling IndexNow a page changed").
 - **`/api/compendium/deleted-slugs`**: a sessionless public list of the slugs of compendium entries that were shown when a curator deleted them, read only by `src/proxy.ts` to answer 410. It is held in the data cache under the `compendium` tag.
 - **Share-card images**: Next generates them from each `opengraph-image.tsx` for `/`, `/compendium` and a compendium entry. They are sessionless and draw only what the public compendium shows.
 - **`/.well-known/workflow/`**: the durable job routes the SDK generates. They carry no application data and run services as the seeded System account.

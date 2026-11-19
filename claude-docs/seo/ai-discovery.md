@@ -95,3 +95,13 @@ The proxy imports no database code. It reads `GET /api/compendium/deleted-slugs`
 - no live compendium entry has an unexpired redirect from it ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md)), because that address answers the live entry.
 
 A slug that is later reused or redirected leaves the list on the next cache expiry.
+
+## Telling IndexNow a page changed
+
+After a keeper write that changes a public compendium entry or a public help page, `pingIndexNowAfterResponse` (`src/lib/indexnow.ts`) names the changed addresses to IndexNow, so a search engine that supports it recrawls them without waiting. The ping is scheduled with `after()` once the save has committed, next to the cache expiry and outside `withAudit`, so a save never waits on it and a failed ping never fails a save. A failure is logged without the key.
+
+- It sends only on a production deploy (`VERCEL_ENV`, as in the section above) with `INDEXNOW_KEY` set. Anywhere else, nothing is sent.
+- The key is proved by `GET /indexnow-key.txt` (`src/app/indexnow-key.txt/route.ts`), a public route that answers the key as plain text, or 404 while no key is set. The key is never written in the repo.
+- Compendium writes ping the entry's address; a write that changes a slug or hides an entry pings the old address too, and an entry that stays hidden pings nothing. Reviewed marks, references and vocabulary writes ping nothing.
+- Help writes ping `helpPath` of a public article with its `#fragment` removed: a term pings `/help/glossary` and a FAQ entry pings `/help`. Staff help and guide or FAQ reordering ping nothing.
+- Seed files and migrations change pages without a ping. A change made that way reaches a search engine only when it recrawls.
