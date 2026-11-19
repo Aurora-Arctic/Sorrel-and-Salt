@@ -10,6 +10,7 @@ import { useAnnounce } from '../ClickFeedback/status-region';
 import EmptyState from '../EmptyState';
 import Spinner from '../Spinner';
 import TableFrame from '../TableFrame';
+import { ReorderMode, ReorderToggle } from '../ReorderMode';
 import { MoveFailedNotice, useOptimisticOrder } from './use-optimistic-order';
 import { SortableColumn } from '@/lib/sortable/column';
 import { useHelpSortableRow } from './sortable';
@@ -152,58 +153,71 @@ const HelpOrderTable = ({
     <>
       {failed && <MoveFailedNotice move={failed} onRetry={() => void save(failed)} />}
       {/* Round the table, not its body: dnd-kit draws its instructions in a div, which a table may not hold. */}
-      <SortableColumn
-        saysMove
-        ids={listed.map((row) => row.id)}
-        names={listed.map((row) => row.title)}
-        onMove={onMove}
-      >
-        {/* The pane around this table is a region named by its heading, which is `label` too; a second region of that name fails the accessibility scan. */}
-        <TableFrame label={`${label} Table`}>
-          <table
-            className="data-table data-table--stack help-outline__order-table"
-            aria-label={label}
-            {...tableRole('table')}
-          >
-            <thead {...tableRole('rowgroup')}>
-              <tr {...tableRole('row')}>
-                <th scope="col" className="help-outline__grip-cell" {...tableRole('columnheader')}>
-                  <span className="visually-hidden">Order</span>
-                </th>
-                <th scope="col" {...tableRole('columnheader')}>
-                  Position
-                </th>
-                {columns.map((column) => (
+      <ReorderMode name={label}>
+        <SortableColumn
+          saysMove
+          ids={listed.map((row) => row.id)}
+          names={listed.map((row) => row.title)}
+          onMove={onMove}
+        >
+          {/* The pane around this table is a region named by its heading, which is `label` too; a second region of that name fails the accessibility scan. */}
+          <TableFrame label={`${label} Table`}>
+            {/* The toggle stands in the grip column's heading on a wide table and on this line over the cards, whose
+              headings are hidden; each copy is display: none where the other shows, so only one is ever named. */}
+            <div className="help-outline__reorder-line">
+              <ReorderToggle />
+            </div>
+            <table
+              className="data-table data-table--stack help-outline__order-table"
+              aria-label={label}
+              {...tableRole('table')}
+            >
+              <thead {...tableRole('rowgroup')}>
+                <tr {...tableRole('row')}>
+                  {/* Named Order by its label, so the toggle inside does not join the column's name. */}
                   <th
-                    key={column.heading}
                     scope="col"
-                    className={column.className}
+                    className="help-outline__grip-cell"
+                    aria-label="Order"
                     {...tableRole('columnheader')}
                   >
-                    {column.hiddenHeading ? (
-                      <span className="visually-hidden">{column.heading}</span>
-                    ) : (
-                      column.heading
-                    )}
+                    <ReorderToggle />
                   </th>
+                  <th scope="col" {...tableRole('columnheader')}>
+                    Position
+                  </th>
+                  {columns.map((column) => (
+                    <th
+                      key={column.heading}
+                      scope="col"
+                      className={column.className}
+                      {...tableRole('columnheader')}
+                    >
+                      {column.hiddenHeading ? (
+                        <span className="visually-hidden">{column.heading}</span>
+                      ) : (
+                        column.heading
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody {...tableRole('rowgroup')}>
+                {listed.map((row) => (
+                  <OrderRow
+                    key={row.id}
+                    row={row}
+                    place={(placeOf.get(row.id) ?? row.index) + 1}
+                    columns={columns}
+                    busy={saving === row.id}
+                    disabled={saving !== undefined}
+                  />
                 ))}
-              </tr>
-            </thead>
-            <tbody {...tableRole('rowgroup')}>
-              {listed.map((row) => (
-                <OrderRow
-                  key={row.id}
-                  row={row}
-                  place={(placeOf.get(row.id) ?? row.index) + 1}
-                  columns={columns}
-                  busy={saving === row.id}
-                  disabled={saving !== undefined}
-                />
-              ))}
-            </tbody>
-          </table>
-        </TableFrame>
-      </SortableColumn>
+              </tbody>
+            </table>
+          </TableFrame>
+        </SortableColumn>
+      </ReorderMode>
     </>
   );
 };

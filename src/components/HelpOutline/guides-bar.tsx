@@ -9,7 +9,7 @@ import { useDismiss } from '../../lib/use-dismiss';
 import { byAudience, HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { useAnnounce } from '../ClickFeedback/status-region';
-import { ReorderButton } from '../IconTip';
+import { ReorderMode, ReorderToggle } from '../ReorderMode';
 import Spinner from '../Spinner';
 import HiddenEye from './eye';
 import HelpGuideSelect from './guide-select';
@@ -126,9 +126,8 @@ const HelpGuidesBar = ({
     );
   };
 
-  const open = (from: 'bar' | 'phone') => {
+  const open = () => {
     clearFailed();
-    setFocusBack(from);
     setReordering(true);
     announce(
       'Reorder mode. Drag a guide by its handle, press its Move Up or Move Down button, or focus its handle and press Space.',
@@ -168,11 +167,10 @@ const HelpGuidesBar = ({
   };
 
   const reorderButton = (from: 'bar' | 'phone') => (
-    <ReorderButton
+    <ReorderToggle
       ref={from === 'bar' ? barButton : phoneButton}
       className={`help-outline__reorder-open help-outline__reorder-open--${from}`}
-      pressed={reordering}
-      onClick={() => (reordering ? close() : open(from))}
+      onPress={() => setFocusBack(from)}
     />
   );
   const canReorder = order.length > 1;
@@ -190,121 +188,126 @@ const HelpGuidesBar = ({
   const current = [...guides, ...others].find((entry) => entry.current)?.href;
 
   return (
-    <div className={reordering ? 'help-outline__side is-reordering' : 'help-outline__side'}>
-      <nav className="help-outline__nav" aria-label="Help Outline">
-        {others.length > 0 && (
-          <>
-            <div className="help-outline__heading">
-              <p id={`${id}-others`} className="help-outline__group">
-                Reference
-              </p>
-            </div>
-            <ul aria-labelledby={`${id}-others`}>
-              {others.map((other) => (
-                <li key={other.label}>
-                  <PendingLink href={other.href} aria-current={other.current ? 'page' : undefined}>
-                    <span className="help-outline__label">{other.label}</span>
-                  </PendingLink>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        {(guides.length > 0 || canReorder) && (
-          <div className="help-outline__heading">
-            <p className="help-outline__group">Guides</p>
-            {canReorder && reorderButton('bar')}
-          </div>
-        )}
-        {reordering ? (
-          <div className="help-outline__mode" ref={modeRef}>
-            {byGroup(rows).map(({ audience, entries }) => (
-              <div key={audience} className="help-outline__run">
-                <p
-                  id={`${id}-mode-${audience}`}
-                  className="help-outline__group help-outline__group--sub"
-                >
-                  {HELP_AUDIENCE_LABELS[audience]}
+    <ReorderMode name="Guides" on={reordering} onChange={(next) => (next ? open() : close())}>
+      <div className={reordering ? 'help-outline__side is-reordering' : 'help-outline__side'}>
+        <nav className="help-outline__nav" aria-label="Help Outline">
+          {others.length > 0 && (
+            <>
+              <div className="help-outline__heading">
+                <p id={`${id}-others`} className="help-outline__group">
+                  Reference
                 </p>
-                {/* One sortable per audience, so neither a pointer nor a key carries a guide out of its own. */}
-                <SortableColumn
-                  saysMove
-                  ids={entries.map((entry) => entry.id)}
-                  names={entries.map((entry) => entry.title)}
-                  onMove={(from, to) => onMove(audience, from, to)}
-                >
-                  <ul
-                    className="help-outline__reorder"
-                    aria-labelledby={`${id}-mode-${audience}`}
-                    aria-busy={saving !== undefined || undefined}
+              </div>
+              <ul aria-labelledby={`${id}-others`}>
+                {others.map((other) => (
+                  <li key={other.label}>
+                    <PendingLink
+                      href={other.href}
+                      aria-current={other.current ? 'page' : undefined}
+                    >
+                      <span className="help-outline__label">{other.label}</span>
+                    </PendingLink>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {(guides.length > 0 || canReorder) && (
+            <div className="help-outline__heading">
+              <p className="help-outline__group">Guides</p>
+              {canReorder && reorderButton('bar')}
+            </div>
+          )}
+          {reordering ? (
+            <div className="help-outline__mode" ref={modeRef}>
+              {byGroup(rows).map(({ audience, entries }) => (
+                <div key={audience} className="help-outline__run">
+                  <p
+                    id={`${id}-mode-${audience}`}
+                    className="help-outline__group help-outline__group--sub"
                   >
-                    {entries.map((entry, at) => (
-                      <ReorderRow
-                        key={entry.id}
-                        entry={entry}
-                        place={at + 1}
-                        busy={saving === entry.id}
-                        disabled={saving !== undefined}
-                      />
+                    {HELP_AUDIENCE_LABELS[audience]}
+                  </p>
+                  {/* One sortable per audience, so neither a pointer nor a key carries a guide out of its own. */}
+                  <SortableColumn
+                    saysMove
+                    ids={entries.map((entry) => entry.id)}
+                    names={entries.map((entry) => entry.title)}
+                    onMove={(from, to) => onMove(audience, from, to)}
+                  >
+                    <ul
+                      className="help-outline__reorder"
+                      aria-labelledby={`${id}-mode-${audience}`}
+                      aria-busy={saving !== undefined || undefined}
+                    >
+                      {entries.map((entry, at) => (
+                        <ReorderRow
+                          key={entry.id}
+                          entry={entry}
+                          place={at + 1}
+                          busy={saving === entry.id}
+                          disabled={saving !== undefined}
+                        />
+                      ))}
+                    </ul>
+                  </SortableColumn>
+                </div>
+              ))}
+              {failed && <MoveFailedNotice move={failed} onRetry={() => void save(failed)} />}
+            </div>
+          ) : (
+            <>
+              {byGroup(guides).map(({ audience, entries }) => (
+                <div key={audience} className="help-outline__run">
+                  <p
+                    id={`${id}-run-${audience}`}
+                    className="help-outline__group help-outline__group--sub"
+                  >
+                    {HELP_AUDIENCE_LABELS[audience]}
+                  </p>
+                  <ul aria-labelledby={`${id}-run-${audience}`}>
+                    {entries.map((guide) => (
+                      <li key={guide.id}>
+                        <PendingLink
+                          href={guide.href as Route}
+                          aria-current={guide.current ? 'page' : undefined}
+                          className={guide.shown ? undefined : 'is-hidden'}
+                        >
+                          <span className="help-outline__label">{guide.title}</span>
+                          {(!guide.shown || guide.subPages > 0) && (
+                            <>
+                              {' '}
+                              <span className="help-outline__marks">
+                                {!guide.shown && <HiddenEye />}
+                                {!guide.shown && guide.subPages > 0 && ' '}
+                                {guide.subPages > 0 && (
+                                  <span className="badge help-outline__count">
+                                    {`${guide.subPages} `}
+                                    <span className="visually-hidden">
+                                      {plural(guide.subPages, 'Sub Page', 'Sub Pages')}
+                                    </span>
+                                  </span>
+                                )}
+                              </span>
+                            </>
+                          )}
+                        </PendingLink>
+                      </li>
                     ))}
                   </ul>
-                </SortableColumn>
-              </div>
-            ))}
-            {failed && <MoveFailedNotice move={failed} onRetry={() => void save(failed)} />}
+                </div>
+              ))}
+            </>
+          )}
+        </nav>
+        {select && choices.length > 0 && (
+          <div className="help-outline__select">
+            <HelpGuideSelect choices={choices} current={current} />
+            {canReorder && !reordering && reorderButton('phone')}
           </div>
-        ) : (
-          <>
-            {byGroup(guides).map(({ audience, entries }) => (
-              <div key={audience} className="help-outline__run">
-                <p
-                  id={`${id}-run-${audience}`}
-                  className="help-outline__group help-outline__group--sub"
-                >
-                  {HELP_AUDIENCE_LABELS[audience]}
-                </p>
-                <ul aria-labelledby={`${id}-run-${audience}`}>
-                  {entries.map((guide) => (
-                    <li key={guide.id}>
-                      <PendingLink
-                        href={guide.href as Route}
-                        aria-current={guide.current ? 'page' : undefined}
-                        className={guide.shown ? undefined : 'is-hidden'}
-                      >
-                        <span className="help-outline__label">{guide.title}</span>
-                        {(!guide.shown || guide.subPages > 0) && (
-                          <>
-                            {' '}
-                            <span className="help-outline__marks">
-                              {!guide.shown && <HiddenEye />}
-                              {!guide.shown && guide.subPages > 0 && ' '}
-                              {guide.subPages > 0 && (
-                                <span className="badge help-outline__count">
-                                  {`${guide.subPages} `}
-                                  <span className="visually-hidden">
-                                    {plural(guide.subPages, 'Sub Page', 'Sub Pages')}
-                                  </span>
-                                </span>
-                              )}
-                            </span>
-                          </>
-                        )}
-                      </PendingLink>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </>
         )}
-      </nav>
-      {select && choices.length > 0 && (
-        <div className="help-outline__select">
-          <HelpGuideSelect choices={choices} current={current} />
-          {canReorder && !reordering && reorderButton('phone')}
-        </div>
-      )}
-    </div>
+      </div>
+    </ReorderMode>
   );
 };
 

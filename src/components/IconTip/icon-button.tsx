@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactElement, Ref } from 'react';
+import type { MouseEvent, ReactElement, Ref } from 'react';
 import type { PreloadHandlers } from '../../lib/types';
 import MenuButton from '../MenuButton';
 import type { IconButtonProps } from './types';
@@ -86,14 +86,16 @@ export const EditButton = ({
   </IconTip>
 );
 
-/** Toggles a list's Reorder Mode: named and tipped Reorder alone, since the list is the one beside it; pressed while the mode is on. */
+/** Toggles a list's Reorder Mode: tipped Reorder, and named for its list, since a page may hold several; pressed while the mode is on. */
 export const ReorderButton = ({
+  name,
   onClick,
   pressed,
   className,
   ref,
 }: {
-  onClick: () => void;
+  name: string;
+  onClick: (event: MouseEvent<HTMLButtonElement>) => void;
   pressed: boolean;
   className?: string;
   ref?: Ref<HTMLButtonElement>;
@@ -107,7 +109,7 @@ export const ReorderButton = ({
       onClick={onClick}
     >
       <ReorderIcon />
-      <span className="visually-hidden">Reorder</span>
+      <span className="visually-hidden">Reorder {name}</span>
     </button>
   </IconTip>
 );

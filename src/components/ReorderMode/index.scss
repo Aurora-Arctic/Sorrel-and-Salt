@@ -1,0 +1,22 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The toggle on: the accent's tint, as the pencil wears on hover, with an accent edge, so it reads as pressed whether or
+// not the pointer rests on it.
+.reorder-toggle[aria-pressed='true'] {
+  &,
+  &:hover {
+    background-color: color-mix(in srgb, $accent 20%, $surface-card);
+    box-shadow: inset 0 0 0 1px $accent;
+    color: $accent;
+  }
+
+  // Tints are dropped, so the pressed toggle takes the Highlight fill.
+  @include forced-colors {
+    &,
+    &:hover {
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
+}

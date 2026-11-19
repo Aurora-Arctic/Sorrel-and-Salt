@@ -297,6 +297,7 @@ export function ListField({
         <Combobox
           id={boxId}
           label={entry}
+          listName={legend}
           value={text}
           onChange={(typed) => {
             clearRefusal();

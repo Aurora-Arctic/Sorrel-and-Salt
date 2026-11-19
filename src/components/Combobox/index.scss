@@ -19,6 +19,15 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   min-width: 0;
 }
 
+// An ordered list's Reorder toggle, at the end of the line over the control, under the field's label. Its tip's wrapper
+// is the box's one direct icon-tip child.
+.combobox > .icon-tip:has(> .combobox__reorder) {
+  display: block;
+  width: fit-content;
+  margin-inline-start: auto;
+  margin-block-end: space(1);
+}
+
 // `.input`'s edge, fill and states, as a flex row that wraps: the entries, the text, then the indicators; compounded with `.input` so a lone class does not lose to `body .input`
 // (claude-docs/components/combobox.md, "Control").
 .input.combobox__control {

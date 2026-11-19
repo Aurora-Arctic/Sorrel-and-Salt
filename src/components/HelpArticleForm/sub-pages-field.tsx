@@ -97,6 +97,7 @@ export function HelpSubPagesField({
       <Combobox
         id={`${id}-box`}
         label="Add Sub Page"
+        listName="Sub Pages"
         value={text}
         onChange={setText}
         onPick={(picked) => {

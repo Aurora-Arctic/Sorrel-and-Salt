@@ -399,6 +399,17 @@ $step-line: type-size('body') * 1.65;
     }
   }
 
+  // The instruction step's grip and arrows stack as the ingredient step's do, so both keep one button's width.
+  .step-row.step-row--instruction .step-row__handle {
+    flex-direction: column;
+    height: auto;
+    min-height: $step-line;
+
+    > .grip-handle__move {
+      margin-inline-start: 0;
+    }
+  }
+
   .step-row.step-row--instruction.step-row--folded .step-row__text {
     display: -webkit-box;
     max-block-size: calc(#{$step-line} * 2);

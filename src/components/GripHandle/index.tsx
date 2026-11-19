@@ -5,11 +5,13 @@ import { SortableMoveContext } from '@/lib/sortable/move';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import { GripIcon } from '../Combobox/icons';
 import { ChevronIcon } from '../IconTip/icons';
+import { useReorderMode } from '../ReorderMode';
 import type { GripHandleProps } from './types';
 import './index.scss';
 
 // The controls a sortable item is moved by: the grip, for pointer and keyboard drag from dnd-kit's listeners and the sort
-// list's keys from src/lib/sortable, and beside it Move Up and Move Down, single presses for a person who cannot drag.
+// list's keys from src/lib/sortable, and beside it Move Up and Move Down, single presses for a person who cannot drag,
+// drawn only while the list's Reorder toggle is on (src/components/ReorderMode).
 
 export default function GripHandle({
   sortable,
@@ -23,6 +25,7 @@ export default function GripHandle({
 }: GripHandleProps): ReactElement {
   const { setActivatorNodeRef, listeners, attributes, index, items } = sortable;
   const moving = useContext(SortableMoveContext);
+  const { reordering } = useReorderMode();
   const announce = useAnnounce();
   // The button's own role stands; dnd-kit's would make it a second one. Its instructions follow `describedBy`.
   const { role: _role, 'aria-describedby': instructions, ...rest } = attributes;
@@ -39,6 +42,7 @@ export default function GripHandle({
     <button
       type="button"
       className="grip-handle__move"
+      data-reorder-move
       aria-label={`${label} ${name}`}
       aria-disabled={unavailable(by) || undefined}
       onClick={() => press(by)}
@@ -64,7 +68,7 @@ export default function GripHandle({
         <GripIcon />
         {children}
       </button>
-      {moving && (
+      {reordering && moving && (
         <>
           {mover(-1, 'Move Up')}
           {mover(1, 'Move Down')}

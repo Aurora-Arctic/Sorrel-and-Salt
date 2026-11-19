@@ -16,6 +16,7 @@ import {
 import { chipColors } from '../../lib/chip-colors';
 import { fold, hasText, plural } from '@/lib/text';
 import Spinner from '../Spinner';
+import { ReorderMode, ReorderToggle } from '../ReorderMode';
 import { ChevronIcon } from '../IconTip/icons';
 import {
   ClearButton,
@@ -188,6 +189,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   suggestions,
   empty,
   entries,
+  listName,
   clear,
   leading,
   toggle = true,
@@ -395,173 +397,177 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   };
 
   return (
-    <div className={popupOpen ? 'combobox is-open' : 'combobox'}>
-      {/* Named by a hidden <label> where the caller names none, as Chrome flags a field only an aria-label names. */}
-      {!labelId && <label {...getLabelProps({ className: 'visually-hidden' })}>{label}</label>}
-      {/* Presentational: the press is for the pointer; the box inside is the control. */}
-      <div
-        ref={setControl}
-        role="presentation"
-        className={invalid ? 'input combobox__control is-invalid' : 'input combobox__control'}
-        onMouseDown={focusText}
-      >
-        {/* The caller's own control, ahead of the text so the tab order reads as the screen does; focusText leaves a press in it alone. */}
-        {leading && <div className="combobox__leading">{leading}</div>}
-        <div className="combobox__values">
-          {entries}
-          {/* The chosen choice's mark, ahead of the text; a press on it is a press on the text. */}
-          {icon && (
-            <span className="combobox__icon combobox__lead" aria-hidden="true">
-              {icon}
-            </span>
-          )}
-          {/* The text's slot, sized by a hidden copy when qualified, always in the page so a pick never remounts the box. */}
-          <span
-            className={qualifier ? 'combobox__text is-qualified' : 'combobox__text'}
-            data-value={value}
-            style={chipsRoom(Boolean(entries), placeholder)}
-          >
-            <input
-              className="combobox__input"
-              {...withoutEmptyDescendant(
-                getInputProps({
-                  ref: inputRef,
-                  name,
-                  placeholder,
-                  spellCheck,
-                  autoCapitalize,
-                  enterKeyHint,
-                  [SEARCH_TEXT_ATTRIBUTE]: searchText || undefined,
-                  'aria-required': required || undefined,
-                  // One character wide of its own, so that the slot, not the
-                  // browser's default of twenty, decides how wide the text is.
-                  size: 1,
-                  // The field's own description first, then the qualifier's, so a
-                  // reader hears the hint before what the pick adds.
-                  'aria-describedby':
-                    [
-                      describedBy,
-                      qualifier && `${qualifierId}-text`,
-                      detail && `${qualifierId}-detail`,
-                    ]
-                      .filter(Boolean)
-                      .join(' ') || undefined,
-                  'aria-invalid': invalid,
-                  'aria-busy': busy || undefined,
-                  onKeyDown,
-                  // Typing always wants the list: Downshift's open callback alone misses a key landing just after a pick closed it, before that render committed
-                  // (claude-docs/components/combobox.md, "Typing always wants the list").
-                  onChange: (event: ChangeEvent<HTMLInputElement>) => {
-                    setWantsOpen(true);
-                    onChange(event.target.value);
-                  },
-                  onFocus: () => {
-                    tip.current?.show();
-                    onFocus?.();
-                  },
-                  onBlur: () => {
-                    tip.current?.hide();
-                    // An open list is Downshift's to close on blur; one wanted but empty is not open to it, so the wish is dropped here.
-                    if (!isOpen) setWantsOpen(false);
-                    onBlur?.();
-                  },
-                }),
-              )}
-            />
-          </span>
-          {qualifier && (
-            // Hover on a wrapper holding the tooltip, so the pointer can move onto it without closing it.
-            <TipAnchor
-              className="combobox__qualifier"
-              bubbleClass="combobox__qualifier-tip"
-              canOpen={hasDetail}
-              placement="top-start"
-              handle={tip}
-              // In the page while closed, faded out and aria-hidden, as an entry's is; read through the box's description.
-              bubble={detail ? <span id={`${qualifierId}-detail`}>{detail}</span> : undefined}
-            >
-              {/* In brackets, as the row picked read: "Wax (Animal)". */}
-              <span id={`${qualifierId}-text`}>({qualifier.text})</span>
-            </TipAnchor>
-          )}
-        </div>
-        {(clear || (hasSource && toggle) || busy) && (
-          <div className="combobox__indicators">
-            {/* Always drawn once the caller has a clear, hidden when empty, so the control's width never changes. */}
-            {clear && (
-              <ClearButton empty={clear.empty} label={clear.label} onClear={clear.onClear} />
+    // The mode offers its toggle only once an ordered list of entries inside says it is there.
+    <ReorderMode name={listName ?? label} waitForList>
+      <div className={popupOpen ? 'combobox is-open' : 'combobox'}>
+        {/* Named by a hidden <label> where the caller names none, as Chrome flags a field only an aria-label names. */}
+        {!labelId && <label {...getLabelProps({ className: 'visually-hidden' })}>{label}</label>}
+        <ReorderToggle className="combobox__reorder" />
+        {/* Presentational: the press is for the pointer; the box inside is the control. */}
+        <div
+          ref={setControl}
+          role="presentation"
+          className={invalid ? 'input combobox__control is-invalid' : 'input combobox__control'}
+          onMouseDown={focusText}
+        >
+          {/* The caller's own control, ahead of the text so the tab order reads as the screen does; focusText leaves a press in it alone. */}
+          {leading && <div className="combobox__leading">{leading}</div>}
+          <div className="combobox__values">
+            {entries}
+            {/* The chosen choice's mark, ahead of the text; a press on it is a press on the text. */}
+            {icon && (
+              <span className="combobox__icon combobox__lead" aria-hidden="true">
+                {icon}
+              </span>
             )}
-            {/* After the clear, as react-select draws it, so the spinner sits by the chevron. */}
-            {busy && <Spinner />}
-            {clear && hasSource && toggle && <IndicatorSeparator empty={clear.empty} />}
-            {hasSource && toggle && (
-              <button
-                type="button"
-                className="combobox__indicator"
-                {...getToggleButtonProps({ 'aria-label': `Show ${label} ${noun}s` })}
+            {/* The text's slot, sized by a hidden copy when qualified, always in the page so a pick never remounts the box. */}
+            <span
+              className={qualifier ? 'combobox__text is-qualified' : 'combobox__text'}
+              data-value={value}
+              style={chipsRoom(Boolean(entries), placeholder)}
+            >
+              <input
+                className="combobox__input"
+                {...withoutEmptyDescendant(
+                  getInputProps({
+                    ref: inputRef,
+                    name,
+                    placeholder,
+                    spellCheck,
+                    autoCapitalize,
+                    enterKeyHint,
+                    [SEARCH_TEXT_ATTRIBUTE]: searchText || undefined,
+                    'aria-required': required || undefined,
+                    // One character wide of its own, so that the slot, not the
+                    // browser's default of twenty, decides how wide the text is.
+                    size: 1,
+                    // The field's own description first, then the qualifier's, so a
+                    // reader hears the hint before what the pick adds.
+                    'aria-describedby':
+                      [
+                        describedBy,
+                        qualifier && `${qualifierId}-text`,
+                        detail && `${qualifierId}-detail`,
+                      ]
+                        .filter(Boolean)
+                        .join(' ') || undefined,
+                    'aria-invalid': invalid,
+                    'aria-busy': busy || undefined,
+                    onKeyDown,
+                    // Typing always wants the list: Downshift's open callback alone misses a key landing just after a pick closed it, before that render committed
+                    // (claude-docs/components/combobox.md, "Typing always wants the list").
+                    onChange: (event: ChangeEvent<HTMLInputElement>) => {
+                      setWantsOpen(true);
+                      onChange(event.target.value);
+                    },
+                    onFocus: () => {
+                      tip.current?.show();
+                      onFocus?.();
+                    },
+                    onBlur: () => {
+                      tip.current?.hide();
+                      // An open list is Downshift's to close on blur; one wanted but empty is not open to it, so the wish is dropped here.
+                      if (!isOpen) setWantsOpen(false);
+                      onBlur?.();
+                    },
+                  }),
+                )}
+              />
+            </span>
+            {qualifier && (
+              // Hover on a wrapper holding the tooltip, so the pointer can move onto it without closing it.
+              <TipAnchor
+                className="combobox__qualifier"
+                bubbleClass="combobox__qualifier-tip"
+                canOpen={hasDetail}
+                placement="top-start"
+                handle={tip}
+                // In the page while closed, faded out and aria-hidden, as an entry's is; read through the box's description.
+                bubble={detail ? <span id={`${qualifierId}-detail`}>{detail}</span> : undefined}
               >
-                <ChevronIcon />
-              </button>
+                {/* In brackets, as the row picked read: "Wax (Animal)". */}
+                <span id={`${qualifierId}-text`}>({qualifier.text})</span>
+              </TipAnchor>
             )}
           </div>
+          {(clear || (hasSource && toggle) || busy) && (
+            <div className="combobox__indicators">
+              {/* Always drawn once the caller has a clear, hidden when empty, so the control's width never changes. */}
+              {clear && (
+                <ClearButton empty={clear.empty} label={clear.label} onClear={clear.onClear} />
+              )}
+              {/* After the clear, as react-select draws it, so the spinner sits by the chevron. */}
+              {busy && <Spinner />}
+              {clear && hasSource && toggle && <IndicatorSeparator empty={clear.empty} />}
+              {hasSource && toggle && (
+                <button
+                  type="button"
+                  className="combobox__indicator"
+                  {...getToggleButtonProps({ 'aria-label': `Show ${label} ${noun}s` })}
+                >
+                  <ChevronIcon />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        {/* Always in the page, as Downshift asks; empty and hidden while closed. */}
+        <Popup
+          wrapped={wrapped}
+          popupRef={setList}
+          open={popupOpen}
+          style={listStyle}
+          placement={placement}
+          after={<>{showEmpty && <EmptyMessage>{message}</EmptyMessage>}</>}
+        >
+          <ul
+            className={cx('combobox__list', listOpen && 'is-open', wrapped && 'is-inset')}
+            style={wrapped ? undefined : listStyle}
+            data-placement={wrapped ? undefined : placement}
+            {...getMenuProps({
+              ref: wrapped ? undefined : setList,
+              'aria-label': `${label} ${noun}s`,
+              'aria-busy': busy || undefined,
+            })}
+          >
+            {isOpen && firstRow && row(firstRow)}
+            {isOpen && actionFirst && lastRow && row(lastRow)}
+            {isOpen &&
+              buckets.map((bucket) =>
+                bucket.heading === null ? (
+                  bucket.rows.map(row)
+                ) : (
+                  <OptionGroup
+                    key={bucket.key}
+                    headingId={`${headingId}-${bucket.key}`}
+                    heading={bucket.heading}
+                  >
+                    {bucket.rows.map(row)}
+                  </OptionGroup>
+                ),
+              )}
+            {isOpen && !actionFirst && lastRow && row(lastRow)}
+            {loading && (
+              <li className="combobox__loading" aria-hidden="true">
+                <Spinner />
+                {`Looking for ${noun}s`}
+              </li>
+            )}
+          </ul>
+        </Popup>
+        {/* What the list holds, for a screen reader, as the rows arrive after the typing. */}
+        {hasSource && (
+          <output className="visually-hidden" aria-label={`${label} ${noun}s`}>
+            {statusOf(
+              listOpen,
+              suggestions && { options: shown, pending: busy },
+              noun,
+              showEmpty ? message : undefined,
+            )}
+          </output>
         )}
       </div>
-      {/* Always in the page, as Downshift asks; empty and hidden while closed. */}
-      <Popup
-        wrapped={wrapped}
-        popupRef={setList}
-        open={popupOpen}
-        style={listStyle}
-        placement={placement}
-        after={<>{showEmpty && <EmptyMessage>{message}</EmptyMessage>}</>}
-      >
-        <ul
-          className={cx('combobox__list', listOpen && 'is-open', wrapped && 'is-inset')}
-          style={wrapped ? undefined : listStyle}
-          data-placement={wrapped ? undefined : placement}
-          {...getMenuProps({
-            ref: wrapped ? undefined : setList,
-            'aria-label': `${label} ${noun}s`,
-            'aria-busy': busy || undefined,
-          })}
-        >
-          {isOpen && firstRow && row(firstRow)}
-          {isOpen && actionFirst && lastRow && row(lastRow)}
-          {isOpen &&
-            buckets.map((bucket) =>
-              bucket.heading === null ? (
-                bucket.rows.map(row)
-              ) : (
-                <OptionGroup
-                  key={bucket.key}
-                  headingId={`${headingId}-${bucket.key}`}
-                  heading={bucket.heading}
-                >
-                  {bucket.rows.map(row)}
-                </OptionGroup>
-              ),
-            )}
-          {isOpen && !actionFirst && lastRow && row(lastRow)}
-          {loading && (
-            <li className="combobox__loading" aria-hidden="true">
-              <Spinner />
-              {`Looking for ${noun}s`}
-            </li>
-          )}
-        </ul>
-      </Popup>
-      {/* What the list holds, for a screen reader, as the rows arrive after the typing. */}
-      {hasSource && (
-        <output className="visually-hidden" aria-label={`${label} ${noun}s`}>
-          {statusOf(
-            listOpen,
-            suggestions && { options: shown, pending: busy },
-            noun,
-            showEmpty ? message : undefined,
-          )}
-        </output>
-      )}
-    </div>
+    </ReorderMode>
   );
 }
 

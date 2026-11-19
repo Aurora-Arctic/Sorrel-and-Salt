@@ -18,6 +18,7 @@ import {
   useSortableAnnouncements,
   useSortableSensors,
 } from '@/lib/sortable';
+import { useReorderList } from '../ReorderMode';
 import { ComboboxEntry } from './entry';
 import { flow, originOf, placeFor, shapeOf } from './flow';
 import type { ComboboxSortableEntriesProps, ComboboxSortableEntry, FlowShape } from './types';
@@ -35,6 +36,7 @@ export function ComboboxSortableEntries({
 }: ComboboxSortableEntriesProps): ReactElement {
   // dnd-kit numbers its regions from a module counter unless given an id, which a server render and the browser's would number apart.
   const id = useId();
+  useReorderList();
   const ids = entries.map((entry) => entry.id);
   const indexOf = (key: UniqueIdentifier) => ids.indexOf(String(key));
   const valueOf = (key: UniqueIdentifier) => entries[indexOf(key)]?.value;

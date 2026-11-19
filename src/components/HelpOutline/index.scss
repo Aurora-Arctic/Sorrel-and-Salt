@@ -339,6 +339,24 @@
   block-size: 1lh;
 }
 
+// The order table's Reorder toggle: in the grip column's heading on a wide table, on its own line over the cards,
+// whose headings are hidden. display: none, not hidden from sight alone, so only one copy is ever named.
+.help-outline__reorder-line {
+  margin-block-end: space(2);
+}
+
+@include container-from(data-table, #{$table-stack-width}) {
+  .help-outline__reorder-line {
+    display: none;
+  }
+}
+
+@include container-to(data-table, #{$table-stack-width}) {
+  .help-outline__grip-cell .reorder-toggle {
+    display: none;
+  }
+}
+
 // The corner's two controls, the grip and the position take only the room they need, rather than a share of the
 // table; above the stacking width only, as a card is full width.
 @include container-from(data-table, #{$table-stack-width}) {

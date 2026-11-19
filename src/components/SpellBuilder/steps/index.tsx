@@ -10,6 +10,7 @@ import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 import { plural } from '@/lib/text';
+import { ReorderMode, ReorderToggle } from '../../ReorderMode';
 
 // The jar's steps in the Jar section: the add box, Add Instruction and the list, one step open at a time, each moved by a handle
 // (claude-docs/components/spell-builder.md, "Steps").
@@ -163,41 +164,46 @@ export function SpellSteps({
   ].join(' · ');
 
   return (
-    <section className="spell-steps" ref={root} aria-labelledby={headingId}>
-      <div className="spell-steps__head">
-        {/* h4: the jar sits in the builder's Jar section, whose heading is an h3. */}
-        <h4 className="spell-steps__heading" id={headingId}>
-          What Goes In
-        </h4>
-        {steps.length > 0 && <p className="spell-steps__summary">{counts}</p>}
-      </div>
-      {/* One grid holds the list, then the add row: the box and Add Instruction, beneath the
+    <ReorderMode name="Steps">
+      <section className="spell-steps" ref={root} aria-labelledby={headingId}>
+        <div className="spell-steps__head">
+          <div className="spell-steps__title">
+            {/* h4: the jar sits in the builder's Jar section, whose heading is an h3. */}
+            <h4 className="spell-steps__heading" id={headingId}>
+              What Goes In
+            </h4>
+            {steps.length > 1 && <ReorderToggle />}
+          </div>
+          {steps.length > 0 && <p className="spell-steps__summary">{counts}</p>}
+        </div>
+        {/* One grid holds the list, then the add row: the box and Add Instruction, beneath the
           list where a new step lands. The button follows the
           box on a wide column and is a dashed line beneath it on a narrow one, by grid
           placement alone, so it is one button, in the one place in the markup. */}
-      <div className="spell-steps__body">
-        <SortableSteps ids={keys} names={names} onMove={move}>
-          {fields.map((field, index) => (
-            <BuilderStepRow
-              key={keys[index]}
-              id={keys[index]!}
-              index={index}
-              step={steps[index] ?? field}
-              open={openId === keys[index]}
-              onToggle={() => setOpenId((was) => (was === keys[index] ? null : keys[index]!))}
-              onRemove={() => removeAt(index)}
-              look={look}
-            />
-          ))}
-        </SortableSteps>
-        <div className="spell-steps__box">
-          <StepPicker workspaceId={workspaceId} oneOffs={oneOffs} onAdd={add} />
+        <div className="spell-steps__body">
+          <SortableSteps ids={keys} names={names} onMove={move}>
+            {fields.map((field, index) => (
+              <BuilderStepRow
+                key={keys[index]}
+                id={keys[index]!}
+                index={index}
+                step={steps[index] ?? field}
+                open={openId === keys[index]}
+                onToggle={() => setOpenId((was) => (was === keys[index] ? null : keys[index]!))}
+                onRemove={() => removeAt(index)}
+                look={look}
+              />
+            ))}
+          </SortableSteps>
+          <div className="spell-steps__box">
+            <StepPicker workspaceId={workspaceId} oneOffs={oneOffs} onAdd={add} />
+          </div>
+          <button type="button" className="btn spell-steps__add-step" onClick={addStep}>
+            Add Instruction
+          </button>
         </div>
-        <button type="button" className="btn spell-steps__add-step" onClick={addStep}>
-          Add Instruction
-        </button>
-      </div>
-      <LiveRegion id={regionId} announcement={announcement} />
-    </section>
+        <LiveRegion id={regionId} announcement={announcement} />
+      </section>
+    </ReorderMode>
   );
 }

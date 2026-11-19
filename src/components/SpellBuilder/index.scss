@@ -112,6 +112,12 @@
   gap: space(1) space(3);
 }
 
+.spell-steps__title {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+}
+
 .spell-steps__heading {
   margin: 0;
 }

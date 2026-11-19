@@ -46,6 +46,8 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   /** The message of an open list with no rows for non-blank text; `false` says nothing (claude-docs/components/combobox.md, "The empty message"). */
   empty?: string | false;
   entries?: ReactNode;
+  /** What an ordered list of entries is called, for its Reorder toggle; `label` unless said, as a box's label may name one entry ("Add Sub Page"). */
+  listName?: string;
   /** A control that empties the box; `empty` hides it but keeps its room (claude-docs/components/combobox.md, "Props in detail"). */
   clear?: { label: string; onClear: () => void; empty: boolean };
   /** A caller's own control inside the control box before the text, such as a submit (claude-docs/components/combobox.md, "Props in detail"). */
