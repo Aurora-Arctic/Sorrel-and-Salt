@@ -102,3 +102,8 @@ export async function findCompendiumSlugs(): Promise<CompendiumSlugEntry[]> {
     }))
     .sort((a, b) => a.name.localeCompare(b.name) || a.slug.localeCompare(b.slug));
 }
+
+/** Every slug a deleted, shown compendium entry left that no live entry or redirect now answers, A to Z. */
+export async function findDeletedCompendiumSlugsIncludingSoftDeleted(): Promise<string[]> {
+  throw new Error('not implemented');
+}

@@ -14,3 +14,8 @@ const cachedSlugs = cachedCompendiumRead('compendium-slugs', findCompendiumSlugs
 export function listCompendiumSlugs(): Promise<CompendiumSlugEntry[]> {
   return cachedSlugs();
 }
+
+/** The addresses of deleted compendium entries that answer 410 Gone. Takes no session, for the same reason. */
+export function listDeletedCompendiumSlugs(): Promise<string[]> {
+  throw new Error('not implemented');
+}

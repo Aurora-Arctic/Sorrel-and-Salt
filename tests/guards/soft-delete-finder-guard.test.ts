@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readSource as source, sourceFiles } from '../support/repo-scan';
+import { filesMatching, readSource as source, sourceFiles } from '../support/repo-scan';
 
 // CLAUDE.md rule 4, read as text off the repository (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention"): every finder the index exports filters tombstones, bar the escape hatches, each of which says so in its name.
 // Each reader's behaviour is its service's READS table's (claude-docs/testing/layer-ownership.md, "The owning layer"). Read as text, not imported, because importing the repository would instantiate a Postgres client, which the `unit` project must not.
@@ -16,7 +16,12 @@ const ESCAPE_HATCHES = [
   'findSubstitutesIncludingSoftDeleted',
   'findCoMemberNamesIncludingSoftDeleted',
   'findCupboardEntryIncludingSoftDeleted',
+  'findDeletedCompendiumSlugsIncludingSoftDeleted',
 ];
+
+/** The finder behind a deleted entry's 410, and the one service allowed to call it. */
+const DELETED_SLUGS = 'findDeletedCompendiumSlugsIncludingSoftDeleted';
+const DELETED_SLUGS_CALLER = 'src/modules/ingredients/services/compendium-slugs.ts';
 
 /** The folder's internal builders that skip a filter, none exported from the index, each with the only functions allowed to call it (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention"). */
 const INTERNAL_HATCHES: Record<string, string[]> = {
@@ -166,6 +171,20 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     );
     // The generic hatch says what it is at the call site, and skips the filter outright.
     expect(functionBody('findManyIncludingSoftDeleted')).not.toMatch(/notSoftDeleted\(/);
+  });
+
+  // It skips the entry's own filter and no other: the tier and the shown flag still hold, and only the 410 list reads it.
+  it('holds the deleted-slug finder to the compendium, the shown flag and its one caller', () => {
+    const body = functionBody(DELETED_SLUGS);
+    expect(body, `${DELETED_SLUGS} keeps to the compendium tier`).toMatch(/\binCompendium\(/);
+    expect(body, `${DELETED_SLUGS} keeps to entries that were shown`).toMatch(/\.shown\b/);
+    expect(body, `${DELETED_SLUGS} reads the tombstone itself`).toMatch(/\.deletedAt\b/);
+
+    const call = new RegExp(`(?<!function )\\b${DELETED_SLUGS}\\(`);
+    expect(
+      filesMatching(sourceFiles({ under: 'src/' }), call),
+      `${DELETED_SLUGS} is called from ${DELETED_SLUGS_CALLER} alone`,
+    ).toEqual([DELETED_SLUGS_CALLER]);
   });
 
   it('calls each internal hatch from its pinned callers only, and declares no other', () => {

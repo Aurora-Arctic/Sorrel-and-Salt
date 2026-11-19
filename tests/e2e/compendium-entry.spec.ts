@@ -56,6 +56,34 @@ test('a slug an entry has moved off answers 308 to its current address', async (
   expect(headers['last-modified']).toBeUndefined();
 });
 
+test("a deleted entry's address answers 410 Gone, and asks not to be indexed", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const author = await signInKeeperOnSidePage(browser, baseURL, 'author@compendium-entry-410.test');
+  const name = 'Fixture Deleted Bramble';
+  const slug = slugify(name);
+  const id = await withSql((sql) =>
+    insertIngredient(
+      sql,
+      makeIngredient({ name, nomenclature: 'none', variants: [makeVariant()] }),
+      author,
+    ),
+  );
+  // Why the 410 is the deletion's: the same address answered 200 before it.
+  expect((await page.request.get(`/compendium/ingredients/${slug}`)).status()).toBe(200);
+  await withSql(
+    (sql) =>
+      sql`update ingredients set deleted_at = now(), deleted_by = ${author} where id = ${id}`,
+  );
+
+  const gone = await page.request.get(`/compendium/ingredients/${slug}`, { maxRedirects: 0 });
+
+  expect(gone.status()).toBe(410);
+  expect(gone.headers()['x-robots-tag']).toBe('noindex');
+});
+
 // A citation prints its url as plain text, and a url with no hyphen or space is one long word that ran
 // past a phone's column, so the bibliography lets it break anywhere.
 test('a visitor reads an entry with its details and each form on a phone, a long source url wrapping inside the column', async ({

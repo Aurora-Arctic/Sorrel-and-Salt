@@ -4,10 +4,12 @@ import {
   getRewrittenUrl,
   unstable_doesMiddlewareMatch,
 } from 'next/experimental/testing/server';
+import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
 import { ORIGIN, USER_ID } from './support/constants';
+import { server } from './support/msw/server';
 import { sessionFromHeaders } from './support/request-session';
 
 // The session lookup is mocked; request-session.test.ts covers what it does with the answer.
@@ -19,8 +21,13 @@ const { config, proxy } = await import('@/proxy');
 // about is protected rather than open. The proxy's check is optimistic (a cookie is present);
 // the page's requireSession() asks the database (claude-docs/auth/route-protection.md, "Route protection").
 
+// The list of deleted compendium entries the proxy reads before an entry page; empty unless a test says otherwise.
+const DELETED_SLUGS = `${ORIGIN}/api/compendium/deleted-slugs`;
+const deletedSlugs = (slugs: string[]) => http.get(DELETED_SLUGS, () => HttpResponse.json(slugs));
+
 beforeEach(() => {
   sessionFromHeaders.mockReset();
+  server.use(deletedSlugs([]));
 });
 const matches = (url: string) => unstable_doesMiddlewareMatch({ config, url });
 
@@ -315,6 +322,71 @@ describe('proxy', () => {
       request('/coven/hearth', `${SESSION_COOKIE}=t.s`, { [RETURN_PATH_HEADER]: '/keepers' }),
     );
     expect(forwarded(response, RETURN_PATH_HEADER)).toBe('/coven/hearth');
+  });
+});
+
+// A deleted entry answers 410 Gone, so search engines drop it; the page itself can answer only 404
+// (claude-docs/seo/ai-discovery.md). Everything else at an entry address is the page's to answer.
+describe('a deleted compendium entry', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  const GONE = '/compendium/ingredients/fixture-gone';
+
+  it('answers 410 with noindex on production for a slug on the list, signed out', async () => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+    server.use(deletedSlugs(['fixture-gone', 'fixture-removed']));
+
+    const response = await proxy(request(GONE));
+
+    expect(response.status).toBe(410);
+    expect(response.headers.get('x-robots-tag')).toBe('noindex');
+    expect(response.headers.get('x-middleware-next')).toBeNull();
+    expect(getRedirectUrl(response)).toBeNull();
+  });
+
+  it('answers 410 off production too, and with a query string', async () => {
+    vi.stubEnv('VERCEL_ENV', 'preview');
+    server.use(deletedSlugs(['fixture-gone']));
+
+    const response = await proxy(request(`${GONE}?support=`, `${SESSION_COOKIE}=t.s`));
+
+    expect(response.status).toBe(410);
+    expect(response.headers.get('x-robots-tag')).toBe('noindex');
+  });
+
+  // The page redirects a renamed entry's old slug and answers 404 for a hidden entry or an unknown slug,
+  // so each must reach it, though the list is not empty.
+  it.each([
+    ["a renamed entry's old slug", '/compendium/ingredients/fixture-was-named'],
+    ['a hidden entry', '/compendium/ingredients/fixture-hidden'],
+    ['a slug that never existed', '/compendium/ingredients/fixture-never'],
+    ['a slug only beginning with a listed one', '/compendium/ingredients/fixture-gone-again'],
+  ])('passes %s through to the page', async (_what, path) => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+    server.use(deletedSlugs(['fixture-gone']));
+    // Why the listed slug alone differs: the same list answers it 410.
+    expect((await proxy(request(GONE))).status).toBe(410);
+
+    const response = await proxy(request(path));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+    expect(response.headers.get('x-robots-tag')).toBeNull();
+  });
+
+  it('passes a listed slug through to the page when the list cannot be read', async () => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+    server.use(deletedSlugs(['fixture-gone']));
+    // Why the failure alone lets it through: the same slug, read from a working list, answers 410.
+    expect((await proxy(request(GONE))).status).toBe(410);
+    server.use(http.get(DELETED_SLUGS, () => new HttpResponse(null, { status: 500 })));
+
+    const response = await proxy(request(GONE));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-middleware-next')).toBe('1');
   });
 });
 
