@@ -31,6 +31,7 @@ import { viewedDetailsOf } from '../../ingredients/viewed-details';
 import { readRecipeOf } from '../recipe-read';
 import { readWorkingsOf } from './workings-read';
 import { readRecipeAsideOf } from './recipe-aside';
+import { readRecipeCorrespondencesOf } from './recipe-correspondences';
 import { workingStepsOf } from './recipe-steps';
 import type { SpellRecipeParams } from './types';
 import { covenPath } from '@/lib/coven-path';
@@ -69,6 +70,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     // Edit Stock on the inventory's lines, on the permission `saveStock` asserts: none for an observer.
     access.canUpdateStock,
   );
+  const correspondenceRows = await readRecipeCorrespondencesOf(session, workspace.id, spell.id);
   const workings = await readWorkingsOf(
     session,
     workspace.id,
@@ -153,7 +155,8 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
               )}
             />
           }
-          aside={<SpellRecipeAside {...aside} />}
+          aside={<SpellRecipeAside {...aside} correspondences={correspondenceRows} />}
+          correspondences={correspondenceRows.some((row) => row.values.length > 0)}
           action={
             <div className="spell-recipe__actions">
               {canRecord && recordButton}

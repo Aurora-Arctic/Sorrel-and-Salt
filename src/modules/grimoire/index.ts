@@ -2,9 +2,16 @@
 export * from './services/spells';
 export * from './services/spell-reads';
 export * from './services/workings';
+export * from './services/spell-correspondences';
 export * from './loaders/spell-children';
 export * from './graphql/spell';
 export * from './graphql/working';
-export type { SpellKey, SpellStatus, SpellStepView, SpellVisibility } from './types';
+export type {
+  SpellCorrespondences,
+  SpellKey,
+  SpellStatus,
+  SpellStepView,
+  SpellVisibility,
+} from './types';
 export * from './validation/categories/summarize';
 export * from './validation/categories/compare';

@@ -3,6 +3,10 @@
     "next-devtools": {
       "command": "npx",
       "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "graphify": {
+      "type": "http",
+      "url": "http://graphify:8080/mcp"
     }
   }
 }

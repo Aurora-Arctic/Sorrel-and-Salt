@@ -3,7 +3,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { seedCoven } from './stories/coven-ingredients';
 import { signInAs } from './session';
-import { PHONE_WIDTH } from './breakpoints';
+import { PHONE_TOUCH } from './breakpoints';
 
 // The footer's Support link on a phone: wholly above the fixed bottom bar, tappable by touch, and
 // present on the signed-in home page.
@@ -12,7 +12,7 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test.use({ viewport: { width: PHONE_WIDTH, height: 844 }, hasTouch: true, isMobile: true });
+test.use(PHONE_TOUCH);
 
 test('the footer Support link clears the tab bar and a tap opens the dialog', async ({ page }) => {
   const coven = await seedCoven(page, 'Fixture Coven Footer', 'footer-tab-bar.test', {

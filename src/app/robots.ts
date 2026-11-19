@@ -34,7 +34,11 @@ export default function robots(): MetadataRoute.Robots {
   const production = process.env.VERCEL_ENV === 'production';
   return {
     rules: production
-      ? { userAgent: '*', allow: CRAWLABLE_PATHS, disallow: '/' }
+      ? [
+          { userAgent: '*', allow: CRAWLABLE_PATHS, disallow: '/' },
+          // A named group replaces `*` for that crawler (RFC 9309, 2.2.1), so Amazonbot reads no allow at all.
+          { userAgent: 'Amazonbot', disallow: '/' },
+        ]
       : { userAgent: '*', disallow: '/' },
     ...(production && { sitemap: siteUrl('/sitemap.xml') }),
   };

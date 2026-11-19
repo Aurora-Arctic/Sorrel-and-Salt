@@ -6,7 +6,7 @@ import StepRow from '../StepRow';
 import OneOffBadge from '../StepRow/one-off-badge';
 import MoonPhaseIcon from '../MoonPhaseIcon';
 import { SafetyMark } from '../SafetyNote';
-import { formLabel } from '../../modules/ingredients/validation/form-label';
+import { stepLabelOf } from '../../modules/grimoire/validation/step-label';
 import { spellNameOf } from '../SpellCard/untitled';
 import { VerdictMark } from '../SpellBuilder/verdict-mark';
 import { STEPS_ID } from './sections';
@@ -21,8 +21,7 @@ import './index.scss';
 // What a saved spell says below its head. The recipe page, the grimoire's Quick Look and the Preview pane all draw it,
 // so they cannot drift (claude-docs/components/spell-recipe.md).
 
-export const labelOf = ({ name, form }: IngredientRecipeStep): string =>
-  form ? `${name} (${formLabel(form)})` : name;
+export const labelOf = ({ name, form }: IngredientRecipeStep): string => stepLabelOf(name, form);
 
 /**
  * The ingredient's name as plain text, not a link: the Quick Look eye

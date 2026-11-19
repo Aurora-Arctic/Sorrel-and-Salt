@@ -7,6 +7,7 @@ import {
   insertStep,
   insertWorking,
   compendiumVariant,
+  localIngredient,
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
@@ -278,4 +279,48 @@ test('a printed draft private spell carries its Draft and Private badges in the 
     expect(badge.top).toBeGreaterThanOrEqual(title.top - 1);
     expect(badge.bottom).toBeLessThanOrEqual(intent.top);
   }
+});
+
+test('the printed recipe keeps the Correspondences block and leaves out the side panels', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Printed Lists', 'spell-print-lists.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await localIngredient(sql, coven.id, A, {
+      name: 'Fixture Emberwort',
+      nomenclature: 'none',
+      elements: ['fire'],
+      colors: ['Silver'],
+    });
+    const id = await insertSpell(
+      sql,
+      coven.id,
+      'Fixture Printed Lists',
+      'workspace',
+      A,
+      'complete',
+    );
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+  const block = page.getByRole('region', { name: 'Correspondences' });
+  // On screen all three are there, so what print leaves out is the print rules' doing.
+  const panels = [
+    page.getByRole('region', { name: 'Category Match' }),
+    page.getByRole('region', { name: 'In the Cupboard' }),
+  ];
+  await expect(block).toBeVisible();
+  for (const panel of panels) await expect(panel).toBeVisible();
+
+  await page.emulateMedia({ media: 'print' });
+  await expect(block).toBeVisible();
+  await expect(block.getByRole('button', { name: 'Fire' })).toBeVisible();
+  await expect(block.getByRole('button', { name: 'Silver' })).toBeVisible();
+  for (const panel of panels) await expect(panel).toBeHidden();
 });

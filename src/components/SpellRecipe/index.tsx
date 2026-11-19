@@ -30,6 +30,7 @@ const SpellRecipe = ({
   back,
   action,
   aside,
+  correspondences,
   workings,
 }: SpellRecipeProps): ReactElement => {
   const name = spellNameOf(title);
@@ -39,6 +40,7 @@ const SpellRecipe = ({
   const entries = recipeMenu({
     steps: steps.length > 0,
     aside: Boolean(aside),
+    correspondences: Boolean(aside) && correspondences,
     workings: Boolean(workings),
   });
   return (

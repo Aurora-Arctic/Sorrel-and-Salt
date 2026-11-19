@@ -11,7 +11,8 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
-import { BAND_WIDTHS, PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
+import { BAND_WIDTHS, PHONE_TOUCH, PHONE_WIDTH, DESKTOP_WIDTH } from './breakpoints';
+import { requiredDelay } from './waits';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -219,7 +220,7 @@ for (const [name, size] of [
     await expect(nav.getByRole('link')).toHaveText(
       name === 'desktop'
         ? ['Steps', 'Workings']
-        : ['Steps', 'Category Match', 'In the Cupboard', 'Workings'],
+        : ['Steps', 'Category Match', 'In the Cupboard', 'Correspondences', 'Workings'],
     );
     await expect(nav.getByText('The Cupboard', { exact: true })).toBeVisible({
       visible: name !== 'desktop',
@@ -604,3 +605,43 @@ for (const visibility of ['private', 'workspace'] as const) {
     for (const top of tops) expect(top).toBeGreaterThanOrEqual(titleBottom);
   });
 }
+
+test.describe('on a touch phone', () => {
+  test.use(PHONE_TOUCH);
+
+  test('a tap on the Edited line, on a scrolled page, opens its tip and leaves it open', async ({
+    page,
+  }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Edited Tap', 'spell-edited-tap.test', {
+      A: 'owner',
+    });
+    const { A } = coven.users;
+    const spellId = await withSql(async (sql) => {
+      const id = await insertSpell(sql, coven.id, 'Fixture Edited', 'workspace', A, 'complete');
+      // Two steps and a working make the phone page long enough to scroll.
+      const herb = await compendiumVariant(sql, 'Rosemary', 'Herb');
+      await insertStep(sql, id, herb, { quantity: 2, unit: 'g', position: 0 }, A);
+      const crystal = await compendiumVariant(sql, 'Selenite', 'Crystal');
+      await insertStep(sql, id, crystal, { quantity: 1, unit: 'g', position: 1 }, A);
+      await insertWorking(sql, id, A, { workedOn: '2026-03-04' });
+      return id;
+    });
+    await signInAgainAs(page, A);
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    const line = page.getByRole('button', { name: /^Edited / });
+    await expect(line).toBeVisible();
+
+    // The flaw shows only on a scrolled page, so the page moves first and the line stays in view.
+    await page.evaluate(() => window.scrollBy(0, 40));
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+    await expect(line).toBeInViewport();
+
+    await line.tap();
+    const tip = page.getByRole('tooltip');
+    await expect(tip).toBeVisible();
+    // "Still open" has no event to wait on, so this waits on the clock instead, past the
+    // 150ms close delay a stray close after the tap would take.
+    await requiredDelay(500, 'a tip staying open fires no event to wait on');
+    await expect(tip).toBeVisible();
+  });
+});

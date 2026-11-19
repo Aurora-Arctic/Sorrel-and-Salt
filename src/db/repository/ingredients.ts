@@ -55,6 +55,7 @@ import {
 } from './predicates';
 import { cites, citesNothing } from './references';
 import { existsByKey, existsIn, selectFrom, selectOne, whenIds } from './select';
+import { findIngredientsInSpellsIncludingSoftDeleted } from './spells';
 import { sourcingScoreExpression } from './sourcing-score';
 import { curated } from './vocabularies';
 import { weightedSearch } from './weighted-search';
@@ -71,6 +72,7 @@ import type {
   ColumnOf,
   ReadRow,
   IngredientScoped,
+  IngredientDeityLink,
   JoinedRow,
   ListColumns,
   ListOrder,
@@ -181,7 +183,7 @@ export function findDeitiesOfIngredients(
   memberships: readonly Membership[],
   ingredientIds: readonly string[],
   heldBy?: Membership,
-): Promise<JoinedRow<typeof ingredientDeities.$inferSelect, typeof deities.$inferSelect>[]> {
+): Promise<IngredientDeityLink[]> {
   return whenIds(ingredientIds, () =>
     selectFrom(
       ingredientDeities,
@@ -195,6 +197,32 @@ export function findDeitiesOfIngredients(
         on: and(eq(deities.id, ingredientDeities.deityId), curated(deities)) as SQL,
       },
     ),
+  );
+}
+
+/**
+ * The live deities of the ingredients a readable spell holds, deleted ingredients' included, unordered.
+ * Two statements, as `existsIn` filters a deleted parent (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention").
+ */
+export async function findDeitiesOfSpellIngredientsIncludingSoftDeleted(
+  membership: Membership,
+  ingredientIds: readonly string[],
+): Promise<IngredientDeityLink[]> {
+  const held = await findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds);
+  if (held.length === 0) return [];
+  return selectFrom(
+    ingredientDeities,
+    and(
+      notSoftDeleted(ingredientDeities),
+      inArray(
+        ingredientDeities.ingredientId,
+        held.map((row) => row.id),
+      ),
+    ),
+    {
+      leftJoin: deities,
+      on: and(eq(deities.id, ingredientDeities.deityId), curated(deities)) as SQL,
+    },
   );
 }
 

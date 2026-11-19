@@ -191,7 +191,7 @@ const FULL: IngredientDetail = {
   folkNames: ['Fixture Bane', 'Grey Testing Weed'],
   categories: [WARDING, DREAMS],
   deities: [
-    { name: 'Fixtura', tradition: 'Fixture Pantheon', otherNames: [] },
+    { name: 'Fixtura', tradition: 'Fixture Pantheon', otherNames: ['Fixtra', 'Testura'] },
     { name: 'Testis', tradition: null, otherNames: [] },
   ],
   substitutes: [

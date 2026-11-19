@@ -1,6 +1,6 @@
 ## MC — Cleanup
 
-MC ids hold grouped clean-up work from four audits: M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)) for MC.1 → MC.9, and M17.10's test performance audit ([`audits/test-performance.md`](../audits/test-performance.md)) for MC.10 → MC.14, and M17.7's design and UX audit ([`audits/design-ux.md`](../audits/design-ux.md)) for MC.15 → MC.27, and M17.9's accessibility audit ([`audits/accessibility.md`](../audits/accessibility.md)) for MC.28 → MC.32 and additions to MC.20 and MC.21. They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
+MC ids hold grouped clean-up work from five audits: M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)) for MC.1 → MC.9, and M17.10's test performance audit ([`audits/test-performance.md`](../audits/test-performance.md)) for MC.10 → MC.14, and M17.7's design and UX audit ([`audits/design-ux.md`](../audits/design-ux.md)) for MC.15 → MC.27, and M17.9's accessibility audit ([`audits/accessibility.md`](../audits/accessibility.md)) for MC.28 → MC.32 and additions to MC.20 and MC.21, and M17.6's search engine audit ([`audits/seo.md`](../audits/seo.md)) for MC.33 → MC.43. They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
 
 **MC.1 — Tidy the Test Support and Scripts** · 16.25h
 
@@ -568,4 +568,163 @@ _Acceptance criteria:_
 - The R6 and R7 rule texts are added to `.claude/rules/testing.md`, "Process".
 - The 14 unknown e2e tests and 11 unknown stories are traced once each, and each is fixed or recorded with its cause.
 - The owner runs the two audit suites once; every failure left is listed with its cause.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.33 — Carry The Share Image On Every Public Page** · 2h
+
+_Story:_ As a person sharing a link to a document or a help page, I want the link to show the site's picture, so that it looks like the site and not a bare address.
+
+Minted from the search engine audit (M17.6). Finding: SEO-1; it is in `claude-docs/audits/seo.md`. Most public pages serve no `og:image` tag, so a shared link shows a bare address. The change is one helper and one test.
+
+_Acceptance criteria:_
+
+- `/about`, `/terms`, `/privacy`, `/disclaimer`, `/code-of-ethics`, `/help` and a help article each serve an `og:image` tag naming the site's share image.
+- `/`, `/compendium` and an entry still serve their own images.
+- The share-card browser test checks every public page, not three.
+- The test fails with the image removed from the helper.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.34 — Make The Article Title The Main Heading On Help Pages** · 3h
+
+_Story:_ As a reader or a search engine, I want a help article's main heading to be its title, so that each article says what it is about.
+
+Minted from the search engine audit (M17.6). Finding: SEO-2; it is in `claude-docs/audits/seo.md`. Every help page's `<h1>` reads "Help", so no article's main heading names its subject. The change is one shared head component, its skeleton and a heading test.
+
+_Acceptance criteria:_
+
+- A help article's only `<h1>` is the article's title.
+- `/help` and `/help/search` keep "Help" as their `<h1>`.
+- The word "Help" still shows above an article's title.
+- Each help page has exactly one `<h1>`.
+- The skeleton shown while an article loads has the same headings.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.35 — Cut The Number Of Stylesheet Files A Page Loads** · 6h
+
+_Story:_ As a site keeper, I want a page to load a handful of stylesheet files, so that crawlers spend their requests on pages and not on styles.
+
+Minted from the search engine audit (M17.6). Finding: SEO-3; it is in `claude-docs/audits/seo.md`. A public page loads 64 to 76 separate stylesheet files. The cause is not known, so the task starts by finding it. The limit of 10 files is a proposal.
+
+_Acceptance criteria:_
+
+- The cause of the 64 to 76 files is written down in the task's PR.
+- A production build serves at most 10 stylesheet files on `/compendium`, an entry, a document and a help article.
+- Each file is still served `public,max-age=31536000,immutable`.
+- The pages look the same in light and dark.
+- Google's URL Inspection live test of an entry shows no stylesheet preload warning.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.36 — Stop Crawlers Following Sign-In And Support Links** · 3h
+
+_Story:_ As a site keeper, I want crawlers to skip links that open sign-in or support, so that they spend their requests on pages with content.
+
+Minted from the search engine audit (M17.6). Finding: SEO-4; it is in `claude-docs/audits/seo.md`. Crawlable links lead into addresses that are never indexed. This is a part of what MB.289 did for the entry links.
+
+_Acceptance criteria:_
+
+- The header's Sign In link carries `rel="nofollow"` on every page that shows it.
+- Each `?support=` link in a document body carries `rel="nofollow"`.
+- A link to a real page in a document body carries no `rel`.
+- Signed-out and signed-in visitors can still use all of these links.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.37 — Keep Superseded Document Versions Out Of Search** · 2h
+
+_Story:_ As a site keeper, I want only the current version of a document to appear in search results, so that nobody finds an old copy of the terms.
+
+Minted from the search engine audit (M17.6). Finding: SEO-5; it is in `claude-docs/audits/seo.md`. An older document version's page is an indexable copy. The change is one metadata function and a test.
+
+_Acceptance criteria:_
+
+- A version page that is not the current version carries a noindex tag with `follow`.
+- A version page that is the current version still names the document's own address as its canonical.
+- Version pages stay out of the sitemap.
+- A test covers a current and a superseded version.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.38 — Tell Bing About New And Changed Pages With IndexNow** · 6h
+
+_Story:_ As a site keeper, I want Bing told when a page is published or changed, so that people on Bing can find new entries and help.
+
+Minted from the search engine audit (M17.6). Finding: SEO-6; it is in `claude-docs/audits/seo.md`. Bing has indexed 34 of 58 known addresses and is not told of new pages. The task adds a route, a key and a call from the keeper mutations. The key is never written in the repository, a comment or an issue.
+
+_Acceptance criteria:_
+
+- The site serves an IndexNow key file at the address the protocol requires.
+- Publishing, changing or retiring a compendium entry sends one ping naming its address.
+- Publishing or changing a help article sends one ping naming its address.
+- A failed ping does not fail the save, and is logged.
+- No ping is sent from a database that is not production.
+- Bing Webmaster Tools shows IndexNow as set up.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.39 — Correct The Record Of The AI Bots Setting** · 1.5h
+
+_Story:_ As a site keeper, I want the design record to say what the Vercel AI Bots rules are set to, so that the next person to read it is not misled.
+
+Minted from the search engine audit (M17.6). Finding: SEO-7; it is in `claude-docs/audits/seo.md`. `claude-docs/design-decisions/ci.md` records AI Assistants as Allow and AI Crawlers as Deny, and Vercel shows both AI Bots rules set to Log. The owner chose to correct the record, not to change the setting. This is a document-only task: the Vercel setting is not touched.
+
+_Acceptance criteria:_
+
+- `claude-docs/design-decisions/ci.md`, item 4 of the owner's decisions and setting V5 in the Vercel table, say both AI Bots rules are set to Log, and say why.
+- `claude-docs/seo/ai-discovery.md` is checked for any sentence that depends on the old setting, and each such sentence is corrected or none is found.
+- `npm run format:check` and `npm run lint` pass.
+
+**MC.40 — Lengthen The Home Page's Title And Description** · 1.5h
+
+_Story:_ As a person finding the site in Bing, I want the home page's title and description to say what the site is, so that I know whether to click.
+
+Minted from the search engine audit (M17.6). Finding: SEO-8; it is in `claude-docs/audits/seo.md`. The title is 15 characters and the description is 44. Bing flags both as short and suggests 50 to 60 and 150 to 160. The change is two strings and a check, in `src/app/page.tsx`.
+
+_Acceptance criteria:_
+
+- The home page's title is 50 to 60 characters.
+- Its description is 150 to 160 characters.
+- Its description agrees with the intro on the page.
+- Bing Webmaster Tools no longer lists either as too short after its next crawl.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.41 — Fail A Public Page That Has No Description Or Canonical Tag** · 2h
+
+_Story:_ As a developer, I want a test to fail when a public page ships with no description or canonical tag, so that no page loses them unnoticed.
+
+Minted from the search engine audit (M17.6). Finding: SEO-11; it is in `claude-docs/audits/seo.md`. `tests/guards/page-metadata.test.ts` stops a page writing its own metadata and requires nothing, so a new public page can ship with neither. The guard extends that one file.
+
+_Acceptance criteria:_
+
+- A guard fails an indexable public page that passes no description to the helper.
+- The guard fails an indexable public page that passes no canonical path.
+- `/support` and `/help/search` are named in the guard as noindex pages.
+- The guard fails once with a page's description removed, and passes with it back.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.42 — Add The Documents And Help To `llms.txt`** · 2h
+
+_Story:_ As an AI assistant reading `llms.txt`, I want to find the site's documents and help, so that I can answer questions about how the site works.
+
+Minted from the search engine audit (M17.6). Finding: SEO-13; it is in `claude-docs/audits/seo.md`. `buildLlmsTxt` lists the compendium and the sitemap only, so `/about`, the documents and the help pages are in neither `llms.txt` nor the AI catalogue. The builder, the doc and two tests change. The two draft specifications are re-read first, as the doc records them as read on 2026-10-19.
+
+_Acceptance criteria:_
+
+- `llms.txt` lists `/about`, each document and each help article, in its own section.
+- Every address in it is on the site's own origin, and none is a retired or hidden page.
+- The owner has said whether the AI catalogue gains a second entry for help.
+- `claude-docs/seo/ai-discovery.md`, "What they read", is corrected to match.
+- The tests for the layout and for hidden entries still pass.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.43 — Answer 410 For A Retired Compendium Entry** · 4h
+
+_Story:_ As a site keeper, I want a retired entry's address to say it was removed, so that search engines stop asking for it.
+
+Minted from the search engine audit (M17.6). Finding: SEO-9; it is in `claude-docs/audits/seo.md`. Migration `0090_retire-endangered-entries.sql` retired four entries as the curator Delete retires one, by setting `deleted_at`. Their addresses answer a plain 404, and a search of `src/app/(public)/compendium` finds no code that answers 410. The deleted row is kept, so no new table is needed. A finder that sees a deleted row is an exception to the soft-delete rule (CLAUDE.md, rule 4, and `.claude/rules/database.md`, Rule 4), and the task names that exception in the rule's list.
+
+_Acceptance criteria:_
+
+- A deleted compendium entry's address answers 410 with a noindex tag. This covers the four entries migration 0090 retired and any entry a curator deletes later.
+- A hidden entry still answers 404 to the public.
+- An address that never existed still answers 404.
+- A renamed entry's old address still redirects for 180 days.
+- The finder that sees a deleted row is named as an exception in `.claude/rules/database.md`, Rule 4.
+- A test covers all four cases.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.

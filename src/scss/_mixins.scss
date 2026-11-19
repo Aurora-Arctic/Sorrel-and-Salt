@@ -404,7 +404,7 @@
   @if $state == full {
     @include chip-wash($color);
   } @else if $state == quiet {
-    // Only the card's +N control wears it; a category is always full.
+    // Uncoloured, for what is not a category: the card's +N control and a deity's other names. A category is always full.
     background-color: transparent;
     border-color: $hairline;
     color: $text-primary;
@@ -805,6 +805,31 @@
   }
 
   @include tip-bubble;
+}
+
+// A lifted card in place of the tip's tint, for a tip that is read rather than glanced at, so it takes the body's colours.
+@mixin tip-card($layer: 1) {
+  box-sizing: content-box;
+  @include tip-above($layer);
+
+  padding: space(3);
+  border-color: $hairline;
+  border-radius: radius('control');
+  background-color: $surface-card;
+  box-shadow: $shadow-floating;
+  color: $text-primary;
+  font-size: type-size('small');
+  font-weight: 400;
+}
+
+// The card's title, in the heading face.
+@mixin tip-card-title {
+  display: block;
+  margin-block-end: space(1);
+  font-family: $font-heading;
+  font-size: type-size('title');
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 // Clipped so no dot leads or ends a line. `$item` is the class of its direct children (claude-docs/styling.md, "Dotted lists").

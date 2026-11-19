@@ -5,7 +5,7 @@
   "workspaceFolder": "/app",
   "shutdownAction": "stopCompose",
   "overrideCommand": false,
-  "initializeCommand": "mkdir -p \"${localWorkspaceFolder}/Docker/claude-home\"",
+  "initializeCommand": "mkdir -p \"${localWorkspaceFolder}/Docker/claude-home\" \"${localWorkspaceFolder}/Docker/plannotator-home\" \"${localWorkspaceFolder}/Docker/agents-home\" \"${localWorkspaceFolder}/graphify-out\"",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -16,8 +16,13 @@
     },
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
-  "postCreateCommand": "sudo apk add --no-cache github-cli",
-  "forwardPorts": [8000, 8001, 4983, 3456, 9229, 9230, 9231, 9323, 9324, 51204, 7900],
+  "postCreateCommand": "sudo apk add --no-cache github-cli && { gh extension install github/gh-stack || echo 'gh-stack was not installed; run: gh extension install github/gh-stack'; }",
+  // Starts the Plannotator Inbox with the container, so agents can post to it from the first session.
+  "postStartCommand": "plannotator inbox --background --no-open || echo 'The Plannotator Inbox did not start; run: plannotator inbox --background --no-open'",
+  "forwardPorts": [
+    8000, 8001, 4983, 3456, 9229, 9230, 9231, 9323, 9324, 51204, 7900, 19432, 19433, 19434, 19435,
+    19436, 43501
+  ],
   "portsAttributes": {
     "8000": { "label": "next dev" },
     "8001": { "label": "next start (production build)" },
@@ -29,7 +34,12 @@
     "9323": { "label": "playwright trace viewer" },
     "9324": { "label": "playwright ui mode" },
     "51204": { "label": "vitest ui" },
-    "7900": { "label": "playwright display (codegen / page.pause)" }
+    "7900": { "label": "playwright display (codegen / page.pause)" },
+    "19432": { "label": "plannotator review page" },
+    "19433": { "label": "plannotator review page" },
+    "19434": { "label": "plannotator review page" },
+    "19435": { "label": "plannotator review page" },
+    "19436": { "label": "plannotator review page" }
   },
   "remoteUser": "node",
   "containerUser": "node",
@@ -62,7 +72,8 @@
         "christian-kohler.path-intellisense",
         "streetsidesoftware.code-spell-checker",
         "eamodio.gitlens",
-        "github.vscode-github-actions"
+        "github.vscode-github-actions",
+        "bierner.markdown-mermaid"
       ]
     }
   }

@@ -78,7 +78,6 @@ export function useTip(
     reference: referenceOverride,
     gapPx = GAP_PX,
     minWidthPx,
-    pinnable = false,
     onEscape,
   }: TipOptions = {},
 ): Tip {
@@ -142,13 +141,14 @@ export function useTip(
     clearTimeout(closing.current);
     if (pinned.current) return;
     const close = () => {
-      // A pinnable tip stays while focus is inside it.
-      if (pinnable && anchorNode.current?.matches(':focus-within')) return;
+      // The pointer leaving does not close a tip while focus is inside it: a touch tap focuses the
+      // control and can still send a stray mouseleave.
+      if (anchorNode.current?.matches(':focus-within')) return;
       setOpen(false);
     };
     if (closeDelayMs <= 0) close();
     else closing.current = setTimeout(close, closeDelayMs);
-  }, [closeDelayMs, pinnable]);
+  }, [closeDelayMs]);
   const toggle = useCallback(() => {
     if (pinned.current) hide();
     else {

@@ -6,6 +6,7 @@ export * from './services/common-names';
 export * from './services/ingredient-suggestions';
 export * from './services/ingredient-children';
 export * from './services/ingredient-detail';
+export * from './services/deity-details';
 export * from './services/workspace-ingredients';
 export * from './services/compendium';
 export * from './services/sourcing-score';

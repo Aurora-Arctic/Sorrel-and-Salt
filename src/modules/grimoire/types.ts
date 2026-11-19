@@ -6,7 +6,7 @@ import type {
   WorkingRow,
 } from '@/db/repository';
 import type { NotDeductedReason } from './plan-deductions';
-import type { IngredientVariantRow } from '@/modules/ingredients';
+import type { DeityDetail, IngredientVariantRow } from '@/modules/ingredients';
 import type { spellSteps } from './schema/spell-steps';
 import type { spells } from './schema/spells';
 import type { z } from 'zod';
@@ -72,4 +72,33 @@ export interface PlannedDeduction {
   shortfall: number;
   before: number;
   lowStockThreshold: number | null;
+}
+
+/** A value and the step labels of the ingredients that gave it, in step order. */
+export interface Sourced<T> {
+  value: T;
+  sources: string[];
+}
+
+export interface SpellCorrespondences {
+  elements: Sourced<string>[];
+  celestialBodies: Sourced<string>[];
+  zodiacSigns: Sourced<string>[];
+  colors: Sourced<string>[];
+  deities: Sourced<DeityDetail>[];
+}
+
+/** The four lists an ingredient or a form carries; a list never set is null. */
+export interface CorrespondenceLists {
+  elements: readonly string[] | null;
+  celestialBodies: readonly string[] | null;
+  zodiacSigns: readonly string[] | null;
+  colors: readonly string[] | null;
+}
+
+/** One step as the block reads it; a null `deityId` is a typed name. */
+export interface CorrespondenceStep {
+  label: string;
+  lists: readonly CorrespondenceLists[];
+  deities: readonly { deityId: string | null; detail: DeityDetail }[];
 }

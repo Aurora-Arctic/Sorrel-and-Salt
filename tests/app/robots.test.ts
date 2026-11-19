@@ -23,11 +23,14 @@ describe('robots', () => {
     expect(dynamic).toBe('force-dynamic');
   });
 
-  it('allows the compendium and nothing else on production, and names the sitemap', () => {
+  it('allows the compendium and nothing else on production, shuts Amazonbot out, and names the sitemap', () => {
     vi.stubEnv('VERCEL_ENV', 'production');
 
     expect(robots()).toEqual({
-      rules: { userAgent: '*', allow: CRAWLABLE_PATHS, disallow: '/' },
+      rules: [
+        { userAgent: '*', allow: CRAWLABLE_PATHS, disallow: '/' },
+        { userAgent: 'Amazonbot', disallow: '/' },
+      ],
       sitemap: 'https://sorrelandsalt.com/sitemap.xml',
     });
     expect(CRAWLABLE_PATHS).toEqual([

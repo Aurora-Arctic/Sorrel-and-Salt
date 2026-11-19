@@ -41,7 +41,9 @@
     .page-nav,
     .spell-recipe__bar,
     .spell-recipe__actions,
-    .spell-recipe__aside,
+    .spell-recipe__aside:not(:has(.spell-recipe__correspondences)),
+    .spell-recipe__aside > .comparison-panel,
+    .spell-recipe__aside > .spell-inventory,
     .spell-workings,
     .site-footer,
     .last-edit,
@@ -69,6 +71,14 @@
 
     .spell-recipe > * {
       max-width: none !important;
+    }
+
+    // The side column prints only its Correspondences block, across the sheet in row 7, under the note
+    // (row 6, the last the grid pins), over the screen's column placement.
+    .spell-recipe__aside {
+      grid-row: 7;
+      grid-column: 1 / -1;
+      margin-block-start: space(4);
     }
 
     // The section nav beside it is gone, so the divider that told them apart goes too.
