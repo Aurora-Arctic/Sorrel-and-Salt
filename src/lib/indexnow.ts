@@ -35,3 +35,11 @@ export async function pingIndexNow(paths: readonly string[]): Promise<void> {
     );
   }
 }
+
+/** Schedules the ping for after the response, so the keeper's save never waits on IndexNow; call it once the write has committed, beside the cache expiry. */
+export async function pingIndexNowAfterResponse(paths: readonly string[]): Promise<void> {
+  if (paths.length === 0) return;
+  // Imported here, not at the top, so loading a service does not load `next/server` before a test can mock it.
+  const { runAfterResponse } = await import('@/lib/background-tasks');
+  runAfterResponse(() => pingIndexNow(paths));
+}

@@ -29,6 +29,7 @@ import {
   HelpArticleInput as InputSchema,
   HelpArticlePatch as PatchSchema,
 } from '../validation/help';
+import { pingHelpPages } from './help-ping';
 import { requireHelpArticle } from './help-reads';
 import { assertMarksExist, assertWidgetsKnown } from './marks';
 import { NO_HELP_ARTICLE, toHelpArticles } from './rows';
@@ -286,7 +287,9 @@ export async function createHelpArticle(
     return inserted;
   });
   expireHelp();
-  return (await toHelpArticles([row], 'keeper'))[0];
+  const created = (await toHelpArticles([row], 'keeper'))[0];
+  if (created.shown) await pingHelpPages(created);
+  return created;
 }
 
 /**
@@ -304,6 +307,7 @@ export async function updateHelpArticle(
   assertSiteAdmin(session);
   const values = parseSaying(PatchSchema, patch);
   const current = await requireHelpArticle(id);
+  const [before] = await toHelpArticles([current], 'keeper');
 
   const slug = values.title == null ? current.slug : slugify(values.title);
   const merged: Merged = {
@@ -351,7 +355,10 @@ export async function updateHelpArticle(
   });
   if (!row) throw new NotFound(NO_HELP_ARTICLE);
   expireHelp();
-  return (await toHelpArticles([row], 'keeper'))[0];
+  const updated = (await toHelpArticles([row], 'keeper'))[0];
+  // The old address first: a page that moved or went hidden is told to the search engine along with the one it moved to.
+  await pingHelpPages(...[before, updated].filter((article) => article.shown));
+  return updated;
 }
 
 /**
@@ -361,12 +368,13 @@ export async function updateHelpArticle(
  */
 export async function deleteHelpArticle(session: Session, id: string): Promise<string> {
   assertSiteAdmin(session);
-  await requireHelpArticle(id);
+  const current = await requireHelpArticle(id);
   if ((await findAllHelpArticleChildren(id)).length > 0)
     throw fieldRefusal('id', 'Delete or move this article’s children first');
   const [row] = await withAudit(session, (write) => write.softDeleteByIds(helpArticles, [id]));
   if (!row) throw new NotFound(NO_HELP_ARTICLE);
   expireHelp();
+  if (current.shown) await pingHelpPages((await toHelpArticles([current], 'keeper'))[0]);
   return row.id;
 }
 
@@ -386,7 +394,10 @@ export async function setHelpArticleShown(
   const [row] = await withAudit(session, (write) => write.updateById(helpArticles, id, { shown }));
   if (!row) throw new NotFound(NO_HELP_ARTICLE);
   expireHelp();
-  return (await toHelpArticles([row], 'keeper'))[0];
+  const marked = (await toHelpArticles([row], 'keeper'))[0];
+  // Hiding or showing changes the page either way, so it is told whichever way the mark went.
+  await pingHelpPages(marked);
+  return marked;
 }
 
 const ORDERED_NAMES = { guides: 'guide', faq: 'FAQ entry' } as const;
