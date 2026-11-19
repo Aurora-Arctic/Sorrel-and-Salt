@@ -2,7 +2,10 @@
 
 // The question's dialog: the modal surface at a narrow column, a title and the question over the answers.
 .confirm-dialog {
-  width: min(24rem, calc(100vw - #{space(8)}));
+  // Compound, so it outranks the modal's own width whatever order the two sheets load in.
+  &.modal-dialog {
+    width: min(24rem, calc(100vw - #{space(8)}));
+  }
 
   &:focus {
     outline: none;
