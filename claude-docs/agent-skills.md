@@ -37,16 +37,15 @@ settings below only lower cost:
 | `start-task`                                      | none     | none     | Step 6 implements the task, so it uses whatever the session is set to.                                        |
 
 `project-progress` also pre-approves its three read-only commands with
-`allowed-tools`. No skill pre-approves a push or a PR: the `permissions.ask`
-entries below still win over `allowed-tools`, on purpose. `start-task` follows
+`allowed-tools`. No skill pre-approves a push or a PR. `start-task` follows
 `create-feature/reference-branch.md` itself rather than calling the two branch
 skills, so their `haiku` setting only applies to a direct `/create-feature` or
 `/create-hotfix`.
 
-- **`.claude/settings.json` is shared, committed config** — it carries the
-  `permissions.ask` entries (`git push origin *`, `git push -u origin *`,
-  `gh pr create/view/comment/list`) the skills tell the reader to expect a
-  prompt on. **Personal permission grants and MCP configuration belong in
+- **`.claude/settings.json` is shared, committed config.** It holds no
+  `permissions.ask` rules: a project `ask` rule makes Claude Code ask again in
+  the terminal after the Plannotator Inbox has answered, so the prompt would be
+  answered twice. **Personal permission grants and MCP configuration belong in
   `.claude/settings.local.json`**, which is not committed.
 - **A skill's supporting files sit beside its `SKILL.md`**:
   `create-pr/reference-hotfix.md`, `create-pr/reference-stack.md`, `project-progress/tally.mjs`,

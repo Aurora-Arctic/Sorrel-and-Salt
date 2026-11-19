@@ -21,5 +21,5 @@
 
 - The branch name follows the Gitflow rules in [`CLAUDE.md`](../../../CLAUDE.md), which accept only the table's name for this kind of source branch — the naming isn't just a convention. `.github/workflows/gitflow.yml` enforces it: a PR from a differently-named branch fails the required `gitflow` check.
 - Never force-push; never delete anything.
-- Pushing here, rather than deferring to `/create-pr` as `/create-feature` and `/create-hotfix` do, is a deliberate exception to this repo's normal "ask before anything visible to others" caution: invoking either skill is itself the user's request for a real, shared branch and PR, and for a release its tag. `.claude/settings.json`'s `permissions.ask` entry for `git push origin *` still prompts for confirmation on each actual push.
+- Pushing here, rather than deferring to `/create-pr` as `/create-feature` and `/create-hotfix` do, is a deliberate exception to this repo's normal "ask before anything visible to others" caution: invoking either skill is itself the user's request for a real, shared branch and PR, and for a release its tag. Each push may still raise an ordinary permission prompt; don't suppress it.
 - If the skill's `git fetch` fails (no network, no remote), stop and report the error rather than working from possibly-stale local refs.
