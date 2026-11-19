@@ -13,6 +13,10 @@ handlers beside the paths.
 All three read `listCompendiumSlugs()` (MB.84): every current compendium
 entry, with no session, held in the data cache under the `compendium` tag, so
 a keeper write refreshes them ([`../db/compendium-cache.md`](../db/compendium-cache.md)).
+`llms.txt` also reads `PUBLIC_DOCUMENTS` (`src/lib/public-documents.ts`, the list the
+sitemap reads too) and `listHelpArticleLinks()`, the shown, public help guides, articles
+and sub pages with title and summary, held in the data cache under the `help` tag.
+The catalog reads neither.
 The read leaves out soft-deleted rows and every workspace's own ingredients in
 SQL. Every URL is built on `siteUrl()` in `src/lib/site.ts`, production's
 origin, never on the request's host. Off production the proxy sets
@@ -21,7 +25,7 @@ production by listing them in `CRAWLABLE_PATHS`.
 
 ## llms.txt
 
-Specification: https://llmstxt.org/, read 2026-10-19. It gives no version. The
+Specification: https://llmstxt.org/, read 2026-11-19. It gives no version. The
 file sits at `/llms.txt` and is Markdown, in this order: an H1 with the site
 name (the only required part), a blockquote summary, prose with no headings,
 then H2 sections of link lists, each item `- [name](url): optional notes`.
@@ -30,7 +34,11 @@ media type; the handler answers `text/markdown; charset=utf-8`.
 
 Ours has a Compendium section (the list page, then one link per entry, named
 with `pageTitleOf` so two entries sharing a label are told apart by formal
-name) and an Optional section holding the sitemap. Each entry link carries a
+name), a Documents section (About and each public document, by its title), a
+Help section (`/help`, `/help/glossary`, then each article and sub page, with its
+summary as the note) and an Optional section holding the sitemap. The spec
+allows any number of H2 sections and asks that the file stay small enough to fit
+in context. Each entry link carries a
 note, the entry's description cut by `describe` in `src/lib/page-metadata.ts`
 (the cutter the meta description uses) with brackets escaped; an entry with no
 description has no note. The description comes from `listCompendiumSlugs()`,
@@ -45,14 +53,16 @@ Two drafts name two paths, and both are served from one body.
 | AI Catalog draft, https://ai-catalog.io/spec/                         | `specVersion` "1.0", undated      | `/.well-known/ai-catalog.json` | `specVersion`, `entries`; per entry `identifier`, `type`, one of `url`/`data` |
 | Agentic Resource Discovery, https://agenticresourcediscovery.org/spec | v0.91, 26 August 2026, "Proposal" | `/.well-known/ard.json`        | per entry `identifier`, `displayName`, `type`, one of `url`/`data`            |
 
-Both read 2026-10-19. ARD says a consumer MUST fetch `ard.json` and calls
+Both read 2026-11-19. ARD says a consumer MUST fetch `ard.json` and calls
 `ai-catalog.json` its predecessor, whose publishers SHOULD move; it also says
 the two evolve independently, so a consumer of either finds the file. The
 body carries every field either requires, plus `host.displayName` (the AI
-Catalog draft's Level 2, "Discoverable"). The one entry is the compendium: an
+Catalog draft's Level 2, "Discoverable"). The one entry is the compendium, and the catalog stays compendium-only (the documents and help are in `llms.txt` alone): an
 identifier `urn:air:sorrelandsalt.com:compendium:ingredients`, `type` of
 `text/html` and `url` of `/compendium`, because the artefact the entry points
-at is the HTML page. `updatedAt` is the latest real change among the entries.
+at is the HTML page. `updatedAt` is the latest real change among the entries. The entry carries four
+`representativeQueries`, plain questions a person would ask of the compendium; ARD says
+an entry SHOULD carry two to five.
 
 The media type is `application/ai-catalog+json` on both paths: the AI Catalog
 draft says a catalog SHOULD be served with it, and ARD names none for
@@ -64,8 +74,9 @@ Every page also names the catalog from its head, as
 `<link rel="ai-catalog" href=... type="application/ai-catalog+json">`
 (`src/app/catalog-link.tsx`, placed by the root layout). The AI Catalog draft's
 "Link Relation Discovery" lets a page do this, and an agent that finds no `Link`
-header reads it. ARD names `rel="ard"` for `ard.json` instead; we do not emit
-that yet.
+header reads it. ARD v0.91 §5.1 names `rel="ard"` for `ard.json`, and a consumer MUST
+honour it, so the same component emits `<link rel="ard" href=...>` beside it, at the
+absolute `siteUrl` address.
 
 ### Keeping copies out of search
 
