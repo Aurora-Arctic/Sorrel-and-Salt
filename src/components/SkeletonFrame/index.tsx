@@ -3,6 +3,7 @@ import ContextRow from '../ContextRow';
 import { HelpFrontSkeleton } from '../HelpFront/skeleton';
 import PageColumn from '../PageColumn';
 import Skeleton from '../Skeleton';
+import { isHelpFront } from '../../lib/help-paths';
 import type { SkeletonHost } from '../../lib/navigation/skeleton-for';
 import './index.scss';
 
@@ -23,22 +24,29 @@ export const SkeletonContextRow = (): ReactElement => (
 // page's head stands where it will and nothing jumps when the section arrives.
 const frames = new Map<ComponentType, Map<string, ComponentType>>();
 
-/** The page's skeleton inside the frame of the section `host` names, one component per skeleton (and per `query`, the words the help header's box shows). */
-export function framed(host: SkeletonHost, Page: ComponentType, query = ''): ComponentType {
+/** The page's skeleton inside the frame of the section `host` names, one component per skeleton (and per `query`, the words the help header's box shows, and per whether `destination`, the page's address or route, is headed Help). */
+export function framed(
+  host: SkeletonHost,
+  Page: ComponentType,
+  query = '',
+  destination = '/help',
+): ComponentType {
   if (host === 'main') return Page;
   const byQuery = frames.get(Page) ?? new Map<string, ComponentType>();
   frames.set(Page, byQuery);
-  const known = byQuery.get(query);
+  const asLabel = !isHelpFront(destination);
+  const key = `${asLabel}|${query}`;
+  const known = byQuery.get(key);
   if (known) return known;
   if (host === 'help') {
     const InHelp = (): ReactElement => (
       <PageColumn as="div">
-        <HelpFrontSkeleton query={query}>
+        <HelpFrontSkeleton query={query} asLabel={asLabel}>
           <Page />
         </HelpFrontSkeleton>
       </PageColumn>
     );
-    byQuery.set(query, InHelp);
+    byQuery.set(key, InHelp);
     return InHelp;
   }
   const className = host === 'coven' ? 'coven-layout' : 'page-column';
@@ -50,6 +58,6 @@ export function framed(host: SkeletonHost, Page: ComponentType, query = ''): Com
       </div>
     </>
   );
-  byQuery.set(query, Framed);
+  byQuery.set(key, Framed);
   return Framed;
 }

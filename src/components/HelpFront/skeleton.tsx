@@ -7,11 +7,16 @@ import { HelpFrontShell } from './shell';
 export const HelpFrontSkeleton = ({
   children,
   query = '',
+  asLabel = false,
 }: {
   children: ReactNode;
   query?: string;
+  /** Whether the page beneath heads itself with its own title, so Help is a label. */
+  asLabel?: boolean;
 }): ReactElement => (
-  <HelpFrontShell head={<HelpFrontHead search={<HelpSearchForm size="hero" query={query} />} />}>
+  <HelpFrontShell
+    head={<HelpFrontHead asLabel={asLabel} search={<HelpSearchForm size="hero" query={query} />} />}
+  >
     {children}
   </HelpFrontShell>
 );
