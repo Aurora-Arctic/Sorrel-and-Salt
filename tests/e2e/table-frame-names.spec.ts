@@ -8,7 +8,6 @@ import { signInAs } from './session';
 // Two tables in one page each sit in a named scrolling region, and two landmarks of one role and one name are one
 // landmark too many for a screen reader's landmark list (axe `landmark-unique`; claude-docs/components/table-frame.md).
 
-const SLUG = 'testwort-twin-tables';
 const TWO_TABLES = [
   '## Testwort Measures',
   '',
@@ -21,21 +20,21 @@ const TWO_TABLES = [
   '| Testroot | 3 |',
 ].join('\n');
 
-let articleId = '';
-let keeper = { userId: '' };
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-async function signInWithArticle(page: Page, email: string): Promise<void> {
-  keeper = await signInAs(page, email, ['discord'], 'admin');
-  if (articleId) return;
+/**
+ * Signs a keeper in and gives this test its own article. Nothing is kept between tests: they run in parallel, and
+ * another spec in the same worker can recreate the database between them.
+ */
+async function signInWithArticle(page: Page, email: string, slug: string): Promise<string> {
+  const keeper = await signInAs(page, email, ['discord'], 'admin');
   // Staff only, so its page is read afresh for each request rather than from the public help cache.
-  articleId = await withE2eSql((sql) =>
+  return withE2eSql((sql) =>
     insertHelpArticle(
       sql,
-      { title: 'Testwort Twin Tables', slug: SLUG, audience: 'staff', body: TWO_TABLES },
+      { title: 'Testwort Twin Tables', slug, audience: 'staff', body: TWO_TABLES },
       keeper.userId,
     ),
   );
@@ -51,8 +50,9 @@ const tableRegionNames = (page: Page) =>
 test('two tables under one heading on a help page are two regions of different names', async ({
   page,
 }) => {
-  await signInWithArticle(page, 'e@table-frame-names.test');
-  await page.goto(`/help/staff/${SLUG}`);
+  const slug = 'testwort-twin-tables-page';
+  await signInWithArticle(page, 'e@table-frame-names.test', slug);
+  await page.goto(`/help/staff/${slug}`);
   // Precondition: both tables are drawn, each in its region.
   await expect(page.getByRole('main').getByRole('table')).toHaveCount(2);
   const names = await tableRegionNames(page);
@@ -62,7 +62,11 @@ test('two tables under one heading on a help page are two regions of different n
 });
 
 test('two tables in the help editor are two regions of different names', async ({ page }) => {
-  await signInWithArticle(page, 'e2@table-frame-names.test');
+  const articleId = await signInWithArticle(
+    page,
+    'e2@table-frame-names.test',
+    'testwort-twin-tables-editor',
+  );
   await page.goto(`/keepers/help/${articleId}`);
   const editor = page.getByRole('textbox', { name: /Body/ });
   // Precondition: both tables are drawn in the editor, each in its region.
