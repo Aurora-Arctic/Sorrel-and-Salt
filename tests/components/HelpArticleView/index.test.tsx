@@ -249,7 +249,11 @@ describe('HelpArticleView under the public help header', () => {
   it('makes the article’s title the one level-one heading, with no search box of its own', () => {
     render(
       <HelpFrame>
-        <HelpArticleView title="Testwort Guide" body="## Testwort Section\n\nText." subpages={[]} />
+        <HelpArticleView
+          title="Testwort Guide"
+          body={'## Testwort Section\n\nText.'}
+          subpages={[]}
+        />
       </HelpFrame>,
     );
 
