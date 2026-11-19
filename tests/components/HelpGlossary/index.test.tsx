@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import HelpGlossary from '@/components/HelpGlossary';
+import { HelpGlossarySkeleton } from '@/components/HelpGlossary/skeleton';
 
 // /help/glossary: each term in the order handed (the finder's A to Z), with an anchor from its slug, so
 // /help/glossary#steward lands on Steward, and its definition through the sanitising Markdown renderer (DESIGN.md §10).
@@ -12,13 +13,22 @@ const TERMS = [
 ];
 
 describe('HelpGlossary', () => {
-  it('draws no heading or search box of its own, which the help header holds above it', () => {
+  it('names itself Glossary as its one level-one heading, leaving the search box to the help header', () => {
     render(<HelpGlossary terms={TERMS} />);
 
-    // Precondition: the page itself drew, under its own title.
-    expect(screen.getByRole('heading', { level: 2, name: 'Glossary' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual([
+      'Glossary',
+    ]);
+    expect(screen.queryByRole('heading', { name: 'Help' })).toBeNull();
     expect(screen.queryByRole('search')).toBeNull();
+  });
+
+  it('draws its skeleton with Glossary as the one level-one heading', () => {
+    render(<HelpGlossarySkeleton />);
+
+    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual([
+      'Glossary',
+    ]);
   });
 
   it('lists each term as a term, in the order handed, each anchored by its slug', () => {
@@ -100,7 +110,7 @@ describe('HelpGlossary head', () => {
     const back = screen.getByRole('link', { name: 'Back to Help' });
     expect(back).toHaveAttribute('href', '/help');
     expect(
-      back.compareDocumentPosition(screen.getByRole('heading', { level: 2, name: 'Glossary' })),
+      back.compareDocumentPosition(screen.getByRole('heading', { level: 1, name: 'Glossary' })),
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
@@ -110,7 +120,7 @@ describe('HelpGlossary head', () => {
     const edit = screen.getByRole('link', { name: 'Edit Glossary' });
     expect(edit).toHaveAttribute('href', '/keepers/help?view=glossary');
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Glossary' }).compareDocumentPosition(edit),
+      screen.getByRole('heading', { level: 1, name: 'Glossary' }).compareDocumentPosition(edit),
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
