@@ -20,7 +20,7 @@ const Welcome = ({ landing }: WelcomeProps): ReactElement => (
           Continue
         </PendingLink>
       ) : (
-        <PendingLink className="btn btn--solid" href="/sign-in">
+        <PendingLink className="btn btn--solid" href="/sign-in" rel="nofollow">
           Sign In
         </PendingLink>
       )}

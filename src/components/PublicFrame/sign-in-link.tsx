@@ -25,13 +25,14 @@ export function SignInLinkWithQuery({
       next={query ? `${pathname}?${query}` : pathname}
       configured={configured}
       label="Sign In"
+      nofollow
     />
   );
 }
 
 export function SignInLink(): ReactElement {
   return (
-    <PendingLink className="btn btn--solid btn--medium" href={signInPath(undefined)}>
+    <PendingLink className="btn btn--solid btn--medium" href={signInPath(undefined)} rel="nofollow">
       Sign In
     </PendingLink>
   );

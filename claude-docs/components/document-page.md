@@ -5,7 +5,7 @@
 Facts the types (`DocumentPageProps`) cannot say:
 
 - `updatedOn` is a `Date` shown in UTC, so no server zone moves it.
-- `body` is the document's markdown, rendered on the server: `##` and `###` headings, paragraphs, lists, tables and footnotes. Raw HTML is shown as text. A link that is not a site path, `#`, `?`, `https:` or `mailto:` is dropped to its text, and a link into `/account` carries `rel="nofollow"`.
+- `body` is the document's markdown, rendered on the server: `##` and `###` headings, paragraphs, lists, tables and footnotes. Raw HTML is shown as text. A link that is not a site path, `#`, `?`, `https:` or `mailto:` is dropped to its text, and a link into `/account`, or one with a `?support=` parameter (it only opens the support dialog), carries `rel="nofollow"`.
 
 ## Contracts
 

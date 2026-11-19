@@ -26,6 +26,7 @@ const SignInDialog = ({
   configured,
   label,
   className = 'btn btn--solid btn--medium',
+  nofollow = false,
   mode: openingMode = 'sign-in',
   ledes,
   signUpLandsOnNext,
@@ -61,6 +62,7 @@ const SignInDialog = ({
         ref={link}
         className={className}
         href={withMode(signInPath(next), openingMode)}
+        rel={nofollow ? 'nofollow' : undefined}
         onClick={openDialog}
       >
         {label}

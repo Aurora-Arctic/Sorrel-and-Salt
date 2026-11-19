@@ -10,6 +10,8 @@ import { unified } from 'unified';
 import { MARK, shownText, type HelpTerms } from '../../lib/help-marks';
 import { widgetOf, type HelpWidgetName } from '../../lib/help-widgets';
 import { OPENABLE_ADDRESS } from '../../lib/link-address';
+import { SITE_ORIGIN } from '../../lib/site';
+import { SUPPORT_PARAM } from '../../lib/support-path';
 import { slugify } from '../../lib/slugify';
 import HelpScreenshot from '../HelpScreenshot';
 import HelpTerm from '../HelpTerm';
@@ -323,6 +325,11 @@ function shapeFootnotes(node: Element): void {
   }
 }
 
+/** A link that only opens the support dialog over the page it names; the base lets a bare `?support=` parse. */
+function opensSupport(href: string): boolean {
+  return new URL(href, SITE_ORIGIN).searchParams.has(SUPPORT_PARAM);
+}
+
 function openableLinks(children: ElementContent[]): ElementContent[] {
   return children.flatMap((child) => {
     if (!isElement(child)) return [child];
@@ -330,7 +337,7 @@ function openableLinks(children: ElementContent[]): ElementContent[] {
     if (child.tagName !== 'a') return [child];
     const href = child.properties.href;
     if (typeof href !== 'string' || !OPENABLE_ADDRESS.test(href)) return child.children;
-    if (ACCOUNT_ADDRESS.test(href)) child.properties.rel = ['nofollow'];
+    if (ACCOUNT_ADDRESS.test(href) || opensSupport(href)) child.properties.rel = ['nofollow'];
     return [child];
   });
 }
