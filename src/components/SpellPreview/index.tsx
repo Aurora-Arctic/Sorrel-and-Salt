@@ -16,8 +16,8 @@ import { BurnLayers, FaceLayers } from '../SpellCard/layers';
 import SpellRecipeBody from '../SpellRecipe/body';
 import SpellRecipeSummary from '../SpellRecipe/summary';
 import { holdPage } from '../Modal/page-hold';
-import { EDGE_EMBERS, HEARTH_EMBERS } from './embers';
-import type { Ember, SpellPreviewProps } from './types';
+import { EDGE_EMBERS, FLECKS, HEARTH_EMBERS, HEAT } from './embers';
+import type { Ember, Fleck, Heat, SpellPreviewProps } from './types';
 import { useWakeLock } from './use-wake-lock';
 import './index.scss';
 import { cx } from '@/lib/class-names';
@@ -40,13 +40,12 @@ function addressWith(preview: boolean): string {
 const emberStyle = (ember: Ember): CSSProperties =>
   ({
     '--x': ember.x === undefined ? undefined : `${ember.x}%`,
-    '--r': ember.right === undefined ? undefined : `${ember.right}rem`,
-    '--b': ember.bottom === undefined ? undefined : `${ember.bottom}rem`,
+    '--r': ember.right === undefined ? undefined : `${ember.right}px`,
+    '--b': ember.bottom === undefined ? undefined : `${ember.bottom}px`,
     '--w': `${ember.w}px`,
     '--h': `${ember.h}px`,
-    '--br': ember.br,
     '--d': `${ember.d}s`,
-    '--delay': `-${ember.delay}s`,
+    '--delay': `${ember.delay}s`,
     '--sway': `${ember.sway}px`,
   }) as CSSProperties;
 
@@ -57,12 +56,33 @@ const embers = (list: readonly Ember[], edge: boolean): ReactElement[] =>
       className={cx(
         'spell-preview__ember',
         `spell-preview__ember--${ember.kind}`,
+        `spell-preview__ember--shape-${ember.shape}`,
         edge && 'spell-preview__ember--edge',
       )}
       style={emberStyle(ember)}
     />
   ));
 
+const fleckStyle = (fleck: Fleck): CSSProperties =>
+  ({
+    right: `${fleck.right}px`,
+    bottom: `${fleck.bottom}px`,
+    width: `${fleck.w}px`,
+    height: `${fleck.h}px`,
+    '--peak': fleck.peak,
+    '--d': `${fleck.d}s`,
+    '--delay': `${fleck.delay}s`,
+  }) as CSSProperties;
+
+const heatStyle = (heat: Heat): CSSProperties =>
+  ({
+    '--r': `${heat.right}px`,
+    '--b': `${heat.bottom}px`,
+    '--delay': `${heat.delay}s`,
+  }) as CSSProperties;
+
+// Every layer is in the markup from the first frame and timed by CSS alone, so what sits on the edge waits for the burn by its
+// animation delay, not by a timer.
 const Scene = (): ReactElement => (
   <>
     <SpellCardFilters />
@@ -72,7 +92,29 @@ const Scene = (): ReactElement => (
       <span className="spell-preview__hearth" />
       <span className="spell-preview__embers">{embers(HEARTH_EMBERS, false)}</span>
       <BurnLayers block="spell-preview" />
-      <span className="spell-preview__embers">{embers(EDGE_EMBERS, true)}</span>
+      <span className="spell-preview__heats">
+        {HEAT.map((heat, i) => (
+          <span
+            key={i}
+            className="spell-preview__heat"
+            data-burn-part="heat"
+            style={heatStyle(heat)}
+          >
+            <BurnLayers block="spell-preview" />
+          </span>
+        ))}
+      </span>
+      <span className="spell-preview__embers spell-preview__late">
+        {FLECKS.map((fleck, i) => (
+          <i
+            key={i}
+            className="spell-preview__fleck"
+            data-burn-part="fleck"
+            style={fleckStyle(fleck)}
+          />
+        ))}
+      </span>
+      <span className="spell-preview__embers spell-preview__late">{embers(EDGE_EMBERS, true)}</span>
     </div>
   </>
 );
