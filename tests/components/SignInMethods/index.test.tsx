@@ -348,7 +348,7 @@ describe('SignInMethods', () => {
 
     expect(unlinkAccountMock).toHaveBeenCalledWith({ accountId: 'a-microsoft' });
     expect(screen.queryByRole('dialog')).toBeNull();
-    await waitFor(() => expect(status).not.toBeEmptyDOMElement());
+    await waitFor(() => expect(screen.getByRole('status')).not.toBeEmptyDOMElement());
     expect(screen.getAllByRole('status')).toHaveLength(1);
     expect(screen.queryByRole('alert')).toBeNull();
     expect(within(row('Microsoft')).getByRole('button', { name: 'Add Microsoft' })).toHaveFocus();
