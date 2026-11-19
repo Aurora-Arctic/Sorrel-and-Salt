@@ -125,7 +125,7 @@ These steps need your own Vercel, Neon, Google, Discord, Meta, Microsoft, Resend
     2. Settings → API Tokens → Add Token, with access to that sandbox.
     3. In Vercel, add `MAIL_TRANSPORT` = `mailtrap-sandbox`, `MAILTRAP_SANDBOX_TOKEN` = the token and `MAILTRAP_SANDBOX_ID` = the id, all Preview only, the last two Sensitive.
     4. Read a preview's mail in the sandbox's own inbox in Mailtrap.
-11. **IndexNow key (Production only)**. A key is 8 to 128 letters, digits, or dashes, and IndexNow issues none. Until it is set, no ping is sent.
+11. **IndexNow key (Production only)**. A key is 8 to 128 letters, digits, or dashes, and IndexNow issues none. Until it is set, no ping is sent. Only the production deploy sends a ping. You never give the key to IndexNow: each ping carries it, and IndexNow checks it against `/indexnow-key.txt`.
     1. Make a key: `openssl rand -hex 16` prints 32 letters and digits.
     2. In Vercel, add `INDEXNOW_KEY` with that value, scoped to Production only and marked Sensitive.
     3. Redeploy production, since Vercel applies a variable only to a new deploy.
