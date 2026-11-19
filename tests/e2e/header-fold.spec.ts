@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { seedWorld, signIn, visit } from './axe-sweep';
-import { DESKTOP_WIDTH, PURPOSE_WIDTHS } from './breakpoints';
+import { BAND_WIDTHS, DESKTOP_WIDTH, PURPOSE_WIDTHS } from './breakpoints';
 import { recreateE2eDatabase } from './database';
 import { seedCoven } from './stories/coven-ingredients';
 
@@ -450,4 +450,97 @@ test('draws the headings at their full sizes in a desktop window at the default 
   const section = main.getByRole('heading', { level: 2, name: 'Your Membership' });
   await expect(section).toBeVisible();
   expect((await sizesOf(section)).heading).toBeCloseTo(34.4, 1);
+});
+
+/** What the bar shows, as a person sees it: which of the fold's steps it has taken. */
+const barShows = (page: Page, signedIn: boolean): Promise<Record<string, boolean | string>> => {
+  const banner = page.getByRole('banner');
+  const nav = banner.getByRole('navigation', { name: 'Site' }).isVisible();
+  if (!signedIn) {
+    return Promise.all([
+      nav,
+      banner.getByRole('link', { name: 'Sign In', exact: true }).isVisible(),
+      banner.getByRole('button', { name: 'Menu', exact: true }).isVisible(),
+    ]).then(([links, signIn, menu]) => ({ links, signIn, menu }));
+  }
+  const add = banner.getByRole('button', { name: 'Add Ingredient', exact: true });
+  const account = banner.getByRole('button', { name: 'Fixture A', exact: true });
+  return Promise.all([
+    nav,
+    add
+      .isVisible()
+      .then(async (shown) => (shown ? ((await aspectOf(add)) > 2 ? 'label' : 'plus') : 'folded')),
+    aspectOf(account).then((aspect) => aspect > 1.5),
+  ]).then(([links, add, named]) => ({ links, add, named }));
+};
+
+test.describe('a window resized after the page has loaded, at a 200% root font', () => {
+  for (const [kind, open, signedIn] of [
+    ['a signed-in coven page', signedInCovenPage, true],
+    ['the public compendium', async () => '/compendium', false],
+  ] as const) {
+    for (const [from, to] of [
+      [BAND_WIDTHS.tablet, DESKTOP_WIDTH],
+      [DESKTOP_WIDTH, BAND_WIDTHS.tablet],
+    ] as const) {
+      test(`folds ${kind}'s bar from ${from}px to ${to}px as a page loaded at ${to}px does`, async ({
+        page,
+      }) => {
+        const path = await open(page);
+        await page.setViewportSize({ width: to, height: 812 });
+        await visit(page, path);
+        await rootFont(page, '200%');
+        const loaded = await barShows(page, signedIn);
+
+        await page.setViewportSize({ width: from, height: 812 });
+        await page.reload();
+        await rootFont(page, '200%');
+        await expect.poll(() => barShows(page, signedIn)).not.toEqual(loaded);
+        await page.setViewportSize({ width: to, height: 812 });
+
+        await expect.poll(() => barShows(page, signedIn)).toEqual(loaded);
+        await expectOneLine(page);
+        await expectBarInWindow(page);
+        await assertNoSidewaysScroll(page, { width: to });
+      });
+    }
+  }
+});
+
+test.describe('an item that folds away while it holds the focus', () => {
+  test('Add Ingredient gives the focus to the account button, which now holds it', async ({
+    page,
+  }) => {
+    const path = await signedInCovenPage(page);
+    await page.setViewportSize({ width: DESKTOP_WIDTH, height: 812 });
+    await visit(page, path);
+    await rootFont(page, '200%');
+    const banner = page.getByRole('banner');
+    const add = banner.getByRole('button', { name: 'Add Ingredient', exact: true });
+    const account = banner.getByRole('button', { name: 'Fixture A', exact: true });
+    await banner.getByRole('navigation', { name: 'Site' }).getByRole('link').last().focus();
+    await page.keyboard.press('Tab');
+    await expect(add).toBeFocused();
+
+    await page.setViewportSize({ width: PURPOSE_WIDTHS.reflow, height: 812 });
+
+    await expect(add).toBeHidden();
+    await expect(account).toBeFocused();
+  });
+
+  test('Sign In gives the focus to the Menu button, which now holds it', async ({ page }) => {
+    await page.setViewportSize({ width: DESKTOP_WIDTH, height: 812 });
+    await visit(page, '/compendium');
+    await rootFont(page, '200%');
+    const banner = page.getByRole('banner');
+    const signIn = banner.getByRole('link', { name: 'Sign In', exact: true });
+    await banner.getByRole('button', { name: 'Toggle Light and Dark Mode' }).focus();
+    await page.keyboard.press('Shift+Tab');
+    await expect(signIn).toBeFocused();
+
+    await page.setViewportSize({ width: PURPOSE_WIDTHS.reflow, height: 812 });
+
+    await expect(signIn).toBeHidden();
+    await expect(banner.getByRole('button', { name: 'Menu', exact: true })).toBeFocused();
+  });
 });
