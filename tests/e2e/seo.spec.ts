@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures';
-import { recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
+import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 
 // What a crawler reads on the public pages, from the HTML as served and signed out.
 // The e2e servers run outside production, so the robots and sitemap files are proved by
@@ -10,6 +11,7 @@ test.beforeAll(async () => {
 });
 
 const count = (html: string, pattern: RegExp): number => [...html.matchAll(pattern)].length;
+const NOINDEX = /<meta[^>]+name="robots"[^>]+noindex/;
 const titleOf = (html: string): string => /<title>([^<]*)<\/title>/.exec(html)?.[1] ?? '';
 const descriptionOf = (html: string): string =>
   /<meta name="description" content="([^"]*)"/.exec(html)?.[1] ?? '';
@@ -116,6 +118,47 @@ test('a version page is titled with its document and number, the current one can
   const html = await (await request.get('/terms/versions/1')).text();
   expect(titleOf(html)).toMatch(/^Terms of Use, Version 1\b/);
   expect(canonicalOf(html)).toBe('https://sorrelandsalt.com/terms');
+  expect(html).not.toMatch(NOINDEX);
+});
+
+test('once a newer version is published, the older version page is noindex with its links followed, and the newer is not', async ({
+  request,
+}) => {
+  const newer = await withE2eSql(async (sql) => {
+    const [current] = await sql`
+      select v.document_id, v.number, v.body from document_versions v
+      join documents d on d.id = v.document_id
+      where d.key = 'code-of-ethics' and d.deleted_at is null
+        and v.status = 'published' and v.deleted_at is null
+      order by v.number desc limit 1`;
+    // Precondition: the seeded version is there, and is the one the document page shows.
+    expect(current).toBeTruthy();
+    const number = (current!.number as number) + 1;
+    await sql`
+      insert into document_versions ${sql({
+        document_id: current!.document_id as string,
+        number,
+        body: current!.body as string,
+        status: 'published',
+        published_at: new Date(),
+        created_by: BOOTSTRAP_USER_ID,
+        updated_by: BOOTSTRAP_USER_ID,
+      })}`;
+    return { older: current!.number as number, number };
+  });
+
+  const older = await request.get(`/code-of-ethics/versions/${newer.older}`);
+  expect(older.status()).toBe(200);
+  const olderHtml = await older.text();
+  // Why it could have stayed indexable: the page names itself, so it is no longer the current version.
+  expect(canonicalOf(olderHtml)).toBe(
+    `https://sorrelandsalt.com/code-of-ethics/versions/${newer.older}`,
+  );
+  expect(metaOf(olderHtml, 'robots')).toBe('noindex, follow');
+
+  const current = await (await request.get(`/code-of-ethics/versions/${newer.number}`)).text();
+  expect(canonicalOf(current)).toBe('https://sorrelandsalt.com/code-of-ethics');
+  expect(current).not.toMatch(NOINDEX);
 });
 
 // robots.txt blocks `/?support=` and `/account`, so a crawler is asked not to follow a link to either.
