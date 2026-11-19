@@ -1,4 +1,5 @@
-import { and, eq, gt, ne, not, type SQL } from 'drizzle-orm';
+import { and, eq, gt, isNotNull, ne, not, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { findOneIngredient } from './ingredients';
@@ -103,7 +104,43 @@ export async function findCompendiumSlugs(): Promise<CompendiumSlugEntry[]> {
     .sort((a, b) => a.name.localeCompare(b.name) || a.slug.localeCompare(b.slug));
 }
 
-/** Every slug a deleted, shown compendium entry left that no live entry or redirect now answers, A to Z. */
+// The same table read again, so each subquery can name the deleted row it is asked about.
+const liveHolder = alias(ingredients, 'live_slug_holder');
+const liveTarget = alias(ingredients, 'live_redirect_target');
+
+/**
+ * Every slug a deleted compendium entry left, A to Z, that the entry showed when it was deleted (a hidden entry's address was never public)
+ * and that no live entry holds or redirects from now, since those addresses answer the live entry and a 410 would hide it.
+ * It skips the entry's own tombstone filter and no other; its one caller is `listDeletedCompendiumSlugs`.
+ */
 export async function findDeletedCompendiumSlugsIncludingSoftDeleted(): Promise<string[]> {
-  throw new Error('not implemented');
+  const rows = await selectFrom(
+    ingredients,
+    and(
+      inCompendium(ingredients),
+      isNotNull(ingredients.deletedAt),
+      eq(ingredients.shown, true),
+      not(
+        existsIn(liveHolder, and(inCompendium(liveHolder), eq(liveHolder.slug, ingredients.slug))),
+      ),
+      not(
+        existsIn(
+          retiredIngredientSlugs,
+          and(
+            inCompendium(retiredIngredientSlugs),
+            eq(retiredIngredientSlugs.slug, ingredients.slug),
+            gt(retiredIngredientSlugs.expiresAt, new Date()),
+            existsByKey(
+              liveTarget,
+              liveTarget.id,
+              retiredIngredientSlugs.ingredientId,
+              inCompendium(liveTarget),
+            ),
+          ),
+        ),
+      ),
+    ),
+    { columns: ['slug'] },
+  );
+  return [...new Set(rows.map(({ slug }) => slug))].sort((a, b) => a.localeCompare(b));
 }
