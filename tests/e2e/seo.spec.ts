@@ -193,6 +193,31 @@ test('every Support link, and the terms link to the acceptance page, is nofollow
   for (const tag of terms) expect(tag).toMatch(/rel="nofollow"/);
 });
 
+// robots.txt blocks `/sign-in` too, and a support link in a document body only opens a dialog over the page.
+test('every Sign In link, and every support link in a document, is nofollow, and a link to another document is not', async ({
+  request,
+}) => {
+  const anchors = (html: string, href: RegExp) =>
+    [...html.matchAll(/<a [^>]*>/g)].map(([tag]) => tag).filter((tag) => href.test(tag));
+
+  for (const path of ['/', '/compendium', '/about']) {
+    const signIn = anchors(await (await request.get(path)).text(), /href="\/sign-in[?"]/);
+    expect(signIn.length, path).toBeGreaterThan(0);
+    for (const tag of signIn) expect(tag, path).toMatch(/rel="nofollow"/);
+  }
+
+  for (const path of ['/about', '/terms', '/privacy', '/disclaimer', '/code-of-ethics']) {
+    const support = anchors(await (await request.get(path)).text(), /href="[^"]*[?&]support=/);
+    // Precondition: more than the footer's own Support link, so the document body's are among them.
+    expect(support.length, path).toBeGreaterThan(1);
+    for (const tag of support) expect(tag, path).toMatch(/rel="nofollow"/);
+  }
+
+  const disclaimer = anchors(await (await request.get('/terms')).text(), /href="\/disclaimer"/);
+  expect(disclaimer.length).toBeGreaterThan(0);
+  for (const tag of disclaimer) expect(tag).not.toMatch(/rel="nofollow"/);
+});
+
 test('each public page names its share card for link previews, absolute, sized and described', async ({
   request,
 }) => {
