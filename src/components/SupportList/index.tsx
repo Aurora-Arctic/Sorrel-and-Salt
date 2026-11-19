@@ -17,7 +17,6 @@ import SupportLink from '../SupportLink';
 import SupportSenderRequest from '../SupportSenderRequest';
 import { senderStatusLabel } from '../SupportSenderRequest/status';
 import type { SupportListProps } from './types';
-import './index.scss';
 
 // A row opens the request in a dialog at `?request=<id>` (claude-docs/components/support-list.md).
 

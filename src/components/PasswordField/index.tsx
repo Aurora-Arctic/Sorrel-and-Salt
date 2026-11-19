@@ -6,7 +6,6 @@ import { MysticEyeIcon } from '../IconTip';
 import { StrengthMeter } from './meter';
 import { PASSWORD_RULES } from './rules';
 import type { PasswordFieldProps } from './types';
-import './index.scss';
 
 // One password control: the browser's own autocomplete, an eye toggle inside the field, and, for a new
 // password, the strength meter. Nothing here blocks paste or caps the length; the server's rules

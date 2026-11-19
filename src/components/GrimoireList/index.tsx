@@ -7,7 +7,6 @@ import { recipeHref } from './recipe-href';
 import EmptyGrimoire from './empty';
 import GrimoireFilter from './filter';
 import type { GrimoireListProps } from './types';
-import './index.scss';
 
 // One tab (Spells or Drafts) of a coven's Grimoire list: the filter row, a card per spell and the pager, on CovenCards'
 // list shell. Render-only (claude-docs/components/grimoire-list.md). The wrapper's `data-density` draws the loading

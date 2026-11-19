@@ -4,7 +4,6 @@ import Notice from '../Notice';
 import SpellMarks from '../SpellMarks';
 import { WORKINGS_ID, WORKINGS_TITLE, WORKINGS_TITLE_ID } from '../SpellRecipe/sections';
 import type { SpellWorkingsProps, WorkingView } from './types';
-import './index.scss';
 
 // A spell's history on its recipe page: one row per working, newest day first. Complete on a draft row is the page's
 // to give (`completeAction`); a row carries no bin, since the Edit dialog holds Delete Working.

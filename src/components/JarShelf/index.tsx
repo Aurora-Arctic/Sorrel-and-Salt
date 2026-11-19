@@ -11,7 +11,6 @@ import { pick } from './pick';
 export { pick as pickJarShape } from './pick';
 import { SHAPES, lv, wv } from './shapes';
 import type { HeldJar, JarPart, JarShelfProps, ShelfForm } from './types';
-import './index.scss';
 
 // A shelf of small drawn jars, one per form of an ingredient, showing what the coven holds of each
 // (claude-docs/components/jar-shelf.md, "Contracts").

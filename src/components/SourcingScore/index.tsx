@@ -2,7 +2,6 @@ import { useId, type ReactElement } from 'react';
 import InfoTip from '../InfoTip';
 import { Icon } from '../IconTip/icons';
 import type { SourcingScoreProps } from './types';
-import './index.scss';
 
 // See claude-docs/components/sourcing-score.md.
 

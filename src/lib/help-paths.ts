@@ -25,3 +25,7 @@ export function helpPath({ kind, audience, slug, parentSlug }: HelpAddressed): s
   if (kind === 'faq') return `${base}#${slug}`;
   return parentSlug ? `${base}/${parentSlug}/${slug}` : `${base}/${slug}`;
 }
+
+/** The public help pages whose heading is the word Help: the front page and the search page. Every other help page is headed by its own title, with Help above it as a label. */
+export const isHelpFront = (pathname: string): boolean =>
+  pathname === '/help' || pathname === '/help/search';

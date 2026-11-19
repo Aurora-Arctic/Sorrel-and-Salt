@@ -16,7 +16,6 @@ import type {
   SpellRecipeLeadProps,
   SpellRecipeRestProps,
 } from './types';
-import './index.scss';
 
 // What a saved spell says below its head. The recipe page, the grimoire's Quick Look and the Preview pane all draw it,
 // so they cannot drift (claude-docs/components/spell-recipe.md).

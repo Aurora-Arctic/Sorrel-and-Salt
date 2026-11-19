@@ -3,13 +3,11 @@ import { ImageResponse } from 'next/og';
 import type { CompendiumShareCard } from '@/modules/ingredients';
 import { EntryCard, SiteCard } from './cards';
 import { SHARE_CARD_FONTS } from './fonts';
+import { SHARE_CARD_SIZE, SHARE_CARD_TYPE } from './size';
 
 // The share card a link preview shows, drawn to a PNG by `next/og` (claude-docs/seo/share-card.md).
 
-/** The size every card is drawn at, the one link previews ask for. */
-export const SHARE_CARD_SIZE = { width: 1200, height: 630 };
-
-export const SHARE_CARD_TYPE = 'image/png';
+export { SHARE_CARD_SIZE, SHARE_CARD_TYPE };
 
 const options = { ...SHARE_CARD_SIZE, fonts: [...SHARE_CARD_FONTS] };
 

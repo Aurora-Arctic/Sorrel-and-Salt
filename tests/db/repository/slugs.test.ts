@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { findCompendiumEntryBySlug, findCompendiumSlugRedirect, withAudit } from '@/db/repository';
+import {
+  findCompendiumEntryBySlug,
+  findCompendiumSlugRedirect,
+  findDeletedCompendiumSlugsIncludingSoftDeleted,
+  withAudit,
+} from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { assertSiteAdmin } from '@/modules/identity';
 import { A, E, asUser } from '../../support/as-user';
@@ -123,6 +128,96 @@ describe('findCompendiumSlugRedirect', () => {
     await expect(findCompendiumSlugRedirect('testwort', INSIDE)).resolves.toMatchObject({
       entry: { id: laterId },
     });
+  });
+});
+
+// The addresses a deleted entry left behind, which answer 410 Gone: the one finder in the folder that reads only tombstones.
+describe('findDeletedCompendiumSlugsIncludingSoftDeleted', () => {
+  const softDelete = (id: string) =>
+    sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
+  const hide = (id: string) => sql`update ingredients set shown = false where id = ${id}`;
+
+  /** Every row holding `slug`, with its tier, tombstone and flag: why the finder could have listed it. */
+  const holders = (slug: string) =>
+    sql`
+      select workspace_id is null as compendium, deleted_at is not null as deleted, shown
+      from ingredients where slug = ${slug} order by deleted_at nulls first`;
+
+  it("lists a deleted entry's slug, which the row still holds", async () => {
+    const id = await add('Testwort');
+    await softDelete(id);
+    expect(await holders('testwort')).toEqual([{ compendium: true, deleted: true, shown: true }]);
+
+    await expect(findDeletedCompendiumSlugsIncludingSoftDeleted()).resolves.toEqual(['testwort']);
+  });
+
+  it("leaves out a live entry's slug and a hidden entry's", async () => {
+    await add('Testwort');
+    await hide(await add('Testleaf'));
+    // Why either could have been listed: both are compendium rows holding their slugs.
+    expect(await holders('testwort')).toEqual([{ compendium: true, deleted: false, shown: true }]);
+    expect(await holders('testleaf')).toEqual([{ compendium: true, deleted: false, shown: false }]);
+
+    await expect(findDeletedCompendiumSlugsIncludingSoftDeleted()).resolves.toEqual([]);
+  });
+
+  it("leaves out a coven's deleted ingredient, whose address is no compendium page", async () => {
+    const id = await add('Testleaf', { workspaceId: WORKSPACE_W_ID });
+    await softDelete(id);
+    expect(await holders('testleaf')).toEqual([{ compendium: false, deleted: true, shown: true }]);
+
+    await expect(findDeletedCompendiumSlugsIncludingSoftDeleted()).resolves.toEqual([]);
+  });
+
+  // A hidden entry's address was never public, so its deletion tells the public nothing either.
+  it('leaves out an entry that was hidden when it was deleted', async () => {
+    const id = await add('Testroot');
+    await hide(id);
+    await softDelete(id);
+    expect(await holders('testroot')).toEqual([{ compendium: true, deleted: true, shown: false }]);
+
+    await expect(findDeletedCompendiumSlugsIncludingSoftDeleted()).resolves.toEqual([]);
+  });
+
+  it('leaves out a deleted slug a live entry has since taken, hidden or shown', async () => {
+    await softDelete(await add('Testwort'));
+    await add('Testwort');
+    await softDelete(await add('Testleaf'));
+    await hide(await add('Testleaf'));
+    // Why each could have been listed: a deleted compendium row still holds the slug beside the live one.
+    expect(await holders('testwort')).toEqual([
+      { compendium: true, deleted: false, shown: true },
+      { compendium: true, deleted: true, shown: true },
+    ]);
+    expect(await holders('testleaf')).toEqual([
+      { compendium: true, deleted: false, shown: false },
+      { compendium: true, deleted: true, shown: true },
+    ]);
+
+    await expect(findDeletedCompendiumSlugsIncludingSoftDeleted()).resolves.toEqual([]);
+  });
+
+  // The address redirects to the live entry, which a 410 would hide.
+  it("leaves out a deleted slug a live entry's redirect still runs from", async () => {
+    await softDelete(await add('Testwort'));
+    const movedId = await add('Testwort, relabelled');
+    await retire(movedId, 'testwort', new Date());
+    await expect(findCompendiumSlugRedirect('testwort', new Date())).resolves.toMatchObject({
+      entry: { id: movedId },
+    });
+
+    await expect(findDeletedCompendiumSlugsIncludingSoftDeleted()).resolves.toEqual([]);
+  });
+
+  it('lists a slug once, though two deleted entries held it, in order', async () => {
+    await softDelete(await add('Testwort'));
+    await softDelete(await add('Testwort'));
+    await softDelete(await add('Testbloom'));
+
+    await expect(findDeletedCompendiumSlugsIncludingSoftDeleted()).resolves.toEqual([
+      'testbloom',
+      'testwort',
+    ]);
   });
 });
 

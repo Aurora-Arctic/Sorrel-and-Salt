@@ -104,7 +104,9 @@ export async function generateMetadata({
 }: PublicCompendiumPageProps): Promise<Metadata> {
   const params = publicParams(await searchParams);
   return {
-    ...publicPageMetadata('Compendium', LIST_DESCRIPTION, await canonicalPath(params)),
+    ...publicPageMetadata('Compendium', LIST_DESCRIPTION, await canonicalPath(params), {
+      shareImage: false,
+    }),
     ...(isFiltered(params) && { robots: { index: false, follow: true } }),
   };
 }

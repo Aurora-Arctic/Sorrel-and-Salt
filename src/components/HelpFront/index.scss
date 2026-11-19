@@ -10,6 +10,15 @@ $-wide: page-with-nav-wide($document-menu-column, $measure);
     flex-basis: auto;
   }
 
+  // Help as a label sets the word as the heading did, so the page looks the same: the page's own title is its h1 below.
+  > .page-header > .help-front__label {
+    @include heading-face;
+    flex-basis: auto;
+    margin: 0;
+    top: 0;
+    @include heading-level(1);
+  }
+
   > .lede {
     margin-block: 0 space(4);
   }

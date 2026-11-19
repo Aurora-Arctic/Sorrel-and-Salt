@@ -1,6 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
 import { BurnLayers, FaceLayers } from './layers';
-import './index.scss';
 import type { SpellCardSkeletonKind } from './types';
 
 // The spell card's data-free frame: the face and shadow layers, the content, and the smouldering

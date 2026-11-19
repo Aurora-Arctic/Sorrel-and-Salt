@@ -4,7 +4,6 @@ import { type ReactElement, useId } from 'react';
 import TipAnchor from '../InfoTip/tip-anchor';
 import { useHydrated } from '@/lib/hydrated';
 import { relativePhrase } from './relative';
-import './index.scss';
 
 // The compact line is "Edited 3 days ago" once hydrated (it depends on the reader's clock), a date
 // before. The text is a button so a keyboard reaches the tip, InfoTip's pattern rather than

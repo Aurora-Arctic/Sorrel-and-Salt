@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
+import { HelpHeading } from '../HelpChrome';
 import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
 import { SkeletonWords } from '../Skeleton/text';
-import './index.scss';
 
 /** Each stand-in row's term and definition lengths, in words, so the rows vary as the real ones do. */
 const ROWS = [
@@ -19,7 +19,9 @@ const ROWS = [
 export const HelpGlossarySkeleton = (): ReactElement => (
   <div className="help-page help-glossary">
     <HelpBackLinkSkeleton>Back to Help</HelpBackLinkSkeleton>
-    <h2>Glossary</h2>
+    <HelpHeading level={2} up>
+      Glossary
+    </HelpHeading>
     <dl>
       {ROWS.map(([term, definition], n) => (
         <div key={n} className="help-glossary__entry">

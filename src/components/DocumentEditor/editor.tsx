@@ -13,7 +13,6 @@ import ConfirmedAction from '../ConfirmedAction';
 import RichTextEditor, { markdownOf, useRichTextEditor } from '../RichTextEditor';
 import { editorValueToMarkdown, markdownToEditorValue } from '../RichTextEditor/markdown';
 import type { DocumentEditorProps } from './types';
-import './index.scss';
 
 // The keeper's editor for one site document: the text as the public page will draw it, saved as a draft only its admin
 // sees (by the shared autosave, or at once by Save Draft), then published as the next version. A save, a publish and a

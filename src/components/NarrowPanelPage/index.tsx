@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import PageFrame from '../PageFrame';
 import PageHeader from '../PageHeader';
-import './index.scss';
 import type { NarrowPanelPageProps } from './types';
 import { cx } from '@/lib/class-names';
 

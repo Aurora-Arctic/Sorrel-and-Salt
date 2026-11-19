@@ -5,16 +5,18 @@ import { getSession, sessionIsVerified } from '@/lib/request-session';
 import { websiteJsonLd } from '@/lib/json-ld';
 import { emailPagePath } from '@/lib/account-email';
 import { signedInLanding } from '@/lib/landing';
-import { SITE_NAME } from '@/lib/site';
+import { SITE_LEDE, SITE_NAME } from '@/lib/site';
 import { publicPageMetadata } from '@/lib/page-metadata';
 
 // The one public page that reads the session, with getSession() as requireSession() would redirect the
 // signed-out visitors it exists for. It offers a signed-in visitor their landing, or sign-in; an
 // unverified account gets the email page. See claude-docs/design-decisions/auth.md, "Where the post-sign-in landing lives".
-const DESCRIPTION = 'A compendium, ingredient store and grimoire.';
+const TITLE = `${SITE_NAME}: A Shared Grimoire for Covens`;
+const DESCRIPTION = `${SITE_LEDE} The compendium is open to all.`;
 
-export const metadata: Metadata = publicPageMetadata(SITE_NAME, DESCRIPTION, '/', {
+export const metadata: Metadata = publicPageMetadata(TITLE, DESCRIPTION, '/', {
   absolute: true,
+  shareImage: false,
 });
 
 async function continueTarget(session: Session): Promise<Route> {

@@ -1,5 +1,8 @@
 import 'server-only';
-import { findCompendiumSlugs } from '../../../db/repository';
+import {
+  findCompendiumSlugs,
+  findDeletedCompendiumSlugsIncludingSoftDeleted,
+} from '../../../db/repository';
 import { cachedCompendiumRead } from '../../../lib/compendium-cache';
 import type { CompendiumSlugEntry } from '../types';
 
@@ -13,4 +16,13 @@ const cachedSlugs = cachedCompendiumRead('compendium-slugs', findCompendiumSlugs
  */
 export function listCompendiumSlugs(): Promise<CompendiumSlugEntry[]> {
   return cachedSlugs();
+}
+
+const cachedDeletedSlugs = cachedCompendiumRead('compendium-deleted-slugs', () =>
+  findDeletedCompendiumSlugsIncludingSoftDeleted(),
+);
+
+/** The addresses of deleted compendium entries that answer 410 Gone. Takes no session, for the same reason. */
+export function listDeletedCompendiumSlugs(): Promise<string[]> {
+  return cachedDeletedSlugs();
 }

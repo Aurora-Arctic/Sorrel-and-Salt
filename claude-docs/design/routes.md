@@ -93,7 +93,7 @@ Component folders are `src/components/<Name>/` with `index.tsx` and `index.scss`
 
 ## Componentized Sass
 
-Every component folder carries its own `index.scss`, imported by its `index.tsx`. One global stylesheet, `src/app/globals.scss`, is imported once by the root layout, with nothing component-specific in it. It exists because two things must be emitted exactly once: `_typography.scss`'s global element rules, and the theme token assignments. Each component's `index.scss` is its own compilation unit, so a shared partial that emitted CSS would duplicate it into every compiled stylesheet — which is why `_variables.scss` and `_mixins.scss` stay declaration-only.
+Every component folder carries its own `index.scss`, `@use`d from `src/scss/components.scss`, which the root layout imports once (`design-decisions/ui.md`, "One aggregate stylesheet for every component"). One global stylesheet, `src/app/globals.scss`, is imported once by the root layout, with nothing component-specific in it. It exists because two things must be emitted exactly once: `_typography.scss`'s global element rules, and the theme token assignments. Each component's `index.scss` is its own compilation unit when Sass loads it, so a shared partial that emitted CSS would duplicate it into every compiled stylesheet — which is why `_variables.scss` and `_mixins.scss` stay declaration-only.
 
 Shared partials live in `src/scss/` (`_variables`, `_mixins`, `_typography`, `_buttons`, `_print`) and are `@use`'d directly by whichever component needs them, never routed through a parent: `@use '../../scss/variables' as *;`. Never the deprecated `@import`.
 

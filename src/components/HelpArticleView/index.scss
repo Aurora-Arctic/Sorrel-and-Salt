@@ -4,9 +4,11 @@
 .help-article__body {
   margin-block-start: space(6);
 
-  // The body's own headings, one level down from the seed text: a contents menu jumps to the h3s.
+  // The body's own headings, one level down from the seed text: a contents menu jumps to the h3s. Under the public help
+  // header they are drawn one level up (h2, h3) and keep these styles through their size class (HelpHeading).
   // A short hairline beneath each section heading marks the break without a full rule.
-  h3 {
+  h3,
+  .help-heading--3 {
     position: relative;
     margin-block: space(8) space(3);
     padding-block-end: space(2);
@@ -24,7 +26,8 @@
     content: none;
   }
 
-  h4 {
+  h4,
+  .help-heading--4 {
     margin-block: space(6) space(2);
   }
 

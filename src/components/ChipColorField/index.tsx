@@ -22,7 +22,6 @@ import {
 import { nearColor } from '../../lib/near-color';
 import Notice from '../Notice';
 import type { ChipColorFieldProps, FormatOption, PickerColor, PickerFormat } from './types';
-import './index.scss';
 
 // One of a category group's two chip colours: Ark's picker kept in step with the hex box the form
 // validates, with a veil under 4.5:1, a copy-partner button, a sample chip with its ratio and a

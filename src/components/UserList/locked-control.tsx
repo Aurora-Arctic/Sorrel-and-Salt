@@ -3,7 +3,6 @@
 import { type ReactElement, useId, useState } from 'react';
 import TipAnchor from '../InfoTip/tip-anchor';
 import type { LockedControlProps } from './types';
-import './controls.scss';
 
 // The locked Revoke, shared by every control that locks the same way
 // (claude-docs/components/user-list.md).

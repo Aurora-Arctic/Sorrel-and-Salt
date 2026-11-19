@@ -674,7 +674,7 @@ Minted from the search engine audit (M17.6). Finding: SEO-8; it is in `claude-do
 
 _Acceptance criteria:_
 
-- The home page's title is 50 to 60 characters.
+- The home page's title is 45 to 60 characters. The owner chose a 45-character title.
 - Its description is 150 to 160 characters.
 - Its description agrees with the intro on the page.
 - Bing Webmaster Tools no longer lists either as too short after its next crawl.

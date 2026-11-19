@@ -26,7 +26,6 @@ import {
   WIPE_MS,
 } from './typing';
 import type { SearchSentenceProps } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 function leadNode(lead: string): ReactNode {

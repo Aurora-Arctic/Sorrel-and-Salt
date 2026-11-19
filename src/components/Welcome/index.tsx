@@ -1,17 +1,14 @@
 import type { ReactElement } from 'react';
 import PageHeader from '../PageHeader';
 import type { WelcomeProps } from './types';
-import './index.scss';
 import { PendingLink } from '../../lib/navigation';
+import { SITE_LEDE } from '../../lib/site';
 
 // The session changes exactly one thing, the way in (claude-docs/components/welcome.md).
 
 const Welcome = ({ landing }: WelcomeProps): ReactElement => (
   <div className="welcome">
-    <PageHeader
-      title="Sorrel & Salt"
-      lede="A shared grimoire for a coven or a household: a compendium of ingredients, the stock you keep, and the spells you make from it."
-    />
+    <PageHeader title="Sorrel & Salt" lede={SITE_LEDE} />
     <p className="welcome__gate">
       Sorrel &amp; Salt is invite-only. Signing in gives you an account, but you need an invitation
       from someone who already uses it to get in.
@@ -22,7 +19,7 @@ const Welcome = ({ landing }: WelcomeProps): ReactElement => (
           Continue
         </PendingLink>
       ) : (
-        <PendingLink className="btn btn--solid" href="/sign-in">
+        <PendingLink className="btn btn--solid" href="/sign-in" rel="nofollow">
           Sign In
         </PendingLink>
       )}

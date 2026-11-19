@@ -5,7 +5,6 @@ import TipAnchor from '../InfoTip/tip-anchor';
 import { privilegeLedgerHref } from '../PrivilegeLedger/href';
 import { HistoryIcon } from './icons';
 import type { HistoryLinkProps } from './types';
-import './controls.scss';
 
 // A row's link to the privilege ledger searched for its user (address lower-cased); its tip behaves as InfoTip's, through `useTip`
 // (claude-docs/components/user-list.md, "Contracts").

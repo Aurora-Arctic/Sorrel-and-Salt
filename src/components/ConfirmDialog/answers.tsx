@@ -1,6 +1,5 @@
 import type { ReactElement, ReactNode, Ref } from 'react';
 import BusyButton from '../BusyButton';
-import '../Modal/index.scss';
 
 // The row under a yes-or-no question: the confirm, an optional second confirm, and the safe answer
 // that comes last. One row for the confirm dialog, the confirmation over a form and the discard

@@ -2,7 +2,6 @@ import { useId, type ReactElement } from 'react';
 import IconTip from '../IconTip';
 import { ChevronIcon } from '../IconTip/icons';
 import type { AccessCardsProps, AccessMark } from './types';
-import './index.scss';
 
 // Who may see each kind of data: one card per kind, a mark per role on its summary line, and a role row over the
 // cards that pins under the bar. Native `<details>`, so a card opens with no script (claude-docs/components/access-cards.md).

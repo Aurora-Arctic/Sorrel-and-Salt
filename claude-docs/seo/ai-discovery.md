@@ -13,6 +13,10 @@ handlers beside the paths.
 All three read `listCompendiumSlugs()` (MB.84): every current compendium
 entry, with no session, held in the data cache under the `compendium` tag, so
 a keeper write refreshes them ([`../db/compendium-cache.md`](../db/compendium-cache.md)).
+`llms.txt` also reads `PUBLIC_DOCUMENTS` (`src/lib/public-documents.ts`, the list the
+sitemap reads too) and `listHelpArticleLinks()`, the shown, public help guides, articles
+and sub pages with title and summary, held in the data cache under the `help` tag.
+The catalog reads neither.
 The read leaves out soft-deleted rows and every workspace's own ingredients in
 SQL. Every URL is built on `siteUrl()` in `src/lib/site.ts`, production's
 origin, never on the request's host. Off production the proxy sets
@@ -21,7 +25,7 @@ production by listing them in `CRAWLABLE_PATHS`.
 
 ## llms.txt
 
-Specification: https://llmstxt.org/, read 2026-10-19. It gives no version. The
+Specification: https://llmstxt.org/, read 2026-11-19. It gives no version. The
 file sits at `/llms.txt` and is Markdown, in this order: an H1 with the site
 name (the only required part), a blockquote summary, prose with no headings,
 then H2 sections of link lists, each item `- [name](url): optional notes`.
@@ -30,7 +34,11 @@ media type; the handler answers `text/markdown; charset=utf-8`.
 
 Ours has a Compendium section (the list page, then one link per entry, named
 with `pageTitleOf` so two entries sharing a label are told apart by formal
-name) and an Optional section holding the sitemap. Each entry link carries a
+name), a Documents section (About and each public document, by its title), a
+Help section (`/help`, `/help/glossary`, then each article and sub page, with its
+summary as the note) and an Optional section holding the sitemap. The spec
+allows any number of H2 sections and asks that the file stay small enough to fit
+in context. Each entry link carries a
 note, the entry's description cut by `describe` in `src/lib/page-metadata.ts`
 (the cutter the meta description uses) with brackets escaped; an entry with no
 description has no note. The description comes from `listCompendiumSlugs()`,
@@ -45,14 +53,16 @@ Two drafts name two paths, and both are served from one body.
 | AI Catalog draft, https://ai-catalog.io/spec/                         | `specVersion` "1.0", undated      | `/.well-known/ai-catalog.json` | `specVersion`, `entries`; per entry `identifier`, `type`, one of `url`/`data` |
 | Agentic Resource Discovery, https://agenticresourcediscovery.org/spec | v0.91, 26 August 2026, "Proposal" | `/.well-known/ard.json`        | per entry `identifier`, `displayName`, `type`, one of `url`/`data`            |
 
-Both read 2026-10-19. ARD says a consumer MUST fetch `ard.json` and calls
+Both read 2026-11-19. ARD says a consumer MUST fetch `ard.json` and calls
 `ai-catalog.json` its predecessor, whose publishers SHOULD move; it also says
 the two evolve independently, so a consumer of either finds the file. The
 body carries every field either requires, plus `host.displayName` (the AI
-Catalog draft's Level 2, "Discoverable"). The one entry is the compendium: an
+Catalog draft's Level 2, "Discoverable"). The one entry is the compendium, and the catalog stays compendium-only (the documents and help are in `llms.txt` alone): an
 identifier `urn:air:sorrelandsalt.com:compendium:ingredients`, `type` of
 `text/html` and `url` of `/compendium`, because the artefact the entry points
-at is the HTML page. `updatedAt` is the latest real change among the entries.
+at is the HTML page. `updatedAt` is the latest real change among the entries. The entry carries four
+`representativeQueries`, plain questions a person would ask of the compendium; ARD says
+an entry SHOULD carry two to five.
 
 The media type is `application/ai-catalog+json` on both paths: the AI Catalog
 draft says a catalog SHOULD be served with it, and ARD names none for
@@ -64,9 +74,35 @@ Every page also names the catalog from its head, as
 `<link rel="ai-catalog" href=... type="application/ai-catalog+json">`
 (`src/app/catalog-link.tsx`, placed by the root layout). The AI Catalog draft's
 "Link Relation Discovery" lets a page do this, and an agent that finds no `Link`
-header reads it. ARD names `rel="ard"` for `ard.json` instead; we do not emit
-that yet.
+header reads it. ARD v0.91 §5.1 names `rel="ard"` for `ard.json`, and a consumer MUST
+honour it, so the same component emits `<link rel="ard" href=...>` beside it, at the
+absolute `siteUrl` address.
 
 ### Keeping copies out of search
 
 Noindex: entry opens Quick Look over the compendium and support the support dialog over any page, so each makes an address a copy of a real page; kept out of search results with links still followed. Anything but a production deploy tells search engines to index nothing because staging is a public URL that would otherwise be indexed as a duplicate of the compendium. VERCEL_ENV, not NODE_ENV, which is production on every deploy, staging included (the test impersonation uses, src/lib/impersonation.ts). Unset locally, so a dev server is noindex too.
+
+## A deleted entry's address
+
+A page can only answer 404, 403 or 401, so `src/proxy.ts` answers 410 Gone, with `X-Robots-Tag: noindex`, for the address of a deleted compendium entry (`/compendium/<slug>`). A 410 tells a crawler the entry is gone for good, so it drops the address sooner than it would a 404.
+
+The proxy imports no database code. It reads `GET /api/compendium/deleted-slugs`, a public list with no session, and answers 410 when the decoded slug is in it. The read times out after two seconds, and any failure passes the request on to the page, so a failed read costs a 404 and never breaks a live entry. The route is outside `/api/graphql` because it carries no application data (`.claude/rules/graphql.md`, "Access paths outside /api/graphql").
+
+`listDeletedCompendiumSlugs` holds the list in the data cache under the `compendium` tag, so a keeper write expires it. `findDeletedCompendiumSlugsIncludingSoftDeleted` builds it and keeps a slug only when:
+
+- the entry was in the compendium and was shown when deleted, because a hidden entry's address was never public;
+- no live compendium entry holds the slug now;
+- no live compendium entry has an unexpired redirect from it ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md)), because that address answers the live entry.
+
+A slug that is later reused or redirected leaves the list on the next cache expiry.
+
+## Telling IndexNow a page changed
+
+After a keeper write that changes a public compendium entry or a public help page, `pingIndexNowAfterResponse` (`src/lib/indexnow.ts`) names the changed addresses to IndexNow, so a search engine that supports it recrawls them without waiting. The ping is scheduled with `after()` once the save has committed, next to the cache expiry and outside `withAudit`, so a save never waits on it and a failed ping never fails a save. A failure is logged without the key.
+
+- It sends only on a production deploy (`VERCEL_ENV`, as in the section above) with `INDEXNOW_KEY` set. Anywhere else, nothing is sent.
+- The key is proved by a file named after it, `GET /<key>.txt` at the root (IndexNow's first option), so only someone who already knows the key can find the file. `src/proxy.ts` answers that address with the key as plain text and nothing else, and adds nothing while no key is set. A route in `src/app` cannot take the address, which comes from the environment. The ping sends no `keyLocation`, so IndexNow looks at that default address. The key is never written in the repo.
+- Production `robots.txt` allows `/*.txt$`, so a crawler can fetch the file without `robots.txt` naming the key, which anyone can read.
+- Compendium writes ping the entry's address; a write that changes a slug or hides an entry pings the old address too, and an entry that stays hidden pings nothing. Reviewed marks, references and vocabulary writes ping nothing.
+- Help writes ping `helpPath` of a public article with its `#fragment` removed: a term pings `/help/glossary` and a FAQ entry pings `/help`. Staff help and guide or FAQ reordering ping nothing.
+- Seed files and migrations change pages without a ping. A change made that way reaches a search engine only when it recrawls.

@@ -249,6 +249,116 @@ test.describe('search', () => {
   });
 });
 
+// Each public help page has one level-one heading, naming what it is about: Help on the index and the search page,
+// the title on an article and on the glossary, with Help above the title as a label. The help header stays mounted
+// between pages, so the headings are checked after moves made in the page as well as after a fresh load.
+test.describe('the main heading', () => {
+  const ONE_HEADING: [string, string][] = [
+    ['/help', 'Help'],
+    [`/help/search?q=${STAFF_WORD}`, 'Help'],
+    [`/help/${HELP.guide.slug}`, HELP.guide.title],
+    [`/help/${HELP.guide.slug}/${HELP.kindling.slug}`, HELP.kindling.title],
+    ['/help/glossary', 'Glossary'],
+  ];
+
+  /** The page's level-one headings, read once it shows the one it should. */
+  const levelOne = async (page: Page, name: string) => {
+    await expect(page.getByRole('heading', { level: 1, name, exact: true })).toBeVisible();
+    return page.getByRole('heading', { level: 1 }).allTextContents();
+  };
+
+  const guides = (page: Page) => page.getByRole('main').getByRole('region', { name: 'Guides' });
+
+  for (const [path, name] of ONE_HEADING) {
+    test(`${path.split('?')[0]} has one level-one heading, ${name}`, async ({ page }) => {
+      await page.goto(path);
+
+      expect(await levelOne(page, name)).toEqual([name]);
+    });
+  }
+
+  for (const [path, name] of ONE_HEADING.filter(([, heading]) => heading !== 'Help')) {
+    test(`${path} shows Help above its title as a label, not a heading`, async ({ page }) => {
+      await page.goto(path);
+      const main = page.getByRole('main');
+      const label = main.getByText('Help', { exact: true });
+      const title = main.getByRole('heading', { level: 1, name, exact: true });
+
+      await expect(label).toBeVisible();
+      await expect(title).toBeVisible();
+      expect((await label.boundingBox())!.y).toBeLessThan((await title.boundingBox())!.y);
+      await expect(page.getByRole('heading', { name: 'Help', exact: true })).toHaveCount(0);
+      await assertNoAccessibilityViolations(page);
+    });
+  }
+
+  test('moving in the page from /help to an article, the glossary and back keeps one level-one heading naming each', async ({
+    page,
+  }) => {
+    await page.goto('/help');
+    const main = page.getByRole('main');
+    // Precondition: the help header is up, and a mark on the window shows no move below is a fresh load.
+    await expect(main.getByRole('search')).toBeVisible();
+    await page.evaluate(() => ((window as Window & { stayed?: boolean }).stayed = true));
+    expect(await levelOne(page, 'Help')).toEqual(['Help']);
+
+    await guides(page).getByRole('link', { name: HELP.guide.title }).click();
+    await expect(page).toHaveURL(new RegExp(`/help/${HELP.guide.slug}$`));
+    expect(await levelOne(page, HELP.guide.title)).toEqual([HELP.guide.title]);
+
+    await main.getByRole('link', { name: 'Back to Help' }).click();
+    await expect(page).toHaveURL(/\/help$/);
+    expect(await levelOne(page, 'Help')).toEqual(['Help']);
+
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp(`/help/${HELP.guide.slug}$`));
+    expect(await levelOne(page, HELP.guide.title)).toEqual([HELP.guide.title]);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/help$/);
+    expect(await levelOne(page, 'Help')).toEqual(['Help']);
+
+    await guides(page).getByRole('link', { name: 'Glossary' }).click();
+    await expect(page).toHaveURL(/\/help\/glossary$/);
+    expect(await levelOne(page, 'Glossary')).toEqual(['Glossary']);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/help$/);
+    expect(await levelOne(page, 'Help')).toEqual(['Help']);
+    // Why the checks mean what they say: every move was made in the page, under the header that stayed.
+    expect(
+      await page.evaluate(() => (window as Window & { stayed?: boolean }).stayed === true),
+    ).toBe(true);
+  });
+
+  test('the skeleton shown while an article loads has one level-one heading, and Help is not a heading', async ({
+    page,
+  }) => {
+    await page.goto('/help');
+    const main = page.getByRole('main');
+    await expect(main.getByRole('search')).toBeVisible();
+    let release: () => void = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route(
+      (url) => url.pathname === `/help/${HELP.guide.slug}`,
+      async (route) => {
+        await held;
+        await route.continue().catch(() => {});
+      },
+    );
+
+    await guides(page).getByRole('link', { name: HELP.guide.title }).click();
+    // Precondition: the article is still on its way, its skeleton up.
+    await expect(page.getByRole('status').filter({ hasText: 'Loading' })).toBeAttached();
+
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: 'Help', exact: true })).toHaveCount(0);
+    await expect(main.getByText('Help', { exact: true })).toBeVisible();
+    release();
+    await expect(page.getByRole('heading', { level: 1, name: HELP.guide.title })).toBeVisible();
+  });
+});
+
 test.describe('the help header', () => {
   // Where the heading, the lede and the box stand, to the pixel, so the two pages can be compared.
   const header = async (page: Page) => {
@@ -261,7 +371,8 @@ test.describe('the help header', () => {
       );
     };
     return {
-      heading: await place(main.getByRole('heading', { level: 1, name: 'Help' })),
+      // The heading on /help and /help/search, the label above an article's title: one word, in one place.
+      heading: await place(main.getByText('Help', { exact: true })),
       lede: await place(main.locator('p.lede')),
       box: await place(main.getByRole('search')),
     };
@@ -277,13 +388,13 @@ test.describe('the help header', () => {
       expect(front.box.width).toBeGreaterThan(0);
 
       // Each page draws all three, with its own content under them.
-      for (const [path, title] of [
-        [`/help/search?q=${STAFF_WORD}`, 'Search Help'],
-        [`/help/${HELP.guide.slug}`, HELP.guide.title],
-      ]) {
+      for (const [path, level, title] of [
+        [`/help/search?q=${STAFF_WORD}`, 2, 'Search Help'],
+        [`/help/${HELP.guide.slug}`, 1, HELP.guide.title],
+      ] as const) {
         await page.goto(path);
         await expect(
-          page.getByRole('main').getByRole('heading', { level: 2, name: title }),
+          page.getByRole('main').getByRole('heading', { level, name: title }),
         ).toBeVisible();
         expect(await header(page)).toEqual(front);
       }

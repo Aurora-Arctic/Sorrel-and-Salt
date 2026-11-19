@@ -103,6 +103,7 @@ export {
   findCompendiumEntryBySlug,
   findCompendiumSlugRedirect,
   findCompendiumSlugs,
+  findDeletedCompendiumSlugsIncludingSoftDeleted,
 } from './slugs';
 export {
   findMemberByEmail,

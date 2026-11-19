@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import PageHeader from '../PageHeader';
 import type { ErrorPageProps } from './types';
-import './index.scss';
 
 // Takes a reason, never an `Error` (claude-docs/components/error-page.md), and sets its own `<title>`, which a 404 and
 // global-error lack.

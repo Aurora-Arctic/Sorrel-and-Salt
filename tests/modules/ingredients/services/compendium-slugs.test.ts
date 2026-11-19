@@ -1,8 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { listCompendiumSlugs } from '@/modules/ingredients';
-import { A } from '../../../support/as-user';
+import {
+  deleteCompendiumEntry,
+  listCompendiumSlugs,
+  listDeletedCompendiumSlugs,
+} from '@/modules/ingredients';
+import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
@@ -90,5 +94,35 @@ describe('listCompendiumSlugs', () => {
     await seed('Fixture Beta');
 
     expect((await listCompendiumSlugs()).map((entry) => entry.name)).toEqual(['Fixture Alpha']);
+  });
+});
+
+// The list the proxy answers 410 Gone from: public slugs only, held under the `compendium` tag.
+describe('listDeletedCompendiumSlugs', () => {
+  const softDelete = (id: string) =>
+    sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
+
+  it("lists a deleted entry's slug and no live one, and takes no session", async () => {
+    await softDelete(await seed('Fixture Removed'));
+    await seed('Fixture Kept');
+    expect(listDeletedCompendiumSlugs).toHaveLength(0);
+
+    await expect(listDeletedCompendiumSlugs()).resolves.toEqual(['fixture-removed']);
+  });
+
+  it('answers a repeat read from the cache until a curator Delete expires it', async () => {
+    const underneath = await seed('Fixture Underneath');
+    const deleted = await seed('Fixture Deleted');
+    await expect(listDeletedCompendiumSlugs()).resolves.toEqual([]);
+    await softDelete(underneath);
+    // The precondition: the cached read has not seen the row deleted underneath it.
+    await expect(listDeletedCompendiumSlugs()).resolves.toEqual([]);
+
+    await deleteCompendiumEntry(asUser(E), deleted);
+
+    await expect(listDeletedCompendiumSlugs()).resolves.toEqual([
+      'fixture-deleted',
+      'fixture-underneath',
+    ]);
   });
 });

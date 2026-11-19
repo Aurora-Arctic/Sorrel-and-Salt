@@ -5,14 +5,20 @@ import { after } from 'next/server';
 
 const held = new Set<Promise<unknown>>();
 
-/** Runs `task` once the response is sent; outside a request, where `after` throws, holds it for `settleHeldTasks`. */
-export function runInBackground(task: Promise<unknown>): void {
+/** Starts `task` once the response is sent, so an answer never waits on it; outside a request, where `after` throws, starts it at once and holds it for `settleHeldTasks`. */
+export function runAfterResponse(task: () => Promise<unknown>): void {
   try {
-    after(() => task);
+    after(task);
   } catch {
-    held.add(task);
-    void task.finally(() => held.delete(task)).catch(() => {});
+    const started = task();
+    held.add(started);
+    void started.finally(() => held.delete(started)).catch(() => {});
   }
+}
+
+/** For a task already started: it runs on, and only its outcome is held until the response is sent. */
+export function runInBackground(task: Promise<unknown>): void {
+  runAfterResponse(() => task);
 }
 
 export async function settleHeldTasks(): Promise<void> {

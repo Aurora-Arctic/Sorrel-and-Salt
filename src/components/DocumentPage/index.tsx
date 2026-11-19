@@ -6,7 +6,6 @@ import PageNav from '../PageNav';
 import { dayInUtc, isoDayInUtc } from '../../lib/utc';
 import { renderMarkdown } from './markdown';
 import type { DocumentPageProps } from './types';
-import './index.scss';
 
 // A public document (privacy policy, about us, disclaimer, code of ethics, terms) beside a jump menu. It reads no session
 // itself and holds no application data; the page that renders it hands a keeper the editor address

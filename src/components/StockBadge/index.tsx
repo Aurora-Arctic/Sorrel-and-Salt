@@ -6,7 +6,6 @@ import { Icon } from '../IconTip/icons';
 import { stockState } from './stock-state';
 import { stockName, stockTip } from './stock-words';
 import type { StockBadgeProps, StockTipProps, StockIconProps } from './types';
-import './index.scss';
 
 // A jar's Low Stock or Out of Stock badge, per jar, so a card holding two forms can flag one and
 // not the other; it renders nothing when there is nothing to flag

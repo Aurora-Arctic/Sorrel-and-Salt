@@ -16,7 +16,6 @@ import {
 import type { SpellRecipeAsideProps } from './types';
 // The two panels' own stylesheet, which the builder's also uses; the column loads it itself
 // rather than the builder's whole stylesheet.
-import '../SpellBuilder/panels.scss';
 
 // The recipe page's side column of Category Match, In the Cupboard and Correspondences, read-only here, beside the text past tablet width and beneath it on a phone; a client part
 // (claude-docs/components/spell-recipe.md, "The side column").

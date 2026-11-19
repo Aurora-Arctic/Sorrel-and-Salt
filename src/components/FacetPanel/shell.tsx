@@ -23,7 +23,6 @@ import CloseButton from '../CloseButton';
 import { holdPage } from '../Modal/page-hold';
 import { FacetCount } from './facet-count';
 import type { FacetShellProps } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // The Filters button and the panel it opens, a native `<dialog>`: `show()` from the tablet width

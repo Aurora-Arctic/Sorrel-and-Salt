@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import { LinkIcon } from '../IconTip';
 import Spinner from '../Spinner';
-import './index.scss';
 
 const meta = {
   title: 'Navigation / Link Hint',

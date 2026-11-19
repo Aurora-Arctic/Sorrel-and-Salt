@@ -78,3 +78,10 @@ export interface HelpRenameEffects {
   /** The front page's quick link titles that read the old slug, which drop out once it moves. */
   quickLinks: string[];
 }
+
+/** A public article or sub page as llms.txt links it: its address, its title, and its summary when it has one. */
+export interface HelpArticleLink {
+  path: string;
+  title: string;
+  summary: string | null;
+}

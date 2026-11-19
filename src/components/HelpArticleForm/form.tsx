@@ -37,7 +37,6 @@ import type {
   HelpGuideChoice,
   HelpSubPageChoice,
 } from './types';
-import './index.scss';
 
 // The keeper's full-page form for a help row: the text in a column on the left, and the row's facts (kind, shown, parent, sub
 // pages, audience, position) in a card beside it that stays in view as the body scrolls. The card comes before the Save row in

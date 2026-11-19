@@ -39,7 +39,6 @@ import type {
   GroupedValueKindSpec,
   GroupedValueValues,
 } from './types';
-import './index.scss';
 
 // The admin's form for a curated value, grouped (category, ingredient form, deity) or flat (celestial
 // body, zodiac sign): a name, a description and, if grouped, the group, validated by the shared schema

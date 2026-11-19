@@ -1,6 +1,5 @@
 import { type ReactElement, useId } from 'react';
 import type { LiddedEyeIconProps } from './types';
-import './lidded-eye.scss';
 import { cx } from '@/lib/class-names';
 
 const LID_OPEN = 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8';

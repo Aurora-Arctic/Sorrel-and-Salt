@@ -5,7 +5,6 @@ import HashTarget from '../HashTarget';
 import { HelpBackLink } from '../HelpArticleView/back-link';
 import { HelpArticleTitle } from '../HelpChrome';
 import type { HelpGlossaryProps } from './types';
-import './index.scss';
 
 // The glossary, beneath the help layout's header: one term and definition per row, each anchored by its slug so /help/glossary#steward lands on it
 // (claude-docs/components/help-pages.md).
@@ -22,7 +21,7 @@ const HelpGlossary = ({ terms, editHref }: HelpGlossaryProps): ReactElement => {
   return (
     <div className="help-page help-glossary">
       <HelpBackLink href="/help" title="Help" />
-      <HelpArticleTitle title="Glossary" editHref={editHref} editName="Glossary" />
+      <HelpArticleTitle level="h1" title="Glossary" editHref={editHref} editName="Glossary" />
       <dl>
         {terms.map((term, index) => (
           <div key={term.slug} id={term.slug} className="help-glossary__entry">

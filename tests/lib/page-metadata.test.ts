@@ -7,7 +7,7 @@ import {
   pageTitle,
   publicPageMetadata,
 } from '@/lib/page-metadata';
-import { SITE_NAME, SITE_TITLE_NAME } from '@/lib/site';
+import { SITE_NAME, SITE_ORIGIN, SITE_TITLE_NAME } from '@/lib/site';
 
 describe('page metadata', () => {
   it('keeps a short description whole, on one line', () => {
@@ -30,7 +30,7 @@ describe('page metadata', () => {
     expect(a).not.toBe(b);
   });
 
-  it('names an absolute canonical without a query, repeats the text in the previews, and leaves the image to the card file', () => {
+  it('names an absolute canonical without a query, and repeats the text in the previews', () => {
     const meta = publicPageMetadata('Testwort', 'About it.', '/compendium/ingredients/testwort');
     expect(meta.alternates?.canonical).toBe(
       'https://sorrelandsalt.com/compendium/ingredients/testwort',
@@ -40,9 +40,23 @@ describe('page metadata', () => {
       url: 'https://sorrelandsalt.com/compendium/ingredients/testwort',
     });
     expect(meta.twitter).toMatchObject({ card: 'summary_large_image', description: 'About it.' });
-    // An `images` key here would replace the image the segment's `opengraph-image` file names.
-    expect(meta.openGraph).not.toHaveProperty('images');
-    expect(meta.twitter).not.toHaveProperty('images');
+  });
+
+  // A page's own `openGraph` replaces its parent segment's whole, so the root card reaches a page only if the helper names it.
+  it.each([
+    ['an indexable page', {}],
+    ['a noindex page', { noIndex: true }],
+    ['a page that names the site', { absolute: true }],
+  ])("names the site's share card, sized and described, on %s", (_, options) => {
+    const meta = publicPageMetadata(SITE_NAME, 'About it.', '/about', options);
+    const images = [meta.openGraph?.images ?? []].flat();
+
+    expect(images).toHaveLength(1);
+    const image = images[0];
+    const url = typeof image === 'string' || image instanceof URL ? image : image?.url;
+    // Relative or absolute alike: the layout's `metadataBase` makes it absolute.
+    expect(new URL(String(url), SITE_ORIGIN).href).toBe(`${SITE_ORIGIN}/opengraph-image`);
+    expect(image).toMatchObject({ width: 1200, height: 630, alt: SITE_NAME });
   });
 
   it("titles a public page's share previews with the site name, ampersand and all", () => {

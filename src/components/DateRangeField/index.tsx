@@ -15,7 +15,6 @@ import { preloadOnIntent } from '../../lib/use-lazy-module';
 import { RangeEnds } from './range-ends';
 import { type TwoMonthAlign, useRoomForTwoMonths } from './use-room-for-two-months';
 import type { DateRangeFieldProps, DayRange } from './types';
-import './index.scss';
 
 // A day-range field: a button showing the range in short words, opening a two-month calendar with quick picks. The
 // calendar is the day field's, in the same popover (claude-docs/components/date-field.md).

@@ -16,7 +16,6 @@ import { useListPosition } from '../Combobox/position';
 import { CheckIcon, ChevronIcon } from '../IconTip/icons';
 import Spinner from '../Spinner';
 import type { MenuButtonItem, MenuButtonProps, MenuSection } from './types';
-import './index.scss';
 import { PendingLink } from '../../lib/navigation';
 import { cx } from '@/lib/class-names';
 

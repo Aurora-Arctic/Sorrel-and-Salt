@@ -3,7 +3,6 @@
 import type { ReactElement } from 'react';
 import TipAnchor from '../InfoTip/tip-anchor';
 import { CrownIcon } from './icons';
-import './controls.scss';
 
 // The primary keeper's crown beside its role, a button whose tip behaves as InfoTip's through `useTip`
 // (claude-docs/components/user-list.md, "Contracts").

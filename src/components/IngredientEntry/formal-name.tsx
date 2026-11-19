@@ -6,7 +6,6 @@ import {
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import type { IngredientRow } from '@/modules/ingredients';
-import './formal-name.scss';
 
 // The formal name as an eyebrow over an entry's heading, with its tip: drawn by the entry page and
 // the details modal's head so they cannot differ. No hook and no client directive, so server and

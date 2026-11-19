@@ -295,3 +295,9 @@ export interface OriginNotifier {
 export type HeldBy = Partial<
   Record<'categories' | 'deities' | 'forms' | 'zodiac' | 'celestialBodies', string[]>
 >;
+
+/** A public document's page, as the sitemap and llms.txt list it. */
+export interface PublicDocumentLink {
+  path: string;
+  title: string;
+}

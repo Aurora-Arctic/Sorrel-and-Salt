@@ -8,7 +8,6 @@ import Skeleton from '../Skeleton';
 import SkeletonText from '../Skeleton/text';
 import { ChevronIcon } from '../IconTip/icons';
 import type { PageNavEntry, PageNavItem, PageNavProps } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // A menu of jump links to a page's sections (claude-docs/components/page-nav.md). The anchors jump,

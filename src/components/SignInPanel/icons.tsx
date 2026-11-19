@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import type { ProviderId } from '../../lib/types';
 import type { ProviderArt } from '../ProviderMark/types';
-import './icons.scss';
 
 // Each provider's own brand mark, from its published assets
 // (claude-docs/components/sign-in-panel.md, "Contracts"). The fills are the artwork's, and
