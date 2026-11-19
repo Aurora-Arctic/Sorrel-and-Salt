@@ -341,16 +341,17 @@ function openableLinks(children: ElementContent[]): ElementContent[] {
 /**
  * Seats each table in the scrolling frame the page's styles give a wide table, so it never widens the page.
  * The frame takes focus and is named for the heading above it, so a keyboard can scroll it. A second table under one
- * heading is numbered, since two regions of one name are one landmark too many in a screen reader's list.
+ * heading is numbered, since two regions of one name are one landmark too many in a screen reader's list. A table under
+ * no heading takes `untitled`, numbered the same way.
  */
-function frameTables(children: ElementContent[]): ElementContent[] {
+function frameTables(children: ElementContent[], untitled: string): ElementContent[] {
   let heading = '';
   const seen = new Map<string, number>();
   const nameOf = (base: string): string => {
     const count = (seen.get(base) ?? 0) + 1;
     seen.set(base, count);
     if (count === 1) return base;
-    return base === 'Table' ? `Table ${count}` : `${base}, Table ${count}`;
+    return base === untitled ? `${untitled} ${count}` : `${base}, Table ${count}`;
   };
   const frame = (nodes: ElementContent[]): ElementContent[] =>
     nodes.map((child) => {
@@ -365,7 +366,7 @@ function frameTables(children: ElementContent[]): ElementContent[] {
         type: 'element',
         tagName: TABLE_FRAME_TAG,
         properties: {
-          label: nameOf(heading || 'Table'),
+          label: nameOf(heading || untitled),
         },
         children: [child],
       };
@@ -426,6 +427,8 @@ export function renderMarkdown(
   terms?: HelpTerms,
   // The widgets a help page draws for its `::widget[name]` paragraphs. A caller that passes none keeps each tag as text.
   widgets: HelpWidgets = {},
+  // The name a table under no heading takes; a body drawn under a title of its own (an FAQ answer) passes one from it.
+  untitledTable = 'Table',
 ): { content: ReactNode; entries: PageNavEntry[] } {
   const tree = markdownProcessor.runSync(markdownProcessor.parse(body)) as Root;
   mapChildren(tree, openableLinks);
@@ -436,7 +439,7 @@ export function renderMarkdown(
   }
   mapChildren(tree, (children) => markWidgets(children, widgets));
   mapChildren(tree, (children) => markPlaceholders(children, placeholders));
-  mapChildren(tree, frameTables);
+  mapChildren(tree, (children) => frameTables(children, untitledTable));
   visitElements(tree, shapeFootnotes);
   const entries = sectionsOf(tree, reserved);
   if (lowerHeadings) {

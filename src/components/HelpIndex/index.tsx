@@ -30,11 +30,20 @@ const HelpIndex = ({
   back,
   faqEditHref,
 }: HelpIndexProps): ReactElement => {
-  // A heading in an answer never takes an entry's id, or another answer's heading id.
+  // A heading in an answer never takes an entry's id, or another answer's heading id. A table under no heading in an
+  // answer is named for its question, since each answer's would otherwise be one more region named "Table".
   const reserved = [GUIDES_ID, FAQ_ID, ...faq.map((entry) => entry.slug)];
   const glossary = helpTerms(terms);
   const answers = faq.map((entry) => {
-    const { content, entries } = renderMarkdown(entry.body, {}, reserved, false, glossary);
+    const { content, entries } = renderMarkdown(
+      entry.body,
+      {},
+      reserved,
+      false,
+      glossary,
+      {},
+      `${entry.title}, Table`,
+    );
     reserved.push(...entries.map(({ href }) => href.slice(1)));
     return content;
   });
