@@ -4,3 +4,7 @@ compendium/
 # .git/info/exclude leaves them out on the owner's machine, but that file is
 # local and not part of the repo.
 .claude/worktrees/
+# graphify names a file's node after its path, a leading dot dropped, so this
+# config's node takes the id of the dependency-cruiser package it imports a type
+# from, and dedup drops it (claude-docs/docker.md, "The code graph (graphify)").
+/.dependency-cruiser.cjs
