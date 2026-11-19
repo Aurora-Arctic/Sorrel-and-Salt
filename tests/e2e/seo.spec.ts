@@ -31,6 +31,34 @@ async function publicPages(
   };
 }
 
+/** Every kind of public page a link can be shared to: the three above, the documents and a version, help, and sign-in. */
+async function everyPublicPage(
+  request: import('@playwright/test').APIRequestContext,
+): Promise<Record<string, string>> {
+  const help = await (await request.get('/help')).text();
+  const article = /href="(\/help\/(?!search\b|glossary\b)[^"/?#]+)"/.exec(help)?.[1];
+  expect(article).toBeDefined();
+  const pages: Record<string, string> = { ...(await publicPages(request)), '/help': help };
+  for (const path of [
+    '/about',
+    '/terms',
+    '/privacy',
+    '/disclaimer',
+    '/code-of-ethics',
+    '/terms/versions/1',
+    article as string,
+    '/help/glossary',
+    '/help/search',
+    '/support',
+    '/sign-in',
+  ]) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(200);
+    pages[path] = await response.text();
+  }
+  return pages;
+}
+
 test('each public page has one H1, a language, and a title and description of its own', async ({
   request,
 }) => {
@@ -109,9 +137,10 @@ test('every Support link, and the terms link to the acceptance page, is nofollow
 test('each public page names its share card for link previews, absolute, sized and described', async ({
   request,
 }) => {
-  const pages = await publicPages(request);
+  const pages = await everyPublicPage(request);
 
   for (const [path, html] of Object.entries(pages)) {
+    expect(metaOf(html, 'og:image'), path).not.toBe('');
     const image = new URL(metaOf(html, 'og:image'));
     expect(image.origin, path).toBe('https://sorrelandsalt.com');
     expect(metaOf(html, 'twitter:image'), path).toBe(image.href);
@@ -126,11 +155,26 @@ test('each public page names its share card for link previews, absolute, sized a
     expect(card.status(), path).toBe(200);
     expect(card.headers()['content-type'], path).toBe('image/png');
   }
-  const [home, list, entry] = Object.values(pages);
-  expect(metaOf(entry, 'og:image')).not.toBe(metaOf(home, 'og:image'));
-  expect(metaOf(entry, 'og:image:alt')).toBe(/<h1[^>]*>([^<]*)</.exec(entry)?.[1]);
-  expect(metaOf(home, 'og:image:alt')).toBe('Sorrel &amp; Salt');
-  expect(metaOf(list, 'og:image:alt')).toBe('Sorrel &amp; Salt');
+  // `/`, the compendium list and an entry keep the cards their own segments name; every other page names the site card.
+  const [homePath, listPath, entryPath] = Object.keys(await publicPages(request));
+  const [home, list, entry] = [homePath, listPath, entryPath].map((path) => pages[path!]!);
+  const cardPath = (html: string) => new URL(metaOf(html, 'og:image')).pathname;
+  expect(cardPath(home!)).toBe('/opengraph-image');
+  expect(cardPath(list!)).toMatch(/^\/compendium\/opengraph-image/);
+  expect(cardPath(entry!)).toMatch(`${entryPath}/opengraph-image`);
+  expect(cardPath(entry!)).toMatch(/\/card$/);
+  expect(metaOf(entry!, 'og:image:alt')).toBe(/<h1[^>]*>([^<]*)</.exec(entry!)?.[1]);
+  expect(metaOf(home!, 'og:image:alt')).toBe('Sorrel &amp; Salt');
+  expect(metaOf(list!, 'og:image:alt')).toBe('Sorrel &amp; Salt');
+
+  const shared = Object.entries(pages).filter(
+    ([path]) => ![homePath, listPath, entryPath].includes(path),
+  );
+  expect(shared).toHaveLength(Object.keys(pages).length - 3);
+  for (const [path, html] of shared) {
+    expect(cardPath(html), path).toBe('/opengraph-image');
+    expect(metaOf(html, 'og:image:alt'), path).toBe('Sorrel &amp; Salt');
+  }
 });
 
 test('the public pages carry no workspace data and, signed out, only public JSON-LD', async ({
