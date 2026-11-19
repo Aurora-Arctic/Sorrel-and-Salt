@@ -5,7 +5,7 @@ import { type ReactElement, useRef } from 'react';
 import { useHydrated } from '../../lib/hydrated';
 import { useMeasuredFit } from '../../lib/use-measured-fit';
 import AccountMenu from '../AccountMenu';
-import { firstFitting, navWidth, pixels, watched } from './bar-room';
+import { firstFitting, navWidth, pixels, useFocusKeptThroughFold, watched } from './bar-room';
 import { PlusIcon } from '../IconTip/icons';
 import ThemeToggle from '../ThemeToggle';
 import { ADD_INGREDIENT_TITLE } from './add-href';
@@ -26,8 +26,12 @@ const STEPS: readonly { form: AddIngredientForm; compact: boolean; links: boolea
   { form: 'folded', compact: true, links: true },
 ];
 
+// The steps the site nav stays in the bar for: its width is added when the room is weighed, as it comes and goes with
+// the window's width after the block is measured.
+const NAV_IN_BAR = STEPS.map(({ links }) => !links);
+
 type Natural = {
-  // The width each step needs: the block's, and the site nav's beside it while the nav is in the bar.
+  // The width each step's block needs.
   widths: number[];
   // The disc's own width, kept to tell a change of text size from a change of the window.
   disc: number;
@@ -58,10 +62,9 @@ const measureEnd = (end: HTMLElement): Natural | null => {
   const compact = full - named;
   const group = end.querySelector<HTMLElement>(':scope > .app-shell__add-group');
   const main = group?.querySelector<HTMLElement>('.app-shell__add');
-  const nav = navWidth(end);
   if (!group || !main) {
     return {
-      widths: [full + nav, compact + nav, compact + nav, compact + nav, compact],
+      widths: [full, compact, compact, compact, compact],
       disc: disc.offsetWidth,
       group: false,
     };
@@ -70,10 +73,10 @@ const measureEnd = (end: HTMLElement): Natural | null => {
   const plus = compact - main.offsetWidth + main.offsetHeight + 1;
   return {
     widths: [
-      full + nav,
-      compact + nav,
-      plus + nav,
-      compact - group.offsetWidth - gap + nav,
+      full,
+      compact,
+      plus,
+      compact - group.offsetWidth - gap,
       compact - group.offsetWidth - gap,
     ],
     disc: disc.offsetWidth,
@@ -81,7 +84,13 @@ const measureEnd = (end: HTMLElement): Natural | null => {
   };
 };
 
-const chooseForm = ({ widths }: Natural, end: HTMLElement): number => firstFitting(widths, end);
+const chooseForm = ({ widths }: Natural, end: HTMLElement): number => {
+  const nav = navWidth(end);
+  return firstFitting(
+    widths.map((width, step) => (NAV_IN_BAR[step] ? width + nav : width)),
+    end,
+  );
+};
 
 const textSizeChanged = ({ disc, group }: Natural, end: HTMLElement): boolean => {
   const now = end.querySelector<HTMLElement>('.app-shell__theme');
@@ -106,6 +115,7 @@ const ShellEnd = ({ viewer, workspaces, links }: ShellEndProps): ReactElement =>
     // A navigation changes the site links' weight, and so the room.
     resetKey: pathname,
   });
+  useFocusKeptThroughFold(end, fit, '.account-menu__button');
   // While measuring, everything shows in full, so its width is read.
   const { form, compact, links: linksInPanel } = STEPS[fit ?? 0];
   const folded = form === 'folded' && addsIngredient(viewer, workspaces);

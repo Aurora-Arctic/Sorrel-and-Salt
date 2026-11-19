@@ -1,3 +1,5 @@
+import { type RefObject, useEffect, useLayoutEffect, useRef } from 'react';
+
 // What a frame bar's end block measures against, shared by the shell's and the public frame's
 // (claude-docs/components/app-shell.md, "The end block").
 
@@ -39,4 +41,42 @@ export const firstFitting = (widths: readonly number[], end: HTMLElement): numbe
   const room = roomFor(end) + 0.5;
   const at = widths.findIndex((width) => width <= room);
   return at === -1 ? widths.length - 1 : at;
+};
+
+// A fold that takes the focused item out of the bar would drop the focus to the page's start: it goes instead to the
+// control that now holds that item, found in the block by `heir`.
+export const useFocusKeptThroughFold = (
+  end: RefObject<HTMLElement | null>,
+  fit: number | null,
+  heir: string,
+): void => {
+  const held = useRef<Element | null>(null);
+  useEffect(() => {
+    const block = end.current;
+    if (!block) return;
+    const take = (event: FocusEvent): void => {
+      held.current = event.target instanceof Element ? event.target : null;
+    };
+    // Left for somewhere else, it holds nothing; a removal, checked once the commit is done, still does.
+    const leave = (event: FocusEvent): void => {
+      const left = event.target;
+      queueMicrotask(() => {
+        if (left instanceof Element && left.isConnected && held.current === left)
+          held.current = null;
+      });
+    };
+    block.addEventListener('focusin', take);
+    block.addEventListener('focusout', leave);
+    return () => {
+      block.removeEventListener('focusin', take);
+      block.removeEventListener('focusout', leave);
+    };
+  }, [end]);
+  useLayoutEffect(() => {
+    const lost = held.current;
+    const active = document.activeElement;
+    if (!lost || lost.isConnected || (active !== null && active !== document.body)) return;
+    held.current = null;
+    end.current?.querySelector<HTMLElement>(heir)?.focus();
+  }, [end, fit, heir]);
 };

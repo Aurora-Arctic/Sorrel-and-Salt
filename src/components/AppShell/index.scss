@@ -91,9 +91,11 @@
   }
 }
 
-// The end block's last step: the site links leave the bar for the account panel (shell-end.tsx).
+// The end block's last step: the site links leave the bar for the account panel (shell-end.tsx). Unseen and out of
+// the row, but still laid out, unlike at a tablet's width, so the end block can read the room the nav would take back.
 .app-shell__bar-inner:has(> .app-shell__end[data-fit='4']) > .app-shell__nav {
-  display: none;
+  position: absolute;
+  visibility: hidden;
 }
 
 // What an Add Ingredient save left behind, beside the button: a short line,

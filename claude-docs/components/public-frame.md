@@ -25,7 +25,7 @@ The bar's shared parts are one mixin, `frame-bar($block)` in `src/scss/_frame-ba
 2. The site links leave the bar for the menu, beside Sign In and the disc (a `:has()` rule on `data-fit` hides the nav).
 3. Sign In joins them in the menu, as a link to `/sign-in?next=<the page>`: the follow-the-address form, not the dialog. At 320px with a 200% root font the room after the brand holds two squares, and Sign In's label alone is wider than one, so this is the step there. Normal text at 320px, and 1280px at 200%, keep step 1.
 
-The disc never folds. On `/sign-in` there is no Sign In to fold. Only Sign In and the menu read the query string for the return path, each in its own Suspense, so the block itself, and Sign In with its return path, are in the HTML as served; the server's render and a browser without script are not measured, and the block clips instead (the `frame-bar` mixin).
+When Sign In folds while it holds the focus, the focus moves to the Menu button, which now holds it (`useFocusKeptThroughFold`, `AppShell/bar-room.ts`). The disc never folds. On `/sign-in` there is no Sign In to fold. Only Sign In and the menu read the query string for the return path, each in its own Suspense, so the block itself, and Sign In with its return path, are in the HTML as served; the server's render and a browser without script are not measured, and the block clips instead (the `frame-bar` mixin).
 
 ## Stories and tests
 

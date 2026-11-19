@@ -5,7 +5,13 @@ import { type ReactElement, Suspense, useRef } from 'react';
 import { useHydrated } from '../../lib/hydrated';
 import { signInPath } from '../../lib/sign-in';
 import { useMeasuredFit } from '../../lib/use-measured-fit';
-import { firstFitting, navWidth, pixels, watched } from '../AppShell/bar-room';
+import {
+  firstFitting,
+  navWidth,
+  pixels,
+  useFocusKeptThroughFold,
+  watched,
+} from '../AppShell/bar-room';
 import { DotsIcon } from '../IconTip/icons';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
@@ -97,6 +103,7 @@ const PublicEnd = ({ configured, links }: PublicEndProps): ReactElement => {
     // A navigation changes the site links' weight, and so the room.
     resetKey: pathname,
   });
+  useFocusKeptThroughFold(end, fit, 'button.public-frame__menu');
   const measuring = hydrated && fit === null;
   const step = fit ?? 0;
   // While measuring, the menu shows beside everything else, so its width is read.
