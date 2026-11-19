@@ -68,7 +68,35 @@ async function refuseWorkshop(request: NextRequest, returnPath: string) {
   }
 }
 
+const ENTRY_PAGE = /^\/compendium\/ingredients\/([^/]+)$/;
+const DELETED_SLUGS_PATH = '/api/compendium/deleted-slugs';
+
+/**
+ * A deleted entry's address answers 410 Gone, which a page cannot (it answers only 404), so the proxy does. It reads the
+ * cached list of deleted slugs through its route, never the database, and an unreadable list lets the request reach the
+ * page (claude-docs/seo/ai-discovery.md, "A deleted entry's address").
+ */
+async function goneEntry(request: NextRequest): Promise<NextResponse | null> {
+  const match = ENTRY_PAGE.exec(request.nextUrl.pathname);
+  if (!match) return null;
+  try {
+    const slug = decodeURIComponent(match[1]);
+    const answer = await fetch(new URL(DELETED_SLUGS_PATH, request.url), {
+      signal: AbortSignal.timeout(2000),
+    });
+    if (!answer.ok) return null;
+    const slugs: unknown = await answer.json();
+    if (!Array.isArray(slugs) || !slugs.includes(slug)) return null;
+    return new NextResponse(null, { status: 410, headers: { 'X-Robots-Tag': 'noindex' } });
+  } catch {
+    return null;
+  }
+}
+
 async function route(request: NextRequest): Promise<NextResponse> {
+  const gone = await goneEntry(request);
+  if (gone) return gone;
+
   const { pathname, search } = request.nextUrl;
   const returnPath = `${pathname}${search}`;
 
