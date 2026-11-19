@@ -939,3 +939,25 @@ _Acceptance criteria:_
 - The plus carries the count on the coven ingredient page, the compendium entry page, and the Quick Look dialog, counting every coven the viewer has a seat in, as the card does (`HoldingCount`, `src/components/AddIcon/holding.tsx`)
 - The count reaches the page from `covensHolding` in `src/app/plus-covens.ts`; no other viewer's covens are counted
 - Every list-of-names "used by" note becomes a count
+
+**MB.303 — The Code Graph Builder Keeps Running When a File Is Named Like a Package** · 1.5h
+
+_Story:_ As a developer in the dev container, I want the code graph builder to keep running and rewriting its graph, so that the graphify MCP server and the graph pages answer from the current code.
+
+Found on 2026-11-19, locally, after `make docker-down` and a fresh dev container start. Not a hotfix: the dev container's graphify services are on `staging` only. Steps to reproduce:
+
+1. Start the dev container's compose stack with an existing `graphify-out/graph.json`
+2. Read the log of the `graphify-watch` service
+
+Actual: `graphify-watch` exits with code 1 on every start and is restarted until its `on-failure` policy gives up. Its log warns that the node `dependency_cruiser` is minted by two files, `.dependency-cruiser.cjs` and the `dependency-cruiser` package, and refuses to write a graph that dedup would shrink.
+
+Expected: `graphify-watch` stays running and its log shows a written graph.
+
+graphify takes a file's node id from its path without the extension, and drops a leading dot, so `.dependency-cruiser.cjs` gets the id `dependency_cruiser`. The file's JSDoc type, `import('dependency-cruiser')`, mints a node for the package under the same id, and the file's node is dropped. The file then has no nodes in the graph, so every incremental build extracts it again and refuses again.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: no JavaScript or TypeScript file graphify reads has the node id of a package in `package.json`
+- `.graphifyignore` leaves `.dependency-cruiser.cjs` out of the graph; the builder is not run with `--allow-dedup-shrink`
+- `graphify-watch` stays running after a start, and its log shows a written graph
+- `claude-docs/docker.md` says why a file named like a package is left out of the graph
