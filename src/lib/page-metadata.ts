@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { SHARE_CARD_SIZE, SHARE_CARD_TYPE } from './share-card';
+import { SHARE_CARD_SIZE, SHARE_CARD_TYPE } from './share-card/size';
 import { SITE_NAME, SITE_TITLE_NAME, TITLE_SEPARATOR, siteUrl } from './site';
 
 // The search-result text of a public page, pure so the three compendium pages share one wording. A page's own

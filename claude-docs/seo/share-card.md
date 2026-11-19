@@ -2,7 +2,7 @@
 
 A share card is the picture a chat app or a social site shows under a pasted link. Each public page names one in its `og:image` and `twitter:image` tags, and Next draws it to a PNG on the server with `next/og`'s `ImageResponse` (`node_modules/next/dist/docs/01-app/03-api-reference/04-functions/image-response.md`). `/` and `/compendium` show the site card; each compendium entry shows its own. Nothing else has a card: the rest of the site is behind sign-in, and a link preview fetches with no cookie.
 
-The code is `src/lib/share-card/`: `cards.tsx` lays the two cards out, `shelf.tsx` draws the jar shelf, `fonts.ts` loads the faces, `palette.ts` holds the colours and `index.tsx` turns a card into an `ImageResponse`. What an entry's card shows is read by `readCompendiumShareCard` in `src/modules/ingredients/services/share-card.ts`.
+The code is `src/lib/share-card/`: `cards.tsx` lays the two cards out, `shelf.tsx` draws the jar shelf, `fonts.ts` loads the faces, `palette.ts` holds the colours, `size.ts` holds the card's size and type (apart from the rest so `page-metadata.ts` can import them without the fonts) and `index.tsx` turns a card into an `ImageResponse`. What an entry's card shows is read by `readCompendiumShareCard` in `src/modules/ingredients/services/share-card.ts`.
 
 ### The design
 
