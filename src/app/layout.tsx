@@ -13,6 +13,7 @@ import PrePaintScripts from './pre-paint-scripts';
 import Providers from './providers';
 import SupportDialog from '@/components/SupportDialog';
 import './globals.scss';
+import '@/scss/components.scss';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),

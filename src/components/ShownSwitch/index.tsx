@@ -8,7 +8,6 @@ import IconTip, { LiddedEyeIcon } from '../IconTip';
 import Notice from '../Notice';
 import Spinner from '../Spinner';
 import type { ShownSwitchProps } from './types';
-import './index.scss';
 
 // Must equal `$fade` in index.scss.
 const RING_FADE_MS = 150;

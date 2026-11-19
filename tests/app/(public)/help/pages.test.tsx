@@ -232,7 +232,7 @@ describe('/help/glossary', () => {
     render((await Page()) as React.ReactElement, { wrapper: await helpHeader() });
 
     // Precondition: the page drew its title, so a missing pencil is the viewer's, not an empty page's.
-    expect(screen.getByRole('heading', { level: 2, name: 'Glossary' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Glossary' })).toBeInTheDocument();
     expect(hrefs(screen.queryAllByRole('link', { name: 'Edit Glossary' }))).toEqual(edit);
   });
 
@@ -264,16 +264,16 @@ describe('/help/[slug]', () => {
     });
 
     expect(readHelpArticle).toHaveBeenCalledWith('testwort-guide');
-    expect(screen.getByRole('heading', { level: 2, name: 'Testwort Guide' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: 'Testwort Section' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Testwort Guide' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Testwort Section' })).toBeInTheDocument();
     expect(linkHrefs()).toEqual(
       expect.arrayContaining([
         '/help/testwort-guide/testwort-signing-in',
         '/help/testwort-guide/testwort-demo-coven',
       ]),
     );
-    // The help layout above the page holds the heading and the search box.
-    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    // The help layout above the page holds Help and the search box, so the title is the page's one h1.
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.queryByRole('search')).toBeNull();
     // A signed-out reader is offered no edit.
     expect(linkHrefs().filter((href) => href?.startsWith('/keepers/'))).toEqual([]);
@@ -371,9 +371,9 @@ describe('/help/[slug]/[child]', () => {
 
     expect(readHelpArticle).toHaveBeenCalledWith('testwort-signing-in');
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Testwort Signing In' }),
+      screen.getByRole('heading', { level: 1, name: 'Testwort Signing In' }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.queryByRole('search')).toBeNull();
   });
 

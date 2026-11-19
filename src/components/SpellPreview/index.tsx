@@ -19,7 +19,6 @@ import { holdPage } from '../Modal/page-hold';
 import { EDGE_EMBERS, FLECKS, HEARTH_EMBERS, HEAT } from './embers';
 import type { Ember, Fleck, Heat, SpellPreviewProps } from './types';
 import { useWakeLock } from './use-wake-lock';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // Spell Preview: a button opening the spell in a pane of its own, with no links or controls. A native modal `<dialog>`

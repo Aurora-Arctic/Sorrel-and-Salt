@@ -2,6 +2,8 @@
 
 Where every standalone component renders in isolation, against the real tokens, without a page routed to it. It is Storybook (`@storybook/nextjs-vite`); what maps to what in the Claude Design sync, which reads the Storybook, is in [`ui.md`, "The component workshop moves from Ladle to Storybook"](design-decisions/ui.md#the-component-workshop-moves-from-ladle-to-storybook).
 
+- **Components get their styles from the preview.** `.storybook/preview.tsx` imports `src/scss/components.scss`, the one aggregate every component sheet is `@use`d from, so a story imports no component stylesheet.
+
 - **Component stories live at exactly `src/components/<Name>/index.stories.tsx`**, beside `index.tsx`, and mail stories at `src/emails/<name>.stories.tsx`. The `stories` globs in `.storybook/main.ts` also pick up `.storybook/*.stories.tsx`, for workshop-only pages the app never imports.
 - **Every component and every email template has its story**, by review; no test guards it. A component that renders nothing has none. Two do: `CovenSwitchTargets` only tells the coven switcher which covens a page also opens in, and the switcher's own story shows the effect; `CovenFacts` only carries the open coven's name and role to the skeletons inside it, and the coven home's story shows the effect. A story of either would be an empty frame.
 - Stories are CSF3 (Storybook's story file format): a default-exported `meta` with the title, and one named export per story. They carry no test ids, no snapshots and no assertions; behaviour is the test's job, and the test lives at `tests/components/<Name>/index.test.tsx`.

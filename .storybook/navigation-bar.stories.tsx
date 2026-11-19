@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { type ReactElement, type ReactNode, useEffect, useState } from 'react';
 import { BAR_FADE_MS, LOADING_DELAY_MS } from '../src/lib/navigation/timing';
-import '../src/lib/navigation/navigation-bar.scss';
 import { ShellFrame } from './shell-frame';
 
 // The page bar's look as static markup, fixed along the bottom edge of the global bar, so each

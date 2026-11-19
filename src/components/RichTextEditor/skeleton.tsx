@@ -1,5 +1,4 @@
 import type { ReactElement } from 'react';
-import './index.scss';
 
 // The buttons in each of the toolbar's groups, in the order toolbar.tsx lays them.
 const GROUP_SIZES = [2, 3, 2, 2, 2];

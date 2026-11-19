@@ -14,6 +14,27 @@ const MAY_ADD_A_TAG = new Set([
   'src/app/(shell)/coven/[slug]/ingredients/[id]/page.tsx',
 ]);
 
+// The helper's signature requires a description and a path, so a page that reaches it carries both tags. A
+// noindex page goes through noIndexMetadata instead, and is named here so a new page cannot skip the helper.
+const PUBLIC_PAGE = /^src\/app\/(?:\(public\)\/.*\/)?page\.tsx$/;
+const INDEXABLE_HEAD = /\b(?:publicPageMetadata|versionDocumentMetadata|helpArticleMetadata)\(/;
+const WRAPPERS = ['src/app/(public)/_documents.tsx', 'src/lib/help-article-props.ts'];
+const NOINDEX = new Set([
+  '/access-paused',
+  '/forgot-password',
+  '/help/search',
+  '/reset-password',
+  '/support',
+  '/support/request',
+]);
+
+function routeOf(file: string): string {
+  return `/${file
+    .replace(/^src\/app\//, '')
+    .replace(/^\(public\)\//, '')
+    .replace(/\/?page\.tsx$/, '')}`;
+}
+
 describe('page metadata', () => {
   const pages = inject('repoFiles').filter((file) => PAGE.test(file));
   const read = (file: string) => readFileSync(file, 'utf8');
@@ -31,5 +52,29 @@ describe('page metadata', () => {
     expect(
       pages.filter((file) => !MAY_ADD_A_TAG.has(file) && HAND_WRITTEN_TAG.test(read(file))),
     ).toEqual([]);
+  });
+
+  describe('on a public page', () => {
+    const publicPages = pages.filter((file) => PUBLIC_PAGE.test(file));
+    const indexable = publicPages.filter((file) => !NOINDEX.has(routeOf(file)));
+
+    it('reaches publicPageMetadata, which requires a description and a canonical path', () => {
+      // Preconditions: the home page and the public group were found, and each wrapper calls the helper.
+      expect(publicPages).toContain('src/app/page.tsx');
+      expect(publicPages).toContain('src/app/(public)/about/page.tsx');
+      expect(indexable.length).toBeGreaterThan(10);
+      for (const wrapper of WRAPPERS) expect(read(wrapper)).toMatch(/\bpublicPageMetadata\(/);
+
+      expect(indexable.filter((file) => !INDEXABLE_HEAD.test(read(file)))).toEqual([]);
+    });
+
+    it('names exactly the noindex pages, each of which builds a noindex head', () => {
+      const routes = publicPages.map(routeOf);
+      expect([...NOINDEX].filter((route) => !routes.includes(route))).toEqual([]);
+
+      const noIndexPages = publicPages.filter((file) => NOINDEX.has(routeOf(file)));
+      expect(noIndexPages.filter((file) => !/\bnoIndexMetadata\(/.test(read(file)))).toEqual([]);
+      expect(noIndexPages.filter((file) => INDEXABLE_HEAD.test(read(file)))).toEqual([]);
+    });
   });
 });

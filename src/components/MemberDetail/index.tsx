@@ -5,8 +5,6 @@ import RoleControl from '../MemberList/role-control';
 import { workspaceRoleLabel } from '../MemberList/roles';
 import CovenAccessPanel from './coven-access-panel';
 import type { MemberDetailProps } from './types';
-import '../UserDetail/index.scss';
-import './index.scss';
 
 // The body of the modal over `/coven/[slug]/members` on a member: the row's facts, and for a steward the role change,
 // the pause on their access to the coven and their removal (claude-docs/components/member-detail.md). Laid out as the

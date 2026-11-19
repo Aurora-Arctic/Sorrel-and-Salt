@@ -7,7 +7,6 @@ import { matchesLabelOrGroup } from '../Combobox/match';
 import InfoTip from '../InfoTip';
 import Skeleton from '../Skeleton';
 import type { CategoryOption, CategoryPickerProps, PickerCategory } from './types';
-import './index.scss';
 
 // The categories picked from one box: typing narrows the live categories under their groups, and a
 // pick adds a chip in its group's colour. Controlled (ids in, ids out through `onChange`), not bound to

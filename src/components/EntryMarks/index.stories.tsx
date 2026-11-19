@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ComponentProps } from 'react';
 import IngredientCard from '../IngredientCard';
-import '../IngredientEntry/index.scss';
 import EntryMarks, { RecencyMark } from '.';
 import { route } from '../../../.storybook/route';
 import { StatesGrid } from '../../../.storybook/states-grid';

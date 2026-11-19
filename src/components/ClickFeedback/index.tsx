@@ -8,7 +8,6 @@ import { useFade } from './fade';
 import { useBadgePlace, useCalloutPlace } from './position';
 import { useAnnounce } from './status-region';
 import type { ClickFeedback, ClickFeedbackOptions } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // What a click outside a form says when it fails: the service's sentence in an alert callout under the

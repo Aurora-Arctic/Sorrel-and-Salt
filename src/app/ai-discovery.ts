@@ -1,6 +1,8 @@
 import { pageTitleOf } from '@/components/IngredientEntry/page-title';
 import { describe } from '@/lib/page-metadata';
+import { PUBLIC_DOCUMENTS } from '@/lib/public-documents';
 import { SITE_NAME, siteUrl } from '@/lib/site';
+import type { HelpArticleLink } from '@/modules/help';
 import type { CompendiumSlugEntry } from '@/modules/ingredients';
 import { compendiumEntryPath } from '@/lib/compendium-path';
 
@@ -15,7 +17,10 @@ const SUMMARY =
  * llms.txt text, in the https://llmstxt.org/ layout: an H1, a blockquote summary, then H2 sections
  * of `- [name](url): notes`. No heading may sit between the summary and the first H2.
  */
-export function buildLlmsTxt(entries: readonly CompendiumSlugEntry[]): string {
+export function buildLlmsTxt(
+  entries: readonly CompendiumSlugEntry[],
+  help: readonly HelpArticleLink[],
+): string {
   const lines = [
     `# ${SITE_NAME}`,
     '',
@@ -29,6 +34,18 @@ export function buildLlmsTxt(entries: readonly CompendiumSlugEntry[]): string {
     ...entries.map(
       (entry) =>
         `- [${linkText(pageTitleOf(entry))}](${siteUrl(compendiumEntryPath(entry.slug))})${note(entry.description)}`,
+    ),
+    '',
+    '## Documents',
+    '',
+    ...PUBLIC_DOCUMENTS.map(({ path, title }) => `- [${linkText(title)}](${siteUrl(path)})`),
+    '',
+    '## Help',
+    '',
+    `- [Help](${siteUrl('/help')}): guides and articles on using the site`,
+    `- [Glossary](${siteUrl('/help/glossary')}): the terms the site uses`,
+    ...help.map(
+      ({ path, title, summary }) => `- [${linkText(title)}](${siteUrl(path)})${note(summary)}`,
     ),
     '',
     '## Optional',
@@ -60,6 +77,7 @@ export type AiCatalog = {
     type: string;
     url: string;
     tags: string[];
+    representativeQueries?: string[];
     updatedAt?: string;
   }[];
 };
@@ -84,6 +102,12 @@ export function buildAiCatalog(entries: readonly CompendiumSlugEntry[]): AiCatal
         type: 'text/html',
         url: siteUrl('/compendium'),
         tags: ['ingredients', 'reference'],
+        representativeQueries: [
+          'What is mugwort used for in spellwork?',
+          'Which herbs are associated with the moon?',
+          'Is this ingredient poisonous?',
+          'What can I use in place of rosemary?',
+        ],
         ...(latest && { updatedAt: latest.toISOString() }),
       },
     ],

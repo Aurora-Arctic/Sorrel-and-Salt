@@ -3,7 +3,6 @@
 import { prefersReducedMotion } from '@/lib/motion';
 import { type ReactElement, useEffect, useRef } from 'react';
 import type { ThemeToggleProps } from './types';
-import './index.scss';
 
 // The pre-paint script in src/app/pre-paint-scripts.tsx reads this key inline; keep in sync.
 export const STORAGE_KEY = 'theme';

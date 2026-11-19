@@ -7,7 +7,6 @@ import SupportThread from '../SupportRequests/thread';
 import SupportSenderReplyBox from './reply-box';
 import SupportSenderResolveButton from './resolve-button';
 import type { SupportSenderRequestProps } from './types';
-import '../SupportRequests/index.scss';
 import { PendingLink } from '../../lib/navigation';
 
 // Staff replies are named for the site and tagged "Staff", never by the staff member's name (claude-docs/components/support-sender-request.md).

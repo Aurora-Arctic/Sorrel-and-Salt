@@ -14,7 +14,6 @@ import ProviderMark from '../src/components/ProviderMark';
 import { ProviderUnavailableNote } from '../src/components/ProviderMark/unavailable-note';
 import { PROVIDER_MARKS } from '../src/components/SignInPanel/icons';
 // The brand buttons' own rules, which only SignInPanel's stylesheet carries.
-import '../src/components/SignInPanel/index.scss';
 import type { SeedCategoryGroup } from '../src/db/seed/types';
 import type { ListNavigation } from '../src/components/ListFrame/types';
 import type { SafetyVariant } from '../src/components/SafetyNote/types';

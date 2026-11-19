@@ -15,4 +15,15 @@ describe('CatalogLink', () => {
     expect(link?.getAttribute('href')).toBe(siteUrl('/.well-known/ai-catalog.json'));
     expect(link?.getAttribute('type')).toBe('application/ai-catalog+json');
   });
+
+  it('points rel="ard" at the ARD catalog beside it, as ARD consumers look for', () => {
+    const container = document.createElement('div');
+    container.innerHTML = renderToStaticMarkup(<CatalogLink />);
+
+    // Precondition: the AI Catalog link is still drawn, so the ARD link stands beside it.
+    expect(container.querySelector('link[rel="ai-catalog"]')).not.toBeNull();
+    const links = container.querySelectorAll('link[rel="ard"]');
+    expect(links).toHaveLength(1);
+    expect(links[0].getAttribute('href')).toBe(siteUrl('/.well-known/ard.json'));
+  });
 });

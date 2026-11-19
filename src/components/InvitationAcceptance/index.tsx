@@ -14,7 +14,6 @@ import SignInDialog from '../SignInDialog';
 import { ADDRESS_LEDES } from './ledes';
 import type { InvitationAcceptanceProps } from './types';
 import type { PageHeaderProps } from '../PageHeader/types';
-import './index.scss';
 
 // `/invite/[token]` and `/i/[token]` share this panel: the page reads where the visitor stands, Accept sends the mutation, and
 // a refusal shows in the service's words (claude-docs/components/invitation-acceptance.md).

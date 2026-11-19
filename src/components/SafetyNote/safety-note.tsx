@@ -3,7 +3,6 @@ import { useId, type ReactElement } from 'react';
 import FormIcon from '../FormIcon';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { SafetyNoteProps } from './types';
-import './index.scss';
 
 // The ingredient's caution as a region labelled by its visible Caution heading, not an aria-label. Text to read, so
 // nothing in it takes focus (claude-docs/components/safety-note.md, "Contracts").

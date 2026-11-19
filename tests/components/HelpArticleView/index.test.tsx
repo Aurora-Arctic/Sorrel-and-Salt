@@ -1,6 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import HelpArticleView from '@/components/HelpArticleView';
+import { HelpArticleSkeleton } from '@/components/HelpArticleView/skeleton';
+import { HelpFrame } from '@/components/HelpChrome';
 import { HELP_WIDGET_ELEMENTS } from '@/components/HelpWidget';
 import { hrefs } from '../../support/links';
 
@@ -240,4 +242,40 @@ describe('HelpArticleView glossary marks', () => {
     expect(screen.getByRole('table', { name: 'What Each Role May Do' })).toBeInTheDocument();
     expect(screen.queryByText('::widget[role-permission-table]')).toBeNull();
   });
+});
+
+// Under the public help header, which shows Help as a label and holds the search box, the article names itself.
+describe('HelpArticleView under the public help header', () => {
+  it('makes the article’s title the one level-one heading, with no search box of its own', () => {
+    render(
+      <HelpFrame>
+        <HelpArticleView
+          title="Testwort Guide"
+          body={'## Testwort Section\n\nText.'}
+          subpages={[]}
+        />
+      </HelpFrame>,
+    );
+
+    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual([
+      'Testwort Guide',
+    ]);
+    // A body section is one level below the title, so the page skips no heading level.
+    expect(screen.getByRole('heading', { level: 2, name: 'Testwort Section' })).toBeInTheDocument();
+    expect(screen.queryByRole('search')).toBeNull();
+  });
+
+  it.each([false, true])(
+    'draws its skeleton with one level-one heading, the title still to come (sub page: %s)',
+    (parent) => {
+      render(
+        <HelpFrame>
+          <HelpArticleSkeleton parent={parent} />
+        </HelpFrame>,
+      );
+
+      expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+      expect(screen.queryByRole('heading', { name: 'Help' })).toBeNull();
+    },
+  );
 });

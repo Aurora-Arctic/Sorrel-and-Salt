@@ -19,7 +19,6 @@ import { HeldMark } from './held-mark';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import { compendiumEntryPath } from '@/lib/compendium-path';
 // The filter is CompendiumList's own, so its stylesheet comes with it; the cards have no stylesheet of their own.
-import '../CompendiumList/index.scss';
 
 // The public compendium's list: the filter row, a grid of cards and the pager. Render-only: the page
 // reads one page under the address's filter. A card's foot is the plus or the check, a curator's Edit

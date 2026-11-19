@@ -15,6 +15,10 @@ export const TITLE_SEPARATOR = ' | ';
 export const SITE_TAGLINE =
   'A grimoire for covens. The compendium is folklore and reference, not advice.';
 
+/** What the site is, in a sentence: the home page's lede, and the first sentence of its search-result description. */
+export const SITE_LEDE =
+  'A shared grimoire for a coven or a household: a compendium of ingredients, the stock you keep, and the spells you make from it.';
+
 /** Each layout writes the whole chain, as Next does not chain a template through its parent's. */
 export function titleTemplate(...scopes: string[]): string {
   return ['%s', ...scopes, SITE_TITLE_NAME].join(TITLE_SEPARATOR);

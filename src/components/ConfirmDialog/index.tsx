@@ -4,8 +4,6 @@ import { type ReactElement, type ReactNode, useEffect, useId, useRef } from 'rea
 import ConfirmAnswersRow from './answers';
 import { giveFocusBack } from '../Modal/modal';
 import { holdPage } from '../Modal/page-hold';
-import '../Modal/index.scss';
-import './index.scss';
 
 // A yes-or-no question in a modal of its own, for a confirm with no form to ask over (claude-docs/
 // components/confirm-dialog.md). An alert dialog: Escape and Cancel are the safe answer, and the focus

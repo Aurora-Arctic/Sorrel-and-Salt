@@ -9,7 +9,6 @@ import BusyButton from '../BusyButton';
 import { EmailField } from '../Field';
 import Notice from '../Notice';
 import { TOO_MANY_ATTEMPTS, rateLimited } from '../../lib/auth-messages';
-import './index.scss';
 
 // Every address gets the same answer, so the page never says whether one has an account (claude-docs/components/forgot-password-form.md).
 

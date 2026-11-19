@@ -14,7 +14,6 @@ import AddGlyph from './glyph';
 import { HoldingCount, holdingText } from './holding';
 import type { NamedAddIconProps } from './types';
 import { ADD, HELD_MARK } from './wording';
-import './index.scss';
 
 // Add to My Ingredients as an icon, at a compendium card's bottom right and beside the entry page's
 // pencil. Tip and accessible name are ADD then the entry's name; a client component of its own so the

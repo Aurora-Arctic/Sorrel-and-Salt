@@ -1,7 +1,6 @@
 import { type ReactElement, useId } from 'react';
 import { HALVES, LIT_PARTS, MARIA } from './icons';
 import type { MoonLayer, MoonPhaseIconProps } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // The moon beside a phase's name, on FormIcon's 24-unit square. Fills are theme tokens, not `currentColor`. Hidden

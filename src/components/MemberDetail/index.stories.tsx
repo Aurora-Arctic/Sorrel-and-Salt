@@ -5,7 +5,6 @@ import { InModal } from '../../../.storybook/in-modal';
 import { answerOperations } from '../../../.storybook/mock-api';
 import { makeQueryClient } from '../../lib/graphql-client';
 import type { MemberListEntry } from '../MemberList/types';
-import '../MemberList/index.scss';
 import MemberDetail from '.';
 
 const meta = {

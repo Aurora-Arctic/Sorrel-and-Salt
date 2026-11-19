@@ -23,7 +23,6 @@ import type {
   HelpOutlineRow,
   HelpOutlineSubPage,
 } from './types';
-import './index.scss';
 import { plural } from '@/lib/text';
 
 // The keepers' help list as an outline: the Guides bar on the left, the chosen guide's sub pages on the right

@@ -3,7 +3,6 @@ import { ListBodySkeleton, ListFilterFrame } from '../ListFrame/skeleton';
 import ArrivalsFilterForm from './arrivals-filter';
 import CardsFilterForm from './filter';
 import { NO_ARRIVALS_FILTER, NO_CARDS_FILTER } from './href';
-import './index.scss';
 
 /** The list's rows with nothing in them yet: its table's headings over placeholder rows. */
 export const AdminCardsBodySkeleton = (): ReactElement => (

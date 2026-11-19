@@ -9,7 +9,6 @@ import ConfirmAnswersRow from '../ConfirmDialog/answers';
 import { ConfirmOverlay } from './confirm-overlay';
 import Modal from './modal';
 import type { DiscardGuard, DiscardQuestionProps } from './types';
-import './index.scss';
 
 // A form's unsaved changes, kept from every way out of its modal: Cancel, Close, Escape and a click
 // outside ask "Discard them?" while the form has changes. It also guards leaving the page

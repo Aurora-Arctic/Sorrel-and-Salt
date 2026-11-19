@@ -297,6 +297,23 @@ describe('DocumentPage', () => {
       }
     });
 
+    // A support link only opens the support dialog over the page, so a crawler following it finds the page it is on.
+    it('asks a crawler not to follow a link that opens support, and follows the page it sits on', () => {
+      show(
+        [
+          '[Fixture Support](?support=accessibility) and [Fixture Page Support](/terms?support=privacy).',
+          '[Fixture Terms](/terms), [Fixture Supporting](?supporting=yes) and [Fixture Heading](/terms#support).',
+        ].join('\n\n'),
+      );
+
+      for (const name of ['Fixture Support', 'Fixture Page Support']) {
+        expect(screen.getByRole('link', { name }), name).toHaveAttribute('rel', 'nofollow');
+      }
+      for (const name of ['Fixture Terms', 'Fixture Supporting', 'Fixture Heading']) {
+        expect(screen.getByRole('link', { name }), name).not.toHaveAttribute('rel');
+      }
+    });
+
     it('prints any other address as plain text, keeping the words', () => {
       const refused = {
         'Fixture Script': 'javascript:alert(1)',

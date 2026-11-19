@@ -9,7 +9,6 @@ import Pager from '../Pager';
 import GroupedValueListFilter from './filter';
 import { KINDS } from './kinds';
 import type { GroupedValueListProps } from './types';
-import './index.scss';
 
 // A curated vocabulary's filter, table and pager: grouped (categories, forms, deities) or flat, with no
 // group column or filter (celestial bodies, zodiac signs); render-only. Filter and each Edit are

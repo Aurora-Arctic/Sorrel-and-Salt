@@ -62,7 +62,6 @@ import type {
   SpellBuilderSpell,
   SpellBuilderValues,
 } from './types';
-import './index.scss';
 import { plural } from '@/lib/text';
 
 // The spell builder: four folding sections inside the dialog (./spell-dialog.tsx). It autosaves (./autosave.ts) and

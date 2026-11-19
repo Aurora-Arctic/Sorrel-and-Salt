@@ -1,5 +1,4 @@
 import type { ReactElement, ReactNode } from 'react';
-import './index.scss';
 
 export type IngredientCardKind = 'cupboard' | 'compendium';
 

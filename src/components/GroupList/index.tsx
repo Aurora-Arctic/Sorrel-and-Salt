@@ -10,7 +10,6 @@ import { emptyList, noMatchText } from '../../lib/text';
 import GroupListFilter from './filter';
 import { KINDS } from './kinds';
 import type { GroupListFilter as Filter, GroupListProps } from './types';
-import './index.scss';
 
 // A group page's table and pager, for every group vocabulary, a deity's traditions included;
 // render-only. A name search heads the list only for a kind whose page hands it a `filter`. Each Edit is

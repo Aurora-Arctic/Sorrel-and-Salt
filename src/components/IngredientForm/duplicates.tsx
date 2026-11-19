@@ -32,7 +32,6 @@ import { LazyDuplicateQuickLook as DuplicateQuickLook } from './lazy-quick-look'
 import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps } from './types';
 // The +'s look is the card's plus's, so its stylesheet; not AddIcon itself, which sends its own
 // add where this one hands the entry to the form.
-import '../AddIcon/index.scss';
 import { plural } from '@/lib/text';
 
 // The "did you mean": once typing settles the name asks `possibleDuplicates`, and each near match

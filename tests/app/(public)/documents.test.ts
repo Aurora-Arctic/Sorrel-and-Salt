@@ -192,6 +192,32 @@ describe.each(Object.keys(PAGES))('/%s', (key) => {
       expect(result.alternates?.canonical).toBe(`https://sorrelandsalt.com/${key}/versions/1`);
     });
 
+    // Only the current version belongs in search; an older one is kept out, its links still followed.
+    it('keeps a superseded version out of search, following its links', async () => {
+      readDocument.mockResolvedValue(version(key, 2, SECOND));
+      readDocumentVersion.mockResolvedValue(version(key, 1, FIRST));
+      const metadata = await PAGES[key]!.versionMetadata();
+
+      const result = await metadata(params('1'));
+
+      // Why it could have been indexable: the version is found, and it is not the current one.
+      expect(readDocumentVersion).toHaveBeenCalledWith(key, 1);
+      expect(result.title).toBe(`Fixture ${key} Title, Version 1`);
+      expect(result.robots).toEqual({ index: false, follow: true });
+    });
+
+    it('leaves the current version indexable', async () => {
+      readDocument.mockResolvedValue(version(key, 2, SECOND));
+      readDocumentVersion.mockResolvedValue(version(key, 2, SECOND));
+      const metadata = await PAGES[key]!.versionMetadata();
+
+      const result = await metadata(params('2'));
+
+      expect(result.title).toBe(`Fixture ${key} Title, Version 2`);
+      expect(result.robots).toBeUndefined();
+      expect(result.alternates?.canonical).toBe(`https://sorrelandsalt.com/${key}`);
+    });
+
     it('reads nothing for an address that is not a whole version number', async () => {
       const metadata = await PAGES[key]!.versionMetadata();
 

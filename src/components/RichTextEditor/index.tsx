@@ -5,8 +5,6 @@ import type { ReactElement } from 'react';
 import { editorPlugins } from './elements';
 import { editorValueToMarkdown, markdownToEditorValue } from './markdown';
 import Toolbar from './toolbar';
-import '../DocumentPage/index.scss';
-import './index.scss';
 
 // Markdown edited as the public page draws it, in a bordered box under a formatting toolbar. Its caller holds the editor, from
 // `useRichTextEditor`, so it can read or replace the text; the library is large, so a caller loads its form with `next/dynamic`.

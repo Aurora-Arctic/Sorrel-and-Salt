@@ -5,7 +5,6 @@ import { REFUSAL_FIXES } from './invitation-refusal-fixes';
 import { PrintedCardMark, RefusalWho } from './refusal-parts';
 import RefusalFinder from './refusal-finder';
 import type { RefusalEntry } from './types';
-import '../CollapsibleSection/index.scss';
 
 // Every message the accept page can give, read from the invitation service's own tables, so a reason added there shows
 // here. The service is server-only, so this shell reads it and hands the messages to the picker as props; the list it

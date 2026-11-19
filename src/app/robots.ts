@@ -19,6 +19,8 @@ export const CRAWLABLE_PATHS = [
   '/help',
   '/llms.txt',
   '/robots.txt',
+  // Every `.txt` at the root, so IndexNow fetches the key file named after the key without robots.txt naming the key.
+  '/*.txt$',
   '/.well-known/ai-catalog.json',
   '/.well-known/ard.json',
   '/sitemap.xml',

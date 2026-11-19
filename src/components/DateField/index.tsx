@@ -13,7 +13,6 @@ import { CalendarPanel, dayBounds, useDayPopover } from './popover';
 import { dayWords, isoDay, today } from './day';
 import { preloadOnIntent } from '../../lib/use-lazy-module';
 import type { DateFieldProps } from './types';
-import './index.scss';
 
 // A day field: a button showing the day in words, opening a calendar in a top-layer popover; where the browser has no
 // popover it opens in flow beneath the button instead (claude-docs/components/date-field.md).

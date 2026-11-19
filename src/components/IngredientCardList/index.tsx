@@ -2,7 +2,6 @@
 
 import { Children, useEffect, useRef, type ReactElement } from 'react';
 import type { IngredientCardListProps } from './types';
-import './index.scss';
 
 // The grid of cards the public compendium, the coven's Ingredients page and its grimoire share, each in
 // an `li`. Presentational: it decides nothing about what is listed and does not page

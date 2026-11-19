@@ -2,7 +2,6 @@ import type { ReactElement, ReactNode } from 'react';
 import { SwitchField } from '../Field';
 import TipMark from '../EntryMarks/tip-mark';
 import { reviewDay } from './review-date';
-import './review-mark.scss';
 
 // The compendium entry's review row: the standing as a badge, the Reviewed switch at the end. It saves nothing: the
 // caller owns the switch. The words show the SAVED state (`standing`), never the switch's unsaved value, and the day

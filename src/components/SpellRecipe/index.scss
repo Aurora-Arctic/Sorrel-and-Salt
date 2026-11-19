@@ -89,8 +89,7 @@
 
   h2 {
     margin: 0;
-    font-size: heading-size(3);
-    line-height: 1.2;
+    @include heading-level(3);
   }
 }
 

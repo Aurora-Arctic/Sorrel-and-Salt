@@ -9,7 +9,6 @@ import { FormActions, PlainTextField } from '../Field';
 import { useNameField } from '../Field/use-name-field';
 import Notice from '../Notice';
 import type { NameFormProps } from './types';
-import './index.scss';
 
 // Plain controlled input, not react-hook-form: one field, checked with the schema the server runs again (claude-docs/components/name-form.md).
 

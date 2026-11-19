@@ -9,7 +9,6 @@ import { PlainTextField } from '../Field';
 import ConfirmedAction from '../ConfirmedAction';
 import Notice from '../Notice';
 import type { DocumentMailingPanelProps, MailingProgressProps } from './types';
-import './index.scss';
 import { plural } from '@/lib/text';
 
 // The service is the guard (claude-docs/components/document-mailing-panel.md).

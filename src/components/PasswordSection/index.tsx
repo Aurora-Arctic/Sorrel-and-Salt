@@ -17,7 +17,6 @@ import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import { GENERIC_RESET_REQUEST_ERROR } from '../ForgotPasswordForm';
 import type { PasswordSectionProps } from './types';
-import './index.scss';
 
 // The account page's Password section: change through Better Auth's client, or set a first password through
 // `setPassword`, as its endpoint for that answers only on the server (claude-docs/components/password-section.md).

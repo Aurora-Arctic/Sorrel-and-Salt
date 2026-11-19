@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import Skeleton from '../Skeleton';
 import type { PageHeaderProps } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // No client directive and no hook, so a server page renders it (claude-docs/styling.md, "Buttons").

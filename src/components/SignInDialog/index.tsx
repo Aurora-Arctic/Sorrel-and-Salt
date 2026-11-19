@@ -11,7 +11,6 @@ import SignInPanel, { LastUsedMark, SignInBack, signInHeader } from '../SignInPa
 import { withMode } from '../SignInPanel/address';
 import type { SignInHeader } from '../SignInPanel/types';
 import type { SignInDialogProps } from './types';
-import './index.scss';
 
 const INBOX_TITLE = 'Check Your Inbox';
 const INBOX_LEDE = `${CHECK_INBOX} Its link brings you back to this page.`;
@@ -26,6 +25,7 @@ const SignInDialog = ({
   configured,
   label,
   className = 'btn btn--solid btn--medium',
+  nofollow = false,
   mode: openingMode = 'sign-in',
   ledes,
   signUpLandsOnNext,
@@ -61,6 +61,7 @@ const SignInDialog = ({
         ref={link}
         className={className}
         href={withMode(signInPath(next), openingMode)}
+        rel={nofollow ? 'nofollow' : undefined}
         onClick={openDialog}
       >
         {label}

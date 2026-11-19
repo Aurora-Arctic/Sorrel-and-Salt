@@ -4,7 +4,6 @@ import { reviewDay } from '../IngredientEntry/review-date';
 import type { EntryMarksProps } from './types';
 import RecencyMark from './recency-mark';
 import TipMark from './tip-mark';
-import './index.scss';
 
 type Tone = 'green' | 'neutral' | 'red';
 

@@ -4,7 +4,6 @@ import { type ReactElement, useId } from 'react';
 import TipAnchor from '../InfoTip/tip-anchor';
 import type { CorrespondenceValueProps } from './types';
 import ValueCard from './value-card';
-import './index.scss';
 
 // A client part so the rows stay server-drawn (claude-docs/components/ingredient-entry.md, "Correspondence cards").
 const CorrespondenceValue = ({ value, card }: CorrespondenceValueProps): ReactElement => {

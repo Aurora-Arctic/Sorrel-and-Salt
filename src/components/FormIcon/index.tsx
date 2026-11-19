@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import { FORM_SHAPES, SPOON } from './icons';
 import type { FormIconProps } from './types';
-import './index.scss';
 import { cx } from '@/lib/class-names';
 
 // The small mark beside a form saying what kind of thing it is: its group's icon, or the generic salt

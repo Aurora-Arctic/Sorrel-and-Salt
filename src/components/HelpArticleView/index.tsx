@@ -8,7 +8,6 @@ import { BackChevron } from '../BackLink/chevron';
 import PageNav from '../PageNav';
 import { HelpBackLink } from './back-link';
 import type { HelpArticleViewProps } from './types';
-import './index.scss';
 
 /** A body with this many sections gains a contents menu; fewer are in view without one. */
 const MENU_FROM = 3;
@@ -27,7 +26,7 @@ const HelpArticleView = ({
   editHref,
   editName = 'Article',
 }: HelpArticleViewProps): ReactElement => {
-  const { content, entries } = renderMarkdown(body, {}, [], true, helpTerms(terms), widgets);
+  const { content, entries } = renderMarkdown(body, {}, [], 'help', helpTerms(terms), widgets);
   // The entries are read before the headings move down, so a top-level entry or a group is one `##` of the body.
   const sections =
     entries.filter((entry) => entry.group === undefined).length +
@@ -40,7 +39,7 @@ const HelpArticleView = ({
       <div className="help-article__head">
         <HelpPageHead heading={heading} />
         {parent && <HelpBackLink href={parent.href} title={parent.title} />}
-        <HelpArticleTitle title={title} editHref={editHref} editName={editName} />
+        <HelpArticleTitle level="article" title={title} editHref={editHref} editName={editName} />
       </div>
       {withMenu && <PageNav label="On This Page" entries={entries} collapsible />}
       <div className="help-article__body">{content}</div>

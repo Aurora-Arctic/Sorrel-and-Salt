@@ -32,7 +32,6 @@ import {
   variantLabel,
 } from './batch';
 import type { StockDialogFormProps, StockDialogValues, StockForm, StockRow } from './types';
-import './index.scss';
 
 // The dialog's form, loaded apart from its openers (claude-docs/components/stock-dialog.md, "The button and the dialog").
 

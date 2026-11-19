@@ -13,7 +13,6 @@ import ConfirmedAction from '../ConfirmedAction';
 import Until from '../LocalTime/until';
 import { Ledger, PauseFields, endOf, pauseReady } from './access-pause-parts';
 import type { PausePanelProps, PauseSpan, StandingPause } from './types';
-import '../SupportRequests/timeout-panel.scss';
 
 // A pause on someone's access, inside a modal: the one that stands with Lift Pause, or the form that sets one, and the
 // earlier ones beneath. The user modal's Site Access and the member modal's Coven Access are both this, each with its

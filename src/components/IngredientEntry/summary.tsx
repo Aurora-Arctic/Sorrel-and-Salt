@@ -13,8 +13,6 @@ import { ShelfIcon } from './held-mark';
 import type { SummaryJar } from './types';
 import { HELD_IN_COVENS_TITLE } from '../AddIcon/wording';
 // Loaded here: a list page draws no entry page to load the blocks' styles.
-import './index.scss';
-import './summary.scss';
 import { PendingLink } from '../../lib/navigation';
 
 // The details modal's body: the entry page's Details section cut to a glance, drawn by the page's

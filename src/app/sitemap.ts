@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { listHelpArticlePaths } from '@/modules/help';
 import { listCompendiumSlugs } from '@/modules/ingredients';
+import { PUBLIC_DOCUMENTS } from '@/lib/public-documents';
 import { siteUrl } from '@/lib/site';
 import { compendiumEntryPath } from '@/lib/compendium-path';
 
@@ -16,11 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: siteUrl('/') },
     { url: siteUrl('/compendium') },
-    { url: siteUrl('/privacy') },
-    { url: siteUrl('/disclaimer') },
-    { url: siteUrl('/about') },
-    { url: siteUrl('/terms') },
-    { url: siteUrl('/code-of-ethics') },
+    ...PUBLIC_DOCUMENTS.map(({ path }) => ({ url: siteUrl(path) })),
     { url: siteUrl('/help') },
     { url: siteUrl('/help/glossary') },
     ...helpPaths.map((path) => ({ url: siteUrl(path) })),
