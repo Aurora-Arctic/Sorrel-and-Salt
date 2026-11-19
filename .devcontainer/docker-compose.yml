@@ -40,14 +40,34 @@ services:
       # Where `npx skills add --global` keeps a skill's files; ~/.claude/skills
       # holds only a link to each, which a rebuild would leave pointing nowhere.
       - ./agents-home:/home/node/.agents:cached
+      # Git over SSH with no editor attached. VS Code forwards the host's SSH
+      # agent and copies ~/.gitconfig itself; the Dev Containers CLI does
+      # neither, so these mounts do it (claude-docs/docker.md, "Without VS Code").
+      # Docker Desktop's forwarded agent: the host's loaded keys, never the keys themselves.
+      - /run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock
+      # GitHub's published host keys, so the first fetch asks nothing.
+      - ./ssh-known-hosts:/etc/ssh/ssh_known_hosts:ro
+      # The host's git identity, copied to ~/.gitconfig at start so the copy stays
+      # editable. Long syntax so a missing file stops the start instead of
+      # Docker creating a directory in its place on the host.
+      - type: bind
+        source: ${HOME}/.gitconfig
+        target: /home/node/.host-gitconfig
+        read_only: true
+        bind:
+          create_host_path: false
     init: true
     tty: true
     # The Plannotator Inbox, for a host with no editor attached. The container
     # side is 43502, the socat forwarder `postStartCommand` starts: the Inbox
     # itself listens on the container's loopback, which a published port never
     # reaches. The host side stays 43501, the address the Inbox accepts.
+    # 8001 is the review server `next dev --hostname 0.0.0.0 --port 8001` serves
+    # from a worktree; it binds every address, so it needs no forwarder. The
+    # `e2e` service publishes 8001 too, so the two cannot run at once.
     ports:
       - '127.0.0.1:43501:43502'
+      - '127.0.0.1:8001:8001'
     # ensure-deps.sh first (see Docker/docker-compose.yaml); `entrypoint` clears
     # the image's CMD, so the command is named below.
     entrypoint: ['sh', '/app/Docker/ensure-deps.sh']
@@ -62,6 +82,8 @@ services:
       # Plannotator's daily usage ping, off. Set here and not in the
       # `plannotator` wrapper, so its plugin inside Claude Code reads it too.
       NO_ANON_PING: '1'
+      # The forwarded agent mounted above; VS Code, when attached, sets its own.
+      SSH_AUTH_SOCK: /run/host-services/ssh-auth.sock
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # From `make docker-update-token`, via git-ignored Docker/.env; `:-`
       # keeps a missing file quiet and the CLI falls back to `/login`.
