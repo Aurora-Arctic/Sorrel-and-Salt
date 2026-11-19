@@ -1,9 +1,8 @@
 import { type RefObject, useEffect, useLayoutEffect, useRef } from 'react';
+import { pixels } from '../../lib/css-pixels';
 
 // What a frame bar's end block measures against, shared by the shell's and the public frame's
 // (claude-docs/components/app-shell.md, "The end block").
-
-export const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
 // The site nav's width and the gap after it, or 0 where it is not in the bar (a tablet's width).
 export const navWidth = (end: HTMLElement): number => {

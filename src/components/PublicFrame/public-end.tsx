@@ -2,16 +2,11 @@
 
 import { usePathname } from 'next/navigation';
 import { type ReactElement, Suspense, useRef } from 'react';
+import { pixels } from '../../lib/css-pixels';
 import { useHydrated } from '../../lib/hydrated';
 import { signInPath } from '../../lib/sign-in';
 import { useMeasuredFit } from '../../lib/use-measured-fit';
-import {
-  firstFitting,
-  navWidth,
-  pixels,
-  useFocusKeptThroughFold,
-  watched,
-} from '../AppShell/bar-room';
+import { firstFitting, navWidth, useFocusKeptThroughFold, watched } from '../AppShell/bar-room';
 import { DotsIcon } from '../IconTip/icons';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';

@@ -1,5 +1,6 @@
 'use client';
 
+import { pixels } from '../../lib/css-pixels';
 import { PendingLink } from '../../lib/navigation';
 import { TABLET_BAND, useMediaQuery } from '../../lib/use-media-query';
 import { usePathname } from 'next/navigation';
@@ -18,8 +19,6 @@ import type { SectionNavItem, SectionNavProps } from './types';
 // How many sections stay in view on a phone, and what the server and first client render show; the stylesheet's
 // `--extra` class hides the rest, so the number lives here once.
 const VISIBLE = 4;
-
-const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
 type Natural = {
   widths: number[];

@@ -2,10 +2,11 @@
 
 import { usePathname } from 'next/navigation';
 import { type ReactElement, useRef } from 'react';
+import { pixels } from '../../lib/css-pixels';
 import { useHydrated } from '../../lib/hydrated';
 import { useMeasuredFit } from '../../lib/use-measured-fit';
 import AccountMenu from '../AccountMenu';
-import { firstFitting, navWidth, pixels, useFocusKeptThroughFold, watched } from './bar-room';
+import { firstFitting, navWidth, useFocusKeptThroughFold, watched } from './bar-room';
 import { PlusIcon } from '../IconTip/icons';
 import ThemeToggle from '../ThemeToggle';
 import { ADD_INGREDIENT_TITLE } from './add-href';

@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useEffect, useRef } from 'react';
+import { pixels } from '../../lib/css-pixels';
 
 // Marks the search row `data-stuck` while it is stuck to the top, so its shadow can fade in, by a
 // sentinel and an IntersectionObserver. A client child, so `IngredientSearch` stays a server
@@ -15,7 +16,7 @@ const StuckMark = (): ReactElement => {
     // Past the browser floor, a pure enhancement: without the observer the row has no shadow.
     if (!mark || !row || !('IntersectionObserver' in window)) return;
 
-    const top = Number.parseFloat(getComputedStyle(row).top) || 0;
+    const top = pixels(getComputedStyle(row).top);
     const observer = new IntersectionObserver(
       ([entry]) => {
         const stuck = !entry.isIntersecting && entry.boundingClientRect.top < top;

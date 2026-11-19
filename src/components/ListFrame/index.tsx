@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { pixels } from '../../lib/css-pixels';
 import { usePendingNavigation, reportLeaving } from '../../lib/navigation';
 import { useRestoredFromCache } from '../../lib/use-restored-from-cache';
 import SwapPanel from '../Skeleton/swap-panel';
@@ -61,7 +62,7 @@ const ListFrame = ({ className, disabled = false, children }: ListFrameProps): R
     keepPlace.current = false;
     const body = root.current?.querySelector('.list-frame__body');
     if (!body) return;
-    const line = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+    const line = pixels(getComputedStyle(document.documentElement).scrollPaddingTop);
     if (body.getBoundingClientRect().top < line) body.scrollIntoView({ block: 'start' });
   }, [moving]);
 
