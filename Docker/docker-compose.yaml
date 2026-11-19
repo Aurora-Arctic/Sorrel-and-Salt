@@ -336,12 +336,14 @@ services:
     # compose network alone, as `lighthouse-chrome:9222`
     # (.devcontainer/docker-compose.yml names it for the devcontainer).
     # Docker/lighthouse-chrome.sh starts Chromium and the forwarder that
-    # publishes its loopback-only port on the network; it is bind-mounted, as
-    # `playwright-entrypoint.sh` is, so an edit needs no image build.
+    # publishes its loopback-only port on the network (Docker/tcp-forward.cjs);
+    # both are bind-mounted, as `playwright-entrypoint.sh` is, so an edit needs
+    # no image build.
     profiles: ['audit']
     image: mcr.microsoft.com/playwright:v1.64.0-noble
     init: true
     ipc: host
     volumes:
       - ./lighthouse-chrome.sh:/lighthouse-chrome.sh:ro
+      - ./tcp-forward.cjs:/tcp-forward.cjs:ro
     command: ['/lighthouse-chrome.sh']
