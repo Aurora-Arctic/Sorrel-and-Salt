@@ -58,30 +58,19 @@ services:
           create_host_path: false
     init: true
     tty: true
-    # Every port in devcontainer.json's `forwardPorts` except 8000, published on
-    # the host's loopback so the host reaches them with no editor attached
-    # (`forwardPorts` is VS Code's alone). 8000 is left to the host's own dev
-    # server. A published port arrives on the container's network address, so a
-    # server on the container's loopback alone does not answer; it needs
-    # `0.0.0.0` or a forwarder (claude-docs/docker.md, "Without VS Code").
-    # The Inbox's container side is 43502, the forwarder
-    # Docker/devcontainer-start.sh starts; the host side stays 43501, the
-    # address the Inbox accepts. 8001 is the review server `next dev --hostname
-    # 0.0.0.0 --port 8001` serves from a worktree. The `e2e`, `studio`, `jobs`,
-    # `playwright-server` and `app` services publish 8001, 4983, 3456, 7900 and
-    # 9229 too, so each pair cannot run at once.
+    # `forwardPorts` minus 8000 and the ports other services publish (4983,
+    # 3456, 7900, 9229), so the host reaches them with no editor attached. A
+    # server on the container's loopback alone needs `0.0.0.0` or a forwarder
+    # (claude-docs/docker.md, "Without VS Code"): the Inbox's is 43502.
+    # `e2e` publishes 8001 too, so the two cannot run at once.
     ports:
       - '127.0.0.1:43501:43502'
       - '127.0.0.1:8001:8001'
-      - '127.0.0.1:4983:4983'
-      - '127.0.0.1:3456:3456'
-      - '127.0.0.1:9229:9229'
       - '127.0.0.1:9230:9230'
       - '127.0.0.1:9231:9231'
       - '127.0.0.1:9323:9323'
       - '127.0.0.1:9324:9324'
       - '127.0.0.1:51204:51204'
-      - '127.0.0.1:7900:7900'
       - '127.0.0.1:19432:19432'
       - '127.0.0.1:19433:19433'
       - '127.0.0.1:19434:19434'

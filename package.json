@@ -26,7 +26,7 @@
     "test:coverage": "scripts/with-lock.sh /tmp/sorrel-vitest.lock vitest run --coverage",
     "test:stories": "scripts/with-lock.sh /tmp/sorrel-e2e.lock playwright test --config playwright.stories.config.ts",
     "test:debug": "vitest run --inspectBrk=0.0.0.0:9230 --no-file-parallelism --maxWorkers=1",
-    "test:ui": "vitest --ui",
+    "test:ui": "vitest --ui --api.host 0.0.0.0",
     "e2e": "playwright test",
     "e2e:audit": "E2E_AUDIT=1 scripts/with-lock.sh /tmp/sorrel-e2e.lock playwright test --project webkit --project firefox --project phone",
     "test:stories:audit": "E2E_AUDIT=1 scripts/with-lock.sh /tmp/sorrel-e2e.lock playwright test --config playwright.stories.config.ts --project webkit --project firefox --project phone",
