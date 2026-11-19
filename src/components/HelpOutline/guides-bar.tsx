@@ -98,12 +98,19 @@ const HelpGuidesBar = ({
   const modeRef = useRef<HTMLDivElement>(null);
   const barButton = useRef<HTMLButtonElement>(null);
   const phoneButton = useRef<HTMLButtonElement>(null);
-  const [focusBack, setFocusBack] = useState<'bar' | 'phone' | null>(null);
+  const [focusBack, setFocusBack] = useState(false);
 
+  // Back to whichever toggle copy the width shows, not the one pressed: on a phone the mode shows only the bar's copy,
+  // which is display: none once the mode ends.
   useEffect(() => {
     if (reordering)
       modeRef.current?.querySelector<HTMLButtonElement>('.help-outline__grip')?.focus();
-    else if (focusBack) (focusBack === 'phone' ? phoneButton : barButton).current?.focus();
+    else if (focusBack) {
+      const copies = [phoneButton.current, barButton.current];
+      (
+        copies.find((copy) => copy && copy.getClientRects().length > 0) ?? barButton.current
+      )?.focus();
+    }
   }, [reordering, focusBack]);
 
   const byId = new Map(order.map((entry) => [entry.id, entry]));
@@ -170,7 +177,7 @@ const HelpGuidesBar = ({
     <ReorderToggle
       ref={from === 'bar' ? barButton : phoneButton}
       className={`help-outline__reorder-open help-outline__reorder-open--${from}`}
-      onPress={() => setFocusBack(from)}
+      onPress={() => setFocusBack(true)}
     />
   );
   const canReorder = order.length > 1;
