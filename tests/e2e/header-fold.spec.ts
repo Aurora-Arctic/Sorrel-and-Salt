@@ -74,19 +74,20 @@ async function signedInCompendium(page: Page) {
   return '/compendium';
 }
 
-const PUBLIC_SETTINGS = [
+const BASE_SETTINGS = [
   { label: 'a 320px window', width: PURPOSE_WIDTHS.reflow, font: '100%' },
   { label: 'a 1280px window at a 200% root font', width: DESKTOP_WIDTH, font: '200%' },
 ] as const;
 const SETTINGS = [
-  ...PUBLIC_SETTINGS,
+  ...BASE_SETTINGS,
   { label: 'a 320px window at a 200% root font', width: PURPOSE_WIDTHS.reflow, font: '200%' },
 ] as const;
 
 for (const [kind, open, settings] of [
   ['a signed-in coven page', signedInCovenPage, SETTINGS],
   ['the signed-in compendium', signedInCompendium, SETTINGS],
-  ['the public compendium', async () => '/compendium', PUBLIC_SETTINGS],
+  ['the public compendium', async () => '/compendium', SETTINGS],
+  ['the public help', async () => '/help', SETTINGS],
 ] as const) {
   test.describe(kind, () => {
     for (const { label, width, font } of settings) {
