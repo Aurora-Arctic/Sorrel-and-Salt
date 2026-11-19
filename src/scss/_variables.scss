@@ -121,18 +121,39 @@ $burn-char-light: rgba(color.mix($iron-gall, $wax-warm, 75%), 0.6);
 $burn-char-line-dark: rgba($shadow-ink-dark, 0.92);
 $burn-char-line-light: rgba($iron-gall, 0.85);
 
-// The glow is the theme red at a strength the owner chose per theme: light the wax red at 0.12, dark the ember red at 0.08, since
-// a glow on soot reads twice as strong as the same glow on parchment.
-$preview-glow-dark: rgba($wax-warm, 0.08);
+// The glow is the theme red, a little fainter on soot than on parchment, since a glow on soot reads stronger.
+$preview-glow-dark: rgba($wax-warm, 0.11);
 $preview-glow-light: rgba($wax, 0.12);
-$preview-ember-dark: $ochre-bright;
-$preview-ember-light: $wax;
-$preview-ember-core-dark: color.adjust($ochre-bright, $lightness: 22%);
-$preview-ember-core-light: color.adjust($ochre-bright, $lightness: 8%);
-$preview-ember-char-dark: rgba($wax-warm, 0.35);
-$preview-ember-char-light: color.mix($iron-gall, $wax-warm, 75%);
-$preview-ash-dark: rgba($chalk-muted, 0.5);
-$preview-ash-light: rgba($ink-muted, 0.5);
+// The preview burns hotter than the palette, so its fire hues are its own rather than the palette's.
+$preview-ember-dark: #ee8a2b;
+$preview-ember-light: #e2661f;
+$preview-ember-core-dark: #ffe29a;
+$preview-ember-core-light: #ffd166;
+$preview-ember-char-dark: #9a3214;
+$preview-ember-char-light: #96301a;
+$preview-ember-white-hot: #fff7dc;
+$preview-ember-glow-dark: rgba(238, 150, 50, 0.4);
+$preview-ember-glow-light: rgba(236, 128, 40, 0.45);
+$preview-ember-halo-dark: rgba($ochre-bright, 0.5);
+$preview-ember-halo-light: rgba(230, 120, 40, 0.8);
+$preview-heat-line-dark: #ffd77a;
+$preview-heat-line-light: #f2c668;
+$preview-ash-dark: #5a554c;
+$preview-ash-light: #3d3831;
+$preview-ash-edge-dark: #a39c8e;
+$preview-ash-edge-light: #8f8778;
+// The preview's char is the card's made stronger, since its wider rim would wash out at the card's strength.
+$preview-char-dark: rgba($shadow-ink-dark, 0.85);
+$preview-char-light: rgba(color.mix($iron-gall, $wax-warm, 75%), 0.82);
+$preview-char-line-dark: rgba($shadow-ink-dark, 0.95);
+$preview-char-line-light: rgba($iron-gall, 0.92);
+$preview-scorch-dark: rgba($wax-warm, 0.16);
+$preview-scorch-light: rgba(color.mix($iron-gall, $wax-warm, 75%), 0.3);
+$preview-halo: rgba($ochre-bright, 0.6);
+$preview-heat-near-dark: rgba($ochre-bright, 0.2);
+$preview-heat-near-light: rgba($wax-warm, 0.3);
+$preview-heat-far-dark: rgba($wax-warm, 0.12);
+$preview-heat-far-light: rgba($wax, 0.14);
 
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba($shadow-ink-dark, 0.8);
@@ -447,6 +468,15 @@ $preview-ember: var(--preview-ember);
 $preview-ember-core: var(--preview-ember-core);
 $preview-ember-char: var(--preview-ember-char);
 $preview-ash: var(--preview-ash);
+$preview-ash-edge: var(--preview-ash-edge);
+$preview-ember-glow: var(--preview-ember-glow);
+$preview-ember-halo: var(--preview-ember-halo);
+$preview-heat-line: var(--preview-heat-line);
+$preview-char: var(--preview-char);
+$preview-char-line: var(--preview-char-line);
+$preview-scorch: var(--preview-scorch);
+$preview-heat-near: var(--preview-heat-near);
+$preview-heat-far: var(--preview-heat-far);
 $dismiss-ink: var(--dismiss-ink);
 $card-more-ink: var(--card-more-ink);
 $list-marker-ink: var(--list-marker-ink);
