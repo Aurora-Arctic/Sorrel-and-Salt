@@ -63,7 +63,8 @@ const VERSION_NUMBER = /^[1-9]\d*$/;
 
 /**
  * A version page's title names the document and version. While it is the current version the page is a
- * copy of the document page, so that is its canonical; once a newer one is published it names itself.
+ * copy of the document page, so that is its canonical; once a newer one is published it names itself and
+ * is kept out of search results (`noindex, follow`), as the sitemap already leaves it out.
  * An address that names no version gets nothing here, and the page is the 404.
  */
 export async function versionDocumentMetadata(
@@ -77,9 +78,12 @@ export async function versionDocumentMetadata(
       readDocumentVersion(key, Number(address)),
       readDocument(key),
     ]);
-    const path = version.number === current.number ? `/${key}` : `/${key}/versions/${address}`;
+    const isCurrent = version.number === current.number;
+    const path = isCurrent ? `/${key}` : `/${key}/versions/${address}`;
     const title = `${version.title}, Version ${version.number}`;
-    return publicPageMetadata(title, `${title}, as published on ${SITE_NAME}.`, path);
+    return publicPageMetadata(title, `${title}, as published on ${SITE_NAME}.`, path, {
+      noIndex: !isCurrent,
+    });
   } catch (error) {
     if (error instanceof NotFound) return {};
     throw error;
