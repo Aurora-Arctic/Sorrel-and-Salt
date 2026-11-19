@@ -221,6 +221,7 @@ The editor extension `bierner.markdown-mermaid` draws the Mermaid block in VS Co
 | `make graphify-up`         | The code graph's builder and its MCP server ([`docker.md`](docker.md)); `graphify-down` stops all three of its services and leaves the rest running, and `graphify-logs` follows the builder's log |
 | `make graphify-pages-up`   | Also the code graph's pages, on **8090**, on the `graph-pages` profile; `graphify-pages-down` stops them                                                                                           |
 | `make devcontainer-up`     | Starts the dev container and every service without a profile, with VS Code closed, through the Dev Containers CLI ([`docker.md`](docker.md), "The dev container")                                  |
+| `make devcontainer-shell`  | Opens a zsh shell in the running dev container, with VS Code closed, through the same CLI                                                                                                          |
 | `make docker-down`         | Stops and removes the stack, the dev container and the code graph included, named volumes kept; `make docker-rebuild` tears down with the volumes and starts again                                 |
 | `make act-check`           | Runs a check locally via `act`; `act-check CHECK=<leg>` picks a `checks.yml` leg, and `make act-test` chains every locally runnable one                                                            |
 

@@ -13,7 +13,7 @@
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-jobs docker-all docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token playwright-server-up playwright-server-down playwright-audit-up playwright-audit-down lighthouse-up lighthouse-down docker-codegen \
-	devcontainer-build devcontainer-up graphify-up graphify-down graphify-pages-up graphify-pages-down graphify-logs \
+	devcontainer-build devcontainer-up devcontainer-shell graphify-up graphify-down graphify-pages-up graphify-pages-down graphify-logs \
 	act-image act-cache-checkout act-check act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
@@ -232,6 +232,10 @@ devcontainer-build:
 ## Start the dev container and the whole stack with VS Code closed (Dev Containers CLI)
 devcontainer-up:
 	npx --yes @devcontainers/cli up --workspace-folder .
+
+## Open a zsh shell in the running dev container, with VS Code closed (Dev Containers CLI)
+devcontainer-shell:
+	npx --yes @devcontainers/cli exec --workspace-folder . zsh
 
 ## Start the code graph: the builder and its MCP server (graphify)
 graphify-up:
