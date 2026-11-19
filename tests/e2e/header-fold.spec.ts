@@ -55,6 +55,28 @@ async function expectBarInWindow(page: Page) {
   expect(past, 'controls of the bar that end past the window').toEqual([]);
 }
 
+/** How many lines one word of the element's text is drawn across: one when it sits whole, more when it breaks. */
+const linesOf = (element: Locator, word: string) =>
+  element.evaluate((root, find) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const at = node.textContent?.indexOf(find) ?? -1;
+      if (at < 0) continue;
+      const range = document.createRange();
+      range.setStart(node, at);
+      range.setEnd(node, at + find.length);
+      return new Set([...range.getClientRects()].map((line) => Math.round(line.top))).size;
+    }
+    return 0;
+  }, word);
+
+/** The element's drawn font size, and the root's, which is the body text's size. */
+const sizesOf = (element: Locator) =>
+  element.evaluate((heading) => ({
+    heading: Number.parseFloat(getComputedStyle(heading).fontSize),
+    body: Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
+  }));
+
 /** How many times wider than tall the button is: a label is several, the plus alone is one. */
 const aspectOf = (button: Locator) =>
   button.evaluate((element) => {
@@ -332,6 +354,67 @@ test.describe('a 320px window at a 200% root font', () => {
     expect(shown).toBeGreaterThanOrEqual(2);
   });
 
+  test('the bottom tab bar draws each of its labels whole, on one line', async ({ page }) => {
+    const path = await signedInCovenPage(page);
+    await page.setViewportSize({ width: PURPOSE_WIDTHS.reflow, height: 812 });
+    for (const [at, current] of [
+      [path, 'Overview'],
+      [`${path}/ingredients`, 'Ingredients'],
+    ]) {
+      await visit(page, at);
+      await rootFont(page, '200%');
+      const tabBar = page.getByRole('navigation', { name: 'Coven' });
+      await expect(tabBar).toBeVisible();
+      // The current tab's label is the bolder, so each page checks the widest word in both weights.
+      await expect(tabBar.getByRole('link', { name: current })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      for (const name of ['Overview', 'Ingredients', 'Grimoire', 'Members']) {
+        const tab = tabBar.getByRole('link', { name, exact: true });
+        await expect(tab).toBeVisible();
+        expect(await linesOf(tab, name), `${name} on ${at} sits on one line`).toBe(1);
+      }
+    }
+  });
+
+  test('a heading draws an ordinary word whole, and no smaller than the body text', async ({
+    page,
+  }) => {
+    const path = await signedInCovenPage(page);
+    await page.setViewportSize({ width: PURPOSE_WIDTHS.reflow, height: 812 });
+    for (const [at, word] of [
+      [path, 'Fixture'],
+      [`${path}/ingredients`, 'Ingredients'],
+      ['/compendium', 'Compendium'],
+    ]) {
+      await visit(page, at);
+      await rootFont(page, '200%');
+      const heading = page.getByRole('main').getByRole('heading', { level: 1 });
+      await expect(heading).toContainText(word);
+      expect(await linesOf(heading, word), `${word} sits on one line`).toBe(1);
+      const sizes = await sizesOf(heading);
+      expect(sizes.body).toBe(32);
+      expect(
+        sizes.heading,
+        `the ${word} heading is no smaller than the body text`,
+      ).toBeGreaterThanOrEqual(sizes.body);
+    }
+    // Every level on a page of several, the smaller levels included.
+    const headings = page.getByRole('main').getByRole('heading');
+    const count = await headings.count();
+    expect(count).toBeGreaterThanOrEqual(3);
+    for (let at = 0; at < count; at += 1) {
+      const heading = headings.nth(at);
+      if (!(await heading.isVisible())) continue;
+      const sizes = await sizesOf(heading);
+      expect(
+        sizes.heading,
+        `heading ${at} is no smaller than the body text`,
+      ).toBeGreaterThanOrEqual(sizes.body);
+    }
+  });
+
   test('a long coven name in the heading wraps rather than scrolling the page sideways', async ({
     page,
   }) => {
@@ -347,5 +430,24 @@ test.describe('a 320px window at a 200% root font', () => {
     const { right } = await heading.evaluate(inkOf);
     expect(right).toBeLessThanOrEqual(PURPOSE_WIDTHS.reflow + 0.5);
     await assertNoSidewaysScroll(page, { width: PURPOSE_WIDTHS.reflow });
+    // Only the word too long for the line at any size breaks; the ordinary word before it stays whole.
+    expect(await linesOf(heading, 'Fixture')).toBe(1);
+    expect(await linesOf(heading, `Covenwithanunbrokenverylongname${tag}`)).toBeGreaterThan(1);
   });
+});
+
+test('draws the headings at their full sizes in a desktop window at the default text size', async ({
+  page,
+}) => {
+  const path = await signedInCovenPage(page);
+  await page.setViewportSize({ width: DESKTOP_WIDTH, height: 812 });
+  await visit(page, path);
+  const main = page.getByRole('main');
+  const title = await sizesOf(main.getByRole('heading', { level: 1 }));
+  expect(title.body).toBe(16);
+  // The title's 3.75rem top end, and an h2's 2.15rem.
+  expect(title.heading).toBe(60);
+  const section = main.getByRole('heading', { level: 2, name: 'Your Membership' });
+  await expect(section).toBeVisible();
+  expect((await sizesOf(section)).heading).toBeCloseTo(34.4, 1);
 });
