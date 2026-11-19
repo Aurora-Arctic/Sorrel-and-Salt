@@ -1,6 +1,7 @@
 import { getSessionCookie } from 'better-auth/cookies';
 import { type NextRequest, NextResponse } from 'next/server';
 import { Forbidden } from './lib/errors';
+import { indexNowKey } from './lib/indexnow';
 import { matchPattern } from './lib/navigation/match-pattern';
 import { PAGE_PATTERNS, PUBLIC_FILES } from './lib/page-routes';
 import { isPublic } from './lib/public-routes';
@@ -93,7 +94,21 @@ async function goneEntry(request: NextRequest): Promise<NextResponse | null> {
   }
 }
 
+/**
+ * IndexNow checks a ping by fetching `/<key>.txt`, whose body is the key. The address comes from the environment, so no
+ * route in `src/app` can be named after it, and a file named after the key is found only by someone who knows the key
+ * (claude-docs/seo/ai-discovery.md, "Telling IndexNow a page changed"). Nothing is answered while no key is set.
+ */
+function indexNowKeyFile(pathname: string): NextResponse | null {
+  const key = indexNowKey();
+  if (!key || pathname !== `/${key}.txt`) return null;
+  return new NextResponse(key, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+}
+
 async function route(request: NextRequest): Promise<NextResponse> {
+  const keyFile = indexNowKeyFile(request.nextUrl.pathname);
+  if (keyFile) return keyFile;
+
   const gone = await goneEntry(request);
   if (gone) return gone;
 
