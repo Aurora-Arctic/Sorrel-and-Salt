@@ -37,11 +37,14 @@ function addressWith(preview: boolean): string {
   return `${pathname}${next ? `?${next}` : ''}${hash}`;
 }
 
+// A place on the rim is in `rem`, as the burn's own size is, so it stays on the rim at any root font size.
+const rem = (px: number): string => `${px / 16}rem`;
+
 const emberStyle = (ember: Ember): CSSProperties =>
   ({
     '--x': ember.x === undefined ? undefined : `${ember.x}%`,
-    '--r': ember.right === undefined ? undefined : `${ember.right}px`,
-    '--b': ember.bottom === undefined ? undefined : `${ember.bottom}px`,
+    '--r': ember.right === undefined ? undefined : rem(ember.right),
+    '--b': ember.bottom === undefined ? undefined : rem(ember.bottom),
     '--w': `${ember.w}px`,
     '--h': `${ember.h}px`,
     '--d': `${ember.d}s`,
@@ -65,8 +68,8 @@ const embers = (list: readonly Ember[], edge: boolean): ReactElement[] =>
 
 const fleckStyle = (fleck: Fleck): CSSProperties =>
   ({
-    right: `${fleck.right}px`,
-    bottom: `${fleck.bottom}px`,
+    right: rem(fleck.right),
+    bottom: rem(fleck.bottom),
     width: `${fleck.w}px`,
     height: `${fleck.h}px`,
     '--peak': fleck.peak,
@@ -76,8 +79,8 @@ const fleckStyle = (fleck: Fleck): CSSProperties =>
 
 const heatStyle = (heat: Heat): CSSProperties =>
   ({
-    '--r': `${heat.right}px`,
-    '--b': `${heat.bottom}px`,
+    '--r': rem(heat.right),
+    '--b': rem(heat.bottom),
     '--delay': `${heat.delay}s`,
   }) as CSSProperties;
 
