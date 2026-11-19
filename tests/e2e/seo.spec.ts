@@ -78,6 +78,22 @@ test('each public page has one H1, a language, and a title and description of it
   expect(new Set(descriptions).size).toBe(descriptions.length);
 });
 
+// Read from the page, so an entity such as `&amp;` counts as the one character a search result shows.
+test('the home page has a title of 50 to 60 characters and a description of 150 to 160', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const title = [...(await page.title())].length;
+  const description = [
+    ...((await page.locator('meta[name="description"]').getAttribute('content')) ?? ''),
+  ].length;
+
+  expect(title).toBeGreaterThanOrEqual(50);
+  expect(title).toBeLessThanOrEqual(60);
+  expect(description).toBeGreaterThanOrEqual(150);
+  expect(description).toBeLessThanOrEqual(160);
+});
+
 test('canonicals are absolute, carry no query string, and name the page they sit on', async ({
   request,
 }) => {

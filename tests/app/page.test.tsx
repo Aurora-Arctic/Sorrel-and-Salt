@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { SITE_TITLE_NAME } from '@/lib/site';
+import { SITE_NAME, SITE_TITLE_NAME } from '@/lib/site';
 import { USER_ID } from '../support/constants';
 import { getSession, sessionIsVerified } from '../support/request-session';
 
@@ -25,16 +25,34 @@ beforeEach(() => {
 describe('the / page metadata', () => {
   const scripts = () => document.querySelectorAll('script[type="application/ld+json"]');
 
-  it('names the site alone, untemplated, with the bare origin as canonical', () => {
-    expect(metadata.title).toEqual({ absolute: SITE_TITLE_NAME });
+  // The tab title spells the name out, for 1Password; the layout's template would add it a second time.
+  const tabTitle = (): string => (metadata.title as { absolute: string }).absolute;
+  const length = (text: string): number => [...text].length;
+
+  it('titles itself untemplated, naming the site spelled out, with the bare origin as canonical', () => {
+    expect(metadata.title).toEqual({ absolute: expect.any(String) });
+    expect(tabTitle()).toContain(SITE_TITLE_NAME);
     expect(metadata.alternates?.canonical).toBe('https://sorrelandsalt.com/');
-    expect(metadata.description).toBeTruthy();
     expect(metadata.robots).toBeUndefined();
   });
 
+  // Bing Webmaster Tools flags a title under 50 characters and a description under 150 as too short.
+  it('has a title of 50 to 60 characters', () => {
+    expect(length(tabTitle())).toBeGreaterThanOrEqual(50);
+    expect(length(tabTitle())).toBeLessThanOrEqual(60);
+  });
+
+  it('has a description of 150 to 160 characters', () => {
+    expect(typeof metadata.description).toBe('string');
+    expect(length(metadata.description!)).toBeGreaterThanOrEqual(150);
+    expect(length(metadata.description!)).toBeLessThanOrEqual(160);
+  });
+
   it('keeps the ampersand in the titles a share preview shows', () => {
-    expect(metadata.openGraph).toMatchObject({ title: 'Sorrel & Salt', siteName: 'Sorrel & Salt' });
-    expect(metadata.twitter).toMatchObject({ title: 'Sorrel & Salt' });
+    const shared = tabTitle().replace(SITE_TITLE_NAME, SITE_NAME);
+    expect(shared).toContain(SITE_NAME);
+    expect(metadata.openGraph).toMatchObject({ title: shared, siteName: SITE_NAME });
+    expect(metadata.twitter).toMatchObject({ title: shared });
   });
 
   it('marks a signed-out visitor’s page up as the website', async () => {
