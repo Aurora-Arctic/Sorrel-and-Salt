@@ -46,6 +46,7 @@ describe('robots', () => {
       '/code-of-ethics',
       '/help',
       '/llms.txt',
+      '/indexnow-key.txt',
       '/robots.txt',
       '/.well-known/ai-catalog.json',
       '/.well-known/ard.json',
@@ -86,6 +87,8 @@ describe('robots', () => {
     // Fetchable so a crawler reads the page's own noindex.
     ['/help/search', true],
     ['/llms.txt', true],
+    // IndexNow reads the key file to trust a ping.
+    ['/indexnow-key.txt', true],
     ['/robots.txt', true],
     ['/.well-known/ai-catalog.json', true],
     ['/.well-known/ard.json', true],

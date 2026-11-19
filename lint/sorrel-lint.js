@@ -53,7 +53,7 @@ export default {
     },
     // CLAUDE.md rule 1: a route handler is a file, so only its path can be checked.
     // The exemptions are the public files that take no session and serve only what
-    // the public compendium already shows, the deleted entries' slugs among them, as robots.ts and sitemap.ts do (claude-docs/seo/ai-discovery.md),
+    // the public compendium already shows, the deleted entries' slugs and the IndexNow key among them, as robots.ts and sitemap.ts do (claude-docs/seo/ai-discovery.md),
     // and the daily cron routes, which carry no application data and only start a job.
     'route-allowlist': {
       create: (context) => ({
@@ -66,6 +66,7 @@ export default {
               file,
             ) &&
             file !== 'src/app/api/compendium/deleted-slugs/route.ts' &&
+            file !== 'src/app/indexnow-key.txt/route.ts' &&
             !file.startsWith('src/app/api/cron/support-retention/route.') &&
             !file.startsWith('src/app/api/cron/provisional-cleanup/route.') &&
             !file.startsWith('src/app/api/cron/document-mailing/route.')
