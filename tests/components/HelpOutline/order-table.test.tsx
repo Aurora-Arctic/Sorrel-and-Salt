@@ -68,6 +68,10 @@ const table = (list: HelpOrderList = { kind: 'subPages', guideId: 'g1' }, rows =
 const grid = () => within(screen.getByRole('table', { name: /Sub Pages|FAQ/ }));
 const grips = () => grid().getAllByRole('button', { name: GRIP_NAME });
 const gripNames = () => grips().map((grip) => grip.getAttribute('aria-label'));
+// The table may draw its toggle twice, in the grip column at desktop width and above the cards at phone width.
+const toggles = () =>
+  screen.getAllByRole('button', { name: 'Reorder Sub Pages of Testwort Basics' });
+const moveButtons = () => grid().queryAllByRole('button', { name: /^Move (Up|Down) / });
 const positionOf = (title: string) =>
   within(grid().getByRole('rowheader', { name: title }).closest('tr') as HTMLElement).getAllByRole(
     'cell',
@@ -122,6 +126,7 @@ describe('HelpOrderTable', () => {
       },
     );
     table();
+    fireEvent.click(toggles()[0]);
 
     fireEvent.click(grid().getByRole('button', { name: 'Move Down Testwort Opening' }));
 
@@ -142,6 +147,7 @@ describe('HelpOrderTable', () => {
       return { orderHelpFaq: variables.ids.map((id) => ({ id })) };
     });
     table({ kind: 'faq' });
+    fireEvent.click(toggles()[0]);
 
     fireEvent.click(grid().getByRole('button', { name: 'Move Up Testwort Closing' }));
 
@@ -156,6 +162,7 @@ describe('HelpOrderTable', () => {
       return { updateHelpArticle: { id: variables.id } };
     });
     table();
+    fireEvent.click(toggles()[0]);
     const up = grid().getByRole('button', { name: 'Move Up Testwort Opening' });
     const down = grid().getByRole('button', { name: 'Move Down Testwort Closing' });
 
@@ -248,5 +255,75 @@ describe('HelpOrderTable', () => {
 
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.getByText('Testwort Basics has no sub pages.')).toBeTruthy();
+  });
+});
+
+describe('HelpOrderTable’s Reorder toggle', () => {
+  it('shows each row’s grip alone until the toggle is pressed, then Move Up and Move Down on every row, until it is pressed again', () => {
+    table();
+
+    // The precondition: every row has its grip while the toggle is off.
+    expect(gripNames()).toHaveLength(3);
+    for (const toggle of toggles()) expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(moveButtons()).toEqual([]);
+
+    fireEvent.click(toggles()[0]);
+
+    for (const toggle of toggles()) expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    expect(moveButtons().map((button) => button.getAttribute('aria-label'))).toEqual(
+      ['Testwort Opening', 'Testwort Middle', 'Testwort Closing'].flatMap((title) => [
+        `Move Up ${title}`,
+        `Move Down ${title}`,
+      ]),
+    );
+
+    fireEvent.click(toggles()[0]);
+
+    for (const toggle of toggles()) expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(moveButtons()).toEqual([]);
+  });
+
+  it('keeps the focus on the toggle as it turns on', () => {
+    table();
+    const toggle = toggles()[0];
+    act(() => toggle.focus());
+
+    fireEvent.click(toggle);
+
+    expect(moveButtons()).not.toEqual([]);
+    expect(toggles()).toContain(document.activeElement);
+  });
+
+  // A pointer press does not focus a button in Safari, so the focus can still be on a Move button as it goes.
+  it('moves the focus to the toggle when it turns off with the focus on a Move button, not to the page body', () => {
+    table();
+    fireEvent.click(toggles()[0]);
+    const down = grid().getByRole('button', { name: 'Move Down Testwort Middle' });
+    act(() => down.focus());
+    expect(down).toHaveFocus();
+
+    fireEvent.click(toggles()[0]);
+
+    expect(moveButtons()).toEqual([]);
+    expect(toggles()).toContain(document.activeElement);
+  });
+
+  it('still saves a row moved by the grip’s keyboard pick-up with the toggle off', async () => {
+    layOutTableRows();
+    const sent: string[][] = [];
+    mockGraphQLMutation(
+      'OrderHelpSubPages',
+      (variables: { id: string; input: { childIds: string[] } }) => {
+        sent.push(variables.input.childIds);
+        return { updateHelpArticle: { id: variables.id } };
+      },
+    );
+    table();
+    expect(toggles()[0]).toHaveAttribute('aria-pressed', 'false');
+    expect(moveButtons()).toEqual([]);
+
+    await moveByKeyboard(grips()[0], 'ArrowDown');
+
+    await waitFor(() => expect(sent).toEqual([['s2', 's3', 's1', 's4']]));
   });
 });

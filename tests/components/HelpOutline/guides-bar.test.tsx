@@ -83,7 +83,7 @@ const bar = (guides = GUIDES, order = ORDER) =>
 const nav = () => within(screen.getByRole('navigation', { name: 'Help Outline' }));
 const grips = () => nav().getAllByRole('button', { name: GRIP_NAME });
 const gripNames = () => grips().map((grip) => grip.getAttribute('aria-label'));
-const reorder = () => fireEvent.click(nav().getByRole('button', { name: 'Reorder' }));
+const reorder = () => fireEvent.click(nav().getByRole('button', { name: 'Reorder Guides' }));
 const audienceLists = () => nav().getAllByRole('list', { name: /^(Public|Staff|Keeper)$/ });
 const gripsIn = (list: HTMLElement) =>
   within(list)
@@ -182,7 +182,7 @@ describe('HelpGuidesBar at rest', () => {
   it('offers no reordering while there is one guide or none', () => {
     bar([guide(0)], [ORDER[0]]);
 
-    expect(nav().queryByRole('button', { name: 'Reorder' })).toBeNull();
+    expect(nav().queryByRole('button', { name: 'Reorder Guides' })).toBeNull();
   });
 });
 
@@ -226,12 +226,12 @@ describe('HelpGuidesBar in Reorder Mode', () => {
 
   it('keeps the Reorder button in its slot, pressed, and leaves the mode when it is pressed again', () => {
     bar();
-    const button = nav().getByRole('button', { name: 'Reorder' });
+    const button = nav().getByRole('button', { name: 'Reorder Guides' });
     expect(button).toHaveAttribute('aria-pressed', 'false');
 
     fireEvent.click(button);
 
-    const pressed = nav().getByRole('button', { name: 'Reorder' });
+    const pressed = nav().getByRole('button', { name: 'Reorder Guides' });
     expect(pressed).toBe(button);
     expect(pressed).toHaveAttribute('aria-pressed', 'true');
 
@@ -239,7 +239,10 @@ describe('HelpGuidesBar in Reorder Mode', () => {
 
     expect(nav().queryByRole('button', { name: /^Move / })).toBeNull();
     expect(nav().getByRole('link', { name: /^Testwort Basics/ })).toBeTruthy();
-    expect(nav().getByRole('button', { name: 'Reorder' })).toHaveAttribute('aria-pressed', 'false');
+    expect(nav().getByRole('button', { name: 'Reorder Guides' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   });
 
   it('numbers each audience’s rows from 1, before and after a move, and sends the whole order', async () => {
@@ -339,7 +342,10 @@ describe('HelpGuidesBar in Reorder Mode', () => {
     await waitFor(() => expect(sent).toEqual([['g2', 'g1', 'g3', 'g4']]));
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(gripNames()[1]).toBe('Move Testwort Basics');
-    expect(nav().getByRole('button', { name: 'Reorder' })).toHaveAttribute('aria-pressed', 'true');
+    expect(nav().getByRole('button', { name: 'Reorder Guides' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 
   it('marks the moved row busy and holds every grip while the write runs', async () => {
@@ -383,7 +389,10 @@ describe('HelpGuidesBar in Reorder Mode', () => {
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
 
     expect(nav().queryByRole('button', { name: /^Move / })).toBeNull();
-    expect(nav().getByRole('button', { name: 'Reorder' })).toHaveAttribute('aria-pressed', 'false');
+    expect(nav().getByRole('button', { name: 'Reorder Guides' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   });
 
   it('keeps the mode when Escape puts down a guide mid-drag', async () => {

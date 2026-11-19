@@ -511,11 +511,20 @@ _Acceptance criteria:_
 
 - `GripHandle` offers Move Up and Move Down as single presses, beside drag and keyboard, which keep working.
 - The combobox chips, the help outline guides and rows, and the spell builder steps all use it.
-- Move Up is unavailable on the first item and Move Down on the last, without losing focus.
+- Each reorderable list has a Reorder toggle of its own, and its rows show Move Up and Move Down only while that toggle is on; while it is off, each row shows the grip alone.
+- The toggle state comes from one shared piece, `src/components/ReorderMode/` (`ReorderMode` holds a list's state, `ReorderToggle` is its button, `useReorderMode` reads it and is off outside a `ReorderMode`), used by all three lists; the guides list's Reorder Mode runs on it.
+- The toggle is a button with `aria-pressed`, the up-down arrows icon, and an accessible name naming its list: "Reorder Steps", "Reorder Guides", "Reorder " and the table's name for a help table ("Reorder Sub Pages of <guide>", "Reorder FAQ"), and "Reorder " and the field's label for an ordered combobox.
+- The toggle's pressed look differs from its off look.
+- The toggle sits right of the "What Goes In" heading for the spell steps; in the grip column's heading at desktop width and on its own line above the cards at phone width for a help table; and beside the field's label for an ordered combobox.
+- With the toggle off, dragging a row and the grip's keyboard pick-up (Space, the arrow keys, Space) still move it.
+- Turning a toggle on keeps the focus on the toggle, in the spell steps, a help table and an ordered combobox. Turning it off while the focus is on a Move button moves the focus to the toggle, never to the page body.
+- Move Up is unavailable on the first item and Move Down on the last, through `aria-disabled`, without losing focus.
 - Moving an item announces its new position.
+- With the toggle on at 375 px, a spell's instruction step stacks its grip, Move Up, and Move Down one above another, as an ingredient step does.
 - A component test, with role and label queries, proves that pressing Move Down changes the order (a regression test, because the missing route is shipped behaviour).
 - The `sortable-wiring` guard also fails a sortable list that uses no `GripHandle`, was seen failing once with a drag-only handle put back, and its allowlist is empty (R3).
-- The R3 rule text is added to `.claude/rules/components.md`, "Shared pieces", on the existing `GripHandle` line.
+- The `sortable-wiring` guard also fails a Move Up or Move Down drawn outside `GripHandle`, a `GripHandle` that draws them without reading `useReorderMode`, a sortable list with no `ReorderMode` around it, and a `ReorderMode` with no `ReorderToggle`. Each part was seen failing once with a copy put back, and its allowlist is empty.
+- The R3 rule text is added to `.claude/rules/components.md`, "Shared pieces", on the existing `GripHandle` line, and says the buttons show only while the list's Reorder toggle is on.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 
 **MC.30 — Move Focus To Errors And Announce Outcomes** · 5h

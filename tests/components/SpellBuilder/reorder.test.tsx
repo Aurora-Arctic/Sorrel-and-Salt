@@ -138,6 +138,8 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
 const steps = () => screen.getByRole('list', { name: 'Steps' });
 const order = () => within(steps()).getAllByRole('button', { name: GRIP_NAME }).map(gripItem);
 const handle = (name: string) => screen.getByRole('button', { name: `Move ${name}` });
+const reorderSteps = () => screen.getByRole('button', { name: 'Reorder Steps' });
+const moveButtons = () => within(steps()).queryAllByRole('button', { name: /^Move (Up|Down) / });
 /** Everything the page's status regions say: dnd-kit's own is one. */
 const announced = () =>
   screen
@@ -254,6 +256,83 @@ describe('the spell builder’s step order', () => {
   });
 });
 
+describe('the spell builder’s Reorder Steps toggle', () => {
+  beforeEach(() => layOutRows());
+  afterEach(() => vi.restoreAllMocks());
+
+  it('shows each step’s grip alone until Reorder Steps is pressed, then Move Up and Move Down on every step, until it is pressed again', () => {
+    renderBuilder();
+    const toggle = reorderSteps();
+
+    // The precondition: every step has its grip while the toggle is off.
+    expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']);
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(moveButtons()).toEqual([]);
+
+    fireEvent.click(toggle);
+
+    expect(reorderSteps()).toHaveAttribute('aria-pressed', 'true');
+    expect(moveButtons().map((button) => button.getAttribute('aria-label'))).toEqual(
+      [ROSEWORT, 'Testwort', 'Stir thrice'].flatMap((name) => [
+        `Move Up ${name}`,
+        `Move Down ${name}`,
+      ]),
+    );
+
+    fireEvent.click(reorderSteps());
+
+    expect(reorderSteps()).toHaveAttribute('aria-pressed', 'false');
+    expect(moveButtons()).toEqual([]);
+    expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']);
+  });
+
+  it('keeps the focus on the toggle as it turns on', () => {
+    renderBuilder();
+    act(() => reorderSteps().focus());
+
+    fireEvent.click(reorderSteps());
+
+    // The precondition: the toggle is on, so the step buttons are there to take the focus.
+    expect(moveButtons()).not.toEqual([]);
+    expect(reorderSteps()).toHaveFocus();
+  });
+
+  // A pointer press does not focus a button in Safari, so the focus can still be on a Move button as it goes.
+  it('moves the focus to the toggle when it turns off with the focus on a Move button, not to the page body', () => {
+    renderBuilder();
+    fireEvent.click(reorderSteps());
+    const down = screen.getByRole('button', { name: 'Move Down Testwort' });
+    act(() => down.focus());
+    expect(down).toHaveFocus();
+
+    fireEvent.click(reorderSteps());
+
+    expect(moveButtons()).toEqual([]);
+    expect(reorderSteps()).toHaveFocus();
+  });
+
+  it('still moves a step by the grip’s keyboard pick-up with the toggle off', async () => {
+    renderBuilder();
+    expect(reorderSteps()).toHaveAttribute('aria-pressed', 'false');
+    expect(moveButtons()).toEqual([]);
+
+    await moveByKeyboard(handle('Testwort'), 'ArrowUp');
+
+    expect(order()).toEqual(['Testwort', ROSEWORT, 'Stir thrice']);
+  });
+
+  it('still moves a step by dragging its grip with the toggle off', async () => {
+    renderBuilder();
+    expect(reorderSteps()).toHaveAttribute('aria-pressed', 'false');
+    expect(moveButtons()).toEqual([]);
+
+    // From the first row's middle to the third's, 60px a row.
+    await dragVertically(handle(ROSEWORT), 144);
+
+    expect(order()).toEqual(['Testwort', 'Stir thrice', ROSEWORT]);
+  });
+});
+
 describe('the spell builder’s Move Up and Move Down', () => {
   beforeEach(() => layOutRows());
   afterEach(() => vi.restoreAllMocks());
@@ -264,6 +343,7 @@ describe('the spell builder’s Move Up and Move Down', () => {
   // Regression: a step moved only by a drag or the keyboard, never by a single press.
   it('moves a step down one place with a single press of Move Down, and says its new place', () => {
     renderBuilder();
+    fireEvent.click(reorderSteps());
     expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']);
 
     fireEvent.click(moveDown('Testwort'));
@@ -276,6 +356,7 @@ describe('the spell builder’s Move Up and Move Down', () => {
   it('moves a step up with a single press of Move Up, and sends the new order on save', async () => {
     const calls = acceptUpdate();
     renderBuilder();
+    fireEvent.click(reorderSteps());
 
     fireEvent.click(moveUp('Stir thrice'));
     expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']);
@@ -287,6 +368,7 @@ describe('the spell builder’s Move Up and Move Down', () => {
 
   it('keeps the focus on Move Down as the step moves, until the step is last and Move Down is unavailable', () => {
     renderBuilder();
+    fireEvent.click(reorderSteps());
     act(() => moveDown(ROSEWORT).focus());
 
     fireEvent.click(moveDown(ROSEWORT));
@@ -301,6 +383,7 @@ describe('the spell builder’s Move Up and Move Down', () => {
   // aria-disabled rather than disabled: a disabled button drops the focus in a browser.
   it('offers no Move Up on the first step and no Move Down on the last, and a press there moves nothing', () => {
     renderBuilder();
+    fireEvent.click(reorderSteps());
 
     // The precondition: the middle step offers both.
     expect(moveUp('Testwort')).not.toHaveAttribute('aria-disabled', 'true');
@@ -318,6 +401,7 @@ describe('the spell builder’s Move Up and Move Down', () => {
 
   it('keeps the drag handle beside the two buttons, still moving the step by keyboard', async () => {
     renderBuilder();
+    fireEvent.click(reorderSteps());
     expect(moveUp('Testwort')).toBeTruthy();
 
     await moveByKeyboard(handle('Testwort'), 'ArrowUp');

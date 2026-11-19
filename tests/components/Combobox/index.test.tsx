@@ -917,6 +917,7 @@ describe('Combobox', () => {
 
   describe('sortable entries', () => {
     const handle = (value: string) => screen.getByRole('button', { name: `Move ${value}` });
+    const reorderForm = () => screen.getByRole('button', { name: 'Reorder Form' });
     const announced = () =>
       screen
         .getAllByRole('status')
@@ -1068,6 +1069,7 @@ describe('Combobox', () => {
             />
           </StatusRegionProvider>,
         );
+        fireEvent.click(reorderForm());
         return onMove;
       };
 
@@ -1104,6 +1106,88 @@ describe('Combobox', () => {
           expect(end).toHaveFocus();
         }
         expect(onMove).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('the Reorder toggle beside the label', () => {
+      const moveButtons = () => screen.queryAllByRole('button', { name: /^Move (Up|Down) / });
+
+      it('shows each entry’s handle alone until Reorder Form is pressed, then Move Up and Move Down on every entry, until it is pressed again', () => {
+        renderSortable(celestialBodies());
+
+        // The precondition: every entry has its handle while the toggle is off.
+        expect(handle('Mars')).toBeTruthy();
+        expect(reorderForm()).toHaveAttribute('aria-pressed', 'false');
+        expect(moveButtons()).toEqual([]);
+
+        fireEvent.click(reorderForm());
+
+        expect(reorderForm()).toHaveAttribute('aria-pressed', 'true');
+        expect(moveButtons().map((button) => button.getAttribute('aria-label'))).toEqual(
+          ['Mars', 'Venus', 'Saturn'].flatMap((value) => [
+            `Move Up ${value}`,
+            `Move Down ${value}`,
+          ]),
+        );
+
+        fireEvent.click(reorderForm());
+
+        expect(reorderForm()).toHaveAttribute('aria-pressed', 'false');
+        expect(moveButtons()).toEqual([]);
+      });
+
+      it('offers no toggle on a combobox whose entries are not ordered', () => {
+        render(
+          <Harness
+            entries={
+              <ul className="combobox__entries">
+                <ComboboxEntry value="Hedge Fixture" onRemove={() => {}} />
+              </ul>
+            }
+          />,
+        );
+
+        // The precondition: the entry is drawn.
+        expect(screen.getByRole('button', { name: 'Remove Hedge Fixture' })).toBeTruthy();
+        expect(screen.queryByRole('button', { name: /^Reorder/ })).toBeNull();
+      });
+
+      it('keeps the focus on the toggle as it turns on', () => {
+        renderSortable(celestialBodies());
+        act(() => reorderForm().focus());
+
+        fireEvent.click(reorderForm());
+
+        expect(moveButtons()).not.toEqual([]);
+        expect(reorderForm()).toHaveFocus();
+      });
+
+      // A pointer press does not focus a button in Safari, so the focus can still be on a Move button as it goes.
+      it('moves the focus to the toggle when it turns off with the focus on a Move button, not to the page body', () => {
+        renderSortable(celestialBodies());
+        fireEvent.click(reorderForm());
+        const down = screen.getByRole('button', { name: 'Move Down Venus' });
+        act(() => down.focus());
+        expect(down).toHaveFocus();
+
+        fireEvent.click(reorderForm());
+
+        expect(moveButtons()).toEqual([]);
+        expect(reorderForm()).toHaveFocus();
+      });
+
+      it('still moves an entry by the handle’s keyboard pick-up and by a drag with the toggle off', async () => {
+        const onMove = renderSortable(celestialBodies());
+        expect(reorderForm()).toHaveAttribute('aria-pressed', 'false');
+        expect(moveButtons()).toEqual([]);
+
+        await moveByKeyboard(handle('Mars'), 'ArrowRight');
+        expect(onMove).toHaveBeenLastCalledWith(0, 1);
+
+        // Mars from the first chip onto the third, Saturn, at 200–280px.
+        await dragByPointer(handle('Mars'), 245);
+        expect(onMove).toHaveBeenLastCalledWith(0, 2);
+        expect(onMove).toHaveBeenCalledTimes(2);
       });
     });
 

@@ -173,7 +173,7 @@ test('at a phone, Reorder Mode as a sheet passes the scans', async ({ page }) =>
   await signInAs(page, 'e4@admin-help-order.test', ['discord'], 'admin');
   await page.setViewportSize({ width: PHONE_WIDTH, height: 812 });
   await page.goto(PATH);
-  await page.getByRole('button', { name: 'Reorder' }).click();
+  await page.getByRole('button', { name: 'Reorder Guides' }).click();
   await expect(said(page, 'Reorder mode.')).toBeAttached();
   // Sweep gap: the Reorder Mode sheet at 375 px.
   await scanBothThemes(page);

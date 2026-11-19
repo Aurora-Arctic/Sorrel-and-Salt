@@ -54,6 +54,7 @@ test('Move Up keeps the focus on the moved row’s button, and each end of the l
     );
   // Precondition: Bark first, Pith second, and each end's outward move is unavailable.
   await expect.poll(titles).toEqual([FIRST, SECOND]);
+  await page.getByRole('button', { name: `Reorder Sub Pages of ${GUIDE}` }).click();
   await expect(table.getByRole('button', { name: `Move Up ${FIRST}` })).toHaveAttribute(
     'aria-disabled',
     'true',

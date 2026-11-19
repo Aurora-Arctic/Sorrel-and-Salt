@@ -31,6 +31,7 @@ for (const width of [DESKTOP_WIDTH, PHONE_WIDTH]) {
     // Precondition: Testwort is first, and its Move Down is available.
     await expect(steps).toHaveCount(2);
     await expect(steps.first()).toContainText('Testwort');
+    await page.getByRole('button', { name: 'Reorder Steps' }).click();
     const down = page.getByRole('button', { name: 'Move Down Testwort', exact: true });
     await expect(down).not.toHaveAttribute('aria-disabled', 'true');
 
