@@ -9,15 +9,7 @@
     "plannotator@plannotator": true
   },
   "permissions": {
-    "allow": ["mcp__graphify"],
-    "ask": [
-      "Bash(git push origin *)",
-      "Bash(git push -u origin *)",
-      "Bash(gh pr create *)",
-      "Bash(gh pr view *)",
-      "Bash(gh pr comment *)",
-      "Bash(gh pr list *)"
-    ]
+    "allow": ["mcp__graphify"]
   },
   "autoCompactWindow": 300000,
   "modelSettings": {
