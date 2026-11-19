@@ -19,6 +19,7 @@ import { useOnTurnedOn } from './use-on-turned-on';
 import { pageHeading } from './page-heading';
 import { holdPage } from './page-hold';
 import CloseButton from '../CloseButton';
+import { StatusRegionSlot } from '../ClickFeedback/status-region';
 import { HeaderNoteContext, HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
@@ -283,6 +284,8 @@ const Modal = ({
         if (event.target === event.currentTarget) finish();
       }}
     >
+      {/* The page's status region stands here while the dialog is open, outside what a question holds inert. */}
+      <StatusRegionSlot />
       <div
         className={cx(
           'modal-dialog__header',

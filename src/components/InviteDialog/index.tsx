@@ -2,7 +2,7 @@
 
 import { useAnnounce } from '../ClickFeedback/status-region';
 import { usePendingNavigation } from '../../lib/navigation';
-import { type FormEvent, type ReactElement, useState } from 'react';
+import { type FormEvent, type ReactElement, useEffect, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { emailFailure } from '../../lib/email-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -47,6 +47,11 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
   const { sending, failure, setFailure, send } = useFormSend(['email']);
   const { ref, settle } = useResultFocus<HTMLFormElement>();
   const [sentTo, setSentTo] = useState<string>();
+  const done = useRef<HTMLButtonElement>(null);
+  // Send Invitation held the focus and is gone, so the focus goes to Done, which takes its place.
+  useEffect(() => {
+    if (sentTo !== undefined) done.current?.focus();
+  }, [sentTo]);
 
   const discard = useDiscardGuard(sentTo === undefined && email !== '');
 
@@ -72,7 +77,7 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
   return (
     <>
       {sentTo !== undefined && (
-        // The page's status region says it; the notice itself carries no role, so it is heard once.
+        // The dialog's status region says it; the notice itself carries no role, so it is heard once.
         <Notice kind="success" block inRegion>
           Invitation sent to <strong>{sentTo}</strong>. The link in it lasts seven days, and only an
           account that has confirmed this address can accept it.
@@ -80,7 +85,7 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
       )}
       {sentTo !== undefined ? (
         <div className="modal__actions">
-          <button className="btn btn--solid" type="button" onClick={close}>
+          <button ref={done} className="btn btn--solid" type="button" onClick={close}>
             Done
           </button>
         </div>
