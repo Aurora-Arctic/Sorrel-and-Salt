@@ -113,6 +113,10 @@ $panel-window-room: 18px;
   z-index: layer('floating');
   min-width: min(#{$panel-min-width}, 100vw - #{$panel-window-room});
   max-width: min(#{$panel-max-width}, 100vw - #{$panel-window-room});
+  // No taller than the room the placement measured above the phone's bottom bar; the count tips are fixed and the
+  // panel has no transform, so this scroll does not clip them.
+  max-height: var(--combobox-list-room, none);
+  overflow-y: auto;
   @include floating-panel;
   @include list-reset;
   // The fade, as the section nav's More sheet does it: `hidden` is display none,
@@ -180,15 +184,15 @@ $panel-window-room: 18px;
   position: relative;
 }
 
+// Centred by its row's height, not a translate, which would make it the containing block of its fixed tip and let the
+// panel's scroll clip the tip. Above the rows after it, which its tip hangs over.
 .account-menu__count {
   position: absolute;
-  top: 50%;
+  inset-block: 0;
   right: space(3);
-  // Above the rows after it, which its tip hangs over: the translate makes the
-  // count a stacking context, so the tip's own layer counts only inside it.
   z-index: 1;
   display: inline-flex;
-  translate: 0 -50%;
+  align-items: center;
 }
 
 .account-menu__item--counted {
@@ -228,8 +232,7 @@ $panel-window-room: 18px;
   }
 }
 
-// The panel clips nothing, so the count's tip can hang past its edge; the top
-// row's wash takes the panel's rounding itself, inside its 1px edge. The last
+// The top row's wash takes the panel's rounding itself, inside its 1px edge. The last
 // row is Sign Out, rounded below.
 .account-menu__panel > li:first-child > .account-menu__item {
   border-radius: calc(#{radius('surface')} - 1px) calc(#{radius('surface')} - 1px) 0 0;

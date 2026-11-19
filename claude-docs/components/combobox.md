@@ -55,6 +55,7 @@ Downshift's open callback fires only when the open state differs from the props 
 - **Never off the screen.** It flips above when there is more room there, sits 8px from the screen's edge, and is no taller than the room it has: `size` sets `--combobox-list-room` and the stylesheet caps the list at `min(20rem, that)`, which holds the eight seeded category groups without a scroll.
 - **Followed only while open** (`autoUpdate`). Every box's closed list stays in the page, as Downshift asks, and is not followed. A pending lookup never closes an open list, which keeps its last rows or shows the loading row, so typing never subscribes again and never reads the page's layout inside the keystroke.
 - **Fixed, not absolute**, so a scrolling ancestor such as a modal cannot clip it.
+- **Placed by a transform unless told not to.** `transform: false` places it by left and top instead, for a list holding a fixed tip that its own scroll must not clip: a transform would make the list the tip's containing block. The account panel uses it.
 - **Shared.** An entry's summary uses it with `matchWidth: false`. MenuButton's menu uses it with `placement: 'bottom-end'`, `gap: 8` (not 4) and `matchWidth: false` ([`menu-button.md`](menu-button.md), "Where it opens").
 
 ### Bottom bar room

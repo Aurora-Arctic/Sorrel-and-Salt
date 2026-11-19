@@ -274,6 +274,12 @@
     border-radius: 0;
     font-size: type-size('tab');
     line-height: 1.2;
+    // At a large text size a label is wider than its fifth of the bar: it wraps under its icon, hyphenated where
+    // the language allows, so no label runs into the next tab.
+    white-space: normal;
+    text-align: center;
+    overflow-wrap: anywhere;
+    hyphens: auto;
   }
 
   // The current tab takes no fill on the phone: the rule above its icon and its weight tell

@@ -53,10 +53,13 @@ export function useListPosition(
     matchWidth = true,
     placement: preferred = 'bottom-start',
     gap = 4,
+    transform = true,
   }: {
     matchWidth?: boolean;
     placement?: Placement;
     gap?: number;
+    /** False places the list by left and top: a transform would make the list the containing block of a fixed tip inside it, which its own scroll then clips. */
+    transform?: boolean;
   } = {},
 ) {
   const [control, setControl] = useState<HTMLElement | null>(null);
@@ -66,6 +69,7 @@ export function useListPosition(
     elements: { reference: anchor ?? control },
     placement: preferred,
     strategy: 'fixed',
+    transform,
     middleware: [
       measureBar,
       offset(gap),

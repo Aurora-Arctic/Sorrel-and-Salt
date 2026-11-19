@@ -41,6 +41,6 @@ cursor helper (rule 8), so every list that shows its pages shows them here. `sof
   drawn without one.
 - **A `nav` named "Pages"**, holding a bare `ul` of the two ends; the chevrons are `aria-hidden`.
 
-On a pager narrower than `$pager-tight-width` (23rem) the ends' padding narrows and "Page X of Y" loses the room either side of it, which holds Prev, the position and Next together on one line down to a 320px screen.
+On a pager narrower than `$pager-tight-width` (23rem) the ends' padding narrows and "Page X of Y" loses the room either side of it, which holds Prev, the position and Next together on one line down to a 320px screen. Where they are wider than that, at a large text size, the row wraps rather than pass the window.
 
 Stories put each in a `ListFrame`, which holds the navigation a pager reads. The test owns paging for every list through `tests/support/navigating.tsx` (it holds a mocked `push` pending as the App Router does until its `arrives` settles); a list’s own test asserts only the hrefs it builds.

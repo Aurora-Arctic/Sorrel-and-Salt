@@ -271,9 +271,10 @@
     container: pager / inline-size;
   }
 
+  // Wraps only where Prev, the position and Next are together wider than the window, as at a large text size on a phone.
   .pager > ul {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     justify-content: center;
     gap: space(3);
 

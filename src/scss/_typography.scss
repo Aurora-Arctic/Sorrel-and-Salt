@@ -13,6 +13,9 @@
   h4 {
     @include heading-face;
     margin: 0 0 space(4);
+    // A name with no space in it (a coven, a spell, an ingredient) breaks inside the word rather than widening the page;
+    // `anywhere`, not `break-word`, so a heading in a flex or grid row can shrink to the window too.
+    overflow-wrap: anywhere;
     // stylelint-disable-next-line plugin/use-baseline -- enhancement: the heading wraps in the ordinary way, uneven lines, where unsupported
     text-wrap: balance;
   }

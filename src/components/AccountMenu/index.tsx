@@ -49,11 +49,13 @@ const AccountMenu = ({
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   // Beneath the button, its right edge on the button's, and moved in where that would put it past the window: at a
-  // large text size the panel is wider than the room left of the button.
+  // large text size the panel is wider than the room left of the button, and taller than the room above the phone's
+  // bottom bar, so it scrolls. No transform, so the count tips inside it are not clipped by that scroll.
   const { setControl, setList, listStyle } = useListPosition(open, undefined, {
     matchWidth: false,
     placement: 'bottom-end',
     gap: PANEL_GAP_PX,
+    transform: false,
   });
 
   const close = (): void => setOpen(false);
