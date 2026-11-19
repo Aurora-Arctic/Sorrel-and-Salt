@@ -11,6 +11,7 @@ import {
 import { CharacterCount } from './character-count';
 import { fieldDescription } from './description';
 import { useMask } from './mask';
+import { useSettledWhilePressed } from './pointer-held';
 import { FieldShell } from './shell';
 import {
   afterCount,
@@ -70,12 +71,15 @@ export function PlainTextField({
     return found;
   };
   const countId = useId();
+  // A problem found as the field is left waits for a press to end, so the button pressed does not slide away
+  // (claude-docs/components/field.md, "Errors wait for the pointer").
+  const drawn = useSettledWhilePressed(error ?? problem);
   const { aria, ...description } = fieldDescription({
     id,
     hint,
     note,
     describedBy: describedByWithCount(describedBy, limit, countId),
-    error: error ?? problem,
+    error: drawn,
     invalid,
   });
   const blurFormatter = blurFormat({ format, multiline });

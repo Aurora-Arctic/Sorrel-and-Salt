@@ -20,7 +20,7 @@ and intro are the page's, not the component's.
 - **Save runs the shared rule first.** `NameInput` in
   `src/modules/identity/validation/name.ts` is the schema the service runs, so a
   name cleared to nothing or to spaces is refused beneath the field in the
-  service's words ("Enter a name") with no request sent. Typing clears the error.
+  service's words ("Enter a name") with no request sent. Typing clears the error. A refused Save, by click or by Enter, moves the focus to the field (`useResultFocus`), as does a name the server refuses.
 - The typed value goes to the server untouched; the service trims it and runs
   the same rule again.
 

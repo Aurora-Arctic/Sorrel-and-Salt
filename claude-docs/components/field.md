@@ -87,7 +87,7 @@ The approved masks are `phoneMask` (`src/lib/phone-number.ts`), on the Business 
 
 ## Errors wait for the pointer
 
-An error drawn when a field is left pushes everything below it down before a button comes up, so the click lands on whatever slid under the pointer (a press on Classification with Name empty never opened it). `useField` therefore keeps what it draws as it stood when the press began (`useSettledWhilePressed`, over `usePointerHeld`) and catches up on release: an error already showing stays, one just raised waits. Hiding errors during a press would take a showing one away and read as flicker; reserving room for the line leaves a gap under every field. Tab shows an error at once. `errorShown` stays pure, and the IngredientForm section flags stand still the same way, so a fold is not flagged a moment before its field.
+An error drawn when a field is left pushes everything below it down before a button comes up, so the click lands on whatever slid under the pointer (a press on Classification with Name empty never opened it). `useField`, and `PlainTextField` for a `check` it runs on leaving, therefore keep what they draw as it stood when the press began (`useSettledWhilePressed`, over `usePointerHeld`) and catch up on release: an error already showing stays, one just raised waits. Hiding errors during a press would take a showing one away and read as flicker; reserving room for the line leaves a gap under every field. Tab shows an error at once. `errorShown` stays pure, and the IngredientForm section flags stand still the same way, so a fold is not flagged a moment before its field.
 
 ## Undo and redo
 

@@ -5,6 +5,7 @@ import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { NAME_MAX_LENGTH, NameInput } from '@/modules/identity/validation/name';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { useResultFocus } from '../../lib/use-result-focus';
 import { FormActions, PlainTextField } from '../Field';
 import { useNameField } from '../Field/use-name-field';
 import Notice from '../Notice';
@@ -27,6 +28,7 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
   const field = useNameField(saved, NameInput.shape.name);
   const { value, setValue, alert, setAlert, fieldError, changed } = field;
   const [savedMessage, setSavedMessage] = useState(false);
+  const { ref, settle } = useResultFocus<HTMLFormElement>();
 
   const mutation = useMutation({
     mutationFn: (typed: string) => graphqlRequest(SetNameDocument, { name: typed }),
@@ -35,7 +37,10 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
       setValue(setName.name);
       setSavedMessage(true);
     },
-    onError: field.fail,
+    onError: (failure) => {
+      field.fail(failure);
+      settle();
+    },
   });
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
@@ -45,6 +50,7 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
     setSavedMessage(false);
     setAlert(undefined);
     if (field.check()) mutation.mutate(value);
+    else settle();
   };
 
   return (
@@ -60,7 +66,7 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
       </div>
       {/* `noValidate`: every refusal is the shared rule's or the server's, worded and
           placed like the rest, rather than the browser's own bubble. */}
-      <form className="form" onSubmit={handleSubmit} noValidate>
+      <form ref={ref} className="form" onSubmit={handleSubmit} noValidate>
         <PlainTextField
           label="Name"
           required
