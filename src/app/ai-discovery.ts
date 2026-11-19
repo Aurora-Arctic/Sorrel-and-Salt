@@ -1,6 +1,7 @@
 import { pageTitleOf } from '@/components/IngredientEntry/page-title';
 import { describe } from '@/lib/page-metadata';
 import { SITE_NAME, siteUrl } from '@/lib/site';
+import type { HelpArticleLink } from '@/modules/help';
 import type { CompendiumSlugEntry } from '@/modules/ingredients';
 import { compendiumEntryPath } from '@/lib/compendium-path';
 
@@ -15,7 +16,10 @@ const SUMMARY =
  * llms.txt text, in the https://llmstxt.org/ layout: an H1, a blockquote summary, then H2 sections
  * of `- [name](url): notes`. No heading may sit between the summary and the first H2.
  */
-export function buildLlmsTxt(entries: readonly CompendiumSlugEntry[]): string {
+export function buildLlmsTxt(
+  entries: readonly CompendiumSlugEntry[],
+  _help: readonly HelpArticleLink[],
+): string {
   const lines = [
     `# ${SITE_NAME}`,
     '',
@@ -60,6 +64,7 @@ export type AiCatalog = {
     type: string;
     url: string;
     tags: string[];
+    representativeQueries?: string[];
     updatedAt?: string;
   }[];
 };

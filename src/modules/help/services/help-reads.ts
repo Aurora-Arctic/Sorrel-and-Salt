@@ -22,7 +22,13 @@ import { trimmedOrUndefined } from '@/lib/text';
 import { isRowId } from '@/lib/validation';
 import { assertCurator, assertSiteAdmin } from '@/modules/identity';
 import { helpArticles } from '../schema/help-articles';
-import type { HelpArticle, HelpArticleWithChildren, HelpKeeperFilter, HelpReach } from '../types';
+import type {
+  HelpArticle,
+  HelpArticleLink,
+  HelpArticleWithChildren,
+  HelpKeeperFilter,
+  HelpReach,
+} from '../types';
 import { reachOf } from './reach';
 import { HELP_LIST_LIMIT, NO_HELP_ARTICLE, toHelpArticles } from './rows';
 
@@ -102,6 +108,11 @@ const cachedPaths = cachedHelpRead('help-paths', publicPaths);
 /** The address of each public article and public sub page, which the sitemap lists. Takes no session: one cached read for every viewer. */
 export function listHelpArticlePaths(): Promise<string[]> {
   return cachedPaths();
+}
+
+/** Each public article and public sub page with its title and summary, which llms.txt lists. Takes no session. */
+export function listHelpArticleLinks(): Promise<HelpArticleLink[]> {
+  throw new Error('not implemented');
 }
 
 /** The public FAQ entries, in position order. */
