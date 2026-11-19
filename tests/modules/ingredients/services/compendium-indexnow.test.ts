@@ -6,9 +6,20 @@ import {
   setCompendiumEntryShown,
   updateCompendiumEntry,
 } from '@/modules/ingredients';
+import {
+  discardScheduledAfter,
+  runScheduledAfter,
+  scheduledAfterCount,
+  withScheduledAfter,
+} from '../../../support/after';
 import { E, asUser } from '../../../support/as-user';
 import { useCompendiumEntryInput } from '../../../support/db/compendium-entry-input';
 import { useTestDatabase } from '../../../support/db/database';
+
+// The ping is sent after the save answers, from `after`, so each test runs what was scheduled before it reads `fetch`.
+vi.mock('next/server', async (original) =>
+  withScheduledAfter(await original<typeof import('next/server')>()),
+);
 
 // A compendium write tells IndexNow which public address it changed, once it has committed (src/lib/indexnow.ts).
 // `fetch` is the boundary: what reaches it is what IndexNow would be sent. The key is invented.
@@ -36,6 +47,7 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
   vi.stubEnv('VERCEL_ENV', 'production');
   vi.stubEnv('INDEXNOW_KEY', KEY);
+  discardScheduledAfter();
   fetchMock.mockReset().mockResolvedValue(new Response(null, { status: 202 }));
   vi.stubGlobal('fetch', fetchMock);
 });
@@ -49,6 +61,7 @@ afterEach(() => {
 /** A shown entry, written by the curator, with the pings its creation sent cleared. */
 async function published(name: string) {
   const row = await createCompendiumEntry(curator(), entry({ name, nomenclature: 'none' }));
+  await runScheduledAfter();
   fetchMock.mockClear();
   return row;
 }
@@ -68,6 +81,7 @@ describe('IndexNow pings from compendium writes', () => {
       curator(),
       entry({ name: 'Testwort', nomenclature: 'none' }),
     );
+    await runScheduledAfter();
 
     expect(row.slug).toBe('testwort');
     expect(pings()).toEqual([[page('testwort')]]);
@@ -82,6 +96,7 @@ describe('IndexNow pings from compendium writes', () => {
       id,
       entry({ name: 'Testwort', nomenclature: 'none', description: 'A fixture, reworded.' }),
     );
+    await runScheduledAfter();
 
     expect(pings()).toEqual([[page(slug)]]);
   });
@@ -94,6 +109,7 @@ describe('IndexNow pings from compendium writes', () => {
       id,
       entry({ name: 'Testwort, relabelled', nomenclature: 'none' }),
     );
+    await runScheduledAfter();
 
     expect(now).not.toBe(was);
     expect(pings()).toEqual([[page(was), page(now)]]);
@@ -103,6 +119,7 @@ describe('IndexNow pings from compendium writes', () => {
     const { id, slug } = await published('Testwort');
 
     await deleteCompendiumEntry(curator(), id);
+    await runScheduledAfter();
 
     expect(pings()).toEqual([[page(slug)]]);
   });
@@ -111,7 +128,9 @@ describe('IndexNow pings from compendium writes', () => {
     const { id, slug } = await published('Testwort');
 
     await setCompendiumEntryShown(curator(), id, false);
+    await runScheduledAfter();
     await setCompendiumEntryShown(curator(), id, true);
+    await runScheduledAfter();
 
     expect(pings()).toEqual([[page(slug)], [page(slug)]]);
   });
@@ -122,15 +141,42 @@ describe('IndexNow pings from compendium writes', () => {
       ...entry({ name: 'Testwort', nomenclature: 'none' }),
       shown: false,
     });
+    await runScheduledAfter();
     await updateCompendiumEntry(curator(), id, {
       ...entry({ name: 'Testwort', nomenclature: 'none', description: 'Still hidden.' }),
       shown: false,
     });
+    await runScheduledAfter();
     expect(pings()).toEqual([]);
     // Why nothing was sent: showing the same entry sends its address.
     const { slug } = await setCompendiumEntryShown(curator(), id, true);
+    await runScheduledAfter();
 
     expect(pings()).toEqual([[page(slug)]]);
+  });
+
+  it('answers the save before the ping is sent, and sends it once the response is done', async () => {
+    let release: () => void = () => {};
+    fetchMock.mockImplementation(
+      () =>
+        new Promise((resolve) => (release = () => resolve(new Response(null, { status: 202 })))),
+    );
+
+    const row = await createCompendiumEntry(
+      curator(),
+      entry({ name: 'Testwort', nomenclature: 'none' }),
+    );
+
+    // The save has answered and the row is committed, with the ping left for after the response.
+    expect(await sql`select id from ingredients where id = ${row.id}`).toHaveLength(1);
+    expect(scheduledAfterCount()).toBe(1);
+    expect(fetchMock).not.toHaveBeenCalled();
+    const sending = runScheduledAfter();
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    release();
+    await sending;
+
+    expect(pings()).toEqual([[page('testwort')]]);
   });
 
   it('saves the write and logs, without the key, when the ping fails', async () => {
@@ -141,6 +187,7 @@ describe('IndexNow pings from compendium writes', () => {
       curator(),
       entry({ name: 'Testwort', nomenclature: 'none' }),
     );
+    await runScheduledAfter();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(
@@ -153,11 +200,13 @@ describe('IndexNow pings from compendium writes', () => {
   it('sends nothing from a deploy that is not production', async () => {
     vi.stubEnv('VERCEL_ENV', 'preview');
     await createCompendiumEntry(curator(), entry({ name: 'Testwort', nomenclature: 'none' }));
+    await runScheduledAfter();
     expect(fetchMock).not.toHaveBeenCalled();
     // Why nothing was sent: the same write on production sends one ping.
     vi.stubEnv('VERCEL_ENV', 'production');
 
     await createCompendiumEntry(curator(), entry({ name: 'Testleaf', nomenclature: 'none' }));
+    await runScheduledAfter();
 
     expect(pings()).toEqual([[page('testleaf')]]);
   });

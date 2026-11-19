@@ -1,8 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { createHelpArticle, updateHelpArticle } from '@/modules/help';
+import {
+  discardScheduledAfter,
+  runScheduledAfter,
+  scheduledAfterCount,
+  withScheduledAfter,
+} from '../../../support/after';
 import { E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+
+// The ping is sent after the save answers, from `after`, so each test runs what was scheduled before it reads `fetch`.
+vi.mock('next/server', async (original) =>
+  withScheduledAfter(await original<typeof import('next/server')>()),
+);
 
 // A help write tells IndexNow which public address it changed, once it has committed (src/lib/indexnow.ts).
 // `fetch` is the boundary: what reaches it is what IndexNow would be sent. The key is invented.
@@ -30,6 +41,7 @@ beforeEach(async () => {
   await sql`truncate help_articles cascade`;
   vi.stubEnv('VERCEL_ENV', 'production');
   vi.stubEnv('INDEXNOW_KEY', KEY);
+  discardScheduledAfter();
   fetchMock.mockReset().mockResolvedValue(new Response(null, { status: 202 }));
   vi.stubGlobal('fetch', fetchMock);
 });
@@ -50,6 +62,7 @@ describe('IndexNow pings from help writes', () => {
     });
 
     await createHelpArticle(keeper(), { ...article, title: 'Testwort Ledger' });
+    await runScheduledAfter();
 
     expect(pings()).toEqual([[at('/help/testwort-ledger')]]);
     expect(committed).toBe(1);
@@ -57,10 +70,13 @@ describe('IndexNow pings from help writes', () => {
 
   it('names a changed article once, and both addresses in one ping when its title moves it', async () => {
     const { id } = await createHelpArticle(keeper(), { ...article, title: 'Testwort Ledger' });
+    await runScheduledAfter();
     fetchMock.mockClear();
 
     await updateHelpArticle(keeper(), id, { body: 'How the fixture reads now.' });
+    await runScheduledAfter();
     await updateHelpArticle(keeper(), id, { title: 'Testwort Daybook' });
+    await runScheduledAfter();
 
     expect(pings()).toEqual([
       [at('/help/testwort-ledger')],
@@ -71,6 +87,7 @@ describe('IndexNow pings from help writes', () => {
   // A term lives on the glossary page; IndexNow is told the page, not the fragment.
   it('names the glossary for a term, the page it is read on', async () => {
     await createHelpArticle(keeper(), { kind: 'term', title: 'Testwort Term', body: 'A word.' });
+    await runScheduledAfter();
 
     expect(pings()).toEqual([[at('/help/glossary')]]);
   });
@@ -78,12 +95,35 @@ describe('IndexNow pings from help writes', () => {
   // Staff help is behind sign-in, so there is no public page to tell a search engine of.
   it('sends nothing for a staff article', async () => {
     await createHelpArticle(keeper(), { ...article, title: 'Testwort Rota', audience: 'staff' });
+    await runScheduledAfter();
     expect(fetchMock).not.toHaveBeenCalled();
     // Why nothing was sent: the same write at the public audience sends one ping.
 
     await createHelpArticle(keeper(), { ...article, title: 'Testwort Roster' });
+    await runScheduledAfter();
 
     expect(pings()).toEqual([[at('/help/testwort-roster')]]);
+  });
+
+  it('answers the save before the ping is sent, and sends it once the response is done', async () => {
+    let release: () => void = () => {};
+    fetchMock.mockImplementation(
+      () =>
+        new Promise((resolve) => (release = () => resolve(new Response(null, { status: 202 })))),
+    );
+
+    const { id } = await createHelpArticle(keeper(), { ...article, title: 'Testwort Ledger' });
+
+    // The save has answered and the row is committed, with the ping left for after the response.
+    expect(await sql`select id from help_articles where id = ${id}`).toHaveLength(1);
+    expect(scheduledAfterCount()).toBe(1);
+    expect(fetchMock).not.toHaveBeenCalled();
+    const sending = runScheduledAfter();
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    release();
+    await sending;
+
+    expect(pings()).toEqual([[at('/help/testwort-ledger')]]);
   });
 
   it('saves the write and logs, without the key, when the ping fails', async () => {
@@ -91,6 +131,7 @@ describe('IndexNow pings from help writes', () => {
     fetchMock.mockRejectedValue(new TypeError('fetch failed'));
 
     const { id } = await createHelpArticle(keeper(), { ...article, title: 'Testwort Ledger' });
+    await runScheduledAfter();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(await sql`select id from help_articles where id = ${id}`).toHaveLength(1);
@@ -101,11 +142,13 @@ describe('IndexNow pings from help writes', () => {
   it('sends nothing from a deploy that is not production', async () => {
     vi.stubEnv('VERCEL_ENV', 'preview');
     await createHelpArticle(keeper(), { ...article, title: 'Testwort Ledger' });
+    await runScheduledAfter();
     expect(fetchMock).not.toHaveBeenCalled();
     // Why nothing was sent: the same write on production sends one ping.
     vi.stubEnv('VERCEL_ENV', 'production');
 
     await createHelpArticle(keeper(), { ...article, title: 'Testwort Roster' });
+    await runScheduledAfter();
 
     expect(pings()).toEqual([[at('/help/testwort-roster')]]);
   });
