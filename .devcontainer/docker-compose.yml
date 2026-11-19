@@ -158,50 +158,44 @@ services:
     depends_on:
       - graphify-watch
 
-  # The graph's pages for a browser: http://localhost:8090/graph.html (the
-  # interactive graph) and /GRAPH_REPORT.md. Published on the host's loopback
-  # only, so nothing else on the network can open it.
-  # This and `graphify-views` are in the `graph-pages` profile, so they start
-  # only when asked for (claude-docs/docker.md); nothing else depends on them.
-  graphify-web:
-    image: sorrel-graphify
-    profiles: ['graph-pages']
-    init: true
-    cpus: 0.25
-    mem_limit: 128m
-    volumes:
-      - ../graphify-out:/data:ro
-    ports:
-      - '127.0.0.1:8090:8090'
-    command: ['python', '-m', 'http.server', '8090', '--bind', '0.0.0.0', '--directory', '/data']
-    depends_on:
-      - graphify-watch
-
-  # Rebuilds the smaller views whenever graph.json changes, which
-  # `graphify watch` does not do itself: the folder tree, /GRAPH_TREE.html,
-  # and, from Docker/graphify-views.py, the map of src/ by folder,
-  # /view/graph.html, and the wiki of one page per folder, /wiki/index.html.
+  # The graph's pages for a browser on port 8090, published on the host's
+  # loopback only, so nothing else on the network can open them. It also
+  # rebuilds the views `graphify watch` does not: the folder tree,
+  # /GRAPH_TREE.html, and, from Docker/graphify-views.py, the map of src/ by
+  # folder, /view/graph.html, and the wiki of one page per folder,
+  # /wiki/index.html. In the `graph-pages` profile, so it starts only when
+  # asked for (claude-docs/docker.md); nothing else depends on it.
+  # The page server runs in the background of the rebuild loop, and the loop
+  # ends when the server does, so a dead server stops the service rather than
+  # leaving the views rebuilding for nobody. graphify-out/ is writable for the
+  # views; http.server answers only GET and HEAD, so nothing writes through
+  # the port.
   # The tree goes to a temporary file first so the page never serves half a
   # copy. The MCP server reads only the full graph.json, which this leaves alone.
   # Each version of graph.json is tried once, so a failing view logs once
   # instead of rerunning every 10 seconds. The first check after a start
   # always rebuilds, so views left stale while it was stopped catch up.
-  graphify-views:
+  graphify-pages:
     image: sorrel-graphify
     profiles: ['graph-pages']
     init: true
-    cpus: 1
-    mem_limit: 1g
+    restart: on-failure:3
+    cpus: 1.25
+    mem_limit: 1152m
     working_dir: /app
     volumes:
       - ..:/app:ro
       - ../graphify-out:/app/graphify-out
+    ports:
+      - '127.0.0.1:8090:8090'
     command:
       - sh
       - -c
       - |
+        python -m http.server 8090 --bind 0.0.0.0 --directory graphify-out &
+        server="$$!"
         last=""
-        while true; do
+        while kill -0 "$$server" 2>/dev/null; do
           now="$$(stat -c %Y graphify-out/graph.json 2>/dev/null)"
           if [ -n "$$now" ] && [ "$$now" != "$$last" ]; then
             last="$$now"
@@ -213,5 +207,7 @@ services:
           fi
           sleep 10
         done
+        echo "the page server stopped"
+        exit 1
     depends_on:
       - graphify-watch

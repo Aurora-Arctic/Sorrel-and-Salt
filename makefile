@@ -237,17 +237,17 @@ devcontainer-up:
 graphify-up:
 	$(COMPOSE_DEV) up -d graphify-watch graphify
 
-## Stop all four code graph services, leaving the rest of the stack running
+## Stop all three code graph services, leaving the rest of the stack running
 graphify-down:
-	$(COMPOSE_DEV) --profile graph-pages stop graphify-watch graphify graphify-web graphify-views
+	$(COMPOSE_DEV) --profile graph-pages stop graphify-watch graphify graphify-pages
 
 ## Also start the code graph's pages on 8090 (compose profile: graph-pages)
 graphify-pages-up:
-	$(COMPOSE_DEV) --profile graph-pages up -d graphify-web graphify-views
+	$(COMPOSE_DEV) --profile graph-pages up -d graphify-pages
 
 ## Stop the code graph's pages
 graphify-pages-down:
-	$(COMPOSE_DEV) --profile graph-pages stop graphify-web graphify-views
+	$(COMPOSE_DEV) --profile graph-pages stop graphify-pages
 
 ## Follow the code graph builder's log, one entry per rebuild
 graphify-logs:
