@@ -753,6 +753,7 @@ _Acceptance criteria:_
 - A secret scanner runs on every pull request and fails on a finding.
 - A static analyser runs on every pull request or on a schedule, and its results are visible.
 - The owner has read GitHub's secret scanning setting.
+- The owner has read the older branch-protection settings and the Actions permission settings, the one on sending secrets to pull requests from forks included, and recorded what each is set to.
 - `npm run format:check` and `npm run lint` pass.
 
 **MC.46 — Stop Logging Mail Contents** · 0.5h
@@ -820,6 +821,7 @@ _Acceptance criteria:_
 - Impersonating a soft-deleted user or the seed's bootstrap user is refused.
 - Impersonating a Keeper is still refused.
 - The owner has recorded whether previews sit behind Deployment Protection.
+- The owner has recorded whether `ENABLE_IMPERSONATION` is set on the Preview environment.
 - A test fails with each refusal removed.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
 
@@ -832,6 +834,7 @@ Minted from the security audit (M17.34). Finding: SEC-12; it is in `claude-docs/
 _Acceptance criteria:_
 
 - The owner has read the live headers and listed which are missing.
+- The owner has sent an introspection query and a failing query to production from a browser, and recorded whether the schema or an internal error detail comes back.
 - The missing ones are set in `src/lib/security-headers.ts` or `next.config.ts`; `poweredByHeader` is false.
 - `/api/*` carries the policy and Referrer-Policy it should.
 - A test fails with each header removed.
@@ -886,6 +889,7 @@ _Acceptance criteria:_
 
 - The public searches and the GraphQL route answer a client over a set rate with a limit error.
 - Keeper invitation sends are limited.
+- The owner has read the Vercel firewall rules, and `claude-docs/auth/rate-limiting.md` says which kinds of client they already limit.
 - A test fails with the limit removed.
 - `claude-docs/auth/rate-limiting.md` lists the new limits.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
