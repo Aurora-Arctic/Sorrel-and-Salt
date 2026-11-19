@@ -1,6 +1,6 @@
 ## MC — Cleanup
 
-MC ids hold grouped clean-up work from five audits: M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)) for MC.1 → MC.9, and M17.10's test performance audit ([`audits/test-performance.md`](../audits/test-performance.md)) for MC.10 → MC.14, and M17.7's design and UX audit ([`audits/design-ux.md`](../audits/design-ux.md)) for MC.15 → MC.27, and M17.9's accessibility audit ([`audits/accessibility.md`](../audits/accessibility.md)) for MC.28 → MC.32 and additions to MC.20 and MC.21, and M17.6's search engine audit ([`audits/seo.md`](../audits/seo.md)) for MC.33 → MC.43. They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
+MC ids hold grouped clean-up work from six audits: M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)) for MC.1 → MC.9, and M17.10's test performance audit ([`audits/test-performance.md`](../audits/test-performance.md)) for MC.10 → MC.14, and M17.7's design and UX audit ([`audits/design-ux.md`](../audits/design-ux.md)) for MC.15 → MC.27, and M17.9's accessibility audit ([`audits/accessibility.md`](../audits/accessibility.md)) for MC.28 → MC.32 and additions to MC.20 and MC.21, and M17.6's search engine audit ([`audits/seo.md`](../audits/seo.md)) for MC.33 → MC.43, and M17.34's security audit ([`audits/security.md`](../audits/security.md)) for MC.44 → MC.60. They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
 
 **MC.1 — Tidy the Test Support and Scripts** · 16.25h
 
@@ -723,4 +723,239 @@ _Acceptance criteria:_
 - A renamed entry's old address still redirects for 180 days.
 - The finder that sees a deleted row is named as an exception in `.claude/rules/database.md`, Rule 4.
 - A test covers all four cases.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.44 — Scope The Sign-In Secret Rotation And The Preview Data Copies** · 3h
+
+_Story:_ As the site owner, I want the secret rotation and the handling of production data in staging and hotfix previews researched and scoped, so that I can approve the build tasks knowing their size and risks.
+
+Minted from the security audit (M17.34). Findings: SEC-1, SEC-21; each is in `claude-docs/audits/security.md`. One value of `BETTER_AUTH_SECRET` is shared by production, staging, and hotfix previews, and `claude-docs/secrets.md` records it as short. The staging database was made as a copy of production, and each hotfix preview's database is made as one. The two interact: the two-factor secrets and the providers' tokens are encrypted under that secret, so a copy read under a different secret cannot decrypt them. This task researches and scopes; it builds nothing. The hotfix preview does not deploy until N7.1 is done, so any build task that touches a preview copy depends on N7.1.
+
+_Acceptance criteria:_
+
+- A record under `claude-docs/design-decisions/` says, from Better Auth's documentation or code, whether the two-factor secrets and provider tokens written under one `BETTER_AUTH_SECRET` can be kept or re-encrypted when the secret changes.
+- It says whether the `sessions` table stores session tokens unhashed, with the file and line.
+- It says, from Neon's documentation, what a child branch copies from its parent, and the owner has read in the Neon console which branch the `staging` branch and a hotfix branch are children of.
+- It lists every table and column that holds a sign-in row or a personal detail, free text included.
+- It compares the options, each with its hours, its risks, and whether it depends on N7.1: one long secret everywhere; separate secrets; clearing the sign-in rows on each new copy; and replacing personal details on each new copy.
+- The owner has checked how long the current secret is and how it was made, and the record says the result without the value.
+- The owner has chosen an option, and the build tasks are drafted with criteria and an estimate. None is minted before the owner approves it.
+- `npm run format:check` and `npm run lint` pass.
+
+**MC.45 — Add A Secret Scanner And A Static Analyser To CI** · 4h
+
+_Story:_ As the site owner, I want a secret scanner and CodeQL (or the like) in CI, so that a committed secret or known insecure pattern is caught early.
+
+Minted from the security audit (M17.34). Finding: SEC-17; it is in `claude-docs/audits/security.md`. Nothing in CI looks for a committed secret or a known insecure code pattern, and the audit ran neither tool.
+
+_Acceptance criteria:_
+
+- A secret scanner runs on every pull request and fails on a finding.
+- A static analyser runs on every pull request or on a schedule, and its results are visible.
+- The owner has read GitHub's secret scanning setting.
+- The owner has read the older branch-protection settings and the Actions permission settings, the one on sending secrets to pull requests from forks included, and recorded what each is set to.
+- `npm run format:check` and `npm run lint` pass.
+
+**MC.46 — Stop Logging Mail Contents** · 0.5h
+
+_Story:_ As the site owner, I want mail bodies never logged in production, so that a link in a log cannot be used.
+
+Minted from the security audit (M17.34). Finding: SEC-14; it is in `claude-docs/audits/security.md`. Off Vercel, the mail transport writes the whole message to the log (`src/lib/mail-transport.ts`), and a comment there says it does not. A mail can hold a reset or verification link.
+
+_Acceptance criteria:_
+
+- With `NODE_ENV` production, the transport logs only the recipient count and subject.
+- The provider response body is not logged in full.
+- The comment at `mail-transport.ts:109` is true.
+- A test fails with the change removed.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.47 — Scope Spell Writers To Readable Spells** · 1h
+
+_Story:_ As a coven member, I want spell updates checked against what I may read at the repository too, so that one skipped service check cannot change a private spell.
+
+Minted from the security audit (M17.34). Finding: SEC-7; it is in `claude-docs/audits/security.md`. The repository functions that update a spell (`src/db/repository/write.ts`) check the workspace and not whether the caller may read that spell. Only the service's earlier read stops a member changing another member's private spell. The audit found no path today.
+
+_Acceptance criteria:_
+
+- The three writers in `write.ts` AND `readableSpells(membership)` for spells.
+- A test calls the writer directly with a spell the caller cannot read and sees it refused, with the service's read removed.
+- `UpdateSpellInputSchema` is recorded as refusing, or is made to refuse, a null revision.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.48 — Refuse Seed Drops On Non-Local Databases** · 1h
+
+_Story:_ As a developer, I want the seed script to refuse dropping a database that is not local, so that a wrong URL cannot wipe production.
+
+Minted from the security audit (M17.34). Finding: SEC-16; it is in `claude-docs/audits/security.md`. `scripts/db-seed.ts` refuses to drop a database only when `NODE_ENV` is `production`, so a production address in a local shell is not refused.
+
+_Acceptance criteria:_
+
+- `drop` is refused when the target host is not local, whatever `NODE_ENV` is.
+- A test covers the refusal and fails with it removed.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.49 — Scope Audit Fields To Curators** · 1.5h
+
+_Story:_ As a person reading the Compendium, I want staff ids hidden from signed-out readers, so that the accounts that curate it are not listed to outsiders.
+
+Minted from the security audit (M17.34). Finding: SEC-3; it is in `claude-docs/audits/security.md`. The `audit` field (`src/graphql/schema/audit.ts`) gives a signed-out reader the user ids of the Keepers and Curators who created and edited each Compendium entry. An id grants nothing; it shows which accounts hold staff rights.
+
+_Acceptance criteria:_
+
+- The owner has decided whether staff ids are public.
+- If not, a signed-out `compendium` query returns null for `createdBy` and `updatedBy`.
+- A Curator still reads them.
+- A test fails with the scope removed.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.50 — Tighten The Impersonation Gate** · 2h
+
+_Story:_ As the site owner, I want impersonation limited to named environments and to live, ordinary accounts, so that a mistaken flag cannot switch it on anywhere else.
+
+Minted from the security audit (M17.34). Finding: SEC-8; it is in `claude-docs/audits/security.md`. Impersonation runs where a flag is set and the environment is not Vercel production (`src/lib/impersonation.ts`), so outside Vercel only the flag stands in the way. A Keeper cannot impersonate another Keeper, and beyond the role there is no check on the target.
+
+_Acceptance criteria:_
+
+- Impersonation runs only where the flag is set and the environment is positively staging, a preview, local, or a test run; anywhere else it is refused, production included.
+- Impersonating a soft-deleted user or the seed's bootstrap user is refused.
+- Impersonating a Keeper is still refused.
+- The owner has recorded whether previews sit behind Deployment Protection.
+- The owner has recorded whether `ENABLE_IMPERSONATION` is set on the Preview environment.
+- A test fails with each refusal removed.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.51 — Set The Missing Response Headers** · 2h
+
+_Story:_ As the site owner, I want Permissions-Policy, Cross-Origin-Opener-Policy and X-Frame-Options set, and `X-Powered-By` off, so that the browser's defences are on.
+
+Minted from the security audit (M17.34). Finding: SEC-12; it is in `claude-docs/audits/security.md`. The repository sets no Permissions-Policy, no Cross-Origin-Opener-Policy, and no X-Frame-Options, sends `X-Powered-By`, and sets no policy on `/api/*`. The audit could not read what the host adds.
+
+_Acceptance criteria:_
+
+- The owner has read the live headers and listed which are missing.
+- The owner has sent an introspection query and a failing query to production from a browser, and recorded whether the schema or an internal error detail comes back.
+- The missing ones are set in `src/lib/security-headers.ts` or `next.config.ts`; `poweredByHeader` is false.
+- `/api/*` carries the policy and Referrer-Policy it should.
+- A test fails with each header removed.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.52 — Correct The Count Of Proofless Finders In The Database Rule** · 1h
+
+_Story:_ As a developer, I want the database rule to list every finder that takes no proof, so that the rule matches the code.
+
+Minted from the security audit (M17.34). Finding: SEC-18; it is in `claude-docs/audits/security.md`. `.claude/rules/database.md` says three finders take no proof; the code has more, each explained only in a comment.
+
+_Acceptance criteria:_
+
+- `.claude/rules/database.md` names every finder listed under SEC-18, or points to `claude-docs/db/write-path.md`, "Reads that take no proof".
+- The count in the rule matches the code.
+- `npm run format:check` and `npm run lint` pass.
+
+**MC.53 — End Other Sessions After Account Security Changes** · 3h
+
+_Story:_ As an account holder, I want my other sessions to end when I change my email, delete a passkey or turn on two-factor, so that a stolen session does not outlive the change.
+
+Minted from the security audit (M17.34). Finding: SEC-5; it is in `claude-docs/audits/security.md`. A password change ends the account's other sessions. An email change, a passkey deletion, and turning on two-factor do not, so a session lasts up to 7 days after them.
+
+_Acceptance criteria:_
+
+- Each of the three events ends every session but the current one.
+- A test for each event fails with the revocation removed.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.54 — Cap The Size Of GraphQL Inputs** · 5h
+
+_Story:_ As the site owner, I want every text field and list to have a size cap and the route a body limit, so that one large request cannot slow the site.
+
+Minted from the security audit (M17.34). Finding: SEC-9; it is in `claude-docs/audits/security.md`. Most text, list, and id inputs accept any size, the public Compendium filters included. No data is exposed.
+
+_Acceptance criteria:_
+
+- `requiredText` and `optionalText` carry a default cap, with named smaller caps for names and titles.
+- Every array input has a `.max()`.
+- The public `compendium` and help search `query` have a cap, including quoted phrases and exclusions.
+- The route refuses a body over a set size.
+- A test per cap fails with the cap removed.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.55 — Rate-Limit The GraphQL Route And Public Searches** · 5h
+
+_Story:_ As the site owner, I want a per-client limit on GraphQL and the public searches, so that a flood cannot load the database.
+
+Minted from the security audit (M17.34). Finding: SEC-10; it is in `claude-docs/audits/security.md`. No code limits GraphQL reads or the public searches, and sign-up mail is limited per IP address only. The host's firewall is the one layer in front of them.
+
+_Acceptance criteria:_
+
+- The public searches and the GraphQL route answer a client over a set rate with a limit error.
+- Keeper invitation sends are limited.
+- The owner has read the Vercel firewall rules, and `claude-docs/auth/rate-limiting.md` says which kinds of client they already limit.
+- A test fails with the limit removed.
+- `claude-docs/auth/rate-limiting.md` lists the new limits.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.56 — Harden The Supply Chain In CI** · 5h
+
+_Story:_ As the site owner, I want pinned actions, a locked CLI, and checked package signatures, so that a poisoned release cannot reach a job holding secrets.
+
+Minted from the security audit (M17.34). Finding: SEC-13; it is in `claude-docs/audits/security.md`. GitHub Actions are pinned to tags that can be moved, the Vercel CLI is installed outside the lockfile, and no step checks package signatures.
+
+_Acceptance criteria:_
+
+- Third-party actions are pinned to commit ids, and the own action is pinned too.
+- The Vercel CLI is installed from the lockfile in the four workflows.
+- `npm audit signatures` runs in CI and fails the job on a bad signature.
+- `npm audit` stays as it is: it reports and does not fail the build, by the owner's decision.
+- `npm run format:check` and `npm run lint` pass.
+
+**MC.57 — Decide Two-Factor For Keepers And Curators** · 3h
+
+_Story:_ As the site owner, I want a decision on requiring a second step for Keepers and Curators, so that staff accounts are held to the standard I choose.
+
+Minted from the security audit (M17.34). Finding: SEC-6; it is in `claude-docs/audits/security.md`. Two-factor is optional for everyone, staff included, and a provider or passkey sign-in never asks for it. The docs record this as by design.
+
+_Acceptance criteria:_
+
+- The owner has chosen to require two-factor or a passkey for Keepers and Curators, or to leave it optional.
+- If required, granting either role to an account without one is refused, and a test fails with the check removed.
+- `claude-docs/auth/two-factor.md` states the decision.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.58 — Hash The Lockout-Mail Reset Token** · 2h
+
+_Story:_ As an account holder, I want reset tokens stored as hashes, so that a database read does not hand out a working reset link.
+
+Minted from the security audit (M17.34). Finding: SEC-4; it is in `claude-docs/audits/security.md`. A password-reset token sits unhashed in the database for its 15 minutes. Better Auth stores its own reset token the same way, which this task records and does not change.
+
+_Acceptance criteria:_
+
+- The lockout-mail token is stored as a hash and looked up by its hash.
+- A test shows the stored value differs from the mailed token and the mailed token still works once.
+- The repository records whether Better Auth's reset token is single use.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.59 — Clear Autosaved Forms At Sign-Out** · 1.5h
+
+_Story:_ As a person on a shared browser, I want my unsaved spell and ingredient text removed when I sign out, so that the next person cannot read it.
+
+Minted from the security audit (M17.34). Finding: SEC-15; it is in `claude-docs/audits/security.md`. An unsaved spell or ingredient form stays in the browser's storage after sign-out, for up to 24 hours.
+
+_Acceptance criteria:_
+
+- Signing out removes every `autosave:` key.
+- A browser test shows the key is gone after sign-out.
+- The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.
+
+**MC.60 — Refuse Inline Scripts On Signed-In Pages With A Nonce** · 4h
+
+_Story:_ As the site owner, I want the signed-in pages to refuse inline scripts, so that an injected script would not run on a screen that holds coven data.
+
+Minted from the security audit (M17.34). Finding: SEC-11; it is in `claude-docs/audits/security.md`. The Content-Security-Policy allows any inline script (`src/lib/security-headers.ts`). A nonce, a random value made per request that marks the scripts a page may run, needs the page rendered per request. The signed-in pages already are, so they take the nonce; the public pages keep today's policy and their caching, by the owner's decision.
+
+_Acceptance criteria:_
+
+- A signed-in page serves a `script-src` with a nonce and no `'unsafe-inline'`.
+- The pre-paint scripts a signed-in page uses run under the nonce set in `src/proxy.ts`.
+- A public page keeps today's policy, and the build still lists it as static.
+- A browser test shows a script without the nonce is blocked on a signed-in page.
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass.

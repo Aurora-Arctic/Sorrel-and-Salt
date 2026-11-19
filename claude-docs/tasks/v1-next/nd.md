@@ -2,7 +2,7 @@
 
 The tasks on the **N · Z. Deferred** milestone: each waits for a trigger, named in its entry, and starts only when it fires.
 
-_3 tasks · 11 hours_
+_4 tasks · 14 hours_
 
 **ND.1 — Move the Account Expiry and the Address-Change Lapse to Hourly Cron Jobs on Vercel Pro** · 3h
 
@@ -67,3 +67,16 @@ _Acceptance criteria:_
 - The 404 for a missing compendium entry, the 404 for a coven the viewer is not a member of, and the 403 for a keeper page each carry their heading and links back in the server's HTML.
 - The status codes stay 404 and 403, and the 308 redirects are unchanged.
 - `claude-docs/loading.md`, or the error-page doc, is corrected wherever it describes how these pages render.
+
+**ND.4 — Put The Deploy Build Behind An Environment** · 3h
+
+_Story:_ As the site owner, I want the job that builds pull-request code to hold no production secrets without a reviewer, so that a writer cannot read them by editing a workflow.
+
+Minted from the security audit (M17.34). Finding: SEC-2; it is in `claude-docs/audits/security.md`. The job that builds a hotfix pull request's code can read repository secrets, the deploy token included, with no reviewer in front of it, and the rulesets the audit could read require no status checks before a merge. Using it needs write access to the repository, which one person holds today. **Trigger:** a second person, or an automation that can push, is given write access to the repository.
+
+_Acceptance criteria:_
+
+- The build job names a GitHub Environment with a required reviewer, or holds secrets only in the steps that need them.
+- A required-status-checks rule exists on `main` and `staging`.
+- A hotfix pull request still deploys a preview.
+- `npm run format:check` and `npm run lint` pass.
