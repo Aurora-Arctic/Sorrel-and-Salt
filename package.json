@@ -164,7 +164,7 @@
     "monocart-coverage-reports": "^3.1.0",
     "msw": "^3.0.3",
     "msw-storybook-addon": "^3.0.3",
-    "oxlint": "^1.89.0",
+    "oxlint": "^1.94.0",
     "pdfjs-dist": "^6.5.438",
     "picomatch": "^4.0.7",
     "pre-commit": "^2.0.0",
